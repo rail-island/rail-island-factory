@@ -19,7 +19,9 @@ describe("the Japanese conventional-line units", () => {
 
   for (const d of JP_EMUS) {
     const s = JP_EMU_SERIES[d.id]!;
-    it(`${d.id}: the end and middle cars at their lengths and real width, the middle car's pantograph raised`, () => {
+    it(`${d.id}: the end and middle cars at their lengths and real width, the pantograph car's pantograph raised`, () => {
+      // the car that raises the pantograph: the intermediate car, or the end car of a series with `endPantograph` (the Hankyu 9000)
+      const raising = s.endPantograph ? "endCar" : "middleCar";
       for (const [unit, len] of [["endCar", s.endLength], ["middleCar", s.midLength]] as const) {
         const m = d.build({ unit });
         const glb = m.toGlb(unit);
@@ -30,7 +32,7 @@ describe("the Japanese conventional-line units", () => {
         expect(st.triangles).toBeLessThanOrEqual(16000);
         expect(findCoplanarOverlaps(glb)).toEqual([]);
         expect(m.rig!.supports).toHaveLength(2);
-        if (unit === "endCar") expect(st.max[1]).toBeLessThanOrEqual(LOADING_GAUGES.uic.height);
+        if (unit !== raising) expect(st.max[1]).toBeLessThanOrEqual(LOADING_GAUGES.uic.height);
         else expect(st.max[1]).toBeGreaterThan(5.8);
       }
     });

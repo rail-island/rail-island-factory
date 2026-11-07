@@ -8,6 +8,8 @@
 // the E6, a mini-shinkansen, keeps its 2.945 m). See docs/models/shinkansen.md.
 
 import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
+import type { Ring } from "./meshCore.ts";
+import { liftable } from "./liftable.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { paint } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
@@ -29,6 +31,7 @@ import { bogieParts, fitUnit, roofPart, turnBody, type UnitBody } from "./lodUni
 import { carbody } from "./carbodyKit.ts";
 import { bodyHalf, cabFaceLod, drawCabFace, edgeAt, type FacePaint, type SeriesCabFace } from "./seriesCab.ts";
 import { RAIL_COLLECTOR_TOP } from "./collector.ts";
+import type { Vec3 } from "./meshCore.ts";
 
 type Band = readonly [number, number, string];
 export type ShinkansenUnit = "endCar" | "middleCar" | "powerCar" | "train";
@@ -64,7 +67,9 @@ export interface ShinkansenLivery {
    * the side between a front and a back edge, [y, d] by height (d behind the nose's or cab face's
    * tip, ascending y), later sweeps over earlier ones; a cab face paints them on its cab sides too.
    */
-  endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
+  endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number; face?: boolean }>;
+  /** Polygons painted on a cab face ([lat, y] seen head-on, under the face's own fields): a canopy painted round its windscreen. */
+  faceFields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
   /** A flag of paint beside every door, on the side toward the car's middle: its width, gap from the door, heights and paint (SBB's red door marks). */
   doorFlags?: { w: number; gap: number; y: readonly [number, number]; mat: string };
   /** Paint over each door's span above its head on every car, bands [y0, y1, mat]: a door's colour carried up the side. */
@@ -74,6 +79,10 @@ export interface ShinkansenLivery {
    * d[0] behind the tip back to d[1] at the shoulder and d[2] at y (a slanted rear end); both sides.
    */
   endRoofEdge?: { mat: string; y: number; d: readonly [number, number, number] };
+  /** A stripe of its own paint along the crown of every car, out to half width z on the roof's arc (the 500's blue-grey roof over silver sides); the distant model's roof takes it. */
+  roofStripe?: { z: number; mat: string };
+  /** This livery's sets' pantograph, in place of the series' (the 500's W sets' T-shaped wing, its V sets' single arm). */
+  pantograph?: "single" | "diamond" | "wing";
 }
 
 /** A fitting on a car's sides, both sides (d span behind the car's front, the end car's from its tip; sill and head). */
@@ -136,6 +145,8 @@ export interface ShinkansenSeries {
   pantograph?: "single" | "diamond";
   /** The pantograph's centre, d behind the car's front (an end car's tip), in place of 1.5 m ahead of the rear bogie. */
   pantographD?: number;
+  /** A streamlined cover on the roof round the pantograph's base, the arm standing on its top: its length and half width at the roof and at its top, its height and paint (the N700S's). */
+  pantographCover?: { len: number; hw: number; top: readonly [number, number]; h: number; mat: string };
   /** With `endPantograph` true: the rear end car's pantograph folded down, only the leading one raised. */
   trailingLowered?: boolean;
   /** Fittings on the sides of the end car and of an intermediate car: service doors, grilles, displays. */
@@ -152,6 +163,8 @@ export interface ShinkansenSeries {
   cabWindows?: ReadonlyArray<readonly [number, number, number, number] | readonly [number, number, number, number, number]>;
   /** A cab face drawn as one painted surface (seriesCab.ts) in place of the nose: the body ends square `dJoin` behind its tip (both ends of a `single` railcar). */
   cabFace?: SeriesCabFace;
+  /** With a cab face: the end car's crown still rising behind the face's join, [d behind the body's front, crown height] (the 500's roof reaching full height behind its first door). */
+  endCrown?: Pt[];
   power: number;
   maxspeed: number;
   /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric); `none` an unpowered set of coaches. */
@@ -322,7 +335,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     spec: {
       length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: s.arc ?? 8, B: s.B, wl: s.W * 0.9, A: s.A, wa: s.W * 0.97,
       ...(end && !s.flatCab && !s.cabFace ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
-      ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: 0.25,
+      ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}),
+      // a crown rising behind a cab face: a nose of the body's full plan whose crown table ends past the join
+      ...(end && s.cabFace && s.endCrown ? { front: { len: 1e-3, tip: 1, power: 2, C: s.endCrown, S: [[0, s.S]] } } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: 0.25,
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
@@ -395,6 +410,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       });
       if (isDiesel(s))
         m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
+      if (l.roofStripe) m.scope("roof stripe", () => { for (const sd of [1, -1]) crownPane(m, b, X, sd, l.roofStripe!.mat, [0, L], [0, l.roofStripe!.z], 0.004); });
       if (end && l.endRoofEdge) m.scope("roof edge", () => roofEdge(m, b, X, l.endRoofEdge!, s.cabFace?.dJoin ?? 0));
       const panels = s.sidePanels?.[end ? "end" : "middle"];
       if (panels) m.scope("side panels", () => sidePanels(m, b, X, l, panels, end ? (s.cabFace?.dJoin ?? 0) : 0));
@@ -419,14 +435,34 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       } else if (pantograph) m.scope("pantograph", () => {
         const x = X(pantographAt(s, end, tr));
         const raised = pantograph !== "lowered";
-        block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
-        if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
-        else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised });
+        const cv = s.pantographCover;
+        if (cv) {
+          m.scope("cover", () => pantographCover(m, x, s.C, cv));
+          singleArm(m, { xc: x, roofY: s.C + cv.h, baseY: s.C + cv.h + 0.2, h: 1, raised });
+        } else {
+          block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
+          const kind = l.pantograph ?? s.pantograph;
+          if (kind === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
+          else if (kind === "wing") wingPantograph(m, x, s.C + 0.05, raised, l.roofStripe?.mat ?? l.roof);
+          else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised });
+        }
       });
       if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr });
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
+}
+
+/** A pantograph's streamlined cover: a frustum from a rounded rectangle sunk in the roof to a smaller one at its top. */
+function pantographCover(m: MeshBuilder, x: number, C: number, cv: NonNullable<ShinkansenSeries["pantographCover"]>): void {
+  const ring = (len: number, hw: number): Array<[number, number]> => {
+    const r = Math.min(hw * 0.9, len / 2 - 0.01), k = 4, out: Array<[number, number]> = [];
+    for (const [cx, cz, a0] of [[len / 2 - r, -(hw - r), -90], [len / 2 - r, hw - r, 0], [-(len / 2 - r), hw - r, 90], [-(len / 2 - r), -(hw - r), 180]] as const)
+      for (let j = 0; j <= k; j++) { const a = ((a0 + (90 * j) / k) * Math.PI) / 180; out.push([x + cx + r * Math.cos(a), cz + r * Math.sin(a)]); }
+    // counter-clockwise seen from above (+y) is a negative shoelace area in (x, z)
+    return out.reverse();
+  };
+  m.loft(cv.mat, ring(cv.len, cv.hw), C - 0.08, ring(cv.top[0], cv.top[1]), C + cv.h);
 }
 
 /** The skirt's cuts round a car's bogies; a Jacobs set's car in the train open at its inner ends over the joints' bogies (`joint`). */
@@ -438,7 +474,7 @@ function jacobsCuts(s: ShinkansenSeries, end: boolean, L: number, tr: readonly n
 /** The paint a cab face takes from a livery. */
 function facePaint(s: ShinkansenSeries, l: ShinkansenLivery, number: string): FacePaint {
   const face = s.cabFace?.bands?.(l) ?? l.front ?? l.bands;
-  return { sides: l.bands, face, roof: l.roof, skirt: l.skirt, S: s.S, A: s.A, number, ...(l.endSweeps ? { sweeps: l.endSweeps } : {}) };
+  return { sides: l.bands, face, roof: l.roof, skirt: l.skirt, S: s.S, A: s.A, number, ...(l.endSweeps ? { sweeps: l.endSweeps } : {}), ...(l.faceFields ? { fields: l.faceFields } : {}) };
 }
 
 /** A sweep of paint on both sides between its front and back edges, in strips 0.1 m tall, clamped to the belly and the shoulder. */
@@ -686,12 +722,13 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
 function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, X: (d: number) => number, cx: number, turned: boolean, section?: number, trucks: readonly boolean[] = [true, true], power?: SeriesPowerCar): { body: UnitBody; parts: LodPart[] } {
   const def = carDef(s, l, end, pantograph, l.number, false, power);
   const b = carbody({ ...def.spec, edges: [] });
-  const side: LodBand[] = [...((end && l.endBands) || l.bands).map(([a, e, mt]): [number, number, string] => [Math.max(a, s.B), Math.min(e, s.S), mt]).filter(([a, e]) => e > a + 1e-6), [s.S, s.C, l.roof]];
+  const roof = l.roofStripe?.mat ?? l.roof;
+  const side: LodBand[] = [...((end && l.endBands) || l.bands).map(([a, e, mt]): [number, number, string] => [Math.max(a, s.B), Math.min(e, s.S), mt]).filter(([a, e]) => e > a + 1e-6), [s.S, s.C, roof]];
   const at = (y: number) => { for (let k = 0; k <= 2000; k++) { const d = k * 0.01; if (b.B(d) <= y && b.C(d) >= y) return d; } return 0; };
   const ys = [s.B, s.Y, (s.Y + s.S) / 2, s.S, (s.S + s.C) / 2, s.C - 0.02];
   const spans = def.windows[0]!.spans;
   let body: UnitBody = {
-    y0: s.B, hw: [[s.B, s.W * 0.9], [s.A, s.W * 0.97], [s.Y, s.W], [s.S, s.W * s.lean], [s.C, 0.4]], side, roof: l.roof,
+    y0: s.B, hw: [[s.B, s.W * 0.9], [s.A, s.W * 0.97], [s.Y, s.W], [s.S, s.W * s.lean], [s.C, 0.4]], side, roof,
     front: end && s.cabFace ? cabFaceLod(s.cabFace, 1, X(-s.cabFace.dJoin), bodyHalf(b, 0), facePaint(s, l, l.number), s.C) : end ? { tip: ys.map((y) => [y, X(at(y))] as const), setback: [[s.B, 2.0], [s.C, 1.0]] } : { tip: [[s.B, X(0)]], ...(section !== undefined ? { hidden: true } : {}) },
     rear: end && s.single && s.cabFace ? cabFaceLod(s.cabFace, -1, -X(b.length + s.cabFace.dJoin), bodyHalf(b, 0), facePaint(s, l, l.number), s.C) : { tip: [[s.B, X(b.length)]], ...(section !== undefined ? { hidden: true } : {}) },
     windows: [{ u: [Math.min(X(spans[0]![0]), X(spans[spans.length - 1]![1])), Math.max(X(spans[0]![0]), X(spans[spans.length - 1]![1]))], y: [def.windows[0]!.y[0], def.windows[0]!.y[1]], mat: LOD_GLASS }],
@@ -783,99 +820,895 @@ function gameOf(s: ShinkansenSeries, params: readonly ParamSpec[]): GameProperti
 const c = (hex: string, r = 0.4) => paint(hex, r);
 const nose = (len: number, tip: number, power: number, C: Pt[], S: Pt[], Y: Pt[], A: Pt[], B: Pt[]): NoseShape => ({ len, tip, power, C, S, Y, A, B });
 
+// N700S (assets/shinkansen-n700s/SOURCES.md): the "dual supreme wing" nose as a cab face whose depth
+// is reshaped across it (`n7Reshape`): a broad, rounded snout; above it the wing body, whose two
+// crests run from the headlights back and up to the body's shoulder with a shallow valley between
+// them; and the canopy, a narrow spine rising out of the valley ahead of the windscreen and widening
+// into the cab's bubble, which merges into the roof at the join. Heights above the rail, d behind
+// the tip, lat from the centre line; the side photograph at about 125 px/m on the body's side.
+
+/** Where the nose meets the body's section (the canopy reaches the roof), and the side's half width. */
+const N7_JOIN = 9.0;
+const N7_HW = 1.62;
+type N7Tab = readonly Pt[];
+const n7 = (t: N7Tab, x: number) => edgeAt(t, x);
+/** The snout's centre line [y, d]: the chin curving under, the tip at 1.0 m, the top rounding back to the upper nose. */
+const N7_SNOUT: N7Tab = [[0.3, 2.6], [0.36, 1.8], [0.44, 1.25], [0.52, 0.9], [0.6, 0.62], [0.7, 0.38], [0.78, 0.22], [0.86, 0.1], [0.94, 0.03], [1.02, 0], [1.1, 0.01], [1.18, 0.06], [1.26, 0.14], [1.34, 0.25], [1.42, 0.4], [1.5, 0.58], [1.58, 0.8], [1.66, 1.0], [2.0, 1.4], [3.6, 2.0]];
+/** The snout's plan: its corner radius and the corner's depth back along the car by height (a broad, deep U). */
+const N7_CORNER: N7Tab = [[0.3, 1.25], [0.5, 1.2], [0.9, 1.1], [1.3, 1.05], [1.6, 1.1], [3.6, 1.1]];
+const N7_DEPTH: N7Tab = [[0.3, 1.5], [0.5, 1.6], [0.9, 2.1], [1.3, 2.4], [1.6, 2.6], [1.9, 1.5], [2.2, 0.6], [3.6, 0.3]];
+/** The wing body by d: the valley's height on the centre line, the crests' height and lat, the side's top at the body's half width. */
+const N7_H0: N7Tab = [[0.6, 1.52], [1.0, 1.58], [2.0, 1.68], [3.0, 1.75], [4.0, 1.85], [5.0, 1.95], [6.0, 2.08], [7.0, 2.25], [8.0, 2.55], [9.0, 2.95]];
+const N7_HC: N7Tab = [[0.6, 1.56], [1.0, 1.64], [2.0, 1.76], [3.0, 1.85], [4.0, 1.95], [5.0, 2.07], [6.0, 2.22], [7.0, 2.45], [8.0, 2.82], [9.0, 3.3]];
+const N7_LR: N7Tab = [[0.6, 1.1], [1.0, 1.18], [2.0, 1.28], [4.0, 1.36], [6.0, 1.42], [8.0, 1.48], [9.0, 1.5]];
+const N7_HS: N7Tab = [[0.6, 1.15], [1.0, 1.25], [2.0, 1.38], [3.0, 1.48], [4.0, 1.58], [5.0, 1.7], [6.0, 1.85], [7.0, 2.08], [8.0, 2.5], [9.0, 3.05]];
+/** The spine and canopy by d: the centre's height, the half width and how far its edge drops below the centre. */
+const N7_HB: N7Tab = [[0.8, 1.68], [1.5, 1.8], [2.5, 1.97], [3.3, 2.1], [3.7, 2.2], [3.95, 2.32], [4.35, 2.55], [4.7, 2.7], [5.1, 2.88], [5.5, 3.0], [6.1, 3.14], [7.0, 3.3], [8.0, 3.45], [9.0, 3.62]];
+const N7_WB: N7Tab = [[0.8, 0.32], [2.0, 0.42], [3.3, 0.55], [3.8, 0.72], [4.5, 0.82], [6.0, 0.86], [7.0, 0.97], [7.8, 1.2], [8.4, 1.45], [9.0, 1.7]];
+const N7_DROP: N7Tab = [[0.8, 0.16], [2.5, 0.18], [3.3, 0.25], [3.8, 0.55], [4.5, 0.9], [5.5, 1.1], [7.0, 1.1], [8.0, 0.8], [8.6, 0.62], [9.0, 0.5]];
+
+/** The nose's top surface height at (d, lat): the wing body or the canopy over it. */
+function n7Height(d: number, lat: number): number {
+  const [h0, hc, lr, hs] = [n7(N7_H0, d), n7(N7_HC, d), n7(N7_LR, d), n7(N7_HS, d)];
+  // the valley between the crests, then the crest rounding down to the side
+  const t = Math.min(1, Math.max(0, (lat - lr) / (N7_HW - lr)));
+  const wing = lat <= lr ? h0 + (hc - h0) * (lat / lr) ** 2 : hc - (hc - hs) * t * t;
+  // the canopy blended into the wing body (a smooth maximum, no crease the grid cannot follow)
+  const canopy = n7(N7_HB, d) - n7(N7_DROP, d) * (lat / n7(N7_WB, d)) ** 2.4;
+  const k = 0.07, h = Math.min(1, Math.max(0, 0.5 + (canopy - wing) / (2 * k)));
+  return wing + (canopy - wing) * h + k * h * (1 - h);
+}
+
+/** The first d at which the top surface reaches height y at lat (bisection; the surface rises toward the join). */
+function n7Top(lat: number, y: number): number {
+  if (n7Height(0, lat) >= y) return 0;
+  if (n7Height(N7_JOIN, lat) < y) return N7_JOIN;
+  let [a, b] = [0, N7_JOIN];
+  for (let i = 0; i < 18; i++) { const m = (a + b) / 2; if (n7Height(m, lat) >= y) b = m; else a = m; }
+  return (a + b) / 2;
+}
+
+/** The grid's rows (the paint's and the shape's heights). */
+const N7_ROWS = [0.3, 0.36, 0.44, 0.52, 0.6, 0.7, 0.78, 0.86, 0.9, 0.95, 1.0, 1.05, 1.12, 1.2, 1.28, 1.36, 1.42, 1.48, 1.54, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2.0, 2.06, 2.12, 2.18, 2.25, 2.32, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.48, 3.55, 3.6];
+/** The face's centre line, the snout's or the top's (the distant model's tip by height too). */
+const N7_PROFILE: Pt[] = N7_ROWS.map((y): Pt => [y, Math.round(Math.max(n7(N7_SNOUT, y), n7Top(0, y)) * 1e4) / 1e4]);
+/** The face's depth: behind both the snout's rounded front and the top surface. */
+/** n7Top by (lat, y): the face's grid and its paint query the same points many times; a pure function, so cached (same bytes). */
+const N7_TOP = new Map<number, Map<number, number>>();
+const n7TopCached = (lat: number, y: number): number => {
+  let row = N7_TOP.get(y);
+  if (!row) N7_TOP.set(y, (row = new Map()));
+  let v = row.get(lat);
+  if (v === undefined) { v = n7Top(lat, y); row.set(lat, v); }
+  return v;
+};
+const N7_SN = new Map<number, readonly [number, number]>();
+const n7SnoutAt = (y: number): readonly [number, number] => {
+  let v = N7_SN.get(y);
+  if (!v) N7_SN.set(y, (v = [n7(N7_SNOUT, y), n7(N7_PROFILE, y)]));
+  return v;
+};
+const n7Reshape = (lat: number, y: number, d: number): number => {
+  const [sn, pr] = n7SnoutAt(y);
+  return Math.max(sn + d - pr, n7TopCached(lat, y));
+};
+
+/** An almond headlight on viewer's side sd: [lat, y], the inner end low, the outer end high under the crest. */
+const n7Lamp = (sd: number, grow: number): Pt[] =>
+  ([[0.93, 1.43], [1.04, 1.385], [1.2, 1.4], [1.33, 1.48], [1.4, 1.6], [1.3, 1.635], [1.15, 1.585], [1.0, 1.515]] as Pt[]).map(([l, y]): Pt => {
+    const [cl, cy] = [1.16, 1.5];
+    return [sd * (cl - 0.08 + (l - cl) * (1 + grow)), cy + (y - cy) * (1 + grow * 1.6)];
+  });
+/** A rounded oval seen head-on, [lat, y]: half width hw, from y0 to y1, the top narrower by `taper`, the corners squarer for a larger exponent. */
+const n7Oval = (hw: number, y0: number, y1: number, taper: number, ex: number, n = 40): Pt[] => {
+  const [cy, hy] = [(y0 + y1) / 2, (y1 - y0) / 2];
+  return Array.from({ length: n }, (_, i): Pt => {
+    const a = (2 * Math.PI * i) / n, c = Math.cos(a), s = Math.sin(a);
+    const x = Math.sign(c) * Math.abs(c) ** (2 / ex), y = Math.sign(s) * Math.abs(s) ** (2 / ex);
+    return [Math.round(hw * x * (1 - taper * Math.max(0, y)) * 1e4) / 1e4, Math.round((cy + hy * y) * 1e4) / 1e4];
+  });
+};
+/** The windscreen (J22, Kyoto: about 1.5 m across, 0.85 m tall): one wide rounded glass wrapping the canopy's front, its foot 2.3 m high. */
+const N7_SCREEN: Pt[] = n7Oval(0.76, 2.29, 3.12, 0.3, 3.2);
+
+const N700S_FACE: SeriesCabFace = {
+  dJoin: N7_JOIN, dSide: 6.0, first: N7_JOIN + 1.3, reach: 0, roofFrom: 9, wrap: true, cols: [10, 10, 1, 2], tolerance: 0.03,
+  profile: N7_PROFILE, corner: [...N7_CORNER], cornerDepth: [...N7_DEPTH], rows: N7_ROWS, reshape: n7Reshape,
+  // the lower snout in the skirt's colour (silver grey, JR Kyushu's red), white above
+  bands: (l) => [[0, 0.9, l.bands[0]![2]], [0.9, 9, "white"]],
+  // the windscreen: one pane, no centre pillar (J30, Kyoto), a single wiper
+  fields: [{ mat: "cabGlass", pts: N7_SCREEN }, { mat: "cabMask", pts: n7Lamp(1, 0.14) }, { mat: "cabMask", pts: n7Lamp(-1, 0.14) }, { mat: "cabGlass", pts: n7Lamp(1, 0) }, { mat: "cabGlass", pts: n7Lamp(-1, 0) }, { mat: "lampHead", pts: n7Lamp(1, -0.35) }, { mat: "lampHead", pts: n7Lamp(-1, -0.35) }],
+  // the distant model's glass: inside the windscreen's outline
+  panes: [{ lat: [-0.6, 0.6], y: [2.34, 3.05], r: 0.25 }],
+  wipers: [[[0.3, 2.37], [-0.16, 2.86]]],
+};
+
+/** A thin line of paint along a centre line (d, y; y ascending) as a sweep's front and back edges by height. */
+function n7Line(pts: ReadonlyArray<readonly [number, number]>, t: number): { front: Pt[]; back: Pt[] } {
+  const dAt = (y: number) => edgeAt(pts.map(([d, yy]): Pt => [yy, d]), y);
+  const [y0, y1] = [pts[0]![1], pts[pts.length - 1]![1]];
+  const ys = Array.from({ length: 13 }, (_, i) => y0 + ((y1 - y0) * i) / 12);
+  return { front: ys.map((y): Pt => [y, dAt(y - t / 2)]), back: ys.map((y): Pt => [y, dAt(y + t / 2)]) };
+}
+
+const N7_PALETTE = { white: c("#f3f3f0"), roofG: c("#e8e8e5", 0.6), cabMask: c("#1b1d20", 0.3) };
+
 export const N700S: ShinkansenSeries = {
-  endLength: 27.35, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.6, lean: 0.96, B: 0.75, A: 1.05,
-  // the "dual supreme wing" nose: low and flat, its edges sharpened
-  nose: nose(10.7, 0.04, 2.6, [[0, 1.25], [0.6, 1.55], [3.0, 2.0], [6.0, 2.45], [8.4, 2.95], [9.6, 3.4], [10.8, 3.6]], [[0, 1.2], [0.6, 1.45], [3.0, 1.75], [6.0, 2.05], [8.4, 2.45], [9.6, 2.8], [10.8, 3.0]], [[0, 1.15], [1.5, 1.3], [4.0, 1.45]], [[0, 1.1], [1.5, 1.05]], [[0, 1.08], [0.6, 0.6], [2.0, 0.75]]),
-  windscreen: [8.0, 9.55, 0.07, 0.95], lamps: [2.6, 1.55],
-  windows: [[2.0, 2.6]], windowW: 0.9, pitch: 1.04, door: [1.3, 3.05, 1.95, 2.6], doorW: 1.0,
-  bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
+  endLength: 27.35, midLength: 25.0, W: N7_HW, Y: 1.45, S: 3.0, C: 3.6, lean: 0.96, B: 0.3, A: 0.9,
+  nose: nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]), windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: N700S_FACE,
+  // small windows with rounded ends, one a seat row (1.04 m); single-leaf plug doors, a narrow window high in the leaf
+  windows: [[2.09, 2.66]], windowW: 0.5, pitch: 1.04, door: [1.32, 3.25, 2.3, 2.9], doorW: 0.8, doorGlassW: 0.3,
+  layout: {
+    // the crew door just behind the canopy, the front passenger door, 13 seat rows, the rear door 0.75 m from the end
+    end: { doors: [[0.15, 0.75, -1], [1.15, 1.95, -1], [16.48, 17.28, 1]], windows: Array.from({ length: 13 }, (_, i): [number, number] => [2.85 + 1.04 * i, 3.35 + 1.04 * i]) },
+    // a door at each end, 20 seat rows between them
+    middle: { doors: [[0.35, 1.15, -1], [23.35, 24.15, 1]], windows: Array.from({ length: 20 }, (_, i): [number, number] => [2.12 + 1.04 * i, 2.62 + 1.04 * i]) },
+  },
+  // the leading bogie under the canopy's rear, 17.5 m ahead of the rear one; the skirts hang low: no underfloor box below them
+  endBogies: [6.1 - N7_JOIN, 23.6 - N7_JOIN], bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5, fittings: () => {},
+  pantographCover: { len: 3.6, hw: 0.72, top: [2.5, 0.52], h: 0.42, mat: "white" },
   liveries: {
-    jrCentral: { title: "JR Central", palette: { white: c("#f3f3f0"), blue: c("#1a3f9a"), roofG: c("#e6e6e3", 0.6), skirtG: c("#dcdcd8") }, bands: [[0, 1.75, "white"], [1.75, 1.92, "blue"], [1.92, 2.65, "white"], [2.65, 2.7, "blue"], [2.7, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "783-1" },
-    jrKyushu: { title: "JR Kyushu", palette: { white: c("#f3f3f0"), blue: c("#1a3f9a"), red: c("#c8102e"), roofG: c("#e6e6e3", 0.6), skirtG: c("#dcdcd8") }, bands: [[0, 1.75, "white"], [1.75, 1.92, "blue"], [1.92, 1.96, "red"], [1.96, 2.65, "white"], [2.65, 2.7, "blue"], [2.7, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "Y1" },
+    jrCentral: {
+      title: "JR Central", palette: { ...N7_PALETTE, blue: c("#123c96"), skirtG: c("#ccd0d3", 0.35) },
+      // the wide blue line under the windows, the thin one under it
+      bands: [[0, 0.9, "skirtG"], [0.9, 1.62, "white"], [1.62, 1.7, "blue"], [1.7, 1.8, "white"], [1.8, 2.0, "blue"], [2.0, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "783-1",
+      endSweeps: [
+        // the wide line's pointed front end just ahead of the crew door, and the blade ahead of it rising to the door
+        { mat: "blue", front: [[1.8, 9.0], [2.0, 8.45]], back: [[1.8, 9.0], [2.0, 9.0]] },
+        { mat: "blue", front: [[1.66, 5.45], [2.14, 8.1]], back: [[1.66, 5.45], [1.97, 9.1], [2.14, 8.1]] },
+      ],
+    },
+    jrKyushu: {
+      title: "JR Kyushu", palette: { ...N7_PALETTE, red: c("#c8102e", 0.45), kBlack: c("#141517", 0.35) },
+      // Nishi Kyushu Shinkansen "Kamome": red below 0.9 m, a thin red line under the windows
+      bands: [[0, 0.9, "red"], [0.9, 1.7, "white"], [1.7, 1.74, "red"], [1.74, 9, "white"]], roof: "roofG", skirt: "red", number: "Y1",
+      endSweeps: [
+        // the thin line dipping along the nose's side ahead of the crew door
+        { mat: "red", ...n7Line([[5.4, 1.41], [6.3, 1.44], [7.2, 1.53], [8.0, 1.62], [8.7, 1.68], [9.0, 1.7]], 0.04) },
+      ],
+      // the black canopy round the windscreen, one oval seen head-on (its thin gold edging is left out)
+      faceFields: [{ mat: "kBlack", pts: n7Oval(0.9, 2.17, 3.5, 0.25, 2.8) }],
+    },
   },
   weight: { end: 44, middle: 42 }, power: 1220, maxspeed: 300,
 };
 
+/**
+ * The E5's paint on its nose (photo-e5-s11-sendai-20090725.jpg near side-on, 46 - 53 px/m; the
+ * E514-1, H514-1, U2, U15 and U44 photographs): the tokiwa green sweeps down from the roof over the
+ * whole nose to the tip, where its edge crosses the coupler hatch at mid height; along the nose's
+ * sides the edge runs level back to 4.5 m and then climbs over the white cheek to meet the stripe at
+ * the body. The pink (the H5's purple) stripe runs forward from the body below that edge and dies
+ * out on it 9 m behind the tip. Edges are [y, d behind the tip].
+ */
+const E5_GREEN_EDGE: Pt[] = [[1.27, 4.5], [1.32, 6.0], [1.45, 6.7], [1.68, 7.4], [1.9, 9.0], [2.06, 11.0], [2.17, 13.0], [2.22, 15.0]];
+const E5_STRIPE_FOOT: Pt[] = [[1.88, 9.0], [1.95, 11.0], [2.03, 13.0], [2.079, 15.0], [2.08, 99]];
+const E5_STRIPE: readonly [number, number] = [2.08, 2.22];
+
+/** The coupler hatch's seam on the nose's tip: an ellipse across the front, [lat, y] corners of short bars. */
+function e5HatchSeam(): Array<{ mat: string; pts: Pt[]; fine: number }> {
+  const [cy, a, b, t, n] = [1.25, 0.98, 0.38, 0.022, 28];
+  return Array.from({ length: n }, (_, i) => {
+    const [p, q] = [(2 * Math.PI * i) / n, (2 * Math.PI * (i + 1)) / n];
+    const o = (th: number, k: number): Pt => [(a + k) * Math.cos(th), cy + (b + k) * Math.sin(th)];
+    return { mat: "rubber", pts: [o(p, -t), o(q, -t), o(q, t), o(p, t)], fine: 2 };
+  });
+}
+
+/**
+ * The E5's 15 m nose (the photographs above, the published 15 m): long and low, its tip at the coupler
+ * (1.15 m) under a rounded hatch, the top rising in a gentle line (1.94 m 2.3 m back, 2.27 m at 6 m),
+ * staying low under the canopy and then rising to the roof at the join. The white lower jaw (up to
+ * the hatch's middle, about two thirds of the tip's height head on) is a blunt spatula reaching full
+ * width 2.2 - 3.1 m back; the green hood over it is narrower, its elliptic corners reaching full
+ * width 5 - 8 m back, so the jaw shows round its cheeks. The canopy cab stands out of it as its own
+ * bubble (`e5Canopy`).
+ */
+const E5_FACE: SeriesCabFace = {
+  dJoin: 15.0, dSide: 2.0, first: 17.4, roofFrom: 3.0, reach: 0, cols: [2, 12, 1, 3], tolerance: 0.02,
+  profile: [[0.5, 0.45], [0.6, 0.18], [0.75, 0.05], [0.9, 0.01], [1.05, 0], [1.15, 0], [1.27, 0.01], [1.35, 0.03], [1.5, 0.15], [1.62, 0.4], [1.72, 0.8], [1.82, 1.45], [1.94, 2.3], [2.03, 3.2], [2.15, 4.1], [2.2, 5.1], [2.27, 6.0], [2.35, 7.3], [2.45, 8.6], [2.6, 9.9], [2.85, 11.0], [3.2, 11.9], [3.5, 12.8], [3.62, 13.8], [3.65, 15.0]],
+  corner: [[0.5, 1.0], [1.27, 1.1], [1.35, 1.45], [3.0, 1.4], [3.65, 1.0]],
+  cornerDepth: [[0.5, 2.2], [0.75, 2.4], [0.95, 2.6], [1.15, 2.9], [1.27, 3.1], [1.35, 5.0], [1.55, 7.0], [1.72, 7.8], [1.94, 8.0], [2.15, 7.6], [2.27, 6.0], [2.35, 5.0], [2.45, 4.0], [2.6, 3.1], [2.85, 2.4], [3.2, 2.0], [3.5, 1.6], [3.62, 1.15], [3.65, 0.02]],
+  rows: [0.5, 0.6, 0.75, 0.9, 1.05, 1.15, 1.27, 1.35, 1.5, 1.62, 1.72, 1.82, 1.94, 2.03, 2.15, 2.27, 2.35, 2.45, 2.6, 2.85, 3.2, 3.5, 3.62, 3.65],
+  bands: () => [[0, 1.27, "white"], [1.27, 9, "green"]],
+  paint: [
+    // the white lower nose round the tip and along its sides, ahead of the grey skirt
+    { mat: "white", front: [[0.5, -9], [1.27, -9]], back: [[0.5, 3.5], [1.27, 4.5]], top: 1.27 },
+    { mat: "white", front: E5_GREEN_EDGE, back: [[1.27, 99], [2.08, 99]], top: 2.08 },
+    { mat: "stripe", front: E5_GREEN_EDGE.filter(([y]) => y >= 1.88), back: E5_STRIPE_FOOT, top: E5_STRIPE[1] },
+    { mat: "green", front: [[1.27, -9], [2.22, -9]], back: E5_GREEN_EDGE, top: E5_STRIPE[1] },
+  ],
+  decals: e5HatchSeam(),
+  panes: [],
+};
+
+/** The canopy's crown along the nose (d behind the tip, height), from where it rises out of the nose to where it runs into the roof. */
+const E5_CANOPY_TOP: Pt[] = [[6.0, 2.3], [6.3, 2.65], [6.6, 2.88], [7.2, 3.0], [8.4, 3.12], [9.5, 3.2], [10.1, 3.25], [11.0, 3.33], [12.0, 3.42], [12.6, 3.46]];
+/** The nose's own centre line under it (the face's profile, d to height). */
+const E5_NOSE_TOP: Pt[] = [[5.1, 2.2], [6.0, 2.27], [7.3, 2.35], [8.6, 2.45], [9.9, 2.6], [11.0, 2.85], [11.9, 3.2], [12.8, 3.5], [13.8, 3.62], [15.0, 3.65]];
+
+/**
+ * The E5's canopy cab (photo-h514-1-omiya-20160327.jpg, photo-e5-s11-sendai-20090725.jpg,
+ * photo-series-e5-u15-yamabiko-50.jpg): a bubble 1.9 - 2.1 m wide standing out of the nose from 6 m
+ * behind the tip and running into the roof by 12 m, round in plan at its front, its sides steep. Its
+ * windscreen is a visor over the front and crown inside a green rim, then a band on the sides back
+ * to 10.2 m rising to the rear; the four headlights shine from under the glass's top edge. Drawn on
+ * its own, sunk into the nose.
+ */
+function e5Canopy(m: MeshBuilder, X: (d: number) => number, dJoin: number): void {
+  const [d0, d1, K] = [6.05, 12.0, 16];
+  const W = (d: number) => {
+    const w = d < 10.5 ? 0.95 + (Math.max(0, d - 7.3) / 3.2) * 0.1 : 1.05 - ((d - 10.5) / (d1 - 10.5)) * 0.15;
+    const t = Math.min(1, (d - d0) / 0.9);
+    return w * Math.sqrt(Math.max(0, 1 - (1 - t) * (1 - t)));
+  };
+  // (edgeAt reads a [key, value] table: here d to height)
+  const top = (d: number) => edgeAt(E5_CANOPY_TOP, d);
+  const base = (d: number) => edgeAt(E5_NOSE_TOP, d) - 0.55;
+  const hgt = (d: number) => Math.max(0, d >= d1 - 1e-9 ? 0 : top(d) - base(d));
+  const ds: number[] = [];
+  for (let d = d0; d < d1 - 1e-9; d += d < 8 ? 0.15 : 0.3) ds.push(d);
+  ds.push(d1);
+  // the glass's foot by d (on the front 2.42 m up, rising along the sides) and the side glass's inner
+  // edge (|z| = 0.62 W, a fixed angle on every section)
+  const [visor, side] = [9.3, 10.4];
+  const foot = (d: number) => 2.5 + 0.06 * Math.max(0, d - 6.45);
+  const phiSide = Math.acos(Math.pow(0.55, 2.5));
+  // a section's angles over its left half: even steps between fixed stations, the glass's foot always
+  // at index 4 and the side glass's edge at index 6, so that both run as straight lines between sections
+  const angles = (d: number): number[] => {
+    const h = hgt(d), f = foot(d);
+    const knots: Array<[number, number]> = [[0, 0]];
+    if (h > 0 && f > base(d) && f < base(d) + h) knots.push([4, Math.min(Math.asin(Math.pow((f - base(d)) / h, 1 / 0.6)), phiSide - 0.1)]);
+    if (d > visor && d <= side + 0.3) knots.push([6, phiSide]);
+    knots.push([K / 2, Math.PI / 2]);
+    const half = Array.from({ length: K / 2 + 1 }, (_, k) => {
+      let i = 1;
+      while (knots[i]![0] < k) i++;
+      const [[ka, a], [kb, b]] = [knots[i - 1]!, knots[i]!];
+      return a + ((b - a) * (k - ka)) / (kb - ka);
+    });
+    return [...half, ...half.slice(0, -1).reverse().map((a) => Math.PI - a)];
+  };
+  // a section: from the left foot over the crown to the right foot (lat, y)
+  const sec = (d: number): Array<[number, number]> => angles(d).map((ph) => {
+    const c = Math.cos(ph), s = Math.sin(ph);
+    return [W(d) * Math.sign(c) * Math.pow(Math.abs(c), 0.4), base(d) + hgt(d) * Math.pow(s, 0.6)];
+  });
+  // the surface's height over lateral z on the section at d
+  const yAt = (d: number, z: number) => {
+    const c = Math.pow(Math.min(1, Math.abs(z) / Math.max(W(d), 1e-6)), 2.5);
+    return base(d) + hgt(d) * Math.pow(Math.sqrt(Math.max(0, 1 - c * c)), 0.6);
+  };
+  // the glass: a visor over the canopy's front and crown to 9 m inside a green rim (its foot 2.42 m
+  // up), then on its sides only back to 10.2 m under the green crown, its foot rising to the rear
+  const glassAt = (d: number, y: number, z: number) =>
+    y >= foot(d) && ((d <= visor && Math.abs(z) < 0.88 * W(d)) || (d <= side && Math.abs(z) > 0.55 * W(d) && y <= top(d) - 0.03));
+  const P = (d: number, [z, y]: [number, number]): Vec3 => [X(d - dJoin), y, z];
+  // each triangle wound to face away from the canopy's axis
+  const out = (a: Vec3, b: Vec3, c: Vec3, ax: Vec3, mat: string) => {
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const g = [(a[0] + b[0] + c[0]) / 3 - ax[0], (a[1] + b[1] + c[1]) / 3 - ax[1], (a[2] + b[2] + c[2]) / 3 - ax[2]];
+    if (n[0] * g[0] + n[1] * g[1] + n[2] * g[2] >= 0) m.tri(mat, a, b, c);
+    else m.tri(mat, a, c, b);
+  };
+  m.scope("skin", () => {
+    for (let i = 0; i + 1 < ds.length; i++) {
+      const [da, db] = [ds[i]!, ds[i + 1]!], [sa, sb] = [sec(da), sec(db)];
+      const dm = (da + db) / 2, ax: Vec3 = [X(dm - dJoin), base(dm), 0];
+      for (let k = 0; k < K; k++) {
+        const y = (sa[k]![1] + sa[k + 1]![1] + sb[k]![1] + sb[k + 1]![1]) / 4, z = (sa[k]![0] + sa[k + 1]![0] + sb[k]![0] + sb[k + 1]![0]) / 4;
+        const mat = glassAt(dm, y, z) ? "e5Glass" : "green";
+        out(P(da, sa[k]!), P(db, sb[k]!), P(db, sb[k + 1]!), ax, mat);
+        out(P(da, sa[k]!), P(db, sb[k + 1]!), P(da, sa[k + 1]!), ax, mat);
+      }
+    }
+  });
+  // the four headlights under the glass's top edge, laid on the canopy's crown
+  m.scope("headlights", () => {
+    for (const z of [-0.33, -0.11, 0.11, 0.33]) {
+      const [da, db, w] = [7.05, 7.3, 0.05];
+      const Q = (d: number, zz: number): Vec3 => [X(d - dJoin), yAt(d, zz) + 0.01, zz];
+      out(Q(da, z - w), Q(db, z - w), Q(db, z + w), [X(7.2 - dJoin), base(7.2), 0], "lampHead");
+      out(Q(da, z - w), Q(db, z + w), Q(da, z + w), [X(7.2 - dJoin), base(7.2), 0], "lampHead");
+    }
+  });
+}
+
+/** The E5's own fittings: the canopy on the end car, the plain underfloor box on every car. */
+function e5Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  if (car.end) m.scope("canopy", () => e5Canopy(m, X, E5_FACE.dJoin));
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), E5.B - 0.35, E5.B, -E5.W * 0.8, E5.W * 0.8));
+}
+
+/** The E5's tokiwa green, sampled from the photographs in diffuse light. */
+const E5_GREEN = "#0f8676";
+/** The canopy's windscreen: a lighter, blue-tinted, reflective glass (the photographs). */
+const E5_GLASS: MaterialSpec = { color: "#4f7896", metallic: 0.45, roughness: 0.08, glass: true };
+
 export const E5: ShinkansenSeries = {
-  endLength: 26.5, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.65, lean: 0.95, B: 0.75, A: 1.05,
-  // the 15 m nose rising in a long line to the canopy cab
-  nose: nose(13.0, 0.04, 2.3, [[0, 1.2], [1.0, 1.55], [5.0, 2.0], [10.0, 2.5], [12.4, 3.0], [14.0, 3.45], [15.0, 3.65]], [[0, 1.15], [1.0, 1.45], [5.0, 1.75], [10.0, 2.1], [12.4, 2.45], [14.0, 2.85], [15.0, 3.0]], [[0, 1.1], [3.0, 1.3], [6.0, 1.45]], [[0, 1.05], [2.0, 1.05]], [[0, 1.03], [0.8, 0.55], [3.0, 0.75]]),
-  windscreen: [12.3, 14.0, 0.07, 0.95], lamps: [4.0, 1.5],
-  windows: [[2.0, 2.55]], windowW: 0.75, pitch: 1.0, door: [1.3, 3.05, 1.95, 2.6], doorW: 1.0,
+  endLength: 26.5, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.65, lean: 0.95, B: 0.5, A: 1.05,
+  // the 15 m nose with its canopy cab, drawn as a cab face (E5_FACE) and the canopy (e5Fittings)
+  nose: nose(0.1, 1, 2, [[0, 3.65]], [[0, 3.0]], [[0, 1.45]], [[0, 1.05]], [[0, 0.75]]),
+  windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: E5_FACE, fittings: e5Fittings,
+  // the distant canopy: its glass visor
+  lodRoof: { d: [6.4, 10.4], hw: 0.85, y: [2.3, 3.25], mat: LOD_GLASS },
+  // the windows standing on the stripe; the door's narrow window high in the leaf; the crew door
+  // ahead of the passenger door behind the nose
+  windows: [[2.25, 2.72]], windowW: 0.66, pitch: 1.04, door: [1.3, 3.2, 2.45, 3.0], doorW: 1.0, doorGlassW: 0.3,
+  sidePanels: { end: [{ d: [15.3, 16.25], y: [1.35, 3.2], kind: "seam" }, { d: [15.62, 15.93], y: [2.45, 3.0], kind: "window" }] },
+  // the leading bogie under the nose: 17.5 m bogie centres, the rear bogie 3.5 m from the inner end
+  endBogies: [5.25 - 15.0, 22.75 - 15.0],
   bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
   liveries: {
-    hayabusa: { title: "E5 Hayabusa", palette: { green: c("#00825a"), white: c("#f2f2ef"), pink: c("#e5649a"), roofG: c("#00825a", 0.5), skirtG: c("#d9d9d6") }, bands: [[0, 2.0, "white"], [2.0, 2.06, "pink"], [2.06, 9, "green"]], roof: "roofG", skirt: "skirtG", number: "E514-1" },
-    h5: { title: "H5 Hokkaido", palette: { green: c("#00825a"), white: c("#f2f2ef"), purple: c("#7a4a9e"), roofG: c("#00825a", 0.5), skirtG: c("#d9d9d6") }, bands: [[0, 2.0, "white"], [2.0, 2.06, "purple"], [2.06, 9, "green"]], roof: "roofG", skirt: "skirtG", number: "H514-1" },
+    hayabusa: { title: "E5 Hayabusa", palette: { green: c(E5_GREEN), white: c("#eff0ee"), stripe: c("#e2509a"), roofG: c(E5_GREEN, 0.5), skirtG: c("#d9d9d6"), e5Glass: E5_GLASS }, bands: [[0, E5_STRIPE[0], "white"], [E5_STRIPE[0], E5_STRIPE[1], "stripe"], [E5_STRIPE[1], 9, "green"]], roof: "roofG", skirt: "skirtG", number: "E514-1" },
+    h5: { title: "H5 Hokkaido", palette: { green: c(E5_GREEN), white: c("#eff0ee"), stripe: c("#7a4a9e"), roofG: c(E5_GREEN, 0.5), skirtG: c("#d9d9d6"), e5Glass: E5_GLASS }, bands: [[0, E5_STRIPE[0], "white"], [E5_STRIPE[0], E5_STRIPE[1], "stripe"], [E5_STRIPE[1], 9, "green"]], roof: "roofG", skirt: "skirtG", number: "H514-1" },
   },
   weight: { end: 46, middle: 45 }, power: 1200, maxspeed: 320,
 };
 
+// --- the 500 series ------------------------------------------------------------
+//
+// Read from the side-on photo of the V5 end car at Himeji (photo-500kei-himeji.jpg, 84 px/m from
+// the 3.69 m body height and the 1.70 m door), the W2 end car 521-2 and the V2 end car 521-7002 at
+// three quarters, and 521-1 at the Kyoto Railway Museum head on (assets/shinkansen-500/SOURCES.md).
+// Heights over the rail, d behind the nose's tip.
+//
+// The nose: the tip at 0.79 m, a flat oval snout rising at a third to the canopy's foot 2.75 m back at
+// 1.92 m; the fighter-like canopy (glass, then a dark hood) on top from 2.75 to 8.6 m; the roof still
+// rising behind the first door (3.49 m at the join, 9.65 m, full 3.69 m 14 m back). In plan the nose
+// rounds to a blunt spatula (elliptic corners): its lower half full width 6.5 m behind its centre line,
+// its top at the join. A blue-grey tongue covers the top from the tip round the domed canopy into the
+// roof's stripe; a crease runs round the snout at 1.0 m, the lower body's edge. The first door 9.8 -
+// 10.45 m, the window band (dark, the blue band under it) from 10.86 m, windows 1.01 m apart.
+const S500_JOIN = 9.65;
+const S500_PROFILE: Pt[] = [
+  [0.3, 1.9], [0.4, 1.2], [0.5, 0.62], [0.6, 0.32], [0.7, 0.12], [0.79, 0], [0.88, 0.03], [0.97, 0.2], [1.07, 0.47], [1.18, 0.74], [1.29, 1.0], [1.48, 1.5], [1.64, 2.0], [1.8, 2.5],
+  [1.92, 2.78], [2.1, 3.15], [2.3, 3.6], [2.5, 4.07], [2.64, 4.45], [2.78, 4.8], [2.89, 5.1], [3.07, 6.0], [3.19, 7.0], [3.31, 8.0], [3.43, 9.0], [3.49, S500_JOIN],
+];
+/** The tongue's edge on the nose's sides ([y, d]): just under the snout's top, under the canopy, back into the roof stripe at the join. */
+const S500_TONGUE: Pt[] = [[1.03, 0.3], [1.08, 0.55], [1.2, 1.1], [1.4, 1.8], [1.6, 2.5], [1.8, 3.15], [2.0, 3.8], [2.3, 4.7], [2.6, 5.7], [2.75, 6.6], [2.8, 8.0], [3.1, 9.0], [3.4, 9.66], [3.6, 9.66]];
+/** A polygon from its right half ([lat, y], from the bottom of the centre line to its top), mirrored. */
+const mirror = (half: Pt[]): Pt[] => [...half, ...half.slice(1, -1).reverse().map(([l, y]): Pt => [-l, y])];
+const S500_ROWS = [...new Set([...S500_PROFILE.map(([y]) => y), 1.0, 1.02, 1.4, 2.0, 2.2, 2.4, 2.6, 2.7, 2.83, 3.0, 3.1, 3.25, 3.33, 3.37])].sort((a, b) => a - b);
+const S500_FACE: SeriesCabFace = {
+  dJoin: S500_JOIN, reach: 0, first: S500_JOIN + 1.15, roofFrom: 9, cols: [1, 14, 1, 1], tolerance: 0.02,
+  profile: S500_PROFILE,
+  // a round nose: the corner is the whole half width, as deep as the nose ahead of the join
+  corner: [[0.3, 2.0], [3.49, 2.0]],
+  // the snout's lower half blunter: full width 6.5 m behind its centre line up to the tip's height, the top reaching it at the join
+  cornerDepth: S500_PROFILE.map(([y, d]): Pt => { const t = Math.min(1, Math.max(0, (y - 1.1) / 0.8)); return [y, Math.max(0.05, Math.min(S500_JOIN - d, 6.5 + t * 9))]; }),
+  rows: S500_ROWS,
+  bands: (l) => [[0, 9, l.bands[0]![2]]],
+  lodBands: [[0, 1.6, "silver"], [1.6, 9, "tongue"]],
+  lod: { profile: [...S500_PROFILE.slice(0, -1), [3.69, S500_JOIN]], corner: [[0.3, 2.0], [3.69, 2.0]], rows: [0.3, 0.5, 0.79, 1.29, 1.92, 2.64, 3.07, 3.43, 3.69] },
+  paint: [
+    { mat: "tongue", front: [[1.03, -9], [3.7, -9]], back: S500_TONGUE, top: 9 },
+    { mat: "crease", front: [[1.0, -9], [1.02, -9]], back: [[1.0, 99], [1.02, 99]] },
+  ],
+  fields: [
+    // the canopy: its dark frame and hood, the glass in it (lat, y); the hood's rear end 8.6 m back
+    { mat: "canopy", pts: mirror([[0, 1.92], [0.45, 1.97], [0.68, 2.1], [0.8, 2.35], [0.86, 2.7], [0.84, 3.05], [0.7, 3.25], [0.4, 3.34], [0, 3.37]]) },
+    { mat: "cabGlass", pts: mirror([[0, 2.06], [0.42, 2.1], [0.62, 2.22], [0.74, 2.45], [0.79, 2.75], [0.76, 2.9], [0.6, 3.08], [0, 3.14]]) },
+  ],
+  panes: [],
+  // the headlights in the canopy's dark foot, under the glass
+  lamps: [[-0.6, 2.13, 0.05, "lampHead"], [-0.47, 2.05, 0.045, "lampHead"], [-0.32, 2.01, 0.035, "lampRed"], [0.32, 2.01, 0.035, "lampRed"], [0.47, 2.05, 0.045, "lampHead"], [0.6, 2.13, 0.05, "lampHead"]],
+};
+const S500_BLUE_GREY = "#8a90b6";
+const s500Palette = (top: string, band: string, stripe = top): Record<string, MaterialSpec> => ({
+  stripe: c(stripe, 0.4), silver: c("#c4cacf", 0.3), dark: c("#353c44", 0.4), blue: c(band), tongue: c(top, 0.35), crease: c("#5c6168", 0.6), canopy: c("#4a5159", 0.3), roofG: c("#b3b9bf", 0.4), skirtG: c("#b8bec3", 0.45),
+});
+// the window band dark, a blue band under it; silver ahead of the window band round the first door
+const s500Bands = (): Band[] => [[0, 1.83, "silver"], [1.83, 2.14, "blue"], [2.14, 2.77, "dark"], [2.77, 9, "silver"]];
+const S500_SWEEPS: ShinkansenLivery["endSweeps"] = [{ mat: "silver", front: [[1.8, -9], [2.8, -9]], back: [[1.8, 10.86], [2.8, 10.86]] }];
+
 export const S500: ShinkansenSeries = {
-  endLength: 27.0, midLength: 25.0, W: 1.6, Y: 1.3, S: 2.6, C: 3.69, lean: 0.92, B: 0.75, A: 1.1,
-  // the round body and the 15 m needle nose, the cab canopy far back
-  nose: nose(14.0, 0.03, 2.0, [[0, 1.55], [2.0, 2.0], [6.0, 2.55], [10.0, 3.05], [13.0, 3.45], [15.0, 3.69]], [[0, 1.5], [2.0, 1.85], [6.0, 2.15], [10.0, 2.35], [13.0, 2.5], [15.0, 2.6]], [[0, 1.45], [3.0, 1.35], [8.0, 1.3]], [[0, 1.4], [3.0, 1.1]], [[0, 1.35], [1.0, 0.7], [3.0, 0.75]]),
-  windscreen: [11.6, 13.4, 0.07, 0.9], lamps: [3.4, 1.85],
-  windows: [[1.95, 2.5]], windowW: 0.75, pitch: 1.0, door: [1.3, 3.0, 1.95, 2.55], doorW: 1.0,
-  bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
+  endLength: 27.0, midLength: 25.0, W: 1.6, Y: 1.5, S: 2.8, C: 3.69, lean: 0.93, B: 0.75, A: 1.05,
+  nose: nose(14.0, 0.03, 2.0, [[0, 1.55], [15.0, 3.69]], [[0, 1.5], [15.0, 2.6]], [[0, 1.45], [8.0, 1.3]], [[0, 1.4], [3.0, 1.1]], [[0, 1.35], [3.0, 0.75]]),
+  windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S500_FACE,
+  endCrown: [[0, 3.49], [0.35, 3.52], [1.35, 3.585], [2.35, 3.63], [3.35, 3.665], [4.35, 3.69]],
+  // small windows in the dark band, 1.04 m apart; narrow single-leaf plug doors with a narrow window high up
+  windows: [[2.2, 2.73]], windowW: 0.69, pitch: 1.04, door: [1.31, 3.0, 2.2, 2.72], doorW: 0.7, doorGlassW: 0.3,
+  // the leading bogie 5.4 m behind the tip (the photo's wheels), the rear one 17.5 m behind it
+  endBogies: [5.4 - S500_JOIN, 5.4 - S500_JOIN + 17.5],
+  bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5, fittings: s500Fittings,
+  // windows 1.01 m apart from 10.86 m behind the tip (body d 1.54), a door at each end
+  layout: {
+    end: { doors: [[0.15, 0.85, 1], [14.93, 15.63, 1]], windows: Array.from({ length: 13 }, (_, i): [number, number] => [1.54 + i * 1.01, 2.23 + i * 1.01]) },
+    middle: { doors: [[0.6, 1.3, -1], [23.2, 23.9, 1]], windows: Array.from({ length: 21 }, (_, i): [number, number] => [2.0 + i * 1.01, 2.69 + i * 1.01]) },
+  },
   liveries: {
-    original: { title: "Nozomi", palette: { grey: c("#a7b0b8"), dark: c("#3a4555"), blue: c("#2a4f9a"), roofG: c("#9aa3ab", 0.5), skirtG: c("#5d6670") }, bands: [[0, 1.85, "grey"], [1.85, 1.9, "blue"], [1.9, 2.55, "dark"], [2.55, 9, "grey"]], roof: "roofG", skirt: "skirtG", number: "521-1" },
-    kodama: { title: "Kodama", palette: { grey: c("#b9c0c6"), dark: c("#3a4555"), blue: c("#2a4f9a"), white: c("#eef0f1"), roofG: c("#a9b0b6", 0.5), skirtG: c("#5d6670") }, bands: [[0, 1.85, "white"], [1.85, 1.92, "blue"], [1.92, 2.55, "dark"], [2.55, 9, "grey"]], roof: "roofG", skirt: "skirtG", number: "521-7001" },
+    // the W sets: a lavender-grey top and roof, the T-shaped wing pantographs
+    original: { title: "Nozomi", palette: s500Palette(S500_BLUE_GREY, "#34529f"), bands: s500Bands(), roof: "roofG", skirt: "skirtG", number: "521-1", endSweeps: S500_SWEEPS, roofStripe: { z: 0.75, mat: "stripe" }, pantograph: "wing" },
+    // the V sets: a brighter blue top, single-arm pantographs
+    kodama: { title: "Kodama", palette: s500Palette("#3d5f9c", "#3f63ad", "#6f7a96"), bands: s500Bands(), roof: "roofG", skirt: "skirtG", number: "521-7001", endSweeps: S500_SWEEPS, roofStripe: { z: 0.75, mat: "stripe" }, pantograph: "single" },
   },
   weight: { end: 41, middle: 40 }, power: 1140, maxspeed: 300,
 };
 
+/** The 500's underfloor and, on the end car, the bogie fairings ahead of and beside the leading bogie: capsules on the nose's sides. */
+function s500Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  // the side skirt down to 0.31 m between the bogies' cuts (and from inside the nose over its join)
+  const [t0, t1, reach] = [car.trucks[0]!, car.trucks[1]!, 2.5 / 2 + 0.43 + 0.25];
+  const spans: Array<[number, number]> = car.end ? [[-0.3, t1 - reach], [t1 + reach, car.length - 0.02]] : [[0.02, t0 - reach], [t0 + reach, t1 - reach], [t1 + reach, car.length - 0.02]];
+  m.scope("underfloor", () => { for (const [a, e] of spans) if (e > a + 0.05) block(m, "skirtG", X(e), X(a), 0.31, 0.76, -1.41, 1.41); });
+  if (!car.end) return;
+  m.scope("bogie fairings", () => {
+    // d spans behind the tip; each a capsule of 8 sides round lat 1.36, 0.49 m up
+    for (const [d0, d1] of [[3.25, 4.4], [4.4, 6.25], [6.25, 7.5]] as const)
+      for (const sd of [1, -1]) {
+        const ring = (k: number): Ring => Array.from({ length: 8 }, (_, i): [number, number] => { const a = (i / 8) * Math.PI * 2; return [sd * 1.36 + 0.1 * k * Math.cos(a), 0.49 + 0.16 * k * Math.sin(a)]; });
+        const xa = X(d0 - S500_JOIN), xb = X(d1 - S500_JOIN), n = 4;
+        // rounded ends: the section grows over the first and last 0.35 m
+        const at = (t: number) => Math.sqrt(Math.max(0.04, 1 - Math.pow(Math.max(0, Math.abs(2 * t - 1) * (d1 - d0) / 2 - ((d1 - d0) / 2 - 0.35)) / 0.35, 2)));
+        for (let i = 0; i < n; i++) m.sweep("skirtG", "x", ring(at(i / n)), xa + ((xb - xa) * i) / n, ring(at((i + 1) / n)), xa + ((xb - xa) * (i + 1)) / n, i === 0 || i === n - 1);
+      }
+  });
+}
+
+/**
+ * A T-shaped wing pantograph (the 500's W sets): one streamlined post hinged at its foot, folding
+ * flat toward +X, carrying a level wing with its carbon strip; on a low shroud of `shroud` paint.
+ */
+function wingPantograph(m: MeshBuilder, x: number, roofY: number, raised: boolean, shroud: string): void {
+  const baseY = roofY + 0.25, post = RAIL_COLLECTOR_TOP - 0.12 - (baseY + 0.1);
+  m.scope("shroud", () => {
+    for (const sd of [1, -1]) m.slab(shroud, [[x - 2.2, roofY - 0.01, sd * 0.78], [x + 2.2, roofY - 0.01, sd * 0.78], [x + 1.6, roofY + 0.42, sd * 0.78], [x - 1.6, roofY + 0.42, sd * 0.78]], [0, 0, -sd * 0.05]);
+  });
+  m.scope("insulators", () => { for (const dx of [-0.25, 0.25]) insulator(m, x + dx, 0, roofY - 0.01, baseY); });
+  m.scope("base", () => block(m, "pantograph", x - 0.35, x + 0.35, baseY, baseY + 0.08, -0.12, 0.12));
+  const draw = (mm: MeshBuilder, lift: number) => {
+    const a = (lift * Math.PI) / 2, [px, py] = [x - 0.2, baseY + 0.1];
+    const [tx, ty] = [px + post * Math.cos(a), py + post * Math.sin(a)];
+    mm.scope("post", () => mm.rod("pantograph", [px, py, 0], [tx, ty, 0], 0.055, 8));
+    mm.scope("wing", () => {
+      mm.rod("pantograph", [tx, ty + 0.04, -0.9], [tx, ty + 0.04, 0.9], 0.04, 8);
+      block(mm, "carbon", tx - 0.025, tx + 0.025, ty + 0.08, ty + 0.12, -0.6, 0.6);
+    });
+  };
+  if (raised) liftable(m, "pantograph", draw);
+  else draw(m, 0);
+}
+
+
+// The 700's cab face (assets/shinkansen-700/SOURCES.md; docs/models/shinkansen.md, "The 700"): the
+// "duck bill" (aero-stream) nose, 9.5 m to the full section. A broad, low beak with its tip at 1.1 m
+// rounds forward of the cab, its top rising gently to the slit headlights; the cab stands up behind it,
+// narrower, the windscreen's front pane and its wrapped side panes in one dark surround from 2.43 m to
+// 3.0 m; deep elliptic corners carry the face back to the body's sides. The side's two blue bands end
+// on the nose in points, the thick one ahead of the thin one.
+const S700_DJOIN = 9.5;
+/** The end car's body behind the face (endLength less the coupling gap and the face; the tip on the coupling plane). */
+const S700_END_BODY = 27.35 - 0.25 - S700_DJOIN;
+/** The sides' bands (body the livery's own colour): the thick blue band under the windows, the thin one under it. */
+const S700_BANDS: readonly Band[] = [[0, 1.47, "body"], [1.47, 1.56, "blue"], [1.56, 1.64, "body"], [1.64, 1.93, "blue"], [1.93, 9, "body"]];
+/** The lamp housings' outline, viewer's right (mirrored for the left): a slit under the windscreen, its outer end slanted. */
+const S700_LAMP: Pt[] = [[0.13, 2.12], [0.74, 2.12], [0.82, 2.23], [0.15, 2.23]];
+const S700_FACE: SeriesCabFace = {
+  dJoin: S700_DJOIN, dSide: S700_DJOIN - 0.4, reach: 0, first: 11.2, roofFrom: 3.3, cols: [8, 6, 3, 2], tolerance: 0.015,
+  profile: [[0.75, 0.4], [0.85, 0.15], [0.95, 0.04], [1.05, 0.0], [1.25, 0.0], [1.45, 0.08], [1.65, 0.28], [1.85, 0.62], [2.05, 1.05], [2.25, 1.5], [2.45, 1.95], [2.7, 2.5], [2.95, 3.15], [3.15, 4.0], [3.35, 5.2], [3.5, 6.5], [3.6, 7.9], [3.65, S700_DJOIN]],
+  // the plan: the beak broad with tight corners, the cab over it rounding back in deep elliptic corners
+  corner: [[0.75, 0.6], [1.05, 0.55], [1.4, 0.65], [1.8, 0.8], [2.2, 0.9], [2.6, 0.95], [3.0, 1.0], [3.4, 1.0], [3.65, 0.4]],
+  cornerDepth: [[0.75, 1.3], [1.05, 1.2], [1.4, 1.4], [1.8, 1.9], [2.2, 3.0], [2.6, 4.5], [3.0, 4.2], [3.4, 2.4], [3.65, 0.4]],
+  // the cab hump narrower than the beak's cheeks (C1 head-on, 229 px/m: 2.79 m wide at the lamps, 2.69 m at the
+  // windscreen's foot, the beak 3.38 m), flaring out to the body's sides behind the windscreen
+  planInset: [[1.6, 0], [1.7, 0.02], [1.8, 0.06], [1.9, 0.12], [2.0, 0.18], [2.1, 0.23], [2.2, 0.27], [2.3, 0.3], [2.45, 0.32], [2.8, 0.32], [3.0, 0.3], [3.15, 0.25], [3.3, 0.17], [3.45, 0.08], [3.6, 0]],
+  rows: [0.75, 0.82, 0.9, 0.97, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.58, 2.7, 2.83, 2.95, 3.05, 3.15, 3.25, 3.35, 3.43, 3.5, 3.56, 3.6, 3.65],
+  // the nose in the body's colour over a grey lip
+  bands: () => [[0, 0.95, "skirtG"], [0.95, 9, "body"]],
+  paint: [
+    // the grey lip rising back along the nose's bottom to the skirt's top
+    { mat: "skirtG", front: [[0.75, -9], [0.95, -9], [0.96, 1.8], [1.05, 3.6]], back: [[0.75, 99], [1.05, 99]] },
+    // the bands' pointed ends: the thin band's cut slanted, the thick band's point near its top
+    { mat: "body", front: [[1.45, -9], [1.95, -9]], back: [[1.45, 9.45], [1.47, 9.45], [1.56, 8.97], [1.64, 8.43], [1.86, 7.24], [1.93, 7.8], [1.95, 7.8]] },
+    // the windscreen's dark surround, round the front pane and the side panes
+    { mat: "cabMask", front: [[2.43, -9], [2.99, -9]], back: [[2.43, 3.95], [2.47, 4.0], [2.6, 4.5], [2.75, 4.8], [2.9, 5.0], [2.99, 4.85]] },
+    // the side panes, wrapped round the cab's corners behind a pillar
+    { mat: "cabGlass", front: [[2.47, 2.3], [2.7, 2.8], [2.95, 3.45]], back: [[2.47, 3.9], [2.6, 4.45], [2.75, 4.75], [2.9, 4.95], [2.95, 4.8]] },
+  ],
+  fields: [
+    { mat: "cabMask", pts: S700_LAMP },
+    { mat: "cabMask", pts: S700_LAMP.map(([x, y]): Pt => [-x, y]).reverse() },
+    // the 923's black hatch on the beak's top (the body's colour on the 700)
+    { mat: "hatch", pts: [[-0.42, 1.68], [0.42, 1.68], [0.38, 1.84], [-0.38, 1.84]] },
+  ],
+  panes: [{ lat: [-0.74, 0.74], y: [2.47, 2.95], r: 0.08, mat: "cabGlass" }],
+  lamps: [[-0.62, 2.175, 0.045, "lampHead"], [-0.36, 2.175, 0.045, "lampHead"], [0.36, 2.175, 0.045, "lampHead"], [0.62, 2.175, 0.045, "lampHead"]],
+};
+
 export const S700: ShinkansenSeries = {
   endLength: 27.35, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.65, lean: 0.96, B: 0.75, A: 1.05,
-  // the "duck bill": the nose flattened wide and low ahead of the cab
-  nose: nose(9.2, 0.18, 3.2, [[0, 1.15], [0.5, 1.4], [3.0, 1.75], [6.5, 2.2], [8.3, 2.85], [9.4, 3.4], [10.2, 3.65]], [[0, 1.12], [0.5, 1.33], [3.0, 1.6], [6.5, 1.9], [8.3, 2.4], [9.4, 2.85], [10.2, 3.0]], [[0, 1.08], [1.5, 1.3], [4.0, 1.45]], [[0, 1.05], [1.5, 1.05]], [[0, 1.02], [0.5, 0.6], [2.0, 0.75]]),
-  windscreen: [7.8, 9.4, 0.07, 1.05], lamps: [1.6, 1.4],
-  windows: [[2.0, 2.6]], windowW: 0.9, pitch: 1.04, door: [1.3, 3.05, 1.95, 2.6], doorW: 1.0,
+  nose: nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]), windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S700_FACE,
+  // the leading bogie under the nose, 17.5 m ahead of the rear one (3.5 m in from the rear end)
+  endBogies: [S700_END_BODY - 21.0, S700_END_BODY - 3.5],
+  // the crew door with its narrow window, ahead of the passenger door behind the nose
+  sidePanels: { end: [{ d: [9.52, 10.02], y: [1.32, 3.0], kind: "seam" }, { d: [9.66, 9.9], y: [2.22, 2.78], kind: "window" }] },
+  windows: [[2.0, 2.55]], windowW: 0.68, pitch: 1.04, door: [1.3, 3.05, 2.36, 2.88], doorW: 0.78, doorGlassW: 0.32,
   bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
   liveries: {
-    jrCentral: { title: "JR Central", palette: { white: c("#f3f3f0"), blue: c("#1a3f9a"), roofG: c("#e6e6e3", 0.6), skirtG: c("#dcdcd8") }, bands: [[0, 1.75, "white"], [1.75, 1.92, "blue"], [1.92, 2.65, "white"], [2.65, 2.7, "blue"], [2.7, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "723-1" },
-    doctorYellow: { title: "Doctor Yellow", palette: { yellow: c("#f0cf12"), blue: c("#1d4596"), roofG: c("#dcc02a", 0.6), skirtG: c("#1d4596") }, bands: [[0, 1.75, "yellow"], [1.75, 1.92, "blue"], [1.92, 9, "yellow"]], roof: "roofG", skirt: "skirtG", number: "923-1" },
+    jrCentral: { title: "JR Central", palette: { body: c("#f3f3f0"), blue: c("#1a3f9a"), hatch: c("#f3f3f0"), cabMask: c("#3a3f46", 0.35), roofG: c("#e6e6e3", 0.6), skirtG: c("#b9bcbe", 0.5) }, bands: S700_BANDS, roof: "roofG", skirt: "skirtG", number: "724-54" },
+    doctorYellow: { title: "Doctor Yellow", palette: { body: c("#f0cf12"), blue: c("#1d4596"), hatch: c("#1b1d20", 0.3), cabMask: c("#3a3f46", 0.35), roofG: c("#dcc02a", 0.6), skirtG: c("#9da1a4", 0.5) }, bands: S700_BANDS, roof: "roofG", skirt: "skirtG", number: "923-1" },
   },
   weight: { end: 45, middle: 43 }, power: 1100, maxspeed: 285,
 };
 
+// The E6's nose and paint, measured on assets/shinkansen-e6/: photo-e6-z8.jpg in near profile,
+// rectified to true scale by a projective fit along the side (the tip, seven windows 0.89 m apart and
+// the car's end 22.85 m back), heights from the rail and the roof (3.65 m); photo-e6-z14.jpg and
+// photo-jr-east-e6-series-z5-in-tazawako-20130924.jpg head on; photo-e611-1.jpg and photo-e621-1.jpg in
+// three-quarter view. Edges are [y, d behind the tip].
+/** The cab face's join: the body's own section from here back (the door follows at once). */
+const E6_JOIN = 11.95;
+/** The red's lower sweep: its lower edge, level with the coupler at the snout, rising to its point 10.9 m back. */
+const E6_RED_LOW: Pt[] = [[1.0, 0], [1.02, 1.0], [1.04, 2.0], [1.17, 4.5], [1.4, 7.0], [1.66, 9.5], [2.0, 10.9], [2.02, 10.9]];
+/** The white wedge's lower edge (the red sweep's upper one), from its point at the headlights. */
+const E6_WEDGE_LOW: Pt[] = [[1.43, 4.4], [1.61, 7.0], [1.84, 9.5], [2.04, 10.9]];
+/** The white wedge's upper edge (the silver arrow's lower one), up to the roof's edge at the join. */
+const E6_WEDGE_TOP: Pt[] = [[1.43, 4.4], [2.02, 5.75], [2.09, 6.5], [2.34, 7.0], [2.6, 8.25], [2.8, 9.5], [2.96, 10.75], [3.1, E6_JOIN]];
+/** The silver arrow's upper edge (the red's lower one), 0.11 m over the wedge. */
+const E6_ARROW_TOP: Pt[] = [[1.43, 4.2], [1.6, 4.65], [2.1, 5.75], [2.17, 6.5], [2.43, 7.0], [2.69, 8.25], [2.89, 9.5], [3.05, 10.75], [3.19, E6_JOIN]];
+/** The windscreen and its surround seen head on, [lat, y]. */
+const E6_SURROUND: Pt[] = [[0.7, 2.76], [0.677, 2.875], [0.612, 2.972], [0.515, 3.037], [0.4, 3.06], [-0.4, 3.06], [-0.515, 3.037], [-0.612, 2.972], [-0.677, 2.875], [-0.7, 2.76], [-0.7, 2.22], [-0.677, 2.105], [-0.612, 2.008], [-0.515, 1.943], [-0.4, 1.92], [0.4, 1.92], [0.515, 1.943], [0.612, 2.008], [0.677, 2.105], [0.7, 2.22]];
+const E6_SCREEN: Pt[] = [[0.62, 2.75], [0.601, 2.846], [0.547, 2.927], [0.466, 2.981], [0.37, 3.0], [-0.37, 3.0], [-0.466, 2.981], [-0.547, 2.927], [-0.601, 2.846], [-0.62, 2.75], [-0.62, 2.23], [-0.601, 2.134], [-0.547, 2.053], [-0.466, 1.999], [-0.37, 1.98], [0.37, 1.98], [0.466, 1.999], [0.547, 2.053], [0.601, 2.134], [0.62, 2.23]];
+const at = (y0: number, y1: number): Pt[] => [[y0, -9], [y1, -9]];
+
+/**
+ * The E6's nose, 11.95 m to the body's full section (the published 13 m includes the roof's last
+ * rise): a round snout at the coupler, 1.1 m tall, its cover split red over white at 1.0 m, the low
+ * pilot behind it; the nose rising behind the snout to the canopy cab, whose windscreen runs from 3.75 m
+ * to 7.5 m behind the tip and wraps down its sides. The canopy is narrower than the nose under it: the
+ * face's bow (2 m deep at the windscreen) is the canopy's front, the corners behind it sweep out to the
+ * body's width over 4 - 6.5 m. The akane red covers the snout's top, the nose and the roof; the white
+ * wedge comes forward along the side from the body to a point at the headlights, the silver arrow line
+ * along its top, the red's lower sweep under it running back to a point 10.9 m behind the tip, where the
+ * grey line under the windows takes over.
+ */
+const E6_FACE: SeriesCabFace = {
+  dJoin: E6_JOIN, dSide: E6_JOIN, first: 13.35, roofFrom: 9, wrap: true, reach: 0, cols: [4, 16, 2, 1], tolerance: 0.05,
+  profile: [[0.42, 0.5], [0.46, 0.33], [0.55, 0.16], [0.68, 0.06], [0.82, 0.01], [0.95, 0], [1.09, 0], [1.25, 0.07], [1.4, 0.3], [1.48, 0.6], [1.52, 1.06], [1.55, 1.6], [1.57, 1.95], [1.7, 2.3], [1.8, 2.55], [1.93, 3.0], [2.0, 3.55], [2.08, 3.75], [2.18, 4.0], [2.3, 4.25], [2.65, 5.0], [2.95, 6.0], [3.02, 7.0], [3.1, 7.8], [3.22, 8.9], [3.37, 10.7], [3.5, 11.4], [3.6, 11.75], [3.65, E6_JOIN]],
+  corner: [[0.42, 1.25], [1.4, 1.3], [1.52, 1.25], [1.57, 1.15], [1.8, 1.15], [2.08, 1.1], [2.18, 0.95], [2.3, 0.82], [2.65, 0.8], [2.95, 0.75], [3.1, 0.8], [3.22, 0.9], [3.37, 0.9], [3.5, 0.7], [3.6, 0.4], [3.65, 0.05]],
+  cornerDepth: [[0.42, 4.5], [0.78, 5.0], [1.09, 5.2], [1.4, 5.0], [1.52, 4.6], [1.57, 4.0], [1.8, 3.4], [1.93, 3.0], [2.08, 2.4], [2.18, 2.8], [2.3, 3.4], [2.65, 3.8], [2.95, 3.8], [3.1, 3.4], [3.22, 2.5], [3.37, 1.05], [3.5, 0.5], [3.6, 0.2], [3.65, 0.01]],
+  bulge: [[0.42, 0.05], [1.4, 0.05], [1.52, 0.2], [1.57, 0.4], [1.8, 0.6], [2.08, 0.6], [2.18, 1.4], [2.3, 2.1], [2.65, 1.6], [2.95, 1.0], [3.1, 0.6], [3.22, 0.35], [3.37, 0.15], [3.5, 0.05], [3.6, 0]],
+  rows: [0.42, 0.5, 0.62, 0.78, 1.0, 1.09, 1.25, 1.4, 1.52, 1.57, 1.8, 1.93, 2.0, 2.08, 2.18, 2.3, 2.65, 2.95, 3.1, 3.22, 3.37, 3.5, 3.6, 3.65],
+  // the face white under its paint; the distant model's centre line: white under the coupler, red above
+  bands: () => [[0, 9, "white"]],
+  lodBands: [[0, 1.0, "white"], [1.0, 9, "red"]],
+  paint: [
+    // the beige equipment covers along the lower side from 5.3 m back
+    { mat: "skirtG", front: [[0.42, 5.3], [0.9, 5.6]], back: [[0.42, 99], [0.9, 99]] },
+    // the red, its lower sweep under the white wedge (over the whole snout ahead of the wedge's point)
+    // and its cap over the silver arrow: the wedge between them is the face's own white
+    { mat: "red", front: [[1.0, -9], [1.43, -9], [1.43, 4.4], ...E6_WEDGE_LOW.slice(1)], back: E6_RED_LOW },
+    { mat: "red", front: at(1.43, 9), back: [...E6_ARROW_TOP, [3.21, 99], [9, 99]], top: 9 },
+    // the silver arrow over the wedge, and the grey line under the windows behind the sweep's point
+    { mat: "arrow", front: E6_ARROW_TOP, back: [...E6_WEDGE_TOP.slice(0, -1), [3.1, E6_JOIN], [3.11, 99], [3.2, 99]], top: 3.2 },
+    { mat: "arrow", front: [[2.02, 10.9], [2.09, 10.9]], back: [[2.02, 99], [2.09, 99]] },
+    // the headlights' long lens at the top of the wedge's front
+    { mat: "cabGlass", front: [[1.48, 4.5], [1.86, 5.3], [1.97, 5.65], [2.03, 6.3]], back: [[1.48, 4.56], [1.6, 5.2], [1.86, 6.17], [1.97, 6.45], [2.03, 6.5]] },
+  ],
+  fields: [
+    // the windscreen on the canopy's front, a rounded rectangle in its thin black surround
+    { mat: "cabMask", pts: E6_SURROUND },
+    { mat: "cabGlass", pts: E6_SCREEN },
+    // the coupler cover's seam under the snout, white inside it below the red's split
+    { mat: "rubber", pts: [[-1.08, 1.0], [1.08, 1.0], [0.95, 0.8], [0.66, 0.6], [0.32, 0.5], [0, 0.47], [-0.32, 0.5], [-0.66, 0.6], [-0.95, 0.8]] },
+    { mat: "white", pts: [[-1.01, 1.0], [1.01, 1.0], [0.9, 0.83], [0.63, 0.64], [0.31, 0.54], [0, 0.51], [-0.31, 0.54], [-0.63, 0.64], [-0.9, 0.83]] },
+  ],
+  // the windscreen is paint; the distant model's glass over its front
+  panes: [], lodGlass: { hw: 0.55, y: [2.05, 2.95] },
+  // two headlights at the lens's front on each side
+  lamps: [[-1.37, 1.6, 0.07, "lampHead"], [-1.39, 1.75, 0.07, "lampHead"], [1.37, 1.6, 0.07, "lampHead"], [1.39, 1.75, 0.07, "lampHead"]],
+  wipers: [[[-0.36, 2.04], [-0.44, 2.42]], [[0.3, 2.04], [0.38, 2.42]]],
+};
+
+/** The E6's pilot under the nose: a low white plough from behind the snout back to the equipment covers. */
+function e6Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  if (!car.end) return;
+  const x = (d: number) => X(d - E6_JOIN);
+  // in plan: rounded at the front behind the snout, then straight to its back; from 0.2 m up into the face
+  const plan: Array<[number, number]> = [[1.9, 0], [2.0, 0.35], [2.3, 0.62], [2.8, 0.8], [5.2, 0.85]];
+  const ring = [...plan.map(([d, z]): [number, number, number] => [x(d), 0.2, -z]), ...plan.slice().reverse().filter(([, z]) => z > 0).map(([d, z]): [number, number, number] => [x(d), 0.2, z])];
+  m.scope("pilot", () => m.slab("white", ring, [0, E6.B + 0.03 - 0.2, 0]));
+}
+
+/** A window row: n windows `w` wide, `pitch` apart, the first centred at d0. */
+const e6Row = (d0: number, n: number, w = 0.55, pitch = 0.9): Array<readonly [number, number]> => Array.from({ length: n }, (_, i) => [d0 + i * pitch - w / 2, d0 + i * pitch + w / 2] as const);
+
+const E6_PALETTE = { white: c("#ebecec", 0.3), red: c("#cc1234", 0.3), arrow: c("#9ea3a8", 0.3), cabMask: c("#15181b", 0.3), skirtG: c("#d6d2c8", 0.6) };
+
 export const E6: ShinkansenSeries = {
-  endLength: 23.075, midLength: 20.5, W: 1.4725, Y: 1.45, S: 3.0, C: 3.65, lean: 0.95, B: 0.75, A: 1.05,
+  // a mini-shinkansen body 2.945 m wide, the side straight up to 3.2 m under a red roof, the beige
+  // equipment covers down to 0.42 m
+  endLength: 23.075, midLength: 20.5, W: 1.4725, Y: 1.45, S: 3.2, C: 3.65, lean: 0.95, B: 0.42, A: 0.9,
   nose: nose(12.0, 0.04, 2.3, [[0, 1.2], [1.0, 1.55], [5.0, 2.05], [9.0, 2.55], [11.2, 3.05], [12.6, 3.45], [13.0, 3.65]], [[0, 1.15], [1.0, 1.45], [5.0, 1.8], [9.0, 2.15], [11.2, 2.5], [12.6, 2.9], [13.0, 3.0]], [[0, 1.1], [3.0, 1.3], [6.0, 1.45]], [[0, 1.05], [2.0, 1.05]], [[0, 1.03], [0.8, 0.55], [3.0, 0.75]]),
-  windscreen: [10.9, 12.6, 0.07, 0.85], lamps: [3.6, 1.5],
-  windows: [[2.0, 2.55]], windowW: 0.75, pitch: 1.0, door: [1.3, 3.05, 1.95, 2.6], doorW: 0.9,
-  bogieCentres: 14.15, wheelR: 0.43, wheelbase: 2.5,
+  windscreen: [10.9, 12.6, 0.07, 0.85], lamps: [3.6, 1.5], cabFace: E6_FACE,
+  // small windows, 0.55 m wide at 0.9 m pitch (photo-e6-z8.jpg, photo-e625-1.jpg); one door behind the
+  // nose and one at the end car's rear, one door at the front of an intermediate car, its toilets at the rear
+  windows: [[2.16, 2.66]], windowW: 0.55, pitch: 0.9, door: [1.3, 3.1, 2.45, 2.9], doorW: 0.85, doorGlassW: 0.3,
+  layout: {
+    end: { doors: [[0.25, 1.1, 1], [8.9, 9.75, -1]], windows: e6Row(2.0, 7) },
+    middle: { doors: [[0.55, 1.4, 1]], windows: e6Row(2.3, 16) },
+  },
+  // the LED destination display beside each door, high on the side (d behind the tip / the car's front)
+  sidePanels: { end: [{ d: [19.6, 20.15], y: [2.8, 2.97], kind: "panel", mat: "black" }], middle: [{ d: [1.65, 2.2], y: [2.8, 2.97], kind: "panel", mat: "black" }] },
+  // the end car's leading bogie under the nose, 6.7 m behind the tip, 14.15 m from the rear one
+  bogieCentres: 14.15, wheelR: 0.43, wheelbase: 2.5, endBogies: [6.7 - E6_JOIN, 20.85 - E6_JOIN], midBogies: [2.9, 17.05], fittings: e6Fittings,
   liveries: {
-    komachi: { title: "E6 Komachi", palette: { red: c("#c8102e"), white: c("#f2f2ef"), silver: c("#a9adb1", 0.35), roofG: c("#c8102e", 0.5), skirtG: c("#d9d9d6") }, bands: [[0, 2.02, "white"], [2.02, 2.08, "silver"], [2.08, 9, "red"]], roof: "roofG", skirt: "skirtG", number: "E611-1" },
-    akita: { title: "Akita", palette: { red: c("#c8102e"), white: c("#f2f2ef"), silver: c("#a9adb1", 0.35), roofG: c("#e4e4e1", 0.5), skirtG: c("#d9d9d6") }, bands: [[0, 2.02, "white"], [2.02, 2.1, "red"], [2.1, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E611-9" },
+    komachi: { title: "E6 Komachi", palette: { ...E6_PALETTE, roofG: c("#cc1234", 0.4) }, bands: [[0, 2.02, "white"], [2.02, 2.09, "arrow"], [2.09, 3.1, "white"], [3.1, 3.2, "arrow"], [3.2, 9, "red"]], roof: "roofG", skirt: "skirtG", number: "E621-1" },
+    akita: { title: "Akita", palette: { ...E6_PALETTE, arrow: c("#cc1234", 0.3), roofG: c("#e4e4e1", 0.5) }, bands: [[0, 2.02, "white"], [2.02, 2.09, "arrow"], [2.09, 3.1, "white"], [3.1, 3.2, "arrow"], [3.2, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E611-9" },
   },
   weight: { end: 41, middle: 39 }, power: 1200, maxspeed: 320,
 };
 
+/**
+ * The 100 series (1985, JNR), measured on photo-100-x1-hamamatsu-19981020.jpg (set X1 near side-on; a
+ * projective fit along the car from the tip, the rear body end and the vertical scale at six columns,
+ * 35 - 80 px/m, checked by the 1.04 m window pitch) and the three-quarter photographs of the preserved
+ * 123-1. Distances are d behind the nose tip. The "shark" nose: an oval cap with its tip at 1.67 m, the
+ * top rising in a nearly straight line to the windscreen's foot (3.24 m at d 2.54), the flat windscreen
+ * raked about 42 degrees to the cab roof (3.91 m at d 3.29); in plan a wedge reaching the body's width
+ * 4.4 m back; the slit headlights on its sides (d 1.12 - 1.98 at 1.75 m); a deep skirt under it, its
+ * slanted rear edge ahead of the leading bogie. Not the 0 series' round bullet: no bulging dome, a far
+ * flatter top line and a windscreen standing in it.
+ */
+const S100_JOIN = 5.9;
+/** The face's centre line, [y, d]: the skirt's top under the cap, the cap's round front, the top line, the windscreen, the cab roof. */
+const S100_PROFILE: Pt[] = [
+  [1.04, 0.64], [1.12, 0.65], [1.21, 0.62], [1.31, 0.5], [1.45, 0.21], [1.56, 0.07], [1.67, 0], [1.78, 0.03], [1.9, 0.1], [2.06, 0.21],
+  [2.33, 0.5], [2.5, 0.81], [2.8, 1.44], [3.06, 2.12], [3.24, 2.54], [3.4, 2.72], [3.6, 2.92], [3.8, 3.15], [3.91, 3.29], [3.96, 3.6], [4.0, S100_JOIN],
+];
+const S100_ROWS = [1.04, 1.12, 1.21, 1.26, 1.31, 1.38, 1.45, 1.51, 1.56, 1.63, 1.67, 1.71, 1.78, 1.87, 1.9, 1.98, 2.06, 2.14, 2.21, 2.27, 2.33, 2.42, 2.5, 2.58, 2.65, 2.73, 2.8, 2.88, 2.95, 3.06, 3.15, 3.24, 3.33, 3.4, 3.5, 3.6, 3.7, 3.8, 3.86, 3.91, 3.96, 4.0];
+/** The plan: a flat front this wide (half width) by height, its corners reaching the body's side this far behind it. */
+const S100_FLAT: Pt[] = [[1.04, 0.02], [2.5, 0.02], [2.8, 0.45], [3.06, 0.75], [3.24, 0.95], [3.4, 1.0], [3.6, 0.98], [3.8, 0.92], [3.91, 0.75], [3.96, 0.4], [4.0, 0.05]];
+const S100_DEPTH: Pt[] = [[1.04, 2.2], [1.21, 2.75], [1.45, 3.8], [1.67, 4.3], [1.9, 4.3], [2.06, 4.2], [2.33, 3.9], [2.5, 3.6], [2.8, 3.0], [3.06, 2.4], [3.24, 2.1], [3.4, 1.95], [3.6, 1.75], [3.8, 1.55], [3.91, 1.4], [3.96, 1.0], [4.0, 0.3]];
+/** The headlight slit's chrome rim and its lens, [y, d] edges with rounded ends. */
+const s100Slit = (y0: number, y1: number, d0: number, d1: number, k: number): { front: Pt[]; back: Pt[] } => {
+  const ym = (y0 + y1) / 2, h = (y1 - y0) / 2;
+  return {
+    front: [[y0, d0 + k], [ym - h * 0.7, d0 + k * 0.3], [ym, d0], [ym + h * 0.7, d0 + k * 0.3], [y1, d0 + k]],
+    back: [[y0, d1 - k], [ym - h * 0.7, d1 - k * 0.3], [ym, d1], [ym + h * 0.7, d1 - k * 0.3], [y1, d1 - k]],
+  };
+};
+/** The oval cap's seam round the tip, a thin line in [lat, y] (centre 1.67 m, 0.62 m half wide, 0.45 m half tall). */
+const S100_CAP_SEAM = Array.from({ length: 20 }, (_, i) => {
+  const [a, b] = [(2 * Math.PI * i) / 20, (2 * Math.PI * (i + 1)) / 20];
+  const at = (t: number, k: number): Pt => [k * 0.62 * Math.cos(t), 1.67 + k * 0.45 * Math.sin(t)];
+  return { mat: "seam", pts: [at(a, 1), at(b, 1), at(b, 1.045), at(a, 1.045)], fine: 2 };
+});
+const S100_FACE: SeriesCabFace = {
+  dJoin: S100_JOIN, first: 7.95, roofFrom: 3.99, cols: [3, 16, 1, 1],
+  // the tip is the end car's front: its coupler lies under the cap, inside the skirt
+  reach: 0,
+  profile: S100_PROFILE, rows: S100_ROWS,
+  // r = the body's half width less the flat front (the kit holds it under 98 % of the half width)
+  corner: S100_FLAT.map(([y, a]): Pt => [y, Math.max(0.05, S100_HALF(y) - a)]),
+  cornerDepth: S100_DEPTH,
+  // the face takes the body's colour; the livery's bands show on the cab sides behind the corners
+  bands: (l) => [[0, 9, l.bands[0]![2]]],
+  paint: [
+    // the skirt's colour up under the cap, its edge rising from 1.04 m at d 2.8 to the cap
+    { mat: "skirtG", front: [[1.04, -9], [1.21, -9]], back: [[1.04, 2.8], [1.12, 1.7], [1.18, 1.0], [1.21, 0.62]] },
+    // the headlight slits: a chrome rim, the lamp ahead and dark glass behind
+    { mat: "frameSilver", ...s100Slit(1.63, 1.87, 1.1, 2.0, 0.06) },
+    { mat: "cabGlass", ...s100Slit(1.67, 1.83, 1.15, 1.95, 0.05) },
+    { mat: "lampHead", ...s100Slit(1.67, 1.83, 1.15, 1.5, 0.05) },
+    // the cab's side window, from the corner pillar back along the cab
+    { mat: "cabGlass", front: [[3.42, 2.92], [3.6, 3.1], [3.8, 3.34]], back: [[3.42, 5.0], [3.8, 4.75]] },
+  ],
+  decals: S100_CAP_SEAM,
+  // the flat windscreen in a thin black rubber
+  masks: [{ lat: [-0.95, 0.95], y: [3.3, 3.87], r: 0.07, mat: "black" }],
+  panes: [{ lat: [-0.91, 0.91], y: [3.33, 3.84], r: 0.05 }],
+  wipers: [[[-0.55, 3.36], [-0.15, 3.74]], [[0.35, 3.36], [0.75, 3.72]]],
+};
+/** The body's half width by height at the join (its section: W 1.62 at the belly, the side leaning in to the shoulder, the roof's elliptic arc). */
+function S100_HALF(y: number): number {
+  const [W, Y, S, C, lean] = [1.62, 1.5, 3.6, 4.0, 0.965];
+  if (y <= Y) return W * 0.97;
+  if (y <= S) return W + ((y - Y) / (S - Y)) * (W * lean - W);
+  return W * lean * Math.sqrt(Math.max(0, 1 - ((y - S) / (C - S)) ** 2));
+}
+
+/**
+ * The skirt under the nose (below the face, which starts at 1.04 m): its front upright under the cap
+ * (d 0.6 - 0.66), its plan boxier toward the bottom (0.3 m above the rail), its rear edge slanted from
+ * d 3.2 at the top to 2.4 at the bottom, clear of the leading wheels; two small boxes at its front
+ * corners; over the bogie behind it the dark underside; the radio fin on the cab roof.
+ */
+function s100Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  if (car.end) {
+    const x = (t: number) => X(t - S100_JOIN);
+    // a ring at height y: flat front +-a at d f, elliptic corners (r wide, D deep) to the side at hw, the rear at d r1
+    const ring = (f: number, a: number, hw: number, D: number, r1: number): Array<[number, number]> => {
+      const r = hw - a, k = 6, pts: Array<[number, number]> = [[r1, hw]];
+      for (let i = k; i >= 0; i--) { const t = (i / k) * (Math.PI / 2); pts.push([f + D * (1 - Math.cos(t)), a + r * Math.sin(t)]); }
+      for (let i = 0; i <= k; i++) { const t = (i / k) * (Math.PI / 2); pts.push([f + D * (1 - Math.cos(t)), -(a + r * Math.sin(t))]); }
+      pts.push([r1, -hw]);
+      const out = pts.map(([d, z]): [number, number] => [x(d), z]);
+      // counter-clockwise from above, as the mesh helpers wind
+      let area = 0;
+      for (let i = 0; i < out.length; i++) { const [p, q] = [out[i]!, out[(i + 1) % out.length]!]; area += p[0] * q[1] - q[0] * p[1]; }
+      return area > 0 ? out.reverse() : out;
+    };
+    const [yb, ym, yt] = [0.3, 0.7, 1.03];
+    const bottom = ring(0.6, 0.85, 1.53, 0.8, 2.4), mid = ring(0.63, 0.5, 1.53, 1.5, 2.84), top = ring(0.66, 0.02, 1.55, 2.2, 3.2);
+    m.scope("skirt", () => {
+      m.loft("skirtG", bottom, yb, mid, ym, false);
+      m.loft("skirtG", mid, ym, top, yt, false);
+      m.cap("skirtG", bottom, yb, false);
+      for (const sd of [1, -1]) m.scope(sd > 0 ? "box right" : "box left", () => block(m, "skirtG", x(0.72), x(0.52), yb, yb + 0.15, ...(sd > 0 ? [0.45, 1.0] : [-1.0, -0.45]) as [number, number]));
+    });
+    // the underside over the leading bogie, between its wheels' tops and the nose
+    m.scope("nose underside", () => block(m, "under", x(S100_JOIN), x(3.0), 0.93, 1.03, -1.2, 1.2));
+    // the blue apron along the car's bottom, carried on over the leading bogie to the skirt
+    for (const sd of [1, -1]) m.scope(sd > 0 ? "apron right" : "apron left", () => block(m, "skirtG", x(S100_JOIN + 0.02), x(3.15), 0.86, 1.035, ...(sd > 0 ? [1.5, 1.54] : [-1.54, -1.5]) as [number, number]));
+    m.scope("radio fin", () => m.slab("roofG", [[x(4.25), 3.95, -0.015], [x(3.85), 3.95, -0.015], [x(4.15), 4.24, -0.015], [x(4.3), 4.24, -0.015]], [0, 0, 0.03]));
+  }
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.72 - 0.3, 0.72, -1.62 * 0.8, 1.62 * 0.8));
+}
+
+/** The 100's window pitch (one window a seat row, 1.04 m), 0.78 m wide. */
+const s100Windows = (from: number, n: number): Array<readonly [number, number]> => Array.from({ length: n }, (_, i) => [from + 1.04 * i, from + 1.04 * i + 0.78] as const);
+
+/**
+ * The JNR livery (photo-100-x1-...: ivory, the blue window band 2.14 - 2.95 m and a thin blue line
+ * 1.98 - 2.06 m under it, both ending on the end car in one edge slanted forward at its foot, d 4.45 at
+ * the line to 5.3 at the band's head, ahead of the cab doors) and JR West's 2002 renewal (photo-jrw-...
+ * -121-5055: light grey, a dark grey window band over a yellow-green stripe, the same slant). The
+ * ivory or grey is swept over the bands ahead of the slant.
+ */
+const S100_SLANT: Pt[] = [[1.95, 4.4], [2.98, 5.33]];
 export const S100: ShinkansenSeries = {
-  endLength: 26.05, midLength: 25.0, W: 1.62, Y: 1.5, S: 3.1, C: 4.0, lean: 0.965, B: 0.85, A: 1.0,
-  // the sharper "shark" nose after the 0 series, the cab windscreen in a flat crown
-  nose: nose(5.2, 0.05, 2.2, [[0, 1.7], [0.3, 2.05], [1.5, 2.45], [4.0, 2.85], [5.0, 3.25], [5.8, 3.7], [7.0, 4.0]], [[0, 1.65], [0.3, 1.9], [1.5, 2.2], [4.0, 2.55], [5.8, 2.95], [7.0, 3.1]], [[0, 1.6], [1.0, 1.55], [2.5, 1.5]], [[0, 1.55], [0.8, 1.0]], [[0, 1.5], [0.4, 0.6], [2.0, 0.85]]),
-  windscreen: [4.6, 6.0, 0.07, 1.05], lamps: [1.6, 1.8],
-  windows: [[2.0, 2.6]], windowW: 0.9, pitch: 1.04, door: [1.35, 3.0, 2.05, 2.6], doorW: 0.7,
+  // 26.05 m end car, 25.0 m intermediate car, 4.0 m high; the body narrowed from 3.38 m to 3.24 m; a high
+  // shoulder (3.6 m) under a flat roof, the cab's roof nearly as wide as its windscreen
+  endLength: 26.05, midLength: 25.0, W: 1.62, Y: 1.5, S: 3.6, C: 4.0, lean: 0.965, B: 0.72, A: 1.04,
+  nose: nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]), windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S100_FACE,
+  // the leading bogie under the nose (d 4.73), the rear one 3.75 m in from the inner coupling
+  endBogies: [26.05 - 0.25 - 3.5 - 17.5 - S100_JOIN, 26.05 - 0.25 - 3.5 - S100_JOIN],
+  // the end car (photo-100-x1-...): the crew door (a seam) and then the passenger door behind the cab, 13
+  // windows (the 65 seats' rows), the rear door over the rear bogie with the toilets behind it; the
+  // intermediate car a door at each end and 20 windows (100 seats)
+  layout: {
+    end: { doors: [[6.84 - S100_JOIN, 7.62 - S100_JOIN, -1], [21.95 - S100_JOIN, 22.7 - S100_JOIN, 1]], windows: s100Windows(8.42 - S100_JOIN, 13) },
+    middle: { doors: [[0.55, 1.3, -1], [23.2, 23.95, 1]], windows: s100Windows(1.95, 20) },
+  },
+  sidePanels: {
+    end: [
+      { d: [6.08, 6.68], y: [1.38, 3.15], kind: "seam" },
+      { d: [6.24, 6.52], y: [2.55, 2.95], kind: "window" },
+    ],
+  },
+  windows: [[2.24, 2.86]], windowW: 0.78, pitch: 1.04, door: [1.35, 3.15, 2.5, 2.95], doorW: 0.78, doorGlassW: 0.24,
   bogieCentres: 17.5, wheelR: 0.455, wheelbase: 2.5,
+  // the diamond pantograph (PS202, photo-jrw-...-k58-pantograph.jpg) near the car's rear end
+  pantograph: "diamond", pantographAt: 25.0 - 0.5 - 2.2,
+  fittings: s100Fittings,
+  lodRoof: { d: [0.62, 3.0], hw: 1.45, y: [0.3, 1.04], mat: "skirtG" },
   liveries: {
-    jnr: { title: "JNR ivory, blue", palette: { ivory: c("#eeece2"), blue: c("#1d4596"), roofG: c("#e2e0d6", 0.6), skirtG: c("#1d4596") }, bands: [[0, 1.85, "ivory"], [1.85, 1.95, "blue"], [1.95, 2.72, "ivory"], [2.72, 2.95, "blue"], [2.95, 9, "ivory"]], roof: "roofG", skirt: "skirtG", number: "123-1" },
-    jrWest: { title: "JR West green", palette: { grey: c("#d9dcdd"), dark: c("#545a60"), green: c("#7dbb2e"), roofG: c("#c9cccd", 0.6), skirtG: c("#5b6167") }, bands: [[0, 1.85, "grey"], [1.85, 1.95, "green"], [1.95, 2.72, "grey"], [2.72, 2.95, "dark"], [2.95, 9, "grey"]], roof: "roofG", skirt: "skirtG", number: "121-3001" },
+    jnr: {
+      title: "JNR ivory, blue", number: "123-1",
+      palette: { ivory: c("#f1efe6"), blue: c("#1d4596"), roofG: c("#e4e2d8", 0.6), skirtG: c("#1d4596"), seam: c("#a9a79e", 0.5) },
+      bands: [[0, 1.98, "ivory"], [1.98, 2.06, "blue"], [2.06, 2.14, "ivory"], [2.14, 2.95, "blue"], [2.95, 9, "ivory"]], roof: "roofG", skirt: "skirtG",
+      endSweeps: [{ mat: "ivory", front: [[1.95, -9], [2.98, -9]], back: S100_SLANT }],
+    },
+    jrWest: {
+      title: "JR West green", number: "121-5055",
+      palette: { grey: c("#d6d9da"), dark: c("#4d5358"), green: c("#8cc43c"), roofG: c("#c9cccd", 0.6), skirtG: c("#a5aaad", 0.45), seam: c("#9a9ea1", 0.5) },
+      bands: [[0, 1.88, "grey"], [1.88, 2.11, "green"], [2.11, 2.95, "dark"], [2.95, 9, "grey"]], roof: "roofG", skirt: "skirtG",
+      endSweeps: [{ mat: "grey", front: [[1.85, -9], [2.98, -9]], back: [[1.85, 4.3], [2.98, 5.33]] }],
+    },
   },
   weight: { end: 57, middle: 56 }, power: 920, maxspeed: 230,
 };
 
+/**
+ * The E4 Max's line under the white (photo-e453-113-kumagaya-20210918.jpg, measured side-on by a projective
+ * fit over the window pitch): 2.08 - 2.37 m along the cars, falling along the nose's sides to the beak's rim,
+ * 1.15 - 1.30 m at the tip. Edges [y, d behind the tip]: where the line's top and its bottom reach a height.
+ */
+const E4_LINE_TOP: Pt[] = [[1.3, 0], [1.52, 1.5], [1.72, 3.4], [1.89, 5.4], [2.07, 7.3], [2.22, 8.3], [2.33, 9.2], [2.37, 9.8]];
+const E4_LINE_BOTTOM: Pt[] = [[1.15, 0], [1.32, 1.5], [1.5, 3.4], [1.68, 5.4], [1.87, 7.3], [2.0, 8.3], [2.08, 9.4]];
+/** The windscreen's outline [lat, y]: a wide eye, its flat top under the head's brow, the ends pointed and raised (photo-e4-frontview.jpg). */
+const E4_EYE: Pt[] = [[-1.05, 2.86], [-0.96, 2.68], [-0.75, 2.6], [0, 2.585], [0.75, 2.6], [0.96, 2.68], [1.05, 2.86], [0.95, 3.03], [0.7, 3.1], [-0.7, 3.1], [-0.95, 3.03]];
+/** A headlight's oval housing, the left one [lat, y]; its two lamps at lat 1.14 and 1.36. */
+const E4_LAMP: Pt[] = [[-1.5, 2.29], [-1.45, 2.18], [-1.3, 2.11], [-1.1, 2.11], [-0.98, 2.16], [-0.96, 2.25], [-1.04, 2.34], [-1.23, 2.39], [-1.42, 2.37]];
+const mirrorLat = (pts: readonly Pt[]): Pt[] => pts.map(([a, y]): Pt => [-a, y]).reverse();
+/** The beak's outline seen head on [lat, y]: the crease over its top, from the line at its sides up to 1.85 m (photo-e4-frontview.jpg). */
+const E4_BEAK_ARC: Pt[] = [[-1.06, 1.3], [-1.0, 1.5], [-0.85, 1.68], [-0.55, 1.8], [0, 1.85], [0.55, 1.8], [0.85, 1.68], [1.0, 1.5], [1.06, 1.3]];
+const E4_BEAK_CREASE: Pt[] = [...E4_BEAK_ARC, ...E4_BEAK_ARC.map(([a, y]): Pt => [a * 0.965, y - 0.035]).reverse()];
+
+/**
+ * The E4's 11.5 m nose (photo-e453-113-kumagaya-20210918.jpg side-on, photo-e4-frontview.jpg head on,
+ * photo-shinkansene4newcolorandoldcolor.jpg and photo-e4-p13.jpg three-quarter): a rounded beak 2.1 m wide
+ * standing out at the bottom, its tip 1.18 m above the rail and its top a shelf at 2.0 - 2.3 m, the
+ * headlights in oval housings on the shelf's broad corners; behind it the tall head rises steeply, the
+ * eye-shaped windscreen set high (2.6 - 3.1 m, 4.0 - 5.1 m behind the tip) under its brow, and runs back
+ * over a bulbous dome to the roof; its sides hollow between the head and the beak's shelf.
+ */
+const E4_FACE: SeriesCabFace = {
+  dJoin: 11.5, dSide: 8.0, first: 12.9, reach: 0, roofFrom: 4.48, cols: [7, 5, 1, 1], tolerance: 0.02, wrap: true,
+  profile: [[0.42, 1.4], [0.62, 0.62], [0.8, 0.3], [1.0, 0.1], [1.18, 0], [1.4, 0.1], [1.66, 0.41], [1.89, 0.97], [2.04, 1.5], [2.15, 1.92], [2.23, 2.55], [2.32, 3.26], [2.43, 3.75], [2.54, 3.92], [2.65, 4.04], [3.06, 5.12], [3.3, 5.44], [3.6, 6.34], [3.81, 7.2], [4.02, 8.03], [4.19, 8.85], [4.3, 9.4], [4.42, 10.4], [4.485, 11.5]],
+  // the plan: the beak's front rounded (a bow) and narrower than the shelf above it, whose corners carry
+  // the lamps face on; the head over the eye rounded in deep corners that leave a hollow beside it
+  corner: [[0.42, 0.8], [0.8, 0.7], [1.1, 0.6], [1.89, 0.55], [2.04, 0.4], [2.15, 0.3], [2.32, 0.3], [2.43, 0.4], [2.54, 0.6], [2.65, 0.8], [3.06, 1.0], [4.485, 1.0]],
+  cornerDepth: [[0.42, 2.4], [0.8, 2.6], [1.1, 2.8], [1.89, 2.9], [2.04, 2.6], [2.15, 2.3], [2.32, 2.0], [2.43, 2.4], [2.54, 3.0], [2.65, 3.4], [3.06, 2.6], [3.3, 2.3], [3.6, 2.0], [3.81, 1.8], [4.02, 1.6], [4.19, 1.3], [4.3, 1.0], [4.42, 0.8], [4.485, 0]],
+  bulge: [[0.42, 0.5], [0.8, 0.7], [1.1, 1.1], [1.89, 1.1], [2.04, 0.6], [2.15, 0.6], [2.32, 0.5], [2.43, 0.45], [2.54, 0.4], [2.65, 0.35], [3.06, 0.3], [3.3, 0.3], [3.6, 0.25], [3.81, 0.2], [4.02, 0.15], [4.19, 0.1], [4.3, 0.05], [4.42, 0]],
+  rows: [0.42, 0.62, 0.8, 1.0, 1.18, 1.4, 1.66, 1.89, 2.04, 2.15, 2.32, 2.43, 2.54, 2.65, 2.85, 3.06, 3.3, 3.6, 3.81, 4.02, 4.19, 4.3, 4.42, 4.485],
+  // the centre line's colours (the distant model's); the paint below draws the line along the sides
+  bands: () => [[0, 1.15, "blue"], [1.15, 1.3, "line"], [1.3, 9, "white"]],
+  // the distant model's nose on fewer rows: the beak, its shelf, the eye and the dome
+  lod: { profile: [[0.42, 1.4], [1.18, 0], [2.2, 2.3], [3.0, 5.0], [4.485, 11.5]], corner: [[0.42, 0.8], [1.18, 0.6], [2.2, 0.4], [3.0, 1.0]], rows: [0.42, 1.18, 2.2, 3.0, 4.485], bulge: [[0.42, 0.6], [1.18, 1.0], [2.2, 0.55], [3.0, 0.3], [4.485, 0]], cornerDepth: [[0.42, 2.5], [1.18, 2.8], [2.2, 2.2], [3.0, 2.8], [4.485, 0]], glass: false },
+  paint: [
+    // blue under the line (reaching under it, so that no gap opens at its edge), the line falling forward
+    // from the body's height to the beak's rim; the face's bands, wrapped round to the join, white over it
+    { mat: "blue", front: [[0.3, -9], [1.299, -9], ...E4_LINE_TOP], back: [[0.3, 99], [2.37, 99]] },
+    { mat: "line", front: [[1.15, -9], [1.299, -9], ...E4_LINE_TOP], back: [...E4_LINE_BOTTOM, [2.081, 99], [2.37, 99]] },
+  ],
+  fields: [
+    // the windscreen's black rubber surround, and the headlights' dark housings
+    { mat: "cabMask", pts: E4_EYE.map(([a, y]): Pt => [a * 1.045, 2.84 + (y - 2.84) * 1.17]) },
+    { mat: "cabMask", pts: E4_LAMP },
+    { mat: "cabMask", pts: mirrorLat(E4_LAMP) },
+    { mat: "crease", pts: E4_BEAK_CREASE },
+  ],
+  panes: [{ lat: [-0.99, 0.99], y: [2.61, 3.07], r: 0.19 }],
+  lamps: [[-1.36, 2.26, 0.075, "lampHead"], [-1.14, 2.24, 0.075, "lampHead"], [1.14, 2.24, 0.075, "lampHead"], [1.36, 2.26, 0.075, "lampHead"]],
+  wipers: [[[0.45, 2.63], [0.62, 2.99]]],
+};
+
+/** The E4 end car's two narrow doors on the nose's sides (d behind the tip; sill, head; the window's width, sill and head), the -Z side's order (the +Z side's windows the other way round). */
+const E4_NOSE_DOORS: ReadonlyArray<readonly [number, number, number, number]> = [[8.07, 8.69, 1.24, 3.07], [9.32, 9.98, 1.16, 3.14]];
+const E4_NOSE_DOOR_GLASS: ReadonlyArray<readonly [number, number, number]> = [[0.3, 2.3, 2.82], [0.42, 2.19, 2.95]];
+
+/** The E4's fittings: the end car's crew doors on the nose's sides and the underfloor equipment. */
+function e4Fittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  if (car.end) m.scope("nose doors", () => {
+    const dTip = E4_FACE.dJoin, t = 0.014;
+    for (const sd of [1, -1]) E4_NOSE_DOORS.forEach(([a, e, y0, y1], i) => {
+      const [d0, d1] = [a - dTip, e - dTip];
+      sidePanel(m, b, X, sd, "rubber", d0, d0 + t, y0, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d1 - t, d1, y0, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d0 + t, d1 - t, y1 - t, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d0 + t, d1 - t, y0, y0 + t, 0.005, 0.004);
+      // the small window on the -Z side's first door, the tall one on its second; the +Z side the other way round
+      const [w, g0, g1] = E4_NOSE_DOOR_GLASS[sd < 0 ? i : 1 - i]!, dm = (d0 + d1) / 2;
+      sidePanel(m, b, X, sd, "rubber", dm - w / 2, dm + w / 2, g0, g1, 0.007, 0.03);
+      sidePanel(m, b, X, sd, "glass", dm - w / 2 + 0.03, dm + w / 2 - 0.03, g0 + 0.03, g1 - 0.03, 0.012, 0.004);
+    });
+  });
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.3, 0.42, -1.62 * 0.75, 1.62 * 0.75));
+}
+
+/** The E4's window rows (body d): the end car's four on each deck behind the nose, the intermediate car's six between its doors. */
+const E4_END_WINDOWS: Array<readonly [number, number]> = [[0.42, 1.94], [2.34, 3.86], [4.26, 5.78], [6.18, 6.8]];
+const E4_MID_WINDOWS: Array<readonly [number, number]> = [[7.06, 8.6], [9.0, 10.54], [10.95, 12.49], [12.9, 14.44], [14.86, 16.4], [16.84, 17.46]];
+
 export const E4: ShinkansenSeries = {
-  endLength: 25.7, midLength: 25.0, W: 1.62, Y: 1.2, S: 3.85, C: 4.485, lean: 0.97, B: 0.65, A: 0.9,
-  // the double-deck car's long nose: a low pointed snout under a tall cab
+  // 25.7 m end cars (11.5 m of nose), 25.0 m intermediate cars, 4.485 m high (ja.wikipedia)
+  endLength: 25.7, midLength: 25.0, W: 1.62, Y: 1.0, S: 3.9, C: 4.485, lean: 0.97, B: 0.42, A: 0.75,
   nose: nose(9.4, 0.06, 2.4, [[0, 1.3], [1.0, 1.7], [4.5, 2.4], [7.5, 3.1], [9.4, 3.7], [10.8, 4.2], [11.5, 4.485]], [[0, 1.25], [1.0, 1.6], [4.5, 2.2], [7.5, 2.85], [9.4, 3.4], [11.5, 3.85]], [[0, 1.2], [2.0, 1.2]], [[0, 1.15], [1.5, 0.9]], [[0, 1.1], [0.6, 0.5], [2.0, 0.65]]),
-  windscreen: [9.3, 10.9, 0.07, 1.05], lamps: [2.4, 1.6],
-  windows: [[1.25, 1.85], [2.7, 3.35]], windowW: 0.85, pitch: 1.0, door: [1.1, 3.05, 1.8, 2.6], doorW: 1.0,
-  bogieCentres: 17.5, wheelR: 0.455, wheelbase: 2.5,
+  windscreen: [9.3, 10.9, 0.07, 1.05], lamps: [2.4, 1.6], cabFace: E4_FACE,
+  // two decks: the lower deck's windows 1.10 - 1.69 m, the upper's 3.03 - 3.72 m; the doors with a narrow window
+  windows: [[1.1, 1.69], [3.03, 3.72]], windowW: 1.52, pitch: 1.94, door: [1.15, 3.14, 2.19, 2.93], doorW: 1.05, doorGlassW: 0.34,
+  layout: {
+    end: { doors: [[8.79, 9.84, 1]], windows: E4_END_WINDOWS },
+    middle: { doors: [[4.02, 5.07, -1], [19.5, 20.55, 1]], windows: E4_MID_WINDOWS },
+  },
+  sidePanels: {
+    // the intermediate car's three toilet windows across the line, and the two-leaf hatch at its rear end
+    middle: [
+      { d: [0.59, 1.15], y: [1.92, 2.62], kind: "window" }, { d: [1.6, 2.16], y: [1.92, 2.62], kind: "window" }, { d: [2.58, 3.14], y: [1.92, 2.62], kind: "window" },
+      { d: [22.15, 23.38], y: [1.03, 3.46], kind: "seam" }, { d: [23.47, 24.43], y: [1.03, 3.46], kind: "seam" },
+    ],
+  },
+  // 17.5 m bogie centres; the end car's rear bogie 3.0 m from its inner end, the leading one under the nose
+  bogieCentres: 17.5, wheelR: 0.455, wheelbase: 2.5, endBogies: [-6.64, 10.86], midBogies: [3.95, 21.45],
+  fittings: e4Fittings,
   liveries: {
-    max: { title: "E4 Max", palette: { white: c("#eef0f1"), blue: c("#2a4f9a"), yellow: c("#f2c31a"), roofG: c("#d9dcdf", 0.6), skirtG: c("#2a4f9a") }, bands: [[0, 2.15, "blue"], [2.15, 2.25, "yellow"], [2.25, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-101" },
-    toki: { title: "Toki", palette: { white: c("#eef0f1"), blue: c("#2a4f9a"), pink: c("#e58aa6"), roofG: c("#d9dcdf", 0.6), skirtG: c("#2a4f9a") }, bands: [[0, 2.15, "blue"], [2.15, 2.25, "pink"], [2.25, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-104" },
+    max: { title: "E4 Max", palette: { white: c("#eef0f1"), blue: c("#22327a"), line: c("#efb51c"), roofG: c("#eef0f1", 0.45), skirtG: c("#22327a"), cabMask: c("#15181c", 0.3), crease: c("#aeb4bb", 0.5) }, bands: [[0, 2.08, "blue"], [2.08, 2.37, "line"], [2.37, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-101" },
+    toki: { title: "Toki", palette: { white: c("#eef0f1"), blue: c("#22327a"), line: c("#f2949a"), roofG: c("#eef0f1", 0.45), skirtG: c("#22327a"), cabMask: c("#15181c", 0.3), crease: c("#aeb4bb", 0.5) }, bands: [[0, 2.08, "blue"], [2.08, 2.37, "line"], [2.37, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-104" },
   },
   weight: { end: 52, middle: 50 }, power: 840, maxspeed: 240,
 };
