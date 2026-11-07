@@ -142,7 +142,7 @@ describe("game properties", () => {
       for (const k of ["weight", "power", "maxspeed", "accel"] as const) expect(v.game, `${v.id} ${k}`).toHaveProperty(k);
     }
     for (const b of exportMeta(BUILDINGS).buildings) {
-      if (b.game) expect(Object.keys(b.game).every((k) => ["plaza", "block", "city", "sounds", "helipad"].includes(k)), b.id).toBe(true);
+      if (b.game) expect(Object.keys(b.game).every((k) => ["plaza", "block", "city", "sounds", "helipad", "offshore"].includes(k)), b.id).toBe(true);
     }
     expect(exportMeta(BUILDINGS).buildings.find((b) => b.id === "proc-building-brandenburg-gate")!.game).toEqual({
       plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" },
@@ -165,7 +165,10 @@ describe("game properties", () => {
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "red" }, maxspeed: 140 }] } }])).toThrow(/at the default/);
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" } }, { params: { livery: "blue" } }] } }])).toThrow(/twice/);
     expect(exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" }, maxspeed: 140 }] } }]).vehicles[0]!.game!.variants).toHaveLength(1);
-    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block, city and helipad/);
+    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block, city, helipad and offshore/);
+    // offshore is a building's, and only ever true
+    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { offshore: false as unknown as true } }])).toThrow(/invalid "offshore"/);
+    expect(() => exportVehicleMeta([{ ...base, game: { ...physics, offshore: true } }])).toThrow(/"offshore", which is for buildings only/);
   });
 
   it("carry an aircraft's passenger seat, a fraction of its length, and refuse one elsewhere", () => {

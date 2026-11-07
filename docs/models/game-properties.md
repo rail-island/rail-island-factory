@@ -3,7 +3,7 @@
 **Covers** - what the game needs of a model beyond its geometry: a vehicle's
 running figures (weight, power, top speed, acceleration), its size factor,
 draft, rope and sill heights, airport class and passenger seat, their per-variant overrides,
-their exported sounds, and a building's plaza and block rules, city variants, party walls, bell and helipad; where they are declared,
+their exported sounds, and a building's plaza and block rules, city variants, party walls, bell, helipad and offshore flag; where they are declared,
 how they are checked and exported, and where today's values came from.
 **Code** - `generator/design.ts` (`GameProperties`, `checkGameProperties`),
 `generator/catalog.ts` (`metaEntry`, `exportMeta`, `withCityUse`, `exportVehicleMeta`),
@@ -81,6 +81,7 @@ A building sets `game` only for its placement rules, in the webapp's shapes:
 - **`block`** (`BlockShape`): the rectangles of its plan that block rails and roads, as fractions of the plan. Examples are the Eiffel Tower's four legs and the wind turbine's mast.
 - **`sounds`** (exported): its `bell`, for the churches, cathedrals and bell towers, from `generator/soundTable.ts` ([sounds.md](sounds.md#bells)).
 - **`helipad`** (`HelipadDecl`): the pad a helicopter can stop at, declared by the design and measured by the export ([below](#helipads)).
+- **`offshore`** (`true`): the building stands in the sea. Its y = 0 is the waterline; the game stands it at sea level over the sea, reclaims none of the water under it and grades only its `block` shape's bounding box ashore. Only the offshore platform ([industry.md](industry.md#offshore-platform)) carries it.
 
 Fifteen landmarks, churches and industrial buildings carry one.
 
@@ -190,7 +191,7 @@ fails before anything is written:
 - A vehicle without `game` fails.
 - So does a vehicle lacking any of the four figures, or with a figure that is not a finite, non-negative number or `null`.
 - A variant fails if its `params` does not resolve against the design's parameters, sits at a default, or repeats another variant.
-- A building fails if its `game` holds anything but `plaza`, `block`, `city` and `helipad`; a `helipad` without a material, with a class other than `small` or `large`, or with a `when` that does not resolve to non-default values the design has, fails too, and so does one the export cannot measure (below).
+- A building fails if its `game` holds anything but `plaza`, `block`, `city`, `helipad` and `offshore` (which must be `true`), and a vehicle fails if it holds `offshore`; a `helipad` without a material, with a class other than `small` or `large`, or with a `when` that does not resolve to non-default values the design has, fails too, and so does one the export cannot measure (below).
 - Sounds are never set on a design: they are derived or stated in `generator/soundTable.ts`, and checked by `checkDesignSounds` ([sounds.md](sounds.md#checks)).
 
 `test/export.test.ts` ("game properties") covers each refusal and pins two

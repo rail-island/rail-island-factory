@@ -382,7 +382,10 @@ export const INDUSTRY: readonly ProceduralDesign[] = [
   // at sea, with a helideck (docs/models/industry.md, "Offshore platform"); no city builds it (cityVariants.ts)
   {
     id: 'industry-offshore-platform', title: 'Offshore oil platform', build: offshorePlatform, buildLod: offshorePlatformLod, lodTriangles: 500,
-    references: 'offshore-platform', catalog: INDUSTRY_CATALOG, game: { helipad: { material: 'helipad', pad: 'large' } },
+    references: 'offshore-platform', catalog: INDUSTRY_CATALOG,
+    // the jacket's base (x -24..24, z -15.3..17.2 m, its battered legs and boat landing) inside
+    // the 96 x 48 m plan the flare and crane booms span: all the game blocks and grades
+    game: { helipad: { material: 'helipad', pad: 'large' }, block: { rects: [{ x: 0.0785, z: -0.1358, w: 0.5, d: 0.684 }] }, offshore: true },
   },
 ];
 
