@@ -605,7 +605,7 @@ function clerestory(m: MeshBuilder, o: { x0: number; x1: number; hood: number; c
       m.sweep(o.roof, "x", full, xa, low, xa + e * hood);
       const side0: Ring = [[-cw, yb], [cw, yb], [cw, yb + h], [-cw, yb + h]];
       const side1: Ring = [[-cw, yb], [cw, yb], [cw, yb + 0.005], [-cw, yb + 0.005]];
-      m.sweep(o.wall, "x", side0, xa, side1, xa + e * hood);
+      m.sweep(o.wall, "x", side0, xa, side1, xa + e * (hood - 0.01));
     }
     archRoof(m, o.roof, x0, x1, cw + 0.03, yb + h, 0.04, 0.03, 4);
     if (o.lights) {
@@ -694,7 +694,7 @@ function closedSaloon(m: MeshBuilder): void {
   m.scope("saloon", () => {
     m.scope("underframe", () => {
       for (const s of [-1, 1]) block(m, "underframe", -C.half + 0.08, C.half - 0.08, C_GEAR.sole, 0.86, ...side(s, 0.6, 0.72));
-      block(m, "timber", -sal, sal, 0.84, floor, -hw + 0.02, hw - 0.02);
+      block(m, "timber", -sal + 0.04, sal - 0.04, 0.84, floor, -hw + 0.02, hw - 0.02);
     });
     for (const s of [-1, 1]) {
       m.scope(s > 0 ? "right side" : "left side", () => {
@@ -756,7 +756,7 @@ function closedEnd(m: MeshBuilder): void {
       block(m, "cream", x - 0.045, x + 0.01, waist, head, ...side(s, 0.88, hw));
       block(m, "cream", x - 0.045, x + 0.01, waist, head, ...side(s, 0.32, 0.4));
       block(m, "glass", x - 0.03, x - 0.024, waist, head, ...side(s, 0.4, 0.88));
-      block(m, "cream", x - 0.045, x + 0.01, waist - 0.05, waist + 0.01, ...side(s, 0.34, hw + 0.02));
+      block(m, "cream", x - 0.045, x + 0.01, waist - 0.05, waist + 0.01, ...side(s, 0.33, hw + 0.02));
       // the grab rail at the corner
       m.rod("brass", [x + 0.05, 1.0, s * (hw + 0.03)], [x + 0.05, 2.0, s * (hw + 0.03)], 0.014, 5);
     }
@@ -770,7 +770,8 @@ function closedEnd(m: MeshBuilder): void {
     });
   });
   m.scope("platform", () => {
-    const ring = ccw([[sal - 0.02, -hw], ...C_DASH, [sal - 0.02, hw]]);
+    // the floor stops inside the dash and the saloon's sides
+    const ring = ccw([[sal - 0.02, -hw + 0.02], ...C_DASH.map(([x, z]) => [x - 0.02, z * 0.98] as [number, number]), [sal - 0.02, hw - 0.02]]);
     m.prism("timber", ring, 0.82, floor);
     m.cap("timber", ring, 0.82, false);
     block(m, "underframe", C.half - 0.12, C.half - 0.04, 0.68, 0.82, -0.85, 0.85);
@@ -782,7 +783,7 @@ function closedEnd(m: MeshBuilder): void {
     }
   });
   m.scope("dash", () => {
-    panels(m, "claret", C_DASH, 0.82, 1.86, 0.035);
+    panels(m, "claret", C_DASH, 0.8, 1.86, 0.035);
     panels(m, "varnish", C_DASH, 1.86, 1.9, 0.06, 0.01);
     const xf = C.half - 0.03;
     // the lined panel and the number disc
@@ -813,7 +814,7 @@ function closedEnd(m: MeshBuilder): void {
 function closedRoof(m: MeshBuilder): void {
   m.scope("roof", () => {
     archRoof(m, "canvas", -C.half - 0.02, C.half + 0.02, C.hw + 0.05, C.eave, C.rise, 0.035);
-    for (const s of [-1, 1]) block(m, "claret", -C.half - 0.02, C.half + 0.02, C.eave - 0.08, C.eave + 0.01, ...side(s, C.hw + 0.02, C.hw + 0.05));
+    for (const s of [-1, 1]) block(m, "claret", -C.half - 0.02, C.half + 0.02, C.eave - 0.08, C.eave + 0.01, ...side(s, C.hw + 0.02, C.hw + 0.06));
     for (const e of [-1, 1]) plateX(m, "claret", e * (C.half + 0.02) + (e > 0 ? 0 : 0.03), archOutline(C.hw + 0.05, C.eave - 0.08, C.eave, C.rise), 0.03);
     const cw = 0.42;
     const yb = C.eave + C.rise * (1 - (cw / (C.hw + 0.05)) ** 2) + 0.02;
@@ -905,14 +906,16 @@ function toastrackBody(m: MeshBuilder): void {
   const { half, body, hw, floor, eave } = T;
   m.scope("floor", () => {
     // the front dash's plan from left to right, then the rear one's from right to left
-    const ring = ccw([...T_DASH, ...T_DASH.map(([x, z]) => [-x, -z] as [number, number])]);
+    // stopping inside the dashes and the valances
+    const plan = T_DASH.map(([x, z]) => [x - 0.02, z * 0.98] as [number, number]);
+    const ring = ccw([...plan, ...plan.map(([x, z]) => [-x, -z] as [number, number])]);
     m.prism("timber", ring, 0.82, floor);
     m.cap("timber", ring, 0.82, false);
     for (const s of [-1, 1]) block(m, "underframe", -half + 0.1, half - 0.1, T_GEAR.sole, 0.82, ...side(s, 0.6, 0.72));
   });
   m.scope("valance", () => {
     for (const s of [-1, 1]) {
-      block(m, "red", -body - 0.4, body + 0.4, 0.58, 0.86, ...side(s, hw - 0.03, hw));
+      block(m, "red", -body - 0.4, body + 0.4, 0.58, 0.85, ...side(s, hw - 0.03, hw));
       const z = side(s, hw, hw + 0.004);
       block(m, "lining", -body - 0.3, body + 0.3, 0.62, 0.635, ...z);
       block(m, "lining", -body - 0.3, body + 0.3, 0.8, 0.815, ...z);
@@ -1085,13 +1088,13 @@ function bobtailBody(m: MeshBuilder): void {
   m.scope("saloon", () => {
     m.scope("underframe", () => {
       for (const s of [-1, 1]) block(m, "underframe", B.tail + 0.05, B.dash - 0.08, B_GEAR.sole, 0.82, ...side(s, 0.58, 0.7));
-      block(m, "timber", rear, front, 0.8, floor, -hw + 0.02, hw - 0.02);
+      block(m, "timber", rear + 0.04, front - 0.04, 0.8, floor, -hw + 0.02, hw - 0.02);
     });
     for (const s of [-1, 1]) {
       m.scope(s > 0 ? "right side" : "left side", () => {
         const z = side(s, hw, hw + 0.004);
         // the sill, the panels below the windows, their lining
-        block(m, "yellow", rear, front, 0.74, 0.86, ...side(s, hw - 0.04, hw + 0.01));
+        block(m, "yellow", rear - 0.005, front + 0.005, 0.74, 0.86, ...side(s, hw - 0.04, hw + 0.01));
         block(m, "vermilion", rear, front, 0.86, waist, ...side(s, hw - 0.04, hw));
         block(m, "yellow", rear - 0.01, front + 0.01, waist - 0.05, waist + 0.01, ...side(s, hw - 0.01, hw + 0.025));
         for (let i = 0; i < B.windows; i++) {
@@ -1125,7 +1128,7 @@ function bobtailBody(m: MeshBuilder): void {
     const x = front;
     m.scope("bulkhead", () => {
       block(m, "vermilion", x - 0.04, x, 0.8, waist, -hw, hw);
-      for (const s of [-1, 1]) block(m, "yellow", x, x + 0.004, 0.95, waist - 0.12, ...side(s, 0.12, 0.8));
+      for (const s of [-1, 1]) block(m, "yellow", x + 0.001, x + 0.005, 0.95, waist - 0.12, ...side(s, 0.12, 0.8));
       block(m, "glass", x - 0.03, x - 0.024, waist, head, -hw + 0.04, hw - 0.04);
       for (const [a, b] of [[-hw, -0.86], [-0.36, -0.28], [0.28, 0.36], [0.86, hw]] as const) block(m, "yellow", x - 0.045, x + 0.01, waist, head, a, b);
       block(m, "yellow", x - 0.045, x + 0.01, waist - 0.05, waist + 0.01, -hw - 0.02, hw + 0.02);
@@ -1156,7 +1159,7 @@ function bobtailBody(m: MeshBuilder): void {
     });
     m.scope("dash", () => {
       const pts = bDashPts(8);
-      panels(m, "vermilion", pts, 0.78, 1.72, 0.035);
+      panels(m, "vermilion", pts, 0.76, 1.72, 0.035);
       panels(m, "yellow", pts, 1.62, 1.635, 0.004, 0.004);
       panels(m, "yellow", pts, 0.86, 0.875, 0.004, 0.004);
       panels(m, "varnish", pts, 1.72, 1.76, 0.06, 0.01);
@@ -1177,11 +1180,11 @@ function bobtailBody(m: MeshBuilder): void {
     m.scope("bulkhead", () => {
       for (const s of [-1, 1]) {
         block(m, "vermilion", x, x + 0.04, 0.8, waist, ...side(s, 0.34, hw));
-        block(m, "yellow", x - 0.004, x, 0.95, waist - 0.12, ...side(s, 0.44, 0.86));
+        block(m, "yellow", x - 0.005, x - 0.001, 0.95, waist - 0.12, ...side(s, 0.44, 0.86));
         block(m, "glass", x + 0.024, x + 0.03, waist, head, ...side(s, 0.4, 0.88));
         block(m, "yellow", x - 0.01, x + 0.045, waist, head, ...side(s, 0.86, hw));
         block(m, "yellow", x - 0.01, x + 0.045, waist, head, ...side(s, 0.3, 0.4));
-        block(m, "yellow", x - 0.01, x + 0.045, waist - 0.05, waist + 0.01, ...side(s, 0.34, hw + 0.02));
+        block(m, "yellow", x - 0.01, x + 0.045, waist - 0.05, waist + 0.01, ...side(s, 0.33, hw + 0.02));
         m.rod("brass", [x - 0.05, 0.9, s * 0.42], [x - 0.05, 1.95, s * 0.42], 0.014, 5);
       }
       block(m, "yellow", x, x + 0.04, head, eave, -hw, hw);
@@ -1194,7 +1197,7 @@ function bobtailBody(m: MeshBuilder): void {
       lamp(m, x - 0.11, 1.62, 0.72, false);
     });
     m.scope("platform", () => {
-      block(m, "timber", B.tail, x, 0.78, floor, -0.62, 0.62);
+      block(m, "timber", B.tail, x - 0.003, 0.78, floor, -0.62, 0.62);
       block(m, "underframe", B.tail, B.tail + 0.08, 0.66, 0.78, -0.62, 0.62);
       // the step below the platform's end, on two hangers
       block(m, "iron", B.tail - 0.2, B.tail + 0.02, 0.44, 0.47, -0.45, 0.45);
@@ -1215,7 +1218,7 @@ function bobtailRoof(m: MeshBuilder): void {
   const [x0, x1] = [B.tail - 0.05, B.dash + 0.03];
   m.scope("roof", () => {
     archRoof(m, "canvas", x0, x1, hw + 0.05, eave, rise, 0.035);
-    for (const s of [-1, 1]) block(m, "yellow", x0, x1, eave - 0.07, eave + 0.01, ...side(s, hw + 0.02, hw + 0.05));
+    for (const s of [-1, 1]) block(m, "yellow", x0, x1, eave - 0.07, eave + 0.01, ...side(s, hw + 0.02, hw + 0.06));
     plateX(m, "yellow", x1, archOutline(hw + 0.05, eave - 0.07, eave, rise), 0.03);
     plateX(m, "yellow", x0 + 0.03, archOutline(hw + 0.05, eave - 0.07, eave, rise), 0.03);
     const cw = 0.4;
