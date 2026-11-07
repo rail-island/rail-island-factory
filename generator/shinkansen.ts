@@ -1406,9 +1406,36 @@ const E6_WEDGE_LOW: Pt[] = [[1.43, 4.4], [1.61, 7.0], [1.84, 9.5], [2.04, 10.9]]
 const E6_WEDGE_TOP: Pt[] = [[1.43, 4.4], [2.02, 5.75], [2.09, 6.5], [2.34, 7.0], [2.6, 8.25], [2.8, 9.5], [2.96, 10.75], [3.1, E6_JOIN]];
 /** The silver arrow's upper edge (the red's lower one), 0.11 m over the wedge. */
 const E6_ARROW_TOP: Pt[] = [[1.43, 4.2], [1.6, 4.65], [2.1, 5.75], [2.17, 6.5], [2.43, 7.0], [2.69, 8.25], [2.89, 9.5], [3.05, 10.75], [3.19, E6_JOIN]];
-/** The windscreen and its surround seen head on, [lat, y]. */
-const E6_SURROUND: Pt[] = [[0.7, 2.76], [0.677, 2.875], [0.612, 2.972], [0.515, 3.037], [0.4, 3.06], [-0.4, 3.06], [-0.515, 3.037], [-0.612, 2.972], [-0.677, 2.875], [-0.7, 2.76], [-0.7, 2.22], [-0.677, 2.105], [-0.612, 2.008], [-0.515, 1.943], [-0.4, 1.92], [0.4, 1.92], [0.515, 1.943], [0.612, 2.008], [0.677, 2.105], [0.7, 2.22]];
-const E6_SCREEN: Pt[] = [[0.62, 2.75], [0.601, 2.846], [0.547, 2.927], [0.466, 2.981], [0.37, 3.0], [-0.37, 3.0], [-0.466, 2.981], [-0.547, 2.927], [-0.601, 2.846], [-0.62, 2.75], [-0.62, 2.23], [-0.601, 2.134], [-0.547, 2.053], [-0.466, 1.999], [-0.37, 1.98], [0.37, 1.98], [0.466, 1.999], [0.547, 2.053], [0.601, 2.134], [0.62, 2.23]];
+/**
+ * The canopy cab (photo-e6-z14.jpg head on, photo-e6-z8.jpg and photo-e611-1.jpg from the side): a
+ * bubble 1.6 m wide standing on the nose, its front a broad, gently rounded windscreen, its sides
+ * near upright walls running straight back to about 7.4 m behind the tip, where it runs into the roof.
+ * The nose's slices are reshaped (`e6Reshape`) from about 2 m up: across the canopy's front the profile's
+ * depth, then its side wall, then the nose beside it pushed back to a valley behind the wall.
+ */
+/** The canopy front's half width by height ([y, half width]): upright sides, rounded over its top. */
+const E6_CANOPY_W: Pt[] = [[2.0, 0.7], [2.9, 0.7], [3.0, 0.62], [3.08, 0.45]];
+/** How far its side wall runs back by height ([y, d behind the tip]). */
+const E6_CANOPY_BACK: Pt[] = [[2.0, 6.6], [2.3, 7.3], [2.7, 7.6], [3.0, 7.6], [3.06, 7.7]];
+/** The side wall's width across (one column of the corner arc). */
+const E6_WALL = 0.08;
+const e6Reshape = (lat: number, y: number, d: number): number => {
+  if (y <= 1.93 || y >= 3.1) return d;
+  // blended in over the canopy's foot and out over its crown into the roof
+  const t = Math.min(1, ((y - 1.93) / 0.19) ** 2, (3.1 - y) / 0.1);
+  const w = edgeAt(E6_CANOPY_W, y), back = Math.max(d, edgeAt(E6_CANOPY_BACK, y));
+  const dF = edgeAt(E6_FACE_PROFILE, y), front = dF + 0.32 * Math.min(1, lat / w) ** 4;
+  let r: number;
+  if (lat <= w) r = front;
+  else if (lat <= w + E6_WALL) r = front + ((lat - w) / E6_WALL) * (back - front);
+  // beside the wall: the nose falls back to it, out to its own surface 0.5 m further out
+  else r = Math.max(d, back - 4 * (lat - w - E6_WALL));
+  return d + t * (r - d);
+};
+/** The glass's edges in side elevation ([y, d]): its foot level at 2.17 m, its rear end rounding up into the crown. */
+const E6_GLASS_BACK: Pt[] = [[2.19, 6.9], [2.3, 7.2], [2.6, 7.35], [2.85, 7.3], [2.94, 7.05], [2.99, 6.6], [3.02, 6.3]];
+const E6_MASK_BACK: Pt[] = [[2.13, 7.0], [2.3, 7.32], [2.6, 7.48], [2.85, 7.45], [2.95, 7.25], [3.01, 6.85], [3.04, 6.55]];
+const E6_FACE_PROFILE: Pt[] = [[0.42, 0.5], [0.46, 0.33], [0.55, 0.16], [0.68, 0.06], [0.82, 0.01], [0.95, 0], [1.09, 0], [1.25, 0.07], [1.4, 0.3], [1.48, 0.6], [1.52, 1.06], [1.55, 1.6], [1.57, 1.95], [1.7, 2.3], [1.8, 2.55], [1.93, 3.0], [2.0, 3.55], [2.08, 3.75], [2.18, 4.0], [2.3, 4.25], [2.65, 5.0], [2.95, 6.0], [3.02, 7.0], [3.1, 7.8], [3.22, 8.9], [3.37, 10.7], [3.5, 11.4], [3.6, 11.75], [3.65, E6_JOIN]];
 const at = (y0: number, y1: number): Pt[] => [[y0, -9], [y1, -9]];
 
 /**
@@ -1424,11 +1451,11 @@ const at = (y0: number, y1: number): Pt[] => [[y0, -9], [y1, -9]];
  */
 const E6_FACE: SeriesCabFace = {
   dJoin: E6_JOIN, dSide: E6_JOIN, first: 13.35, roofFrom: 9, wrap: true, reach: 0, cols: [4, 16, 2, 1], tolerance: 0.05,
-  profile: [[0.42, 0.5], [0.46, 0.33], [0.55, 0.16], [0.68, 0.06], [0.82, 0.01], [0.95, 0], [1.09, 0], [1.25, 0.07], [1.4, 0.3], [1.48, 0.6], [1.52, 1.06], [1.55, 1.6], [1.57, 1.95], [1.7, 2.3], [1.8, 2.55], [1.93, 3.0], [2.0, 3.55], [2.08, 3.75], [2.18, 4.0], [2.3, 4.25], [2.65, 5.0], [2.95, 6.0], [3.02, 7.0], [3.1, 7.8], [3.22, 8.9], [3.37, 10.7], [3.5, 11.4], [3.6, 11.75], [3.65, E6_JOIN]],
-  corner: [[0.42, 1.25], [1.4, 1.3], [1.52, 1.25], [1.57, 1.15], [1.8, 1.15], [2.08, 1.1], [2.18, 0.95], [2.3, 0.82], [2.65, 0.8], [2.95, 0.75], [3.1, 0.8], [3.22, 0.9], [3.37, 0.9], [3.5, 0.7], [3.6, 0.4], [3.65, 0.05]],
+  profile: E6_FACE_PROFILE, reshape: e6Reshape,
+  corner: [[0.42, 1.25], [1.4, 1.3], [1.52, 1.25], [1.57, 1.15], [1.8, 1.15], [2.0, 0.85], [2.08, 0.77], [2.65, 0.77], [2.95, 0.75], [3.1, 0.8], [3.22, 0.9], [3.37, 0.9], [3.5, 0.7], [3.6, 0.4], [3.65, 0.05]],
   cornerDepth: [[0.42, 4.5], [0.78, 5.0], [1.09, 5.2], [1.4, 5.0], [1.52, 4.6], [1.57, 4.0], [1.8, 3.4], [1.93, 3.0], [2.08, 2.4], [2.18, 2.8], [2.3, 3.4], [2.65, 3.8], [2.95, 3.8], [3.1, 3.4], [3.22, 2.5], [3.37, 1.05], [3.5, 0.5], [3.6, 0.2], [3.65, 0.01]],
   bulge: [[0.42, 0.05], [1.4, 0.05], [1.52, 0.2], [1.57, 0.4], [1.8, 0.6], [2.08, 0.6], [2.18, 1.4], [2.3, 2.1], [2.65, 1.6], [2.95, 1.0], [3.1, 0.6], [3.22, 0.35], [3.37, 0.15], [3.5, 0.05], [3.6, 0]],
-  rows: [0.42, 0.5, 0.62, 0.78, 1.0, 1.09, 1.25, 1.4, 1.52, 1.57, 1.8, 1.93, 2.0, 2.08, 2.18, 2.3, 2.65, 2.95, 3.1, 3.22, 3.37, 3.5, 3.6, 3.65],
+  rows: [0.42, 0.5, 0.62, 0.78, 1.0, 1.09, 1.25, 1.4, 1.52, 1.57, 1.8, 1.93, 2.0, 2.12, 2.18, 2.3, 2.65, 2.9, 2.99, 3.04, 3.1, 3.22, 3.37, 3.5, 3.6, 3.65],
   // the face white under its paint; the distant model's centre line: white under the coupler, red above
   bands: () => [[0, 9, "white"]],
   lodBands: [[0, 1.0, "white"], [1.0, 9, "red"]],
@@ -1444,11 +1471,11 @@ const E6_FACE: SeriesCabFace = {
     { mat: "arrow", front: [[2.02, 10.9], [2.09, 10.9]], back: [[2.02, 99], [2.09, 99]] },
     // the headlights' long lens at the top of the wedge's front
     { mat: "cabGlass", front: [[1.48, 4.5], [1.86, 5.3], [1.97, 5.65], [2.03, 6.3]], back: [[1.48, 4.56], [1.6, 5.2], [1.86, 6.17], [1.97, 6.45], [2.03, 6.5]] },
+    // the canopy's glass, the windscreen wrapping into its side windows, in a thin black frame
+    { mat: "cabMask", front: [[2.13, -9], [3.04, -9]], back: E6_MASK_BACK, top: 9, lat: E6_CANOPY_W[0]![1] + E6_WALL + 0.01 },
+    { mat: "e6Glass", front: [[2.19, -9], [3.02, -9]], back: E6_GLASS_BACK, top: 9, lat: E6_CANOPY_W[0]![1] + E6_WALL + 0.01 },
   ],
   fields: [
-    // the windscreen on the canopy's front, a rounded rectangle in its thin black surround
-    { mat: "cabMask", pts: E6_SURROUND },
-    { mat: "cabGlass", pts: E6_SCREEN },
     // the coupler cover's seam under the snout, white inside it below the red's split
     { mat: "rubber", pts: [[-1.08, 1.0], [1.08, 1.0], [0.95, 0.8], [0.66, 0.6], [0.32, 0.5], [0, 0.47], [-0.32, 0.5], [-0.66, 0.6], [-0.95, 0.8]] },
     { mat: "white", pts: [[-1.01, 1.0], [1.01, 1.0], [0.9, 0.83], [0.63, 0.64], [0.31, 0.54], [0, 0.51], [-0.31, 0.54], [-0.63, 0.64], [-0.9, 0.83]] },
@@ -1457,7 +1484,7 @@ const E6_FACE: SeriesCabFace = {
   panes: [], lodGlass: { hw: 0.55, y: [2.05, 2.95] },
   // two headlights at the lens's front on each side
   lamps: [[-1.37, 1.6, 0.07, "lampHead"], [-1.39, 1.75, 0.07, "lampHead"], [1.37, 1.6, 0.07, "lampHead"], [1.39, 1.75, 0.07, "lampHead"]],
-  wipers: [[[-0.36, 2.04], [-0.44, 2.42]], [[0.3, 2.04], [0.38, 2.42]]],
+  wipers: [[[-0.36, 2.2], [-0.42, 2.6]], [[0.3, 2.2], [0.36, 2.6]]],
 };
 
 /** The E6's pilot under the nose: a low white plough from behind the snout back to the equipment covers. */
@@ -1473,7 +1500,9 @@ function e6Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car
 /** A window row: n windows `w` wide, `pitch` apart, the first centred at d0. */
 const e6Row = (d0: number, n: number, w = 0.55, pitch = 0.9): Array<readonly [number, number]> => Array.from({ length: n }, (_, i) => [d0 + i * pitch - w / 2, d0 + i * pitch + w / 2] as const);
 
-const E6_PALETTE = { white: c("#ebecec", 0.3), red: c("#cc1234", 0.3), arrow: c("#9ea3a8", 0.3), cabMask: c("#15181b", 0.3), skirtG: c("#d6d2c8", 0.6) };
+/** The canopy's glass: dark, blue-grey and reflective, lighter than its black frame (photo-e6-z14.jpg). */
+const E6_GLASS: MaterialSpec = { color: "#34495c", metallic: 0.4, roughness: 0.1, glass: true };
+const E6_PALETTE = { e6Glass: E6_GLASS, white: c("#ebecec", 0.3), red: c("#cc1234", 0.3), arrow: c("#9ea3a8", 0.3), cabMask: c("#15181b", 0.3), skirtG: c("#d6d2c8", 0.6) };
 
 export const E6: ShinkansenSeries = {
   // a mini-shinkansen body 2.945 m wide, the side straight up to 3.2 m under a red roof, the beige

@@ -138,13 +138,15 @@ combinations hashed before and after):
   from the front round the corners and back along a long nose: the Giruno's red and black);
   its `planInset` ([y, inset], cabNose.ts) stands the face and its corners that far inside the
   body's half width, the straight run behind them flaring out to the body's side by `dSide`: a
-  cab hump narrower than the beak under it (the 700's); unset, the face is as before;
+  cab hump narrower than the beak under it (the 700's); unset, the face is as before; a `paint`
+  entry's `lat` keeps it within that lateral distance of the centre line: glass on a canopy
+  narrower than the nose round it, its front and side windows drawn by one pair of edges (the E6's);
 
   `lodGlass` gives the distant model's windscreen (half width, heights) where the windscreen is
   `paint`, not a pane (the E6);
 
 - a cab face's `reshape` - its depth reshaped across the face (`cabNose.ts`; the distant model keeps the
-  plain slices): the N700S's canopy, valleys and wing crests; a livery sweep's `face` paints it on the face's
+  plain slices): the N700S's canopy, valleys and wing crests, the E6's canopy cab; a livery sweep's `face` paints it on the face's
   front and corners too, not only its cab sides (the N700S's black canopy for JR Kyushu);
   `pantographCover` - a streamlined cover round the pantograph's base, the arm standing on its top;
 - `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
@@ -314,14 +316,20 @@ the 3.65 m roof), the head-on and three-quarter photographs for widths.
 - **Nose** - joined to the body's section 11.95 m behind the tip (the door follows at once, 12.2 -
   13.05 m). A round snout 0.42 - 1.55 m high, upright from 0.8 to 1.1 m, the coupler cover's seam
   under it and the red over white split at 1.0 m; behind it the nose rises to the windscreen's foot
-  (3.6 m back, 1.98 m) and the canopy (3.0 m high from 6 to 7.5 m back), the roof reaching full height
-  at the join. The canopy is narrower than the nose under it: the face's bow (up to 2.2 m deep) is the
-  canopy's front, 0.65 m half wide; below 2.08 m the corners reach the full width within 2.4 - 5 m.
+  (about 3.9 m back, 2.1 m) and the canopy (3.0 m high from 6 to 7.5 m back), the roof reaching full height
+  at the join. The canopy cab (`e6Reshape`) stands out of the nose from about 2 m up: its front 1.4 m
+  wide (0.7 m half width to 2.9 m, rounded over its crown), the profile's depth across it, then an
+  upright side wall 0.08 m across (one column of the corner arc, the corner's radius set so the face
+  ends there) running straight back to 6.6 - 7.6 m, the nose beside it falling back to a valley
+  behind the wall; blended in over 1.93 - 2.12 m and out into the roof over 3.0 - 3.1 m.
 - **Paint** - edges in [y, d] (`paint`): the red over the snout and nose, its lower sweep rising from
   1.03 m (2 m back) to a point 10.9 m back at 2.0 m; the white wedge from a point at the headlights
   (4.4 m, 1.43 m) up to the roof's edge, the silver arrow line along its top; the grey line under the
-  windows (2.02 - 2.09 m) along the body; the red roof over a silver band (3.1 - 3.2 m). The windscreen
-  (3.6 - 7.3 m back) a rounded rectangle 1.24 m wide head on (`fields`), in a thin black surround; the headlights' long dark lens (4.5 - 6.5 m, 1.48 - 2.05 m)
+  windows (2.02 - 2.09 m) along the body; the red roof over a silver band (3.1 - 3.2 m). The canopy's glass
+  (`e6Glass`, a dark blue-grey, reflective) is `paint` in side elevation, kept to the canopy by `lat`:
+  its foot level at 2.19 m from the front back to 6.9 m, its rear end rounding up into the crown, so
+  the windscreen wraps from the front into the side windows in one piece, in a thin black frame
+  (`cabMask`, from 2.13 m) round it; two wipers on the front. The headlights' long dark lens (4.5 - 6.5 m, 1.48 - 2.05 m)
   with two lamps at its front. A low white pilot under the nose (0.2 m high, 1.9 - 5.2 m back) and beige
   equipment covers from 5.3 m back, down to 0.42 m (`B`).
 - **Sides** - windows 0.55 m wide, 2.16 - 2.66 m, 0.9 m apart: seven on the end car (E621), sixteen on
@@ -329,7 +337,7 @@ the 3.65 m roof), the head-on and three-quarter photographs for widths.
   end car's rear, at the front of an intermediate car (its toilets at the rear); the LED destination
   display beside each. Bogies 6.7 m and 20.85 m behind the tip; centred on the intermediate cars.
 - **Liveries** - `komachi` as above; `akita` keeps its white roof and red lines, with the same red nose.
-- About 14,700 triangles the end car, 8,400 an intermediate car.
+- About 15,500 triangles the end car, 8,400 an intermediate car.
 
 
 ## The N700S
