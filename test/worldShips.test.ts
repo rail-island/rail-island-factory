@@ -17,6 +17,7 @@ import { proceduralId } from "../generator/modelId";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { coverageCombinations, type ParamValues } from "../generator/design";
 import { sample } from "./catalogCache";
+import { UNPOWERED_ACCEL } from "../generator/worldShips";
 import { posable } from "../generator/rig";
 
 const ALL = [...CARGO_SHIP_SPECS, ...SERVICE_SHIP_SPECS, ...PASSENGER_SHIP_SPECS, ...SMALL_SHIP_SPECS];
@@ -139,6 +140,15 @@ describe("the world ships", () => {
       // a water rig alone is nothing pose() moves: the bundle does not carry the rig code
       expect(posable(m.rig), id).toBe(false);
     }
+  });
+
+  it("gives a ship without an engine an acceleration of its own, and leaves the rest to the game", () => {
+    for (const s of ALL) {
+      const g = DESIGNS.get(proceduralId(s.id))!.game!;
+      if (s.game.power > 0) expect(g.accel, s.id).toBeNull();
+      else expect(g.accel, s.id).toBe(UNPOWERED_ACCEL);
+    }
+    expect(ALL.find((s) => s.id === "veh-ship-cutty-sark")!.game.power).toBe(0);
   });
 
   it("budgets 25,000 triangles for the ocean ships over 150 m, 15,000 below, 4,000 for small craft", () => {
