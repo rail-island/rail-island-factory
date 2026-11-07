@@ -7,7 +7,7 @@ the runtime ones the game sets, the variants' overrides, the checks, the export,
 the bells, and the factory's committed copy of the sound designs
 (`pnpm import:sounds`).
 **Code** - `generator/soundMapping.ts`, `generator/soundTable.ts`,
-`generator/importSounds.ts`, `generator/catalog.ts` (`gameWithSounds`,
+`generator/importSounds.ts`, `generator/draftAnimals.ts` (the team's figures the hoof beat pins), `generator/catalog.ts` (`gameWithSounds`,
 `ExportedGame`), `sounds/`,
 `test/soundMapping.test.ts`
 **See also** - [game-properties.md](game-properties.md),
@@ -37,6 +37,7 @@ does not have, and plays nothing there.
 | `horn` | rail and road vehicles, ships | a one-shot | `call` (why it sounds), where the design has one |
 | `engine` | rail and road vehicles, helicopters | a loop | `rpm`, `load`, `state` (a diesel's revs, effort and whether it runs), `rate`, `intensity` (a steam beat), `speed`, `load` (an electric's share of its top speed and effort) or `spin`, `load` (a helicopter rotor's speed and effort), whichever the design has |
 | `bell` | buildings | a one-shot | nothing |
+| `call` | animal-drawn vehicles | a one-shot, played only by the player's Horn (in place of `horn`) | nothing |
 
 A slot is `{ id, params?, calls? }`: a rail-island-music design id and the
 values of its **character** parameters pinned for this model (pitch, size,
@@ -126,6 +127,17 @@ first car's. A ship's hull is measured as the game draws it
 (`shipHullStuds`): a ship standing in for an old model takes the old model's
 length (the legacy table scales it to that, [legacy-mapping.md](legacy-mapping.md)),
 any other its own length at its `game.scale`, at 1.5 studs to the metre.
+
+### Animal-drawn vehicles
+
+A design with the team's two parameters (`animal`, `team`; [draft-animals.md](draft-animals.md))
+takes its slots from its team, per selection (`teamSounds`, `withTeamSounds`): its `engine` is
+rail-island-music's `hoof-beat` with the species' `foot` (`hoof`, `cloven`, `padded`), `size` and
+`stride` and the team's `count` pinned - the game sets the footfall `rate` from the speed and the
+stride - and its `call` is `animal-call` with the species pinned, which the game plays only on the
+player's Horn. A tram keeps the derived tram bell on departure; a horse railway's car and a road
+coach have no `horn`. The trailer (team `none`) has neither engine nor call. Every other species
+and team selection carries a variant with the slots that differ from the default's.
 
 ## Variants
 

@@ -54,7 +54,7 @@ export interface LoopVoice extends Voice {
 }
 
 /** What a sound belongs to, for grouping it in the catalog; the game ignores it. */
-export type SoundCategory = "trains" | "ships" | "aircraft" | "water" | "nature" | "bells" | "editor";
+export type SoundCategory = "trains" | "ships" | "aircraft" | "animals" | "water" | "nature" | "bells" | "editor";
 
 /** A category as the catalog shows it: a heading and a line on what it holds. */
 export interface SoundCategoryInfo {

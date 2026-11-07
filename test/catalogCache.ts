@@ -144,6 +144,9 @@ export function variantsUnderTest(d: Pick<ProceduralDesign, "params" | "finishPa
   // a world fleet design: its defaults (its family suite builds its other combinations;
   // docs/models/world-fleet.md)
   if (d.id && FLEET_IDS.has(d.id)) return out.slice(0, 1);
+  // an animal-drawn vehicle: its defaults (test/animalDrawn.test.ts builds every species' biggest
+  // team, an elephant and the trailer)
+  if (d.id && /^(proc-vehicle|veh)-animal-/.test(d.id)) return out.slice(0, 1);
   // a train's sampled length is its shortest with a middle car (3 cars where offered): the
   // longest repeats the same cars and joints at several times the cost
   const cars = d.params?.find((p) => p.name === "cars");
@@ -175,8 +178,16 @@ export function swept(id: string): boolean {
   if (ALL_DESIGNS || ALL_VARIANTS) return true;
   // the world fleet: its covering sample (generator/worldFleet.ts FLEET_SWEEP_SAMPLE, SWEPT_IDS)
   if (!SWEPT.has(id)) return false;
-  return !KIT_FAMILY_MODULES.has(src) || FIRST_OF_MODULE.get(src) === id;
+  return (!KIT_FAMILY_MODULES.has(src) && !ANIMAL_DRAWN_MODULES.has(src)) || FIRST_OF_MODULE.get(src) === id;
 }
+
+/**
+ * The animal-drawn vehicles' modules (docs/models/animal-drawn-vehicles.md): every design is a
+ * body on one kit, so the catalog sweep and the door, rig and rolling suites check each module's
+ * first design; test/animalDrawn.test.ts checks all twelve (budget, flicker, rig, supports, gait,
+ * LOD and sounds at every species' biggest team, an elephant and the trailer).
+ */
+export const ANIMAL_DRAWN_MODULES: ReadonlySet<string> = new Set(["animalTrams.ts", "animalRail.ts", "animalBuses.ts"]);
 
 /** The first item and SAMPLED_VARIANTS others evenly spread; all of them with TEST_ALL_VARIANTS=1. */
 export function sample<T>(list: readonly T[]): T[] {
