@@ -144,6 +144,9 @@ export function variantsUnderTest(d: Pick<ProceduralDesign, "params" | "finishPa
   // a world fleet design: its defaults (its family suite builds its other combinations;
   // docs/models/world-fleet.md)
   if (d.id && FLEET_IDS.has(d.id)) return out.slice(0, 1);
+  // an animal-drawn vehicle: its defaults (test/animalDrawn.test.ts builds every species' biggest
+  // team, an elephant and the trailer)
+  if (d.id && /^(proc-vehicle|veh)-animal-/.test(d.id)) return out.slice(0, 1);
   // a train's sampled length is its shortest with a middle car (3 cars where offered): the
   // longest repeats the same cars and joints at several times the cost
   const cars = d.params?.find((p) => p.name === "cars");

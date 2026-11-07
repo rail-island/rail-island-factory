@@ -8,6 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import { collectTriangles, parseGlb, type Tri } from "../generator/glbTriangles";
+import { findCoplanarOverlaps } from "../generator/coplanar";
 import { paramCombinations, resolveParams, type ParamValues, type ProceduralDesign } from "../generator/design";
 import {
   ANIMAL_PARAM, GAIT_CLIP, NO_TEAM, SPECIES, SPECIES_SPECS, TEAM_PARAM, gaitPose, gradeSpeed, placeTeam, rowsOf, teamFigures, teamGame, teamOf,
@@ -171,7 +172,10 @@ describe("the animal-drawn vehicles", () => {
         const m = d.build(params);
         const t = teamOf(resolveParams(d.params!, params), { pair: road });
         expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(budget(t.count));
-        const { json, bin } = parseGlb(m.toGlb(d.id));
+        const glb = m.toGlb(d.id);
+        // the catalog sweep builds only the defaults (test/catalogCache.ts): no flicker at any team
+        expect(findCoplanarOverlaps(glb)).toEqual([]);
+        const { json, bin } = parseGlb(glb);
         const ts = collectTriangles(json, bin);
         expect(span(ts, 1)[0]).toBeGreaterThan(-0.05);
         const rig = m.rig as VehicleRig | null;
