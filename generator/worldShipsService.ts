@@ -459,47 +459,191 @@ export function anchorHandlerSpec(): ShipSpec {
 export function craneVesselSpec(): ShipSpec {
   const L = 220;
   const Y = 49.5;
+  // the deck box from Y - 13 to Y over the open water gap; the columns from the pontoons (13 m) into it
+  const box0 = Y - 13;
+  type P = [number, number, number];
+  const lerp = (a: P, b: P, f: number): P => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
+  const sdn = (sd: number): string => (sd > 0 ? "starboard" : "port");
+  // the 10,000 t cranes: slewing tub, red house, the black A-frame, the lattice boom on its foot pins
+  const crane = (sd: number, angle: number): Item[] => {
+    const zc = sd * 30;
+    const out: Item[] = [
+      { k: "cyl", u: 29, z: zc, y: [Y - 0.1, 56.2], r: 14.5, mat: "black", n: 20, name: `crane ${sdn(sd)} slewing tub` },
+      { k: "box", u: [10, 48], z: [zc - 15, zc + 15], y: [56, 74], mat: "red", name: `crane ${sdn(sd)} house` },
+      // the operator's cab on the house's front inboard corner, its windscreen
+      { k: "box", u: [47.8, 51], z: sd > 0 ? [zc - 14.6, zc - 10] : [zc + 10, zc + 14.6], y: [63, 67.5], mat: "white", name: `crane ${sdn(sd)} cab` },
+      { k: "box", u: [50.9, 51.15], z: sd > 0 ? [zc - 14.2, zc - 10.4] : [zc + 10.4, zc + 14.2], y: [64.6, 66.8], mat: "glass", name: `crane ${sdn(sd)} cab window` },
+      // the machinery house and the vents on the roof
+      { k: "box", u: [14, 26], z: [zc - 10, zc + 10], y: [73.8, 77], mat: "white", name: `crane ${sdn(sd)} machinery house` },
+      // the boom's foot pins on their brackets at the house front
+      rod([47.6, 60, zc - 9.5], [47.6, 60, zc + 9.5], 1.1, "black", `crane ${sdn(sd)} boom foot pin`),
+    ];
+    // the A-frame: a side frame each side of the house, a back leg and a front leg meeting under the cap, girts and X-braces
+    const back0: P = [12, 73.8, 0];
+    const back1: P = [21, 139, 0];
+    const front0: P = [45, 73.8, 0];
+    const front1: P = [31, 139, 0];
+    for (const dz of [-13, 13]) {
+      const z = zc + dz;
+      const at = (p: P): P => [p[0], p[1], z];
+      // box-section legs (two plated members), girts at the platforms, one diagonal per panel
+      out.push(rod(at(back0), at(back1), 1.9, "crane", `crane ${sdn(sd)} A-frame back leg`));
+      out.push(rod(at(front0), at(front1), 1.9, "crane", `crane ${sdn(sd)} A-frame front leg`));
+      const lv = [0.02, 0.3, 0.55, 0.78, 0.97];
+      for (let k = 0; k < lv.length; k++) {
+        const f = lv[k]!;
+        if (k > 0) out.push(rod(at(lerp(back0, back1, f)), at(lerp(front0, front1, f)), 1, "crane", `crane ${sdn(sd)} A-frame girt`));
+        if (k + 1 < lv.length) {
+          const g = lv[k + 1]!;
+          out.push(k % 2 ? rod(at(lerp(front0, front1, f)), at(lerp(back0, back1, g)), 0.75, "crane", `crane ${sdn(sd)} A-frame brace`) : rod(at(lerp(back0, back1, f)), at(lerp(front0, front1, g)), 0.75, "crane", `crane ${sdn(sd)} A-frame brace`));
+        }
+      }
+      // the platforms at the girts, red-railed in the photographs: walkways along each side frame
+      for (const f of [0.3, 0.55, 0.78]) {
+        const pb = lerp(back0, back1, f);
+        const pf = lerp(front0, front1, f);
+        out.push({ k: "box", u: [pb[0] - 1, pf[0] + 1], z: [z - 2.4, z + 2.4], y: [pb[1] - 1.5, pb[1] - 1.1], mat: "steel", name: `crane ${sdn(sd)} A-frame platform` });
+      }
+    }
+    // the ties between the side frames and the cap on top
+    for (const f of [0.5, 0.82]) for (const [a, b] of [[back0, back1], [front0, front1]] as const) {
+      const p = lerp(a, b, f);
+      out.push(rod([p[0], p[1], zc - 13], [p[0], p[1], zc + 13], 0.7, "crane", `crane ${sdn(sd)} A-frame tie`));
+    }
+    out.push({ k: "box", u: [19, 33], z: [zc - 14.5, zc + 14.5], y: [138, 142.5], mat: "crane", name: `crane ${sdn(sd)} A-frame cap` });
+    // the boom: four chords through three stations (narrow at the foot pins, deepest a fifth up, tapering to the head)
+    const len = 144;
+    const pivot: P = [47.6, 60, zc];
+    const d: P = [Math.cos(angle), Math.sin(angle), 0];
+    const n: P = [-Math.sin(angle), Math.cos(angle), 0];
+    const st = [[0, 0.6, 9], [0.2, 4, 8], [1, 1.4, 2.4]] as const;
+    const pt = (f: number, a: number, b: number): P => [pivot[0] + d[0] * len * f + n[0] * a, pivot[1] + d[1] * len * f + n[1] * a, zc + b];
+    const sec = (s: readonly [number, number, number], sa: number, sb: number): P => pt(s[0], sa * s[1], sb * s[2]);
+    const cs = [[1, 1], [1, -1], [-1, -1], [-1, 1]] as const;
+    for (const [sa, sb] of cs) for (let k = 0; k + 1 < st.length; k++) out.push(rod(sec(st[k]!, sa, sb), sec(st[k + 1]!, sa, sb), 0.75, "crane", `crane ${sdn(sd)} boom chord`));
+    // lattice: zigzag braces on the four faces
+    const panels = 11;
+    const stAt = (f: number): [number, number] => {
+      if (f <= 0.2) return [0.6 + (4 - 0.6) * (f / 0.2), 9 + (8 - 9) * (f / 0.2)];
+      const g = (f - 0.2) / 0.8;
+      return [4 + (1.4 - 4) * g, 8 + (2.4 - 8) * g];
+    };
+    for (let k = 0; k < panels; k++) {
+      const f0 = 0.04 + (0.95 * k) / panels;
+      const f1 = 0.04 + (0.95 * (k + 1)) / panels;
+      const [h0, w0] = stAt(f0);
+      const [h1, w1] = stAt(f1);
+      const zig = k % 2 ? 1 : -1;
+      // the sides (+-b): from upper to lower chord; the top and bottom faces (+-a): across
+      for (const sb of [1, -1]) out.push(rod(pt(f0, zig * h0, sb * w0), pt(f1, -zig * h1, sb * w1), 0.35, "crane", `crane ${sdn(sd)} boom lacing`));
+      for (const sa of [1, -1]) out.push(rod(pt(f0, sa * h0, zig * w0), pt(f1, sa * h1, -zig * w1), 0.35, "crane", `crane ${sdn(sd)} boom lacing`));
+    }
+    const tip = pt(1, 0, 0);
+    // the boom head with its sheaves, the luffing wires from the A-frame cap, the main hook on its falls
+    out.push({ k: "box", u: [tip[0] - 2.4, tip[0] + 2.6], z: [zc - 2.8, zc + 2.8], y: [tip[1] - 2.2, tip[1] + 2], mat: "red", name: `crane ${sdn(sd)} boom head` });
+    for (const dz of [-5.5, -3, 3, 5.5]) out.push(rod([26, 141, zc + dz], [tip[0] - 1, tip[1] + 1, zc + dz * 0.35], 0.35, "rope", `crane ${sdn(sd)} luffing wires`));
+    const hookY = tip[1] - 24;
+    for (const dz of [-1.2, 1.2]) out.push(rod([tip[0] + 0.5, tip[1] - 2, zc + dz], [tip[0] + 0.5, hookY + 6.8, zc + dz], 0.25, "rope", `crane ${sdn(sd)} hook falls`));
+    out.push({ k: "box", u: [tip[0] - 2.5, tip[0] + 3.5], z: [zc - 2.4, zc + 2.4], y: [hookY + 2, hookY + 7], mat: "yellow", name: `crane ${sdn(sd)} hook block` });
+    out.push({ k: "box", u: [tip[0] - 0.4, tip[0] + 1.4], z: [zc - 0.9, zc + 0.9], y: [hookY, hookY + 2.05], mat: "steel", name: `crane ${sdn(sd)} hook` });
+    // the boom rest forward on the deck: two posts and the cradle the lowered boom lies in
+    out.push(
+      ...[-6, 6].map((dz): Item => ({ k: "box", u: [113, 115], z: [zc + dz - 1, zc + dz + 1], y: [Y - 0.1, 66.2], mat: "crane", name: `boom rest ${sdn(sd)} post` })),
+      { k: "box", u: [112.5, 115.5], z: [zc - 8, zc + 8], y: [66, 67.6], mat: "yellow", name: `boom rest ${sdn(sd)} cradle` },
+      ...[-1, 1].map((s): Item => rod([114, Y, zc + s * 9], [114, 64, zc + s * 6.5], 0.35, "crane", `boom rest ${sdn(sd)} brace`)),
+    );
+    return out;
+  };
+  // the accommodation forward: 7 decks, its lifeboats on platforms along each side, under davits
+  const hw = 26;
+  const Pt = Y + 3.45;
+  const boats = [170, 180, 190];
+  const boatItems: Item[] = [
+    ...[1, -1].flatMap((sd): Item[] => [
+      { k: "box", u: [165, 195], z: sd > 0 ? [hw - 0.2, hw + 3.4] : [-hw - 3.4, -hw + 0.2], y: [Pt - 0.4, Pt], mat: "steel", name: `boat platform ${sdn(sd)}` },
+      ...boats.flatMap((u): Item[] => [-3.6, 3.6].flatMap((du): Item[] => [
+        rod([u + du, Pt - 0.1, sd * (hw + 3.1)], [u + du, Pt + 4.6, sd * (hw + 3.1)], 0.18, "steel", "davit"),
+        rod([u + du, Pt + 4.6, sd * (hw + 3.1)], [u + du, Pt + 5.6, sd * (hw - 0.2)], 0.18, "steel", "davit arm"),
+        rod([u + du * 0.8, Pt + 4.5, sd * (hw + 1.3)], [u + du * 0.8, Pt + 2.4, sd * (hw + 1.3)], 0.06, "rope", "davit fall"),
+      ])),
+    ]),
+    { k: "boats", at: boats, z: hw + 1.3, y: Pt + 1.35, len: 9, r: 1.45, name: "lifeboats" },
+  ];
+  // the helideck cantilevered over the bow at the fourth deck, on its trusses to the deck box front and the house
+  const hy = Y + 12;
+  const helideck: Item[] = [
+    { k: "helideck", u: 213, y: hy, r: 13, name: "helideck" },
+    { k: "box", u: [203.5, 222.5], z: [-9, 9], y: [hy - 1.3, hy + 0.1], mat: "steel", name: "helideck girders" },
+    { k: "box", u: [199.6, 203.6], z: [-1.6, 1.6], y: [hy - 0.3, hy + 0.05], mat: "steel", name: "helideck access bridge" },
+    ...[-8, 8].flatMap((z): Item[] => [
+      rod([204, hy - 1.2, z], [203, Y, z * 1.1], 0.55, "steel", "helideck post"),
+      rod([213, hy - 1.2, z], [204, Y, z * 1.1], 0.4, "steel", "helideck truss"),
+      rod([222, hy - 1.2, z], [217.6, Y - 6, z], 0.55, "steel", "helideck knee brace"),
+      rod([213, hy - 1.2, z], [217.6, Y - 3, z], 0.4, "steel", "helideck truss"),
+    ]),
+    rod([204, Y + 5, -8.8], [204, Y + 5, 8.8], 0.35, "steel", "helideck tie"),
+    rod([217.6, Y - 4.5, -8], [217.6, Y - 4.5, 8], 0.35, "steel", "helideck tie"),
+  ];
+  // the funnel casings beside the accommodation, two each side, their exhaust pipes
+  const casings: Item[] = [1, -1].flatMap((sd): Item[] => [[127, 140], [143, 156]].flatMap(([a, b]): Item[] => [
+    { k: "box", u: [a!, b!], z: sd > 0 ? [36, 49] : [-49, -36], y: [Y - 0.1, 81], mat: "red", name: `funnel casing ${sdn(sd)}` },
+    { k: "box", u: [a! + 1, b! - 1], z: sd > 0 ? [35.8, 49.2] : [-49.2, -35.8], y: [66, 68], mat: "steel", name: "casing louvres" },
+    ...[0.2, 0.4, 0.6, 0.8].map((f): Item => ({ k: "cyl", u: a! + (b! - a!) * f, z: sd * 42.5, y: [80.5, 84.5], r: 0.9, mat: "black", n: 8, name: "exhaust pipe" })),
+  ]));
+  // the auxiliary cranes on the bow corners: red pedestal and cab, black lattice jib
+  const aux = (sd: number): Item[] => {
+    const u = 205;
+    const z = sd * 42;
+    const a: P = [u - 1.5, Y + 15, z];
+    const b: P = [u - 22, Y + 53, z - sd * 3];
+    return [
+      { k: "cyl", u, z, y: [Y - 0.1, Y + 13], r: 2, mat: "red", n: 10, name: `auxiliary crane ${sdn(sd)} pedestal` },
+      { k: "box", u: [u - 3, u + 3], z: [z - 2.5, z + 2.5], y: [Y + 12.8, Y + 17], mat: "red", name: `auxiliary crane ${sdn(sd)} house` },
+      rod([a[0], a[1], z - 1.2], b, 0.45, "crane", "auxiliary crane jib"),
+      rod([a[0], a[1], z + 1.2], b, 0.45, "crane", "auxiliary crane jib"),
+      rod([u + 1, Y + 17, z], b, 0.12, "rope", "auxiliary crane pendant"),
+      rod(b, [b[0], b[1] - 12, b[2]], 0.1, "rope", "auxiliary crane hook wire"),
+      { k: "box", u: [b[0] - 0.6, b[0] + 0.6], z: [b[2] - 0.6, b[2] + 0.6], y: [b[1] - 13.2, b[1] - 11.95], mat: "yellow", name: "auxiliary crane hook" },
+    ];
+  };
+  // the columns: four on each pontoon, the corner ones longest, flared into the pontoon at their feet
+  const cols: ReadonlyArray<readonly [number, number]> = [[2, 34], [68, 96], [124, 152], [182, 218]];
+  const columns: Item[] = cols.flatMap(([a, b]): Item[] => [1, -1].flatMap((sd): Item[] => {
+    const z: [number, number] = sd > 0 ? [26, 49.8] : [-49.8, -26];
+    const zm = (z[0] + z[1]) / 2;
+    return [
+      { k: "box", u: [a, b], z, y: [12.9, box0 + 0.2], mat: "hull", name: `column ${a} ${sd > 0 ? "s" : "p"}` },
+      ...(a > 2 ? [{ k: "plate", pts: [[a + 0.2, 12.95], [a - 4, 12.95], [a + 0.2, 19]], z: zm, t: 23.2, mat: "hull", name: "column flare" } as Item] : []),
+      ...(b < 218 ? [{ k: "plate", pts: [[b - 0.2, 12.95], [b + 4, 12.95], [b - 0.2, 19]], z: zm, t: 23.2, mat: "hull", name: "column flare" } as Item] : []),
+      // the anchor fairleads on the columns' outer faces
+      { k: "box", u: [(a + b) / 2 - 1.5, (a + b) / 2 + 1.5], z: sd > 0 ? [49.7, 50.6] : [-50.6, -49.7], y: [30, 34], mat: "steel", name: "fairlead" },
+    ];
+  }));
   return {
     kind: "service",
     // the two pontoons, awash at the transit draught; the columns rise to the deck box
-    hull: { length: L, beam: 102, depth: 13, draft: 12, twin: 24, bow: "barge", stern: "sternwheel", section: "flat", entry: 0.06, run: 0.04, transom: 0.92, rake: 0.04, boot: 0.6, stripe: 0, rudder: false, fine: true },
-    livery: { hull: "#c23128", bottom: "#1d2024", boot: "#f2f0ea", deck: "#6b6f6c", house: "#f2f0ea", crane: "#e8bf2a" },
+    hull: { length: L, beam: 102, depth: 13, draft: 12, twin: 26, bow: "barge", stern: "sternwheel", section: "flat", entry: 0.06, run: 0.04, transom: 0.92, rake: 0.04, boot: 0.6, stripe: 0, rudder: false, fine: true },
+    livery: { hull: "#22272e", bottom: "#7d2a24", boot: "#2e3338", deck: "#6b6f6c", house: "#f2f0ea", crane: "#1f2328", red: "#c8302a" },
     items: [
-      ...[18, 74, 146, 202].flatMap((u): Item[] => [1, -1].flatMap((sd): Item[] => [
-        { k: "box", u: [u - 12, u + 12], z: sd > 0 ? [31, 49] : [-49, -31], y: [12.9, 37.5], mat: "hull", name: `column ${u} ${sd > 0 ? "s" : "p"}` },
-        // the anchor fairleads on the columns' outer corners
-        { k: "box", u: [u - 1.5, u + 1.5], z: sd > 0 ? [49, 50.2] : [-50.2, -49], y: [32, 36], mat: "steel", name: "fairlead" },
-      ])),
-      { k: "box", u: [2, 218], z: [-50, 50], y: [37.5, Y], mat: "hull", name: "deck box" },
-      { k: "tier", u: [2.6, 217.4], y: [Y - 6, Y - 5.4], hw: 50.6, mat: "white", name: "deck box stripe" },
-      ...deckhouse({ u: [176, 214], y0: Y, decks: 6, hw: 22, h: 3.2, wings: 26, detail: true }),
-      { k: "helideck", u: 198, y: Y + 6 * 3.2 + 1, r: 13, legs: 4 },
-      // the deck's pipe racks, the sea fastening grillage, the mooring winches on the corners
-      { k: "box", u: [80, 160], z: [-30, 30], y: [Y - 0.05, Y + 1.2], mat: "steel", top: false, name: "grillage" },
-      ...[90, 110, 130, 150].map((u): Item => ({ k: "box", u: [u - 0.6, u + 0.6], z: [-30, 30], y: [Y + 1.2, Y + 2.4], mat: "yellow", name: "grillage beam" })),
-      { k: "containers", u: [60, 76], bays: 2, hw: 12, y: Y, tiers: 1, seed: 71, rows: 2.5, name: "deck containers" },
-      ...[[8, 44], [8, -44], [212, 44], [212, -44]].map(([u, z]): Item => ({ k: "box", u: [u! - 3, u! + 3], z: [z! - 3, z! + 3], y: [Y, Y + 3.4], mat: "steel", name: "mooring winch" })),
-      ...[180, 192].map((u): Item => ({ k: "freefall", u, y: Y + 2, len: 9, tilt: -0.55, name: "freefall lifeboat" })),
-      // the two cranes on the stern corners, their lattice booms raised, the hooks hanging
-      ...[1, -1].flatMap((sd): Item[] => [
-        { k: "cyl", u: 22, z: sd * 32, y: [Y, 66], r: 14, mat: "crane", n: 16, name: `crane ${sd > 0 ? "starboard" : "port"} slew` },
-        { k: "tier", u: [10, 40], y: [66, 82], hw: 11, mat: "crane", lip: 0.3, windows: [{ y: 6, h: 1.4, w: 2, pitch: 4, from: 32, to: 38 }], name: `crane house ${sd > 0 ? "starboard" : "port"}` },
-        // the starboard boom raised forward over the deck, the port one slewed out over the side
-        ...((): Item[] => {
-          const tip: [number, number, number] = sd > 0 ? [150, 175, 30] : [122, 160, -96];
-          const at = (f: number, dz: number): [number, number, number] => [40 + (tip[0] - 40) * f, 70 + (tip[1] - 70) * f, sd * 30 + (tip[2] - sd * 30) * f + dz * (1 - 0.7 * f)];
-          return [
-            ...[-4, 4].map((dz): Item => rod(at(0, dz), at(1, dz), 1.4, "crane", `crane boom chord ${sd > 0 ? "starboard" : "port"}`)),
-            ...[0.2, 0.4, 0.6, 0.8].map((f): Item => rod(at(f, -4), at(f, 4), 0.6, "crane", "crane boom brace")),
-            rod([16, 82, sd * 30], tip, 0.4, "rope", `crane topping ${sd > 0 ? "starboard" : "port"}`),
-            rod(tip, [tip[0], tip[1] - 54, tip[2]], 0.25, "rope", "hook falls"),
-            { k: "box", u: [tip[0] - 3, tip[0] + 3], z: [tip[2] - 3, tip[2] + 3], y: [tip[1] - 60, tip[1] - 54], mat: "yellow", name: "hook block" },
-          ];
-        })(),
-        { k: "box", u: [12, 22], z: sd > 0 ? [26, 34] : [-34, -26], y: [82, 112], mat: "crane", name: `crane A-frame ${sd > 0 ? "starboard" : "port"}` },
-      ]),
+      ...columns,
+      { k: "box", u: [2, 218], z: [-50, 50], y: [box0, Y], mat: "hull", name: "deck box" },
+      { k: "rail", u: [3, 217], y: Y, hw: 49.6, h: 1.1, mat: "steel", name: "deck box railing" },
+      ...deckhouse({ u: [164, 200], y0: Y, decks: 7, hw, h: 3.2, wings: 29, detail: true }),
+      { k: "mast", u: 192, y: [Y + 22.3, Y + 38], r: 0.45, yards: [[Y + 33, 4]], radar: true, mat: "white", name: "radar mast" },
+      ...boatItems,
+      ...helideck,
+      ...casings,
+      // the deck's sea fastening grillage, deck containers, the mooring winches on the corners
+      { k: "box", u: [78, 108], z: [-22, 22], y: [Y - 0.05, Y + 1.2], mat: "steel", top: false, name: "grillage" },
+      ...[84, 94, 104].map((u): Item => ({ k: "box", u: [u - 0.6, u + 0.6], z: [-22, 22], y: [Y + 1.2, Y + 2.4], mat: "yellow", name: "grillage beam" })),
+      { k: "containers", u: [56, 72], bays: 2, hw: 10, y: Y, tiers: 1, seed: 71, rows: 2.5, name: "deck containers" },
+      ...[[5, 44], [5, -44], [214, 44], [214, -44]].map(([u, z]): Item => ({ k: "box", u: [u! - 2.5, u! + 2.5], z: [z! - 3, z! + 3], y: [Y - 0.1, Y + 3.4], mat: "steel", name: "mooring winch" })),
+      // the two cranes on the stern corners, their booms raised forward (starboard 50, port 58 degrees)
+      ...crane(1, (50 * Math.PI) / 180),
+      ...crane(-1, (58 * Math.PI) / 180),
+      ...aux(1),
+      ...aux(-1),
       { k: "marks", at: [L * 0.9, L * 0.5, L * 0.1], y: [8, 13], step: 1, s: 1 },
-      ...[22, 22].map((u, i): Item => ({ k: "crane", u: u + 4, z: (i ? -1 : 1) * 46, y: Y, h: 6, jib: 24, dir: (i ? -1 : 1) * Math.PI * 0.6, mat: "crane", name: "auxiliary crane" })),
     ],
   };
 }
@@ -700,7 +844,33 @@ export function shipSupplyVesselLod(p?: ParamValues): MeshBuilder { return shipL
 export function shipAnchorHandler(): MeshBuilder { return worldShip(anchorHandlerSpec()); }
 export function shipAnchorHandlerLod(): MeshBuilder { return shipLod(anchorHandlerSpec()); }
 export function shipCraneVessel(): MeshBuilder { return worldShip(craneVesselSpec()); }
-export function shipCraneVesselLod(): MeshBuilder { return shipLod(craneVesselSpec()); }
+/**
+ * The crane vessel from afar: the twin pontoons' plan rings alone take the kit's whole
+ * 100 triangles, so its distant model is drawn from blocks instead - the deck box on its
+ * four corner columns (down to the pontoons, under the water), the crane houses, the
+ * A-frames and the raised booms.
+ */
+export function shipCraneVesselLod(): MeshBuilder {
+  const s = craneVesselSpec();
+  const Y = 49.5;
+  const boom = (sd: number, deg: number): Item => {
+    const a = (deg * Math.PI) / 180;
+    return { k: "boom", a: [47.6, 60, sd * 30], b: [47.6 + 144 * Math.cos(a), 60 + 144 * Math.sin(a), sd * 30], w: 3.5, mat: "crane", name: "boom" };
+  };
+  return shipLod({
+    kind: s.kind, hull: null, length: 220, livery: s.livery,
+    items: [
+      ...[[2, 34], [182, 218]].flatMap(([a, b]): Item[] => [1, -1].map((sd): Item => ({ k: "box", u: [a!, b!], z: sd > 0 ? [26, 49.8] : [-49.8, -26], y: [0, Y - 13.2], mat: "hull", name: "column" }))),
+      { k: "box", u: [2, 218], z: [-50, 50], y: [Y - 13, Y], mat: "hull", name: "deck box" },
+      ...[1, -1].flatMap((sd): Item[] => [
+        { k: "box", u: [10, 48], z: [sd * 30 - 15, sd * 30 + 15], y: [Y, 74], mat: "red", name: "crane house" },
+        { k: "boom", a: [28, 74, sd * 30], b: [26, 141, sd * 30], w: 5, mat: "crane", name: "A-frame" },
+      ]),
+      boom(1, 50),
+      boom(-1, 58),
+    ],
+  });
+}
 export function shipDrillship(): MeshBuilder { return worldShip(drillshipSpec()); }
 export function shipDrillshipLod(): MeshBuilder { return shipLod(drillshipSpec()); }
 export function shipCableLayer(): MeshBuilder { return worldShip(cableLayerSpec()); }

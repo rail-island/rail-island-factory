@@ -94,7 +94,7 @@ Notes:
 | `veh-ship-hopper-dredger` | Trailing Suction Hopper Dredger | 150.0 x 32.0 x 37.4 | 11.0 (0.2941) | bulbous / transom | 7048 (99) | - |
 | `veh-ship-supply-vessel` | Platform Supply Vessel | 89.0 x 19.0 x 30.0 | 6.3 (0.21) | raked / transom | 5427 (99) | livery: red, blue, orange |
 | `veh-ship-anchor-handler` | Anchor Handling Tug | 91.0 x 22.0 x 33.9 | 7.8 (0.2301) | raked / transom | 5591 (99) | - |
-| `veh-ship-crane-vessel` | Semi-Submersible Crane Vessel | 220.0 x 102.0 x 175.9 | 12.0 (0.0682) | barge / sternwheel, twin | 9327 (96) | - |
+| `veh-ship-crane-vessel` | Semi-Submersible Crane Vessel | 220.0 x 102.0 x 184.1 | 12.0 (0.0652) | barge / sternwheel, twin | 15012 (94) | - |
 | `veh-ship-drillship` | Drillship | 228.0 x 42.0 x 96.0 | 12.0 (0.125) | raked / transom | 9560 (93) | - |
 | `veh-ship-fireboat` | Fire Fighter | 40.5 x 9.1 x 14.5 | 3.0 (0.2062) | raked / cruiser | 4818 (99) | - |
 | `veh-ship-rnli-shannon` | RNLI Shannon Class | 13.6 x 4.5 x 5.8 | 0.9 (0.1552) | raked / transom | 2672 (93) | - |
@@ -114,9 +114,17 @@ the pilot boat's heavy fenders and boarding deck rail.
 
 Notes:
 
-- The **crane vessel** (Sleipnir) is drawn at transit draught: the two pontoons awash, the
-  columns, the deck box, the two cranes with their booms raised; the cranes' 10,000 t blocks are
-  left out.
+- The **crane vessel** (Sleipnir) is drawn at transit draught: the two pontoons awash, four
+  columns on each (the corner ones longest, flared into the pontoon at their feet) reaching up into
+  the 13 m deck box over the open water gap; the two cranes on the stern corners - slewing tub, red
+  house with its cab, the black A-frame (box legs, girts, platforms, one diagonal per panel) and the
+  144 m lattice boom on its foot pins, raised forward, its luffing wires from the A-frame cap and
+  the hook block on its falls - with their boom rests on the deck; two red funnel casings each side;
+  the 7-deck accommodation forward with lifeboats under davits on platforms along both sides and
+  the helideck cantilevered over the bow on its girders, posts and knee braces; red-pedestal
+  auxiliary cranes on the bow corners. Its distant model is its own (the twin pontoons' plan rings
+  alone would take the kit's 100 triangles): the deck box on its corner columns, the crane houses,
+  A-frames and booms.
 - The **drillship's** derrick is a tapering four-leg tower with girts, not a lattice.
 - The **fishing vessels'** nets are boxes; the shrimp trawler's outriggers are lowered, the
   fishing cutter's (small module) raised.
