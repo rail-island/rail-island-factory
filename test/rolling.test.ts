@@ -25,6 +25,9 @@ type Gltf = {
 const ROLLING: Array<{ id: string; d: number; nodes: string[] }> = [
   { id: "proc-vehicle-cd-150", d: 1.25, nodes: ["wheelset-1", "wheelset-2", "wheelset-3", "wheelset-4"] },
   { id: "proc-vehicle-horse-tram", d: 0.76, nodes: ["wheelset-1", "wheelset-2"] },
+  // the paddle steamers (hullKit.ts "paddle"): each side wheel turns on its shaft
+  { id: "proc-vehicle-ship-swiss-paddle", d: 4.8, nodes: ["paddle-wheel-0", "paddle-wheel-1"] },
+  { id: "proc-vehicle-ship-elbe-paddle", d: 4.4, nodes: ["paddle-wheel-0", "paddle-wheel-1"] },
   ...[
     ["proc-vehicle-tatra-815-tipper", 1.14, 2],
     ["proc-vehicle-praga-rv", 1.02, 2],
