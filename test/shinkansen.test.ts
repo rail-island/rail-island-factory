@@ -6,6 +6,7 @@ import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
 import { lodBudget } from "../generator/lod";
+import { readTriangles } from "../generator/renderGlbThumb";
 
 describe("the later Shinkansen", () => {
   it("are seven series on the Shinkansen gauge, each an end car, a middle car and a train of 3 - 8", () => {
@@ -53,5 +54,24 @@ describe("the later Shinkansen", () => {
     expect(t.map((x) => x.pantograph)).toEqual([false, false, true, false, false, true, false, false]);
     expect(t.map((x) => x.turned)).toEqual([false, false, false, false, false, false, false, true]);
     expect(shinkansenTrain(SHINKANSEN_SERIES["proc-vehicle-shinkansen-n700s"]!, 3).map((x) => x.pantograph)).toEqual([false, true, false]);
+  });
+
+  it("draws the E6's windscreen on its canopy only: one glass wrapping from the front into the side windows", () => {
+    // regression: the windscreen was a polygon seen head on, smeared along the twisting nose round the canopy
+    const tris = readTriangles(SHINKANSEN_DESIGNS.find((d) => d.id === "proc-vehicle-shinkansen-e6")!.build().toGlb("e6"));
+    const tip = Math.max(...tris.flatMap((t) => t.p.map((p) => p[0])));
+    for (const mat of ["e6Glass", "cabMask"]) {
+      const pts = tris.filter((t) => t.material === mat).flatMap((t) => t.p);
+      expect(pts.length, mat).toBeGreaterThan(0);
+      const range = (f: (p: readonly number[]) => number) => [Math.min(...pts.map(f)), Math.max(...pts.map(f))];
+      const [d0, d1] = range((p) => tip - p[0]!), [y0, y1] = range((p) => p[1]!), [z0, z1] = range((p) => p[2]!);
+      // on the canopy, 1.6 m wide, its foot level above the headlights' lens, from the front back to 7.2 m
+      expect(Math.max(-z0, z1), mat).toBeLessThanOrEqual(0.8);
+      expect(y0, mat).toBeGreaterThanOrEqual(2.1);
+      expect(y1, mat).toBeLessThanOrEqual(3.05);
+      expect(d0, mat).toBeGreaterThan(3.7);
+      expect(d1, mat).toBeLessThan(7.2);
+      expect(d1 - d0, mat).toBeGreaterThan(2.8);
+    }
   });
 });

@@ -66,8 +66,10 @@ export interface SeriesCabFace {
    * height (d behind the tip, ascending y) and below `top` (default `roofFrom`); later ones over earlier
    * ones, drawn over the livery's sweeps and under the fields, masks and panes: a colour field that
    * runs from the face's front round its corners and back along the nose (a long, pointed nose).
+   * With `lat`, only within that lateral distance of the centre line: glass on a canopy narrower
+   * than the nose round it, its side windows drawn by the same edges (the E6's).
    */
-  paint?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
+  paint?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number; lat?: number }>;
   /** The face's bands wrap round onto the cab sides back to the join (default the sides' bands there). */
   wrap?: boolean;
   /** The windscreens and other panes, painted glass. */
@@ -176,7 +178,7 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
     const [front, back] = [edgeMemo(w.front), edgeMemo(w.back)];
     out.push({
       mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
-      inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= front(q.y) && q.d <= back(q.y),
+      inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && (w.lat === undefined || Math.abs(q.lat) <= w.lat) && q.d >= front(q.y) && q.d <= back(q.y),
     });
   });
   [...(p.fields ?? []), ...(f.fields ?? [])].forEach((r, i) => {
