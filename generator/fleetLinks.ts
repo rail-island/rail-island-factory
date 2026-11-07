@@ -1377,6 +1377,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikipedia: Feeder ship", url: "https://en.wikipedia.org/wiki/Feeder_ship" },
     { title: "Wikimedia Commons: 2015-02-07 VEGA SCORPIO - IMO 9491599, with tug, BARBADOS II - IMO 9229221.jpg", url: "https://commons.wikimedia.org/wiki/File:2015-02-07_VEGA_SCORPIO_-_IMO_9491599,_with_tug,_BARBADOS_II_-_IMO_9229221.jpg" },
     { title: "Wikimedia Commons: BF Fortaleza (IMO 9130432) River Thames 2020.jpg", url: "https://commons.wikimedia.org/wiki/File:BF_Fortaleza_(IMO_9130432)_River_Thames_2020.jpg" },
+    { title: "Wikimedia Commons: VEGA SCORPIO 2112.jpg", url: "https://commons.wikimedia.org/wiki/File:VEGA_SCORPIO_2112.jpg" },
   ],
   "proc-vehicle-ship-felucca": [
     { title: "Wikipedia: Felucca", url: "https://en.wikipedia.org/wiki/Felucca" },
