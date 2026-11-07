@@ -908,19 +908,37 @@ const n7Oval = (hw: number, y0: number, y1: number, taper: number, ex: number, n
     return [Math.round(hw * x * (1 - taper * Math.max(0, y)) * 1e4) / 1e4, Math.round((cy + hy * y) * 1e4) / 1e4];
   });
 };
-/** The windscreen (J22, Kyoto: about 1.5 m across, 0.85 m tall): one wide rounded glass wrapping the canopy's front, its foot 2.3 m high. */
-const N7_SCREEN: Pt[] = n7Oval(0.76, 2.29, 3.12, 0.3, 3.2);
+/**
+ * The windscreen seen head-on (J30 at Nozomi, J22, Kyoto; the user's close-up of J30): a wide, low
+ * opening in a grey frame on the canopy's front - its top nearly level under the canopy's crown, its
+ * ends rounded - holding a wide centre pane (a little wider at its top, no centre pillar) and, behind
+ * a grey pillar each side, a D-shaped side pane wrapping round the canopy's corner, its outer edge
+ * leaning in toward the top. [lat, y]; the side panes for the viewer's side sd.
+ */
+/** A symmetric outline from its right half (bottom centre round to top centre). */
+const n7Mirror = (half: Pt[]): Pt[] => [...half, ...half.slice(1, -1).reverse().map(([l, y]): Pt => [-l, y])];
+const N7_FRAME: Pt[] = n7Mirror([[0, 2.285], [0.5, 2.285], [0.7, 2.29], [0.77, 2.32], [0.795, 2.38], [0.79, 2.48], [0.76, 2.6], [0.71, 2.72], [0.64, 2.83], [0.57, 2.91], [0.48, 2.955], [0.3, 2.97], [0, 2.975]]);
+const N7_CENTRE: Pt[] = n7Mirror([[0, 2.335], [0.39, 2.335], [0.42, 2.35], [0.435, 2.4], [0.455, 2.85], [0.44, 2.9], [0.4, 2.92], [0, 2.925]]);
+const n7SidePane = (sd: number): Pt[] =>
+  ([[0.495, 2.345], [0.69, 2.34], [0.74, 2.37], [0.752, 2.45], [0.735, 2.56], [0.695, 2.67], [0.64, 2.77], [0.585, 2.85], [0.53, 2.89], [0.51, 2.88]] as Pt[]).map(([l, y]): Pt => [sd * l, y]);
+/** The single wiper parked up the centre pane from its pivot near the bottom, as short pieces (a decal follows the curved glass only at its corners). */
+const N7_WIPER: Array<[Pt, Pt]> = Array.from({ length: 6 }, (_, i): [Pt, Pt] => {
+  const at = (t: number): Pt => [0.06 - 0.36 * t, 2.37 + 0.36 * t];
+  return [at(i / 6), at((i + 1) / 6)];
+});
+/** The centre pane's lighter, blue-green glass (the photographs); the side panes, seen at a slant, are dark. */
+const N7_GLASS: MaterialSpec = { color: "#3d6b74", metallic: 0.4, roughness: 0.08, glass: true };
 
 const N700S_FACE: SeriesCabFace = {
   dJoin: N7_JOIN, dSide: 6.0, first: N7_JOIN + 1.3, reach: 0, roofFrom: 9, wrap: true, cols: [10, 10, 1, 2], tolerance: 0.03,
   profile: N7_PROFILE, corner: [...N7_CORNER], cornerDepth: [...N7_DEPTH], rows: N7_ROWS, reshape: n7Reshape,
   // the lower snout in the skirt's colour (silver grey, JR Kyushu's red), white above
   bands: (l) => [[0, 0.9, l.bands[0]![2]], [0.9, 9, "white"]],
-  // the windscreen: one pane, no centre pillar (J30, Kyoto), a single wiper
-  fields: [{ mat: "cabGlass", pts: N7_SCREEN }, { mat: "cabMask", pts: n7Lamp(1, 0.14) }, { mat: "cabMask", pts: n7Lamp(-1, 0.14) }, { mat: "cabGlass", pts: n7Lamp(1, 0) }, { mat: "cabGlass", pts: n7Lamp(-1, 0) }, { mat: "lampHead", pts: n7Lamp(1, -0.35) }, { mat: "lampHead", pts: n7Lamp(-1, -0.35) }],
-  // the distant model's glass: inside the windscreen's outline
-  panes: [{ lat: [-0.6, 0.6], y: [2.34, 3.05], r: 0.25 }],
-  wipers: [[[0.3, 2.37], [-0.16, 2.86]]],
+  // the windscreen: the grey frame, the centre pane (no centre pillar) and the two side panes, a single wiper
+  fields: [{ mat: "screenFrame", pts: N7_FRAME }, { mat: "n7Glass", pts: N7_CENTRE }, { mat: "cabGlass", pts: n7SidePane(1) }, { mat: "cabGlass", pts: n7SidePane(-1) }, { mat: "cabMask", pts: n7Lamp(1, 0.14) }, { mat: "cabMask", pts: n7Lamp(-1, 0.14) }, { mat: "cabGlass", pts: n7Lamp(1, 0) }, { mat: "cabGlass", pts: n7Lamp(-1, 0) }, { mat: "lampHead", pts: n7Lamp(1, -0.35) }, { mat: "lampHead", pts: n7Lamp(-1, -0.35) }],
+  // the windscreen is paint; the distant model's glass inside its outline
+  panes: [], lodGlass: { hw: 0.74, y: [2.33, 2.92] },
+  wipers: N7_WIPER,
 };
 
 /** A thin line of paint along a centre line (d, y; y ascending) as a sweep's front and back edges by height. */
@@ -931,7 +949,7 @@ function n7Line(pts: ReadonlyArray<readonly [number, number]>, t: number): { fro
   return { front: ys.map((y): Pt => [y, dAt(y - t / 2)]), back: ys.map((y): Pt => [y, dAt(y + t / 2)]) };
 }
 
-const N7_PALETTE = { white: c("#f3f3f0"), roofG: c("#e8e8e5", 0.6), cabMask: c("#1b1d20", 0.3) };
+const N7_PALETTE = { white: c("#f3f3f0"), roofG: c("#e8e8e5", 0.6), cabMask: c("#1b1d20", 0.3), screenFrame: c("#9ca3aa", 0.35), n7Glass: N7_GLASS };
 
 export const N700S: ShinkansenSeries = {
   endLength: 27.35, midLength: 25.0, W: N7_HW, Y: 1.45, S: 3.0, C: 3.6, lean: 0.96, B: 0.3, A: 0.9,
@@ -959,7 +977,7 @@ export const N700S: ShinkansenSeries = {
       ],
     },
     jrKyushu: {
-      title: "JR Kyushu", palette: { ...N7_PALETTE, red: c("#c8102e", 0.45), kBlack: c("#141517", 0.35) },
+      title: "JR Kyushu", palette: { ...N7_PALETTE, red: c("#c8102e", 0.45), kBlack: c("#141517", 0.35), screenFrame: c("#202226", 0.3) },
       // Nishi Kyushu Shinkansen "Kamome": red below 0.9 m, a thin red line under the windows
       bands: [[0, 0.9, "red"], [0.9, 1.7, "white"], [1.7, 1.74, "red"], [1.74, 9, "white"]], roof: "roofG", skirt: "red", number: "Y1",
       endSweeps: [

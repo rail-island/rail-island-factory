@@ -336,8 +336,12 @@ under to 0.3 m) and the top surface, the higher of the wing body - a shallow val
 two crests at 1.1 - 1.5 m from it rising from the headlights (1.56 m high 0.6 m behind the tip) to the body's
 shoulder at the join - and the canopy, a narrow spine out of the valley that widens into the cab's bubble
 (the windscreen's foot 2.3 m high 3.9 m behind the tip, 2.9 m at 5 m, 3.3 m at 7 m), blended by a smooth
-maximum. The windscreen is one wide rounded pane (about 1.5 m across, 2.3 - 3.1 m high) painted on the
-bubble as an oval seen head-on, so its outline stays smooth on the curved canopy; the almond headlights
+maximum. The windscreen (J30, J22; 1.6 m across, 2.29 - 2.98 m high) is painted on the bubble as
+outlines seen head-on, so they stay smooth on the curved canopy: a grey frame (`screenFrame`; black on the
+JR Kyushu canopy), its top nearly level under the crown and its ends rounded, holding a wide centre pane
+of lighter blue-green glass (`n7Glass`, no centre pillar, one wiper parked up it from a pivot near the
+bottom) and, behind a pillar each side, a dark D-shaped side pane wrapping round the canopy's corner, its
+outer edge leaning in toward the top; the almond headlights
 (clear covers, black rims) fields on the snout's upper corners. The leading bogie stands under the canopy
 6.1 m behind the tip, 17.5 m ahead of the rear one; the skirts hang to 0.3 m (no underfloor box), the skirt
 colour to 0.9 m. Side: the crew door 9.15 - 9.75 m behind the tip, the front passenger door, 13 windows
@@ -373,8 +377,8 @@ Every design's nose is a cab face measured from photographs (its section above, 
 leaves out:
 
 - **N700S** - no projective fit was possible on its side-on photograph (lengths along the nose stretched to
-  the crew door's place); the windscreen is a painted oval, the real lens wraps a little further round the
-  canopy; the JR Kyushu canopy's thin gold edging, its emblems and lettering and the pantograph's two roof
+  the crew door's place); the windscreen is paint, flush with the canopy (the real frame is a shallow
+  recess); the JR Kyushu canopy's thin gold edging, its emblems and lettering and the pantograph's two roof
   fins are not drawn; the windows have square ends.
 - **E5** - the sculpted white cheek is painted, not shaped; the hatch seam kinks where the white jaw meets
   the green hood; the pantographs lack their noise shields; the doors' green edge lines are not drawn.
