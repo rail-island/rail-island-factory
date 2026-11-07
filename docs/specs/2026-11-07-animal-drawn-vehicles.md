@@ -2,7 +2,7 @@
 
 Status: draft
 Date: 2026-11-07
-Area: rail-island-factory (draft animals, animal-drawn trams, trains and buses); rail-island-webapp (posing an animal team on rail and road)
+Area: rail-island-factory (draft animals, animal-drawn trams, trains and buses); rail-island-webapp (posing an animal team on rail and road, playing its sounds); rail-island-music (hoof beat and animal call sound designs)
 
 ## Context of the change
 
@@ -163,6 +163,10 @@ wagons couple behind it in the ordinary consist.
 
 **Answer: Request hoof sounds.**
 
+**Follow-up (user): "add implementing sounds into spec".** The sounds are not only requested
+but implemented in this change: the new designs are built in rail-island-music, mapped to
+every species x count variant in the factory and played by the game.
+
 ### What should the standalone Animals-category designs be used for in the game?
 | Option | What it means |
 |---|---|
@@ -212,15 +216,41 @@ than kept or aliased; the double-deck car returns under a new id on the animal k
    CGO omnibus with imperiale, a wagonette/charabanc. Each with references, OpenTTD entry,
    text in 14 languages and the family skill's budgets and checks. The old horse tram design
    and its id are removed. Depends on 1-2.
-4. **Sounds (rail-island-music).** A speed-driven hoof beat (hard hooves and padded feet) and
-   one call per species, each a new sound design; the factory then maps them to the vehicles'
-   `game.sounds`. Independent of 1-3 until the mapping step.
+4. **Sounds (rail-island-music, then the factory's mapping).** Part of this change, not a
+   request for later.
+   - **A new sound category, Animals** ("Draft animals: their hooves and their calls"),
+     beside Trains, Ships and the others.
+   - **The hoof beat** (proposed id `hoof-beat`): a loop, the animal counterpart of the steam
+     beat. Its runtime parameter is the footfall `rate`, which the game sets from the vehicle's
+     speed; standing still it falls silent. Its character parameters, pinned per variant by the
+     factory, are the foot (`hard` hooves of horse, donkey and mule, the cloven hooves of the
+     cow, the `padded` feet of camel and elephant), the animal's size (weight of each
+     footfall, pony-light donkey to elephant), the stride (metres per footfall, from which the
+     game derives the rate) and the team count (more animals: denser, slightly unsynchronised
+     footfalls rather than one louder beat). Harness jingle and the creak of traces are part
+     of it, quiet.
+   - **The animal call** (proposed id `animal-call`): a one-shot with a `species` choice -
+     horse neigh/whinny, donkey bray, mule (between the two), cow moo, camel groan, elephant
+     trumpet - and a `pitch` scale; it takes the horn's `call` parameter like every horn, so
+     the game sounds it on departure and on the player's Horn.
+   - Each design is matched against downloaded recordings (CC0, Public Domain Mark or CC BY),
+     kept as excerpts with their sources in the music repository, with what was measured and
+     what was modelled stated in its documentation; MP3 renders are sent to the user.
+   - **The factory's mapping.** The factory re-imports the designs into its copy of the sound
+     designs. Every animal-drawn vehicle's slots are derived from its team, per variant: the
+     `engine` slot is the hoof beat with the species' foot, size and stride and the team count
+     pinned; the `horn` slot is the species' call with `departure` among its calls. The trailer
+     (count "none") is silent. The factory's sound check covers every variant.
+   Independent of 1-3 until the mapping step, which needs the vehicles' parameters.
 5. **The game (rail-island-webapp).** Import the new export. Extend the horse tram's handling
    (team as a front section on its own supports, its gait played by distance) from trams to
    train consists and to buses on the road. Add the turnback rule: while a rail or tram
    consist with a team stands at a platform to turn back, the team moves to the new leading
    end. Remove what referred only to the old horse tram and move its regression tests to the
-   new vehicles. Depends on 2-3 (and 4 for sound).
+   new vehicles. Import the new sound designs; drive the hoof beat's footfall rate from the
+   vehicle's speed and the pinned stride (the way the steam beat's rate follows the wheels),
+   silent while standing, heard from the team's section; list the new ids among the sounds
+   the game plays. Depends on 2-4.
 
 ## Database and persistent storage
 
@@ -237,8 +267,14 @@ No new database table, bucket, KV key or browser storage.
 - **Imported files (git-tracked, generated).** `db/procedural/vehicles.meta.json` gains the
   twelve vehicles, their `game.variants` per species x count, and a rig marker for the
   re-hitchable team section; `db/procedural/text/` gains their texts; `db/sounds/` gains the
-  hoof and call designs. The animals are in the factory's `catalog.json` only, in no game
+  hoof and call designs (re-imported from rail-island-music). The animals are in the factory's `catalog.json` only, in no game
   meta file.
+- **Sound designs (rail-island-music, git-tracked source; its export is generated).** Two new
+  designs in a new Animals category. Their ids and parameter names are **permanent once the
+  game plays them**, so `hoof-beat`, `animal-call` and their parameter names (`rate`, foot,
+  size, stride, count, `species`, `pitch`, `call`) are decided here. Reference recordings are
+  stored in git as excerpts with their licences. The factory's committed copy of the designs
+  is refreshed by its own sound import.
 - **Factory permanent registries.** New ids in `generator/catalogModels.json` once confirmed
   and in `generator/openttdIds.json` via `pnpm openttd:ids`. The horse tram's OpenTTD ids stay
   reserved and are never reused, though its model is gone.
@@ -259,6 +295,13 @@ No new database table, bucket, KV key or browser storage.
   conflict with the characters' 1.8 m height class and six walk-mode clips.
 - **Team changes ends at turnback** instead of forbidding stub lines or letting a horse be
   pushed: historically correct and keeps every existing track layout usable.
+- **The hoof beat is an engine-slot loop driven by a rate**, the steam beat's pattern, so the
+  game's existing engine playback (runtime `rate`, distance from the listener, voice limit)
+  carries it; only the rate's source (speed over stride) is new. One parametric design for
+  all six species, not one per species: fewer permanent ids, and the species differences are
+  character values the factory pins.
+- **The animal call as the horn slot**, so the player's Horn and the departure call work with
+  no new game slot.
 - **Count "none" as the trailer** instead of separate trailer designs: one design per vehicle.
 
 ## Weaknesses and risks
@@ -279,8 +322,18 @@ No new database table, bucket, KV key or browser storage.
 - **Animals walking on curves and switches.** The team is a front section on lone supports;
   on tight curves and points a long team may cut across. The horse tram's current tests only
   cover one horse.
-- **Sound dependency.** The hoof beat and calls are a separate change in rail-island-music;
-  until then the vehicles map no new sound (trams keep the bell).
+- **Three-repository order for sound.** rail-island-music lands first, then the factory
+  re-imports the designs and maps them, then the game imports both. Out of order, the game
+  warns about a slot naming a design it lacks and plays nothing there; harmless but must be
+  sequenced.
+- **The tram bell.** The animal call takes the horn slot, so the animal-drawn trams lose the
+  tram bell they ring today. Open question: keep the bell for trams and give the call only to
+  the player's Horn?
+- **Reference recordings.** Freely licensed camel and elephant recordings are scarcer than
+  horse or cow; a call may end up modelled with fewer measurements (stated in its docs).
+- **Many hooves.** A six-ox team or several teams in view may blur into noise or crowd the
+  voice limit; the count parameter thins the footfalls rather than adding voices, and the
+  design is one voice per vehicle whatever the count.
 - **Dropped id.** Players with the horse tram on a saved map lose it without notice. Accepted
   by the user.
 - **Factory rule exception.** The factory's rules forbid removing a shipped model id or a
