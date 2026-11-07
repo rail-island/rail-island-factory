@@ -7,7 +7,7 @@ description: Create or change procedural railway vehicles, including electric an
 
 **Covers** - railway vehicle geometry, operating poses and verification.
 **Code** - `generator/vehicles.ts`, `generator/cd150.ts`, `generator/cd163.ts`, `generator/cd163Family.ts`, `generator/csdCoaches.ts`, `generator/csdCoachParts.ts`, `generator/bmoCoach.ts`, `generator/cdGreenWhiteCoach.ts`, `generator/wagons.ts`, `generator/wagonParts.ts`, `generator/steamLocos.ts`, `generator/steamLoco.ts`, `generator/steamParts.ts`, `generator/steamGear.ts`, `generator/drVt1816.ts`, `generator/shinkansen0.ts`, `generator/tgvDuplex.ts`, `generator/sliceBody.ts`, `test/models.test.ts`, `test/steam.test.ts`, `test/cd150.test.ts`, `test/csdCoaches.test.ts`
-**See also** - [vehicle reference](../../../docs/models/vehicles.md), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
+**See also** - [vehicle reference](../../../docs/models/vehicles.md), [detailed-vehicle](../detailed-vehicle/SKILL.md) (matching the photos; one subagent per vehicle), [road-vehicle](../road-vehicle/SKILL.md), [vlakosimdb-transfer](../vlakosimdb-transfer/SKILL.md)
 
 This skill follows the repository's road-vehicle workflow, with railway-specific
 geometry, dimensions and roof equipment. Keep skill text and repository
