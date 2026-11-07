@@ -1539,7 +1539,9 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   ],
   "proc-vehicle-ship-product-tanker": [
     { title: "Wikipedia: Oil tanker", url: "https://en.wikipedia.org/wiki/Oil_tanker" },
-    { title: "Wikimedia Commons: Demonstration against oil tankers on Canadian side of Peace Arch Park, 1970.jpg", url: "https://commons.wikimedia.org/wiki/File:Demonstration_against_oil_tankers_on_Canadian_side_of_Peace_Arch_Park,_1970.jpg" },
+    { title: "Wikimedia Commons: Iver Exact Leaving Sydney.jpg", url: "https://commons.wikimedia.org/wiki/File:Iver_Exact_Leaving_Sydney.jpg" },
+    { title: "Wikimedia Commons: Oil Products Tanker MP MR Tanker 2 at BP Oil Refinery Jetty, Kwinana, October 2023 02.jpg", url: "https://commons.wikimedia.org/wiki/File:Oil_Products_Tanker_MP_MR_Tanker_2_at_BP_Oil_Refinery_Jetty,_Kwinana,_October_2023_02.jpg" },
+    { title: "Wikimedia Commons: Oil Products Tanker MP MR Tanker 2 at BP Oil Refinery Jetty, Kwinana, October 2023 03.jpg", url: "https://commons.wikimedia.org/wiki/File:Oil_Products_Tanker_MP_MR_Tanker_2_at_BP_Oil_Refinery_Jetty,_Kwinana,_October_2023_03.jpg" },
   ],
   "proc-vehicle-ship-purse-seiner": [
     { title: "Wikipedia: Seine fishing", url: "https://en.wikipedia.org/wiki/Seine_fishing" },

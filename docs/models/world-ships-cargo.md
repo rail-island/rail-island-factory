@@ -21,7 +21,7 @@ in `assets/ship-<name>/SOURCES.md`.
 | `veh-ship-vlcc` | Very Large Crude Carrier | 330.0 x 60.0 x 64.6 | 21.0 (0.3252) | bulbous / transom | 9930 (99) | livery: navy, green, black |
 | `veh-ship-seawise-giant` | Seawise Giant | 458.4 x 68.8 x 70.6 | 24.6 (0.3484) | raked / transom | 11115 (99) | - |
 | `veh-ship-aframax` | Aframax Tanker | 245.0 x 42.0 x 50.9 | 14.8 (0.2909) | bulbous / transom | 9074 (99) | livery: red, navy, black |
-| `veh-ship-product-tanker` | Product Tanker | 183.0 x 32.2 x 45.6 | 12.0 (0.2629) | bulbous / transom | 8598 (99) | livery: red, navy, green |
+| `veh-ship-product-tanker` | Product Tanker | 183.0 x 32.2 x 47.4 | 12.0 (0.2532) | bulbous / transom | 10451 (99) | livery: red, navy, green |
 | `veh-ship-lng-moss` | Moss LNG Carrier | 290.0 x 48.0 x 60.8 | 11.5 (0.1891) | bulbous / transom | 16260 (99) | - |
 | `veh-ship-lng-qmax` | Q-Max LNG Carrier | 345.0 x 53.8 x 63.0 | 12.0 (0.1905) | bulbous / transom | 9130 (99) | - |
 | `veh-ship-lpg-carrier` | LPG Carrier | 120.0 x 19.6 x 32.6 | 7.2 (0.2209) | bulbous / transom | 7071 (99) | - |
@@ -64,6 +64,14 @@ Notes:
 - **Tankers** share the deck (`tankDeck`): cargo lines on their supports, the red fire main,
   the catwalk on its posts, the manifold with its crossovers, the hose cranes, the tank hatches,
   the vent risers and the foam monitor platform; liveries recolour the hull. The Seawise Giant is at her lengthened 458.45 m.
+  The MR product tanker draws its own deck from the MP MR Tanker 2 and Iver Exact photographs: the house
+  from 0.07 to 0.235 of the length (four full decks, the funnel casing on their after part, a deck
+  and a narrower wheelhouse forward with closed wings to the sides), the freefall lifeboat on a
+  platform off the house with its ramp legs to the deck, the rescue boat in cradles under davits,
+  the cargo lines in one bundle on supports under the catwalk (which enters the house and lands on
+  the forecastle), the manifold amidships with crossovers on supports, valves and drip trays, a hose
+  crane each side on its pedestal with the jib on a rest post, pump heads, P/V risers, foam monitor
+  towers and a tripod mast forward; its liveries also paint the deck and the lines (red, green, white).
 - **Gas carriers**: the Moss carrier is drawn after the photographed Gulf Energy: five tank
   covers nearly touching at a 40 m pitch, each a skirt from the deck to the walkway round the
   sphere's equator (4 m up, closed, railed) and a dome 12 m over it (`spheres` with `cap` and
