@@ -334,30 +334,6 @@ one ending in a point just ahead of the crew door, and the blade ahead of it (fr
 nose, the canopy black: one oval round the windscreen, a livery's `faceFields` (polygons on the cab face
 seen head-on, under the face's own fields). The pantograph stands on a streamlined cover.
 
-## Deviations
-
-- The 500: the canopy is paint on the nose's own surface, not a separate bubble; the lower snout's lip
-  under the crease does not stand proud; the "JR500 WEST JAPAN" lettering is not drawn; the W sets'
-  pantograph shroud is two low walls, not the full noise screen; the bogies show through the kit's skirt
-  cuts on the rear bogie and the middle cars, where the real cars carry bogie covers.
-
-- The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
-  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E6's pointed lower nose and the
-  N700S's wing edges are approximations.
-- The E5's sculpted white cheek (a bulge along the nose's lower sides) is painted, not shaped;
-  its pantographs lack their noise shields; its doors' green edge lines are not drawn.
-
-  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses are
-  approximations. The N700S's nose (above) is measured, but a projective fit was not possible in its
-  side-on photograph (lengths along the nose stretched to the crew door's place); its windscreen is a
-  painted oval, the real lens wraps a little further round the canopy; the JR Kyushu canopy's thin gold edging, its
-  emblems and lettering and the pantograph's two roof fins are not drawn.
-- The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
-  measurement dome, the observation windows) is not drawn. The 700's beak is no wider than the
-  body, and its hump's waist is one straight flare at each height. Its
-  distant model carries the side bands on to the nose's tip (the cab face's distant end paints by height).
-- The E4's double-deck cars have the doors at the lower deck's level and the standard cabin.
-
 ## The E4 Max
 
 Drawn from photographs (assets/shinkansen-e4/SOURCES.md, with the measurements): the end car's 11.5 m
@@ -375,6 +351,33 @@ a deck and the two-leaf hatch at its rear end (`sidePanels`). The leading bogie 
 nose (`lod` with `cornerDepth`) without the face's glass, so that the line stays within its 100 triangles.
 Deviations: the hollow beside the head is shallower than the real one (the nose's doors need the flat side
 from 8 m back); every intermediate car is the E455 type; the roof's raised covers are not drawn.
+
+## Deviations
+
+Every design's nose is a cab face measured from photographs (its section above, its
+`assets/shinkansen-*/SOURCES.md`). The bodies' widths are narrowed to the gauge (above). What each still
+leaves out:
+
+- **N700S** - no projective fit was possible on its side-on photograph (lengths along the nose stretched to
+  the crew door's place); the windscreen is a painted oval, the real lens wraps a little further round the
+  canopy; the JR Kyushu canopy's thin gold edging, its emblems and lettering and the pantograph's two roof
+  fins are not drawn; the windows have square ends.
+- **E5** - the sculpted white cheek is painted, not shaped; the hatch seam kinks where the white jaw meets
+  the green hood; the pantographs lack their noise shields; the doors' green edge lines are not drawn.
+- **500** - the canopy is paint on the nose's own surface, not a separate bubble; the lower snout's lip under
+  the crease does not stand proud; the "JR500 WEST JAPAN" lettering is not drawn; the W sets' pantograph
+  shroud is two low walls, not the full noise screen; the bogies show through the kit's skirt cuts on the
+  rear bogie and the middle cars, where the real cars carry bogie covers.
+- **700 / 923** - the beak is no wider than the body, and the hump's waist is one straight flare at each
+  height; the distant model ignores `planInset` and carries the side bands on to the nose's tip; the 923's
+  measurement dome and observation windows are not drawn; the middle cars' pantograph has no fairing.
+- **E6** - the crown reaches full height at 11.95 m instead of about 13 m (the door's position); the upper
+  arc of the coupler-cover seam is not drawn; the pilot is a flat-sided slab; the pantograph has no noise
+  shields; the `akita` livery has no photographed prototype.
+- **100** - the cab canopy's side panes sit on the nose's corners (the real canopy is set in from the sides);
+  the blue apron along the cars is shallower than the real one; the pantograph shroud, the small toilet
+  windows and the Grand Hikari scheme are not drawn (`jrWest` is the Kodama renewal).
+- **E4** - see its section above (the hollow beside the head, the intermediate cars, the roof covers).
 
 ## Checking
 

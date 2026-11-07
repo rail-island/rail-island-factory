@@ -2,10 +2,10 @@
 // JR East's E235 (the Yamanote line, 2015) and JNR's 103 series commuter cars
 // (1963), Odakyu's Romancecar GSE (2018), Kintetsu's Hinotori (2020), the E259
 // Narita Express (2009), JNR's 485 series bonnet-nosed express (1964) and the
-// Hankyu 9000 series (2006). Each
-// an end car, a middle car and a train of 3 - 8. Their narrow-gauge (1,067 mm)
-// bodies keep their real 2.8 - 2.95 m width within the UIC gauge, on the game's
-// standard-gauge wheelsets (docs/models/jr-kiha40.md, "Gauge").
+// Hankyu 9000 series (2006). Each an end car, a middle car and a train of 3 - 8,
+// with its own cab face measured from photographs. Their bodies keep their real
+// 2.79 - 2.95 m width within the UIC gauge, on the game's standard-gauge
+// wheelsets (docs/models/jr-kiha40.md, "Gauge").
 // See docs/models/jp-emus.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";

@@ -1,6 +1,6 @@
 # Japanese conventional-line electric units
 
-**Covers** - the seven Japanese narrow-gauge-line units (`proc-vehicle-jr-e235`, `-jnr-103`, `-odakyu-gse`, `-kintetsu-hinotori`, `-jr-e259`, `-jnr-485`, `-hankyu-9000`): their series specs on the Shinkansen series kit, the commuter doors and flat cabs, liveries, the gauge and tests.
+**Covers** - the seven Japanese conventional-line units (`proc-vehicle-jr-e235`, `-jnr-103`, `-odakyu-gse`, `-kintetsu-hinotori`, `-jr-e259`, `-jnr-485`, `-hankyu-9000`): their series specs on the Shinkansen series kit, their cab faces measured from photographs, doors and windows, liveries, the gauge and tests.
 **Code** - `generator/jpEmus.ts` (`JP_EMUS`, `JP_EMU_SERIES`), `generator/jrE259.ts` (the E259), `generator/jnr485.ts` (the 485), `generator/shinkansen.ts` (`ShinkansenSeries`, `buildSeries`, `seriesDesign`), `generator/usTransit.ts` (`drawCar`), `test/jpEmus.test.ts`, `assets/jr-e235/`, `assets/jnr-103/`, `assets/odakyu-gse/`, `assets/kintetsu-hinotori/`, `assets/jr-e259/`, `assets/jnr-485/`, `assets/hankyu-9000/`
 **See also** - [shinkansen.md](shinkansen.md), [jnr-locos.md](jnr-locos.md), [jr-kiha40.md](jr-kiha40.md), [us-transit.md](us-transit.md)
 
@@ -17,13 +17,14 @@
 | `proc-vehicle-hankyu-9000` | Hankyu 9000 series | `maroon`, `allMaroon` | 19.0 / 19.0 m, 3 doors | cab face (`HK_FACE`) |
 
 Each is a `ShinkansenSeries` ([shinkansen.md](shinkansen.md)) built by the same code: the end
-car (the default), the middle car raising its pantograph and the articulated train of 3 - 8
-cars. The series kit's options used here: `doorCount` (commuter doors evenly along the car,
-windows in the piers between them), `flatCab` (a flat cab end's windscreen panes, mask and
-lamps in place of the nose; the end car's body is 7 cm short of its length so its lamps stand
-at it), `pantograph: "diamond"`. The bodies keep their real 2.75 - 2.95 m widths and run on the
-game's standard-gauge wheelsets (the prototypes' track is 1,067 mm; [jr-kiha40.md](jr-kiha40.md),
-"Gauge"), inside the UIC gauge.
+car (the default), the car raising its pantograph and the train of 3 - 8 cars. Every one has its
+own cab face (`cabFace`, the series kit's `SeriesCabFace`), measured from at least three photographs
+listed with their scales in its `assets/<name>/SOURCES.md`, and its doors and windows laid out per
+car from the photographs (`layout`); the sections below give each one's figures. The E259 and the
+485 live in their own modules (`generator/jrE259.ts`, `generator/jnr485.ts`). The bodies keep their
+real 2.79 - 2.95 m widths and run on the game's standard-gauge wheelsets inside the UIC gauge (JR's,
+JNR's and Odakyu's track is 1,067 mm, [jr-kiha40.md](jr-kiha40.md), "Gauge"; Kintetsu's Osaka and
+Nagoya lines and Hankyu are 1,435 mm).
 
 ## The E235
 
@@ -233,37 +234,31 @@ cab's top 3.88 m).
 
 ## Deviations
 
-- The E259's wrap-round windows and the 103's later variants are simplified.
-- The E235: the side windows' rounded corners are square (the kit's windows are rectangles); the
-  destination board is unlit; the halftone is coarser than the real one (7 rows of 0.077 m dots);
-  the distant model shows no green doors (the series LOD paints only bands); the end car's body is
-  0.1 m longer behind the cab than the real one (the face's tip 0.07 m from the coupling plane, the
-  kit's length check). The lamps sit at the face's top corners and there is no gangway door, as in
-  every photograph of the -0 and -1000 subseries.
-- The E235's and E259's wrap-round windows are simplified. The 103 is one version (the low cab, twin
-  sealed beams, AU75); its high-cab ATC cars, the single round headlight and the non-cooled roof are not
-  drawn. The kit's elliptic roof arc gives its face slightly tighter top corners than the real roof's;
-  the coupler plane stands 0.13 m ahead of the face (0.25 m on the real car), so the body is 19.62 m long.
-  Longer trains still raise one pantograph.
-- The E235's wrap-round windows and the 103's later variants are simplified.
-- The Hinotori's real cars ride on their bogies in ways the kit approximates with two bogies a car.
-- The GSE (see "The GSE" above): its pantographs stand where the kit puts them (the middle cars'
-  rear ends, two in a train), not on cars 2, 4 and 6; the dome's wipers, the emblems and the end
-  car's interior ladder to the cab are left out; the cab roof's fairing into the car's roof (6.2 -
-  9.4 m behind the tip) and the roof fairings' sizes are read from three-quarter views only.
+Each section above names what its model still leaves out; in short:
 
-
-- The 485: the Kyushu livery shares the JNR face's geometry, so its white lines sit where the JNR
-  whiskers are (the real ones run above the lamp boxes beside "RED EXPRESS", which is not drawn on
-  the face); one diamond pantograph per motor pair where the MoHa 484 has two; the cab's small rear
-  window and the bonnet's side grilles are left out; the distant model's window band runs on to the cab.
-
-- The GSE's and the Hinotori's real cars are articulated or on their own bogies in ways the kit
-  approximates with two bogies a car; the GSE's raised driver's cab over the saloon is the
-  nose's crown.
-- The E235's and E259's wrap-round windows and the 103's later variants are simplified.
-- The Hankyu 9000's Mc 9000 carries two pantographs on the prototype, the kit one per end car;
-  the skirt's facets and the underfloor equipment are simplified.
+- **E235** - the side windows' rounded corners are square (the kit's windows are rectangles); the
+  destination board is unlit; the halftone is coarser than the real one (7 rows of 0.077 m dots); the
+  distant model shows no green doors; the end car's body is 0.1 m longer behind the cab (the face's tip
+  0.07 m from the coupling plane, the kit's length check).
+- **103** - one version (the low cab, twin sealed beams, AU75); the high-cab ATC cars, the single round
+  headlight and the non-cooled roof are not drawn. The kit's elliptic roof arc gives the face slightly
+  tighter top corners; the coupler plane stands 0.13 m ahead of the face (0.25 m on the real car), so the
+  body is 19.62 m long. Longer trains still raise one pantograph.
+- **GSE** - its pantographs stand where the kit puts them (the middle cars' rear ends, two in a train),
+  not on cars 2, 4 and 6; the dome's wipers, the emblems and the end car's ladder to the cab are left out;
+  the cab roof's fairing (6.2 - 9.4 m behind the tip) and the roof fairings are read from three-quarter
+  views only. The `lse` livery is the LSE's colours, which the GSE never wore.
+- **Hinotori** - the roof reaches full height about 0.8 m sooner than on the prototype; end and middle cars
+  share one window height; the `ace` livery is drawn from the 22600 "Ace" scheme without a photograph.
+- **E259** - the spare pantograph on car 5 is not drawn; the cab cap's rear end is square; the red roof's
+  slanted edge shows the kit's strips; the coupler sits at 1.0 m (0.88 m real); the other end car is a
+  mirrored KuRo, not a KuHa E258.
+- **485** - the Kyushu livery shares the JNR face's geometry, so its white lines sit where the JNR whiskers
+  are ("RED EXPRESS" is not drawn on the face); one diamond pantograph per motor pair where the MoHa 484
+  has two; the cab's small rear window and the bonnet's side grilles are left out; the distant model's
+  window band runs on to the cab.
+- **Hankyu 9000** - the Mc 9000 carries two pantographs, the kit one per end car; the skirt's facets and
+  the underfloor equipment are simplified.
 
 ## Checking
 

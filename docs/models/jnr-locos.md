@@ -43,8 +43,7 @@ on the factory's standard-gauge wheelsets, inside the UIC gauge.
   the smoke deflectors, the Walschaerts gear; the D51's `variant` picks the standard engine's
   separate domes or the early "namekuji" (slug) casing.
 - **EF66** - a square-ended carbody with a cab face (seriesCab.ts) at both ends; see "The EF66".
-- **DD51** - the hood unit kit with a high hood at each side of the centre cab and its new
-  `trucks.middle` option for the idle middle bogie (three supports).
+- **DD51** - its own builder (`jnrDd51.ts`); see the DD51 entry below.
 - **Blue Train** - the car builder's shell, doors, bellows, couplers and TR217 bogies, with the
   sides laid out from photographs (assets/blue-train-24/SOURCES.md, measured in a projective fit
   along each side). `sleeper` is the 25-type two-tier B sleeper OHaNe 25 118 (1976), `dining` the
@@ -96,8 +95,6 @@ measurements) and the published figures: body 17.1 m (18.2 m over couplers), 2.8
   the later JR Freight roof air conditioners and the 100-number body are not modelled. Triangles:
   about 14,400 (jnr) and 15,600 (jrFreight).
 
-- **EF66** - the carbody kit with the same "brow" nose at both ends, the cream front in the
-  JNR scheme, side windows and grilles, two diamond pantographs, three two-axle bogies.
 - **DD51** - its own builder (`jnrDd51.ts`, measured from the photographs in
   `assets/jnr-dd51/`, figures in its SOURCES.md), on czElectricKit's lofted `shell`: the cab 3.0 m
   long, full width (2.95 m), its eaves at 3.64 m and its roof crowned at 3.82 m, two windscreens
@@ -122,8 +119,6 @@ measurements) and the published figures: body 17.1 m (18.2 m over couplers), 2.8
   details, the JR Freight renewal livery. The distant model is the five shells with the frame,
   the beams, the columns and the tanks. The hood unit kit's `trucks.middle` option it once used
   stays in the kit.
-- **Blue Train** - the car builder: windows (13 small ones on the sleeper, 8 large on the
-  dining car), a plug door each side onto the cabin, the three white lines along the skirt.
 
 ## Checking
 
