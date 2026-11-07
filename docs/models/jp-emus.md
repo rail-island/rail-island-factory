@@ -42,13 +42,16 @@ own layout (`HK_LAYOUT`) and fittings (`hkFittings`) in place of the generic fla
   round the corners; the coupler at 0.88 m.
 - **Sides** (projective fit over the side of 9000): doors 1.3 m wide every 5.75 m (end car
   tip-d 3.65, 9.4, 15.15 m; intermediate car 3.5, 9.25, 15.0 m from its end), each with two
-  narrow windows; one 2.8 m window between doors and a 1.5 m one at each plain end, a 0.55 m one
+  narrow windows; one 2.8 m two-pane window (a bright mullion at its middle, no pier) between doors and a 1.5 m one at each plain end, a 0.55 m one
   behind the end car's crew door (tip-d 0.65 - 1.3 m, its grab rails beside it); windows
   1.94 - 2.91 m in bright frames; two LED boards under the eaves.
 - **Paint**: maroon all over, the roof ivory from the shoulder (3.22 m) up - the band over the
   eaves; `allMaroon` the same face with a grey roof.
 - **Roof and running gear**: a long low cover over the air conditioning along the crown; bogies
-  13.0 m apart centred on the body.
+  13.0 m apart centred on the body. The single-arm pantographs are on the end cars
+  (`endPantograph: true`, `pantographAt`: tip-d 15.6 m, over the inner bogie, photo of 9100): the
+  lone end car raises its own, in a train both end cars raise theirs, the intermediate cars have
+  none (the test checks the end car reaches the wire and the middle car stays in the gauge).
 
 ## Deviations
 
@@ -56,12 +59,11 @@ own layout (`HK_LAYOUT`) and fittings (`hkFittings`) in place of the generic fla
   approximates with two bogies a car; the GSE's raised driver's cab over the saloon is the
   nose's crown.
 - The E235's and E259's wrap-round windows and the 103's later variants are simplified.
-- The Hankyu 9000's end cars (9000, 9100) carry the set's single-arm pantographs on the
-  prototype; the kit raises one on the intermediate car instead and draws none on the end car.
-  The skirt's facets and the underfloor equipment are simplified.
+- The Hankyu 9000's Mc 9000 carries two pantographs on the prototype, the kit one per end car;
+  the skirt's facets and the underfloor equipment are simplified.
 
 ## Checking
 
 `pnpm exec vitest run test/jpEmus.test.ts` (ids, parameters and two liveries each; the end and
 middle cars at their lengths and real widths inside the UIC gauge, in budget, without coplanar
-faces, on two bogies, the middle car's pantograph raised; the commuter cars' four doors).
+faces, on two bogies, the pantograph car's pantograph raised (the middle car's, the Hankyu's end car's); the commuter cars' four doors).

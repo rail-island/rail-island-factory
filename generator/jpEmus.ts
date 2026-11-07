@@ -131,8 +131,10 @@ const HK_REACH = 0.12;
 const HK_PITCH = 5.75;
 const HK_END_DOORS = [0, 1, 2].map((i) => 3.65 + HK_PITCH * i);
 const HK_MID_DOORS = [0, 1, 2].map((i) => 3.5 + HK_PITCH * i);
+/** The end car's raised pantograph, d behind its body's front (tip-d 15.6 m, over the inner bogie: photo-hankyu-9100.jpg). */
+const HK_PANTO = 15.6 - HK_JOIN;
 
-/** One side's windows from its door centres: a 2.8 m window between doors, a 1.5 m one at a plain end, a narrow one behind the cab. */
+/** One side's windows from its door centres: a 2.8 m two-pane window between doors (a mullion at its middle), a 1.5 m one at a plain end, a narrow one behind the cab. */
 function hkWindows(doors: readonly number[], end: "cab" | "plain", L: number): Array<[number, number]> {
   const out: Array<[number, number]> = [end === "cab" ? [1.75, 2.3] : [0.4, 1.9]];
   for (let i = 0; i + 1 < doors.length; i++) { const c = (doors[i]! + doors[i + 1]!) / 2; out.push([c - 1.4, c + 1.4]); }
@@ -217,7 +219,8 @@ function hkFittings(m: MeshBuilder, b: HkBody, X: (d: number) => number, car: { 
   });
   m.scope("roof cover", () => {
     // the long low cover over the air conditioning along the crown, its edges chamfered
-    const j = car.end ? HK_JOIN : 0, [d0, d1] = [car.end ? 1.6 - j : 1.2, L - 1.2];
+    // on an end car it stops short of the pantograph's base over the rear bogie
+    const j = car.end ? HK_JOIN : 0, [d0, d1] = [car.end ? 1.6 - j : 1.2, car.end ? HK_PANTO - 1.75 : L - 1.2];
     const sec: Array<[number, number]> = [[-0.9, C - 0.12], [0.9, C - 0.12], [0.9, C + 0.02], [0.75, C + 0.07], [-0.75, C + 0.07], [-0.9, C + 0.02]];
     m.sweep("roofCover", "x", sec, X(d1), sec, X(d0));
     // its louvres either side
@@ -228,7 +231,7 @@ function hkFittings(m: MeshBuilder, b: HkBody, X: (d: number) => number, car: { 
   m.scope("window frames", () => {
     // the bright aluminium frames round every window
     for (const sd of [1, -1]) for (const [a, e] of rows)
-      for (const [p, q, y0, y1] of [[a, e, w0, w0 + 0.05], [a, e, w1 - 0.05, w1], [a, a + 0.05, w0 + 0.05, w1 - 0.05], [e - 0.05, e, w0 + 0.05, w1 - 0.05]] as const)
+      for (const [p, q, y0, y1] of [[a, e, w0, w0 + 0.05], [a, e, w1 - 0.05, w1], [a, a + 0.05, w0 + 0.05, w1 - 0.05], [e - 0.05, e, w0 + 0.05, w1 - 0.05], ...(e - a > 2 ? [[(a + e) / 2 - 0.025, (a + e) / 2 + 0.025, w0 + 0.05, w1 - 0.05]] : [])] as const)
         hkPanel(m, b, X, sd, "frameW", p, q, y0, y1, 0.016, 0.006);
   });
   m.scope("destination boards", () => {
@@ -287,6 +290,8 @@ export const HANKYU9000: ShinkansenSeries = {
   // the bogies 13.0 m apart, centred on the body
   bogieCentres: 13.0, wheelR: 0.43, wheelbase: 2.1,
   endBogies: [2.825 - HK_JOIN, 15.825 - HK_JOIN], midBogies: [2.75, 15.75], fittings: hkFittings,
+  // the single-arm pantographs on the end cars (9000, 9100) over their inner bogies, both raised; the intermediate cars have none
+  endPantograph: true, pantographAt: HK_PANTO,
   liveries: {
     maroon: { title: "Hankyu maroon", palette: hkPalette("#e6dfca"), bands: [[0, 9, "maroon"]], roof: "roofG", skirt: "skirtG", number: "9000" },
     allMaroon: { title: "Plain maroon", palette: hkPalette("#7d8084"), bands: [[0, 9, "maroon"]], roof: "roofG", skirt: "skirtG", number: "9300" },
