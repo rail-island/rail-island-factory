@@ -1,6 +1,7 @@
 // The JNR locomotives and the Blue Train coach (generator/jpLocos.ts). See docs/models/jnr-locos.md.
 import { describe, expect, it } from "vitest";
 import { BLUE_LENGTH, EF66_LENGTH, JNR_LOCOS, jnrSteamSpec } from "../generator/jpLocos";
+import { DD51_LENGTH } from "../generator/jnrDd51";
 import { LOADING_GAUGES } from "../generator/loadingGauge";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -44,6 +45,16 @@ describe("the JNR locomotives and the Blue Train", () => {
     expect(s.max[0] - s.min[0]).toBeCloseTo(EF66_LENGTH, 1);
     expect(s.max[1]).toBeGreaterThan(5.8);
     expect(design("proc-vehicle-jnr-dd51").build().rig!.supports).toHaveLength(3);
+  });
+
+  it("builds the DD51 at 18.0 m with the cab standing above the hoods and headlights", () => {
+    for (const livery of ["jnr", "hokutosei"]) {
+      const m = design("proc-vehicle-jnr-dd51").build({ livery });
+      const s = glbStats(m.toGlb("dd"));
+      expect(s.max[0] - s.min[0]).toBeCloseTo(DD51_LENGTH, 1);
+      expect(s.max[1]).toBeGreaterThan(3.8);
+      expect(m.lamps()!.materials.lampHead?.role).toBe("head");
+    }
   });
 
   it("builds the Blue Train's sleeper and dining car at 20.8 m with a door each side", () => {
