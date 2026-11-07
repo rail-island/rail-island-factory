@@ -15,10 +15,9 @@ import { steamLocoLod } from "./lodSteam.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { bogieGeometry, paint, type BogieSpec } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
-import { sideDecal, sideLettering, sidePanel } from "./sliceBody.ts";
-import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, type CarbodySpec, type NoseShape } from "./carbodyKit.ts";
+import { sideLettering, sidePanel } from "./sliceBody.ts";
+import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, type CarbodySpec, type NoseShape } from "./carbodyKit.ts";
 import { bodyHalf, cabFaceLod, drawCabFace, type FacePaint, type FaceRect, type SeriesCabFace } from "./seriesCab.ts";
-import type { Pt } from "./sliceLoft.ts";
 import { buildUsHood, knuckleCoupler, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
 import { diamond } from "./czElectricKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
@@ -27,6 +26,10 @@ import { COACH_CATALOG } from "./csdCoaches.ts";
 import { enumParam } from "./emuParts.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
 import { bogieParts, fitUnit, pantographParts, type UnitBody } from "./lodUnits.ts";
+import { sideDecal, type SliceBody } from "./sliceBody.ts";
+import { decalX, decalZ } from "./usHoodKit.ts";
+import { ngon, type Ring } from "./meshCore.ts";
+import type { Pt } from "./sliceLoft.ts";
 
 const c = (hex: string, r = 0.5) => paint(hex, r);
 const COUPLER_Y = 0.88;
@@ -465,30 +468,168 @@ export function jnrDd51(v?: ParamValues): MeshBuilder { return buildUsHood(DD51_
 export function jnrDd51Lod(v?: ParamValues): MeshBuilder { return usHoodLod(DD51_SPEC, DD51_LIVERIES[resolveParams(DD51_PARAMS, v).livery!]!); }
 
 // ---------------------------------------------------------------------------
-// The Blue Train: a 24-series sleeper and dining car
+// The Blue Train: the 24 series' 25-type two-tier B sleeper (OHaNe 25, 1974) and
+// the OShi 24 dining car, laid out from photographs (assets/blue-train-24/SOURCES.md).
+// d runs from the sleeper's door end (the dining car's kitchen end) at +X; the
+// layouts below are in the prototype's metres along its 20.0 m body (`bt`).
 
 export type BlueTrainCar = "sleeper" | "dining";
 const BLUE_PARAMS: ParamSpec[] = [enumParam("unit", "Car", { sleeper: "Sleeper", dining: "Dining car" })];
 export const BLUE_LENGTH = 20.8;
 const BLUE_BODY = BLUE_LENGTH - 0.5;
-const BLUE_PAL = { btBlue: c("#1d3576"), btWhite: c("#e6e8ea", 0.35), btRoof: c("#3b4351", 0.6), under: c("#2a2c2f", 0.85) };
+/** The prototype's metres along its 20.0 m body to the model's d. */
+const bt = (d: number) => (d * BLUE_BODY) / 20.0;
+const BLUE_PAL: Record<string, MaterialSpec> = {
+  btBlue: c("#1d3478"),
+  btLine: { ...c("#c3c7cb", 0.3), metallic: 0.6 },
+  btRoof: { ...c("#a9aeb3", 0.45), metallic: 0.4 },
+  btHood: c("#80868c", 0.6),
+  btFrost: c("#c6cdd3", 0.3),
+  btHatch: c("#192e6a", 0.55),
+  btSign: c("#eceeec", 0.4),
+  under: c("#2a2c2f", 0.85),
+};
+/** The body's section: bottom, foot, belly, eaves and crown (from the photos' end faces), the air conditioners' top. */
+const BT = { B: 1.05, A: 1.08, Y: 1.1, S: 3.55, C: 3.98, W: 1.475, lean: 0.985, hood: 4.085 };
+/** The two stainless lines: one along the foot, one under the windows; both stop at the doors. */
+const BT_BANDS: Array<[number, number, string]> = [[0, 1.12, "btBlue"], [1.12, 1.17, "btLine"], [1.17, 1.94, "btBlue"], [1.94, 2.0, "btLine"], [2.0, 9, "btBlue"]];
+
+/** A window: d span (prototype metres), sill and head, corner radius, glass. */
+interface BtPane { d: readonly [number, number]; y: readonly [number, number]; r: number; mat?: string }
+/** A painted or grille panel on a side: d span (prototype metres), heights, material. */
+interface BtPanel { d: readonly [number, number]; y: readonly [number, number]; mat: string }
+interface BtSide { panes: BtPane[]; panels: BtPanel[] }
+const btRow = (c0: number, pitch: number, n: number, w: number, y: readonly [number, number], r: number): BtPane[] =>
+  Array.from({ length: n }, (_, i) => ({ d: [c0 + i * pitch - w / 2, c0 + i * pitch + w / 2] as const, y, r }));
+
+/** The B sleeper's sides: wide, low berth windows on one, tall corridor windows and the washroom on the other. */
+const BT_DOOR_SIGN: BtPanel = { d: [0.45, 1.05], y: [3.33, 3.45], mat: "btSign" };
+const BT_DEST: BtPanel = { d: [19.0, 19.6], y: [3.08, 3.3], mat: "btSign" };
+const BT_SLEEPER: { berth: BtSide; corridor: BtSide } = {
+  berth: {
+    panes: [{ d: [2.45, 3.05], y: [2.09, 2.78], r: 0.08 }, ...btRow(4.56, 1.866, 8, 1.15, [2.09, 2.78], 0.08),
+      { d: [18.6, 19.05], y: [2.68, 2.95], r: 0.08, mat: "btFrost" }, { d: [19.3, 19.72], y: [2.68, 2.95], r: 0.08, mat: "btFrost" }],
+    panels: [{ d: [1.32, 1.85], y: [1.22, 1.48], mat: "louvre" }, BT_DOOR_SIGN, BT_DEST],
+  },
+  corridor: {
+    panes: [{ d: [1.7, 2.05], y: [2.13, 3.05], r: 0.06 }, ...btRow(3.25, 1.84, 7, 1.07, [2.09, 3.03], 0.08),
+      { d: [15.75, 16.9], y: [2.09, 2.97], r: 0.08, mat: "btFrost" },
+      { d: [17.5, 18.15], y: [2.58, 2.86], r: 0.13, mat: "btFrost" }, { d: [18.6, 19.25], y: [2.58, 2.86], r: 0.13, mat: "btFrost" }],
+    // and two service hatches low under the toilets
+    panels: [BT_DOOR_SIGN, BT_DEST, { d: [17.6, 18.2], y: [1.3, 1.66], mat: "btHatch" }, { d: [18.3, 18.9], y: [1.3, 1.66], mat: "btHatch" }],
+  },
+};
+/** The dining car's side: the kitchen's sliding door and its rail, four windows, a vent, the dining room's five. */
+const BT_DINER: BtSide = {
+  panes: [...btRow(3.72, 1.58, 4, 1.2, [2.38, 3.0], 0.09), ...btRow(10.72, 1.675, 5, 1.2, [2.38, 3.0], 0.09)],
+  panels: [{ d: [1.22, 3.0], y: [3.1, 3.15], mat: "rubber" }, { d: [9.3, 9.65], y: [2.08, 2.42], mat: "louvre" }, { d: [0.5, 0.98], y: [1.2, 1.48], mat: "louvre" }],
+};
+/** Which side (+1 the +Z side) carries the sleeper's berth windows. */
+const BT_BERTH_S = -1;
+/** Both end walls: corners rounded in plan, the roof dropping a little to the wall (the photos' end faces). */
+const BT_END = { len: 0.3, tip: 0.85, power: 2.2, C: [[0, 3.9], [0.3, BT.C]] as Pt[], S: [[0, 3.5], [0.3, BT.S]] as Pt[] };
+
+/** A rounded rectangle in (d, y), counter-clockwise, `n` steps a corner. */
+function btRound(d0: number, d1: number, y0: number, y1: number, r: number, n = 3): Pt[] {
+  const q = Math.min(r, (d1 - d0) / 2 - 0.002, (y1 - y0) / 2 - 0.002);
+  const out: Pt[] = [];
+  for (const [cd, cy, a0] of [[d1 - q, y1 - q, 0], [d0 + q, y1 - q, 90], [d0 + q, y0 + q, 180], [d1 - q, y0 + q, 270]] as const)
+    for (let i = 0; i <= n; i++) { const a = ((a0 + (90 * i) / n) * Math.PI) / 180; out.push([cd + q * Math.cos(a), cy + q * Math.sin(a)]); }
+  return out;
+}
+const btFan = (p: Pt[]): Pt[] => p.slice(1, -1).flatMap((v, i) => [p[0]!, v, p[i + 2]!]);
+const btRing = (o: Pt[], n: Pt[]): Pt[] => o.flatMap((v, i) => { const j = (i + 1) % o.length; return [v, o[j]!, n[j]!, v, n[j]!, n[i]!]; });
+
+/** A side's windows (a silver frame round the glass) and panels, flush on the skin. */
+function btSide(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, side: BtSide): void {
+  m.scope("windows", () => side.panes.forEach((p, i) => m.scope(`window ${i + 1}`, () => {
+    const [d0, d1] = [bt(p.d[0]), bt(p.d[1])], f = 0.035;
+    const glass = btRound(d0, d1, p.y[0], p.y[1], p.r);
+    sideDecal(m, b, X, s, "frameSilver", btRing(btRound(d0 - f, d1 + f, p.y[0] - f, p.y[1] + f, p.r + f), glass), 0.006);
+    sideDecal(m, b, X, s, p.mat ?? "glass", btFan(glass), 0.006);
+  })));
+  m.scope("panels", () => {
+    for (const p of side.panels) sideDecal(m, b, X, s, p.mat, btFan(btRound(bt(p.d[0]), bt(p.d[1]), p.y[0], p.y[1], 0.01, 1)), 0.005);
+  });
+}
+
+/** An air conditioner's housing on the roof over an end: from d0 to d1 (prototype metres), sloping into the roof beyond d1. */
+function btHood(m: MeshBuilder, X: (d: number) => number, d0: number, d1: number, top: number): void {
+  const z = 1.18, zt = 1.02, y0 = 3.6;
+  const high: Ring = [[-z, y0], [z, y0], [z, top - 0.11], [zt, top], [-zt, top], [-z, top - 0.11]];
+  const low: Ring = [[-z, y0], [z, y0], [z, 3.64], [zt, 3.7], [-zt, 3.7], [-z, 3.64]];
+  const [a, e] = [X(bt(d0)), X(bt(d1))], tail = X(bt(d1 + 0.55 * Math.sign(d1 - d0)));
+  m.scope("air conditioner", () => {
+    m.sweep("btHood", "x", high, Math.min(a, e), high, Math.max(a, e));
+    if (tail < e) m.sweep("btHood", "x", low, tail, high, e);
+    else m.sweep("btHood", "x", high, e, low, tail);
+    // the condensers' grilles on top and the louvres along its sides
+    const [g0, g1] = [Math.min(a, e) + 0.25, Math.max(a, e) - 0.25];
+    const gm = (g0 + g1) / 2;
+    for (const [p, q] of [[g0, gm - 0.1], [gm + 0.1, g1]] as const)
+      m.facets("louvre", [[p, top + 0.004, -0.62], [q, top + 0.004, -0.62], [q, top + 0.004, 0.62], [p, top + 0.004, -0.62], [q, top + 0.004, 0.62], [p, top + 0.004, 0.62]], [0, 1, 0]);
+    for (const s of [-1, 1]) decalZ(m, "louvre", s * (z + 0.004), s, g0, g1, top - 0.26, top - 0.14);
+  });
+}
+
+/** An end wall at |x| = face facing e: the gangway door inside the bellows, the tail lamps, grab rails. */
+function btEnd(m: MeshBuilder, e: number, face: number): void {
+  const x = e * (face + 0.004);
+  // the bellows (the kit leaves them off a shaped end)
+  m.scope("diaphragm", () => endDiaphragm(m, e, e * face, 1.15, 3.4, 0.42));
+  m.scope("gangway door", () => {
+    for (const [z0, z1, y0, y1] of [[-0.37, -0.34, 1.17, 3.28], [0.34, 0.37, 1.17, 3.28], [-0.34, 0.34, 3.25, 3.28]] as const) decalX(m, "rubber", x, e, z0, z1, y0, y1);
+    decalX(m, "rubber", x, e, -0.24, 0.24, 2.42, 3.06);
+    decalX(m, "glass", e * (face + 0.007), e, -0.2, 0.2, 2.46, 3.02);
+  });
+  m.scope("tail lamps", () => faceLamps(m, e, face, [[-0.98, 1.66, 0.075, "lampRed"], [0.98, 1.66, 0.075, "lampRed"]]));
+  m.scope("grab rails", () => { for (const z of [-0.78, 0.78]) m.rod("handrail", [e * (face + 0.06), 1.35, z], [e * (face + 0.06), 2.6, z], 0.015, 6); });
+}
+
+/** The underfloor equipment between the bogies: boxes (d0, d1, bottom, z0, z1) and tanks (d0, d1, radius, y, z). */
+const BT_UNDER: Record<BlueTrainCar, { boxes: Array<readonly [number, number, number, number, number]>; tanks: Array<readonly [number, number, number, number, number]> }> = {
+  sleeper: {
+    boxes: [[4.8, 5.8, 0.55, -0.2, 1.1], [6.1, 7.3, 0.6, -1.1, 0.4], [7.6, 8.3, 0.5, 0.2, 1.1], [10.8, 12.0, 0.6, -1.05, 0.3], [12.3, 12.9, 0.55, 0.3, 1.1]],
+    tanks: [[8.6, 10.4, 0.18, 0.78, 0.7], [13.2, 15.1, 0.3, 0.68, -0.45]],
+  },
+  dining: {
+    boxes: [[4.8, 6.0, 0.55, -0.4, 1.1], [6.3, 7.2, 0.6, -1.1, 0.2], [7.5, 8.5, 0.5, 0.1, 1.1], [8.8, 9.6, 0.62, -1.0, 0.0]],
+    tanks: [[9.9, 10.5, 0.16, 0.8, 0.75], [10.8, 12.9, 0.34, 0.66, 0.55], [13.1, 15.1, 0.34, 0.66, 0.55]],
+  },
+};
 
 function blueDef(u: BlueTrainCar): CarDef {
   const L = BLUE_BODY;
-  const n = u === "sleeper" ? 13 : 8;
-  const w = u === "sleeper" ? 0.95 : 1.35;
-  const spans = Array.from({ length: n }, (_, i): [number, number] => { const d = 2.2 + (L - 3.6) * ((i + 0.5) / n); return [d - w / 2, d + w / 2]; });
+  const trucks = [L / 2 - 7.075, L / 2 + 7.075];
+  const sleeper = u === "sleeper";
   return {
-    spec: { length: L, W: 1.475, Y: 1.35, S: 3.3, C: 3.93, lean: 0.98, arc: 6, B: 1.0, wl: 1.42, A: 1.1, wa: 1.47, edges: [], step: 1.0, cuts: [L / 2 - 7.075, L / 2 + 7.075].map((d) => [d - 1.6, d + 1.6] as const) },
-    bands: [[0, 1.25, "btBlue"], [1.25, 1.29, "btWhite"], [1.29, 1.33, "btBlue"], [1.33, 1.37, "btWhite"], [1.37, 1.41, "btBlue"], [1.41, 1.45, "btWhite"], [1.45, 9, "btBlue"]],
+    spec: { length: L, W: BT.W, Y: BT.Y, S: BT.S, C: BT.C, lean: BT.lean, arc: 6, B: BT.B, wl: 1.43, A: BT.A, wa: 1.46, front: BT_END, rear: BT_END, edges: [], step: 1.0, noseStep: 0.06, cuts: trucks.map((d) => [d - 1.6, d + 1.6] as const) },
+    bands: BT_BANDS, doorBands: [[0, 9, "btBlue"]],
     roof: "btRoof", skirt: "btBlue", under: "under",
-    windows: [{ y: [2.0, 2.8], spans, frame: "rubber" }],
-    doors: { spans: [[0.5, 1.2]], y: [1.15, 3.0], glass: [2.05, 2.6] },
-    cabEnds: [], diaphragm: [1.2, 3.1],
-    trucks: [L / 2 - 7.075, L / 2 + 7.075], truck: { axles: [-1.05, 1.05], wheelR: 0.43, frameHalf: 1.65, frameTop: 0.92, frameBottom: 0.55, frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: 1.0 },
+    windows: [],
+    // the sleeper's folding vestibule door (two leaves, a tall narrow window each), the dining car's kitchen door
+    doors: sleeper
+      ? { spans: [[bt(0.35), bt(1.15)]], y: [1.1, 3.28], glass: [2.07, 3.18], glassW: 0.16, glassPair: 0.4 }
+      : { spans: [[bt(1.3), bt(2.15)]], y: [1.12, 3.06], glass: [2.38, 2.96], glassW: 0.45 },
+    cabEnds: [], diaphragm: [1.15, 3.4], diaphragmW: 0.42,
+    trucks, truck: { axles: [-1.05, 1.05], wheelR: 0.43, frameHalf: 1.65, frameTop: 0.92, frameBottom: 0.55, frameZ: [0.92, 1.04], primary: "coil", secondary: [0], secondaryZ: 1.05, bolster: BT.B },
     coupler: "knuckle", couplerY: COUPLER_Y, gap: [0.25, 0.25],
-    lettering: [{ text: u === "sleeper" ? "OHANE 25" : "SHISHI 24", d: L - 2.0, y: 1.6, h: 0.12, mat: "btWhite" }],
-    extras: (m, _b, X) => m.scope("underfloor", () => block(m, "under", X(L / 2 + 4.6), X(L / 2 - 4.6), 0.5, 1.01, -1.1, 1.1)),
+    lettering: [{ text: sleeper ? "OHANE 25 118" : "OSHI 24 101", d: bt(10.4), y: 1.63, h: 0.09, mat: "btSign" }],
+    extras: (m, b, X) => {
+      for (const s of [1, -1])
+        m.scope(s > 0 ? "right side" : "left side", () => btSide(m, b, X, s, sleeper ? (s === BT_BERTH_S ? BT_SLEEPER.berth : BT_SLEEPER.corridor) : BT_DINER));
+      m.scope("roof", () => {
+        btHood(m, X, 0.12, 2.45, BT.hood);
+        if (sleeper) btHood(m, X, 19.88, 17.55, BT.hood);
+        else btHood(m, X, 19.88, 18.5, BT.hood - 0.05);
+      });
+      for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => btEnd(m, e, Math.abs(X(e > 0 ? 0 : L))));
+      m.scope("underfloor", () => {
+        const g = BT_UNDER[u];
+        for (const [d0, d1, y0, z0, z1] of g.boxes) block(m, "under", X(bt(d1)), X(bt(d0)), y0, BT.B + 0.01, z0, z1);
+        for (const [d0, d1, r, y, z] of g.tanks) { const ring = ngon(12, r, 0, z, y); m.sweep("tank", "x", ring, X(bt(d1)), ring, X(bt(d0))); }
+      });
+    },
   };
 }
 
@@ -502,11 +643,11 @@ export function blueTrain24Lod(v?: ParamValues): MeshBuilder {
   const u = resolveParams(BLUE_PARAMS, v).unit as BlueTrainCar;
   const def = blueDef(u);
   const X = (d: number) => BLUE_LENGTH / 2 - 0.25 - d;
-  const side: LodBand[] = [[1.0, 3.3, "btBlue"], [3.3, 3.93, "btRoof"]];
-  const sp = def.windows[0]!.spans;
-  const body: UnitBody = { y0: 1.0, hw: [[1.0, 1.42], [1.35, 1.475], [3.3, 1.45], [3.93, 0.4]], side, roof: "btRoof", front: { tip: [[1.0, X(0)]] }, rear: { tip: [[1.0, X(BLUE_BODY)]] },
-    windows: [{ u: [X(sp[sp.length - 1]![1]), X(sp[0]![0])], y: [2.0, 2.8], mat: LOD_GLASS }] };
-  return fitUnit({ palette: { ...CARBODY_PALETTE, ...BLUE_PAL }, bodies: [body], parts: bogieParts(def.trucks.map((d) => [X(d), 1.65] as const), 1.0) }, 100);
+  const side: LodBand[] = [[BT.B, 1.12, "btBlue"], [1.12, 1.17, "btLine"], [1.17, 1.94, "btBlue"], [1.94, 2.0, "btLine"], [2.0, BT.S, "btBlue"], [BT.S, BT.C, "btRoof"]];
+  const [w0, w1, wy] = u === "sleeper" ? [2.45, 18.2, [2.09, 2.78] as const] : [3.12, 18.02, [2.38, 3.0] as const];
+  const body: UnitBody = { y0: BT.B, hw: [[BT.B, 1.43], [BT.A, 1.46], [BT.Y, BT.W], [BT.S, BT.W * BT.lean], [BT.C, 0.4]], side, roof: "btRoof", front: { tip: [[BT.B, X(0)]] }, rear: { tip: [[BT.B, X(BLUE_BODY)]] },
+    windows: [{ u: [X(bt(w1)), X(bt(w0))], y: wy, mat: LOD_GLASS }] };
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...BLUE_PAL }, bodies: [body], parts: bogieParts(def.trucks.map((d) => [X(d), 1.65] as const), BT.B) }, 100);
 }
 
 // ---------------------------------------------------------------------------
