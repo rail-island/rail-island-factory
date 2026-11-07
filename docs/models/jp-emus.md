@@ -204,6 +204,33 @@ own layout (`HK_LAYOUT`) and fittings (`hkFittings`) in place of the generic fla
   lone end car raises its own, in a train both end cars raise theirs, the intermediate cars have
   none (the test checks the end car reaches the wire and the middle car stays in the gauge).
 
+
+## The 485 series
+
+`generator/jnr485.ts` (`S485`): the KuHa 481 in its early bonnet form (0 and 100 numbers), measured
+on the photographs in `assets/jnr-485/` (SOURCES.md) against the published heights (floor 1.23 m, the
+cab's top 3.88 m).
+
+- **Body** - bottom 0.91 m, gutter 3.13 m, crown 3.45 m; windows 2.03 - 2.69 m, 1.45 m wide at a 1.8 m
+  pitch (two seat rows each): seven on the end car from 5.64 m behind the tip, nine on the intermediate
+  car; folding doors 0.7 m, behind the cab (4.47 m) and at the rear. Bogie centres 14.15 m, the end car's
+  leading bogie under the cab 3.0 m behind the tip.
+- **Bonnet** - a cab face joined to the body 4.2 m behind the tip: upright from the bumper band to the
+  crease at 2.43 m, then the hood rounding back to the windscreens' foot at 3.13 m (2.65 m behind the
+  tip), its top falling to the sides (`bulge`) so that its shoulder climbs along the side. On it the
+  red lamp boxes (head lamp 1.77 m over the tail lamp, at +-1.1 m) as pods, the eyebrows, the JNR wing
+  emblem, the framed headboard; along the sides the whiskers (the red block with three cream lines, to
+  3.7 m); under it the skirt to 0.44 m and the red coupler cover (`reach` 0.24 m).
+- **Cab** - a second painted surface (cabNose.ts) standing above the gutter, its sides leaning in to
+  2.16 m across the roof: two windscreens 3.13 - 3.6 m raked 0.32 m back, the raked side windows, the
+  grey roof from 3.66 m, a rear wall at 4.35 m and the headlight pod on top (to 4.24 m). The distant
+  model draws it as a box (`lodRoof`).
+- **Roof** - AU13 air conditioners, four on the end car and five on the intermediate car clear of the
+  diamond pantograph; grey.
+- **Liveries** - `jnr`: cream and red (red to 1.17 m, the window band 1.94 - 2.83 m stopping at the door
+  behind the cab, cream skirt), KuHa 481-26. `kyushu`: JR Kyushu's "Red Express" all red with white
+  lines and "RED EXPRESS" on the end car's sides, black headboard, KuHa 481-33.
+
 ## Deviations
 
 - The E259's wrap-round windows and the 103's later variants are simplified.
@@ -224,6 +251,12 @@ own layout (`HK_LAYOUT`) and fittings (`hkFittings`) in place of the generic fla
   rear ends, two in a train), not on cars 2, 4 and 6; the dome's wipers, the emblems and the end
   car's interior ladder to the cab are left out; the cab roof's fairing into the car's roof (6.2 -
   9.4 m behind the tip) and the roof fairings' sizes are read from three-quarter views only.
+
+
+- The 485: the Kyushu livery shares the JNR face's geometry, so its white lines sit where the JNR
+  whiskers are (the real ones run above the lamp boxes beside "RED EXPRESS", which is not drawn on
+  the face); one diamond pantograph per motor pair where the MoHa 484 has two; the cab's small rear
+  window and the bonnet's side grilles are left out; the distant model's window band runs on to the cab.
 
 - The GSE's and the Hinotori's real cars are articulated or on their own bogies in ways the kit
   approximates with two bogies a car; the GSE's raised driver's cab over the saloon is the

@@ -617,19 +617,9 @@ export const HINOTORI: ShinkansenSeries = {
 import { E259 } from "./jrE259.ts";
 export { E259 };
 
-export const S485: ShinkansenSeries = {
-  endLength: 21.0, midLength: 20.5, W: 1.45, Y: 1.35, S: 3.25, C: 3.9, lean: 0.97, B: 1.0, A: 1.1,
-  // the bonnet nose: a rounded hood ahead of the raised cab, its headlight on top
-  nose: nose(2.4, 0.3, 2.3, [[0, 1.9], [0.3, 2.25], [1.2, 2.45], [2.1, 2.55], [2.35, 3.25], [2.9, 3.7], [3.4, 3.9]], [[0, 1.85], [0.3, 2.1], [1.2, 2.3], [2.1, 2.4], [2.6, 3.1], [3.4, 3.25]], [[0, 1.6], [1.0, 1.4]], [[0, 1.4], [0.6, 1.1]], [[0, 1.3], [0.4, 1.0]]),
-  windscreen: [2.4, 3.0, 0.07, 1.1], lamps: [0.6, 1.95],
-  windows: [[1.9, 2.75]], windowW: 1.0, pitch: 1.2, door: [1.15, 3.0, 1.95, 2.6], doorW: 0.7,
-  bogieCentres: 14.15, wheelR: 0.43, wheelbase: 2.1, pantograph: "diamond",
-  liveries: {
-    jnr: { title: "JNR express", palette: { cream: c("#efe3c2"), red: c("#b5202b"), roofG: c("#7d8084", 0.6), skirtG: c("#b5202b") }, bands: [[0, 1.45, "red"], [1.45, 1.92, "cream"], [1.92, 2.75, "red"], [2.75, 9, "cream"]], roof: "cream", skirt: "skirtG", number: "KUHA 481-1" },
-    kyushu: { title: "JR Kyushu red", palette: { red: c("#c8102e"), white: c("#f2f2ef"), roofG: c("#7d8084", 0.6), skirtG: c("#3a3b3d") }, bands: [[0, 1.45, "white"], [1.45, 9, "red"]], roof: "red", skirt: "skirtG", number: "KUHA 481-201" },
-  },
-  weight: { end: 41, middle: 44 }, power: 480, maxspeed: 120,
-};
+// the 485 series and its bonnet: generator/jnr485.ts
+import { S485 } from "./jnr485.ts";
+export { S485 };
 
 // --- Hankyu 9000 series (HANKYU9000) ---------------------------------------
 // The 2006 Kobe / Takarazuka line set from photographs (assets/hankyu-9000/SOURCES.md): the glossy
