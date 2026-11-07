@@ -111,7 +111,10 @@ describe("the team's parameters and figures", () => {
     for (const s of SPECIES) expect(sels.filter((x) => x[ANIMAL_PARAM] === s).map((x) => Number(x[TEAM_PARAM]))).toEqual([...SPECIES_SPECS[s].counts]);
     // the selections are what resolving accepts
     for (const sel of sels) expect(resolveParams(teamParams({ trailer: false }), sel)).toEqual(sel);
-    expect(() => teamOf({ animal: "elephant", team: "6" })).toThrow(/not put to/);
+    // a count no picker offers for the species builds its biggest team no larger, never a throw mid-build
+    expect(teamOf({ animal: "elephant", team: "6" })).toEqual({ species: "elephant", count: 2 });
+    expect(teamOf({ animal: "horse", team: "3" })).toEqual({ species: "horse", count: 2 });
+    expect(() => teamOf({ animal: "horse", team: "x" })).toThrow();
     expect(paramCombinations(teamParams({ trailer: true }))).toHaveLength(sels.length + SPECIES.length);
   });
 

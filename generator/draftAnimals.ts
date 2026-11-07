@@ -199,13 +199,17 @@ export function teamParams(opts: { trailer: boolean; pair?: boolean }): ParamSpe
   ];
 }
 
-/** The team a selection asks for: its species and how many (0 for the trailer). */
+/** The team a selection asks for: its species and how many (0 for the trailer); a count the species is not put to is read as its biggest team no larger. */
 export function teamOf(params: ParamValues | undefined, opts: { pair?: boolean } = {}): { species: Species; count: number } {
   const species = (params?.[ANIMAL_PARAM] ?? "horse") as Species;
   const raw = params?.[TEAM_PARAM] ?? (opts.pair ? "2" : "1");
   if (!SPECIES.includes(species)) throw new Error(`unknown animal ${species}`);
-  const count = raw === NO_TEAM ? 0 : Number(raw);
-  if (count && !SPECIES_SPECS[species].counts.includes(count)) throw new Error(`a ${species} is not put to a team of ${count}`);
+  const asked = raw === NO_TEAM ? 0 : Number(raw);
+  if (!Number.isInteger(asked) || asked < 0) throw new Error(`no team of ${raw}`);
+  // a count the species is not put to (a selection no picker offers, ParamValue.when) is
+  // its biggest team no larger, as resolving does not refuse it: never a throw mid-build
+  const counts = SPECIES_SPECS[species].counts;
+  const count = !asked || counts.includes(asked) ? asked : Math.max(counts[0]!, ...counts.filter((n) => n <= asked));
   return { species, count };
 }
 
