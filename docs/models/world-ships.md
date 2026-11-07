@@ -86,7 +86,7 @@ are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `de
 | `domes`, `spheres`, `tanks`, `pipes` | tank domes, Moss LNG spheres on their skirts (a dome too: Icon's AquaDome, a radome), cylindrical gas tanks, deck piping |
 | `helideck`, `gantry`, `boom`, `boats` | a helideck with its H, a portal or A-frame, an unloading boom or drag arm, lifeboats and tenders |
 | `canopy`, `rail`, `portholes` | an arched roof (thatch, awnings), railings, a row of round lights in the hull |
-| `paddle` | side paddle wheels with their boxes, or a stern wheel |
+| `paddle` | side paddle wheels with their boxes, or a stern wheel; each wheel is a part turned by the ship's `rolling` clip ([animation.md](animation.md#rolling-wheels)) |
 | `foil`, `skirt`, `prop` | hydrofoils on struts, a hovercraft's skirt, air propellers on pylons |
 | `rig` | masts with their sails, a bowsprit and stays |
 | `bulwark` | a solid bulwark following the deck edge on both sides, from u0 to u1 |

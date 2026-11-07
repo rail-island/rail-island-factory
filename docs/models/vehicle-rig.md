@@ -1,7 +1,7 @@
 # Vehicle rig
 
-**Covers** - what of a vehicle the game may move after loading it: the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them, a rail vehicle's supports and turning bogies; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
-**Code** - `generator/rig.ts`, `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent, `bogie`, `axleAt`, the `rig` accessor), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/tramKit.ts` (`articulate`), `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `generator/tgv.ts` (the articulated trailer set), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`, `posePreview`, `previewKey`, `pageKey`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`, `test/railSupports.test.ts`, `test/collision.ts`
+**Covers** - what of a vehicle the game may move after loading it, and where a ship meets the water (its water rig): the steered front wheels, an articulated vehicle's sections and the joints (bellows) between them, a rail vehicle's supports and turning bogies; how they are laid out as GLB nodes, the `rig` that names them in the GLB, the meta entry and the JS model, the pose and joint functions the JS model exports, and the model page's Pose sliders.
+**Code** - `generator/rig.ts`, `generator/waterRig.ts`, `generator/hullKit.ts` (`shipWaterRig`), `generator/ships.ts` (`withWater`), `generator/trucks.ts` (`steered`), `generator/meshCore.ts` (`part` with a parent, `bogie`, `axleAt`, the `rig` accessor), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/vehicleParts.ts` (`steeredWheels`), `generator/busAssembly.ts`, `generator/tramKit.ts` (`articulate`), `generator/jsModel.ts`, `generator/catalog.ts` (`MetaEntry.rig`), `generator/tgv.ts` (the articulated trailer set), `src/catalogQuery.ts` (`poseControls`, `poseOf`, `steerLockDeg`, `posePreview`, `previewKey`, `pageKey`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `test/rig.test.ts`, `test/railSupports.test.ts`, `test/collision.ts`
 **See also** - [vehicles.md](vehicles.md), [buses.md](buses.md), [js-format.md](js-format.md), [export.md](export.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## The idea
@@ -48,6 +48,7 @@ interface VehicleRig {
   joints?: Array<{ node; sections: [front, rear]; front; rear; profile: Array<[z, y]>; folds; depth; material; frame?: { width; depth } }>;
   maxBendDeg?: number;
   team?: { section: number; rehitchable: boolean };  // an animal-drawn vehicle's team
+  water?: WaterRig;                                  // a ship's: where it meets the water
 }
 ```
 
@@ -74,6 +75,36 @@ entry** (`vehicles.meta.json`, `rig`) carry the default build's; the JS model's
 group carries the rig of the parameters it was built with (`group.userData.rig`) -
 a Karosa Long variant's hinge and joint faces are its own. Pose a model with the
 rig it carries. A model without one has no `rig` key and unchanged bytes.
+
+## The water rig
+
+Every ship carries `rig.water` (`WaterRig`, `generator/waterRig.ts`), which the game
+draws its wake, bow wave and churn foam from. Nothing in it is posed, so a rig with only
+`water` is not **posable** (`posable(rig)`): the JS bundle of such a ship does not carry
+the pose code, and its doc comment does not promise `pose()`.
+
+```ts
+interface WaterRig {
+  bow: [x, y, z]; stern: [x, y, z];   // the stem and the stern on the waterline
+  halfBeam: number;                    // the waterline's greatest half-breadth
+  draft: number;                       // the waterline's y above the keel
+  churn: Array<{ kind: "screw" | "paddle" | "air"; at: [x, y, z]; width: number }>;
+}
+```
+
+- `measureWaterRig` measures the outline off the drawn triangles: every vertex at or
+  below the waterline (with a tolerance of 5% of the draft, at least 5 cm) spans the stem,
+  the stern and the half-breadth, along +X (the hull kit) or +Z (a model drawn bow-first
+  along Z: the passenger ferry). A paddle wheel dipping into the water counts.
+- The hull kit (`worldShip`, `shipWaterRig`) records a churn source for every screw it
+  draws under a stern (its diameter), every paddle wheel (a side-wheeler's two, at the
+  wheels' shafts; a stern wheel's one; the wheel's width) and every air propeller of a
+  hovercraft (behind it); all on the waterline. The waterline is the hull form's
+  `draft`, 0 without a hull.
+- The three older ships (`ships.ts` `withWater`) take the waterline at their `draftFrac`
+  of the model's height and one screw's churn at the stern, half the half-breadth wide.
+
+Tested in `test/worldShips.test.ts`.
 
 ## Rail supports and turning bogies
 
