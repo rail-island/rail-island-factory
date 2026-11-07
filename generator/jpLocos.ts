@@ -15,8 +15,10 @@ import { steamLocoLod } from "./lodSteam.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { bogieGeometry, paint, type BogieSpec } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
-import { crownPane, sideLettering, sidePanel } from "./sliceBody.ts";
-import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, faceLamps, type CarbodySpec, type NoseShape } from "./carbodyKit.ts";
+import { sideDecal, sideLettering, sidePanel } from "./sliceBody.ts";
+import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, type CarbodySpec, type NoseShape } from "./carbodyKit.ts";
+import { bodyHalf, cabFaceLod, drawCabFace, type FacePaint, type FaceRect, type SeriesCabFace } from "./seriesCab.ts";
+import type { Pt } from "./sliceLoft.ts";
 import { buildUsHood, knuckleCoupler, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
 import { diamond } from "./czElectricKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
@@ -177,68 +179,255 @@ export function jnrD51Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(d5
 export const jnrSteamSpec = (id: string, v?: ParamValues): LocoSpec => (id === "proc-vehicle-jnr-c62" ? c62(v) : d51(v));
 
 // ---------------------------------------------------------------------------
-// EF66: a Bo-Bo-Bo electric with the "brow" nose at both ends
+// EF66: a Bo-Bo-Bo electric with the same cab at both ends (docs/models/jnr-locos.md,
+// "The EF66"): the windscreen leaning back under the raised cab roof's visor, a blue shelf
+// sloping down from it to the brow, the cream front under the brow with the number plate on
+// its gold vee, the louvred grille between two lamp housings at the chamfered corners, and the
+// grey skirt; drawn as a cab face (seriesCab.ts) on a square-ended carbody. d_f is metres back
+// from a face's tip plane; the body runs between the two faces' joins.
 
 export const EF66_LENGTH = 18.2;
-const EF66_BODY = EF66_LENGTH - 2 * 0.45;
-const EF66_NOSE: NoseShape = { len: 0.9, tip: 0.86, power: 3.0, C: [[0, 3.0], [0.25, 3.35], [0.6, 3.52], [0.9, 3.6]], S: [[0, 2.3], [0.3, 3.0], [0.9, 3.3]], Y: [[0, 1.75], [0.5, 1.5]], A: [[0, 1.3], [0.4, 1.15]], B: [[0, 1.25], [0.3, 1.05]] };
-const EF66_SPEC: CarbodySpec = { length: EF66_BODY, W: 1.4, Y: 1.5, S: 3.3, C: 3.6, lean: 0.97, arc: 6, B: 1.05, wl: 1.35, A: 1.15, wa: 1.39, front: EF66_NOSE, rear: EF66_NOSE, edges: [], step: 1.0, noseStep: 0.15 };
-const EF66_TRUCKS = [6.1, 0, -6.1];
-const EF66_LIVERIES: Record<string, { title: string; palette: Record<string, MaterialSpec>; bands: ReadonlyArray<readonly [number, number, string]>; roof: string; nose: string }> = {
-  jnr: { title: "JNR blue, cream", palette: { blue: c("#2a4f9a"), cream: c("#efe3c2"), roofG: c("#7d8084", 0.6) }, bands: [[0, 1.42, "cream"], [1.42, 9, "blue"]], roof: "roofG", nose: "cream" },
-  jrFreight: { title: "JR Freight", palette: { lightBlue: c("#6fa8d6"), grey: c("#c9ccce"), navy: c("#2a3f6a"), roofG: c("#7d8084", 0.6) }, bands: [[0, 1.42, "navy"], [1.42, 2.35, "lightBlue"], [2.35, 9, "grey"]], roof: "roofG", nose: "grey" },
+/** Body length (17,100 mm), the face's join behind its tip, the tip plane's model x. */
+const EF66_BODY_LENGTH = 17.1;
+const EF66_JOIN = 0.95;
+const EF66_TIP = EF66_BODY_LENGTH / 2;
+/** The raised cab roof ends this far behind the tip; the body's roof (3,670 mm) is lower behind it. */
+const EF66_HUMP = 1.65;
+const EF66_CAB_ROOF = 3.87;
+const EF66_ROOF = 3.67;
+/** Bogie centres 5,300 mm apart, wheelbase 2,800 mm, wheels 1,120 mm. */
+const EF66_TRUCKS = [5.3, 0, -5.3];
+const EF66_PAN = 5.65;
+/** The cab hump's crown and shoulder over the body's d (the body starts at the join). */
+const EF66_CAB: NoseShape = { len: 0.01, tip: 1, power: 2, C: [[0, EF66_CAB_ROOF], [EF66_HUMP - EF66_JOIN - 0.08, EF66_CAB_ROOF], [EF66_HUMP - EF66_JOIN, EF66_ROOF]], S: [[0, 3.62], [EF66_HUMP - EF66_JOIN - 0.08, 3.62], [EF66_HUMP - EF66_JOIN, 3.5]] };
+const EF66_SPEC: CarbodySpec = { length: EF66_BODY_LENGTH - 2 * EF66_JOIN, W: 1.4, Y: 1.4, S: 3.5, C: EF66_ROOF, lean: 0.98, arc: 6, B: 1.32, wl: 1.39, A: 1.36, wa: 1.4, front: EF66_CAB, rear: EF66_CAB, edges: [], step: 2.0, noseStep: 0.2 };
+/** The seven upper windows and the louvres under them: starts behind the tip, pitch, widths. */
+const EF66_WIN0 = 2.53, EF66_PITCH = 1.74, EF66_WIN_W = 1.575;
+/** The number plate ([lat, y] corners) and the gold vee behind it, as the convex pieces round the plate. */
+const EF66_PLATE = { lat: [-0.37, 0.37], y: [2.44, 2.64] } as const;
+const EF66_VEE: Pt[][] = [
+  [[-0.63, 2.665], [0.63, 2.665], [0.596, 2.64], [-0.596, 2.64]],
+  [[-0.596, 2.64], [-0.37, 2.64], [-0.37, 2.478]], [[0.37, 2.64], [0.596, 2.64], [0.37, 2.478]],
+  [[-0.284, 2.44], [0.284, 2.44], [0, 2.335]],
+];
+
+interface Ef66Livery {
+  title: string;
+  number: string;
+  palette: Record<string, MaterialSpec>;
+  /** The body's side bands (bottom up) and its roof; the cab roof's colour. */
+  side: ReadonlyArray<readonly [number, number, string]>;
+  roof: string;
+  cabRoof: string;
+  /** The face's bands, its roof from this height, its painted fields; the lamp housings' paint, the louvres' slats, the skirt. */
+  face: ReadonlyArray<readonly [number, number, string]>;
+  faceRoofFrom: number;
+  fields: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
+  decals?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
+  pod: string;
+  slat: string;
+  skirt: string;
+  /** Paint over the face's cab sides (seriesCab.ts `paint`) and over the body's sides: polygons in [d_f, y]. */
+  cabPaint?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
+  sweeps?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
+  /** The distant model's face and side bands (the vee and the side band as level bands). */
+  lodFace: ReadonlyArray<readonly [number, number, string]>;
+  lodSide?: ReadonlyArray<readonly [number, number, string]>;
+}
+
+/** The face's bands: `lower` up to the brow, `upper` over it, the stainless windscreen frame. */
+const ef66FaceBands = (lower: string, upper: string, brow = 2.72): Array<readonly [number, number, string]> => [[0, brow, lower], [brow, 3.05, upper], [3.05, 3.61, "frameSilver"], [3.61, 9, upper]];
+
+const EF66_LIVERIES: Record<string, Ef66Livery> = {
+  // JNR blue No. 15 and cream No. 1 (EF66 27, 11, 35): the cream front under the brow, narrowing
+  // between the lamp housings; a cream stripe along the sides at the grille's height
+  jnr: {
+    title: "JNR blue, cream", number: "EF66 27",
+    palette: { efBlue: c("#22468c", 0.45), efCream: c("#ece0bf", 0.45), efRoof: c("#8d9093", 0.6), efSkirt: c("#aeb4b9", 0.55), efGold: c("#b49048", 0.35), efPlate: c("#203c78", 0.4) },
+    side: [[0, 1.92, "efBlue"], [1.92, 2.02, "efCream"], [2.02, 9, "efBlue"]], roof: "efRoof", cabRoof: "efBlue",
+    lodFace: [[0, 1.69, "efBlue"], [1.69, 2.72, "efCream"], [2.72, 9, "efBlue"]],
+    face: [[0, 2.27, "efBlue"], ...ef66FaceBands("efCream", "efBlue").map(([a, z, mt]) => [Math.max(a, 2.27), z, mt] as const)], faceRoofFrom: 9,
+    // the cream between the lamp housings down to the blue skirt band, the side stripe on the corners
+    fields: [
+      { mat: "efCream", pts: [[-0.91, 1.69], [0.91, 1.69], [0.91, 2.28], [-0.91, 2.28]] },
+    ],
+    decals: [
+      ...EF66_VEE.map((pts) => ({ mat: "efGold", pts })),
+      { mat: "efCream", pts: [[1.24, 1.92], [1.5, 1.92], [1.5, 2.02], [1.24, 2.02]] }, { mat: "efCream", pts: [[-1.5, 1.92], [-1.24, 1.92], [-1.24, 2.02], [-1.5, 2.02]] },
+    ],
+    pod: "efBlue", slat: "efBlue", skirt: "efSkirt",
+  },
+  // JR Freight's colours on EF66 20 (c. 1990): light grey, the blue vee over the front from
+  // the corners down under the grille, a blue band along the sides falling behind the cab
+  jrFreight: {
+    title: "JR Freight", number: "EF66 20",
+    palette: { jfGrey: c("#d8dad5", 0.45), jfBlue: c("#2458a8", 0.45), jfRoof: c("#8f8a7f", 0.6), jfSkirt: c("#9ebfcf", 0.55), efPlate: c("#203c78", 0.4) },
+    side: [[0, 9, "jfGrey"]], roof: "jfRoof", cabRoof: "jfRoof",
+    lodFace: [[0, 2.0, "jfGrey"], [2.0, 2.72, "jfBlue"], [2.72, 9, "jfGrey"]], lodSide: [[0, 2.2, "jfGrey"], [2.2, 2.6, "jfBlue"], [2.6, 9, "jfGrey"]],
+    face: ef66FaceBands("jfGrey", "jfGrey"), faceRoofFrom: 3.71,
+    fields: [{ mat: "jfBlue", pts: [[-1.6, 2.72], [-0.64, 2.72], [0, 2.0], [0.64, 2.72], [1.6, 2.72], [1.6, 2.3], [0, 1.6], [-1.6, 2.3]] }],
+    pod: "black", slat: "jfGrey", skirt: "jfSkirt",
+    cabPaint: [{ mat: "jfBlue", front: [[2.3, 0.12], [2.72, 0.12]], back: [[2.3, 1.2], [2.72, 1.2]], top: 2.72 }],
+    sweeps: [{ mat: "jfBlue", pts: [[0, 2.3], [2.6, 2.3], [5.6, 2.18], [EF66_BODY_LENGTH - 5.6, 2.18], [EF66_BODY_LENGTH - 2.6, 2.3], [EF66_BODY_LENGTH, 2.3], [EF66_BODY_LENGTH, 2.9], [EF66_BODY_LENGTH - 2.6, 2.9], [EF66_BODY_LENGTH - 5.6, 2.45], [5.6, 2.45], [2.6, 2.9], [0, 2.9]] }],
+  },
 };
 const EF66_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { jnr: EF66_LIVERIES.jnr!.title, jrFreight: EF66_LIVERIES.jrFreight!.title })];
+
+/** The cab face of one livery: profile measured from EF66 11, 27 and 35 (assets/jnr-ef66/). */
+function ef66Face(l: Ef66Livery): SeriesCabFace {
+  const plate: FaceRect = { ...EF66_PLATE, r: 0, mat: "efPlate" };
+  const strip = (lat: number, w: number, y0: number, y1: number, mat = "frameSilver") => ({ mat, pts: [[lat - w / 2, y0], [lat + w / 2, y0], [lat + w / 2, y1], [lat - w / 2, y1]] as Pt[], fine: 1 });
+  return {
+    dJoin: EF66_JOIN, dSide: 0.93, roofFrom: l.faceRoofFrom, cols: [4, 2, 1, 1], tolerance: 0.05, reach: 0.55,
+    // upright from the skirt to the brow, the shelf sloping back to the windscreen's foot, the
+    // windscreen leaning back under the visor, the cab roof rounding up behind the visor's lip
+    profile: [[1.32, 0.02], [1.4, 0], [2.72, 0], [2.76, 0.03], [3.0, 0.33], [3.05, 0.38], [3.62, 0.6], [3.645, 0.47], [3.71, 0.44], [3.79, 0.52], [3.85, 0.68], [EF66_CAB_ROOF, EF66_JOIN]],
+    // chamfered corners: small at the lamp housings, wider at the windscreen's corner panes
+    corner: [[1.32, 0.22], [2.72, 0.22], [2.76, 0.24], [3.05, 0.36], [3.62, 0.4], [3.71, 0.42], [EF66_CAB_ROOF, 0.3]],
+    cornerDepth: [[1.32, 0.22], [2.72, 0.22], [3.05, 0.38], [3.62, 0.3], [3.71, 0.36], [3.85, 0.22], [EF66_CAB_ROOF, 0]],
+    rows: [1.32, 1.4, 2.72, 2.76, 3.0, 3.05, 3.62, 3.645, 3.71, 3.79, 3.85, EF66_CAB_ROOF],
+    bands: () => l.face, lodBands: l.lodFace,
+    fields: l.fields,
+    ...(l.cabPaint ? { paint: l.cabPaint } : {}),
+    masks: [
+      // the louvred grille's opening, the number plate
+      { lat: [-0.91, 0.91], y: [1.81, 2.07], r: 0, mat: "black" },
+      plate,
+    ],
+    // one pane across the windscreen and round its corners; the stainless pillars over it
+    panes: [{ lat: [-1.6, 1.6], y: [3.09, 3.57], r: 0 }],
+    decals: [
+      strip(0, 0.08, 3.09, 3.57), ...[-1, 1].map((sd) => ({ ...strip(sd * 1.0, 0.07, 3.09, 3.57), fine: 2 })),
+      // the grille's five chromed slats
+      ...[0, 1, 2, 3, 4].map((i) => strip(0, 1.76, 1.83 + i * 0.048, 1.853 + i * 0.048)),
+      ...(l.decals ?? []).map((dc) => ({ ...dc, fine: 1 })),
+    ],
+    pods: [-1, 1].flatMap((s) => [
+      // the tall housing at each corner, the headlight over the tail light
+      { lat: s * 1.08, y: 2.105, w: 0.34, h: 0.32, r: 0.05, proud: 0.125, depth: 0.3, mat: l.pod, lamps: [[0, 0.1, "lampHead"]] as Array<[number, number, string]> },
+      { lat: s * 1.08, y: 1.795, w: 0.34, h: 0.32, r: 0.05, proud: 0.12, depth: 0.3, mat: l.pod, lamps: [[0, 0.088, "lampRed"]] as Array<[number, number, string]> },
+    ]),
+    number: { lat: -0.3, y: 2.485, h: 0.11, mat: "white" },
+    wipers: [[[-0.62, 3.12], [-0.28, 3.47]], [[0.32, 3.12], [0.66, 3.47]]],
+    lod: { profile: [[1.32, 0], [2.72, 0], [3.05, 0.38], [3.62, 0.6], [EF66_ROOF, 0.95]], corner: [[1.32, 0.22], [3.05, 0.36], [EF66_ROOF, 0.4]], rows: [1.32, 2.72, 3.05, 3.62, EF66_ROOF] },
+  };
+}
+
+const ef66Paint = (l: Ef66Livery): FacePaint => ({ sides: l.side, face: l.face, roof: l.cabRoof, skirt: l.side[0]![2], S: 3.62, A: 1.36, number: l.number });
 
 export function jnrEf66(v?: ParamValues): MeshBuilder {
   const l = EF66_LIVERIES[resolveParams(EF66_PARAMS, v).livery!]!;
   const m = new MeshBuilder({ ...CARBODY_PALETTE, under: c("#2a2c2f", 0.85), ...l.palette });
-  const b = carbody({ ...EF66_SPEC, edges: [...new Set(l.bands.flatMap(([p, q]) => [p, q]))].filter((y) => y > 1.51 && y < 3.29) });
-  const tip = EF66_LENGTH / 2 - 0.45;
-  const X = (d: number) => tip - d;
-  const base = bandPainter(l.bands, l.roof, "under", l.bands[0]![2]);
+  const L = EF66_BODY_LENGTH;
+  const b = carbody({ ...EF66_SPEC, edges: [...new Set(l.side.flatMap(([p, q]) => [p, q]))].filter((y) => y > 1.41 && y < 3.49) });
+  // body d from the front face's tip plane (d_f), as the photographs were measured
+  const X = (df: number) => EF66_TIP - EF66_JOIN - df;
+  const Bd = (df: number) => df - EF66_JOIN;
+  const base = bandPainter(l.side, l.roof, "under", l.side[0]![2]);
+  const face = ef66Face(l), fp = ef66Paint(l), half = bodyHalf(b, 0);
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, (d, y, r) => ((d < 0.5 || EF66_BODY - d < 0.5) && r !== "arc" && r !== "bottom" && y < 2.4 ? l.nose : base(d, y, r))));
+    // the raised cab roofs keep the cab's colour
+    m.scope("shell", () => carbodyShell(m, b, X, (d, y, r) => (r === "arc" && (d < EF66_HUMP - EF66_JOIN + 0.01 || b.length - d < EF66_HUMP - EF66_JOIN + 0.01) ? l.cabRoof : base(d, y, r))));
+    // both sides alike, the two cab ends mirrored: [d_f0, d_f1] from the front end, or from the rear
+    const span = (e: number, a: number, z: number): [number, number] => (e > 0 ? [Bd(a), Bd(z)] : [Bd(L - z), Bd(L - a)]);
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        for (const d of [1.3, EF66_BODY - 2.1]) sidePanel(m, b, X, s, "glass", d, d + 0.75, 2.45, 3.05, 0.01, 0.004);
-        for (let i = 0; i < 6; i++) sidePanel(m, b, X, s, "grille", 3.3 + i * 1.75, 4.6 + i * 1.75, 2.35, 3.0, 0.006, 0.02);
-        sideLettering(m, b, X, s, "EF66 27", EF66_BODY / 2, 1.75, 0.22, "white", 0.012);
+        for (const e of [1, -1])
+          m.scope(e > 0 ? "front cab" : "rear cab", () => {
+            m.scope("cab window", () => {
+              sidePanel(m, b, X, s, "rubber", ...span(e, 0.98, 1.36), 3.06, 3.56, 0.008, 0.004);
+              sidePanel(m, b, X, s, "cabGlass", ...span(e, 1.01, 1.33), 3.09, 3.53, 0.012, 0.004);
+            });
+            m.scope("door", () => {
+              for (const [a, z, y0, y1] of [[1.7, 1.725, 1.45, 3.45], [2.395, 2.42, 1.45, 3.45], [1.725, 2.395, 3.425, 3.45]] as const) sidePanel(m, b, X, s, "rubber", ...span(e, a, z), y0, y1, 0.006, 0.004);
+              sidePanel(m, b, X, s, "rubber", ...span(e, 1.85, 2.11), 2.62, 3.3, 0.008, 0.004);
+              sidePanel(m, b, X, s, "cabGlass", ...span(e, 1.875, 2.085), 2.645, 3.275, 0.012, 0.004);
+            });
+            m.scope("handrails", () => {
+              for (const a of [1.66, 2.46]) {
+                const [d] = span(e, a, a), q = X(d), z = s * (1.4 * 0.995 + 0.07);
+                m.rod("handrail", [q, 1.7, z], [q, 3.0, z], 0.016, 6);
+              }
+            });
+          });
+        m.scope("windows", () => {
+          for (let i = 0; i < 7; i++) {
+            const d0 = EF66_WIN0 + i * EF66_PITCH;
+            sidePanel(m, b, X, s, "frameSilver", Bd(d0), Bd(d0 + EF66_WIN_W), 2.98, 3.32, 0.008, 0.004);
+            sidePanel(m, b, X, s, "cabGlass", Bd(d0 + 0.03), Bd(d0 + EF66_WIN_W - 0.03), 3.0, 3.3, 0.012, 0.004);
+          }
+        });
+        m.scope("louvres", () => {
+          for (let i = 0; i < 7; i++) {
+            const d0 = EF66_WIN0 + 0.02 + i * EF66_PITCH, d1 = d0 + EF66_WIN_W - 0.04;
+            sidePanel(m, b, X, s, "grille", Bd(d0), Bd(d1), 2.41, 2.88, 0.008, 0.004);
+            // the slats as flat strips over the opening
+            const tris: Pt[] = [];
+            for (let k = 0; k < 8; k++) {
+              const [a, z, y0, y1] = [Bd(d0 + 0.02), Bd(d1 - 0.02), 2.43 + k * 0.055, 2.46 + k * 0.055];
+              tris.push([a, y0], [z, y0], [z, y1], [a, y0], [z, y1], [a, y1]);
+            }
+            sideDecal(m, b, X, s, l.slat, tris, 0.014);
+          }
+        });
+        if (l.sweeps)
+          m.scope("band", () => l.sweeps!.forEach((w) => {
+            // a strip of quads between the band's lower and upper edges, both listed from the front
+            const n = w.pts.length / 2, lo = w.pts.slice(0, n), hi = w.pts.slice(n).reverse();
+            const tris: Pt[] = [];
+            for (let i = 0; i + 1 < n; i++) {
+              const [a, bb, cc, dd] = [lo[i]!, lo[i + 1]!, hi[i + 1]!, hi[i]!].map(([df, y]): Pt => [Bd(Math.min(L - EF66_JOIN, Math.max(EF66_JOIN, df))), y]);
+              tris.push(a!, bb!, cc!, a!, cc!, dd!);
+            }
+            sideDecal(m, b, X, s, w.mat, tris, 0.003);
+          }));
+        sideLettering(m, b, X, s, l.number, Bd(L / 2), 2.12, 0.14, "frameSilver", 0.004);
       });
   });
   for (const e of [1, -1])
     m.scope(e > 0 ? "front end" : "rear end", () => {
-      const at = (d: number) => (e > 0 ? d : EF66_BODY - d);
-      m.scope("windscreen", () => {
-        for (const s of [1, -1]) {
-          const [d0, d1] = e > 0 ? [0.08, 0.62] : [at(0.62), at(0.08)];
-          crownPane(m, b, X, s, "rubber", [d0, d1], [0.08, 1.05], 0.01, 4, 3);
-          crownPane(m, b, X, s, "cabGlass", [d0 + 0.04, d1 - 0.04], [0.12, 1.0], 0.03, 4, 3);
-        }
-      });
-      faceLamps(m, e, e * X(at(0)) + 0.0, [[-0.85, 1.9, 0.1, "lampHead"], [0.85, 1.9, 0.1, "lampHead"], [-1.1, 1.6, 0.06, "lampRed"], [1.1, 1.6, 0.06, "lampRed"]]);
-      m.scope("skirt", () => block(m, "under", ...(e > 0 ? [tip - 0.35, tip + 0.02] : [-tip - 0.02, -tip + 0.35]) as [number, number], 0.35, 1.1, -1.25, 1.25));
-      m.scope("coupler", () => knuckleCoupler(m, e, tip - 0.25, EF66_LENGTH / 2, COUPLER_Y));
+      m.scope("cab face", () => drawCabFace(m, face, e, EF66_TIP, half, fp));
+      // the grey skirt with chamfered corners, the dark plough under it, the coupler in its pocket
+      const xf = EF66_TIP - 0.03;
+      const ring = (x0: number, x1: number, hw: number, ch: number): Array<[number, number]> =>
+        ([[x1, -hw + ch], [x1, hw - ch], [x1 - ch, hw], [x0, hw], [x0, -hw], [x1 - ch, -hw]] as Array<[number, number]>).map(([x, z]) => [e * x, z]);
+      m.scope("skirt", () => m.prism(l.skirt, ring(xf - 1.15, xf, 1.28, 0.28), 0.55, 1.3));
+      m.scope("plough", () => m.prism("under", ring(xf - 0.6, xf + 0.05, 1.25, 0.36), 0.2, 0.6));
+      m.scope("pocket", () => block(m, "black", ...((e > 0 ? [xf - 0.01, xf + 0.006] : [-xf - 0.006, -xf + 0.01]) as [number, number]), 0.68, 1.12, -0.32, 0.32));
+      m.scope("coupler", () => knuckleCoupler(m, e, EF66_TIP - 0.25, EF66_LENGTH / 2, COUPLER_Y));
     });
   m.scope("roof", () => {
-    for (const e of [1, -1]) m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => diamond(m, { xc: e * 5.0, roofY: 3.6, baseY: 3.9, raised: e < 0 }));
+    for (const e of [1, -1]) m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => diamond(m, { xc: e * EF66_PAN, roofY: EF66_ROOF, baseY: 3.95, raised: e < 0 }));
+    // the hatches over the machinery room, the high-tension line between the pantographs on its insulators
+    m.scope("hatches", () => { for (const [x0, x1] of [[-3.7, -1.3], [-1.1, 1.1], [1.3, 3.7]] as const) block(m, l.roof, x0, x1, 3.6, 3.71, -0.62, 0.62); });
+    m.scope("roof line", () => {
+      m.rod("steel", [-EF66_PAN + 0.6, 3.86, 0.35], [EF66_PAN - 0.6, 3.86, 0.35], 0.02, 6, false);
+      for (const x of [-3.0, 0, 3.0]) m.rod("insulator", [x, 3.7, 0.35], [x, 3.86, 0.35], 0.045, 6);
+    });
   });
   m.scope("running gear", () => {
-    const spec: BogieSpec = { axles: [-1.25, 1.25], wheelR: 0.56, frameHalf: 1.95, frameTop: 1.0, frameBottom: 0.62, frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.45, 0.45], secondaryZ: 1.1, bolster: 1.05 };
+    const spec: BogieSpec = { axles: [-1.4, 1.4], wheelR: 0.56, frameHalf: 2.05, frameTop: 1.02, frameBottom: 0.62, frameZ: [0.92, 1.04], primary: "coil", secondary: [0], secondaryZ: 1.1, bolster: 1.05 };
     EF66_TRUCKS.forEach((x, i) => m.scope(`truck ${i + 1}`, () => m.bogie(() => bogieGeometry(m, x, spec))));
+  });
+  // the equipment hung under the frame between the bogies
+  m.scope("underframe", () => {
+    for (const s of [1, -1]) block(m, "under", ...((s > 0 ? [2.15, 3.15] : [-3.15, -2.15]) as [number, number]), 0.72, 1.31, -1.15, 1.15);
   });
   return m;
 }
 
 export function jnrEf66Lod(v?: ParamValues): MeshBuilder {
   const l = EF66_LIVERIES[resolveParams(EF66_PARAMS, v).livery!]!;
-  const tip = EF66_LENGTH / 2 - 0.45;
+  const b = carbody({ ...EF66_SPEC, edges: [] });
+  const face = ef66Face(l), fp = ef66Paint(l), half = bodyHalf(b, 0);
   const body: UnitBody = {
-    y0: 1.05, hw: [[1.05, 1.35], [1.5, 1.4], [3.3, 1.36], [3.6, 0.5]], side: [...l.bands.map(([a, e, mt]): [number, number, string] => [Math.max(a, 1.05), Math.min(e, 3.3), mt]).filter(([a, e]) => e > a), [3.3, 3.6, l.roof]], roof: l.roof,
-    front: { tip: [[1.05, tip], [3.6, tip - 0.85]], setback: [[1.05, 0.3], [3.6, 0.3]], windows: [{ u: [-1.0, 1.0], y: [2.45, 3.1], mat: LOD_GLASS }] },
-    rear: { tip: [[1.05, -tip], [3.6, -tip + 0.85]], setback: [[1.05, 0.3], [3.6, 0.3]], windows: [{ u: [-1.0, 1.0], y: [2.45, 3.1], mat: LOD_GLASS }] },
+    y0: 1.32, hw: [[1.32, 1.39], [1.4, 1.4], [3.5, 1.37], [EF66_ROOF, 0.5]],
+    side: [...(l.lodSide ?? l.side).map(([a, e, mt]): [number, number, string] => [Math.max(a, 1.32), Math.min(e, 3.5), mt]).filter(([a, e]) => e > a), [3.5, EF66_ROOF, l.roof]], roof: l.roof,
+    front: cabFaceLod(face, 1, EF66_TIP, half, fp, EF66_ROOF),
+    rear: cabFaceLod(face, -1, EF66_TIP, half, fp, EF66_ROOF),
+    windows: [{ u: [-(EF66_TIP - EF66_WIN0), EF66_TIP - EF66_WIN0], y: [2.98, 3.32], mat: LOD_GLASS }],
   };
-  const parts = [...bogieParts(EF66_TRUCKS.map((x) => [x, 1.95] as const), 1.05), ...pantographParts([-5.0, 5.0], 3.6, 3.9)];
+  const parts = [...bogieParts(EF66_TRUCKS.map((x) => [x, 2.05] as const), 1.02), ...pantographParts([-EF66_PAN, EF66_PAN], EF66_ROOF, 3.95)];
   return fitUnit({ palette: { ...CARBODY_PALETTE, ...l.palette }, bodies: [body], parts }, 100);
 }
 
