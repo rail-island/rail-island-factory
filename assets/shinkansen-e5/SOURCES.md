@@ -36,6 +36,12 @@ at 14 m back and about 53 px/m at the tip.
 - Doors: a crew door 15.3 - 16.2 m and the passenger door 16.4 - 17.4 m behind the tip.
 - Middle car (photo-e5-u2.jpg): the stripe about 0.14 m tall, its top 2.2 m up; the windows stand
   on it, about 0.47 m tall; the door's narrow window high in the leaf.
+- Windscreen (photo-series-e5-u15-yamabiko-50.jpg head-on, photo-e5-u2.jpg, photo-h514-1-omiya-20160327.jpg):
+  one very dark navy glass on the canopy's front, a wide trapezoid head-on - a level top edge under
+  the green crown, a nearly straight foot, the sides slanting outward toward the bottom - wrapping
+  round the front corners into side windows whose foot rises to meet their top about 3.5 m back; a
+  thin black seal round it; the four headlights in a row inside it under its top edge, together
+  about 40 % of the glass's width (u15). Head-on the glass is about 0.42 times as tall as it is wide.
 - Colours sampled in diffuse light: tokiwa green about #0f8676 to #228779, the pink about #e2509a.
 
 ## Published figures

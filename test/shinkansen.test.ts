@@ -6,6 +6,7 @@ import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
 import { lodBudget } from "../generator/lod";
+import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 
 describe("the later Shinkansen", () => {
   it("are seven series on the Shinkansen gauge, each an end car, a middle car and a train of 3 - 8", () => {
@@ -47,6 +48,42 @@ describe("the later Shinkansen", () => {
       expect(buildLodModel(d, { unit: "train" }).triangleCount()).toBeLessThanOrEqual(lodBudget(d));
     });
   }
+
+  // regression: the E5's windscreen read as a pale blob over the whole canopy crown (docs/models/shinkansen.md)
+  it("gives the E5's canopy a dark windscreen on its front under a green crown, the headlights inside it", () => {
+    const d = SHINKANSEN_DESIGNS.find((x) => x.id === "proc-vehicle-shinkansen-e5")!;
+    const { json, bin } = parseGlb(d.build().toGlb("e5"));
+    const tris = collectTriangles(json, bin);
+    const tip = Math.max(...tris.flatMap((t) => t.p.map((p) => p[0])));
+    const of = (mat: string) => tris.filter((t) => t.material === mat && t.p.every((p) => p[0] > tip - 13));
+    const normal = (t: (typeof tris)[number]) => {
+      const [a, b, c] = t.p, u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+      return [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]] as const;
+    };
+    const glass = of("e5Glass");
+    expect(glass.length).toBeGreaterThan(100);
+    // very dark glass, nothing like the green or the white
+    expect(Math.max(...glass[0]!.color)).toBeLessThan(0.03);
+    // seen head-on (the area facing forward, projected on the front) a wide pane: over 0.5 m2, wider than 1.5 m
+    const front = glass.map(normal).reduce((s, n) => s + Math.max(0, n[0]) / 2, 0);
+    expect(front).toBeGreaterThan(0.5);
+    const zs = glass.flatMap((t) => t.p.map((p) => p[2]));
+    expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(1.5);
+    // under the crown: no glass above 3 m and none lying flat on the canopy's top
+    expect(Math.max(...glass.flatMap((t) => t.p.map((p) => p[1])))).toBeLessThan(3.0);
+    const top = glass.map(normal).reduce((s, n) => s + Math.max(0, Math.abs(n[1]) - 0.9 * Math.hypot(...n)) / 2, 0);
+    expect(top).toBeLessThan(0.01);
+    expect(of("rubber").length).toBeGreaterThan(0);
+    // the four headlights within the glass's height and width
+    const lamps = of("lampHead");
+    expect(lamps).toHaveLength(8);
+    const ys = glass.flatMap((t) => t.p.map((p) => p[1]));
+    for (const p of lamps.flatMap((t) => t.p)) {
+      expect(p[1]).toBeGreaterThan(Math.min(...ys));
+      expect(p[1]).toBeLessThan(Math.max(...ys));
+      expect(Math.abs(p[2])).toBeLessThan(Math.max(...zs) - 0.2);
+    }
+  });
 
   it("puts the pantographs on the second and next-to-last cars, the rear end car turned", () => {
     const t = shinkansenTrain(SHINKANSEN_SERIES["proc-vehicle-shinkansen-n700s"]!, 8);

@@ -1040,73 +1040,111 @@ const E5_FACE: SeriesCabFace = {
   panes: [],
 };
 
-/** The canopy's crown along the nose (d behind the tip, height), from where it rises out of the nose to where it runs into the roof. */
-const E5_CANOPY_TOP: Pt[] = [[6.0, 2.3], [6.3, 2.65], [6.6, 2.88], [7.2, 3.0], [8.4, 3.12], [9.5, 3.2], [10.1, 3.25], [11.0, 3.33], [12.0, 3.42], [12.6, 3.46]];
+/** The canopy's crown behind its rounded front (d behind the tip, height), out to where it sinks under the roof. */
+const E5_CANOPY_TOP: Pt[] = [[7.4, 3.06], [8.4, 3.14], [9.5, 3.2], [10.1, 3.25], [11.0, 3.33], [12.0, 3.42], [12.6, 3.46], [13.2, 3.49]];
 /** The nose's own centre line under it (the face's profile, d to height). */
 const E5_NOSE_TOP: Pt[] = [[5.1, 2.2], [6.0, 2.27], [7.3, 2.35], [8.6, 2.45], [9.9, 2.6], [11.0, 2.85], [11.9, 3.2], [12.8, 3.5], [13.8, 3.62], [15.0, 3.65]];
 
 /**
  * The E5's canopy cab (photo-h514-1-omiya-20160327.jpg, photo-e5-s11-sendai-20090725.jpg,
- * photo-series-e5-u15-yamabiko-50.jpg): a bubble 1.9 - 2.1 m wide standing out of the nose from 6 m
- * behind the tip and running into the roof by 12 m, round in plan at its front, its sides steep. Its
- * windscreen is a visor over the front and crown inside a green rim, then a band on the sides back
- * to 10.2 m rising to the rear; the four headlights shine from under the glass's top edge. Drawn on
- * its own, sunk into the nose.
+ * photo-series-e5-u15-yamabiko-50.jpg, photo-e5-u2.jpg): a green bubble 1.7 - 1.9 m wide rising out
+ * of the nose 6 m behind the tip and sinking under the roof by 13 m, its front a quarter ellipsoid
+ * (round in plan and in profile). Its windscreen is one dark glass on the front, seen head-on a wide
+ * trapezoid: a level top edge (2.94 m, falling to the rear so that it reads level from slightly
+ * above) under the green crown, a level foot (2.5 m), the sides the canopy's own flanks narrowing to
+ * the top; it wraps round the front corners into the side windows (a thin pillar between), their
+ * foot rising to meet the top 9.7 m behind the tip. A thin black seal rings it; the four headlights
+ * stand inside the glass under its top edge. Every edge is a height line laid on fixed section
+ * angles (with a section where an edge crosses the crown or the window closes), so the paint follows
+ * the surface without steps. Drawn on its own, sunk into the nose.
  */
 function e5Canopy(m: MeshBuilder, X: (d: number) => number, dJoin: number): void {
-  const [d0, d1, K] = [6.05, 12.0, 16];
-  const W = (d: number) => {
-    const w = d < 10.5 ? 0.95 + (Math.max(0, d - 7.3) / 3.2) * 0.1 : 1.05 - ((d - 10.5) / (d1 - 10.5)) * 0.15;
-    const t = Math.min(1, (d - d0) / 0.9);
-    return w * Math.sqrt(Math.max(0, 1 - (1 - t) * (1 - t)));
-  };
-  // (edgeAt reads a [key, value] table: here d to height)
-  const top = (d: number) => edgeAt(E5_CANOPY_TOP, d);
+  // the canopy from its front foot (d0, buried in the nose) over its rounded front (to dFront) to under the roof (d1)
+  const [d0, dFront, d1] = [5.85, 7.4, 13.0];
+  // the crown: a quarter ellipse up the front (piercing the nose 6 m back, 3.06 m at dFront), then the table
+  const top = (d: number) => (d < dFront ? 2.05 + 1.01 * Math.sqrt(Math.max(0, 1 - ((dFront - d) / (dFront - d0)) ** 2)) : edgeAt(E5_CANOPY_TOP, d));
   const base = (d: number) => edgeAt(E5_NOSE_TOP, d) - 0.55;
-  const hgt = (d: number) => Math.max(0, d >= d1 - 1e-9 ? 0 : top(d) - base(d));
-  const ds: number[] = [];
-  for (let d = d0; d < d1 - 1e-9; d += d < 8 ? 0.15 : 0.3) ds.push(d);
-  ds.push(d1);
-  // the glass's foot by d (on the front 2.42 m up, rising along the sides) and the side glass's inner
-  // edge (|z| = 0.62 W, a fixed angle on every section)
-  const [visor, side] = [9.3, 10.4];
-  const foot = (d: number) => 2.5 + 0.06 * Math.max(0, d - 6.45);
-  const phiSide = Math.acos(Math.pow(0.55, 2.5));
-  // a section's angles over its left half: even steps between fixed stations, the glass's foot always
-  // at index 4 and the side glass's edge at index 6, so that both run as straight lines between sections
-  const angles = (d: number): number[] => {
-    const h = hgt(d), f = foot(d);
-    const knots: Array<[number, number]> = [[0, 0]];
-    if (h > 0 && f > base(d) && f < base(d) + h) knots.push([4, Math.min(Math.asin(Math.pow((f - base(d)) / h, 1 / 0.6)), phiSide - 0.1)]);
-    if (d > visor && d <= side + 0.3) knots.push([6, phiSide]);
-    knots.push([K / 2, Math.PI / 2]);
-    const half = Array.from({ length: K / 2 + 1 }, (_, k) => {
-      let i = 1;
-      while (knots[i]![0] < k) i++;
-      const [[ka, a], [kb, b]] = [knots[i - 1]!, knots[i]!];
-      return a + ((b - a) * (k - ka)) / (kb - ka);
-    });
-    return [...half, ...half.slice(0, -1).reverse().map((a) => Math.PI - a)];
+  const hgt = (d: number) => Math.max(0, top(d) - base(d));
+  // the half width: round in plan over the front metre, widest 10.5 m back
+  const W = (d: number) => {
+    const w = d < 10.5 ? 0.86 + (Math.max(0, d - 7.3) / 3.2) * 0.1 : 0.96 - Math.min(1, (d - 10.5) / 2.5) * 0.12;
+    const t = Math.min(1, Math.max(0, d - d0) / 1.0);
+    return w * Math.sqrt(1 - (1 - t) * (1 - t));
   };
-  // a section: from the left foot over the crown to the right foot (lat, y)
-  const sec = (d: number): Array<[number, number]> => angles(d).map((ph) => {
-    const c = Math.cos(ph), s = Math.sin(ph);
-    return [W(d) * Math.sign(c) * Math.pow(Math.abs(c), 0.4), base(d) + hgt(d) * Math.pow(s, 0.6)];
-  });
+  // a section's shape: angle ph from the foot (0) to the crown (pi/2), a rounded superellipse
+  const [PZ, PY] = [0.75, 0.7];
+  const phOf = (d: number, y: number) => {
+    const h = hgt(d), f = h > 1e-9 ? (y - base(d)) / h : 1;
+    return f >= 1 ? Math.PI / 2 : f <= 0 ? 0 : Math.asin(Math.pow(f, 1 / PY));
+  };
   // the surface's height over lateral z on the section at d
   const yAt = (d: number, z: number) => {
-    const c = Math.pow(Math.min(1, Math.abs(z) / Math.max(W(d), 1e-6)), 2.5);
-    return base(d) + hgt(d) * Math.pow(Math.sqrt(Math.max(0, 1 - c * c)), 0.6);
+    const c = Math.pow(Math.min(1, Math.abs(z) / Math.max(W(d), 1e-6)), 1 / PZ);
+    return base(d) + hgt(d) * Math.pow(Math.sqrt(Math.max(0, 1 - c * c)), PY);
   };
-  // the glass: a visor over the canopy's front and crown to 9 m inside a green rim (its foot 2.42 m
-  // up), then on its sides only back to 10.2 m under the green crown, its foot rising to the rear
-  const glassAt = (d: number, y: number, z: number) =>
-    y >= foot(d) && ((d <= visor && Math.abs(z) < 0.88 * W(d)) || (d <= side && Math.abs(z) > 0.55 * W(d) && y <= top(d) - 0.03));
+  // the glass between its foot (ybot, level on the front) and its top edge (ytop), the seal SEAL wide
+  // round it and across it at the pillar (dPillar); past dEnd the foot overtakes the top and the side
+  // window closes
+  const SEAL = 0.03;
+  const [yFoot, dLow, dEnd, dPillar] = [2.5, 6.7, 9.7, 7.6];
+  const ytop = (d: number) => 2.94 - 0.1 * (d - 7.0);
+  const ybot = (d: number) => yFoot + (ytop(dEnd) - yFoot) * Math.pow(Math.max(0, d - dLow) / (dEnd - dLow), 1.6);
+  const edges = (d: number): [number, number, number, number] => {
+    const mid = (ytop(d) + ybot(d)) / 2, half = (ytop(d) - ybot(d)) / 2;
+    const [g, s] = [Math.max(0, half), Math.max(0, half + SEAL)];
+    return [mid - s, mid - g, mid + g, mid + s];
+  };
+  const bisect = (f: (d: number) => number, a: number, b: number) => {
+    let [lo, hi] = [a, b];
+    for (let i = 0; i < 60; i++) { const md = (lo + hi) / 2; if ((f(lo) < 0) === (f(md) < 0)) lo = md; else hi = md; }
+    return (lo + hi) / 2;
+  };
+  // the sections where an edge crosses the crown at the front, and where the side window closes
+  const keys = [0, 1, 2, 3].map((i) => bisect((d) => top(d) - edges(d)[i]!, d0, dFront));
+  const dShut = bisect((d) => ytop(d) - ybot(d) + 2 * SEAL, dLow, 12);
+  const grid: number[] = [];
+  for (let d = d0; d < d1 - 1e-9; d += d < 6.6 - 1e-9 ? 0.05 : d < 8 - 1e-9 ? 0.1 : 0.25) grid.push(d);
+  const special = [...keys, dPillar, dPillar + SEAL, dEnd, dShut];
+  const ds = [...grid.filter((d) => special.every((k) => Math.abs(d - k) > 0.02)), ...special, d1].sort((a, b) => a - b);
+  // a half section's knots: the foot, the seal, the glass, the seal and the crown at fixed indices, so
+  // that each edge runs along one line of facets; a knot above the crown sits on it (no facet), and
+  // behind the closed side window the knots spread out evenly again over the crown
+  const K = 22, KN = [0, 7, 8, 15, 16, K];
+  const angles = (d: number): number[] => {
+    const e = edges(d);
+    const knots = [0, ...e.map((y) => phOf(d, y)), Math.PI / 2];
+    const half = Array.from({ length: K + 1 }, (_, k) => {
+      let i = 1;
+      while (KN[i]! < k) i++;
+      const [ka, kb] = [KN[i - 1]!, KN[i]!];
+      return knots[i - 1]! + ((knots[i]! - knots[i - 1]!) * (k - ka)) / (kb - ka);
+    });
+    const w = d <= dShut ? 0 : Math.min(1, (d - dShut) / 0.8);
+    const sm = w * w * (3 - 2 * w);
+    return half.map((a, k) => a + (((Math.PI / 2) * k) / K - a) * sm);
+  };
+  // a section: from the left foot over the crown to the right foot (lat, y)
+  const sec = (d: number): Array<[number, number]> => {
+    const half = angles(d), all = [...half, ...half.slice(0, -1).reverse().map((a) => Math.PI - a)];
+    return all.map((ph) => {
+      const c = Math.cos(ph), s = Math.sin(ph);
+      return [W(d) * Math.sign(c) * Math.pow(Math.abs(c), PZ), base(d) + hgt(d) * Math.pow(s, PY)];
+    });
+  };
+  // a facet column's paint between two sections (dm between them): the glass and its seal, else green
+  const column = (k: number, dm: number) => {
+    const j = k < K ? k : 2 * K - 1 - k;
+    if (dm > dShut || j < 7) return "green";
+    if (j === 7 || j === 15) return "rubber";
+    if (j < 15) return dm > dPillar && dm < dPillar + SEAL ? "rubber" : "e5Glass";
+    return "green";
+  };
   const P = (d: number, [z, y]: [number, number]): Vec3 => [X(d - dJoin), y, z];
-  // each triangle wound to face away from the canopy's axis
+  // each triangle wound to face away from the canopy's axis; a collapsed one (a knot on the crown) left out
   const out = (a: Vec3, b: Vec3, c: Vec3, ax: Vec3, mat: string) => {
     const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
     const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    if (n[0] * n[0] + n[1] * n[1] + n[2] * n[2] < 1e-14) return;
     const g = [(a[0] + b[0] + c[0]) / 3 - ax[0], (a[1] + b[1] + c[1]) / 3 - ax[1], (a[2] + b[2] + c[2]) / 3 - ax[2]];
     if (n[0] * g[0] + n[1] * g[1] + n[2] * g[2] >= 0) m.tri(mat, a, b, c);
     else m.tri(mat, a, c, b);
@@ -1115,21 +1153,22 @@ function e5Canopy(m: MeshBuilder, X: (d: number) => number, dJoin: number): void
     for (let i = 0; i + 1 < ds.length; i++) {
       const [da, db] = [ds[i]!, ds[i + 1]!], [sa, sb] = [sec(da), sec(db)];
       const dm = (da + db) / 2, ax: Vec3 = [X(dm - dJoin), base(dm), 0];
-      for (let k = 0; k < K; k++) {
-        const y = (sa[k]![1] + sa[k + 1]![1] + sb[k]![1] + sb[k + 1]![1]) / 4, z = (sa[k]![0] + sa[k + 1]![0] + sb[k]![0] + sb[k + 1]![0]) / 4;
-        const mat = glassAt(dm, y, z) ? "e5Glass" : "green";
+      for (let k = 0; k < 2 * K; k++) {
+        const mat = column(k, dm);
         out(P(da, sa[k]!), P(db, sb[k]!), P(db, sb[k + 1]!), ax, mat);
         out(P(da, sa[k]!), P(db, sb[k + 1]!), P(da, sa[k + 1]!), ax, mat);
       }
     }
   });
-  // the four headlights under the glass's top edge, laid on the canopy's crown
+  // the four headlights in a row inside the glass under its top edge, standing just off its surface
   m.scope("headlights", () => {
-    for (const z of [-0.33, -0.11, 0.11, 0.33]) {
-      const [da, db, w] = [7.05, 7.3, 0.05];
-      const Q = (d: number, zz: number): Vec3 => [X(d - dJoin), yAt(d, zz) + 0.01, zz];
-      out(Q(da, z - w), Q(db, z - w), Q(db, z + w), [X(7.2 - dJoin), base(7.2), 0], "lampHead");
-      out(Q(da, z - w), Q(db, z + w), Q(da, z + w), [X(7.2 - dJoin), base(7.2), 0], "lampHead");
+    const dOn = (z: number, y: number) => bisect((d) => yAt(d, z) - y, d0 + 0.05, dFront);
+    const Q = (z: number, y: number): Vec3 => P(dOn(z, y) - 0.012, [z, y + 0.004]);
+    const [y0, y1, w] = [2.855, 2.91, 0.06];
+    for (const z of [-0.29, -0.1, 0.1, 0.29]) {
+      const ax: Vec3 = [X(dFront - dJoin), base(dFront), 0];
+      out(Q(z - w, y0), Q(z + w, y0), Q(z + w, y1), ax, "lampHead");
+      out(Q(z - w, y0), Q(z + w, y1), Q(z - w, y1), ax, "lampHead");
     }
   });
 }
@@ -1142,8 +1181,8 @@ function e5Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car
 
 /** The E5's tokiwa green, sampled from the photographs in diffuse light. */
 const E5_GREEN = "#0f8676";
-/** The canopy's windscreen: a lighter, blue-tinted, reflective glass (the photographs). */
-const E5_GLASS: MaterialSpec = { color: "#4f7896", metallic: 0.45, roughness: 0.08, glass: true };
+/** The canopy's windscreen: a very dark navy, glossy glass, the cab barely seen through it (the photographs). */
+const E5_GLASS: MaterialSpec = { color: "#141c28", metallic: 0.2, roughness: 0.05, glass: true };
 
 export const E5: ShinkansenSeries = {
   endLength: 26.5, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.65, lean: 0.95, B: 0.5, A: 1.05,
@@ -1151,7 +1190,7 @@ export const E5: ShinkansenSeries = {
   nose: nose(0.1, 1, 2, [[0, 3.65]], [[0, 3.0]], [[0, 1.45]], [[0, 1.05]], [[0, 0.75]]),
   windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: E5_FACE, fittings: e5Fittings,
   // the distant canopy: its glass visor
-  lodRoof: { d: [6.4, 10.4], hw: 0.85, y: [2.3, 3.25], mat: LOD_GLASS },
+  lodRoof: { d: [6.0, 9.4], hw: 0.82, y: [2.3, 2.95], mat: LOD_GLASS },
   // the windows standing on the stripe; the door's narrow window high in the leaf; the crew door
   // ahead of the passenger door behind the nose
   windows: [[2.25, 2.72]], windowW: 0.66, pitch: 1.04, door: [1.3, 3.2, 2.45, 3.0], doorW: 1.0, doorGlassW: 0.3,
