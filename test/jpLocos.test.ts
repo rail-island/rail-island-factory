@@ -1,6 +1,7 @@
 // The JNR locomotives and the Blue Train coach (generator/jpLocos.ts). See docs/models/jnr-locos.md.
 import { describe, expect, it } from "vitest";
 import { BLUE_LENGTH, EF66_LENGTH, JNR_LOCOS, jnrSteamSpec } from "../generator/jpLocos";
+import { DD51_LENGTH } from "../generator/jnrDd51";
 import { LOADING_GAUGES } from "../generator/loadingGauge";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -55,6 +56,16 @@ describe("the JNR locomotives and the Blue Train", () => {
     expect(Math.abs(nam.x0 - nam.chimney)).toBeLessThan(0.35);
   });
 
+  it("draws the C62 as C62 2: Boxpok drivers, 21.475 m with its six-axle 10-22 tender, the swallow on its deflectors", () => {
+    const c62 = jnrSteamSpec("proc-vehicle-jnr-c62");
+    expect(c62.gear.engines[0]!.coupled.every((i) => c62.gear.wheels[i]!.box)).toBe(true);
+    const tender = jnrSteamSpec("proc-vehicle-jnr-c62", { unit: "tender" });
+    expect(tender.gear.wheels).toHaveLength(6);
+    expect(c62.heads[1] + tender.heads[1]).toBeCloseTo(21.475, 3);
+    const glb = design("proc-vehicle-jnr-c62").build().toGlb("c62");
+    expect(glbStats(glb).triangles).toBeLessThanOrEqual(15000);
+  });
+
   it("runs the EF66 and the DD51 on three bogies, the EF66's rear pantograph raised", () => {
     const ef = design("proc-vehicle-jnr-ef66").build();
     expect(ef.rig!.supports).toHaveLength(3);
@@ -62,6 +73,24 @@ describe("the JNR locomotives and the Blue Train", () => {
     expect(s.max[0] - s.min[0]).toBeCloseTo(EF66_LENGTH, 1);
     expect(s.max[1]).toBeGreaterThan(5.8);
     expect(design("proc-vehicle-jnr-dd51").build().rig!.supports).toHaveLength(3);
+  });
+
+  it("draws the EF66 to its published figures: bogie centres 5.3 m apart, the body 17.1 m long in the distant model too", () => {
+    const ef = design("proc-vehicle-jnr-ef66").build();
+    expect(ef.rig!.supports!.map((s) => Math.round(s.x * 100) / 100)).toEqual([-5.3, 0, 5.3]);
+    expect(ef.rig!.supports!.every((s) => s.axles === 2)).toBe(true);
+    const low = glbStats(design("proc-vehicle-jnr-ef66").buildLod().toGlb("l"));
+    expect(low.max[0] - low.min[0]).toBeCloseTo(17.1, 1);
+  });
+
+  it("builds the DD51 at 18.0 m with the cab standing above the hoods and headlights", () => {
+    for (const livery of ["jnr", "hokutosei"]) {
+      const m = design("proc-vehicle-jnr-dd51").build({ livery });
+      const s = glbStats(m.toGlb("dd"));
+      expect(s.max[0] - s.min[0]).toBeCloseTo(DD51_LENGTH, 1);
+      expect(s.max[1]).toBeGreaterThan(3.8);
+      expect(m.lamps()!.materials.lampHead?.role).toBe("head");
+    }
   });
 
   it("builds the Blue Train's sleeper and dining car at 20.8 m with a door each side", () => {
