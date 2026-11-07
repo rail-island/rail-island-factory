@@ -24,12 +24,6 @@ import { loftHalves } from "./sliceLoft.ts";
 
 const c = (hex: string, r = 0.4) => paint(hex, r);
 const nose = (len: number, tip: number, power: number, C: Pt[], S: Pt[], Y: Pt[], A: Pt[], B: Pt[]): NoseShape => ({ len, tip, power, C, S, Y, A, B });
-/** A flat cab front's mask and three panes across a w-wide end, lamps low at its corners. */
-const flatCab = (w: number, y0: number, y1: number, mask: string, lampY: number) => ({
-  mask: [y0 - 0.2, y1 + 0.15, mask] as const,
-  panes: [[0.25, w - 0.12, y0, y1], [-0.2, 0.2, y0 - 0.25, y1 + 0.05], [-(w - 0.12), -0.25, y0, y1]] as Array<[number, number, number, number]>,
-  lamps: [[-(w - 0.3), lampY, 0.08, "lampHead"], [w - 0.3, lampY, 0.08, "lampHead"], [-(w - 0.15), lampY, 0.05, "lampRed"], [w - 0.15, lampY, 0.05, "lampRed"]] as Array<[number, number, number, string]>,
-});
 const NO_NOSE = nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]);
 
 // ---------------------------------------------------------------------------
