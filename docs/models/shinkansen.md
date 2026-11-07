@@ -44,9 +44,13 @@ A cab face (`cabFace`, `drawCabFace` in `generator/seriesCab.ts`) scans every pa
 few hundred heights in every column, so a measured face with many fields costs 100 - 700 ms to work
 out. Its skin depends only on the face spec, its end, tip, body section and paint, so
 `drawCabFace` records it once per process and replays the same `scope`/`facets` calls into later
-builds (every unit, livery and train length a test or the export asks for): the bytes are the same
-(test/seriesCabFace.test.ts, "cab face skin replay"). A face spec copied or made per build misses the
-cache and is worked out afresh. The N700S's `reshape` also caches its height lookups by (lat, y).
+builds with the same end and tip: the bytes are the same (test/seriesCabFace.test.ts, "cab face skin
+replay"). Which layer covers which heights in each column (`NoseScan`, cabNose.ts `shared`) depends on
+neither the end nor the tip, so a face drawn at another place along a train (every train length) reuses
+that scan and only maps its points afresh. Both caches keep their 48 most recent entries, and a scan drops
+its sample points once its first skin is drawn, so a build of every combination stays in memory. A face
+spec copied or made per build misses the caches and is worked out afresh. The scan's queries carry no
+model point (only drawing needs one), and the N700S's `reshape` caches its height lookups by (lat, y).
 
 ### The series kit beyond the Shinkansen
 

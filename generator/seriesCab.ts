@@ -9,7 +9,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { halfSlice, type SliceBody } from "./sliceBody.ts";
-import { CabNose, inRoundRect, type NoseLayer, type NoseQuery, type NoseSpec } from "./cabNose.ts";
+import { CabNose, inRoundRect, type NoseLayer, type NoseQuery, type NoseScan, type NoseSpec } from "./cabNose.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { noseEnd, type UnitEnd } from "./lodUnits.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
@@ -225,8 +225,31 @@ function subdivide(pts: readonly Pt[], k: number): Pt[] {
  */
 type Skin = Array<[string, Array<[string, Vec3[], Vec3]>]>;
 type Vec3 = [number, number, number];
-const SKINS = new WeakMap<SeriesCabFace, Map<string, Skin>>();
+/**
+ * The face's scan by body section and paint, shared by its skins at every end and tip (cabNose.ts
+ * NoseScan). Both caches keep the most recently used entries only (a build of every combination of
+ * every design would otherwise hold every skin it drew), and a scan keeps only its intervals once
+ * its first skin is drawn: the later skins ask the same intervals.
+ */
+const CACHE_SIZE = 48;
+const SKINS = new Map<string, Skin>();
+const SCANS = new Map<string, NoseScan>();
+const FACE_IDS = new WeakMap<SeriesCabFace, number>();
+let faceCount = 0;
+const faceId = (f: SeriesCabFace): number => {
+  let id = FACE_IDS.get(f);
+  if (id === undefined) FACE_IDS.set(f, (id = ++faceCount));
+  return id;
+};
 const skinKey = (v: unknown): string => JSON.stringify(v, (_k, x: unknown) => (Object.is(x, -0) ? "-0" : x));
+function cached<T>(cache: Map<string, T>, key: string, make: () => T): T {
+  let v = cache.get(key);
+  if (v !== undefined) cache.delete(key);
+  else v = make();
+  cache.set(key, v);
+  if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
+  return v;
+}
 
 /** Draws a cab face on end e (+1 the +X end), its tip at model x e * xTip, joined to the body's section `half`. */
 export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint): void {
@@ -235,11 +258,9 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
     base: p.face[0]?.[2] ?? p.sides[0]![2], layers: layers(f, p), cols: f.cols ?? [8, 4, 1, 1], ...(f.tolerance ? { tolerance: f.tolerance } : {}), capTop: p.roof, capBottom: p.skirt,
     ...(f.reshape ? { reshape: f.reshape } : {}),
   });
-  let byKey = SKINS.get(f);
-  if (!byKey) SKINS.set(f, (byKey = new Map()));
-  const key = skinKey([e, xTip, half, p]);
-  let skin = byKey.get(key);
-  if (!skin) {
+  const id = faceId(f);
+  const skin = cached(SKINS, `${id}|${skinKey([e, xTip, half, p])}`, () => {
+    const shared = cached(SCANS, `${id}|${skinKey([half, p])}`, (): NoseScan => ({ memo: new Map(), scanCols: new Map() }));
     // record what draw() emits (it calls only scope and facets)
     const rec: Skin = [];
     let cur: Array<[string, Vec3[], Vec3]> | null = null;
@@ -256,11 +277,11 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
         cur.push([mat, pts, normal]);
       },
     } as unknown as MeshBuilder;
-    new CabNose(recorder, n.s).draw();
-    byKey.set(key, (skin = rec));
-  }
-  const drawn = skin;
-  m.scope("skin", () => { for (const [name, list] of drawn) m.scope(name, () => { for (const [mat, pts, normal] of list) m.facets(mat, pts, normal); }); });
+    new CabNose(recorder, { ...n.s, shared }).draw();
+    shared.scanCols.clear();
+    return rec;
+  });
+  m.scope("skin", () => { for (const [name, list] of skin) m.scope(name, () => { for (const [mat, pts, normal] of list) m.facets(mat, pts, normal); }); });
   const g = f.gangway;
   if (g)
     m.scope("gangway door", () => {
