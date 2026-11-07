@@ -21,9 +21,9 @@
 import { MeshBuilder } from "./meshBuilder.ts";
 import type { MaterialSpec, Vec3 } from "./meshCore.ts";
 import { rollWheels, ROLLING_CLIP, ROLLING_SAMPLES, ROLLING_SPEED } from "./rolling.ts";
-import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
+import { resolveParams, type CatalogFields, type ParamValues, type ProceduralDesign } from "./design.ts";
 import type { VehicleRig } from "./rig.ts";
-import { addGait, animalPalette, drawTeam, SPECIES_SPECS, teamGame, teamLod, teamOf, teamParams, placeTeam } from "./draftAnimals.ts";
+import { addGait, animalPalette, drawTeam, SPECIES_SPECS, teamGame, teamLod, teamOf, teamParams } from "./draftAnimals.ts";
 
 export type AnimalVehicleKind = "tram" | "rail" | "road";
 
@@ -69,6 +69,8 @@ const paletteOf = (s: AnimalVehicleSpec): Record<string, MaterialSpec> => ({ ...
 export const TEAM_BEND_DEG = 60;
 
 export function buildAnimalVehicle(s: AnimalVehicleSpec, params?: ParamValues): MeshBuilder {
+  // an unknown parameter or value throws, as every design's does (resolveParams)
+  resolveParams(teamParams({ trailer: s.kind !== "road", pair: s.pair }), params);
   const m = new MeshBuilder(paletteOf(s));
   const team = teamOf(params, { pair: s.pair });
   if (s.kind === "road") {
@@ -111,20 +113,15 @@ export function buildAnimalVehicle(s: AnimalVehicleSpec, params?: ParamValues): 
 }
 
 export function buildAnimalVehicleLod(s: AnimalVehicleSpec, params?: ParamValues): MeshBuilder {
+  resolveParams(teamParams({ trailer: s.kind !== "road", pair: s.pair }), params);
   const m = new MeshBuilder(paletteOf(s));
   const team = teamOf(params, { pair: s.pair });
   if (s.kind === "road") {
     const kp = s.kingpin!;
+    // a distant model is static but for its sections (no steering)
     m.part(SECTION0, [0, 0, 0], () => teamLod(m, team.species, team.count, s.hitch[0]));
-    const lead = Math.max(...placeTeam(team.species, team.count, s.hitch[0]).map((p) => p.x)) + SPECIES_SPECS[team.species].legs.front;
-    const half = (s.track ?? 1.6) / 2;
-    // the steered nodes before the body's section: a part follows its parent's other descendants
-    for (const [name, z] of [["wheel-front-left", -half], ["wheel-front-right", half]] as const) m.part(name, [r4(lead), 0, z], () => {}, SECTION0);
     m.part(SECTION1, kp, () => s.lod(m));
-    m.rig = {
-      sections: [{ node: SECTION0, pivot: [0, 0, 0] }, { node: SECTION1, pivot: kp }], joints: [], maxBendDeg: TEAM_BEND_DEG,
-      steer: { axles: [{ nodes: ["wheel-front-left", "wheel-front-right"], wheelbase: r4(lead - kp[0]) }], maxAngleDeg: 40, track: s.track ?? 1.6 },
-    } satisfies VehicleRig;
+    m.rig = { sections: [{ node: SECTION0, pivot: [0, 0, 0] }, { node: SECTION1, pivot: kp }], joints: [], maxBendDeg: TEAM_BEND_DEG } satisfies VehicleRig;
   } else if (!team.count) {
     s.lod(m);
   } else {

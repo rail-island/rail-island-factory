@@ -99,8 +99,11 @@ function arcPts(cx: number, cy: number, r: number, a0: number, a1: number, n: nu
   });
 }
 
+/** The game's track gauge (m): every rail vehicle's treads stand on it. */
+const GAME_GAUGE = 1.435;
+
 interface WheelSpec {
-  /** Track gauge (m) and the wheel's tread radius. */
+  /** The prototype's track gauge (m; the model runs on GAME_GAUGE) and the wheel's tread radius. */
   gauge: number;
   r: number;
   /** Facets round the tyre, spokes, the axle's half length. */
@@ -113,20 +116,24 @@ interface WheelSpec {
   centre?: string;
 }
 
-const axleY = (w: WheelSpec): number => w.r * Math.cos(Math.PI / w.sides);
+// the tyre polygon stands on a vertex: its axle a full radius over the rail head
+const axleY = (w: WheelSpec): number => w.r;
 
 /** A spoked wheelset (a rolling part) at x: axle, two tyres with flanges, hubs and spokes. */
 function wheelset(m: MeshBuilder, name: string, x: number, w: WheelSpec): void {
   const y = axleY(w);
-  const g = w.gauge / 2;
+  // every rail vehicle runs on the game's one gauge, standard: a narrower line's own is in its sources
+  const g = GAME_GAUGE / 2;
+  const axleHalf = Math.max(w.axleHalf, g + 0.1 * w.k + 0.02);
   m.spin(name, [x, y, 0], () => m.scope("wheelset", () => {
     const axle = ngon(8, 0.06 * w.k, 0, x, y);
-    m.sweep("steel", "z", axle, -w.axleHalf, axle, w.axleHalf);
+    m.sweep("steel", "z", axle, -axleHalf, axle, axleHalf);
     for (const s of [-1, 1]) {
-      const [t0, t1] = side(s, g - 0.03 * w.k, g + 0.075 * w.k); // the tread: the rail head under it
+      const [t0, t1] = side(s, g - 0.03, g + 0.075); // the tread: the rail head under it, whatever the wheel's size
       m.tube("wheel", "z", x, y, w.r, w.r - 0.055 * w.k, t0, t1, w.sides, Math.PI / w.sides);
-      const [f0, f1] = side(s, g - 0.045 * w.k, g - 0.025 * w.k); // the flange inside the rail
-      m.tube("wheel", "z", x, y, w.r + 0.025 * w.k, w.r - 0.05 * w.k, f0, f1, w.sides, Math.PI / w.sides);
+      // the flange inside the rail, drawn no deeper than the tread: nothing below the rail head (y 0)
+      const [f0, f1] = side(s, g - 0.03 - 0.02 * w.k, g - 0.03);
+      m.tube("wheel", "z", x, y, w.r, w.r - 0.05 * w.k, f0, f1, w.sides, Math.PI / w.sides);
       const hub = ngon(8, 0.09 * w.k, 0, x, y);
       const [h0, h1] = side(s, g - 0.02 * w.k, g + 0.1 * w.k);
       m.sweep(w.centre ?? "wheel", "z", hub, h0, hub, h1);

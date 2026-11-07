@@ -183,7 +183,8 @@ describe("the rigged vehicles", () => {
       expect(rig.supports!.length).toBeGreaterThanOrEqual(2);
       if (!rig.sections) continue;
       expect(rig.sections.length).toBeGreaterThanOrEqual(2);
-      expect(rig.joints).toHaveLength(rig.sections.length - 1);
+      // an animal-drawn car's team is hitched with no joint (rig.team)
+      expect(rig.joints).toHaveLength(rig.sections.length - 1 - (rig.team ? 1 : 0));
     }
     expect(rail.filter((id) => RIGS.get(id)!.sections)).toEqual(expect.arrayContaining(["proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]));
   });

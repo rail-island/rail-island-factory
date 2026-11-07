@@ -723,18 +723,32 @@ export interface GaitPose {
   legs: Record<Leg, { swing: number; knee: number }>;
 }
 
-/** The lowest foot's sole over the ground for a pose, before the body's lift. */
+/**
+ * The lower leg's outline near the ground, as (height over the sole, radius along x):
+ * the sole, and the widest ring above it (the hoof's top, or a Clydesdale's feather),
+ * so a tilted foot's front or back edge is found as well as its centre.
+ */
+function footOutline(s: SpeciesSpec): Array<[number, number]> {
+  const rFoot = s.legs.r[3];
+  const k = s.legs.knee / 0.55;
+  const out: Array<[number, number]> = [[0, rFoot * 1.05]];
+  if (s.foot === "padded") out.push([s.legs.knee * 0.18, rFoot * 0.95 * 1.05]);
+  else out.push([0.1 * k, rFoot * 0.82 * 1.05]);
+  if (s.species === "horse") out.push([0.075, rFoot * 1.25 * 1.05], [0.12, rFoot * 1.2 * 1.05]);
+  return out;
+}
+
+/** The lowest point of any lower leg over the ground for a pose, before the body's lift. */
 function lowestFoot(s: SpeciesSpec, p: GaitPose): number {
   const { top, knee } = s.legs;
-  const rFoot = s.legs.r[3];
+  const outline = footOutline(s);
   let low = Infinity;
   for (const l of LEGS) {
     const { swing, knee: k } = p.legs[l];
     const ky = (knee - top) * Math.cos(swing);
     const t = swing + k;
-    for (let i = 0; i < 8; i++) {
-      const sx = rFoot * Math.cos(Math.PI / 8 + (i * Math.PI) / 4);
-      low = Math.min(low, top + ky + sx * Math.sin(t) - knee * Math.cos(t));
+    for (const [h, rx] of outline) {
+      for (const sx of [-rx, rx]) low = Math.min(low, top + ky + sx * Math.sin(t) - (knee - h) * Math.cos(t));
     }
   }
   return low;

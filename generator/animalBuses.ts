@@ -104,16 +104,16 @@ function carriageWheel(m: MeshBuilder, name: string, x: number, w: Wheel, s: num
     const rot = Math.PI / w.sides;
     const [t0, t1] = [zc - w.w / 2, zc + w.w / 2];
     m.tube("tyre", "z", x, ay, w.r, w.r - 0.025, t0, t1, w.sides, rot);
-    m.tube("gear", "z", x, ay, w.r - 0.02, w.r - 0.08, t0 + 0.006, t1 - 0.006, w.sides, rot);
+    m.tube("carriage", "z", x, ay, w.r - 0.02, w.r - 0.08, t0 + 0.006, t1 - 0.006, w.sides, rot);
     const nave = ngon(8, w.hub, Math.PI / 8, x, ay);
-    m.sweep("gear", "z", nave, zc - 0.08, nave, zc + 0.08);
+    m.sweep("carriage", "z", nave, zc - 0.08, nave, zc + 0.08);
     const cap = ngon(8, w.hub * 0.55, Math.PI / 8, x, ay);
     const [c0, c1] = s > 0 ? [zc + 0.075, zc + 0.11] : [zc - 0.11, zc - 0.075];
     m.sweep("iron", "z", cap, c0, cap, c1);
     for (let k = 0; k < w.spokes; k++) {
       const a = (TAU * (k + 0.5)) / w.spokes;
       const [c, sn] = [Math.cos(a), Math.sin(a)];
-      m.rod("gear", [x + w.hub * 0.8 * c, ay + w.hub * 0.8 * sn, zc], [x + (w.r - 0.07) * c, ay + (w.r - 0.07) * sn, zc], 0.019, 4, false);
+      m.rod("carriage", [x + w.hub * 0.8 * c, ay + w.hub * 0.8 * sn, zc], [x + (w.r - 0.07) * c, ay + (w.r - 0.07) * sn, zc], 0.019, 4, false);
     }
   });
 }
@@ -146,18 +146,18 @@ function foreCarriage(m: MeshBuilder, f: Fore): void {
   const [hx, hy] = [f.hitch[0], f.hitch[1]];
   m.scope("front axle", () => {
     m.rod("iron", [f.x, ay, -w.z], [f.x, ay, w.z], 0.035, 6);
-    block(m, "gear", f.x - 0.06, f.x + 0.06, ay - 0.02, ay + 0.09, -w.z + 0.09, w.z - 0.09);
+    block(m, "carriage", f.x - 0.06, f.x + 0.06, ay - 0.02, ay + 0.09, -w.z + 0.09, w.z - 0.09);
     carriageWheel(m, "fore-wheel-left", f.x, w, -1);
     carriageWheel(m, "fore-wheel-right", f.x, w, 1);
   });
   m.scope("turntable", () => {
-    block(m, "gear", f.x - 0.07, f.x + 0.07, ay + 0.085, f.table - 0.015, -0.42, 0.42);
+    block(m, "carriage", f.x - 0.07, f.x + 0.07, ay + 0.085, f.table - 0.015, -0.42, 0.42);
     m.prism("iron", ccw(ngon(12, 0.36, 0, f.x, 0)), f.table - 0.02, f.table);
   });
   m.scope("hounds", () => {
-    for (const s of [-1, 1]) rods(m, "gear", [[f.x - 0.4, ay + 0.04, s * 0.12], [f.x, ay + 0.05, s * 0.3], [hx - 0.1, hy, s * 0.11]], 0.025, 5);
+    for (const s of [-1, 1]) rods(m, "carriage", [[f.x - 0.4, ay + 0.04, s * 0.12], [f.x, ay + 0.05, s * 0.3], [hx - 0.1, hy, s * 0.11]], 0.025, 5);
     // the splinter bar across, its trace hooks, the pole's socket
-    m.rod("gear", [hx - 0.28, hy + 0.02, -0.72], [hx - 0.28, hy + 0.02, 0.72], 0.035, 6);
+    m.rod("carriage", [hx - 0.28, hy + 0.02, -0.72], [hx - 0.28, hy + 0.02, 0.72], 0.035, 6);
     for (const s of [-1, 1]) m.rod("iron", [hx - 0.28, hy + 0.02, s * 0.6], [hx - 0.18, hy + 0.02, s * 0.6], 0.012, 4);
     block(m, "iron", hx - 0.16, hx + 0.01, hy - 0.045, hy + 0.045, -0.055, 0.055);
   });
@@ -216,7 +216,7 @@ const KB_PALETTE: Record<string, MaterialSpec> = {
   ...BASE,
   body: { color: "#5e1c18", roughness: 0.45 },
   panel: { color: "#d9c48e", roughness: 0.5 },
-  gear: { color: "#a3322a", roughness: 0.6 },
+  carriage: { color: "#a3322a", roughness: 0.6 },
   roof: { color: "#5b5248", roughness: 0.85 },
   advert: { color: "#ebdcae", roughness: 0.6 },
   letterBlue: { color: "#1e3566", roughness: 0.5 },
@@ -399,8 +399,8 @@ const KNIFEBOARD: AnimalVehicleSpec = {
     lodSideBox(m, "body", [[0.95, 2.0], [1.95, 2.0], [1.95, 2.62], [0.95, 2.62]], -0.7, 0.7);
     lodSideBox(m, "boards", [[-2.45, 0.85], [k.rear, 0.85], [k.rear, 0.97], [-2.45, 0.97]], -k.low, k.low);
     for (const s of [-1, 1]) {
-      lodWheel(m, "gear", KB_XR, KB_REAR.r, ...side(s, KB_REAR.z - 0.04, KB_REAR.z + 0.04), 8);
-      lodWheel(m, "gear", KB_XF, KB_FORE.r, ...side(s, KB_FORE.z - 0.04, KB_FORE.z + 0.04), 8);
+      lodWheel(m, "carriage", KB_XR, KB_REAR.r, ...side(s, KB_REAR.z - 0.04, KB_REAR.z + 0.04), 8);
+      lodWheel(m, "carriage", KB_XF, KB_FORE.r, ...side(s, KB_FORE.z - 0.04, KB_FORE.z + 0.04), 8);
     }
   },
   references: "animal-bus-knifeboard-omnibus",
@@ -427,7 +427,7 @@ const SC_PALETTE: Record<string, MaterialSpec> = {
   ...BASE,
   body: { color: "#b3221b", roughness: 0.4 },
   panel: { color: "#c8281f", roughness: 0.45 },
-  gear: { color: "#e0b53a", roughness: 0.55 },
+  carriage: { color: "#e0b53a", roughness: 0.55 },
   roof: { color: "#2b2826", roughness: 0.8 },
   trunk: { color: "#7a4a2a", roughness: 0.8 },
   canvas: { color: "#cfc3a4", roughness: 0.95 },
@@ -497,7 +497,7 @@ function stagecoachBoots(m: MeshBuilder): void {
     for (const s of [-1, 1]) lamp(m, 1.42, 1.95, s * 0.72);
   });
   m.scope("rear boot", () => {
-    block(m, "gear", -1.98, -1.1, 1.2, 1.26, -0.62, 0.62);
+    block(m, "carriage", -1.98, -1.1, 1.2, 1.26, -0.62, 0.62);
     const prof: Ring = [[-1.12, 1.255], [-1.96, 1.255], [-1.96, 1.42], [-1.22, 2.12]];
     m.sweep("leather", "z", prof, -0.6, prof, 0.6);
     for (const s of [-1, 1]) {
@@ -512,12 +512,12 @@ function stagecoachGear(m: MeshBuilder): void {
   m.scope("running gear", () => {
     const ayR = axleY(SC_REAR);
     rearWheels(m, SC_XR, SC_REAR);
-    block(m, "gear", SC_XR - 0.07, SC_XR + 0.07, ayR + 0.02, ayR + 0.15, -0.68, 0.68);
+    block(m, "carriage", SC_XR - 0.07, SC_XR + 0.07, ayR + 0.02, ayR + 0.15, -0.68, 0.68);
     // the front bolster on the turntable, the perch back to the rear bed, its braces
-    block(m, "gear", SC_XF - 0.1, SC_XF + 0.1, 0.835, 0.95, -0.5, 0.5);
+    block(m, "carriage", SC_XF - 0.1, SC_XF + 0.1, 0.835, 0.95, -0.5, 0.5);
     m.prism("iron", ccw(ngon(12, 0.34, Math.PI / 12, SC_XF, 0)), 0.82, 0.835);
-    m.rod("gear", [SC_XR, ayR + 0.1, 0], [SC_XF, 0.9, 0], 0.05, 6);
-    for (const s of [-1, 1]) m.rod("gear", [SC_XR, ayR + 0.1, s * 0.6], [0.0, 0.88, 0], 0.03, 5);
+    m.rod("carriage", [SC_XR, ayR + 0.1, 0], [SC_XF, 0.9, 0], 0.05, 6);
+    for (const s of [-1, 1]) m.rod("carriage", [SC_XR, ayR + 0.1, s * 0.6], [0.0, 0.88, 0], 0.03, 5);
     m.scope("thoroughbraces", () => {
       for (const s of [-1, 1]) {
         const z = s * 0.52;
@@ -562,10 +562,10 @@ const STAGECOACH: AnimalVehicleSpec = {
     lodSideBox(m, "leather", [[-1.96, 1.2], [-1.15, 1.2], [-1.15, 2.1], [-1.96, 1.42]], -0.6, 0.6);
     lodSideBox(m, "leather", [[1.12, 1.35], [1.8, 1.42], [1.8, 2.0], [1.12, 2.06]], -0.62, 0.62);
     lodSideBox(m, "cushion", [[-0.9, 2.32], [0.9, 2.32], [0.9, 2.6], [-0.9, 2.6]], -0.62, 0.62);
-    lodSideBox(m, "gear", [[SC_XR, 0.8], [SC_XF, 0.8], [SC_XF, 0.95], [SC_XR, 0.95]], -0.5, 0.5);
+    lodSideBox(m, "carriage", [[SC_XR, 0.8], [SC_XF, 0.8], [SC_XF, 0.95], [SC_XR, 0.95]], -0.5, 0.5);
     for (const s of [-1, 1]) {
-      lodWheel(m, "gear", SC_XR, SC_REAR.r, ...side(s, SC_REAR.z - 0.04, SC_REAR.z + 0.04), 8);
-      lodWheel(m, "gear", SC_XF, SC_FORE.r, ...side(s, SC_FORE.z - 0.04, SC_FORE.z + 0.04), 8);
+      lodWheel(m, "carriage", SC_XR, SC_REAR.r, ...side(s, SC_REAR.z - 0.04, SC_REAR.z + 0.04), 8);
+      lodWheel(m, "carriage", SC_XF, SC_FORE.r, ...side(s, SC_FORE.z - 0.04, SC_FORE.z + 0.04), 8);
     }
   },
   references: "animal-bus-stagecoach",
@@ -592,7 +592,7 @@ const PO_PALETTE: Record<string, MaterialSpec> = {
   ...BASE,
   body: { color: "#4a2c1c", roughness: 0.45 },
   panel: { color: "#c99f3e", roughness: 0.5 },
-  gear: { color: "#d8cdb2", roughness: 0.6 },
+  carriage: { color: "#d8cdb2", roughness: 0.6 },
   roof: { color: "#6b6156", roughness: 0.85 },
   advert: { color: "#ece2c4", roughness: 0.6 },
   letterBlue: { color: "#2a2a30", roughness: 0.5 },
@@ -795,8 +795,8 @@ const PARIS: AnimalVehicleSpec = {
     lodSideBox(m, "boards", [[k.plat, 0.68], [k.rear, 0.68], [k.rear, 0.78], [k.plat, 0.78]], -0.9, 0.9);
     lodSideBox(m, "roof", [[k.plat, k.roof], [k.rear, k.roof], [k.rear, k.deck], [k.plat, k.deck]], -0.9, 1.0);
     for (const s of [-1, 1]) {
-      lodWheel(m, "gear", PO_XR, PO_REAR.r, ...side(s, PO_REAR.z - 0.04, PO_REAR.z + 0.04), 8);
-      lodWheel(m, "gear", PO_XF, PO_FORE.r, ...side(s, PO_FORE.z - 0.04, PO_FORE.z + 0.04), 8);
+      lodWheel(m, "carriage", PO_XR, PO_REAR.r, ...side(s, PO_REAR.z - 0.04, PO_REAR.z + 0.04), 8);
+      lodWheel(m, "carriage", PO_XF, PO_FORE.r, ...side(s, PO_FORE.z - 0.04, PO_FORE.z + 0.04), 8);
     }
   },
   references: "animal-bus-paris-omnibus",
@@ -821,7 +821,7 @@ const WG_PALETTE: Record<string, MaterialSpec> = {
   ...BASE,
   body: { color: "#23402f", roughness: 0.45 },
   panel: { color: "#7b4b2a", roughness: 0.55 },
-  gear: { color: "#8c2a1f", roughness: 0.6 },
+  carriage: { color: "#8c2a1f", roughness: 0.6 },
   canvas: { color: "#e3d8bc", roughness: 0.95 },
   fringe: { color: "#9c3324", roughness: 0.9 },
 };
@@ -895,7 +895,7 @@ function wagonetteGear(m: MeshBuilder): void {
   m.scope("running gear", () => {
     rearWheels(m, WG_XR, WG_REAR);
     for (const s of [-1, 1]) ellipticSpring(m, WG_XR, s * 0.55, axleY(WG_REAR) + 0.03, WG.bed, 0.4);
-    block(m, "gear", WG_XF - 0.14, WG_XF + 0.14, 0.755, WG.bed + 0.01, -0.42, 0.42);
+    block(m, "carriage", WG_XF - 0.14, WG_XF + 0.14, 0.755, WG.bed + 0.01, -0.42, 0.42);
     m.prism("iron", ccw(ngon(12, 0.34, Math.PI / 12, WG_XF, 0)), 0.74, 0.755);
   });
 }
@@ -928,8 +928,8 @@ const WAGONETTE: AnimalVehicleSpec = {
     lodSideBox(m, "cushion", [[k.rear + 0.1, k.side], [k.front - 0.1, k.side], [k.front - 0.1, 1.85], [k.rear + 0.1, 2.25]], -0.72, 0.72);
     lodBlock(m, k.rear - 0.08, k.front + 0.1, k.canopy - 0.12, k.canopy + 0.12, -0.875, 0.875, { side: "fringe", top: "canvas", bottom: "canvas" });
     for (const s of [-1, 1]) {
-      lodWheel(m, "gear", WG_XR, WG_REAR.r, ...side(s, WG_REAR.z - 0.04, WG_REAR.z + 0.04), 8);
-      lodWheel(m, "gear", WG_XF, WG_FORE.r, ...side(s, WG_FORE.z - 0.04, WG_FORE.z + 0.04), 8);
+      lodWheel(m, "carriage", WG_XR, WG_REAR.r, ...side(s, WG_REAR.z - 0.04, WG_REAR.z + 0.04), 8);
+      lodWheel(m, "carriage", WG_XF, WG_FORE.r, ...side(s, WG_FORE.z - 0.04, WG_FORE.z + 0.04), 8);
     }
   },
   references: "animal-bus-wagonette",
