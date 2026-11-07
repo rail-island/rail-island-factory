@@ -256,21 +256,28 @@ export function helipad(site: HelipadSite, _type: string): TerminalBox[] {
     add(0, top, sgn * (half - e / 2 - 0.3 * k), side - 0.6 * k, paint, e, C.white!, "edge");
     add(sgn * (half - e / 2 - 0.3 * k), top + 0.004, 0, e, paint, side - 2 * e - 0.6 * k, C.white!, "edge");
   }
-  // the yellow aiming circle: eight stripes round an octagon
+  // the yellow aiming circle: eight stripes round an octagon of apothem r, none
+  // overlapping another in plan (overlapping paint at one height flickers)
   const r = half * 0.62;
   const sw = 0.9 * k;
   const chord = 2 * r * Math.tan(Math.PI / 8);
-  for (let i = 0; i < 8; i++) {
-    const a = (i * Math.PI) / 4;
-    const [cx, cz] = [r * Math.cos(a), r * Math.sin(a)];
-    // the stripes square to x and z are boxes; the diagonal four are short runs of boxes
-    if (i % 2 === 0) add(cx, top + 0.008, cz, Math.abs(Math.cos(a)) > 0.5 ? sw : chord, paint, Math.abs(Math.cos(a)) > 0.5 ? chord : sw, C.orange!, "safety");
-    else {
-      const steps = 3;
-      for (let j = 0; j < steps; j++) {
-        const t = (j + 0.5) / steps - 0.5;
-        add(cx - Math.sin(a) * t * chord, top + 0.008, cz + Math.cos(a) * t * chord, chord / steps + sw * 0.4, paint, chord / steps + sw * 0.4, C.orange!, "safety");
-      }
+  // the four stripes square to x and z are one box each, centred on the octagon's sides
+  for (const [ux, uz] of [[1, 0], [0, 1], [-1, 0], [0, -1]] as const) {
+    add(ux * r, top + 0.008, uz * r, ux ? sw : chord, paint, ux ? chord : sw, C.orange!, "safety");
+  }
+  // the four diagonal ones are staircases from one vertex (r, chord/2) to the next
+  // (chord/2, r): a row of `steps` rectangles, each one step deep and two long, each
+  // sharing only an edge with the next so the band runs on unbroken; the last is cut
+  // back at the next vertex, so the ends only touch the straight stripes' ends
+  const span = r - chord / 2;
+  const steps = Math.max(4, Math.round(span / (sw * 0.7)));
+  const step = span / steps;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    for (let j = 0; j < steps; j++) {
+      const x1 = r - j * step;
+      const x0 = Math.max(chord / 2, r - (j + 2) * step);
+      const z = chord / 2 + (j + 0.5) * step;
+      add(sx * (x0 + x1) / 2, top + 0.008, sz * z, x1 - x0, paint, step, C.orange!, "safety");
     }
   }
   // the "H": two uprights along z and the bar
@@ -279,8 +286,9 @@ export function helipad(site: HelipadSite, _type: string): TerminalBox[] {
   const bar = 1.2 * k;
   for (const sgn of [-1, 1]) add(sgn * (hw / 2 - bar / 2), top + 0.012, 0, bar, paint, hh, C.white!, "edge");
   add(0, top + 0.016, 0, hw - 2 * bar + 0.02, paint, bar, C.white!, "edge");
-  // green edge lights at the corners, standing on the slab
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(sx * (half - 0.9 * k), slab + 0.25, sz * (half - 0.9 * k), 0.5, 0.5, 0.5, [60, 200, 90], "light");
+  // green edge lights at the corners, their feet seated 0.1 into the slab (a foot on
+  // the slab's top face would share its plane and flicker)
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(sx * (half - 0.9 * k), slab + 0.2, sz * (half - 0.9 * k), 0.5, 0.6, 0.5, [60, 200, 90], "light");
   return out;
 }
 

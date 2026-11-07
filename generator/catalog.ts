@@ -226,6 +226,9 @@ export function sceneryOf(entry: Pick<MetaEntry, "category" | "group" | "tractio
 }
 
 /** One row of the site's listing. */
+/** What drives an aircraft: the site's second row of Aircraft chips. */
+export type AirframeKind = "helicopter" | "jet" | "propeller" | "airship";
+
 export interface CatalogRecord extends MetaEntry {
   /** Site-relative URLs, e.g. "thumbs/sky-pagoda.png". */
   thumbUrl: string;
@@ -263,6 +266,8 @@ export interface CatalogRecord extends MetaEntry {
   draft?: true;
   /** What the viewer draws under (and over) a road or rail vehicle; absent for anything else. */
   scenery?: Scenery;
+  /** An aircraft's kind, for the site's Aircraft chips (generator/airframeKinds.ts); absent for anything else. */
+  airframe?: AirframeKind;
   /** Set when the JS model also exports buildCoarse (a tree's third level, docs/models/trees.md). */
   coarse?: boolean;
   /** Set when the JS module exports buildMax, an optional close-up detail level. */

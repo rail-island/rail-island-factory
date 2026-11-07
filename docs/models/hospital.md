@@ -1,6 +1,6 @@
 # Hospital
 
-**Covers** - the general hospital `proc-building-hospital` (a draft): its massing, facade, emergency department and ambulance bay, rooftop plant, the raised rooftop helipad it exports as the air-ambulance stop, its catalog fields, budget, low detail, references and checks.
+**Covers** - the general hospital `proc-building-hospital` (confirmed): its massing, facade, emergency department and ambulance bay, rooftop plant, the raised rooftop helipad it exports as the air-ambulance stop, its catalog fields, budget, low detail, references and checks.
 **Code** - `generator/hospital.ts`, `generator/generate.ts` (its family), `test/hospital.test.ts`, `test/export.test.ts` ("helipads")
 **See also** - [game-properties.md](game-properties.md#helipads), [industry.md](industry.md#offshore-platform) (the other new building with a pad), [skyscrapers.md](skyscrapers.md) (the glass office's roof pad), [lod.md](lod.md), [../site/workshop.md](../site/workshop.md), [../specs/2026-11-06-helicopter-game-support.md](../specs/2026-11-06-helicopter-game-support.md)
 
@@ -41,8 +41,8 @@ The export measures `{ pad: "small", centre: [-14, 28.4, -9], size: 20 }`
 
 `HOSPITAL_CATALOG`: category `Commercial` (the picker's tab), group `civic`, which is no
 city pool (`cityVariants.ts`): cities never stand it; it is placed by hand. Default scale 1.
-The id is not in `generator/catalogModels.json`, so it is a **draft**: the site lists it
-under Workshop and no game meta file carries it until the user confirms it.
+The id is in `generator/catalogModels.json`: it is **confirmed**, listed in the catalog and
+carried by the game's building meta with its helipad.
 
 ## Budget and low detail
 
@@ -59,7 +59,7 @@ copy of either.
 
 ## Checks
 
-`test/hospital.test.ts`: registered as a draft in its own family; within budget, grounded,
+`test/hospital.test.ts`: registered as a confirmed building in its own family; within budget, grounded,
 deterministic and free of coplanar faces in full and low detail; the measured pad is small,
 20 m, centred on the deck above the parapet, and the low detail keeps the deck in place.
 `test/export.test.ts` ("helipads") measures it with the platform's. The catalog sweep checks

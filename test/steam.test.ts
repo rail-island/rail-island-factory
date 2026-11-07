@@ -8,6 +8,7 @@ import { paramCombinations } from "../generator/design.ts";
 import { ALL_VEHICLES } from "../generator/generate.ts";
 import { STEAM_CATALOG, STEAM_DESIGNS, STEAM_RAILCAR_CATALOG, STEAM_LOCOS, UNIT_PARAM, steamSpec } from "../generator/steamLocos.ts";
 import { N_SAMPLES, RUNNING_CLIP, RUNNING_SPEED, RunningGear, axleHeight, tyreSides } from "../generator/steamGear.ts";
+import { turningUnits } from "../generator/steamLoco.ts";
 import { STEAM_TRANSFERS, steamComparison, worstPixels } from "../generator/steamComparison.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { glbStats } from "../generator/glbStats.ts";
@@ -109,9 +110,9 @@ describe("the running animation", () => {
     expect(times[times.length - 1]).toBeCloseTo((Math.PI * ref.d) / RUNNING_SPEED, 5);
     // the consumer plays it by distance travelled, at the reference speed
     expect((json as { scenes: Array<{ extras?: { clipDrives?: unknown } }> }).scenes[0]!.extras?.clipDrives).toEqual({ [RUNNING_CLIP]: { drive: "distance", speed: RUNNING_SPEED } });
-    // every part but the body (and a swivelling front engine's bogie) is animated, and every sampler is linear and shares the times
+    // every part but the body and its turning units' bogies is animated, and every sampler is linear and shares the times
     const animated = new Set(a.channels.map((c) => g.nodes[c.target.node]!.name));
-    expect(g.nodes.map((n) => n.name).filter((n) => !animated.has(n))).toEqual(spec.gear.swivel ? ["body", "bogie0"] : ["body"]);
+    expect(g.nodes.map((n) => n.name).filter((n) => !animated.has(n))).toEqual(["body", ...turningUnits(spec).map((_, k) => `bogie${k}`)]);
     for (const s of a.samplers) {
       expect(s.input).toBe(a.samplers[0]!.input);
       expect(s.interpolation).toBe("LINEAR");
@@ -151,17 +152,21 @@ describe("the running animation", () => {
     });
   });
 
-  it("turns the 636's front engine under the boiler: a bogie carrying its leading axle, front drivers and front motion", () => {
+  it("turns the 636's leading axle and both engines on the track: three bogies, each engine's motion in its own", () => {
     const m = STEAM_LOCOS.find((x) => x.id === "proc-vehicle-csd-636")!.build();
     const supports = m.rig!.supports!;
-    expect(supports.filter((s) => s.node)).toEqual([expect.objectContaining({ node: "bogie0", axles: 4, sections: [0] })]);
-    expect(supports.filter((s) => !s.node)).toHaveLength(2);
+    expect(supports.every((s) => s.node)).toBe(true);
+    expect(supports.map((s) => s.axles).reverse()).toEqual([1, 3, 3]);
     const g = parseGlb(m.toGlb("t", "vehicle")).json as unknown as Gltf;
-    const bogie = g.nodes.find((n) => n.name === "bogie0")!;
-    const carried = (bogie.children ?? []).map((i) => g.nodes[i]!.name);
-    expect(carried.filter((n) => n.startsWith("wheelset-")).sort()).toEqual(["wheelset-1", "wheelset-2", "wheelset-3", "wheelset-4"]);
-    expect(g.nodes.filter((n) => /-(right|left)-front$/.test(n.name)).map((n) => n.name).sort()).toEqual(carried.filter((n) => !n.startsWith("wheelset-")).sort());
-    expect(carried.some((n) => n === "main-rod-right-front")).toBe(true);
+    const carried = (node: string) => (g.nodes.find((n) => n.name === node)!.children ?? []).map((i) => g.nodes[i]!.name);
+    expect(carried("bogie0")).toEqual(["wheelset-1"]);
+    for (const [node, name, wheels] of [["bogie1", "front", [2, 3, 4]], ["bogie2", "rear", [5, 6, 7]]] as const) {
+      const c = carried(node);
+      expect(new Set(c.filter((n) => n.startsWith("wheelset-")))).toEqual(new Set(wheels.map((i) => `wheelset-${i}`)));
+      const rods = new RegExp(`-(right|left)-${name}$`);
+      expect(c.filter((n) => !n.startsWith("wheelset-")).sort()).toEqual(g.nodes.filter((n) => rods.test(n.name)).map((n) => n.name).sort());
+      expect(c).toContain(`main-rod-right-${name}`);
+    }
   });
 
   it.each(COMBOS.filter((c) => steamSpec(c.d.id, c.p).gear.engines.length).map((c) => [c.label, c] as const))("%s keeps its rods' lengths at every sample", (_, { d, p }) => {

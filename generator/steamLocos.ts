@@ -511,7 +511,7 @@ function csd556TenderSpec(): LocoSpec {
 //
 // A 1'C C Mallet locomotive (vlakosimdb csd_636, its bogie tender
 // tender/csd_636tend): two engines of three coupled 1.3 m wheels, the front one
-// with the leading axle a unit that turns under the boiler (`swivel`). Measured: boiler 1.7..8.1
+// with the leading axle; each turns on the track (steamLoco.ts turningUnits). Measured: boiler 1.7..8.1
 // about y 3.2 and the firebox to 12.0, chimney 2.3..2.9, domes 3.3..4.1 and
 // 4.9..5.7, the drum on top 6.3..7.8, cylinders 2.1..3.1 and 8.4..9.3, coupled
 // wheels at the frame notches 4.1, 5.8, 7.5 and 10.25, 11.9, 13.6, cab 12.0..14.8.
@@ -557,8 +557,6 @@ function csd636Spec(): LocoSpec {
       cylinderZ: 1.12,
       reference: 1,
       wheelMaterial: "wheel",
-      // the front engine, its leading axle and its frame to the rear cylinders turn under the boiler
-      swivel: { engines: [0], carrying: [0], x1: 8.3 },
     },
     lamps: { front: [[0.45, 1.2, 0.75], [0.45, 1.2, -0.75]], rear: [[14.75, 1.2, 0.7], [14.75, 1.2, -0.7]] },
     number: { text: "636.001", side: [13.1, 2.15, 1.5], front: [1.62, 2.6] },

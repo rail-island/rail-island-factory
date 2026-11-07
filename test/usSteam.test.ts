@@ -83,39 +83,46 @@ describe("the US steam locomotives", () => {
     expect(spec.gear.wheels).toHaveLength(12);
   });
 
-  it("turns the Big Boy's front engine under the boiler: a bogie carrying its lead truck, drivers, cylinders and motion", () => {
+  it("turns the Big Boy's lead truck, both engines and trailing truck on the track: four bogies, each engine's motion in its own", () => {
     const m = US_STEAM[0]!.build();
-    // the front engine is one support of six axles, the body rests on it and the trailing truck
+    // every wheel rides a bogie; the body rests on the two outermost
     const supports = m.rig!.supports!;
-    expect(supports.filter((s) => s.node)).toEqual([expect.objectContaining({ node: "bogie0", axles: 6, sections: [0] })]);
-    expect(supports.filter((s) => !s.node)).toHaveLength(2);
+    expect(supports.every((s) => s.node)).toBe(true);
+    expect(supports.map((s) => s.axles).reverse()).toEqual([2, 4, 4, 2]);
     const g = parseGlb(m.toGlb("t", "vehicle")).json as unknown as Gltf;
-    const bogie = g.nodes.find((n) => n.name === "bogie0")!;
-    expect(g.scenes[0]!.nodes.map((i) => g.nodes[i]!.name)).toContain("bogie0");
-    const carried = (bogie.children ?? []).map((i) => g.nodes[i]!.name);
-    // wheels 1-6 (the four-wheel truck and the front drivers) and every rod of the front engine
-    expect(carried.filter((n) => n.startsWith("wheelset-")).sort()).toEqual([1, 2, 3, 4, 5, 6].map((i) => `wheelset-${i}`));
-    expect(carried.filter((n) => !n.startsWith("wheelset-")).every((n) => /-(right|left)-front$/.test(n))).toBe(true);
-    expect(carried.some((n) => n.startsWith("main-rod-"))).toBe(true);
-    expect(g.nodes.filter((n) => /-(right|left)-front$/.test(n.name)).every((n) => carried.includes(n.name))).toBe(true);
+    const top = g.scenes[0]!.nodes.map((i) => g.nodes[i]!.name);
+    const carried = (node: string) => (g.nodes.find((n) => n.name === node)!.children ?? []).map((i) => g.nodes[i]!.name);
+    for (const [node, wheels] of [["bogie0", [1, 2]], ["bogie3", [11, 12]]] as const) {
+      expect(top).toContain(node);
+      expect(new Set(carried(node))).toEqual(new Set(wheels.map((i) => `wheelset-${i}`)));
+    }
+    for (const [node, name, wheels] of [["bogie1", "front", [3, 4, 5, 6]], ["bogie2", "rear", [7, 8, 9, 10]]] as const) {
+      const c = carried(node);
+      expect(new Set(c.filter((n) => n.startsWith("wheelset-")))).toEqual(new Set(wheels.map((i) => `wheelset-${i}`)));
+      const rods = new RegExp(`-(right|left)-${name}$`);
+      expect(c.filter((n) => !n.startsWith("wheelset-")).sort()).toEqual(g.nodes.filter((n) => rods.test(n.name)).map((n) => n.name).sort());
+      expect(c.some((n) => n.startsWith("main-rod-"))).toBe(true);
+    }
   });
 
-  it("animates the Big Boy's front engine in its bogie exactly as it would on a rigid frame", () => {
+  it("animates the Big Boy's running gear in its bogies exactly as it would on a rigid frame", () => {
     const spec = usSteamSpec("proc-vehicle-up-big-boy");
-    const swivel = tracksOf(buildLoco(spec).toGlb("t", "vehicle"));
-    const rigid = tracksOf(buildLoco({ ...spec, gear: { ...spec.gear, swivel: undefined } }).toGlb("t", "vehicle"));
-    const pivot = swivel.nodes.find((n) => n.name === "bogie0")!.translation!;
-    const children = new Set(swivel.nodes.find((n) => n.name === "bogie0")!.children!.map((i) => swivel.nodes[i]!.name));
-    expect([...swivel.tracks.keys()].sort()).toEqual([...rigid.tracks.keys()].sort());
-    for (const [key, values] of swivel.tracks) {
+    const split = tracksOf(buildLoco(spec).toGlb("t", "vehicle"));
+    const rigid = tracksOf(buildLoco(spec, []).toGlb("t", "vehicle"));
+    // the bogie a part rides, and its pivot
+    const pivotOf = new Map<string, number[]>();
+    for (const b of split.nodes.filter((n) => /^bogie\d+$/.test(n.name))) for (const i of b.children ?? []) pivotOf.set(split.nodes[i]!.name, b.translation!);
+    expect(pivotOf.size).toBeGreaterThan(12);
+    expect([...split.tracks.keys()].sort()).toEqual([...rigid.tracks.keys()].sort());
+    for (const [key, values] of split.tracks) {
       const [node, path] = key.split(" ") as [string, string];
       const want = rigid.tracks.get(key)!;
-      // a part of the front engine moves within the bogie: its translation is the rigid one less the bogie's pivot
-      const offset = path === "translation" && children.has(node) ? pivot : [0, 0, 0];
+      // a part of a turning unit moves within its bogie: its translation is the rigid one less the bogie's pivot
+      const offset = path === "translation" ? pivotOf.get(node) ?? [0, 0, 0] : [0, 0, 0];
       values.forEach((v, i) => expect(v + (path === "translation" ? offset[i % 3]! : 0), `${key} ${i}`).toBeCloseTo(want[i]!, 4));
       // the first sample is the node's rest translation
       if (path === "translation") {
-        const rest = swivel.nodes.find((n) => n.name === node)!.translation ?? [0, 0, 0];
+        const rest = split.nodes.find((n) => n.name === node)!.translation ?? [0, 0, 0];
         for (let i = 0; i < 3; i++) expect(values[i]).toBeCloseTo(rest[i]!, 4);
       }
     }

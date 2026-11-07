@@ -3,7 +3,7 @@
 **Covers** - the Solid site that lists every model the factory builds: its data,
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview (its passenger view on structure pages included), and the URL state.
-**Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `generator/countryTable.ts`, `src/ModelTable.tsx`,
+**Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `generator/airframeKinds.ts`, `generator/countryTable.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerLine.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/Link.tsx`, `src/VariantThumb.tsx`, `src/SoundsPanel.tsx`, `src/modelSounds.ts`, `src/soundAudition.ts`, `test/modelSounds.test.ts`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
@@ -216,8 +216,10 @@ except a `tram` group, which is Trams; `Road vehicles` is Road vehicles; `Cable
 car` is Cable cars; any category that is not a vehicle one is a building's).
 Under a pick, a second row splits it by the vehicle's `group` (Locomotive, Unit,
 Coach, Wagon, Metro, Bus, Truck), the building's category, a structure's or a way's set
-(Bridges, Railway stations, Dams, Rail types, ...) or a city block's district; Ships, Aircraft,
-Cable cars, Trams, Trees, Woods, Props and Textures have no second row. A third row splits a Locomotive or a
+(Bridges, Railway stations, Dams, Rail types, ...), a city block's district or an aircraft's
+`airframe` - what drives it: Helicopter, Jet, Propeller or Airship (`generator/airframeKinds.ts`:
+a helicopter by its game kind, the rest by the list the design is in, the hand-built aircraft by
+a table); Ships, Cable cars, Trams, Trees, Woods, Props and Textures have no second row. A third row splits a Locomotive or a
 Unit by its `traction` (Electric, Diesel, Steam); buildings have no city-pool
 row. A lower row appears only when it offers a choice,
 leads with its own All, and is cleared when the row above changes; picking the

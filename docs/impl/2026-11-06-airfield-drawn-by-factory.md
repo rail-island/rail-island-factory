@@ -57,6 +57,14 @@ also matched the two drawings box for box on all 11 fixtures × 4 types × 3 hea
 - Game: `pnpm typecheck` passes. `pnpm test` passes (656 files, 8,896 tests).
   `pnpm build` passes.
 
+## Follow-up changes
+
+1. **Fix the helipad flicker.** `helipad` now seats its corner lights 0.1 into the slab
+   and draws the aiming circle's diagonals as staircases of rectangles that meet only
+   along edges. The coplanar test covers the pads, and a pad-only regression test was
+   added. The helipad and airfield pins, and the game's `field.*` pins with pads, moved
+   on purpose.
+
 ## How to test
 
 **Automated coverage.** There is no E2E test: neither repository has an E2E framework for
@@ -115,9 +123,6 @@ how the spec worded them:
   at the terminal's end, and at whole-field framing it is only a few pixels tall.
 - **The windsock fabric prop is not drawn on the preview pages.** This is the same as
   before the change; the windsock's pole is drawn.
-- **The existing `helipad` drawing has coplanar faces.** It seats its corner lights
-  exactly on the slab top and overlaps its aiming circle's steps. Fixing it redraws
-  shipped pads, so the coplanar test leaves pads out.
 - **The `airport.types` pin moved.** This is on purpose: `TYPE_META` gained `surface`.
   The terminal, furniture and helipad pins did not move.
 - **The factory suite takes about 5 minutes on a 4-core box.** It ran in 5 min 4 s,
@@ -129,8 +134,6 @@ how the spec worded them:
 
 ## Recommended follow-ups
 
-- Fix `helipad`'s coplanar lights and circle steps, move its pins on purpose, and drop
-  the test's pad exclusion.
 - Give ports the same treatment: the module draws the berths on the game's saved port
   layout, so the port pages show a real harbour.
 - Frame the airport thumbnails on the terminal end, or add a tower close-up view, so a
