@@ -21,8 +21,14 @@ sounds, OpenTTD, references, deviations and tests. The former horse tram is the 
 | `animal-tram-closed` | Closed Horsecar | tram | the Prague 1875-76 cars, Doebeln, Spiekeroog | 5.96 x 2.0 x 2.8 | 2.6 t, 15 km/h |
 | `animal-tram-toastrack` | Toastrack Horsecar | tram | the Douglas Bay Horse Tramway's open cars | 7.6 x 2.0 x 2.9 | 2.2 t, 15 km/h |
 | `animal-tram-bobtail` | Bobtail Horsecar | tram | Stephenson bobtail cars (Adelaide no. 18, Christchurch no. 1) | 4.37 x 1.9 x 2.57 | 1.6 t, 12 km/h |
-RAIL_ROWS
-BUS_ROWS
+| `animal-rail-budweis-coach` | Budweis-Linz Coach | rail, 1106 mm | the Ceske Budejovice - Linz horse railway's "Hannibal" (1832) | 4.24 x 1.6 x 3.35 | 1.8 t, 15 km/h |
+| `animal-rail-budweis-wagon` | Budweis-Linz Goods Wagon | rail, 1106 mm | the same railway's open salt wagon (the Kerschbaum replica) | 3.8 x 1.68 x 1.63 | 1.0 t, 12 km/h |
+| `animal-rail-mine-tub` | Mine Tub | rail, 600 mm | a pit-pony hauled coal tub | 1.75 x 0.9 x 1.1 | 0.35 t, 10 km/h |
+| `animal-rail-trolley` | Platelayers' Trolley | rail, 1435 mm | a platelayers' trolley with benches for six | 2.45 x 1.84 x 1.54 | 0.45 t, 20 km/h |
+| `animal-bus-knifeboard-omnibus` | Knifeboard Omnibus | road | the London knifeboard horse buses (1850s-1880s) | 4.4 x 1.9 x 3.05 | 1.4 t, 15 km/h |
+| `animal-bus-stagecoach` | Concord Stagecoach | road | Abbot-Downing Concord coaches | 4.2 x 1.8 x 2.8 | 1.1 t, 20 km/h |
+| `animal-bus-paris-omnibus` | Paris Omnibus | road | the Compagnie generale des omnibus cars with their imperiale | 5.35 x 2.0 x 3.6 | 2.6 t, 15 km/h |
+| `animal-bus-wagonette` | Wagonette | road | an excursion wagonette / charabanc | 4.4 x 1.95 x 2.9 | 0.9 t, 18 km/h |
 
 Every one carries the team's two parameters (`animal`, `team`; [draft-animals.md](draft-animals.md)):
 any of the six species, in the counts it is put to; a tram or railway vehicle also `none`, the
@@ -75,7 +81,11 @@ or a goods wagon) whose presets are the default, a pair or four-in-hand and the 
 
 Each design's photographs and published figures are in `assets/<name>/SOURCES.md`; the weights
 and seat counts are estimates (approx.). The trams all run on standard-gauge treads, the Douglas
-car's 914 mm gauge noted only in its sources.
+car's 914 mm gauge noted only in its sources. A road coach's front wheels are sized so the rear
+wheel's turn is a whole number of quarter turns of theirs (`rollAll`: one clip rolls both), so
+they differ slightly from the photographs. The Budweis-Linz coach is one closed compartment with a
+hooded seat at each end, as "Hannibal" is. The paired horses' collars touch a little in the
+pair; any species may pull any vehicle, so some pairings are unhistorical by design.
 
 ## Checking
 
