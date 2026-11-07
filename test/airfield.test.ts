@@ -150,26 +150,45 @@ describe("airfield", () => {
     }
   });
 
-  it("never shares a visible plane between two overlapping boxes", () => {
-    // The helipads are left out: `helipad` (shipped before the airfield moved here)
-    // seats its corner lights on the slab's top and overlaps its aiming-circle steps,
-    // which is its own known issue (docs/models/airfield.md) and redraws shipped pads.
-    const overlaps: string[] = [];
-    for (const [name, layout] of Object.entries(AIRFIELD_FIXTURES)) {
-      for (const t of TYPES) {
-        const pads = new Set((layout.pads ?? []).flatMap((p) => airport.helipad({ cx: p.cx, cz: p.cz, pad: p.pad }, t)).map((b) => JSON.stringify(b)));
-        const boxes = airport.airfield(layout, t).boxes.filter((b) => !b.rotZ && !b.profile && !pads.has(JSON.stringify(b)));
-        for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-          const a = boxes[i]!, b = boxes[j]!;
-          if (Math.abs(a.cx - b.cx) >= (a.sx + b.sx) / 2 - 1e-6 || Math.abs(a.cz - b.cz) >= (a.sz + b.sz) / 2 - 1e-6) continue;
-          for (const fa of [a.cy - a.sy / 2, a.cy + a.sy / 2]) {
-            if (fa < 0) continue;
-            for (const fb of [b.cy - b.sy / 2, b.cy + b.sy / 2]) if (Math.abs(fa - fb) <= 1e-6) overlaps.push(`${name}/${t}: ${i}/${j} at y=${fa}`);
-          }
-        }
+  /** Every pair of boxes overlapping in plan with a face on one plane above the ground. */
+  const sharedPlanes = (boxes: readonly airport.AirfieldBox[], label: string): string[] => {
+    const out: string[] = [];
+    const flat = boxes.filter((b) => !b.rotZ && !b.profile);
+    for (let i = 0; i < flat.length; i++) for (let j = i + 1; j < flat.length; j++) {
+      const a = flat[i]!, b = flat[j]!;
+      if (Math.abs(a.cx - b.cx) >= (a.sx + b.sx) / 2 - 1e-6 || Math.abs(a.cz - b.cz) >= (a.sz + b.sz) / 2 - 1e-6) continue;
+      for (const fa of [a.cy - a.sy / 2, a.cy + a.sy / 2]) {
+        if (fa < 0) continue;
+        for (const fb of [b.cy - b.sy / 2, b.cy + b.sy / 2]) if (Math.abs(fa - fb) <= 1e-6) out.push(`${label}: ${a.material} ${i} / ${b.material} ${j} at y=${fa}`);
       }
     }
+    return out;
+  };
+
+  it("never shares a visible plane between two overlapping boxes, helipads included", () => {
+    const overlaps: string[] = [];
+    for (const [name, layout] of Object.entries(AIRFIELD_FIXTURES)) {
+      for (const t of TYPES) overlaps.push(...sharedPlanes(airport.airfield(layout, t).boxes, `${name}/${t}`));
+    }
     expect(overlaps).toEqual([]);
+  });
+
+  it("draws a helipad with no flickering faces: lights seated into the slab, circle steps apart", () => {
+    // regression: the corner lights stood exactly on the slab's top and the aiming
+    // circle's diagonal steps overlapped each other at one height, so both flickered
+    for (const pad of ["small", "large"] as const) {
+      const boxes = airport.helipad({ cx: 5, cz: -7, pad }, "heliport");
+      expect(sharedPlanes(boxes, pad)).toEqual([]);
+      const slabTop = Math.max(...boxes.filter((b) => b.material === "platform").map((b) => b.cy + b.sy / 2));
+      for (const l of boxes.filter((b) => b.material === "light")) expect(l.cy - l.sy / 2, `${pad}: a light's foot`).toBeLessThan(slabTop - 0.05);
+      // the circle's paint never overlaps itself in plan
+      const circle = boxes.filter((b) => b.material === "safety");
+      for (let i = 0; i < circle.length; i++) for (let j = i + 1; j < circle.length; j++) {
+        const a = circle[i]!, b = circle[j]!;
+        const overlap = Math.abs(a.cx - b.cx) < (a.sx + b.sx) / 2 - 1e-6 && Math.abs(a.cz - b.cz) < (a.sz + b.sz) / 2 - 1e-6;
+        expect(overlap, `${pad}: circle pieces ${i}/${j}`).toBe(false);
+      }
+    }
   });
 
   it("is deterministic", () => {

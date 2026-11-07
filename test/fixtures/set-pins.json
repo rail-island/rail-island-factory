@@ -227,18 +227,18 @@
     "international.big": "cd7b76ac3f0783be",
     "heliport.small": "a22bb553c5c89ec7",
     "heliport.big": "05e8865f6a24c7dc",
-    "helipad.small": "95bbe977494a721c",
-    "helipad.large": "3020dfc9b2387c8a",
+    "helipad.small": "88f8184875b10c92",
+    "helipad.large": "0c405aa59e789e18",
     "airfield.grass_field.small": "f33235e0026da2fc",
     "airfield.grass_field.medium": "720846124ff4f3bf",
     "airfield.grass_field.big": "6241992689cfb7ac",
-    "airfield.regional.small": "b2b379d50715c339",
-    "airfield.regional.medium": "4c4e14718de55f0f",
-    "airfield.regional.big": "141295e1a9d9a378",
-    "airfield.international.small": "135a7bdfe05ee0af",
-    "airfield.international.medium": "a2a79d075b994f8d",
-    "airfield.international.big": "ba6a2711c5f71169",
-    "airfield.heliport": "e3164f84bb34f020",
-    "airfield.regional.tworunways": "356824489c00f326"
+    "airfield.regional.small": "642c53a55cef5185",
+    "airfield.regional.medium": "580e89edfb530603",
+    "airfield.regional.big": "a6f37955167650a6",
+    "airfield.international.small": "b009feb7049dd7b7",
+    "airfield.international.medium": "c0be8f704d854595",
+    "airfield.international.big": "4987c222c30bc47b",
+    "airfield.heliport": "1a4540258fd24cda",
+    "airfield.regional.tworunways": "1d5b7843fb171082"
   }
 }

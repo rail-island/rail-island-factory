@@ -109,11 +109,13 @@ drawing moved here, so the move was proven 1:1.
 paved, `pavementDeck` tiling a union exactly, paint and lights on the paved types only,
 the runway numbers and their reciprocals, one name board, a jet bridge per stand at an
 international hub only, the helipads where the layout put them, the far level, the fence
-on the footprint, no shared visible plane (helipads aside, below), and determinism.
+on the footprint, no shared visible plane (helipads included), and determinism.
 
-## Known issue
+## Helipads without flicker
 
-`helipad` (shipped before the airfield moved here) seats its corner lights exactly on the
-slab's top and overlaps its aiming circle's diagonal steps, so those faces share planes.
-Fixing it redraws shipped pads and moves the `helipad.*` pins; the coplanar test leaves
-the pads out until it is fixed.
+`helipad` seats each green corner light 0.1 studs into the slab, so no foot lies on the
+slab's top face. It draws the yellow aiming circle as eight stripes that never overlap in
+plan: the four square to the axes are one box each, and the four diagonal ones are
+staircases of rectangles, each one step deep and two long, that meet only along edges.
+`test/airfield.test.ts` checks every field, helipads included, for shared visible planes,
+and a pad on its own for seated lights and a circle that never overlaps itself.
