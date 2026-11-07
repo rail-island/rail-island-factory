@@ -43,7 +43,7 @@ export interface SeriesCabFace {
   /** The face's bow: its edges this much behind its centre (by height, [y, bulge], for a vee that deepens or flattens). */
   bulge?: number | readonly Pt[];
   /** The distant model's end in place of the face's own profile, plan and rows: a face with a low bonnet ahead of it drawn apart (the series' fittings). */
-  lod?: { profile: Pt[]; corner: Pt[]; rows: number[]; bulge?: number | readonly Pt[]; glass?: boolean };
+  lod?: { profile: Pt[]; corner: Pt[]; rows: number[]; bulge?: number | readonly Pt[]; glass?: boolean; cornerDepth?: Pt[] };
   /** The corner arc's depth over its radius by height (cabNose.ts `cornerRatio`). */
   cornerRatio?: Pt[];
   /** Grid rows, ascending, from the body's bottom to its crown (the profile's and the paint's heights). */
@@ -270,7 +270,7 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
 
 /** The distant model's end of a cab face: its profile and plan, the face's bands and the panes as glass. */
 export function cabFaceLod(face: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint, C: number): UnitEnd {
-  const f: SeriesCabFace = face.lod ? { ...face, profile: face.lod.profile, corner: face.lod.corner, rows: face.lod.rows, ...(face.lod.bulge !== undefined ? { bulge: face.lod.bulge } : {}) } : face;
+  const f: SeriesCabFace = face.lod ? { ...face, profile: face.lod.profile, corner: face.lod.corner, rows: face.lod.rows, ...(face.lod.bulge !== undefined ? { bulge: face.lod.bulge } : {}), ...(face.lod.cornerDepth ? { cornerDepth: face.lod.cornerDepth } : {}) } : face;
   const B = f.rows[0]!;
   const paint: LodBand[] = [...(f.lodBands ?? p.face).map(([a, b, mt]): LodBand => [Math.max(a, B), Math.min(b, f.roofFrom), mt]).filter(([a, b]) => b > a + 1e-6), [f.roofFrom, C, p.roof]];
   const lo = Math.min(...f.panes.map((r) => r.y[0])), hi = Math.max(...f.panes.map((r) => r.y[1]));
