@@ -114,6 +114,8 @@ export interface RunningGearSpec {
   wheelMaterial: string;
   /** The coupling rods' material (C62 2's are painted red); the bright "rod" steel by default. */
   couplingMat?: string;
+  /** The main rods' material (D51 51's are painted red like its coupling rods); the bright "rod" steel by default. */
+  mainMat?: string;
   /**
    * More parts riding on an inclined cylinder's crosshead (the Rocket's feed pump
    * ram), drawn into its moving part at rest on side s: `at(k, off, dz)` is the
@@ -622,7 +624,7 @@ export class RunningGear {
         }
       }, false);
       link("main-rod", (p) => p.crosshead, (p) => p.crank, () => {
-        bar(m, "rod", s, rest.crosshead, rest.crank, 0.055, 0.08, Z.main0, Z.main1);
+        bar(m, spec.mainMat ?? "rod", s, rest.crosshead, rest.crank, 0.055, 0.08, Z.main0, Z.main1);
       });
       if (engine.valveGear) {
         link("eccentric-rod", (p) => p.returnCrank!, (p) => p.linkFoot!, () => {
