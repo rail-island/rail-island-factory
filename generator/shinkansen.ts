@@ -873,7 +873,25 @@ const N7_ROWS = [0.3, 0.36, 0.44, 0.52, 0.6, 0.7, 0.78, 0.86, 0.9, 0.95, 1.0, 1.
 /** The face's centre line, the snout's or the top's (the distant model's tip by height too). */
 const N7_PROFILE: Pt[] = N7_ROWS.map((y): Pt => [y, Math.round(Math.max(n7(N7_SNOUT, y), n7Top(0, y)) * 1e4) / 1e4]);
 /** The face's depth: behind both the snout's rounded front and the top surface. */
-const n7Reshape = (lat: number, y: number, d: number): number => Math.max(n7(N7_SNOUT, y) + d - n7(N7_PROFILE, y), n7Top(lat, y));
+/** n7Top by (lat, y): the face's grid and its paint query the same points many times; a pure function, so cached (same bytes). */
+const N7_TOP = new Map<number, Map<number, number>>();
+const n7TopCached = (lat: number, y: number): number => {
+  let row = N7_TOP.get(y);
+  if (!row) N7_TOP.set(y, (row = new Map()));
+  let v = row.get(lat);
+  if (v === undefined) { v = n7Top(lat, y); row.set(lat, v); }
+  return v;
+};
+const N7_SN = new Map<number, readonly [number, number]>();
+const n7SnoutAt = (y: number): readonly [number, number] => {
+  let v = N7_SN.get(y);
+  if (!v) N7_SN.set(y, (v = [n7(N7_SNOUT, y), n7(N7_PROFILE, y)]));
+  return v;
+};
+const n7Reshape = (lat: number, y: number, d: number): number => {
+  const [sn, pr] = n7SnoutAt(y);
+  return Math.max(sn + d - pr, n7TopCached(lat, y));
+};
 
 /** An almond headlight on viewer's side sd: [lat, y], the inner end low, the outer end high under the crest. */
 const n7Lamp = (sd: number, grow: number): Pt[] =>

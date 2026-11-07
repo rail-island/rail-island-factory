@@ -147,6 +147,16 @@ export function edgeAt(pts: readonly Pt[], y: number): number {
   return pts[pts.length - 1]![1];
 }
 
+/** edgeAt on one polyline, cached by height: the nose's scan tests the same heights in every column (same values, so the same bytes). */
+function edgeMemo(pts: readonly Pt[]): (y: number) => number {
+  const memo = new Map<number, number>();
+  return (y) => {
+    let v = memo.get(y);
+    if (v === undefined) { v = edgeAt(pts, y); memo.set(y, v); }
+    return v;
+  };
+}
+
 function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   const onFace = (q: NoseQuery) => Math.abs(q.u) <= 2;
   const banded = (q: NoseQuery) => f.wrap || onFace(q);
@@ -155,14 +165,20 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   for (const [y0, y1, mat] of p.face) out.push({ mat, name: `${mat} face`, inside: (q) => banded(q) && q.y >= y0 && q.y < y1 && (onFace(q) || q.y >= p.A) });
   out.push({ mat: p.roof, name: "roof", inside: (q) => (banded(q) ? q.y >= f.roofFrom : q.y >= p.S) });
   // a sweep on the cab sides, between the skirt's top and the shoulder (or its own top, over the cab's roof)
-  (p.sweeps ?? []).forEach((w, i) => out.push({
-    mat: w.mat, name: `sweep ${i + 1}`, where: { ...(w.face ? {} : { side: true }), y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
-    inside: (q) => (w.face || q.side) && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
-  }));
-  (f.paint ?? []).forEach((w, i) => out.push({
-    mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
-    inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
-  }));
+  (p.sweeps ?? []).forEach((w, i) => {
+    const [front, back] = [edgeMemo(w.front), edgeMemo(w.back)];
+    out.push({
+      mat: w.mat, name: `sweep ${i + 1}`, where: { ...(w.face ? {} : { side: true }), y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
+      inside: (q) => (w.face || q.side) && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= front(q.y) && q.d <= back(q.y),
+    });
+  });
+  (f.paint ?? []).forEach((w, i) => {
+    const [front, back] = [edgeMemo(w.front), edgeMemo(w.back)];
+    out.push({
+      mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
+      inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= front(q.y) && q.d <= back(q.y),
+    });
+  });
   [...(p.fields ?? []), ...(f.fields ?? [])].forEach((r, i) => {
     // the polygon's bounds first: a point outside them is never inside it (inPoly is the scan's cost)
     const lats = r.pts.map((t) => t[0]), ys = r.pts.map((t) => t[1]);
@@ -201,6 +217,17 @@ function subdivide(pts: readonly Pt[], k: number): Pt[] {
   return out;
 }
 
+/**
+ * A face's painted skin as CabNose.draw() emits it: its scopes, each with its facets. The skin
+ * depends only on the face, its end, tip, body section and paint, and a design builds the same
+ * face for every unit, livery and train length it is asked for, so the skin is worked out once
+ * and replayed into later builds: the same calls in the same order, so the same bytes.
+ */
+type Skin = Array<[string, Array<[string, Vec3[], Vec3]>]>;
+type Vec3 = [number, number, number];
+const SKINS = new WeakMap<SeriesCabFace, Map<string, Skin>>();
+const skinKey = (v: unknown): string => JSON.stringify(v, (_k, x: unknown) => (Object.is(x, -0) ? "-0" : x));
+
 /** Draws a cab face on end e (+1 the +X end), its tip at model x e * xTip, joined to the body's section `half`. */
 export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint): void {
   const n = new CabNose(m, {
@@ -208,7 +235,32 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
     base: p.face[0]?.[2] ?? p.sides[0]![2], layers: layers(f, p), cols: f.cols ?? [8, 4, 1, 1], ...(f.tolerance ? { tolerance: f.tolerance } : {}), capTop: p.roof, capBottom: p.skirt,
     ...(f.reshape ? { reshape: f.reshape } : {}),
   });
-  m.scope("skin", () => n.draw());
+  let byKey = SKINS.get(f);
+  if (!byKey) SKINS.set(f, (byKey = new Map()));
+  const key = skinKey([e, xTip, half, p]);
+  let skin = byKey.get(key);
+  if (!skin) {
+    // record what draw() emits (it calls only scope and facets)
+    const rec: Skin = [];
+    let cur: Array<[string, Vec3[], Vec3]> | null = null;
+    const recorder = {
+      scope<T>(name: string, fn: () => T): T {
+        if (cur) throw new Error("drawCabFace: a nested scope in the skin");
+        const list: Array<[string, Vec3[], Vec3]> = [];
+        rec.push([name, list]);
+        cur = list;
+        try { return fn(); } finally { cur = null; }
+      },
+      facets(mat: string, pts: Vec3[], normal: Vec3): void {
+        if (!cur) throw new Error("drawCabFace: skin facets outside a scope");
+        cur.push([mat, pts, normal]);
+      },
+    } as unknown as MeshBuilder;
+    new CabNose(recorder, n.s).draw();
+    byKey.set(key, (skin = rec));
+  }
+  const drawn = skin;
+  m.scope("skin", () => { for (const [name, list] of drawn) m.scope(name, () => { for (const [mat, pts, normal] of list) m.facets(mat, pts, normal); }); });
   const g = f.gangway;
   if (g)
     m.scope("gangway door", () => {
