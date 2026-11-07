@@ -495,6 +495,12 @@ export interface GameProperties extends Partial<VehicleGameFields> {
   /** A building's blocking footprint. Buildings only. */
   block?: BlockShape;
   /**
+   * The building stands in the SEA: its y = 0 is the waterline, and the game stands it
+   * at sea level over the sea without reclaiming the water under it (an offshore
+   * platform). Buildings only; on land or a lake it is placed like any building.
+   */
+  offshore?: true;
+  /**
    * How the aircraft flies: "helicopter" lifts off and lands vertically on pads and
    * needs no runway. Aircraft only; absent means an aeroplane, which uses airports
    * by its sizeClass. A helicopter states `flight` and no sizeClass.
@@ -517,6 +523,7 @@ export interface GameProperties extends Partial<VehicleGameFields> {
 }
 
 const PHYSICS_KEYS = ["weight", "power", "maxspeed", "accel"] as const;
+const BUILDING_KEYS = ["plaza", "block", "city", "helipad", "offshore"];
 const VEHICLE_KEYS = [...PHYSICS_KEYS, "scale", "draftFrac", "ropeFrac", "boardFrac", "sizeClass", "seatFrac", "variants"];
 
 /**
@@ -532,13 +539,15 @@ export function checkGameProperties(design: ProceduralDesign, vehicle: boolean):
     throw new Error(`${design.id}: game properties ${why} (docs/models/game-properties.md)`);
   };
   if (!vehicle) {
-    if (game && Object.keys(game).some((k) => k !== "plaza" && k !== "block" && k !== "city" && k !== "helipad")) fail("of a building may hold only plaza, block, city and helipad");
+    if (game && Object.keys(game).some((k) => !BUILDING_KEYS.includes(k))) fail("of a building may hold only plaza, block, city, helipad and offshore");
+    if (game?.offshore !== undefined && game.offshore !== true) fail(`have an invalid "offshore": ${String(game.offshore)} (true or absent)`);
     if (game?.helipad) checkHelipadDecl(design, game.helipad, fail);
     return;
   }
   if (!game) return fail("missing: a vehicle states its weight, power, maxspeed and accel");
   if (game.plaza || game.block || game.city) fail("of a vehicle hold no plaza, block or city");
   if (game.helipad) fail('hold a "helipad", which is for buildings only');
+  if (game.offshore) fail('hold "offshore", which is for buildings only');
   checkAircraftKind(design, game, fail);
   for (const k of PHYSICS_KEYS) {
     const v = game[k];
