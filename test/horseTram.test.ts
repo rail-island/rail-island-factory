@@ -11,7 +11,7 @@ import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { poseGlb, sampleCount } from "../generator/glbPose";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { ROLLING_CLIP, ROLLING_SPEED } from "../generator/rolling";
-import { HORSE_LEG_LENGTH, HORSE_NODES, TROT_CLIP, TROT_SAMPLES, TROT_STRIDE, trotPose } from "../generator/horseTram";
+import { CAR_SECTION, HORSE_HITCH, HORSE_LEG_LENGTH, HORSE_NODES, HORSE_SECTION, HORSE_SUPPORTS, TROT_CLIP, TROT_SAMPLES, TROT_STRIDE, trotPose } from "../generator/horseTram";
 import { jsModuleOf } from "./catalogCache";
 
 const ID = "proc-vehicle-horse-tram";
@@ -109,6 +109,46 @@ describe("the horse tram", () => {
     const z0 = new THREE.Euler().setFromQuaternion(leg.quaternion).z;
     expect(z0).toBeCloseTo(trotPose(0).legs["front-left"].swing, 4);
     expect(Math.abs(z0)).toBeGreaterThan(0.2);
+  });
+
+  it("is hitched like an articulated tram: the horse a section ahead of its car, on its own two supports", () => {
+    // regression: the horse was drawn into the rigid car 5.3 m ahead of its centre, so
+    // the game posed it by the car's wheelsets - buried in a rise, floating over a dip,
+    // and off the track to the outside of every curve
+    const rig = model.rig!;
+    expect(rig.sections).toEqual([{ node: CAR_SECTION, pivot: [0, 0, 0] }, { node: HORSE_SECTION, pivot: HORSE_HITCH }]);
+    expect(rig.joints).toEqual([]);
+    expect(rig.supports).toEqual([
+      { x: -0.8, axles: 1, sections: [0] },
+      { x: 0.8, axles: 1, sections: [0] },
+      { x: HORSE_SUPPORTS[0], axles: 1, sections: [1] },
+      { x: HORSE_SUPPORTS[1], axles: 1, sections: [1] },
+    ]);
+    // the horse's supports are under its legs, apart enough to set its pitch
+    expect(HORSE_SUPPORTS[1] - HORSE_SUPPORTS[0]).toBeGreaterThan(1);
+    // every triangle of the horse (and its swingletree and traces) is in its section, ahead of the car's
+    const nodes = (parseGlb(glb).json as { nodes: Array<{ name: string; translation?: number[] }> }).nodes;
+    expect(nodes.find((n) => n.name === HORSE_SECTION)!.translation).toEqual(HORSE_HITCH);
+    const tris = collectTriangles(...(Object.values(parseGlb(glb)) as [never, never]));
+    const horseMats = new Set(["horseCoat", "horseMane", "horseWhite", "muzzle", "hoof", "collar", "hames"]);
+    const hx = tris.filter((t) => horseMats.has(t.material)).flatMap((t) => t.p.map((q) => q[0]!));
+    expect(Math.min(...hx)).toBeGreaterThan(HORSE_HITCH[0]);
+  });
+
+  it("walks between the rails, on the track's centre line, its soles on the rail plane", () => {
+    const tris = collectTriangles(...(Object.values(parseGlb(glb)) as [never, never]));
+    const zs = tris.filter((t) => t.material === "hoof" || t.material === "horseWhite").flatMap((t) => t.p.map((q) => q[2]!));
+    // the legs stand inside the rail heads' inner edges (0.7175 m off the centre line), symmetric about it
+    expect(Math.max(...zs.map(Math.abs))).toBeLessThan(0.5);
+    expect(Math.max(...zs) + Math.min(...zs)).toBeCloseTo(0, 6);
+    expect(Math.abs(hoofLow(glb))).toBeLessThan(1e-6);
+  });
+
+  it("splits its distant model the same way, the horse in the section ahead", () => {
+    const low = DESIGNS.get(ID)!.buildLod();
+    expect(low.rig?.sections?.map((s) => s.node)).toEqual([CAR_SECTION, HORSE_SECTION]);
+    expect(low.rig?.sections?.[1]!.pivot).toEqual(HORSE_HITCH);
+    expect(low.rig?.joints).toEqual([]);
   });
 
   it("keeps a static distant model", () => {

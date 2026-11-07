@@ -39,7 +39,7 @@ export function horseTramSpec(): WorldTramSpec {
     wheelRadius: 0.38,
     colors: { skirt: "#1f4a33", body: "#8f5a2c", upper: "#1f4a33", horseCoat: "#5a2c19", horseMane: "#1c1411", harness: "#1b1917" },
     paint: [[1.44, "skirt"], [2.08, "body"], [2.6, "upper"]],
-    over: { deck: "open", windows: [1.47, 2.06], screen: [1.47, 2.06], eave: 2.42, pitch: 0.73, extraLod: horseLod(-HORSE_AHEAD), extraFeatures: ["horse"] },
+    over: { deck: "open", windows: [1.47, 2.06], screen: [1.47, 2.06], eave: 2.42, pitch: 0.73, extraLod: horseLod(-HORSE_AHEAD), extraSection: HORSE_HITCH, extraFeatures: ["horse"] },
   });
   const { upper: _upper, ...rest } = s;
   return rest;
@@ -875,7 +875,8 @@ function addTrot(m: MeshBuilder): void {
     times,
     drive: { drive: "distance", speed: ROLLING_SPEED },
     tracks: [
-      { node: "horse", path: "translation", values: poses.flatMap((p) => [r6(BODY_PIVOT[0]), r6(BODY_PIVOT[1] + p.lift), 0]) },
+      // within the horse's section, whose node stands at the hitch
+      { node: "horse", path: "translation", values: poses.flatMap((p) => [r6(BODY_PIVOT[0] - HORSE_HITCH[0]), r6(BODY_PIVOT[1] + p.lift - HORSE_HITCH[1]), 0]) },
       { node: "horse-head", path: "rotation", values: rot((p) => qAxis(2, p.nod)) },
       { node: "horse-tail", path: "rotation", values: rot((p) => qMul(qAxis(1, p.tail), qAxis(2, -0.04 * Math.abs(p.tail) / 0.12))) },
       ...LEGS.flatMap((l) => [
@@ -889,17 +890,50 @@ function addTrot(m: MeshBuilder): void {
 // ---------------------------------------------------------------------------
 // the design's build functions
 
-/** The horse tram: the car, the horse in its harness, the rolling wheels and the trot. */
+/** The car's section and the horse's: their nodes, front first in the game's eyes but the car first here, the body the horse is hitched to. */
+export const CAR_SECTION = "section0";
+export const HORSE_SECTION = "section1";
+/** The hitch: the draw hook's pin, which the swingletree (and the horse with it) turns about. */
+export const HORSE_HITCH: Vec3 = [3.24, 0.75, 0];
+/** Where the horse stands on the track: under its forelegs and its hind legs (model x). */
+export const HORSE_SUPPORTS: readonly [number, number] = [r3(HX + legX("hind-left")), r3(HX + legX("front-left"))];
+
+/**
+ * The horse and its car as the game poses them (docs/models/world-trams.md "The
+ * horse tram"): two sections hitched at the draw hook with no joint between them,
+ * like an articulated tram whose first section is the horse. The car rides its two
+ * wheelsets; the horse stands on the track at its forelegs and hind legs (two lone
+ * supports, `axleAt`), so the game sets it on the track's centre line and at the
+ * track's height wherever it is, on a curve and over a change of grade alike.
+ */
+function hitch(m: MeshBuilder): void {
+  m.rig = {
+    sections: [
+      { node: CAR_SECTION, pivot: [0, 0, 0] },
+      { node: HORSE_SECTION, pivot: HORSE_HITCH },
+    ],
+    joints: [],
+    maxBendDeg: 60,
+  };
+}
+
+/** The horse tram: the car, the horse in its harness as the section ahead of it, the rolling wheels and the trot. */
 export function horseTram(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
-  saloon(m);
-  for (const e of [1, -1]) {
-    m.scope(e > 0 ? "front end" : "rear end", () => (e > 0 ? carEnd(m) : m.turned(0, () => carEnd(m))));
-  }
-  topDeck(m);
-  swingletree(m);
-  m.scope("running gear", () => runningGear(m));
-  m.scope("horse", () => horse(m));
+  m.part(CAR_SECTION, [0, 0, 0], () => {
+    saloon(m);
+    for (const e of [1, -1]) {
+      m.scope(e > 0 ? "front end" : "rear end", () => (e > 0 ? carEnd(m) : m.turned(0, () => carEnd(m))));
+    }
+    topDeck(m);
+    m.scope("running gear", () => runningGear(m));
+  });
+  m.part(HORSE_SECTION, HORSE_HITCH, () => {
+    swingletree(m);
+    m.scope("horse", () => horse(m));
+    for (const x of HORSE_SUPPORTS) m.axleAt(x, 0);
+  });
+  hitch(m);
   rollWheels(m, ["wheelset-1", "wheelset-2"], 2 * WHEEL_R);
   addTrot(m);
   return m;

@@ -92,9 +92,10 @@ describe("the world trams", () => {
         // the sections: a rigid car one body, an articulated one a section per body and a joint per gap
         const rig = m.rig!;
         expect(rig.supports!.length).toBeGreaterThanOrEqual(2);
-        const n = s.sections.length;
+        // (a hitched extra - the horse tram's horse - is one more section, with no joint)
+        const n = s.sections.length + (s.extraSection ? 1 : 0);
         expect(rig.sections?.length ?? 1).toBe(n);
-        expect(rig.joints?.length ?? 0).toBe(n - 1);
+        expect(rig.joints?.length ?? 0).toBe(s.sections.length - 1);
         // the doors: on the sides the spec says
         const sides = new Set(m.animations().filter((c) => c.drive.drive === "door").map((c) => (c.drive as { side: string }).side));
         const want = s.open || !s.doors.length ? [] : s.doubleEnded ? ["left", "right"] : ["right"];
