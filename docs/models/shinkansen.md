@@ -171,7 +171,8 @@ under to 0.3 m) and the top surface, the higher of the wing body - a shallow val
 two crests at 1.1 - 1.5 m from it rising from the headlights (1.56 m high 0.6 m behind the tip) to the body's
 shoulder at the join - and the canopy, a narrow spine out of the valley that widens into the cab's bubble
 (the windscreen's foot 2.3 m high 3.9 m behind the tip, 2.9 m at 5 m, 3.3 m at 7 m), blended by a smooth
-maximum. The windscreen and the side windows are glass painted on the bubble, the almond headlights
+maximum. The windscreen is one wide rounded pane (about 1.5 m across, 2.3 - 3.1 m high) painted on the
+bubble as an oval seen head-on, so its outline stays smooth on the curved canopy; the almond headlights
 (clear covers, black rims) fields on the snout's upper corners. The leading bogie stands under the canopy
 6.1 m behind the tip, 17.5 m ahead of the rear one; the skirts hang to 0.3 m (no underfloor box), the skirt
 colour to 0.9 m. Side: the crew door 9.15 - 9.75 m behind the tip, the front passenger door, 13 windows
@@ -179,7 +180,8 @@ colour to 0.9 m. Side: the crew door 9.15 - 9.75 m behind the tip, the front pas
 JR Central: the wide blue line (1.80 - 2.0 m) and the thin one (1.62 - 1.70 m) under the windows, the wide
 one ending in a point just ahead of the crew door, and the blade ahead of it (from 5.45 m up to 2.14 m at
 8.1 m); silver-grey skirts. JR Kyushu ("Kamome", 2022): red below 0.9 m, a thin red line dipping along the
-nose, the canopy black. The pantograph stands on a streamlined cover.
+nose, the canopy black: one oval round the windscreen, a livery's `faceFields` (polygons on the cab face
+seen head-on, under the face's own fields). The pantograph stands on a streamlined cover.
 
 ## Deviations
 
@@ -187,7 +189,7 @@ nose, the canopy black. The pantograph stands on a streamlined cover.
   their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses are
   approximations. The N700S's nose (above) is measured, but a projective fit was not possible in its
   side-on photograph (lengths along the nose stretched to the crew door's place); its windscreen is a
-  painted outline, smaller than the real wrapped lens; the JR Kyushu canopy's thin gold edging, its
+  painted oval, the real lens wraps a little further round the canopy; the JR Kyushu canopy's thin gold edging, its
   emblems and lettering and the pantograph's two roof fins are not drawn.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn.

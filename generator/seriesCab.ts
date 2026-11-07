@@ -129,6 +129,8 @@ export interface FacePaint {
   number: string;
   /** The livery's sweeps (shinkansen.ts `endSweeps`, d behind the tip), painted on the face's cab sides too (and on its front and corners with `face`). */
   sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number; face?: boolean }>;
+  /** The livery's own painted polygons on the face ([lat, y], like the face's `fields`, drawn under them): a canopy painted round its glass. */
+  fields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
 }
 
 /** Value of a [y, d] edge at height y (held past its ends). */
@@ -157,7 +159,7 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
     mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
     inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
   }));
-  (f.fields ?? []).forEach((r, i) => {
+  [...(p.fields ?? []), ...(f.fields ?? [])].forEach((r, i) => {
     // the polygon's bounds first: a point outside them is never inside it (inPoly is the scan's cost)
     const lats = r.pts.map((t) => t[0]), ys = r.pts.map((t) => t[1]);
     const [l0, l1, y0, y1] = [Math.min(...lats), Math.max(...lats), Math.min(...ys), Math.max(...ys)];

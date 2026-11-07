@@ -65,6 +65,8 @@ export interface ShinkansenLivery {
    * tip, ascending y), later sweeps over earlier ones; a cab face paints them on its cab sides too.
    */
   endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number; face?: boolean }>;
+  /** Polygons painted on a cab face ([lat, y] seen head-on, under the face's own fields): a canopy painted round its windscreen. */
+  faceFields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
   /** A flag of paint beside every door, on the side toward the car's middle: its width, gap from the door, heights and paint (SBB's red door marks). */
   doorFlags?: { w: number; gap: number; y: readonly [number, number]; mat: string };
   /** Paint over each door's span above its head on every car, bands [y0, y1, mat]: a door's colour carried up the side. */
@@ -458,7 +460,7 @@ function jacobsCuts(s: ShinkansenSeries, end: boolean, L: number, tr: readonly n
 /** The paint a cab face takes from a livery. */
 function facePaint(s: ShinkansenSeries, l: ShinkansenLivery, number: string): FacePaint {
   const face = s.cabFace?.bands?.(l) ?? l.front ?? l.bands;
-  return { sides: l.bands, face, roof: l.roof, skirt: l.skirt, S: s.S, A: s.A, number, ...(l.endSweeps ? { sweeps: l.endSweeps } : {}) };
+  return { sides: l.bands, face, roof: l.roof, skirt: l.skirt, S: s.S, A: s.A, number, ...(l.endSweeps ? { sweeps: l.endSweeps } : {}), ...(l.faceFields ? { fields: l.faceFields } : {}) };
 }
 
 /** A sweep of paint on both sides between its front and back edges, in strips 0.1 m tall, clamped to the belly and the shoulder. */
@@ -864,19 +866,27 @@ const n7Lamp = (sd: number, grow: number): Pt[] =>
     const [cl, cy] = [1.16, 1.5];
     return [sd * (cl - 0.08 + (l - cl) * (1 + grow)), cy + (y - cy) * (1 + grow * 1.6)];
   });
-/** The windscreen on the canopy's front, [lat, y]: wide at its foot, narrowing to the top, the corners rounded. */
-const N7_SCREEN: Pt[] = [[-0.45, 2.31], [0.45, 2.31], [0.56, 2.35], [0.62, 2.45], [0.58, 2.65], [0.5, 2.85], [0.38, 2.96], [0.27, 2.99], [-0.27, 2.99], [-0.38, 2.96], [-0.5, 2.85], [-0.58, 2.65], [-0.62, 2.45], [-0.56, 2.35]];
+/** A rounded oval seen head-on, [lat, y]: half width hw, from y0 to y1, the top narrower by `taper`, the corners squarer for a larger exponent. */
+const n7Oval = (hw: number, y0: number, y1: number, taper: number, ex: number, n = 40): Pt[] => {
+  const [cy, hy] = [(y0 + y1) / 2, (y1 - y0) / 2];
+  return Array.from({ length: n }, (_, i): Pt => {
+    const a = (2 * Math.PI * i) / n, c = Math.cos(a), s = Math.sin(a);
+    const x = Math.sign(c) * Math.abs(c) ** (2 / ex), y = Math.sign(s) * Math.abs(s) ** (2 / ex);
+    return [Math.round(hw * x * (1 - taper * Math.max(0, y)) * 1e4) / 1e4, Math.round((cy + hy * y) * 1e4) / 1e4];
+  });
+};
+/** The windscreen (J22, Kyoto: about 1.5 m across, 0.85 m tall): one wide rounded glass wrapping the canopy's front, its foot 2.3 m high. */
+const N7_SCREEN: Pt[] = n7Oval(0.76, 2.29, 3.12, 0.3, 3.2);
 
 const N700S_FACE: SeriesCabFace = {
   dJoin: N7_JOIN, dSide: 6.0, first: N7_JOIN + 1.3, reach: 0, roofFrom: 9, wrap: true, cols: [10, 10, 1, 2], tolerance: 0.03,
   profile: N7_PROFILE, corner: [...N7_CORNER], cornerDepth: [...N7_DEPTH], rows: N7_ROWS, reshape: n7Reshape,
   // the lower snout in the skirt's colour (silver grey, JR Kyushu's red), white above
   bands: (l) => [[0, 0.9, l.bands[0]![2]], [0.9, 9, "white"]],
-  // the canopy's side windows behind the windscreen's pillars, their rear ends rounded
-  paint: [{ mat: "cabGlass", front: [[2.55, 5.95], [2.85, 6.0], [3.05, 6.2]], back: [[2.55, 6.5], [2.7, 7.0], [2.9, 7.3], [3.0, 7.2], [3.05, 6.9]], top: 3.06 }],
+  // the windscreen: one pane, no centre pillar (J30, Kyoto), a single wiper
   fields: [{ mat: "cabGlass", pts: N7_SCREEN }, { mat: "cabMask", pts: n7Lamp(1, 0.14) }, { mat: "cabMask", pts: n7Lamp(-1, 0.14) }, { mat: "cabGlass", pts: n7Lamp(1, 0) }, { mat: "cabGlass", pts: n7Lamp(-1, 0) }, { mat: "lampHead", pts: n7Lamp(1, -0.35) }, { mat: "lampHead", pts: n7Lamp(-1, -0.35) }],
   // the distant model's glass: inside the windscreen's outline
-  panes: [{ lat: [-0.42, 0.42], y: [2.36, 2.95], r: 0.2 }],
+  panes: [{ lat: [-0.6, 0.6], y: [2.34, 3.05], r: 0.25 }],
   wipers: [[[0.3, 2.37], [-0.16, 2.86]]],
 };
 
@@ -922,9 +932,9 @@ export const N700S: ShinkansenSeries = {
       endSweeps: [
         // the thin line dipping along the nose's side ahead of the crew door
         { mat: "red", ...n7Line([[5.4, 1.41], [6.3, 1.44], [7.2, 1.53], [8.0, 1.62], [8.7, 1.68], [9.0, 1.7]], 0.04) },
-        // the black canopy (its thin gold edging is left out: a line across the canopy's grid costs 3,000 triangles)
-        { mat: "kBlack", face: true, top: 3.61, front: [[2.2, 3.4], [2.5, 3.9], [2.9, 4.6], [3.2, 5.3], [3.4, 6.2], [3.61, 7.5]], back: [[2.2, 4.3], [3.4, 8.9], [3.61, 9.0]] },
       ],
+      // the black canopy round the windscreen, one oval seen head-on (its thin gold edging is left out)
+      faceFields: [{ mat: "kBlack", pts: n7Oval(0.9, 2.17, 3.5, 0.25, 2.8) }],
     },
   },
   weight: { end: 44, middle: 42 }, power: 1220, maxspeed: 300,
