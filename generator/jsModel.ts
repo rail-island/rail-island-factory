@@ -17,6 +17,7 @@ import type { ProceduralDesign } from "./design.ts";
 import { lodBudget } from "./lod.ts";
 import { isInteriorName } from "./interiorTable.ts";
 import { passengerOf } from "./passengerHints.ts";
+import { posable } from "./rig.ts";
 
 const GENERATOR_DIR = path.dirname(fileURLToPath(import.meta.url));
 
@@ -92,7 +93,7 @@ export interface BundleFlags {
 export function bundleFlags(design: ProceduralDesign, rigged?: boolean): BundleFlags {
   const levels = [design.build(), design.buildLod(), ...(design.buildCoarse ? [design.buildCoarse()] : []), ...(design.buildMax ? [design.buildMax()] : [])];
   return {
-    rigged: rigged ?? levels[0]!.rig !== null,
+    rigged: rigged ?? posable(levels[0]!.rig),
     // the UV code ships only in the bundle of a design that names a surface (threeBuilder.ts)
     surfaces: levels.some((m) => Object.values((m as unknown as { palette: Record<string, MaterialSpec> }).palette).some((spec) => spec.surface)),
     // a structure preview's passenger-view hints (passengerHints.ts) reach userData only in the bundle of a design that sets them
