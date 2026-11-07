@@ -14,6 +14,11 @@ import { paint } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
 import type { NoseShape } from "./carbodyKit.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
+import type { SeriesCabFace } from "./seriesCab.ts";
+import { sidePanel, type SliceBody } from "./sliceBody.ts";
+import { block } from "./vehicleParts.ts";
+import { pilotPlate } from "./carbodyKit.ts";
+import { centreCoupler } from "./emuParts.ts";
 
 const c = (hex: string, r = 0.4) => paint(hex, r);
 const nose = (len: number, tip: number, power: number, C: Pt[], S: Pt[], Y: Pt[], A: Pt[], B: Pt[]): NoseShape => ({ len, tip, power, C, S, Y, A, B });
@@ -25,17 +30,158 @@ const flatCab = (w: number, y0: number, y1: number, mask: string, lampY: number)
 });
 const NO_NOSE = nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]);
 
+// ---------------------------------------------------------------------------
+// The E235 (assets/jr-e235/SOURCES.md): published 20.0 m over couplers, bodies 19.57 / 19.5 m,
+// 2.95 m wide, 3.62 m high, floor 1.13 m; the sides upright from the waist (no lean), tucked in
+// below it. Measured from photo-e235-0.jpg (head-on, 192 px/m across the 2.95 m face) and the
+// side photographs (89 px/m at the middle car's near door, 1.3 m wide).
+
+/** A rectangle as a polygon in [lat, y], its top corners rounded (radius r), the bottom square. */
+function e235TopRounded(l: number, y0: number, y1: number, r: number): Pt[] {
+  const pts: Pt[] = [[-l, y0], [l, y0]];
+  for (let i = 0; i <= 3; i++) { const a = (Math.PI / 2) * (i / 3); pts.push([l - r + r * Math.cos(a), y1 - r + r * Math.sin(a)]); }
+  for (let i = 0; i <= 3; i++) { const a = Math.PI / 2 + (Math.PI / 2) * (i / 3); pts.push([-l + r + r * Math.cos(a), y1 - r + r * Math.sin(a)]); }
+  return pts;
+}
+
+/** The E235 face's halftone: square dots of the lower colour growing downward over the upper one, merging at the foot. */
+function e235Dots(l: number, y0: number, y1: number, pitch: number): Array<{ mat: string; pts: Pt[]; fine: number }> {
+  const rows = Math.round((y1 - y0) / pitch), cols = Math.floor((2 * l) / pitch);
+  const [py, px] = [(y1 - y0) / rows, (2 * l) / cols];
+  const out: Array<{ mat: string; pts: Pt[]; fine: number }> = [];
+  for (let k = 0; k < rows; k++) {
+    const yc = y1 - py * (k + 0.5), h = 0.5 * py * (0.1 + 0.88 * ((k + 0.5) / rows) ** 1.3);
+    for (let j = 0; j < cols; j++) {
+      const xc = -l + px * (j + 0.5), w = (h * px) / py;
+      out.push({ mat: "dotBottom", fine: 1, pts: [[xc - w, yc - h], [xc + w, yc - h], [xc + w, yc + h], [xc - w, yc + h]] });
+    }
+  }
+  return out;
+}
+
+/** The face's black field and the halftone's ground under it: half width, heights. */
+const E235_FIELD = { l: 1.37, dots: [1.42, 1.96] as const, top: 3.51 };
+
+/**
+ * The E235's cab face (photo-e235-0.jpg head-on, photo-jr-east-kuhae235-1.jpg from the side): an
+ * upright face as wide as the body, its plan corners rounded 0.25 m, the lower lip curving back under
+ * it and the crown rounding over to the roof. The livery's frame colour wraps round the corners
+ * 0.7 m back along the cab sides (the green band down the face's side). Inside the frame one black
+ * field from 1.96 m to 3.51 m, its top corners rounded: the destination board and the LED head and
+ * tail lamps across its top, under them the one big windscreen (2.17 - 3.19 m) wrapping into the
+ * corners; below the field the halftone of square dots grading down into the frame colour (Yamanote:
+ * green dots on black; Yokosuka: blue dots on cream). No gangway door: the face is closed.
+ */
+const E235_FACE: SeriesCabFace = {
+  dJoin: 0.7, dSide: 0.55, first: 3.6, roofFrom: 3.7, wrap: true,
+  profile: [[0.9, 0.14], [1.0, 0.05], [1.15, 0.01], [1.3, 0], [2.2, 0], [3.0, 0.015], [3.35, 0.045], [3.5, 0.1], [3.57, 0.19], [3.61, 0.36], [3.62, 0.7]],
+  corner: [[0.9, 0.2], [1.3, 0.25], [3.35, 0.25], [3.5, 0.2], [3.6, 0.1], [3.62, 0.05]], bulge: 0.05, cols: [8, 4, 1, 1],
+  rows: [0.9, 1.0, 1.15, 1.3, 1.42, 1.96, 2.17, 2.7, 3.19, 3.35, 3.51, 3.57, 3.61, 3.62],
+  bands: () => [[0, 9, "frame"]],
+  // the distant face: the halftone as its two colours, half each
+  lodBands: [[0, 1.69, "frame"], [1.69, E235_FIELD.dots[1], "dotTop"], [E235_FIELD.dots[1], E235_FIELD.top, "cabMask"], [E235_FIELD.top, 9, "frame"]],
+  fields: [
+    { mat: "dotTop", pts: [[-E235_FIELD.l, E235_FIELD.dots[0]], [E235_FIELD.l, E235_FIELD.dots[0]], [E235_FIELD.l, E235_FIELD.dots[1]], [-E235_FIELD.l, E235_FIELD.dots[1]]] },
+    { mat: "cabMask", pts: e235TopRounded(E235_FIELD.l, E235_FIELD.dots[1], E235_FIELD.top, 0.2) },
+  ],
+  decals: e235Dots(E235_FIELD.l - 0.02, E235_FIELD.dots[0], E235_FIELD.dots[1], 0.077),
+  // the windscreen, and the destination board over it
+  panes: [{ lat: [-1.33, 1.33], y: [2.17, 3.19], r: 0.06, mat: "screen" }, { lat: [-0.53, 0.53], y: [3.24, 3.38], r: 0.02, mat: "destBoard" }],
+  // the LED head lamps at the field's top corners, the tail lamps inboard of them
+  lamps: [[-0.93, 3.36, 0.065, "lampHead"], [0.93, 3.36, 0.065, "lampHead"], [-0.7, 3.36, 0.05, "lampRed"], [0.7, 3.36, 0.05, "lampRed"]],
+  // one parked along the windscreen's foot, the other upright at its right
+  wipers: [[[0.2, 2.22], [-0.68, 2.33]], [[0.98, 2.22], [1.28, 2.7]]],
+};
+
+/** Door leaves: each 1.3 m double door as two leaves sliding apart, at their centres (d). */
+const e235Doors = (centres: readonly number[]): Array<readonly [number, number, number]> => centres.flatMap((d): Array<readonly [number, number, number]> => [[d - 0.65, d, -1], [d, d + 0.65, 1]]);
+
+/**
+ * The E235's sides, d behind the body's front end (the face's join on the end car): the doors 4.82 m
+ * apart, the outer ones 2.52 m from the body's ends; one big 1.9 m window between doors, a 0.8 m
+ * one at each end. The cab car's first door sits 3.6 m ahead of the second (tip-d 3.74 m), a small
+ * window between them (photo-jr-east-kuhae235-1.jpg).
+ */
+const E235_LAYOUT = {
+  // the body 18.98 m from the face's join (its tip 0.07 m short of the coupling plane): the rear part 0.1 m longer than the real one's
+  end: { doors: e235Doors([3.04, 6.64, 11.56, 16.46]), windows: [[4.44, 5.24], [8.65, 10.55], [13.56, 15.46], [17.93, 18.73]] },
+  middle: { doors: e235Doors([2.52, 7.34, 12.16, 16.98]), windows: [[0.25, 1.05], [3.98, 5.88], [8.8, 10.7], [13.62, 15.52], [18.45, 19.25]] },
+} as const;
+
+/** The E235's own fittings: the air conditioner, the cab's crew door and antennas, the skirt under the face, the underfloor boxes. */
+function e235Fittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  const box = (mat: string, d0: number, d1: number, y0: number, y1: number, z0: number, z1: number) => block(m, mat, Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1)), y0, y1, z0, z1);
+  const C = E235.C, L = car.length, [t0, t1] = [car.trucks[0]!, car.trucks[1]!];
+  m.scope("air conditioner", () => {
+    // the one roof unit in the middle of the car: a low base and its narrower hood
+    box("roofE", L / 2 - 1.9, L / 2 + 1.9, C - 0.05, C + 0.2, -1.0, 1.0);
+    box("roofE", L / 2 - 1.75, L / 2 + 1.75, C + 0.2, C + 0.34, -0.85, 0.85);
+  });
+  m.scope("underfloor", () => {
+    // the equipment boxes between the bogies, in three groups
+    const [a, e] = [t0 + 1.9, t1 - 1.9], w = (e - a - 0.8) / 3;
+    for (let i = 0; i < 3; i++) box("under", a + i * (w + 0.4), a + i * (w + 0.4) + w, E235.B - (i === 1 ? 0.5 : 0.4), E235.B + 0.02, -1.15, 1.15);
+  });
+  if (!car.end) return;
+  const dj = E235_FACE.dJoin, tip = X(-dj), k = Math.sign(tip - X(0));
+  m.scope("crew door", () => {
+    // the stainless cab door behind the cab window (tip-d 1.62 - 2.27 m), its outline
+    const [d0, d1, y0, y1, q] = [1.62 - dj, 2.27 - dj, 1.15, 3.0, 0.02];
+    for (const sd of [1, -1]) {
+      sidePanel(m, b, X, sd, "rubber", d0, d0 + q, y0, y1, 0.006, 0.02);
+      sidePanel(m, b, X, sd, "rubber", d1 - q, d1, y0, y1, 0.006, 0.02);
+      sidePanel(m, b, X, sd, "rubber", d0 + q, d1 - q, y0, y0 + q, 0.006, 0.02);
+      sidePanel(m, b, X, sd, "rubber", d0 + q, d1 - q, y1 - q, y1, 0.006, 0.02);
+    }
+  });
+  m.scope("antennas", () => {
+    for (const [d, z] of [[0.9, 0.35], [2.3, -0.3]] as const) box("under", d - 0.04, d + 0.04, C - 0.05, C + 0.3, z - 0.04, z + 0.04);
+  });
+  m.scope("skirt", () => {
+    // the deflector under the face: its plate 0.2 m behind the tip, from 0.15 m to 0.66 m over the rail
+    pilotPlate(m, "skirtG", k, k * (tip - k * 0.2), 0.15, 0.66, 1.24, 0.08, 0.45);
+    // its cheeks running back to the leading bogie (tip-d 1.3 m)
+    box("skirtG", -dj + 0.6, 1.3 - dj, 0.22, 0.6, -1.2, 1.2);
+    // the dark gear between it and the body
+    box("under", -dj + 0.62, 2.0, 0.62, E235.B + 0.02, -1.1, 1.1);
+  });
+  // the series kit leaves a cab face without a coupler: the E235's stands out under the face, its head at the coupling plane
+  m.scope("coupler", () => centreCoupler(m, k, tip - k * 1.0, tip + k * 0.07, E235.couplerY!, "knuckle"));
+}
+
+/** Both liveries' stainless, black, glass and grey paints. */
+const E235_PALETTE = {
+  ss: c("#c3c7ca", 0.3), mask: c("#1d1f22", 0.3), cabMask: c("#1d1f22", 0.3), roofG: c("#b9bdc0", 0.5), roofE: c("#a9aeb2", 0.5), skirtG: c("#55595e", 0.7),
+  // the windscreen lighter than the black field round it (the cab behind it), the destination board darker
+  screen: { color: "#3a4a5a", metallic: 0.25, roughness: 0.1, glass: true }, destBoard: { color: "#121416", metallic: 0.2, roughness: 0.15, glass: true },
+};
+/** The JR emblem on the cab side under the eaves, over the crew door (tip-d 1.75 m). */
+const E235_JR = [{ text: "JR", d: 1.05, y: 3.05, h: 0.2, mat: "lettering" }];
+
 export const E235: ShinkansenSeries = {
-  endLength: 20.0, midLength: 20.0, W: 1.475, Y: 1.3, S: 3.2, C: 3.62, lean: 0.98, B: 1.0, A: 1.1,
-  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.475, 1.95, 2.85, "mask", 1.45),
-  windows: [[1.95, 2.75]], windowW: 1.1, pitch: 1.35, door: [1.15, 3.05, 1.95, 2.7], doorW: 1.3, doorCount: 4,
-  bogieCentres: 13.8, wheelR: 0.43, wheelbase: 2.1,
+  endLength: 20.0, midLength: 20.0, W: 1.475, Y: 1.8, S: 3.34, C: 3.62, lean: 1, B: 0.9, A: 1.0,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: E235_FACE,
+  windows: [[2.0, 2.9]], windowW: 1.9, pitch: 4.82, door: [1.15, 2.95, 1.94, 2.86], doorW: 1.3, doorCount: 4, doorGlassW: 0.37,
+  layout: E235_LAYOUT,
+  // the cab side window (tip-d 0.66 - 1.48 m) and the crew door's window
+  cabWindows: [[0.66 - E235_FACE.dJoin, 1.48 - E235_FACE.dJoin, 2.35, 3.05], [1.775 - E235_FACE.dJoin, 2.115 - E235_FACE.dJoin, 2.11, 2.88]],
+  bogieCentres: 13.8, wheelR: 0.43, wheelbase: 2.1, couplerY: 0.85,
+  // the end car's bogies centred on its 19.5 m body (tip-d 2.88 and 16.68 m), the middle car's on its own
+  endBogies: [2.18, 15.98], centredBogies: true, pantographAt: 16.3,
+  numberAt: [-4.0, 1.5, 0.08],
   liveries: {
-    yamanote: { title: "Yamanote green", palette: { ss: c("#c5c9cc", 0.3), green: c("#9acd32"), mask: c("#1d1f22", 0.3), roofG: c("#b9bdc0", 0.5), skirtG: c("#5d6266") }, bands: [[0, 1.12, "ss"], [1.12, 1.24, "green"], [1.24, 2.9, "ss"], [2.9, 3.0, "green"], [3.0, 9, "ss"]], roof: "roofG", skirt: "skirtG", number: "TOU-01" },
-    yokosuka: { title: "Yokosuka blue", palette: { ss: c("#c5c9cc", 0.3), blue: c("#1d3f80"), cream: c("#e5d9b6"), mask: c("#1d1f22", 0.3), roofG: c("#b9bdc0", 0.5), skirtG: c("#5d6266") }, bands: [[0, 1.12, "ss"], [1.12, 1.2, "cream"], [1.2, 1.3, "blue"], [1.3, 2.9, "ss"], [2.9, 3.0, "blue"], [3.0, 9, "ss"]], roof: "roofG", skirt: "skirtG", number: "F-01" },
+    // stainless; the uguisu green on the doors, over them under the eaves and round the face
+    yamanote: {
+      title: "Yamanote green", palette: { ...E235_PALETTE, green: c("#8cc63f"), frame: c("#8cc63f"), dotTop: c("#1d1f22", 0.3), dotBottom: c("#8cc63f") },
+      bands: [[0, 9, "ss"]], doors: [[0, 9, "green"]], overDoors: [[3.02, 3.3, "green"]], roof: "roofG", skirt: "ss", number: "TOU-01", endLettering: E235_JR,
+    },
+    // E235-1000: the cream-over-blue stripes under the windows and under the eaves, plain doors, the blue face
+    yokosuka: {
+      title: "Yokosuka blue", palette: { ...E235_PALETTE, blue: c("#1d3d9c"), cream: c("#e9dfc0"), frame: c("#1d3d9c"), dotTop: c("#e9dfc0"), dotBottom: c("#1d3d9c") },
+      bands: [[0, 1.72, "ss"], [1.72, 1.86, "blue"], [1.86, 1.98, "cream"], [1.98, 3.06, "ss"], [3.06, 3.18, "cream"], [3.18, 3.32, "blue"], [3.32, 9, "ss"]], doors: [[0, 9, "ss"]], roof: "roofG", skirt: "ss", number: "F-01", endLettering: E235_JR,
+    },
   },
-  weight: { end: 28, middle: 33 }, power: 560, maxspeed: 120,
+  weight: { end: 28, middle: 33 }, power: 560, maxspeed: 120, fittings: e235Fittings,
 };
 
 export const S103: ShinkansenSeries = {

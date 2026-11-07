@@ -8,7 +8,7 @@
 
 | id | title | `livery` (default first) | car (end / middle) | front |
 |---|---|---|---|---|
-| `proc-vehicle-jr-e235` | JR E235 | `yamanote`, `yokosuka` | 20.0 / 20.0 m, 4 doors a side | flat cab |
+| `proc-vehicle-jr-e235` | JR E235 | `yamanote`, `yokosuka` | 20.0 / 20.0 m, 4 doors a side | cab face (`cabFace`) |
 | `proc-vehicle-jnr-103` | JNR 103 series | `chuo`, `yamanote` | 20.0 / 20.0 m, 4 doors | flat cab, diamond pantograph |
 | `proc-vehicle-odakyu-gse` | Odakyu Romancecar GSE | `rose`, `lse` | 19.6 / 16.0 m | the observation nose |
 | `proc-vehicle-kintetsu-hinotori` | Kintetsu Hinotori | `hinotori`, `ace` | 21.0 / 20.5 m | the curved-windscreen nose |
@@ -25,12 +25,43 @@ at it), `pantograph: "diamond"`. The bodies keep their real 2.75 - 2.95 m widths
 game's standard-gauge wheelsets (the prototypes' track is 1,067 mm; [jr-kiha40.md](jr-kiha40.md),
 "Gauge"), inside the UIC gauge.
 
+## The E235
+
+Built from five photographs and the published figures (assets/jr-e235/SOURCES.md, with the
+measurements). The body is upright from the waist knuckle at 1.8 m (`lean: 1`, as the real
+"sustina" body with its gutter built into the side) and tucked in below it to 0.9 m.
+
+- **Face** - a `cabFace` (`E235_FACE`) as wide as the body: upright, plan corners rounded 0.25 m,
+  the lower lip curving back under it and the crown over to the roof. The livery's frame colour
+  (`frame`) covers it and wraps 0.7 m back along the cab sides (`wrap`, `dJoin: 0.7`). One black
+  field 1.96 - 3.51 m (half width 1.37 m, top corners rounded) holds the destination board, the LED
+  head and tail lamps at its top corners and the big windscreen (2.17 - 3.19 m, its own lighter
+  `screen` glass). Under it the halftone: square decals of `dotBottom` growing downward over a
+  `dotTop` ground (Yamanote green dots on black, Yokosuka blue dots on cream). No gangway door.
+- **Sides** - `layout` from JR East's door pitch (centres 4.82 m apart, the outer ones 2.52 m from
+  the body's ends; the cab car's first door 3.6 m ahead of its second), each door as two leaves
+  sliding apart with a narrow window each; one 1.9 m window between doors, 0.8 m ones at the ends;
+  the cab window and the crew door's outline and window; the JR emblem.
+- **Liveries** - `yamanote`: plain stainless, green door leaves and green panels over them under the
+  eaves (`overDoors`); `yokosuka` (E235-1000): cream-over-blue stripes under the windows and under
+  the eaves, stainless doors, the blue face.
+- **Fittings** (`e235Fittings`) - the roof's air conditioner, two antennas on the cab roof, the
+  skirt under the face with its cheeks, the coupler under the face (the kit draws none at a cab
+  face), the underfloor boxes. The bogies sit at the real positions on the 19.57 m body
+  (`endBogies`), the single-arm pantograph over the middle car's rear bogie (`pantographAt`).
+
 ## Deviations
 
 - The GSE's and the Hinotori's real cars are articulated or on their own bogies in ways the kit
   approximates with two bogies a car; the GSE's raised driver's cab over the saloon is the
   nose's crown.
-- The E235's and E259's wrap-round windows and the 103's later variants are simplified.
+- The E259's wrap-round windows and the 103's later variants are simplified.
+- The E235: the side windows' rounded corners are square (the kit's windows are rectangles); the
+  destination board is unlit; the halftone is coarser than the real one (7 rows of 0.077 m dots);
+  the distant model shows no green doors (the series LOD paints only bands); the end car's body is
+  0.1 m longer behind the cab than the real one (the face's tip 0.07 m from the coupling plane, the
+  kit's length check). The lamps sit at the face's top corners and there is no gangway door, as in
+  every photograph of the -0 and -1000 subseries.
 
 ## Checking
 
