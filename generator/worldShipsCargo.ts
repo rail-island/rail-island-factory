@@ -274,19 +274,125 @@ export function aframaxSpec(p?: ParamValues): ShipSpec {
 }
 
 export const PRODUCT_PARAMS: readonly ParamSpec[] = [/* @__PURE__ */ tankerLivery("red", "navy", "green")];
+/**
+ * An MR product tanker of about 50,000 dwt (the Hyundai Mipo type; assets/ship-product-tanker):
+ * the house aft from 0.07 to 0.235 of the length, four full decks with the funnel casing on
+ * their after part, two more decks forward under a narrower wheelhouse with wings to the
+ * ship's sides; the freefall lifeboat on its ramp over the stern; the cargo lines in one
+ * bundle on their supports under the catwalk, which runs on posts from the house to the
+ * forecastle; the manifold amidships with a hose crane each side, its jib on a rest; tank
+ * hatches and P/V risers in rows; a tripod mast on the forecastle.
+ */
 export function productTankerSpec(p?: ParamValues): ShipSpec {
   const L = 183;
   const D = 19;
+  const B = 32.2;
+  const h = 3;
+  const y0 = D - 0.2;
+  const yd = (k: number): number => y0 + k * h;
+  const hw = 12.5;
+  const livery = pick(PRODUCT_PARAMS, p, "livery");
+  // the deck and its piping by livery: red decks and lines on the red ship, green on the navy one (the Kwinana photos)
+  const deckPaint: Record<string, Record<string, string>> = {
+    red: { hull: "#b52b22", deck: "#6e2c24", pipe: "#b8372b" },
+    navy: { hull: "#222b36", deck: "#3f6b4c", pipe: "#5b9468" },
+    green: { deck: "#5f6f62", pipe: "#dedcd4" },
+  };
+  const side = { y: h * 0.36, h: 1, w: 1, pitch: 5 };
+  const accommodation = (k: number, u: readonly [number, number], name: string, front = 6): Item => ({
+    k: "tier", u, y: [yd(k), yd(k + 1)], hw, lip: 0.35, windows: [side], front: { y: side.y, h: side.h, w: side.w, n: front }, name,
+  });
+  // a hose crane on its pedestal, its jib lowered aft onto a rest post (the kit crane's geometry)
+  const hoseCrane = (u: number, z: number): Item[] => {
+    const ch = 6;
+    const jib = 15;
+    const lift = -0.2;
+    const dir = Math.PI;
+    const ped = Math.max(0.6, jib * 0.06);
+    const yb = D + 0.8;
+    const ty = yb + ch + ped * 0.8 + Math.sin(lift) * jib;
+    const tu = u + Math.cos(dir) * (ped + Math.cos(lift) * jib);
+    return [
+      { k: "box", u: [u - 1.4, u + 1.4], z: [z - 1.4, z + 1.4], y: [D - 0.05, yb], mat: "steel", name: "hose crane pedestal" },
+      { k: "crane", u, z, y: yb, h: ch, jib, dir, lift, mat: "white", name: "hose crane" },
+      { k: "cyl", u: tu, z, y: [D - 0.05, ty - 0.3], r: 0.22, n: 6, mat: "white", name: "jib rest" },
+    ];
+  };
+  const tanks = spacedAt(56, 160, 6);
+  const supports = spacedAt(48, 168, 14);
+  const lines = [-0.5, -1.3, -2.1, -2.9, -3.7, -4.5];
+  const py = D + 0.9;
+  const cw = -2.5;
+  const mid = 92;
+  const ff = { u: 8.6, len: 7.5, tilt: 0.6, y: yd(3) };
+  const ffr = ff.len * 0.17;
+  const lowU = ff.u - Math.cos(ff.tilt) * ff.len * 0.55;
+  const lowY = ff.y + ffr - Math.sin(ff.tilt) * ff.len * 0.55 - Math.cos(ff.tilt) * ffr;
   return {
     kind: "cargo",
-    hull: oceanHull({ length: L, beam: 32.2, depth: D, draft: 12, entry: 0.2, run: 0.2, boot: 1, forecastle: [12, 2.4], fine: true }),
-    livery: TANKER_LIVERIES[pick(PRODUCT_PARAMS, p, "livery")]!,
+    hull: oceanHull({ length: L, beam: B, depth: D, draft: 12, entry: 0.2, run: 0.2, boot: 1, forecastle: [12, 2.4], fine: true }),
+    livery: { ...TANKER_LIVERIES[livery]!, ...deckPaint[livery] },
     items: [
-      ...aftHouse({ u: [5, 25], D, decks: 6, hw: 12, wings: 16.1, funnel: { u: [6, 12], hw: 2.6, h: 9 }, detail: true, freefall: 7 }),
-      ...tankDeck(30, 170, D, 15, 0.8),
-      { k: "crane", u: 100, z: 0, y: D, h: 8, jib: 22, dir: Math.PI, lift: 0.5, mat: "white", name: "manifold crane" },
-      mast(L - 7, D + 2.4, D + 13, 0.25),
-      ...fittings({ L, B: 32.2, D, fc: [12, 2.4], aft: [], draft: 12 }),
+      // the house: four decks over its whole length, the funnel casing on their after part
+      { k: "tier", u: [12, 43], y: [yd(0), yd(1)], hw, lip: 0.35, windows: [{ y: 0.9, h: 1.1, w: 1, pitch: 4.5 }], front: { y: 0.9, h: 1.1, w: 1, n: 5 }, name: "upper deck house" },
+      accommodation(1, [12, 43], "accommodation deck A"),
+      accommodation(2, [12, 43], "accommodation deck B"),
+      accommodation(3, [12, 43], "accommodation deck C"),
+      // the two decks forward of the funnel, the bridge deck as wide as the house, the wheelhouse narrower
+      accommodation(4, [24, 43], "accommodation deck D"),
+      { k: "tier", u: [26, 43], y: [yd(5), yd(6)], hw: 8, lip: 0.6, windows: [{ y: 0.95, h: 1.3, w: 1.3, pitch: 1.8 }], front: { y: 0.95, h: 1.3, w: 1.4, n: 9 }, wings: { hw: 16.1, h: h + 0.05, len: 3.4 }, name: "wheelhouse" },
+      funnel([15.5, 23.5], 3.4, [yd(4) - 0.2, D + 23], [["funnel", 0.8], ["black", 1]], 0.6),
+      ...exhausts([15.5, 23.5], 3.4, D + 23, 0.6),
+      mast(33, yd(6), D + 28, 0.25),
+      // the freefall lifeboat on its ramp over the stern: the platform off the house's after wall, the ramp's legs to the deck
+      { k: "freefall", ...ff },
+      { k: "box", u: [9.8, 12.3], z: [-2.2, 2.2], y: [ff.y - 0.35, ff.y + 0.05], mat: "steel", name: "lifeboat platform" },
+      ...[1, -1].map((sd): Item => rod([12, ff.y - 3, sd * 2], [10, ff.y - 0.3, sd * 2], 0.12, "steel", "platform strut")),
+      ...[1, -1].map((sd): Item => rod([lowU + 0.3, D - 0.05, sd * ffr * 0.7], [lowU + 0.3, lowY + 0.1, sd * ffr * 0.7], 0.14, "steel", "ramp leg")),
+      // the rescue boat in its cradle beside the house, under its davit
+      { k: "boats", at: [30], z: 14.3, y: D + 1.45, len: 6, r: 0.9, name: "rescue boat" },
+      ...[1, -1].flatMap((sd): Item[] => [
+        ...[28.2, 31.8].map((u): Item => ({ k: "box", u: [u - 0.2, u + 0.2], z: sd > 0 ? [13.4, 15.2] : [-15.2, -13.4], y: [D - 0.05, D + 0.7], mat: "steel", name: "boat cradle" })),
+        { k: "cyl", u: 33.6, z: sd * 12.75, y: [D - 0.05, D + 4.4], r: 0.2, n: 6, mat: "white", name: "davit post" },
+        rod([33.6, D + 4.2, sd * 12.75], [30, D + 4.2, sd * 14.3], 0.15, "white", "davit arm"),
+        rod([30, D + 4.2, sd * 14.3], [30, D + 2.3, sd * 14.3], 0.04, "rope", "davit fall"),
+      ]),
+      // foam monitors on their towers at the house front
+      ...[1, -1].flatMap((sd): Item[] => [
+        { k: "cyl", u: 45, z: sd * 8, y: [D - 0.05, D + 3.2], r: 0.35, n: 8, mat: "steel", name: "foam monitor tower" },
+        { k: "box", u: [44.2, 45.8], z: [sd * 8 - 0.8, sd * 8 + 0.8], y: [D + 3.2, D + 3.45], mat: "steel", name: "foam monitor platform" },
+        rod([45, D + 3.6, sd * 8], [46.4, D + 4.2, sd * 8], 0.16, "red", "foam monitor"),
+      ]),
+      // the cargo lines in one bundle on their supports, the fire main beside them, the catwalk over them on posts
+      { k: "pipes", u: [46, 170], z: lines, y: py, r: 0.25, mat: "pipe", name: "cargo lines" },
+      ...supports.map((u): Item => ({ k: "box", u: [u - 0.2, u + 0.2], z: [-4.9, -0.1], y: [D - 0.05, py], mat: "steel", top: false, name: "pipe support" })),
+      { k: "pipes", u: [46, 170], z: [1.4], y: D + 0.6, r: 0.18, mat: "red", name: "fire main" },
+      ...supports.map((u): Item => ({ k: "box", u: [u - 0.12, u + 0.12], z: [1.3, 1.5], y: [D - 0.05, D + 0.6], mat: "steel", top: false, name: "fire main support" })),
+      // (its walkway 8 cm over the first deck's roof where it enters the house, a landing down onto the forecastle)
+      { k: "catwalk", u: [43, 171.5], y: yd(1) + 0.08, z: cw, w: 1.4, pitch: 8 },
+      { k: "box", u: [171, 172.6], z: [cw - 0.7, cw + 0.7], y: [D + 1.8, yd(1) - 0.1], mat: "steel", name: "catwalk landing" },
+      // the safe ways along both sides
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [46, 170], z: sd > 0 ? [13.2, 13.6] : [-13.6, -13.2], y: [D - 0.02, D + 0.03], mat: "yellow", name: "safe way line" })),
+      // the manifold amidships: its platforms at the sides, the crossovers on their supports, the valves and drip trays
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [mid - 4, mid + 4], z: sd > 0 ? [10.5, 15.4] : [-15.4, -10.5], y: [D - 0.05, D + 0.4], mat: "steel", name: "manifold platform" })),
+      ...[-2.4, -0.8, 0.8, 2.4].flatMap((du, i): Item[] => [
+        rod([mid + du, D + 1.2, -15], [mid + du, D + 1.2, 15], 0.24, "pipe", `manifold crossover ${i + 1}`),
+        ...[-13, -8, 8, 13].map((z): Item => ({ k: "box", u: [mid + du - 0.15, mid + du + 0.15], z: [z - 0.15, z + 0.15], y: [Math.abs(z) > 9 ? D + 0.35 : D - 0.05, D + 1.0], mat: "steel", top: false, name: "crossover support" })),
+        ...[1, -1].map((sd): Item => ({ k: "cyl", u: mid + du, z: sd * 14, y: [D + 1.2, D + 2.1], r: 0.18, n: 6, mat: "steel", name: "manifold valve" })),
+      ]),
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [mid - 3.4, mid + 3.4], z: sd > 0 ? [14.6, 15.4] : [-15.4, -14.6], y: [D + 0.35, D + 0.8], mat: "steel", name: "drip tray" })),
+      ...hoseCrane(mid + 9, 7.5),
+      ...hoseCrane(mid + 9, -7.5),
+      // tank hatches and the P/V risers over each pair of tanks, the deepwell pumps' heads by the bundle
+      { k: "domes", u: [tanks[0]!, tanks[5]!], n: 6, r: 0.7, y: D, h: 1, z: 6, mat: "steel", name: "tank hatches" },
+      { k: "domes", u: [tanks[0]!, tanks[5]!], n: 6, r: 0.7, y: D, h: 1, z: -8, mat: "steel", name: "tank hatches" },
+      { k: "vents", at: tanks.flatMap((u) => [[u + 4, 11], [u + 4, -11]] as const), h: 4, r: 0.22, mat: "steel", name: "P/V risers" },
+      { k: "domes", u: [tanks[0]! - 3, tanks[5]! - 3], n: 6, r: 0.45, y: D, h: 1.4, z: 3.2, mat: "white", name: "cargo pump heads" },
+      { k: "domes", u: [tanks[0]! - 3, tanks[5]! - 3], n: 6, r: 0.45, y: D, h: 1.4, z: -6, mat: "white", name: "cargo pump heads" },
+      // the forecastle's tripod mast
+      mast(L - 7, D + 2.4, D + 15, 0.3),
+      ...[1, -1].map((sd): Item => rod([L - 10, D + 2.35, sd * 1.4], [L - 7, D + 10, 0], 0.16, "mast", "mast leg")),
+      ...fittings({ L, B, D, fc: [12, 2.4], aft: [2.5], draft: 12 }),
     ],
   };
 }
