@@ -82,7 +82,8 @@ on the Commons photograph of FO 105 and a side view of the LGB model
 
 - **RAe TEE II.** Drawn from eight photographs (assets/sbb-rae-tee/SOURCES.md) and de.wikipedia's
   figures: the driving car's own cab face (`TEE_FACE`): the full lower face with its tip at the
-  big twin-lamp pods on the corners of the bulging lower face (it stands 0.7 m ahead of the
+  big twin-lamp pods on the corners of the bulbous lower face (rounding down into the bumper and up
+  into the chrome strip, its corners sweeping back 1.0 - 1.25 m in plan; it stands 0.66 m ahead of the
   windscreen's foot), the TEE emblem with its rings, the red coupler cover beside the pocket, the louvred grille,
   the chrome strip, four windscreen panes wrapping onto the cab sides, the rear-rounded quarter
   window, the domed roof end with its top lamp; the cab side window on the right only, the
