@@ -1361,6 +1361,8 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-elbe-paddle": [
     { title: "Wikipedia: S\u00e4chsische Dampfschiffahrt", url: "https://en.wikipedia.org/wiki/S%C3%A4chsische_Dampfschiffahrt" },
     { title: "Wikimedia Commons: Dresden-Kleinzschachwitz, der Raddampfer \"Mei\u00dfen\".jpg", url: "https://commons.wikimedia.org/wiki/File:Dresden-Kleinzschachwitz,_der_Raddampfer_%22Mei%C3%9Fen%22.jpg" },
+    { title: "Wikimedia Commons: Dresden (1926).jpg", url: "https://commons.wikimedia.org/wiki/File:Dresden_(1926).jpg" },
+    { title: "Wikimedia Commons: Schiff Dresden in Pillnitz 2010-09-15.jpg", url: "https://commons.wikimedia.org/wiki/File:Schiff_Dresden_in_Pillnitz_2010-09-15.jpg" },
   ],
   "proc-vehicle-ship-emma-maersk": [
     { title: "Wikipedia: Emma M\u00e6rsk", url: "https://en.wikipedia.org/wiki/Emma_M%C3%A6rsk" },
@@ -1636,6 +1638,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-swiss-paddle": [
     { title: "Wikipedia: Paddle steamer", url: "https://en.wikipedia.org/wiki/Paddle_steamer" },
     { title: "Wikimedia Commons: Dampfschiff Stadt Luzern 1928.jpg", url: "https://commons.wikimedia.org/wiki/File:Dampfschiff_Stadt_Luzern_1928.jpg" },
+    { title: "Wikimedia Commons: DS Stadt Luzern02.JPG", url: "https://commons.wikimedia.org/wiki/File:DS_Stadt_Luzern02.JPG" },
   ],
   "proc-vehicle-ship-sydney-first-fleet": [
     { title: "Wikipedia: First Fleet-class ferry", url: "https://en.wikipedia.org/wiki/First_Fleet-class_ferry" },

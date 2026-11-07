@@ -29,9 +29,9 @@ in `assets/ship-<name>/SOURCES.md`.
 | `veh-ship-srn4` | SR.N4 Hovercraft | 56.4 x 23.2 x 14.9 | 0.3 (0.0201) | skirt | 2473 (100) | - |
 | `veh-ship-raketa` | Raketa Hydrofoil | 27.0 x 5.0 x 7.1 | 1.8 (0.2535) | raked / transom, on foils | 2704 (93) | - |
 | `veh-ship-jetfoil` | Boeing Jetfoil | 27.4 x 8.5 x 11.8 | 2.6 (0.2203) | raked / transom, on foils | 3203 (99) | livery: blue, red, green |
-| `veh-ship-swiss-paddle` | Swiss Lake Paddle Steamer | 62.5 x 7.5 x 12.8 | 1.5 (0.1172) | clipper / cruiser | 5333 (99) | - |
+| `veh-ship-swiss-paddle` | Swiss Lake Paddle Steamer | 63.5 x 7.8 x 24.5 | 1.6 (0.0652) | plumb / cruiser | 7572 (93) | - |
 | `veh-ship-sternwheeler` | Mississippi Sternwheeler | 116.0 x 21.0 x 28.4 | 2.6 (0.0915) | raked / sternwheel | 8187 (93) | - |
-| `veh-ship-elbe-paddle` | Elbe Paddle Steamer | 68.7 x 6.6 x 10.4 | 0.9 (0.0865) | plumb / cruiser | 5431 (99) | - |
+| `veh-ship-elbe-paddle` | Elbe Paddle Steamer | 68.7 x 6.9 x 10.6 | 1.0 (0.0943) | plumb / cruiser | 6073 (99) | - |
 | `veh-ship-bateau-mouche` | Bateau-Mouche | 55.0 x 10.0 x 6.6 | 1.3 (0.197) | raked / transom | 4433 (93) | - |
 | `veh-ship-nile-cruiser` | Nile Cruise Boat | 72.0 x 14.4 x 15.2 | 1.6 (0.1053) | raked / transom | 6767 (93) | - |
 | `veh-ship-amazon-riverboat` | Amazon Riverboat | 30.0 x 7.0 x 10.8 | 1.8 (0.1667) | raked / transom | 3941 (93) | colour: blue, green, red, yellow |
@@ -54,7 +54,16 @@ Notes:
   bow as a tier between the hulls), the SR.N4 on its skirt with its four propeller pylons, the
   Raketa and the Jetfoil lifted on their foils.
 - **Paddle steamers** carry side wheels in their boxes, the sternwheeler a stern wheel on its
-  beams behind the transom (the model's length then exceeds the hull's).
+  beams behind the transom (the model's length then exceeds the hull's). The Elbe and Swiss
+  steamers close their wheels in the paddle item's `casing` (flat outer face, end walls and top,
+  its foot over the water) and widen the main deck with its `sponson` guards fore and aft; the
+  deck over the casings ("paddle bridge") lies flush with the sun or upper deck. The Elbe
+  steamer follows the Dresden (1926): the shaft at 0.67 L, the varnished wheelhouse on the sun
+  deck ahead of the white funnel, the funnel mast forward of the casings, the awning over the
+  sun deck, green boot-topping. The Swiss steamer follows the Stadt Luzern (1928): the shaft at
+  0.41 L, the arched fanlight on the casing, the upper saloon under its flat roof, the
+  bridge-deck house and wheelhouse, the white funnel with its black top and red cowls, the
+  promenade deck forward on stanchions, two masts raked aft, red-brown boot-topping.
 - **Cruise ships** stack glazed decks over the hull-coloured public decks; Icon carries its
   AquaDome forward and the water slides aft. Oasis's open Central Park between two towers is
   drawn as one superstructure with a green strip (approx.).
