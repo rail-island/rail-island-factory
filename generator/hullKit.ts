@@ -122,7 +122,11 @@ export type Item =
   | { k: "hatches"; u: readonly [number, number]; n: number; hw: number; y: number; h: number; mat?: string; gap?: number; name?: string; coaming?: number; coamingMat?: string; ridge?: number; ribs?: number; ribMat?: string }
   | { k: "containers"; u: readonly [number, number]; bays: number; hw: number; y: number; tiers: number; groups?: number; seed?: number; name?: string; rows?: number }
   | { k: "domes"; u: readonly [number, number]; n: number; r: number; y: number; h: number; mat?: string; z?: number; name?: string }
-  | { k: "spheres"; u: readonly [number, number]; n: number; r: number; y: number; base?: number; mat?: string; cover?: string; name?: string }
+  | { k: "spheres"; u: readonly [number, number]; n: number; r: number; y: number; base?: number; mat?: string; cover?: string; name?: string;
+      /** A tank cover: the dome's height over its equator, drawn as a spherical cap (default r, a hemisphere). */
+      cap?: number;
+      /** A flat walkway this wide round the equator: the skirt this much outside the dome, its top closed, with a railing. */
+      ring?: number }
   | { k: "tanks"; u: readonly [number, number]; n: number; r: number; y: number; z?: readonly number[]; mat?: string; name?: string }
   | { k: "pipes"; u: readonly [number, number]; z: readonly number[]; y: number; r: number; mat?: string; name?: string }
   | { k: "helideck"; u: number; y: number; r: number; z?: number; legs?: number; name?: string }
@@ -965,6 +969,30 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
             const a = (j / 6) * (Math.PI / 2);
             st.push([it.y + Math.sin(a) * it.r, Math.max(0.02, Math.cos(a) * it.r), 0]);
           }
+          if (it.cap !== undefined || it.ring !== undefined) {
+            // a tank cover: a spherical cap of height `cap` over the equator's circle, on a skirt out to the
+            // walkway round the equator (its top closed under the dome) with its railing
+            const sides = 28;
+            const h = it.cap ?? it.r;
+            const R = (it.r * it.r + h * h) / (2 * h);
+            const a0 = Math.asin(Math.min(1, it.r / R));
+            const cover = Array.from({ length: 7 }, (_, j) => {
+              const a = a0 * (1 - j / 6);
+              return [it.y + R * Math.cos(a) - (R - h), ngon(sides, Math.max(0.02, R * Math.sin(a)), 0, x(u), 0)] as const;
+            });
+            for (let j = 0; j + 1 < cover.length; j++) m.loft(it.mat ?? "tank", cover[j]![1], cover[j]![0], cover[j + 1]![1], cover[j + 1]![0], j + 2 === cover.length);
+            const ro = it.r + (it.ring ?? 0.02);
+            m.prism(it.cover ?? it.mat ?? "tank", ngon(sides, ro, 0, x(u), 0), it.base ?? c.deck(u) - 0.2, it.y, true);
+            if (it.ring !== undefined && it.ring > 0.3) {
+              const pts = ngon(sides, ro - 0.1, 0, x(u), 0);
+              pts.forEach((p, j) => {
+                const q = pts[(j + 1) % pts.length]!;
+                m.rod("steel", [p[0], it.y + 1.05, p[1]], [q[0], it.y + 1.05, q[1]], 0.04, 4, false);
+                if (j % 2 === 0) m.box("steel", p[0], p[1], 0.06, 0.06, it.y - 0.02, it.y + 1.03, 0, false);
+              });
+            }
+            continue;
+          }
           // the dome above the deck: rings from its equator to its top
           const rings = st.map(([y, r]) => [y, ngon(16, r, 0, x(u), 0)] as const);
           for (let j = 0; j + 1 < rings.length; j++) m.loft(it.mat ?? "tank", rings[j]![1], rings[j]![0], rings[j + 1]![1], rings[j + 1]![0], j + 2 === rings.length);
@@ -1734,7 +1762,7 @@ function lodItem(c: ShipCtx, it: Item): LodPrim[] {
         const sq = (r: number): Array<[number, number]> => [[xc + r, 0], [xc, r], [xc - r, 0], [xc, -r]];
         return {
           tris: 10, weight: it.r * it.r * it.r * 3,
-          draw: (m) => m.scope("tank", () => lodStack(m, [[it.y - it.r * 0.3, sq(it.r * 1.1)], [it.y + it.r * 0.9, sq(it.r * 0.45)]], [it.mat ?? "tank"], it.mat ?? "tank")),
+          draw: (m) => m.scope("tank", () => lodStack(m, [[it.y - it.r * 0.3, sq(it.r * 1.1)], [it.y + (it.cap ?? it.r) * 0.9, sq(it.r * 0.45)]], [it.mat ?? "tank"], it.mat ?? "tank")),
         };
       });
     }
