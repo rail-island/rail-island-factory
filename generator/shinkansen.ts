@@ -839,12 +839,15 @@ const S700_BANDS: readonly Band[] = [[0, 1.47, "body"], [1.47, 1.56, "blue"], [1
 /** The lamp housings' outline, viewer's right (mirrored for the left): a slit under the windscreen, its outer end slanted. */
 const S700_LAMP: Pt[] = [[0.13, 2.12], [0.74, 2.12], [0.82, 2.23], [0.15, 2.23]];
 const S700_FACE: SeriesCabFace = {
-  dJoin: S700_DJOIN, dSide: S700_DJOIN - 0.4, reach: 0, first: 11.2, roofFrom: 3.3, cols: [8, 6, 1, 2], tolerance: 0.015,
+  dJoin: S700_DJOIN, dSide: S700_DJOIN - 0.4, reach: 0, first: 11.2, roofFrom: 3.3, cols: [8, 6, 3, 2], tolerance: 0.015,
   profile: [[0.75, 0.4], [0.85, 0.15], [0.95, 0.04], [1.05, 0.0], [1.25, 0.0], [1.45, 0.08], [1.65, 0.28], [1.85, 0.62], [2.05, 1.05], [2.25, 1.5], [2.45, 1.95], [2.7, 2.5], [2.95, 3.15], [3.15, 4.0], [3.35, 5.2], [3.5, 6.5], [3.6, 7.9], [3.65, S700_DJOIN]],
   // the plan: the beak broad with tight corners, the cab over it rounding back in deep elliptic corners
   corner: [[0.75, 0.6], [1.05, 0.55], [1.4, 0.65], [1.8, 0.8], [2.2, 0.9], [2.6, 0.95], [3.0, 1.0], [3.4, 1.0], [3.65, 0.4]],
   cornerDepth: [[0.75, 1.3], [1.05, 1.2], [1.4, 1.4], [1.8, 1.9], [2.2, 3.0], [2.6, 4.5], [3.0, 4.2], [3.4, 2.4], [3.65, 0.4]],
-  rows: [0.75, 0.85, 0.95, 1.05, 1.25, 1.45, 1.65, 1.85, 2.05, 2.25, 2.45, 2.7, 2.95, 3.15, 3.35, 3.5, 3.6, 3.65],
+  // the cab hump narrower than the beak's cheeks (C1 head-on, 229 px/m: 2.79 m wide at the lamps, 2.69 m at the
+  // windscreen's foot, the beak 3.38 m), flaring out to the body's sides behind the windscreen
+  planInset: [[1.6, 0], [1.7, 0.02], [1.8, 0.06], [1.9, 0.12], [2.0, 0.18], [2.1, 0.23], [2.2, 0.27], [2.3, 0.3], [2.45, 0.32], [2.8, 0.32], [3.0, 0.3], [3.15, 0.25], [3.3, 0.17], [3.45, 0.08], [3.6, 0]],
+  rows: [0.75, 0.82, 0.9, 0.97, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.58, 2.7, 2.83, 2.95, 3.05, 3.15, 3.25, 3.35, 3.43, 3.5, 3.56, 3.6, 3.65],
   // the nose in the body's colour over a grey lip
   bands: () => [[0, 0.95, "skirtG"], [0.95, 9, "body"]],
   paint: [

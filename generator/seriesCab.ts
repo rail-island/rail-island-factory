@@ -46,6 +46,8 @@ export interface SeriesCabFace {
   lod?: { profile: Pt[]; corner: Pt[]; rows: number[]; bulge?: number | readonly Pt[]; glass?: boolean };
   /** The corner arc's depth over its radius by height (cabNose.ts `cornerRatio`). */
   cornerRatio?: Pt[];
+  /** The face standing inside the body's half width by height, [y, inset] (cabNose.ts `planInset`): a cab narrower than the body below it. */
+  planInset?: Pt[];
   /** Grid rows, ascending, from the body's bottom to its crown (the profile's and the paint's heights). */
   rows: number[];
   /** The face's paint by height (default the livery's `front`, else its side bands); the roof's colour from `roofFrom` up. */
@@ -166,8 +168,9 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   return out;
 }
 
-const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "cornerDepth" | "cornerRatio" | "bulge" | "rows"> => ({
+const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "cornerDepth" | "cornerRatio" | "bulge" | "rows" | "planInset"> => ({
   e, xTip, profile: f.profile, half, corner: f.corner, rows: f.rows, ...(f.bulge ? { bulge: f.bulge } : {}), ...(f.cornerDepth ? { cornerDepth: f.cornerDepth } : {}), ...(f.cornerRatio ? { cornerRatio: f.cornerRatio } : {}),
+  ...(f.planInset ? { planInset: f.planInset } : {}),
 });
 
 const rect = (x0: number, x1: number, y0: number, y1: number): Pt[] => {

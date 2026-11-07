@@ -122,6 +122,9 @@ combinations hashed before and after):
   rounded to a point in plan, the Giruno's); its `paint` lays colour fields over the whole
   surface, face and cab sides alike, between front and back edges in [y, d] (a field that runs
   from the front round the corners and back along a long nose: the Giruno's red and black);
+  its `planInset` ([y, inset], cabNose.ts) stands the face and its corners that far inside the
+  body's half width, the straight run behind them flaring out to the body's side by `dSide`: a
+  cab hump narrower than the beak under it (the 700's); unset, the face is as before;
 - `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
   cars (its rig support names both sections) and the cars' skirts are cut open at their inner
   ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
@@ -170,7 +173,10 @@ windows at 1.04 m pitch, the camera at the sill's height; the fronts of C1 and C
   (2.12 - 2.23 m, lat 0.13 - 0.82 m, two lamps each), 1.2 - 1.5 m behind the tip; the windscreen
   from 2.47 to 2.95 m, its front pane 1.48 m wide 2.0 - 3.15 m behind the tip and its side panes
   wrapped round the corners to 3.9 - 5.0 m, in one dark surround. The plan: tight corners on the
-  broad beak, elliptic corners up to 4.5 m deep at the windscreen.
+  broad beak, elliptic corners up to 4.5 m deep at the windscreen; over the beak's cheeks the cab
+  hump stands up to 0.32 m inside the body's sides (`planInset`, from the C1 head-on at 229 px/m:
+  2.79 m wide at the lamps, 2.69 m at the windscreen's foot, the beak 3.38 m), the waist flaring
+  out to the sides by 9.1 m. The face's 32 rows keep its faceting below a thumbnail's notice.
 - **Bands** - the thick blue band under the windows (1.64 - 1.93 m) and the thin one under it
   (1.47 - 1.56 m), over the doors on every car; on the nose the thick band ends in a point 7.24 m
   behind the tip (its top corner 7.8 m, bottom 8.43 m), the thin band in a slanted cut at
@@ -187,9 +193,8 @@ windows at 1.04 m pitch, the camera at the sill's height; the fronts of C1 and C
   their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses and the
   N700S's wing edges are approximations.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
-  measurement dome, the observation windows) is not drawn. The 700's cab face is convex in plan
-  at every height, so the cab over the beak is not drawn narrower than the beak's cheeks, and
-  the windscreen's side panes wrap out to the body's edge; the beak is no wider than the body. Its
+  measurement dome, the observation windows) is not drawn. The 700's beak is no wider than the
+  body, and its hump's waist is one straight flare at each height. Its
   distant model carries the side bands on to the nose's tip (the cab face's distant end paints by height).
 - The E4's double-deck cars have the doors at the lower deck's level and the standard cabin.
 
