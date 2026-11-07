@@ -1115,7 +1115,7 @@ export const E5: ShinkansenSeries = {
   nose: nose(0.1, 1, 2, [[0, 3.65]], [[0, 3.0]], [[0, 1.45]], [[0, 1.05]], [[0, 0.75]]),
   windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: E5_FACE, fittings: e5Fittings,
   // the distant canopy: its glass visor
-  lodRoof: { d: [6.4, 10.4], hw: 0.85, y: [2.3, 3.25], mat: "e5Glass" },
+  lodRoof: { d: [6.4, 10.4], hw: 0.85, y: [2.3, 3.25], mat: LOD_GLASS },
   // the windows standing on the stripe; the door's narrow window high in the leaf; the crew door
   // ahead of the passenger door behind the nose
   windows: [[2.25, 2.72]], windowW: 0.66, pitch: 1.04, door: [1.3, 3.2, 2.45, 3.0], doorW: 1.0, doorGlassW: 0.3,
