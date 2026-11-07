@@ -1,7 +1,7 @@
 # Steam locomotives
 
 **Covers** - the nine steam designs transferred from vlakosimdb (`db/train/loco/steam`): their ids, the `unit` parameter that makes a locomotive and its tender two variants of one design, the shared builder, measurements and deliberate deviations, the native comparison and the tests.
-**Code** - `generator/steamLocos.ts` (the specs, `STEAM_DESIGNS`, `STEAM_LOCOS`, `UNIT_PARAM`, `steamSpec`), `generator/steamLoco.ts` (`buildLoco`, `LocoSpec`), `generator/steamParts.ts` (`Steam`: boiler, chimney, domes, cab, prisms, volumes, running board, deflectors, draw gear, lamps, plates), `generator/steamGear.ts` (running gear and its animation), `generator/steamComparison.ts`, `generator/steamReport.ts`, `generator/strokeFont.ts`, `test/steam.test.ts`
+**Code** - `generator/steamLocos.ts` (the specs, `STEAM_DESIGNS`, `STEAM_LOCOS`, `UNIT_PARAM`, `steamSpec`), `generator/steamLoco.ts` (`buildLoco`, `LocoSpec`, `turningUnits`), `generator/steamParts.ts` (`Steam`: boiler, chimney, domes, cab, prisms, volumes, running board, deflectors, draw gear, lamps, plates), `generator/steamGear.ts` (running gear and its animation), `generator/steamComparison.ts`, `generator/steamReport.ts`, `generator/strokeFont.ts`, `test/steam.test.ts`, `test/steamOnCurve.test.ts`, `test/railCurve.ts`
 **See also** - [animation.md](animation.md) (the running-gear animation), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [wagons.md](wagons.md) (the comparison method), the sources under `assets/steam-<name>/` (`SOURCES.md`, `COMPARISON-<key>.md`)
 
 ## The designs
@@ -59,11 +59,44 @@ bands), smoke deflectors, bogie side frames, buffer beams with buffers and
 coupling (4 mm proud of the body end, a shorter draw gear between a locomotive
 and its tender), lamps and number plates, cylinders with valve chests, slide
 bars, motion brackets and expansion-link brackets - and then the moving parts
-of `RunningGear` and the `running` clip ([animation.md](animation.md)). A
-spec whose gear names a `swivel` unit (the 636 below; the Big Boy,
-[us-steam.md](us-steam.md)) splits its frame at `swivel.x1` and draws the front engine - that frame, the
-truck frames ahead of it, its cylinders and axle boxes and its moving gear - as
-a rail bogie inside the body, which the game turns under the boiler.
+of `RunningGear` and the `running` clip ([animation.md](animation.md)). A long
+wheelbase is split into turning units, each drawn as a rail bogie the game turns
+on the track (below).
+
+## On curves
+
+The game lays a rail vehicle's body on the chord between its two outermost
+supports and turns each bogie on the track at its own centre
+([vehicle-rig.md](vehicle-rig.md)). A rigid steam frame laid on that chord leaves
+its middle wheels beside the rails: on a curve of 40 studs the Big Boy's rear
+drivers stood 2.1 studs off the track centre line (the gauge is about 2.15), a
+Pacific's or Mikado's middle drivers 0.6 - 1.4. So `turningUnits(spec)`
+(`steamLoco.ts`) splits the running gear of every vehicle whose wheelbase
+reaches `UNIT_WHEELBASE` (5.5 m) into **turning units**, front first, `bogie0`,
+`bogie1`, ...:
+
+- every **carrying truck** - the carrying wheels inside one of the spec's truck
+  frames (`bogies`), with that frame, or a run of neighbouring carrying axles (a
+  pony truck, a trailing axle);
+- every **engine** - its coupled wheels with its cylinders, slide bars, rods and
+  valve gear, and the plate frames from its cylinders to its last driver (two
+  engines meet in the middle of the frame between them: the Big Boy, the 636);
+- a tender's **trucks**.
+
+The body - boiler, cab, running board, the rest of the plate frames, the pilot
+and draw gear - rests on the outermost units, so no wheel stays on it. A unit
+whose wheels are its only ones (a short tank engine, the Rocket, a tender on
+rigid axles) is not split. It is not how a real rigid locomotive rides, whose
+frame carries its coupled wheels and whose trucks swing beneath it: here the body
+swings over the coupled wheels instead (half a stud on a 40-stud curve) and the
+cylinders, riding their engine, swing out from under the smokebox as an
+articulated locomotive's do. In exchange every wheelset stands within 0.35 studs
+of the track centre line on that curve (`test/steamOnCurve.test.ts`, with the
+game's placement copied in `test/railCurve.ts`). The motion animates within each
+unit's bogie exactly as on a rigid frame (`test/usSteam.test.ts`); a turning unit
+is `RunningGear`'s `units` (steamGear.ts), and `buildLoco(spec, [])` draws the
+whole gear on a rigid frame. Plate and truck frames are drawn without their
+undersides (`Steam.sideFrame`), never seen from above the rails.
 
 ## Deliberate deviations
 
@@ -75,11 +108,10 @@ a rail bogie inside the body, which the game turns under the boiler.
   XML clip to 17.8 m where the BMP paints it to 16.9 m.
 - **456.0, 636**: 1.32 m / 1.3 m coupled wheels and the strokes are read from
   the texture and the XML notches; no class article could be checked.
-- **Articulation**: the 636's front engine - the leading axle, the three front
-  drivers, the front cylinders and motion and the frame to source x 8.3 - is the
-  rail bogie `bogie0` (`swivel`), which the game turns under the boiler; it turns
-  about its axles' mean rather than the real locomotive's hinge. Three-cylinder classes (477.0, 498.1) show only their outside
-  cylinders.
+- **Articulation**: the 636's leading axle and both its engines are turning units
+  ("On curves"), each turning about its own axles' mean rather than the real
+  Mallet's hinge, where the rear engine is fixed to the boiler. Three-cylinder
+  classes (477.0, 498.1) show only their outside cylinders.
 - **386**: the skirts reach 0.2 m above the rail as in the XML, so most of the
   motion is hidden; it is drawn and animated without valve gear.
 - Smoke deflector plates that lean inward in the XML are drawn upright; a

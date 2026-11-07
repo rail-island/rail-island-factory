@@ -8,7 +8,7 @@
 // The moving parts (wheelsets, rods, valve gear) are steamGear.ts.
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
-import type { Vec3 } from "./meshCore.ts";
+import { rect, type Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 
@@ -101,6 +101,18 @@ export class Steam {
   /** The box on side s: z from a to b (both >= 0), mirrored for s < 0. */
   sideBox(mat: string, s: number, x0: number, x1: number, y0: number, y1: number, a: number, b: number): void {
     this.box(mat, x0, x1, y0, y1, ...side(s, a, b));
+  }
+
+  /**
+   * The box on side s without its bottom face: plate and truck frames, whose
+   * underside, below axle height between the wheels, is only seen from under
+   * the rails.
+   */
+  sideFrame(mat: string, s: number, x0: number, x1: number, y0: number, y1: number, a: number, b: number): void {
+    const [z0, z1] = side(s, a, b);
+    const [u0, u1] = [Math.min(this.X(x0), this.X(x1)), Math.max(this.X(x0), this.X(x1))];
+    const [w0, w1] = [Math.min(z0, z1), Math.max(z0, z1)];
+    this.m.prism(mat, rect(u1 - u0, w1 - w0, (u0 + u1) / 2, (w0 + w1) / 2), y0, y1);
   }
 
   /** A horizontal cylinder along x from source x0 to x1 about (z, y). */

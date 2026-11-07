@@ -237,8 +237,12 @@ the `unit` parameter (`locomotive` default, `tender`). Their wheelsets, rods and
 valve gear are parts animated by the `running` clip (`steamGear.ts`,
 docs/models/animation.md): keep each moving piece in its own z plane, keep
 spoke counts so a tyre has twice the spokes in facets, and check posed frames
-(`poseGlb`) for flicker as `test/steam.test.ts` does. A rigid vehicle without
-moving parts stays one body node plus its bogie nodes.
+(`poseGlb`) for flicker as `test/steam.test.ts` does. A long wheelbase rides
+turning units - each carrying truck and each engine a rail bogie the game turns
+on the track (`turningUnits`, docs/models/steam-locomotives.md "On curves"); a new
+locomotive's wheels must pass `test/steamOnCurve.test.ts` (within 0.35 studs of
+the track on a 40-stud curve). A rigid vehicle without moving parts stays one body
+node plus its bogie nodes.
 
 Other moving parts follow the same pattern: wheels with spokes roll by distance
 (`spin` parts and `rollWheels`, `rolling.ts`), and a horse tram's horse is a tree of

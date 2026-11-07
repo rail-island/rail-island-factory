@@ -68,8 +68,8 @@ describe("rail supports", () => {
       const t = nodes[i]!.translation!;
       expect(t[0]).toBeCloseTo(s.x, 3);
       expect(t[1]).toBeGreaterThan(0.25);
-      // up to the DRG E 18's 1.6 m drivers (axle at 0.8 m)
-      expect(t[1]).toBeLessThan(0.82);
+      // up to a steam engine unit's (steamLoco.ts turningUnits): the K4s's 80 in drivers, axle at 1.01 m
+      expect(t[1]).toBeLessThan(1.03);
       expect(t[2]).toBe(0);
       // its own triangles reach either side of the pivot along x
       const own = collectTriangles({ ...json, scenes: [{ nodes: [i] }], scene: 0 }, bin);
@@ -91,8 +91,8 @@ describe("rail supports", () => {
     }
   });
 
-  it("gives a two-axle vehicle and a steam locomotive their outermost wheelsets, no node", () => {
-    for (const id of ["proc-vehicle-csd-be31", "proc-vehicle-cd-810", "proc-vehicle-legacy-covered-wagon", "proc-vehicle-csd-498-1"]) {
+  it("gives a two-axle vehicle and a short-wheelbase steam vehicle their outermost wheelsets, no node", () => {
+    for (const id of ["proc-vehicle-csd-be31", "proc-vehicle-cd-810", "proc-vehicle-legacy-covered-wagon", "proc-vehicle-csd-m112"]) {
       const supports = RAIL.find((d) => d.id === id)!.build().rig!.supports!;
       expect(supports, id).toHaveLength(2);
       expect(supports.every((s) => !s.node && s.axles === 1 && s.sections[0] === 0), id).toBe(true);
