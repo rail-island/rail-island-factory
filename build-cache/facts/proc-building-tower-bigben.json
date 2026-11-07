@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"time\",\"time1010\"]]": [
+    13.800000190734863,
+    96,
+    13.800000190734863
+   ]
+  }
  }
 }

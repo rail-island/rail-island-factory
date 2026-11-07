@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"size\",\"compact\"]]": [
+    14,
+    7.799999952316284,
+    8
+   ]
+  }
  }
 }

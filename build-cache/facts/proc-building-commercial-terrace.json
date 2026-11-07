@@ -29,6 +29,17 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.75,
+    14.1899995803833,
+    9.649999618530273
+   ],
+   "[[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"storeys\",\"3\"],[\"width\",\"wide\"]]": [
+    14.149999618530273,
+    14.1899995803833,
+    9.649999618530273
+   ]
+  }
  }
 }

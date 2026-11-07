@@ -29,6 +29,22 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"layout\",\"courtyard\"],[\"roof\",\"conical\"],[\"towers\",\"round\"],[\"walls\",\"crenellated\"],[\"windows\",\"slits\"]]": [
+    72.44999694824219,
+    37,
+    62.45000076293945
+   ],
+   "[[\"layout\",\"fortress\"],[\"roof\",\"conical\"],[\"towers\",\"round\"],[\"walls\",\"crenellated\"],[\"windows\",\"slits\"]]": [
+    72.44999694824219,
+    21,
+    62.45000076293945
+   ],
+   "[[\"layout\",\"keep\"],[\"roof\",\"conical\"],[\"towers\",\"round\"],[\"walls\",\"crenellated\"],[\"windows\",\"slits\"]]": [
+    38.45000076293945,
+    37,
+    34.45000076293945
+   ]
+  }
  }
 }

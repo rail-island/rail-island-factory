@@ -29,6 +29,22 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"height\",\"medium\"],[\"style\",\"striped\"]]": [
+    6,
+    27.049999237060547,
+    6
+   ],
+   "[[\"height\",\"short\"],[\"style\",\"steel\"]]": [
+    6,
+    15.050000190734863,
+    6
+   ],
+   "[[\"height\",\"tall\"],[\"style\",\"striped\"]]": [
+    6,
+    41.04999923706055,
+    6
+   ]
+  }
  }
 }

@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"chimney\",\"stone\"],[\"entrance\",\"porch\"],[\"framing\",\"braced\"],[\"pitch\",\"steep\"],[\"roof\",\"terracotta\"],[\"timber\",\"oak\"],[\"walls\",\"ivory\"]]": [
+    8.423781394958496,
+    8.25,
+    9.474999904632568
+   ]
+  }
  }
 }

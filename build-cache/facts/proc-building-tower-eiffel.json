@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[]": [
+    125,
+    330,
+    125
+   ]
+  }
  }
 }

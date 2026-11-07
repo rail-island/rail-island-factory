@@ -29,6 +29,17 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"type\",\"chemical\"]]": [
+    36,
+    18.059999465942383,
+    28
+   ],
+   "[[\"type\",\"refinery\"]]": [
+    36,
+    24.059999465942383,
+    28
+   ]
+  }
  }
 }

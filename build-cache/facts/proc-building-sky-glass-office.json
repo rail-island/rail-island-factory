@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"glazing\",\"original\"],[\"helipad\",\"none\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"size\",\"compact\"],[\"structure\",\"original\"]]": [
+    21.5,
+    51.79999923706055,
+    24.800000190734863
+   ]
+  }
  }
 }
