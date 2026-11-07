@@ -52,7 +52,21 @@ export interface NoseLayer {
   where?: { face?: boolean; side?: boolean; y?: readonly [number, number] };
 }
 
+/**
+ * A nose's scan, shareable between noses that differ only in their end (`e`) and tip (`xTip`):
+ * the layers' intervals and the scan's queries depend on neither (only the model points do), so a
+ * design drawing the same face at several places along a train works it out once (the same values,
+ * so the same bytes). The caller keys it; CabNose fills it.
+ */
+export interface NoseScan {
+  memo: Map<string, [number, number] | null>;
+  scanCols: Map<string, NoseQuery[]>;
+  cols?: { base: number[]; all: number[] };
+}
+
 export interface NoseSpec {
+  /** Shares the scan with other noses of the same shape and layers (see NoseScan). */
+  shared?: NoseScan;
   /** +1 the +X end, -1 the -X end. */
   e: number;
   /** Model x of the +X end's tip plane (mirrored for e = -1). */
@@ -73,6 +87,8 @@ export interface NoseSpec {
   bulge?: number | readonly Pt[];
   /** The corner arc's depth over its radius by height, [y, k] (default 1, a quarter circle): an elliptic corner, a nose rounded to a point in plan (the Giruno's; `cornerDepth` states the depth itself). */
   cornerRatio?: Pt[];
+  /** How far the face and its corners stand inside the body's half width, by height ([y, inset], ascending; default none): a cab narrower than the body, its straight run flaring out to the body's side by dSide (the Shinkansen 700's hump over its beak). */
+  planInset?: Pt[];
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
   rows: number[];
   base: string;
@@ -84,6 +100,13 @@ export interface NoseSpec {
   /** The material of the crown cap and the bottom cap. */
   capTop?: string;
   capBottom?: string;
+  /**
+   * The face's and corners' depth reshaped (default unchanged): given a point's lateral position
+   * (unsigned), height and the depth the slice gives it, the depth drawn - a relief across the face
+   * that no rounded slice holds (a canopy standing forward of grooves and wing edges, the N700S's).
+   * The straight run starts at the corner's reshaped depth; the depth stays clamped to `dJoin`.
+   */
+  reshape?: (lat: number, y: number, d: number) => number;
 }
 
 const lerp = (pts: Pt[], y: number): number => {
@@ -118,9 +141,9 @@ interface Interval {
 export class CabNose {
   readonly yBot: number;
   readonly yTop: number;
-  private readonly memo = new Map<string, [number, number] | null>();
+  private readonly memo: Map<string, [number, number] | null>;
   /** The scan's surface points by column (see `column`). */
-  private readonly scanCols = new Map<string, Array<NoseQuery & { p: Vec3 }>>();
+  private readonly scanCols: Map<string, NoseQuery[]>;
   /**
    * The heights every interval() scan samples, the same for every layer and
    * column, with the slice there (half width, corner radius, centreline face):
@@ -133,6 +156,8 @@ export class CabNose {
   constructor(readonly m: MeshBuilder, readonly s: NoseSpec) {
     this.yBot = s.rows[0]!;
     this.yTop = s.rows[s.rows.length - 1]!;
+    this.memo = s.shared?.memo ?? new Map();
+    this.scanCols = s.shared?.scanCols ?? new Map();
   }
 
   /** The surface at (u, y): the query a layer sees and the model point. */
@@ -142,8 +167,10 @@ export class CabNose {
   }
 
   /** at(u, y) given the slice at y: its half width, its plan's corner radius, its centreline face and the corner's depth (negative: its radius). */
-  private atSlice(u: number, y: number, hw: number, corner: number, dF: number, depth: number): NoseQuery & { p: Vec3 } {
+  private atSlice(u: number, y: number, hwBody: number, corner: number, dF: number, depth: number, withP = true): NoseQuery & { p: Vec3 } {
     const s = this.s;
+    // a face narrower than the body (planInset): its face and corners within hw, the straight run flaring out to the body's side
+    const hw = s.planInset ? hwBody - lerp(s.planInset, y) : hwBody;
     const r = Math.min(corner, hw * 0.98);
     // the corner's depth along the car: stated, or its radius times a ratio, else its radius (a round corner)
     const rd = depth >= 0 ? depth : s.cornerRatio ? lerp(s.cornerRatio, y) * r : r;
@@ -156,19 +183,23 @@ export class CabNose {
     if (au <= 1) {
       lat = au * a;
       d = dF + b * au * au;
+      if (s.reshape) d = s.reshape(lat, y, d);
     } else if (au <= 2) {
       const th = ((au - 1) * Math.PI) / 2;
       lat = a + r * Math.sin(th);
       d = dF + b + rd * (1 - Math.cos(th));
+      if (s.reshape) d = s.reshape(lat, y, d);
     } else {
-      lat = hw;
-      const dA = dF + b + rd;
+      lat = s.planInset && au <= 3 ? hw + (au - 2) * (hwBody - hw) : hwBody;
+      const dA = s.reshape ? s.reshape(hw, y, dF + b + rd) : dF + b + rd;
       const dS = Math.min(Math.max(dA, s.dSide), s.dJoin);
       d = au <= 3 ? dA + (au - 2) * (dS - dA) : dS + (au - 3) * (s.dJoin - dS);
     }
     d = Math.min(d, s.dJoin);
     const e = s.e;
-    return { u, y, d, lat: sg * lat, hw, side: au >= 2, p: [e * (s.xTip - d), y, -e * sg * lat] };
+    // the scan's queries skip the model point (no layer reads it): the same numbers, far fewer allocations
+    if (!withP) return { u, y, d, lat: sg * lat, hw: hwBody, side: au >= 2 } as NoseQuery & { p: Vec3 };
+    return { u, y, d, lat: sg * lat, hw: hwBody, side: au >= 2, p: [e * (s.xTip - d), y, -e * sg * lat] };
   }
 
   /** The outward normal at (u, y). */
@@ -182,7 +213,7 @@ export class CabNose {
   /** u of a lateral position on the face or its corner arc at height y. */
   uAt(lat: number, y: number): number {
     const s = this.s;
-    const hw = lerp(s.half, y);
+    const hw = lerp(s.half, y) - (s.planInset ? lerp(s.planInset, y) : 0);
     const r = Math.min(lerp(s.corner, y), hw * 0.98);
     const a = hw - r;
     const al = Math.abs(lat);
@@ -205,7 +236,8 @@ export class CabNose {
     const hit = this.memo.get(key);
     if (hit !== undefined) return hit;
     const L = this.s.layers[li]!;
-    const test = (y: number) => L.inside(this.at(u, y));
+    const s = this.s;
+    const test = (y: number) => L.inside(this.atSlice(u, y, lerp(s.half, y), lerp(s.corner, y), lerp(s.profile, y), s.cornerDepth ? lerp(s.cornerDepth, y) : -1, false));
     const S = this.samples();
     const n = S.n;
     let first = -1;
@@ -252,13 +284,13 @@ export class CabNose {
    * tests the same points, so they are worked out once a column (the scan was most of
    * a face's build when a face carries many layers).
    */
-  private column(u: number): Array<NoseQuery & { p: Vec3 }> {
+  private column(u: number): NoseQuery[] {
     const key = u.toFixed(7);
     let q = this.scanCols.get(key);
     if (!q) {
       const S = this.samples();
       q = new Array(S.n + 1);
-      for (let i = 0; i <= S.n; i++) q[i] = this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!, S.rd[i]!);
+      for (let i = 0; i <= S.n; i++) q[i] = this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!, S.rd[i]!, false);
       this.scanCols.set(key, q);
     }
     return q;
@@ -342,7 +374,8 @@ export class CabNose {
 
   /** Draws the nose: the painted surface and the crown and bottom caps. */
   draw(): void {
-    const { base, all } = this.columns();
+    const sh = this.s.shared;
+    const { base, all } = sh ? (sh.cols ??= this.columns()) : this.columns();
     const rows = this.s.rows;
     const P = (u: number, y: number) => this.at(u, y).p;
     for (let c = 0; c + 1 < base.length; c++) {

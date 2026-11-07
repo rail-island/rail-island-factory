@@ -142,6 +142,9 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   clockwise seen from the right (rolling forward). A smaller wheel turns
   `d_ref / d` times per cycle, rounded to a whole number of spoke pitches, and its
   tyre has twice the spokes in facets, so the loop closes on an identical pose.
+  A wheel with `box` (the JNR C62's Boxpok drivers) draws its spokes broad and
+  waisted at mid radius, the openings between them ovals, on a tyre of four facets
+  per spoke; `couplingMat` on the gear paints the coupling rods (C62 2's red ones) and `mainMat` the main rods (D51 51's, red too).
 - **Per engine side** (`-right`, `-left`, plus `-front`/`-rear` on the Mallet):
   `coupling-rod` (translated round the crank circle), `crosshead` (sliding),
   `main-rod`, and with valve gear `eccentric-rod`, `expansion-link` (turning on
