@@ -1595,6 +1595,9 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-ss-great-britain": [
     { title: "Wikipedia: SS Great Britain", url: "https://en.wikipedia.org/wiki/SS_Great_Britain" },
     { title: "Wikimedia Commons: Bristol MMB 43 SS Great Britain.jpg", url: "https://commons.wikimedia.org/wiki/File:Bristol_MMB_43_SS_Great_Britain.jpg" },
+    { title: "Wikimedia Commons: SS Great Britain diagram.jpg", url: "https://commons.wikimedia.org/wiki/File:SS_Great_Britain_diagram.jpg" },
+    { title: "Wikimedia Commons: Great Western Dry Dock, Bristol, 2006 (08).jpg", url: "https://commons.wikimedia.org/wiki/File:Great_Western_Dry_Dock,_Bristol,_2006_(08).jpg" },
+    { title: "Wikimedia Commons: SS Great Britain - geograph.org.uk - 1135916.jpg", url: "https://commons.wikimedia.org/wiki/File:SS_Great_Britain_-_geograph.org.uk_-_1135916.jpg" },
   ],
   "proc-vehicle-ship-ss-united-states": [
     { title: "Wikipedia: SS United States", url: "https://en.wikipedia.org/wiki/SS_United_States" },
