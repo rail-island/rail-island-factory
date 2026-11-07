@@ -175,8 +175,10 @@ neighbours' planes, so no two coplanar faces fight.
 ## Game properties, OpenTTD and sounds
 
 - **`game`**: displacement (t), installed power (kW), service speed (km/h) from the
-  published figures in each `SOURCES.md`; `accel` null; `draftFrac` measured. A sailing
-  ship without an engine states power 0.
+  published figures in each `SOURCES.md`; `accel` null (the game derives it from power
+  and weight); `draftFrac` measured. A sailing ship or a barge without an engine states
+  power 0 and `accel` `UNPOWERED_ACCEL` (0.3 m/s2) instead, since the game would derive
+  zero from no power and the ship would never get under way.
 - **OpenTTD**: container ships, feeders, ro-ro and car carriers carry `GOOD` (TEU or units
   as crates; no default climate has `VEHI`), tankers and gas carriers `OIL_` (liquid; the
   chemical tanker hazardous too), bulkers `COAL`, `IORE` or `GRAI` with the bulk refit, the
