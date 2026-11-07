@@ -113,6 +113,18 @@ describe("the filter chips", () => {
     expect(groupOf(rec("proc-vehicle-cabin-classic", "Classic Cabin", 900, { category: "Cable car", group: "cablecar" }))).toBe("cablecar");
   });
 
+  it("splits Aircraft by what drives them: Helicopter, Jet, Propeller, Airship", () => {
+    const air = prepareRows([
+      rec("proc-vehicle-bell-206", "Bell 206", 900, { category: "Aircraft", group: "aircraft", airframe: "helicopter" }),
+      rec("proc-vehicle-boeing-737", "Boeing 737", 900, { category: "Aircraft", group: "aircraft", airframe: "jet" }),
+      rec("proc-vehicle-small-airplane", "Small Airplane", 900, { category: "Aircraft", group: "aircraft", airframe: "propeller" }),
+      rec("proc-vehicle-zeppelin-nt", "Zeppelin NT", 900, { category: "Aircraft", group: "aircraft", airframe: "airship" }),
+    ]);
+    expect(chipRows(air, { ...NO_CHIPS, group: "aircraft" }).l2).toEqual(["airship", "helicopter", "jet", "propeller"]);
+    expect(queryRows(air, "", "title", "asc", { ...NO_CHIPS, group: "aircraft", l2: "helicopter" }).map((r) => r.id)).toEqual(["proc-vehicle-bell-206"]);
+    expect(["helicopter", "jet", "propeller", "airship"].map(chipLabel)).toEqual(["Helicopter", "Jet", "Propeller", "Airship"]);
+  });
+
   it("files a tram under Trams, though its category is Rail vehicles", () => {
     expect(groupOf(rec("proc-vehicle-tatra-t3", "Tatra T3", 9000, { category: "Rail vehicles", group: "tram" }))).toBe("tram");
   });

@@ -41,6 +41,7 @@
 // flickering model off the site and out of the export.
 //
 //   pnpm build:models
+import { airframeField } from "./airframeKinds.ts";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { buildLegacyMapping, measureModel } from "./legacyMapping.ts";
@@ -859,7 +860,7 @@ export async function buildExport(
         jsHash: crypto.createHash("sha256").update(jsText).digest("hex").slice(0, 16),
         thumbBytes: built.thumb ? fs.statSync(built.thumb).size : 0,
       }, refs.get(design.id), catalogOpenttd(design, catalogFields(design)));
-      return { ...record, ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}), ...(design.sourceTree === false ? { noSourceTree: true } : {}) };
+      return { ...record, ...airframeField(design.id), ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}), ...(design.sourceTree === false ? { noSourceTree: true } : {}) };
     }),
   };
   // the legacy table maps old ids onto the whole catalog, so a narrowed export has none

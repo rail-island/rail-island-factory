@@ -213,15 +213,16 @@ export function groupOf(r: CatalogRecord): string {
 }
 
 /** The fleets whose models are all one kind, so a second row would only split near-synonyms (ship / ships). */
-const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "aircraft", "cablecar", "tram", "tree", "woods", "prop", "character", "texture"]);
+const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "cablecar", "tram", "tree", "woods", "prop", "character", "texture"]);
 
 /** The chip a model lands on when it has no value for a level, so every model is reachable through the chips. */
 export const OTHER_CHIP = "other";
 
-/** The second chip level: a vehicle's group (loco, unit, coach, truck, ...), a building's category. */
+/** The second chip level: a vehicle's group (loco, unit, coach, truck, ...), an aircraft's kind, a building's category. */
 export function level2Of(r: CatalogRecord): string {
   const g = groupOf(r);
   if (NO_LEVEL2.has(g)) return OTHER_CHIP;
+  if (g === "aircraft") return r.airframe ?? OTHER_CHIP;
   return (g === "building" ? r.category : r.group) || OTHER_CHIP;
 }
 
@@ -300,6 +301,11 @@ const CHIP_LABELS: Readonly<Record<string, string>> = {
   truck: "Truck",
   tram: "Tram",
   other: "Other",
+  // the Aircraft row: what drives it (generator/airframeKinds.ts)
+  helicopter: "Helicopter",
+  jet: "Jet",
+  propeller: "Propeller",
+  airship: "Airship",
   // the Structures, Rails and roads and City blocks rows: a set, a district
   bridge: "Bridges",
   busStop: "Bus stops",

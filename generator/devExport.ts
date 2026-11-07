@@ -14,6 +14,7 @@
 // No z-fighting, LOD or game-property checks run here: `pnpm build` and the
 // tests run them.
 
+import { airframeField } from "./airframeKinds.ts";
 import { catalogRecord, isSideViewCategory, listedEntry, metaEntry, REFS_DIR, type BuiltFacts, type ModelCatalog } from "./catalog.ts";
 import { BUILDINGS, DESIGNS, VILLAGE_DESIGNS, catalogFields, designReferenceFiles, designSource, designTree } from "./generate.ts";
 import { bundleDesign } from "./jsModel.ts";
@@ -36,7 +37,7 @@ export function devCatalog(): ModelCatalog {
       const references = designReferenceFiles(design).map(({ name, file }) => ({ name, url: `${REFS_DIR}/${design.id}/${name}`, bytes: fs.statSync(file).size }));
       const building = BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design);
       const record = catalogRecord(listedEntry(metaEntry(design, fields, null, side), design, building), zero, references, catalogOpenttd(design, fields));
-      return { ...record, ...(design.buildCoarse ? { coarse: true as const } : {}), ...(design.buildMax ? { maxDetail: true as const } : {}), ...(design.sourceTree === false ? { noSourceTree: true as const } : {}), pending: true as const };
+      return { ...record, ...airframeField(design.id), ...(design.buildCoarse ? { coarse: true as const } : {}), ...(design.buildMax ? { maxDetail: true as const } : {}), ...(design.sourceTree === false ? { noSourceTree: true as const } : {}), pending: true as const };
     }),
   };
 }
