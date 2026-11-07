@@ -158,11 +158,41 @@ transoms) and a skirt bottom on the centre coupler's draft gear or on the transo
 `seriesHelpers.ts` holds the paint, nose and flat-cab helpers, the one-colour `striped`
 livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE S-103 share.
 
+## The E5's nose and canopy
+
+The E5 (`E5_FACE`, `e5Canopy` in `shinkansen.ts`) is drawn from six photographs and measured on
+the near side-on one (`assets/shinkansen-e5/SOURCES.md`): its nose is a cab face (`cabFace`) 15 m
+long, not the lofted nose tables, and the canopy cab its own bubble in the series' `fittings`.
+
+- **Nose** - the tip at the coupler (1.05 - 1.15 m) under the coupler hatch, its seam an ellipse
+  1.96 m wide across the front, the white lower jaw below it down to the skirt (0.5 m, the series'
+  skirt bottom); the top rising 1.72 m at 1 m, 2.03 m at 3.2 m, 2.27 m at 6 m, then over the cab to
+  the roof (3.62 m at 13.8 m). In plan a broad spatula (1.8 m wide 0.5 m back), the elliptic
+  corners (`cornerDepth`) reaching full width 3 - 5 m back low down and 7 m back at the green's
+  edge, so the green top sits narrower over the white cheeks.
+- **Canopy** - 1.9 - 2.1 m wide, rising out of the nose 6 m back, its crown 2.92 m at 7.2 m and
+  3.27 m at 10.1 m, running into the roof by 12 m; steep sides, sunk 0.55 m into the nose. Its glass
+  (painted per facet, its edges on fixed section angles so they run straight): a visor over the
+  front and crown to 9 m inside a green rim, then on the sides only to 10.2 m, its foot 2.42 m up
+  rising to the rear; the four headlights under the glass's top edge on the crown.
+- **Paint** - the nose's `paint` fields: white round the lower nose, the tokiwa green from the
+  roof down over the whole nose to the hatch's middle (1.18 m), its edge level back to 4.5 m and
+  then climbing over the white cheek to the stripe's top at the join; the stripe (pink, the H5's
+  purple: the livery material `stripe`) 2.08 - 2.22 m on the body, dying out on the green's edge
+  9 m back.
+- **Sides** - the windows standing on the stripe (2.25 - 2.72 m, 0.66 m wide, 1.04 m pitch); a
+  crew door's seam and window 15.3 - 16.25 m and the passenger door 16.4 - 17.4 m behind the tip;
+  the doors' narrow windows high in the leaf. The leading bogie under the nose, 5.25 m behind the
+  tip (17.5 m bogie centres).
+- **Distant model** - the face's profile and plan with its two bands, the canopy's glass a block.
+
 ## Deviations
 
 - The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
-  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses and the
+  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E6's pointed lower nose and the
   N700S's wing edges are approximations.
+- The E5's sculpted white cheek (a bulge along the nose's lower sides) is painted, not shaped;
+  its pantographs lack their noise shields; its doors' green edge lines are not drawn.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn.
 - The E4's double-deck cars have the doors at the lower deck's level and the standard cabin.
