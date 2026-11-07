@@ -340,16 +340,154 @@ export const GSE: ShinkansenSeries = {
   weight: { end: 36, middle: 30 }, power: 380, maxspeed: 110,
 };
 
+// ---------------------------------------------------------------------------
+// Kintetsu 80000 "Hinotori" (2020): the cab face, the window band, the premium end car's high windows.
+// Measured from assets/kintetsu-hinotori/ (SOURCES.md): heights and the nose's profile from the near
+// side view photo-80000.jpg (147 px/m, rail to roof 3.74 m), the face from photo-hinotori-10.jpg and
+// photo-kintetsu-80000-series-hinotori-2022-04-02.jpg, the layout from the Kasumigaura photograph.
+// Edges along the car are [y, d behind the nose's tip].
+
+import type { Ring } from "./meshCore.ts";
+import { sideDecal, sidePanel, type SliceBody } from "./sliceBody.ts";
+import type { SeriesCabFace } from "./seriesCab.ts";
+import type { SeriesLayout, ShinkansenLivery } from "./shinkansen.ts";
+import { block } from "./vehicleParts.ts";
+
+/** The red frame's back edge on the cab side: up beside the nose, then back along the roof's edge as the red line. */
+const HINO_FRAME: Pt[] = [[1.45, 0.66], [1.55, 0.72], [1.95, 1.0], [2.35, 1.34], [2.6, 1.66], [2.85, 2.05], [3.0, 2.45], [3.08, 2.8], [3.12, 3.05]];
+/** The cab's side window in the dark field: its front edge raked with the frame, a flat sill, its back square before the door. */
+const HINO_CAB_WINDOW: { front: Pt[]; back: Pt[] } = { front: [[1.75, 1.02], [2.1, 1.28], [2.4, 1.6], [2.62, 1.92], [2.78, 2.25], [2.86, 2.5]], back: [[1.75, 2.82], [2.86, 2.82]] };
+
+/**
+ * The Hinotori's front: a long curved nose, the face raked about 45 degrees from the LED headlight
+ * bar (1.5 - 1.66 m) to the roof, which it reaches 3 m behind the tip. A dark centre panel holds the
+ * big windscreen and over it, set in the roof's curve, the upper glass the premium car's passengers
+ * look forward through; the red frame round it runs up the face's corners and back along the roof's
+ * edge as the red line under the dark roof. Under the face the red bumper and the coupler's black recess.
+ */
+const HINO_FACE: SeriesCabFace = {
+  dJoin: 3.0, dSide: 2.4, first: 4.35, roofFrom: 3.38, bulge: 0.1, cols: [8, 4, 1, 2], tolerance: 0.02, reach: 0.02,
+  profile: [[0.85, 0.03], [0.95, 0.0], [1.19, 0.08], [1.5, 0.28], [1.98, 0.64], [2.45, 0.98], [2.76, 1.3], [3.05, 1.68], [3.25, 2.0], [3.45, 2.35], [3.6, 2.62], [3.7, 2.85], [3.74, 3.0]],
+  corner: [[0.85, 0.3], [2.0, 0.32], [2.8, 0.4], [3.2, 0.5], [3.5, 0.45], [3.74, 0.12]],
+  cornerDepth: [[0.85, 0.28], [2.0, 0.3], [2.8, 0.42], [3.2, 0.6], [3.5, 0.55], [3.74, 0.2]],
+  rows: [0.85, 0.95, 1.19, 1.36, 1.395, 1.45, 1.5, 1.58, 1.66, 1.75, 1.98, 2.2, 2.45, 2.6, 2.76, 2.9, 3.05, 3.12, 3.25, 3.38, 3.45, 3.55, 3.6, 3.66, 3.7, 3.74],
+  bands: () => [[0, 9, "frame"]],
+  lodBands: [[0, 1.48, "frame"], [1.48, 9, "faceDark"]],
+  fields: [
+    // the dark centre panel inside the frame, rounded at the bottom under the headlight bar; over the
+    // windscreen it opens out to the roof as the frame turns back along the roof's edge
+    { mat: "faceDark", pts: [[-0.82, 1.47], [0.82, 1.47], [0.94, 1.5], [0.99, 1.58], [1.0, 2.2], [0.98, 3.0], [1.05, 3.18], [1.2, 3.3], [1.5, 3.36], [1.5, 3.9], [-1.5, 3.9], [-1.5, 3.36], [-1.2, 3.3], [-1.05, 3.18], [-0.98, 3.0], [-1.0, 2.2], [-0.99, 1.58], [-0.94, 1.5]] },
+    // the windscreen, a little wider at its foot, and the upper glass over it in the roof's curve
+    { mat: "cabGlass", pts: [[-0.86, 1.98], [0.86, 1.98], [0.93, 2.04], [0.91, 2.98], [0.85, 3.05], [-0.85, 3.05], [-0.91, 2.98], [-0.93, 2.04]] },
+    { mat: "cabGlass", pts: [[-0.82, 3.11], [0.82, 3.11], [0.9, 3.17], [0.93, 3.3], [0.85, 3.5], [0.62, 3.6], [-0.62, 3.6], [-0.85, 3.5], [-0.93, 3.3], [-0.9, 3.17]] },
+  ],
+  // the headlight bar: two rows of twenty LEDs in a black bezel
+  masks: [{ lat: [-0.86, 0.86], y: [1.5, 1.665], r: 0.05, mat: "black" }],
+  panes: [],
+  decals: Array.from({ length: 40 }, (_, i) => {
+    const [k, row] = [i % 20, Math.floor(i / 20)];
+    const [lat, y, h] = [-0.76 + k * 0.08, row ? 1.6 : 1.535, 0.022];
+    return { mat: "lampHead", pts: [[lat - h, y - h], [lat + h, y - h], [lat + h, y + h], [lat - h, y + h]] as Pt[], fine: 1 };
+  }),
+  wipers: [[[0.1, 2.02], [0.55, 2.7]]],
+};
+
+/** The bumper under the face: [y, d of its front, d of its back, half width, corner across, corner depth]. */
+const HINO_CHIN: ReadonlyArray<readonly [number, number, number, number, number, number]> = [
+  [0.2, 0.42, 2.3, 1.05, 0.45, 0.55], [0.28, 0.28, 2.35, 1.12, 0.4, 0.45], [0.42, 0.16, 2.4, 1.18, 0.36, 0.38], [0.62, 0.08, 2.45, 1.22, 0.32, 0.32], [0.88, 0.03, 2.5, 1.25, 0.3, 0.29],
+];
+
+/** The phoenix logo as triangles, [d behind the tip, y] (photo-80000.jpg: 0.8 m long, 2.44 - 2.79 m): beak, body, three wing and three tail feathers. */
+const HINO_PHOENIX: Pt[] = [
+  [3.85, 2.55], [3.95, 2.6], [3.95, 2.5],
+  [3.95, 2.6], [3.95, 2.5], [4.3, 2.44], [3.95, 2.6], [4.3, 2.44], [4.2, 2.56],
+  [4.05, 2.57], [4.12, 2.565], [4.42, 2.79], [4.1, 2.565], [4.18, 2.56], [4.5, 2.74], [4.15, 2.56], [4.22, 2.55], [4.55, 2.67],
+  [4.22, 2.53], [4.27, 2.49], [4.6, 2.62], [4.25, 2.5], [4.3, 2.46], [4.66, 2.55], [4.28, 2.47], [4.32, 2.44], [4.6, 2.46],
+];
+
+/** The Hinotori's own fittings: the bumper and its coupler recess on the end car, the underfloor equipment. */
+function hinotoriFittings(m: MeshBuilder, b: SliceBody, X: (dd: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  const [t0, t1] = [car.trucks[0]!, car.trucks[1]!];
+  m.scope("underfloor", () => block(m, "under", X(t1 - 2.6), X(t0 + 2.6), HINOTORI.B - 0.4, HINOTORI.B, -HINOTORI.W * 0.82, HINOTORI.W * 0.82));
+  if (!car.end) return;
+  const dj = HINO_FACE.dJoin;
+  // the gold phoenix (the logo), beak forward, over its lettering beside both doors; the crew door's grab rails
+  const bird = (at: number): Pt[] => HINO_PHOENIX.map(([d, y]): Pt => [d + at - dj, y]);
+  m.scope("emblems", () => {
+    for (const sd of [1, -1]) for (const at of [0, 14.85]) sideDecal(m, b, X, sd, "gold", bird(at), 0.006);
+    for (const sd of [1, -1]) for (const d of [3.14, 3.84]) sidePanel(m, b, X, sd, "frameSilver", d - dj, d + 0.03 - dj, 1.2, 2.0, 0.02, 0.025);
+  });
+  // a rounded rectangle in plan, d behind the tip, the back square; `notch` m deep and 0.56 m to each side the coupler's recess in its front
+  const ring = ([, df, db, hw, r, rd]: readonly [number, number, number, number, number, number], notch: number): Ring => {
+    const pts: Array<[number, number]> = [];
+    const n = 5;
+    for (let i = 0; i <= n; i++) { const t = (i / n) * (Math.PI / 2); pts.push([df + rd * (1 - Math.sin(t)), -(hw - r + r * Math.cos(t))]); }
+    if (notch > 0) pts.push([df, -0.56], [df + notch, -0.56], [df + notch, 0.56], [df, 0.56]);
+    for (let i = 0; i <= n; i++) { const t = (i / n) * (Math.PI / 2); pts.push([df + rd * (1 - Math.cos(t)), hw - r + r * Math.sin(t)]); }
+    pts.push([db, hw], [db, -hw]);
+    const out: Ring = pts.map(([d, z]): [number, number] => [X(d - dj), z]);
+    let area = 0;
+    for (let i = 0; i < out.length; i++) { const [p, q] = [out[i]!, out[(i + 1) % out.length]!]; area += p[0] * q[1] - q[0] * p[1]; }
+    return area > 0 ? out.reverse() : out;
+  };
+  // the lip under the recess, capped on top (the recess's floor); over it the bumper round the recess, open at its foot
+  const ys = HINO_CHIN.map((rw) => rw[0]);
+  m.scope("bumper", () => {
+    const lip = HINO_CHIN.slice(0, 3).map((rw) => ring(rw, 0)), up = HINO_CHIN.slice(2).map((rw) => ring(rw, 0.2));
+    m.cap("bumper", lip[0]!, ys[0]!, false);
+    for (let i = 0; i + 1 < lip.length; i++) m.loft("bumper", lip[i]!, ys[i]!, lip[i + 1]!, ys[i + 1]!, i + 2 === lip.length);
+    for (let i = 0; i + 1 < up.length; i++) m.loft("bumper", up[i]!, ys[i + 2]!, up[i + 1]!, ys[i + 3]!, false);
+  });
+  // the recess's black back, the retracted coupler in it
+  m.scope("coupler recess", () => block(m, "black", X(0.6 - dj), X(0.21 - dj), ys[2]! + 0.005, 0.87, -0.55, 0.55));
+}
+
+/** Side bands: the fine dark lines under the window band, its semi-transparent black, the red line under the roof. */
+const hinoBands = (body: string, line: string, stripe: string, band: string, frame: string): ShinkansenLivery["bands"] => [
+  [0, 1.36, body], [1.36, 1.395, line], [1.395, 1.62, body], [1.62, 1.635, stripe], [1.635, 1.7, body], [1.7, 1.72, stripe], [1.72, 1.78, body],
+  [1.78, 1.805, stripe], [1.805, 1.86, body], [1.86, 1.89, stripe], [1.89, 1.93, body], [1.93, 3.12, band], [3.12, 9, frame],
+];
+const hinoSweeps = (frame: string, band: string): NonNullable<ShinkansenLivery["endSweeps"]> => [
+  // the frame red forward of its back edge, the dark field behind it down to 1.55 m, the cab's side window in it
+  { mat: frame, front: [[1.45, -9], [3.12, -9]], back: HINO_FRAME },
+  { mat: band, front: HINO_FRAME.slice(1), back: [[1.55, 3.1], [3.12, 3.1]] },
+  { mat: "cabGlass", ...HINO_CAB_WINDOW },
+];
+
+/** Windows in the dark band: the premium end car's seven at its 1.3 m seat pitch, the regular cars' long ones; d behind the body's +X end (the end car's 3 m behind the tip). */
+const HINO_PREMIUM = Array.from({ length: 7 }, (_, i): readonly [number, number] => [1.65 + 1.3 * i, 1.65 + 1.3 * i + 1.08]);
+const HINO_REGULAR = Array.from({ length: 7 }, (_, i): readonly [number, number] => [2.3 + 2.4 * i, 2.3 + 2.4 * i + 2.18]);
+const HINO_LAYOUT: { end: SeriesLayout; middle: SeriesLayout } = {
+  // the crew door behind the cab, the passengers' door at the rear deck over the rear bogie
+  end: { doors: [[0.2, 0.78, 1], [14.55, 15.5, -1]], windows: HINO_PREMIUM },
+  middle: { doors: [[0.55, 1.5, 1]], windows: HINO_REGULAR },
+};
+
 export const HINOTORI: ShinkansenSeries = {
-  endLength: 21.0, midLength: 20.5, W: 1.4, Y: 1.25, S: 3.0, C: 3.68, lean: 0.95, B: 0.95, A: 1.05,
-  // the metallic red nose leaning out under its big curved windscreen
-  nose: nose(2.6, 0.2, 2.2, [[0, 1.6], [0.3, 2.2], [1.4, 3.0], [2.4, 3.5], [3.0, 3.68]], [[0, 1.55], [0.3, 2.05], [1.4, 2.7], [2.4, 2.95], [3.0, 3.0]], [[0, 1.4], [1.0, 1.25]], [[0, 1.3], [0.8, 1.05]], [[0, 1.25], [0.4, 0.95]]),
-  windscreen: [0.35, 2.3, 0.07, 1.15], lamps: [0.45, 1.5],
-  windows: [[1.8, 2.8]], windowW: 1.5, pitch: 1.85, door: [1.15, 3.0, 1.85, 2.6], doorW: 0.9,
-  bogieCentres: 14.15, wheelR: 0.43, wheelbase: 2.1,
+  // 21.6 m end cars and 20.5 m intermediate cars over the couplers, 2.79 m wide, roof 3.74 m (ja.wikipedia)
+  endLength: 21.6, midLength: 20.5, W: 1.395, Y: 1.1, S: 3.38, C: 3.74, lean: 0.96, B: 0.85, A: 0.9,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: HINO_FACE,
+  windows: [[2.12, 3.08]], windowW: 1.08, pitch: 1.3, door: [0.95, 2.62, 1.84, 2.48], doorW: 0.95, doorGlassW: 0.3,
+  layout: HINO_LAYOUT,
+  // the leading bogie under the cab door 3.9 m behind the tip, 14.15 m bogie centres
+  bogieCentres: 14.15, wheelR: 0.43, wheelbase: 2.1, endBogies: [0.9, 15.05], midBogies: [2.925, 17.075], couplerY: 0.62, fittings: hinotoriFittings,
   liveries: {
-    hinotori: { title: "Hinotori red", palette: { red: c("#8e1b22", 0.25), gold: c("#c9a55a", 0.3), roofG: c("#8e1b22", 0.4), skirtG: c("#3a3b3d") }, bands: [[0, 1.5, "red"], [1.5, 1.54, "gold"], [1.54, 9, "red"]], roof: "roofG", skirt: "skirtG", number: "HV01" },
-    ace: { title: "Ace orange", palette: { orange: c("#e46c1d"), navy: c("#1d2a4a"), white: c("#efefea"), roofG: c("#e4e4e1", 0.5), skirtG: c("#3a3b3d") }, bands: [[0, 1.5, "navy"], [1.5, 1.56, "white"], [1.56, 2.9, "orange"], [2.9, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "HV02" },
+    hinotori: {
+      title: "Hinotori red", number: "80101",
+      // metallic red #ad2320, premium gold #c29d3b (ja.wikipedia); the dark roof and face panel
+      palette: { body: c("#a8211f", 0.22), frame: c("#b42420", 0.2), line: c("#c29d3b", 0.3), stripe: c("#5a1416", 0.35), band: c("#2a2224", 0.2), faceDark: c("#3e3a39", 0.3), roofG: c("#3b3837", 0.45), skirtG: c("#a8211f", 0.3), bumper: c("#b42420", 0.2), black: c("#141516", 0.5), gold: c("#c29d3b", 0.3) },
+      bands: hinoBands("body", "line", "stripe", "band", "frame"), roof: "roofG", skirt: "skirtG",
+      endSweeps: hinoSweeps("frame", "band"),
+      doors: [[0, 1.93, "body"], [1.93, 9, "band"]],
+      // under the phoenix beside the crew door and behind the passengers' door
+      endLettering: [{ text: "HINOTORI", d: 1.25, y: 2.33, h: 0.065, mat: "gold" }, { text: "HINOTORI", d: 16.15, y: 2.33, h: 0.065, mat: "gold" }],
+    },
+    ace: {
+      title: "Ace orange", number: "HV02",
+      palette: { body: c("#1d2a4a"), frame: c("#e46c1d"), line: c("#efefea"), stripe: c("#1d2a4a"), band: c("#e46c1d"), faceDark: c("#1d2a4a", 0.3), roofG: c("#d9d9d5", 0.5), skirtG: c("#1d2a4a"), bumper: c("#1d2a4a"), black: c("#141516", 0.5), gold: c("#e46c1d") },
+      bands: [[0, 1.31, "body"], [1.31, 1.37, "line"], [1.37, 9, "band"]], roof: "roofG", skirt: "skirtG",
+      endSweeps: [{ mat: "cabGlass", ...HINO_CAB_WINDOW }],
+    },
   },
   weight: { end: 46, middle: 44 }, power: 300, maxspeed: 130,
 };
