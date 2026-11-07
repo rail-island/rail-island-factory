@@ -17,6 +17,8 @@ import { proceduralId } from "../generator/modelId";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { coverageCombinations, type ParamValues } from "../generator/design";
 import { sample } from "./catalogCache";
+import { UNPOWERED_ACCEL } from "../generator/worldShips";
+import { posable } from "../generator/rig";
 
 const ALL = [...CARGO_SHIP_SPECS, ...SERVICE_SHIP_SPECS, ...PASSENGER_SHIP_SPECS, ...SMALL_SHIP_SPECS];
 
@@ -105,6 +107,49 @@ describe("the world ships", () => {
       });
     });
   }
+
+  it("states where each ship meets the water: stem ahead of stern on the waterline, a half-breadth inside the beam, its screws and wheels", () => {
+    for (const s of ALL) {
+      const spec = s.spec();
+      const w = built(s).rig?.water;
+      expect(w, s.id).toBeDefined();
+      const draft = spec.hull ? spec.hull.draft : 0;
+      expect(w!.draft, s.id).toBeCloseTo(draft, 3);
+      expect(w!.bow[1], s.id).toBeCloseTo(draft, 3);
+      expect(w!.stern[1], s.id).toBeCloseTo(draft, 3);
+      expect(w!.bow[0] - w!.stern[0], s.id).toBeGreaterThan(shipLength(spec) * 0.5);
+      expect(w!.halfBeam, s.id).toBeGreaterThan(0);
+      if (spec.hull) expect(w!.halfBeam, s.id).toBeLessThanOrEqual(spec.hull.beam / 2 + 7);
+      const paddles = spec.items.filter((it) => it.k === "paddle").reduce((n, it) => n + (it.k === "paddle" && it.stern ? 1 : 2), 0);
+      expect(w!.churn.filter((c) => c.kind === "paddle"), s.id).toHaveLength(paddles);
+      for (const c of w!.churn) {
+        expect(c.at[1], s.id).toBeCloseTo(draft, 3);
+        expect(c.width, s.id).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("turns the paddle wheels as parts on their shafts, not the rest of the ship", () => {
+    for (const id of ["veh-ship-swiss-paddle", "veh-ship-elbe-paddle"]) {
+      const s = ALL.find((x) => x.id === id)!;
+      const m = built(s);
+      const clip = m.animations().find((a) => a.name === "rolling");
+      expect(clip, id).toBeDefined();
+      expect(clip!.tracks.map((t) => t.node), id).toEqual(["paddle-wheel-0", "paddle-wheel-1"]);
+      expect(m.clipDrives()!.rolling, id).toEqual({ drive: "distance", speed: 5 });
+      // a water rig alone is nothing pose() moves: the bundle does not carry the rig code
+      expect(posable(m.rig), id).toBe(false);
+    }
+  });
+
+  it("gives a ship without an engine an acceleration of its own, and leaves the rest to the game", () => {
+    for (const s of ALL) {
+      const g = DESIGNS.get(proceduralId(s.id))!.game!;
+      if (s.game.power > 0) expect(g.accel, s.id).toBeNull();
+      else expect(g.accel, s.id).toBe(UNPOWERED_ACCEL);
+    }
+    expect(ALL.find((s) => s.id === "veh-ship-cutty-sark")!.game.power).toBe(0);
+  });
 
   it("budgets 25,000 triangles for the ocean ships over 150 m, 15,000 below, 4,000 for small craft", () => {
     for (const s of ALL) {

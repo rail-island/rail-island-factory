@@ -16,7 +16,11 @@ import type { ParamValues } from "./design.ts";
 // minified identifiers of all of them.
 
 /** A sound role the game knows how to drive. */
-export type SoundSlotName = "horn" | "engine" | "bell";
+/**
+ * `call` is an animal-drawn vehicle's animal call, played only by the player's Horn
+ * (which plays `call` where a vehicle has one, `horn` otherwise).
+ */
+export type SoundSlotName = "horn" | "engine" | "bell" | "call";
 
 /**
  * One slot of a model's sounds: a rail-island-music design id, and the values of
@@ -35,7 +39,7 @@ export interface SoundSlot {
   calls?: string[];
 }
 
-/** Which sound plays in each slot: horn and engine for a vehicle, bell for a building. */
+/** Which sound plays in each slot: horn, engine and call for a vehicle, bell for a building. */
 export type SoundMapping = Partial<Record<SoundSlotName, SoundSlot>>;
 
 /** A variant's change to the slots: a slot replaced, or removed with null. */

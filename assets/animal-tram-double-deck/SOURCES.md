@@ -1,7 +1,7 @@
-# horse-tram references
+# animal-tram-double-deck references
 
-**Covers** - provenance of the `horse-tram` model's references: photographs and published figures.
-**Code** - see the design that names `references: "horse-tram"`
+**Covers** - provenance of the `animal-tram-double-deck` model (formerly the horse tram)'s references: photographs and published figures.
+**Code** - see the design that names `references: "animal-tram-double-deck"`
 **See also** - [docs/models/world-fleet.md](../../docs/models/world-fleet.md)
 
 ## Photographs

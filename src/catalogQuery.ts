@@ -177,6 +177,7 @@ export const GROUPS: readonly Group[] = [
   { id: "block", label: "City blocks" },
   { id: "prop", label: "Props" },
   { id: "character", label: "Characters" },
+  { id: "animal", label: "Animals" },
   { id: "texture", label: "Textures" },
 ];
 
@@ -199,6 +200,8 @@ const VEHICLE_CATEGORIES: ReadonlyMap<string, string> = new Map([
   ["Props", "prop"],
   // the characters the game's walk mode moves (generator/characters.ts)
   ["Characters", "character"],
+  // the draft animals that pull the animal-drawn vehicles (generator/animalDesigns.ts)
+  ["Animals", "animal"],
   // one page per set type, block type and texture (generator/previews/)
   ["Structures", "structure"],
   ["Rails and roads", "way"],
@@ -213,7 +216,7 @@ export function groupOf(r: CatalogRecord): string {
 }
 
 /** The fleets whose models are all one kind, so a second row would only split near-synonyms (ship / ships). */
-const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "cablecar", "tram", "tree", "woods", "prop", "character", "texture"]);
+const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "cablecar", "tram", "tree", "woods", "prop", "character", "animal", "texture"]);
 
 /** The chip a model lands on when it has no value for a level, so every model is reachable through the chips. */
 export const OTHER_CHIP = "other";

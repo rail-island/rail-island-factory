@@ -1,6 +1,6 @@
 // The trams from around the world (docs/models/world-trams.md): the family's
 // designs in the list's order, from the two modules that define them (Europe's
-// in worldTramsEurope.ts, the rest of the world's and the historic horse, steam
+// in worldTramsEurope.ts, the rest of the world's and the historic steam
 // and cable trams in worldTramsWorld.ts), and what the whole-catalog suites need
 // to know of them: which open no doors and which open on the right only.
 
@@ -20,7 +20,7 @@ const LIST_ORDER = [
   "vityaz-m", "electron-t5l64", "bucharest-v3a", "koncar-tmk2200", "durmazlar-silkworm", "helsinki-artic", "helsinki-valmet", "oslo-sl79", "gothenburg-m29", "pcc-streamliner",
   "toronto-clrv", "toronto-flexity", "birney-safety-car", "new-orleans-perley-thomas", "boston-type-8", "siemens-s70", "kinki-sharyo-lrv", "brookville-liberty", "philadelphia-kawasaki", "rio-bonde",
   "buenos-aires-premetro", "hong-kong-tram", "hiroshima-green-mover", "toei-9000", "toyama-portram", "tokyu-300", "kolkata-tram", "dalian-tram", "foshan-hydrogen", "alexandria-double-deck",
-  "addis-ababa-lrt", "melbourne-w-class", "melbourne-b-class", "melbourne-e-class", "glenelg-h-class", "sydney-r-class", "christchurch-boon", "horse-tram", "steam-tram", "cable-car-dunedin",
+  "addis-ababa-lrt", "melbourne-w-class", "melbourne-b-class", "melbourne-e-class", "glenelg-h-class", "sydney-r-class", "christchurch-boon", "steam-tram", "cable-car-dunedin",
   "istanbul-nostalgic", "trieste-opicina", "budapest-ganz-uv", "wroclaw-skoda-16t", "strasbourg-eurotram", "montpellier-citadis", "gmunden-vario", "sarajevo-k2yu", "turin-2800", "dubai-citadis",
 ].map((n) => `veh-${n}`);
 

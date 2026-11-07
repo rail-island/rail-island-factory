@@ -25,6 +25,8 @@ import { MeshBuilder, chamferedRect, ngon, type MaterialSpec, type Ring } from "
 import type { Vec3 } from "./meshCore.ts";
 import { LOD_PALETTE, lodPolygon } from "./lodKit.ts";
 import { lodBar, lodStack } from "./lodAir.ts";
+import { rollWheels } from "./rolling.ts";
+import { measureWaterRig, type WaterChurn, type WaterRig } from "./waterRig.ts";
 
 // --- the spec ----------------------------------------------------------------------
 
@@ -563,6 +565,10 @@ export interface ShipCtx {
   deck: (u: number) => number;
   /** The hull's half-breadth at u and y (outermost hull), or 0. */
   side: (u: number, y: number) => number;
+  /** The paddle wheels drawn so far: their spin parts and radii (paddleNode). */
+  paddles: Array<{ node: string; r: number }>;
+  /** Where the ship's screws, wheels and air propellers stir the water, as drawn (shipWaterRig). */
+  churn: WaterChurn[];
 }
 
 export function shipLength(s: ShipSpec): number {
@@ -579,7 +585,16 @@ function ctxOf(m: MeshBuilder, s: ShipSpec): ShipCtx {
     const c = Math.max(...hull.centres.map(Math.abs));
     return c + hull.halfBeam(uu, y);
   };
-  return { m, spec: s, L, x: (u) => u - L / 2, hull, deck, side };
+  return { m, spec: s, L, x: (u) => u - L / 2, hull, deck, side, paddles: [], churn: [] };
+}
+
+const round3 = (v: number): number => Math.round(v * 1000) / 1000;
+
+/** The node of the next paddle wheel: `paddle-wheel-<n>` in drawing order, recorded with its radius. */
+function paddleNode(c: ShipCtx, r: number): string {
+  const node = `paddle-wheel-${c.paddles.length}`;
+  c.paddles.push({ node, r });
+  return node;
 }
 
 /** The triangle budget of a ship (docs/models/world-ships.md, "Budgets"): 25,000 over 150 m, 4,000 small craft, else 15,000. */
@@ -650,6 +665,7 @@ function drawSternGear(c: ShipCtx, f: HullForm, zc: number): void {
   m.scope("propellers", () => {
     for (const z of zs) {
       const up = ur + chord * 0.6 + 0.15;
+      c.churn.push({ kind: "screw", at: [round3(c.x(up)), round3(f.draft), round3(z)], width: round3(2 * r) });
       const cy = Math.max(r + 0.05, f.draft * 0.42);
       for (let k = 0; k < 4; k++) {
         const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
@@ -1036,20 +1052,24 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
       m.scope(nm("paddle wheel"), () => {
         const mat = it.mat ?? "red";
         const xc = x(it.u);
-        const zs = it.stern ? [-it.w / 2, it.w / 2] : [it.z - it.w / 2, it.z + it.w / 2, -it.z - it.w / 2, -it.z + it.w / 2];
-        // the rims
-        for (const z of zs) m.tube(mat, "z", xc, it.y, it.r, it.r * 0.9, z - 0.08, z + 0.08, 16);
-        // the floats, across each wheel
         const pairs = it.stern ? [[-it.w / 2, it.w / 2]] : [[it.z - it.w / 2, it.z + it.w / 2], [-it.z - it.w / 2, -it.z + it.w / 2]];
+        // each wheel - its two rims, its floats and its shaft - is a part that turns
+        // on its shaft (MeshCore.spin), played by the ship's `rolling` clip (worldShip)
         for (const [za, zb] of pairs) {
-          for (let k = 0; k < 10; k++) {
-            const a = (k / 10) * Math.PI * 2;
-            const p0: Vec3 = [xc + Math.cos(a) * it.r * 0.55, it.y + Math.sin(a) * it.r * 0.55, za!];
-            const p1: Vec3 = [xc + Math.cos(a) * it.r * 0.97, it.y + Math.sin(a) * it.r * 0.97, za!];
-            const t = it.r * 0.03;
-            m.slab("wood", [[p0[0] - Math.sin(a) * t, p0[1] + Math.cos(a) * t, za!], [p1[0] - Math.sin(a) * t, p1[1] + Math.cos(a) * t, za!], [p1[0] + Math.sin(a) * t, p1[1] - Math.cos(a) * t, za!], [p0[0] + Math.sin(a) * t, p0[1] - Math.cos(a) * t, za!]], [0, 0, zb! - za!]);
-          }
-          m.rod("steel", [xc, it.y, za! - 0.1], [xc, it.y, zb! + 0.1], it.r * 0.06, 6);
+          const node = paddleNode(c, it.r);
+          m.spin(node, [round3(xc), round3(it.y), round3((za! + zb!) / 2)], () => {
+            // the rims
+            for (const z of [za!, zb!]) m.tube(mat, "z", xc, it.y, it.r, it.r * 0.9, z - 0.08, z + 0.08, 16);
+            // the floats, across the wheel
+            for (let k = 0; k < 10; k++) {
+              const a = (k / 10) * Math.PI * 2;
+              const p0: Vec3 = [xc + Math.cos(a) * it.r * 0.55, it.y + Math.sin(a) * it.r * 0.55, za!];
+              const p1: Vec3 = [xc + Math.cos(a) * it.r * 0.97, it.y + Math.sin(a) * it.r * 0.97, za!];
+              const t = it.r * 0.03;
+              m.slab("wood", [[p0[0] - Math.sin(a) * t, p0[1] + Math.cos(a) * t, za!], [p1[0] - Math.sin(a) * t, p1[1] + Math.cos(a) * t, za!], [p1[0] + Math.sin(a) * t, p1[1] - Math.cos(a) * t, za!], [p0[0] + Math.sin(a) * t, p0[1] - Math.cos(a) * t, za!]], [0, 0, zb! - za!]);
+            }
+            m.rod("steel", [xc, it.y, za! - 0.1], [xc, it.y, zb! + 0.1], it.r * 0.06, 6);
+          });
         }
         if (it.box) {
           // the paddle boxes: half drums over the wheels' upper halves
@@ -1583,7 +1603,36 @@ export function worldShip(s: ShipSpec): MeshBuilder {
   const c = ctxOf(m, s);
   drawHull(c);
   m.scope("deck furniture", () => s.items.forEach((it, i) => drawItem(c, it, i)));
+  if (c.paddles.length) {
+    // the paddle wheels turn as a wheel rolls on the water: one turn per circumference sailed
+    const d = 2 * c.paddles[0]!.r;
+    if (c.paddles.some((p) => Math.abs(2 * p.r - d) > 1e-6)) throw new Error("worldShip(): paddle wheels of different sizes");
+    rollWheels(m, c.paddles.map((p) => p.node), d);
+  }
+  m.rig = { ...(m.rig ?? {}), water: shipWaterRig(c, m.positions()) };
   return m;
+}
+
+/**
+ * Where the ship meets the water, for the game's wake and foam (rig.ts WaterRig):
+ * the stem and the stern on the waterline and the greatest half-breadth there,
+ * measured off the drawn hull (every vertex at or below the waterline), and the
+ * churn sources - every screw under the stern, every paddle wheel, a hovercraft's
+ * air propellers - where they meet the surface.
+ */
+function shipWaterRig(c: ShipCtx, pos: readonly number[]): WaterRig {
+  const f = c.hull?.form;
+  const draft = f ? f.draft : 0;
+  const churn: WaterChurn[] = [...c.churn];
+  for (const it of c.spec.items) {
+    if (it.k === "paddle") {
+      const zs = it.stern ? [0] : [it.z, -it.z];
+      for (const z of zs) churn.push({ kind: "paddle", at: [round3(c.x(it.u)), round3(draft), round3(z)], width: round3(it.w) });
+    } else if (it.k === "prop") {
+      churn.push({ kind: "air", at: [round3(c.x(it.u - it.r)), round3(draft), round3(it.z)], width: round3(2 * it.r) });
+    }
+  }
+  return measureWaterRig(pos, draft, "x", churn);
 }
 
 // --- the distant model ---------------------------------------------------------------

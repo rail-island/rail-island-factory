@@ -16,6 +16,10 @@ import { checkedBySuites, variantsUnderTest } from "./catalogCache";
 const ALL_VEHICLES = EVERY_VEHICLE.filter((d) => checkedBySuites(d.id));
 import { isInteriorName } from "../generator/interiorTable.ts";
 import { WORLD_TRAMS_RIGHT_ONLY, WORLD_TRAMS_WITHOUT_DOORS } from "../generator/worldTrams.ts";
+import { proceduralId } from "../generator/modelId.ts";
+import { ANIMAL_TRAMS } from "../generator/animalTrams.ts";
+import { ANIMAL_RAIL } from "../generator/animalRail.ts";
+import { ANIMAL_BUSES } from "../generator/animalBuses.ts";
 
 /** The groups of passenger vehicles: every one opens its passenger doors. */
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
@@ -24,7 +28,9 @@ const NO_DOORS = new Set(["proc-vehicle-csd-dsk", "proc-vehicle-csd-m112", "proc
   // the jeepney and the songthaew board at their open rears; the camello's trailer is drawn without the kit's doors
   "proc-vehicle-jeepney", "proc-vehicle-songthaew", "proc-vehicle-havana-camello",
   // the AEC Routemaster and the Bristol Lodekka board at their open rear platforms (DoorStyle.open)
-  "proc-vehicle-aec-routemaster", "proc-vehicle-bristol-lodekka"]);
+  "proc-vehicle-aec-routemaster", "proc-vehicle-bristol-lodekka",
+  // the animal-drawn cars and coaches board over open platforms, steps and coach doors the kit does not open
+  ...[...ANIMAL_TRAMS, ...ANIMAL_RAIL, ...ANIMAL_BUSES].map((d) => proceduralId(d.id))]);
 /** Doors on the right only: the single-ended trams and every bus (the kerb side). */
 const RIGHT_ONLY = (id: string, group: string) => group === "bus" || WORLD_TRAMS_RIGHT_ONLY.has(id) || ["proc-vehicle-tatra-t3", "proc-vehicle-tatra-t6", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"].includes(id);
 

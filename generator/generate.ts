@@ -161,6 +161,10 @@ import { AIRPORT_PROPS } from "./props/airportProps.ts";
 import { SIGNAL_PROPS } from "./props/signalProps.ts";
 import { CHARACTERS } from "./characters.ts";
 import { ANIMALS } from "./animals.ts";
+import { DRAFT_ANIMALS } from "./animalDesigns.ts";
+import { ANIMAL_TRAMS } from "./animalTrams.ts";
+import { ANIMAL_RAIL } from "./animalRail.ts";
+import { ANIMAL_BUSES } from "./animalBuses.ts";
 import { PREVIEW_FAMILIES } from "./previews/index.ts";
 import { FAR_PROPS } from "./props/propKit.ts";
 import { generateSets } from "./sets/setsExport.ts";
@@ -184,7 +188,7 @@ import {
 } from "./catalog.ts";
 import { TREE_DIR, TREE_MAX_BYTES, type SourceTree } from "./sourceTree.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { VehicleRig } from "./rig.ts";
+import { posable, type VehicleRig } from "./rig.ts";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -214,7 +218,7 @@ export const THUMB_VERSION = "2";
  * functions (the JS bundle's entry) and the meta file it is listed in: the
  * buildings', the village houses' own, or the vehicles'.
  */
-const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" | "woods" | "props" | "characters" | "previews" }> = [
+const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" | "woods" | "props" | "characters" | "animals" | "previews" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
   { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
@@ -297,6 +301,10 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: EUROPE_TRAMS, source: "worldTramsEurope.ts", meta: "vehicles" }, // the world trams
   { designs: WORLD_REGION_TRAMS, source: "worldTramsWorld.ts", meta: "vehicles" }, // the world trams
+  // the animal-drawn trams, trains and buses (docs/models/animal-drawn-vehicles.md)
+  { designs: ANIMAL_TRAMS, source: "animalTrams.ts", meta: "vehicles" },
+  { designs: ANIMAL_RAIL, source: "animalRail.ts", meta: "vehicles" },
+  { designs: ANIMAL_BUSES, source: "animalBuses.ts", meta: "vehicles" },
   { designs: METRO_DESIGNS, source: "metro.ts", meta: "vehicles" },
   { designs: EMU451_DESIGNS, source: "emu451.ts", meta: "vehicles" },
   { designs: EMU460_DESIGNS, source: "emu460.ts", meta: "vehicles" },
@@ -324,6 +332,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   // the characters the game's walk mode moves: listed in characters.meta.json
   { designs: CHARACTERS, source: "characters.ts", meta: "characters" },
   { designs: ANIMALS, source: "animals.ts", meta: "characters" },
+  // the draft animals, for the site to browse: in no game meta (docs/models/draft-animals.md)
+  { designs: DRAFT_ANIMALS, source: "animalDesigns.ts", meta: "animals" },
   // the set types drawn at a representative size, for the site to browse: in no game meta
   // the site's preview designs, one per set type, block type and texture (previews/index.ts)
   ...PREVIEW_FAMILIES.map((f) => ({ designs: f.designs, source: f.source, meta: "previews" as const })),
@@ -358,11 +368,13 @@ export const PROP_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => 
 export const CHARACTER_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "characters").flatMap((f) => f.designs);
 
 /** The site's preview designs, one per set type, block type and texture (previews/index.ts); in no game meta. */
+/** The draft animals (animalDesigns.ts): the site's Animals category, in no game meta. */
+export const ANIMAL_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "animals").flatMap((f) => f.designs);
 export const PREVIEW_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "previews").flatMap((f) => f.designs);
 
 /** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, the trees, the woods groves, the props, the set previews, then the characters (last, so the
  * test shards, which split this order, keep every older design where it was). */
-export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS, ...WOODS_DESIGNS, ...PROP_DESIGNS, ...PREVIEW_DESIGNS, ...CHARACTER_DESIGNS].map((d) => [d.id, d]));
+export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS, ...WOODS_DESIGNS, ...PROP_DESIGNS, ...PREVIEW_DESIGNS, ...CHARACTER_DESIGNS, ...ANIMAL_DESIGNS].map((d) => [d.id, d]));
 
 const VEHICLE_IDS = new Set(ALL_VEHICLES.map((d) => d.id));
 
@@ -648,7 +660,7 @@ export function generateModels(
         rig: b!.rig,
         side: sideView ? glbSideFrame(b!.bytes) : null,
         seat: VEHICLE_IDS.has(design.id) ? vehicleSeat(design, b!.bytes) : null,
-        bundle: bundleFlags(design, b!.rig !== null),
+        bundle: bundleFlags(design, posable(b!.rig)),
         extents: {},
       };
       if (key !== null) cache.set(design.id, facts);
