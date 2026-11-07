@@ -114,58 +114,219 @@ function c62TenderSpec(): LocoSpec {
 export type D51Variant = "standard" | "namekuji";
 const D51_PARAMS: ParamSpec[] = [UNIT_PARAM, enumParam("variant", "Type", { standard: "Standard", namekuji: "Namekuji" })];
 
+// The D51 in source metres from the front coupler face, measured from the side-on photograph of
+// D51 51 (assets/jnr-d51/SOURCES.md: a projective fit over the four drivers at the published
+// 1,550 mm pitch) and the published 19,730 mm over the couplers with the 8-20 tender.
+/** Where the engine's drawbar meets the tender: the engine is 12.4 m, the tender 7.33 m. */
+const D51_ENGINE = 12.4;
+const D51_TENDER = 19.73 - D51_ENGINE;
+/** The four 1,400 mm drivers at 1,550 mm, the leading axle 2.35 m ahead, the trailing truck 2.2 m behind. */
+const D51_DRIVERS = [3.22, 4.77, 6.32, 7.87];
+const D51_LEAD = 0.87;
+const D51_TRAIL = 10.07;
+const D51_BOILER = { x0: 0.6, x1: 10.85, y: 2.42, r: 0.85, smokebox: 2.1 };
+/** The smokebox's top (its radius is 4 cm more than the barrel's). */
+const D51_SMOKEBOX_TOP = D51_BOILER.y + D51_BOILER.r + 0.04;
+const D51_RB = 1.85;
+const D51_RB_HALF = 1.4;
+const D51_CAB_HALF = 1.4;
+
+/** JNR black with the white edging of the preserved engines: running boards, tyres, cab and tender sills. */
+const D51_PALETTE = (variant: D51Variant): Record<string, MaterialSpec> => ({
+  ...JNR_STEAM,
+  beam: c("#1d1e20", 0.6),
+  tyre: c("#e8e6df", 0.55),
+  // D51 200's red number plates with silver figures; D51 1's black ones
+  ...(variant === "standard" ? { plate: c("#a8221d", 0.5), plateText: c("#e3e1da", 0.35) } : {}),
+});
+
+/** The dome casing's section: upright sides into the boiler, a rounded crown. */
+const D51_CASING_SEC: Array<[number, number]> = [[-0.47, 2.7], [0.47, 2.7], [0.47, 3.45], [0.42, 3.64], [0.3, 3.76], [0.15, 3.81], [0, 3.82], [-0.15, 3.81], [-0.3, 3.76], [-0.42, 3.64], [-0.47, 3.45]];
+
+/**
+ * The casing on the boiler top. Standard (D51 101 on): one casing over the sand box and steam
+ * dome, 2.6 m over the first and second drivers. Namekuji (D51 1 - 95): the long "slug" casing
+ * from the chimney back over the feedwater heater, sand box and dome, its tail sloping down 5.6 m on.
+ */
+function d51Casing(variant: D51Variant): NonNullable<LocoSpec["volumes"]>[number] {
+  if (variant === "namekuji") {
+    return {
+      name: "namekuji casing", sec: D51_CASING_SEC,
+      plan: [[1.62, 0.3], [1.78, 0.43], [2.2, 0.47], [6.2, 0.47], [6.9, 0.4], [7.3, 0.26]],
+      top: [[1.62, 3.62], [1.8, 3.79], [2.1, 3.82], [6.1, 3.82], [6.5, 3.74], [6.9, 3.56], [7.3, 3.33]],
+      bands: [[2.7, 3.82, "paint"]],
+    };
+  }
+  return {
+    name: "dome casing", sec: D51_CASING_SEC,
+    plan: [[3.4, 0.28], [3.55, 0.42], [3.8, 0.47], [5.65, 0.47], [5.9, 0.4], [6.05, 0.26]],
+    top: [[3.4, 3.56], [3.55, 3.74], [3.75, 3.82], [5.65, 3.82], [5.88, 3.72], [6.05, 3.52]],
+    bands: [[2.7, 3.82, "paint"]],
+  };
+}
+
+/**
+ * The front end: the black end beam with its automatic coupler, the pilot plate under it, the
+ * headlight on the smokebox top, the number plate on the smokebox door and, on the standard
+ * engine, the feedwater heater across the smokebox ahead of the chimney.
+ */
+function d51Front(t: Steam, variant: D51Variant, number: string): void {
+  t.m.scope("front beam", () => {
+    t.box("beam", 0.35, 0.55, 0.78, 1.18, -1.32, 1.32);
+    knuckleCoupler(t.m, 1, t.X(0) - 0.6, t.X(0), COUPLER_Y);
+    // the pilot plate low under the beam, its foot leaning forward
+    t.box("frame", 0.4, 0.5, 0.3, 0.76, -1.1, 1.1);
+    t.box("frame", 0.3, 0.4, 0.1, 0.42, -1.15, 1.15);
+  });
+  t.m.scope("headlight", () => {
+    const y = D51_SMOKEBOX_TOP + 0.2;
+    t.box("black", 0.66, 0.9, D51_SMOKEBOX_TOP - 0.06, y - 0.12, -0.12, 0.12);
+    t.cylX("black", 0.95, 0.56, 0, y, 0.19, 12);
+    t.cylX("lampHead", 0.555, 0.53, 0, y, 0.15, 12);
+  });
+  if (variant === "standard") {
+    t.m.scope("feedwater heater", () => {
+      const [x, y] = [1.2, D51_SMOKEBOX_TOP + 0.24];
+      t.cylZ("black", x, y, -0.7, 0.7, 0.22, 12);
+      for (const z of [-0.7, 0.7]) t.cylZ("black", x, y, z - 0.04, z + 0.04, 0.25, 12);
+      for (const z of [-0.4, 0.4]) t.box("black", x - 0.12, x + 0.12, D51_SMOKEBOX_TOP - 0.08, y - 0.15, z - 0.06, z + 0.06);
+    });
+  }
+  t.endPlate(1, D51_BOILER.x0 - 0.07, D51_BOILER.y + 0.42, number, 0.16);
+  // the marker lamps on the front deck
+  t.m.scope("marker lamps", () => { for (const z of [-0.85, 0.85]) t.lamp(1, 0.42, 1.22, z); });
+  // the brass star handle on the smokebox door
+  t.m.scope("door handle", () => {
+    const y = D51_BOILER.y;
+    t.cylX("brass", 0.497, 0.465, 0, y, 0.06, 8);
+    t.box("brass", 0.47, 0.495, y - 0.17, y + 0.17, -0.02, 0.02);
+    t.box("brass", 0.472, 0.493, y - 0.02, y + 0.02, -0.17, 0.17);
+  });
+  // the grab rails up the deflectors' front edges
+  t.m.scope("deflector handrails", () => {
+    for (const s of [-1, 1]) {
+      t.cylY("handrail", 0.52, s * 1.475, 1.45, 3.0, 0.016, 6);
+      for (const y of [1.55, 2.9]) t.sideBox("handrail", s, 0.51, 0.53, y - 0.01, y + 0.01, 1.446, 1.47);
+    }
+  });
+}
+
+/** The air compressor on the left and the feedwater pump on the right, under the running board's rise. */
+function d51Pumps(t: Steam): void {
+  t.m.scope("air compressor", () => {
+    for (const x of [8.05, 8.4]) t.cylY("black", x, -1.2, 1.05, 2.15, 0.15, 10);
+    t.cylY("brass", 8.05, -1.2, 1.6, 1.64, 0.152, 10, false);
+  });
+  t.m.scope("feedwater pump", () => {
+    t.cylY("black", 8.2, 1.2, 1.15, 2.15, 0.16, 10);
+    t.cylY("brass", 8.2, 1.2, 1.7, 1.74, 0.162, 10, false);
+  });
+}
+
+/** The cylinder block: a tall casing round the cylinder and steam chest up to the running board, its brass covers. */
+function d51Cylinders(t: Steam): void {
+  t.m.scope("cylinder casing", () => {
+    for (const s of [-1, 1]) {
+      t.sideBox("paint", s, 1.3, 2.33, 0.38, D51_RB - 0.05, 0.8, 1.445);
+      t.m.scope("brass", () => {
+        t.cylZ("brass", 1.82, 1.15, Math.min(s * 1.445, s * 1.465), Math.max(s * 1.445, s * 1.465), 0.1, 10);
+        for (const x of [1.52, 2.12]) t.box("brass", x - 0.04, x + 0.04, 1.11, 1.19, s * 1.445, s * 1.46);
+      });
+    }
+  });
+}
+
 function d51Spec(variant: D51Variant): LocoSpec {
+  const namekuji = variant === "namekuji";
+  // the namekuji's cab is shorter than the standard engine's
+  const cab = namekuji ? { x0: 10.9, x1: 12.1, win: [[11.1, 11.45], [11.55, 11.9]] } : { x0: 10.85, x1: 12.15, win: [[11.02, 11.42], [11.52, 11.95]] };
+  const number = namekuji ? "D51 1" : "D51 200";
+  // the running board rises over the fourth driver; the standard engine's stays up to the cab
+  const rb: Array<[number, number]> = namekuji
+    ? [[0.4, 1.12], [1.3, D51_RB], [7.7, D51_RB], [8.0, 2.32], [8.9, 2.32], [9.25, 1.93], [10.84, 1.93]]
+    : [[0.4, 1.12], [1.3, D51_RB], [8.2, D51_RB], [8.5, 2.32], [10.84, 2.32]];
+  const defTop = D51_SMOKEBOX_TOP - 0.08;
   return {
     title: "JNR D51",
-    palette: JNR_STEAM,
-    heads: [0, 11.6],
+    palette: D51_PALETTE(variant),
+    heads: [0, D51_ENGINE],
     beams: { front: false, rear: false },
-    boiler: { x0: 0.9, x1: 8.6, y: 2.6, r: 0.82, smokebox: 1.5, bands: [3.6, 5.6, 7.4] },
-    chimney: { x: 1.8, top: 3.95, r: 0.26 },
-    // the standard engine's separate sand and steam domes, or the early "namekuji" (slug) casing from the chimney back
-    domes: variant === "namekuji" ? [{ x: 3.6, top: 3.82, r: 0.36, len: 3.2 }] : [{ x: 3.6, top: 3.85, r: 0.36 }, { x: 5.2, top: 3.85, r: 0.38 }],
-    valves: { x: 7.7, top: 3.65 },
-    handrail: { x0: 1.8, x1: 8.4, y: 2.8 },
-    runningBoard: { profile: [[0.4, 1.35], [1.3, 1.35], [1.8, 1.9], [8.9, 1.9]], half: 1.4, valance: 0.08 },
-    frame: { x0: 0.5, x1: 11.0, top: 1.8 },
+    boiler: { ...D51_BOILER },
+    chimney: { x: 1.9, top: 3.95, r: 0.3 },
+    volumes: [d51Casing(variant)],
+    valves: { x: 7.75, top: 3.72 },
+    handrail: { x0: 2.4, x1: 10.7, y: 2.8 },
+    runningBoard: { profile: rb, half: D51_RB_HALF, valance: 0.08, valanceMat: "lining" },
+    frame: { x0: 0.6, x1: 12.2, top: 1.7 },
     cab: {
-      x0: 8.6, x1: 11.0, half: [[1.45, 1.75], [1.45, 3.5], [1.25, 3.78], [0.8, 3.93], [0, 3.98]], roofY: 3.75,
-      windows: [{ x0: 8.9, x1: 9.6, y0: 2.75, y1: 3.35 }, { x0: 9.8, x1: 10.5, y0: 2.75, y1: 3.35 }],
-      front: [{ z0: 0.8, z1: 1.2, y0: 2.95, y1: 3.4 }, { z0: -1.2, z1: -0.8, y0: 2.95, y1: 3.4 }],
+      x0: cab.x0, x1: cab.x1, half: [[D51_CAB_HALF, 1.8], [D51_CAB_HALF, 3.45], [1.28, 3.72], [0.85, 3.88], [0, 3.93]], roofY: 3.7,
+      windows: cab.win.map(([x0, x1]) => ({ x0: x0!, x1: x1!, y0: 2.72, y1: 3.32 })),
+      front: [{ z0: 0.92, z1: 1.28, y0: 3.0, y1: 3.42 }, { z0: -1.28, z1: -0.92, y0: 3.0, y1: 3.42 }],
     },
-    prisms: [{ name: "firebox", x0: 7.2, x1: 8.6, half: [[0.95, 2.0], [0.95, 2.95], [0.8, 3.35], [0.5, 3.5], [0, 3.55]] }],
-    deflectors: { outlines: [[[0.8, 1.95], [2.3, 1.95], [2.3, 3.3], [1.1, 3.3], [0.8, 3.0]]], z: 1.3 },
-    bogies: [{ x0: 1.6, x1: 2.8, y: 0.55 }],
+    // the wide firebox over the trailing truck, under the cab front
+    prisms: [{ name: "firebox", x0: 8.7, x1: 10.85, half: [[1.0, 1.95], [1.0, 2.85], [0.82, 3.17], [0.45, 3.29], [0, 3.31]] }],
+    // the plates beside the smokebox: their foot follows the front running board's slope down to the beam
+    deflectors: {
+      outlines: [
+        [[1.3, D51_RB], [2.32, D51_RB], [2.32, defTop - 0.24], [2.29, defTop - 0.12], [2.22, defTop - 0.04], [2.1, defTop], [1.3, defTop]],
+        [[0.42, 1.15], [1.3, D51_RB], [1.3, defTop], [0.47, defTop], [0.42, defTop - 0.05]],
+      ],
+      z: 1.42,
+    },
+    bogies: [{ x0: 0.62, x1: 1.12, y: 0.55 }, { x0: 9.6, x1: 10.55, y: 0.62 }],
     gear: {
       wheels: [
-        { x: 2.2, d: 0.86, spokes: 10, outsideBoxes: true },
-        { x: 3.85, d: 1.4, spokes: 16 },
-        { x: 5.4, d: 1.4, spokes: 16 },
-        { x: 6.95, d: 1.4, spokes: 16 },
-        { x: 8.5, d: 1.4, spokes: 16 },
-        { x: 10.2, d: 1.07, spokes: 12, outsideBoxes: true },
+        { x: D51_LEAD, d: 0.86, spokes: 10, outsideBoxes: true },
+        // the box (Boxpok) drivers drawn as discs
+        ...D51_DRIVERS.map((x) => ({ x, d: 1.4, spokes: 0 })),
+        { x: D51_TRAIL, d: 1.07, spokes: 12, outsideBoxes: true },
       ],
-      engines: [{ coupled: [1, 2, 3, 4], main: 3, cylinder: { x0: 1.4, x1: 2.4, y: 0.95, r: 0.33 }, crank: 0.33, phase: 0.2, valveGear: true }],
+      engines: [{ coupled: [1, 2, 3, 4], main: 3, cylinder: { x0: 1.32, x1: 2.31, y: 1.0, r: 0.33 }, crank: 0.33, phase: 0.2, valveGear: true }],
       cylinderZ: 1.1, reference: 3, wheelMaterial: "wheel",
     },
-    number: { text: variant === "namekuji" ? "D51 1" : "D51 200", side: [9.7, 2.4, 1.45], front: [0.88, 2.35] },
+    number: { text: number, side: [cab.win[0]![0]! + 0.2, 2.3, D51_CAB_HALF] },
     extras: (t) => {
-      jnrFront(t, 1.05, 3.4);
-      t.m.scope("drawbar", () => t.box("black", 11.0, 11.6, 0.8, 1.0, -0.15, 0.15));
+      d51Front(t, variant, number);
+      d51Pumps(t);
+      d51Cylinders(t);
+      t.m.scope("cab sills", () => { for (const s of [-1, 1]) t.sideBox("lining", s, cab.x0, cab.x1, 1.8, 1.86, D51_CAB_HALF + 0.004, D51_CAB_HALF + 0.014); });
+      // the cab roof carried on over the gap to the tender
+      t.m.scope("roof extension", () => t.section("roof", cab.x1 + 0.12, D51_ENGINE - 0.02, [[-0.9, 3.92], [0.9, 3.92], [0.9, 3.95], [0, 3.99], [-0.9, 3.95]]));
+      t.m.scope("drawbar", () => t.box("black", cab.x1, D51_ENGINE, 0.8, 1.0, -0.15, 0.15));
     },
   };
 }
 
+/** The 8-20 tender on two two-axle bogies: tank, coal space with its raised sides, white sills. */
 function d51TenderSpec(): LocoSpec {
-  return { ...c62TenderSpec(), title: "JNR D51 tender", heads: [0, 8.2],
-    frame: { x0: 0.3, x1: 7.8, top: 1.2 },
-    prisms: [{ name: "tank", x0: 0.3, x1: 7.7, half: [[1.4, 1.2], [1.4, 2.85]] }, { name: "coal sides", x0: 0.5, x1: 4.8, half: [[1.4, 2.85], [1.3, 3.2]] }],
-    coal: { x0: 0.7, x1: 4.6, y: 3.2, half: 1.15, rise: 0.35 },
-    bogies: [{ x0: 0.6, x1: 3.2, y: 0.55 }, { x0: 4.8, x1: 7.4, y: 0.55 }],
-    gear: { wheels: [1.15, 2.65, 5.35, 6.85].map((x) => ({ x, d: 0.86, spokes: 0 })), engines: [], cylinderZ: 1.0, reference: 0, wheelMaterial: "wheel" },
-    lamps: { front: [], rear: [[7.72, 2.5, 0]] },
-    extras: (t) => t.m.scope("rear beam", () => { t.box("beam", 7.7, 7.85, 0.75, 1.15, -1.3, 1.3); knuckleCoupler(t.m, -1, -t.X(8.2) - 0.6, -t.X(8.2), COUPLER_Y); }),
+  const L = D51_TENDER;
+  return {
+    title: "JNR D51 tender",
+    palette: D51_PALETTE("standard"),
+    heads: [0, L],
+    beams: { front: false, rear: false },
+    frame: { x0: 0.3, x1: L - 0.35, top: 1.15 },
+    prisms: [
+      { name: "tank", x0: 0.2, x1: L - 0.33, half: [[1.38, 1.15], [1.38, 3.0]] },
+      { name: "coal sides", x0: 0.2, x1: 4.4, half: [[1.38, 3.0], [1.3, 3.25]] },
+    ],
+    coal: { x0: 0.4, x1: 4.2, y: 3.1, half: 1.15, rise: 0.3 },
+    bogies: [{ x0: 0.55, x1: 2.95, y: 0.55 }, { x0: 4.4, x1: 6.8, y: 0.55 }],
+    gear: { wheels: [1.0, 2.5, 4.85, 6.35].map((x) => ({ x, d: 0.86, spokes: 0 })), engines: [], cylinderZ: 1.0, reference: 0, wheelMaterial: "wheel" },
+    lamps: { front: [], rear: [[L - 0.1, 2.5, 0.9]] },
+    extras: (t) => {
+      t.m.scope("sills", () => { for (const s of [-1, 1]) t.sideBox("lining", s, 0.2, L - 0.33, 1.04, 1.12, 1.3, 1.39); });
+      t.m.scope("rear beam", () => { t.box("beam", L - 0.33, L - 0.18, 0.75, 1.15, -1.3, 1.3); knuckleCoupler(t.m, -1, -t.X(L) - 0.6, -t.X(L), COUPLER_Y); });
+    },
   };
+}
+
+/** The distant model's spec: the casing as a dome block (the LOD kit's dome), no volumes. */
+function d51LodSpec(spec: LocoSpec): LocoSpec {
+  const v = spec.volumes?.[0];
+  if (!v) return spec;
+  const x0 = v.plan[0]![0], x1 = v.plan[v.plan.length - 1]![0];
+  return { ...spec, volumes: undefined, domes: [{ x: (x0 + x1) / 2, top: 3.82, r: 0.45, len: x1 - x0 }] };
 }
 
 const c62 = (v?: ParamValues) => (resolveParams([UNIT_PARAM], v).unit === "tender" ? c62TenderSpec() : c62Spec());
@@ -173,7 +334,7 @@ const d51 = (v?: ParamValues) => { const p = resolveParams(D51_PARAMS, v); retur
 export function jnrC62(v?: ParamValues): MeshBuilder { return buildLoco(c62(v)); }
 export function jnrC62Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(c62(v)); }
 export function jnrD51(v?: ParamValues): MeshBuilder { return buildLoco(d51(v)); }
-export function jnrD51Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(d51(v)); }
+export function jnrD51Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(d51LodSpec(d51(v)), 120); }
 export const jnrSteamSpec = (id: string, v?: ParamValues): LocoSpec => (id === "proc-vehicle-jnr-c62" ? c62(v) : d51(v));
 
 // ---------------------------------------------------------------------------
@@ -328,7 +489,7 @@ const steamGame = (weight: number, power: number, maxspeed: number, tender: numb
 
 export const JNR_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-jnr-c62", title: "JNR C62", build: jnrC62, buildLod: jnrC62Lod, params: [UNIT_PARAM], game: steamGame(89, 1210, 100, 56), catalog: STEAM_CATALOG, references: "jnr-c62" },
-  { id: "proc-vehicle-jnr-d51", title: "JNR D51", build: jnrD51, buildLod: jnrD51Lod, params: D51_PARAMS, game: steamGame(78, 950, 85, 47, [{ params: { unit: "tender", variant: "namekuji" }, weight: 47, power: 0 }]), catalog: STEAM_CATALOG, references: "jnr-d51" },
+  { id: "proc-vehicle-jnr-d51", title: "JNR D51", build: jnrD51, buildLod: jnrD51Lod, lodTriangles: 200, params: D51_PARAMS, game: steamGame(78, 950, 85, 47, [{ params: { unit: "tender", variant: "namekuji" }, weight: 47, power: 0 }]), catalog: STEAM_CATALOG, references: "jnr-d51" },
   { id: "proc-vehicle-jnr-ef66", title: "JNR EF66", build: jnrEf66, buildLod: jnrEf66Lod, params: EF66_PARAMS, game: { weight: 101, power: 3900, maxspeed: 110, accel: null }, catalog: ELECTRIC_LOCO_CATALOG, references: "jnr-ef66" },
   { id: "proc-vehicle-jnr-dd51", title: "JNR DD51", build: jnrDd51, buildLod: jnrDd51Lod, params: DD51_PARAMS, finishParams: ["livery"], game: { weight: 84, power: 1640, maxspeed: 95, accel: null }, catalog: DIESEL_LOCO_CATALOG, references: "jnr-dd51" },
   { id: "proc-vehicle-blue-train-24", title: "Blue Train 24 series", build: blueTrain24, buildLod: blueTrain24Lod, params: BLUE_PARAMS, game: { weight: 33, power: 0, maxspeed: 110, accel: null, variants: [{ params: { unit: "dining" }, weight: 38 }] }, catalog: COACH_CATALOG, references: "blue-train-24" },

@@ -33,8 +33,26 @@ describe("the JNR locomotives and the Blue Train", () => {
     expect(c62.gear.engines[0]!.coupled.map((i) => c62.gear.wheels[i]!.d)).toEqual([1.75, 1.75, 1.75]);
     const d51 = jnrSteamSpec("proc-vehicle-jnr-d51");
     expect(d51.gear.engines[0]!.coupled.map((i) => d51.gear.wheels[i]!.d)).toEqual([1.4, 1.4, 1.4, 1.4]);
-    expect(jnrSteamSpec("proc-vehicle-jnr-d51", { variant: "namekuji" }).domes).toHaveLength(1);
-    expect(jnrSteamSpec("proc-vehicle-jnr-d51").domes).toHaveLength(2);
+    // the drivers at the published 1,550 mm pitch; engine and 8-20 tender 19.73 m over the couplers
+    const drivers = d51.gear.engines[0]!.coupled.map((i) => d51.gear.wheels[i]!.x);
+    for (let i = 1; i < drivers.length; i++) expect(drivers[i]! - drivers[i - 1]!).toBeCloseTo(1.55, 5);
+    const tender = jnrSteamSpec("proc-vehicle-jnr-d51", { unit: "tender" });
+    expect(d51.heads[1] - d51.heads[0] + tender.heads[1] - tender.heads[0]).toBeCloseTo(19.73, 5);
+  });
+
+  it("gives the D51 one dome casing: the standard's 2.6 m casing behind the chimney, the namekuji's long one from it", () => {
+    const span = (variant: string) => {
+      const s = jnrSteamSpec("proc-vehicle-jnr-d51", { variant });
+      expect(s.volumes).toHaveLength(1);
+      const plan = s.volumes![0]!.plan;
+      return { x0: plan[0]![0], x1: plan[plan.length - 1]![0], chimney: s.chimney!.x };
+    };
+    const std = span("standard");
+    expect(std.x1 - std.x0).toBeCloseTo(2.65, 1);
+    expect(std.x0 - std.chimney).toBeGreaterThan(1.2);
+    const nam = span("namekuji");
+    expect(nam.x1 - nam.x0).toBeGreaterThan(5);
+    expect(Math.abs(nam.x0 - nam.chimney)).toBeLessThan(0.35);
   });
 
   it("runs the EF66 and the DD51 on three bogies, the EF66's rear pantograph raised", () => {
