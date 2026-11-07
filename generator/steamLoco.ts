@@ -32,7 +32,8 @@ export interface LocoSpec {
   palette: Record<string, MaterialSpec>;
   /** Source x of the front and rear buffer heads; the model is centred between them. */
   heads: [number, number];
-  boiler?: { x0: number; x1: number; y: number; r: number; smokebox: number; bands?: number[]; band?: string };
+  /** `n`: facets round the boiler (20 by default). */
+  boiler?: { x0: number; x1: number; y: number; r: number; smokebox: number; bands?: number[]; band?: string; n?: number };
   /** The chimney; `base` is where it starts when there is no boiler (a streamlined casing); `mat` its paint in the low level of detail (the smokebox's by default). */
   chimney?: { x: number; top: number; r: number; base?: number; mat?: string };
   domes?: Array<{ x: number; top: number; r: number; len?: number; mat?: string }>;

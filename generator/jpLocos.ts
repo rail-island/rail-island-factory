@@ -54,45 +54,205 @@ function jnrFront(t: Steam, headX: number, headY: number): void {
   });
 }
 
+// The C62 as C62 2 ("Swallow Angel") is preserved at the Kyoto Railway Museum, measured from
+// side-on photographs of C62 3 at Naebo (143 px/m on the 1,750 mm drivers) and C62 2 itself
+// (assets/jnr-c62/SOURCES.md): source x from the front coupler face, 13.1 m to the drawbar,
+// the 10-22 tender 8.375 m more (21.475 m in all).
+
+/** C62 2's paint: gloss black, the white edging of the running boards and tyres, red coupling rods, a black buffer beam. */
+const C62_STEAM: Record<string, MaterialSpec> = {
+  paint: c("#1b1c1e", 0.35), wheel: c("#1b1c1e", 0.55), frame: c("#1b1c1e", 0.65), crimson: c("#8a2a22", 0.5), lining: c("#e8e6df", 0.55),
+  beam: c("#1b1c1e", 0.6), smokebox: c("#2a2b2e", 0.5), rim: c("#46474b", 0.45), tyre: c("#cfcdc6", 0.5),
+  plate: c("#1b1c1e", 0.45), plateText: { color: "#c9a64e", metallic: 0.5, roughness: 0.35 },
+  stainless: { color: "#c9cdd1", metallic: 0.6, roughness: 0.3 }, marker: { color: "#b3221d", roughness: 0.3 },
+  knuckle: c("#3a3b3d", 0.7), handrail: c("#c9ccce", 0.5),
+};
+
+const C62_LENGTH = 13.1;
+const C62_TENDER_LENGTH = 8.375;
+/** The running board: the front deck, the slope behind the deflectors' foot, the board, the hump by the firebox and the cab step. */
+const C62_BOARD: Array<[number, number]> = [[0.25, 1.22], [0.6, 1.22], [1.66, 2.27], [9.0, 2.27], [9.2, 2.47], [9.85, 2.47], [10.05, 2.07], [10.8, 2.07]];
+const C62_DEFLECTOR_Z = 1.41;
+/** The dome casing's section: near-vertical sides rising out of the boiler into a round top. */
+const C62_CASING: Array<[number, number]> = [[-0.42, 3.2], [0.42, 3.2], [0.42, 3.6], [0.39, 3.76], [0.31, 3.88], [0.17, 3.95], [0, 3.97], [-0.17, 3.95], [-0.31, 3.88], [-0.39, 3.76], [-0.42, 3.6]];
+/** The deflector plate (convex pieces round its opening): the chamfered top front, the foot down the board's slope. */
+const C62_DEFLECTOR: Array<Array<[number, number]>> = [
+  [[0.55, 2.87], [2.77, 2.87], [2.77, 3.53], [2.69, 3.64], [0.99, 3.64], [0.55, 3.1]],
+  [[0.55, 1.14], [0.88, 1.16], [1.66, 2.3], [1.75, 2.3], [1.75, 2.87], [0.55, 2.87]],
+  [[1.75, 2.3], [2.77, 2.3], [2.77, 2.42], [1.75, 2.42]],
+  [[2.69, 2.42], [2.77, 2.42], [2.77, 2.87], [2.69, 2.87]],
+];
+
+/** The stainless swallow on C62 2's deflectors: triangles in (forward, up) about its centre, 1 = its span. */
+const SWALLOW: Array<[number, number]> = [
+  // head and body
+  [0.5, 0.01], [0.22, 0.06], [0.2, -0.05], [0.22, 0.06], [-0.16, 0.02], [0.2, -0.05], [0.2, -0.05], [-0.16, 0.02], [-0.12, -0.03],
+  // the near wing swept up and back, the far wing below
+  [0.26, 0.05], [0.0, 0.03], [-0.36, 0.3], [0.26, 0.05], [-0.36, 0.3], [-0.2, 0.3],
+  [0.18, -0.03], [-0.02, -0.02], [-0.3, -0.19],
+  // the forked tail
+  [-0.1, 0.02], [-0.5, 0.1], [-0.22, 0.0], [-0.1, -0.02], [-0.5, -0.11], [-0.22, 0.0],
+];
+
+/** The swallow on side s's deflector, centred at source x, height y, `span` long, its head forward. */
+function c62Swallow(t: Steam, s: number, x: number, y: number, span: number): void {
+  const z = s * (C62_DEFLECTOR_Z + 0.025 + 0.004);
+  t.m.scope("swallow", () => t.m.facets("stainless", SWALLOW.map(([u, v]): [number, number, number] => [t.X(x - u * span), y + v * span, z]), [0, 0, s]));
+}
+
+/** The front end: black buffer beam with marker lamps and the automatic coupler, the deck rail, the headlight and C62 2's second lamp. */
+function c62Front(t: Steam): void {
+  t.m.scope("front beam", () => {
+    t.box("beam", 0.22, 0.45, 0.75, 1.2, -1.35, 1.35);
+    knuckleCoupler(t.m, 1, t.X(0) - 0.6, t.X(0), COUPLER_Y);
+    for (const z of [-1.08, 1.08]) {
+      t.cylX("black", 0.22, 0.12, z, 1.0, 0.075, 10);
+      t.cylX("marker", 0.12, 0.105, z, 1.0, 0.055, 10);
+    }
+    // the deck rail above the beam
+    for (const s of [-1, 1]) for (const z of [0.45, 1.15]) t.box("handrail", 0.3, 0.33, 1.22, 1.72, s * z - 0.015, s * z + 0.015);
+    for (const s of [-1, 1]) t.cylZ("handrail", 0.315, 1.72, s * 0.45, s * 1.16, 0.018, 6);
+  });
+  t.m.scope("headlight", () => {
+    // the LP403 headlight on its bracket at the smokebox's top front
+    t.box("black", 1.3, 1.5, 3.62, 3.72, -0.1, 0.1);
+    t.cylX("black", 1.62, 1.15, 0, 3.88, 0.2, 14);
+    t.cylX("black", 1.15, 1.1, 0, 3.88, 0.215, 14);
+    t.cylX("lampHead", 1.1, 1.085, 0, 3.88, 0.17, 14);
+    // C62 2's smaller second lamp beside it, on the right
+    t.cylX("black", 1.5, 1.2, 0.31, 3.8, 0.1, 10);
+    t.cylX("lampHead", 1.2, 1.185, 0.31, 3.8, 0.08, 10);
+  });
+  t.m.scope("smokebox door", () => {
+    // the brass four-spoke handle in the middle of the door, the number plate above it
+    // the door's rim, catching the light round the round door
+    t.m.tube("rim", "x", 0, 2.75, 0.75, 0.69, t.X(1.1) + 0.05, t.X(1.1) + 0.079, 28);
+    const X = t.X(1.1) + 0.101;
+    block(t.m, "brass", X, X + 0.02, 2.73, 2.77, -0.2, 0.2);
+    block(t.m, "brass", X, X + 0.02, 2.55, 2.95, -0.02, 0.02);
+    t.endPlate(1, 1.1 - 0.07, 3.12, "C62 2", 0.15);
+  });
+}
+
+/** Fittings on the boiler and cab: feedwater heater, feed and air pumps, the cab's white skirt line and plates. */
+function c62Fittings(t: Steam): void {
+  t.m.scope("feedwater heater", () => t.cylZ("smokebox", 1.85, 3.6, -0.5, 0.5, 0.15, 12));
+  t.m.scope("feed pump", () => {
+    // on the left side of the boiler, over the rear driver
+    t.cylX("black", 7.0, 7.6, -1.05, 2.68, 0.16, 10);
+    t.box("black", 7.6, 8.35, 2.5, 2.88, -1.18, -0.88);
+    t.box("black", 7.2, 8.2, 2.27, 2.5, -1.12, -0.94);
+  });
+  t.m.scope("air pump", () => {
+    // the air compressor on the right, behind the deflector
+    t.cylY("black", 3.25, 1.05, 2.27, 2.95, 0.15, 10);
+    t.cylY("black", 3.25, 1.05, 2.95, 3.02, 0.11, 10);
+  });
+  t.m.scope("air reservoirs", () => {
+    // a main reservoir under the board each side ahead of the firebox, the pipes along the board's edge
+    for (const s of [-1, 1]) {
+      t.cylX("black", 7.3, 8.5, s * 1.16, 1.97, 0.2, 10);
+      for (const y of [2.04, 2.13]) t.cylX("black", 3.0, 9.0, s * 1.3, y, 0.022, 6);
+    }
+  });
+  t.m.scope("cylinder casings", () => {
+    // the cylinder and valve chest clad in one block, the covers proud at both ends
+    for (const s of [-1, 1]) t.sideBox("paint", s, 1.74, 2.76, 0.6, 2.25, 0.78, 1.5);
+  });
+  t.m.scope("cab", () => {
+    for (const s of [-1, 1]) {
+      // the white line round the cab's skirt and the depot plate under the number
+      t.sideBox("lining", s, 10.79, 12.96, 1.74, 1.8, 1.4, 1.465);
+      t.sideBox("plate", s, 11.15, 11.4, 2.05, 2.22, 1.45, 1.462);
+      t.sideBox("lining", s, 11.18, 11.37, 2.09, 2.18, 1.462, 1.466);
+    }
+  });
+}
+
 function c62Spec(): LocoSpec {
   return {
     title: "JNR C62",
-    palette: JNR_STEAM,
-    heads: [0, 13.6],
+    palette: C62_STEAM,
+    heads: [0, C62_LENGTH],
     beams: { front: false, rear: false },
-    boiler: { x0: 1.0, x1: 10.3, y: 2.75, r: 0.86, smokebox: 1.6, bands: [4.0, 6.0, 8.0] },
-    chimney: { x: 2.0, top: 3.95, r: 0.26 },
-    domes: [{ x: 4.7, top: 3.88, r: 0.38, len: 2.3 }],
-    valves: { x: 9.3, top: 3.82 },
-    handrail: { x0: 2.0, x1: 10.1, y: 2.95 },
-    runningBoard: { profile: [[0.4, 1.4], [1.5, 1.4], [2.1, 1.95], [10.6, 1.95]], half: 1.4, valance: 0.08 },
-    frame: { x0: 0.5, x1: 13.0, top: 1.85 },
+    boiler: { x0: 1.1, x1: 9.5, y: 2.75, r: 0.87, smokebox: 2.4, bands: [3.9, 7.7, 8.9], band: "rim", n: 28 },
+    chimney: { x: 2.42, top: 3.98, r: 0.3 },
+    // the long casing over the sand and steam domes: a rounded loaf, its ends tapering down
+    volumes: [{ name: "dome casing", sec: C62_CASING, plan: [[4.18, 0.2], [4.35, 0.36], [4.6, 0.42], [7.0, 0.42], [7.25, 0.36], [7.42, 0.2]],
+      top: [[4.18, 3.62], [4.35, 3.84], [4.6, 3.95], [7.0, 3.95], [7.25, 3.84], [7.42, 3.62]], bands: [[3.2, 4.0, "paint"]] }],
+    valves: { x: 8.5, top: 3.92 },
+    handrail: { x0: 2.95, x1: 9.3, y: 3.25 },
+    runningBoard: { profile: C62_BOARD, half: 1.4, valance: 0.07, valanceMat: "lining" },
+    frame: { x0: 0.5, x1: 12.9, top: 1.6 },
     cab: {
-      x0: 10.3, x1: 12.9, half: [[1.45, 1.8], [1.45, 3.5], [1.25, 3.78], [0.8, 3.93], [0, 3.98]], roofY: 3.75,
-      windows: [{ x0: 10.6, x1: 11.4, y0: 2.75, y1: 3.35 }, { x0: 11.6, x1: 12.4, y0: 2.75, y1: 3.35 }],
-      front: [{ z0: 0.8, z1: 1.2, y0: 2.95, y1: 3.4 }, { z0: -1.2, z1: -0.8, y0: 2.95, y1: 3.4 }],
+      x0: 10.8, x1: 12.95, half: [[1.45, 1.75], [1.45, 3.45], [1.3, 3.72], [0.85, 3.86], [0, 3.91]], roofY: 3.72,
+      windows: [{ x0: 10.98, x1: 11.62, y0: 2.72, y1: 3.36 }, { x0: 11.82, x1: 12.5, y0: 2.72, y1: 3.36 }],
+      front: [{ z0: 1.13, z1: 1.38, y0: 3.0, y1: 3.42 }, { z0: -1.38, z1: -1.13, y0: 3.0, y1: 3.42 }],
     },
-    prisms: [{ name: "firebox", x0: 8.8, x1: 10.3, half: [[1.0, 2.0], [1.0, 3.0], [0.85, 3.45], [0.5, 3.62], [0, 3.66]] }],
-    // the large smoke deflectors of the express engines
-    deflectors: { outlines: [[[0.9, 2.0], [2.7, 2.0], [2.7, 3.55], [1.25, 3.55], [0.9, 3.2]]], z: 1.3 },
-    bogies: [{ x0: 1.2, x1: 3.6, y: 0.55 }, { x0: 10.5, x1: 12.8, y: 0.58 }],
+    // the wide firebox over the trailing truck, ahead of the cab
+    prisms: [{ name: "firebox", x0: 9.4, x1: 10.85, half: [[1.15, 1.9], [1.15, 2.9], [1.0, 3.35], [0.6, 3.6], [0, 3.66]] }],
+    deflectors: { outlines: C62_DEFLECTOR, z: C62_DEFLECTOR_Z },
+    bogies: [{ x0: 0.9, x1: 3.75, y: 0.55 }, { x0: 10.4, x1: 12.5, y: 0.58 }],
     gear: {
       wheels: [
-        { x: 1.75, d: 0.86, spokes: 10, outsideBoxes: true },
-        { x: 3.05, d: 0.86, spokes: 10, outsideBoxes: true },
-        { x: 4.7, d: 1.75, spokes: 20 },
-        { x: 6.65, d: 1.75, spokes: 20 },
-        { x: 8.6, d: 1.75, spokes: 20 },
-        { x: 11.0, d: 0.92, spokes: 12, outsideBoxes: true },
-        { x: 12.3, d: 0.92, spokes: 12, outsideBoxes: true },
+        { x: 1.21, d: 0.86, spokes: 0, outsideBoxes: true },
+        { x: 3.47, d: 0.86, spokes: 0, outsideBoxes: true },
+        { x: 5.2, d: 1.75, spokes: 8, box: true },
+        { x: 7.27, d: 1.75, spokes: 8, box: true },
+        { x: 9.34, d: 1.75, spokes: 8, box: true },
+        { x: 10.95, d: 0.92, spokes: 0, outsideBoxes: true },
+        { x: 12.05, d: 0.92, spokes: 0, outsideBoxes: true },
       ],
-      engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 1.9, x1: 2.9, y: 1.0, r: 0.33 }, crank: 0.33, phase: 0.4, valveGear: true }],
-      cylinderZ: 1.1, reference: 3, wheelMaterial: "wheel",
+      engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 1.75, x1: 2.75, y: 0.98, r: 0.36 }, crank: 0.33, phase: 0.4, valveGear: true }],
+      cylinderZ: 1.1, reference: 3, wheelMaterial: "wheel", couplingMat: "crimson",
     },
-    number: { text: "C62 2", side: [11.6, 2.45, 1.45], front: [0.98, 2.45] },
+    number: { text: "C62 2", side: [11.3, 2.36, 1.45] },
     extras: (t) => {
-      jnrFront(t, 1.15, 3.55);
-      t.m.scope("drawbar", () => t.box("black", 12.9, 13.6, 0.8, 1.0, -0.15, 0.15));
+      c62Front(t);
+      c62Fittings(t);
+      for (const s of [-1, 1]) c62Swallow(t, s, 1.3, 3.18, 0.66);
+      t.m.scope("drawbar", () => t.box("black", 12.95, C62_LENGTH, 0.8, 1.0, -0.15, 0.15));
+    },
+  };
+}
+
+/** The 10-22 tender: the welded "boat-bottom" tank, the coal space ahead of the lower water deck, two three-axle bogies. */
+function c62Tender(): LocoSpec {
+  const L = C62_TENDER_LENGTH;
+  const axles = [1.0, 2.2, 3.4, 5.0, 6.2, 7.4];
+  return {
+    title: "JNR C62 tender",
+    palette: C62_STEAM,
+    heads: [0, L],
+    beams: { front: false, rear: false },
+    frame: { x0: 0.3, x1: 8.05, top: 1.22 },
+    prisms: [
+      { name: "tank", x0: 0.3, x1: 8.15, half: [[1.24, 1.22], [1.42, 1.42], [1.42, 2.85]] },
+      { name: "coal space", x0: 0.3, x1: 7.15, half: [[1.42, 2.85], [1.42, 3.15]] },
+    ],
+    coal: { x0: 0.75, x1: 6.7, y: 3.1, half: 1.25, rise: 0.28 },
+    bogies: [{ x0: 0.55, x1: 3.85, y: 0.55 }, { x0: 4.55, x1: 7.85, y: 0.55 }],
+    gear: { wheels: axles.map((x) => ({ x, d: 0.86, spokes: 0, outsideBoxes: true })), engines: [], cylinderZ: 1.0, reference: 0, wheelMaterial: "wheel" },
+    lamps: { front: [], rear: [[8.37, 2.55, 0]] },
+    extras: (t) => {
+      t.m.scope("rear beam", () => { t.box("beam", 8.15, 8.3, 0.75, 1.2, -1.35, 1.35); knuckleCoupler(t.m, -1, -t.X(L) - 0.6, -t.X(L), COUPLER_Y); });
+      t.m.scope("lining", () => {
+        // the white edge along the coal space's top and the water deck behind it
+        for (const s of [-1, 1]) {
+          t.sideBox("lining", s, 0.3, 7.15, 3.09, 3.17, 1.42, 1.455);
+          t.sideBox("lining", s, 7.15, 8.15, 2.79, 2.87, 1.42, 1.455);
+          t.sideBox("lining", s, 7.12, 7.15, 2.87, 3.09, 1.42, 1.455);
+        }
+      });
+      t.m.scope("water filler", () => t.cylY("black", 7.65, 0, 2.85, 3.0, 0.3, 12));
+      t.m.scope("front bulkhead", () => {
+        // the coal space's front plate standing over the cab's gangway, the tool boxes at its corners
+        t.box("paint", 0.3, 0.42, 3.15, 3.55, -0.95, 0.95);
+        for (const s of [-1, 1]) t.sideBox("paint", s, 0.3, 1.0, 3.15, 3.5, 0.95, 1.4);
+        // the sloping coal floor's rear wall behind the heap
+        t.box("paint", 6.7, 7.15, 3.15, 3.3, -1.4, 1.4);
+      });
+      t.m.scope("drawbar", () => t.box("black", 0, 0.3, 0.8, 1.0, -0.15, 0.15));
     },
   };
 }
@@ -173,10 +333,11 @@ function d51TenderSpec(): LocoSpec {
   };
 }
 
-const c62 = (v?: ParamValues) => (resolveParams([UNIT_PARAM], v).unit === "tender" ? c62TenderSpec() : c62Spec());
+const c62 = (v?: ParamValues) => (resolveParams([UNIT_PARAM], v).unit === "tender" ? c62Tender() : c62Spec());
 const d51 = (v?: ParamValues) => { const p = resolveParams(D51_PARAMS, v); return p.unit === "tender" ? d51TenderSpec() : d51Spec(p.variant as D51Variant); };
 export function jnrC62(v?: ParamValues): MeshBuilder { return buildLoco(c62(v)); }
-export function jnrC62Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(c62(v)); }
+// the distant C62 draws its rounded dome casing as one of the kit's domes (a volume shell would not fit 100 triangles)
+export function jnrC62Lod(v?: ParamValues): MeshBuilder { const s = c62(v); return steamLocoLod(s.volumes ? { ...s, volumes: undefined, domes: [{ x: 5.8, top: 3.95, r: 0.42, len: 3.24 }] } : s); }
 export function jnrD51(v?: ParamValues): MeshBuilder { return buildLoco(d51(v)); }
 export function jnrD51Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(d51(v)); }
 export const jnrSteamSpec = (id: string, v?: ParamValues): LocoSpec => (id === "proc-vehicle-jnr-c62" ? c62(v) : d51(v));

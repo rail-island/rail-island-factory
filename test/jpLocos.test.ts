@@ -37,6 +37,16 @@ describe("the JNR locomotives and the Blue Train", () => {
     expect(jnrSteamSpec("proc-vehicle-jnr-d51").domes).toHaveLength(2);
   });
 
+  it("draws the C62 as C62 2: Boxpok drivers, 21.475 m with its six-axle 10-22 tender, the swallow on its deflectors", () => {
+    const c62 = jnrSteamSpec("proc-vehicle-jnr-c62");
+    expect(c62.gear.engines[0]!.coupled.every((i) => c62.gear.wheels[i]!.box)).toBe(true);
+    const tender = jnrSteamSpec("proc-vehicle-jnr-c62", { unit: "tender" });
+    expect(tender.gear.wheels).toHaveLength(6);
+    expect(c62.heads[1] + tender.heads[1]).toBeCloseTo(21.475, 3);
+    const glb = design("proc-vehicle-jnr-c62").build().toGlb("c62");
+    expect(glbStats(glb).triangles).toBeLessThanOrEqual(15000);
+  });
+
   it("runs the EF66 and the DD51 on three bogies, the EF66's rear pantograph raised", () => {
     const ef = design("proc-vehicle-jnr-ef66").build();
     expect(ef.rig!.supports).toHaveLength(3);
