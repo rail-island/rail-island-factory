@@ -13,12 +13,14 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { paint } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
 import type { NoseShape } from "./carbodyKit.ts";
-import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
+import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type SeriesLayout, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
-import { sidePanel, type SliceBody } from "./sliceBody.ts";
+import { sideDecal, sidePanel, type SliceBody } from "./sliceBody.ts";
+import type { Ring } from "./meshCore.ts";
 import { block } from "./vehicleParts.ts";
 import { pilotPlate } from "./carbodyKit.ts";
 import { centreCoupler } from "./emuParts.ts";
+import { loftHalves } from "./sliceLoft.ts";
 
 const c = (hex: string, r = 0.4) => paint(hex, r);
 const nose = (len: number, tip: number, power: number, C: Pt[], S: Pt[], Y: Pt[], A: Pt[], B: Pt[]): NoseShape => ({ len, tip, power, C, S, Y, A, B });
@@ -326,19 +328,150 @@ export const S103: ShinkansenSeries = {
   weight: { end: 30, middle: 40 }, power: 440, maxspeed: 100,
 };
 
-export const GSE: ShinkansenSeries = {
-  endLength: 19.6, midLength: 16.0, W: 1.45, Y: 1.25, S: 3.0, C: 3.55, lean: 0.96, B: 0.9, A: 1.05,
-  // the observation front: a long rounded nose of glass, the driver's cab over the saloon
-  nose: nose(3.2, 0.25, 2.4, [[0, 1.5], [0.4, 2.2], [1.6, 3.0], [2.8, 3.45], [3.6, 3.55]], [[0, 1.45], [0.4, 2.05], [1.6, 2.7], [2.8, 2.95], [3.6, 3.0]], [[0, 1.35], [1.0, 1.25]], [[0, 1.25], [1.0, 1.05]], [[0, 1.2], [0.5, 0.9]]),
-  windscreen: [0.45, 2.7, 0.07, 1.25], lamps: [0.5, 1.45],
-  windows: [[1.85, 2.75]], windowW: 1.6, pitch: 1.95, door: [1.15, 3.0, 1.85, 2.6], doorW: 0.9,
-  bogieCentres: 9.5, wheelR: 0.43, wheelbase: 2.1,
-  liveries: {
-    rose: { title: "Rose vermilion", palette: { red: c("#c8102e"), white: c("#f2f2ef"), roofG: c("#e4e4e1", 0.5), skirtG: c("#c8102e") }, bands: [[0, 1.6, "red"], [1.6, 1.68, "white"], [1.68, 9, "red"]], roof: "red", skirt: "skirtG", number: "70051" },
-    lse: { title: "LSE colours", palette: { orange: c("#e86a1f"), grey: c("#7d8084"), white: c("#f2f2ef"), roofG: c("#e4e4e1", 0.5), skirtG: c("#7d8084") }, bands: [[0, 1.6, "grey"], [1.6, 1.7, "white"], [1.7, 2.8, "orange"], [2.8, 2.86, "white"], [2.86, 9, "grey"]], roof: "roofG", skirt: "skirtG", number: "7001" },
-  },
-  weight: { end: 36, middle: 30 }, power: 380, maxspeed: 110,
+// --- Odakyu 70000 "GSE" (assets/odakyu-gse/; docs/models/jp-emus.md, "The GSE") ---------------
+// Published (ja.wikipedia, SUBWAY 2018/5): 21.3 m end and 20.0 m intermediate cars on their own
+// bogies (not articulated), 2,878 mm wide, roof 3,700 mm, 4,057 mm over the raised cab, floor
+// 1,150 mm, side windows 1.0 m tall, 860 mm wheels, 2.1 m wheelbase. Heights and the nose's
+// profile measured on the near side view at Odawara (81.8 px/m: the 1.0 m windows, 4.057 m over the
+// cab), the plan and face widths on the head-on view at Shinjuku (211 px/m: the 2.878 m width).
+
+/** The tip-to-body join of the GSE's face: the face runs from the bumper up to the band under the cab dome. */
+const GSE_JOIN = 3.9;
+/** The end car's body length behind the join (21.3 m less the face, its 2 cm reach to the coupling plane and the 0.25 m coupling gap). */
+const GSE_END = 21.3 - GSE_JOIN - 0.02 - 0.25;
+/** The silver pillars beside the observation windscreen, [y, d behind the tip]: they run from the bumper's top up and back to the cab. */
+const GSE_PILLAR_FRONT: Pt[] = [[1.74, 0.7], [3.07, 2.3]];
+const GSE_PILLAR_BACK: Pt[] = [[1.74, 1.1], [3.07, 3.03]];
+
+/**
+ * The observation end: a blunt bumper (its most forward point 1.11 m up, raked back to 0.45 m and to
+ * 1.64 m), the saloon's windscreen raked 42 degrees from 1.74 m (0.5 m behind the tip) up to 3.03 m
+ * (1.7 m behind), the red band over it whose top slopes back to 3.39 m at 2.5 m, where the cab dome
+ * (gseFittings) stands; nearly flat in plan with 0.3 m corners. The windscreen glass wraps round the
+ * corners to the silver pillars.
+ */
+const GSE_FACE: SeriesCabFace = {
+  dJoin: GSE_JOIN, dSide: 1.4, first: 4.2, reach: 0.02, roofFrom: 3.47, cols: [8, 5, 1, 2], tolerance: 0.02,
+  // under the dome the face's top runs nearly level back to 3.6 m and only then rises to the roof's
+  // crown, inside the dome, so that the dome stands clear of it seen from ahead
+  profile: [[0.2, 0.9], [0.45, 0.78], [0.48, 0.42], [0.61, 0.25], [0.86, 0.1], [1.11, 0], [1.4, 0.12], [1.64, 0.32], [1.74, 0.52], [3.03, 1.7], [3.18, 1.8], [3.3, 1.98], [3.39, 2.5], [3.42, 3.4], [3.55, 3.75], [3.7, GSE_JOIN]],
+  // the lower bumper and the chin narrower than the body (the head-on view: 2.28 m at 0.5 m)
+  corner: [[0.2, 0.5], [0.48, 0.45], [0.86, 0.32], [1.11, 0.3], [1.74, 0.3], [3.03, 0.45], [3.3, 0.4], [3.42, 0.3], [3.6, 0.15], [3.7, 0.03]],
+  cornerRatio: [[0.2, 1.3], [1.74, 1.3], [3.03, 1.7], [3.42, 1.4], [3.7, 1.0]],
+  bulge: [[0.2, 0.1], [1.11, 0.12], [1.74, 0.06], [3.7, 0.02]],
+  rows: [0.2, 0.45, 0.48, 0.61, 0.86, 1.11, 1.4, 1.64, 1.7, 1.74, 1.76, 2.1, 2.5, 2.8, 3.03, 3.07, 3.14, 3.18, 3.28, 3.3, 3.39, 3.42, 3.45, 3.47, 3.55, 3.7],
+  bands: (l) => [[0, 0.45, "skirtG"], [0.45, 9, l.bands.find(([, top]) => top > 1.0)![2]]],
+  paint: [
+    // the body's colour down to 0.45 m on the nose's sides (the underframe cover starts behind the leading bogie)
+    { mat: "gseBody", front: [[0.45, -9], [0.86, -9]], back: [[0.45, 99], [0.86, 99]] },
+    // the windscreen wrapping round the corners ahead of the pillars, and the pillars
+    { mat: "cabGlass", front: [[1.74, -9], [3.07, -9]], back: GSE_PILLAR_FRONT },
+    { mat: "gseSilver", front: GSE_PILLAR_FRONT, back: GSE_PILLAR_BACK },
+  ],
+  panes: [{ lat: [-1.17, 1.17], y: [1.76, 3.03], r: 0.08, mat: "cabGlass" }],
+  // the coupler cover in the bumper; the square headlights on the band under the dome
+  masks: [{ lat: [-0.52, 0.52], y: [0.5, 0.86], r: 0.06, mat: "gseCover" }, { lat: [-1.1, -0.88], y: [3.12, 3.29], r: 0.03, mat: "black" }, { lat: [0.88, 1.1], y: [3.12, 3.29], r: 0.03, mat: "black" }],
+  lamps: [[-0.99, 3.205, 0.07, "lampHead"], [0.99, 3.205, 0.07, "lampHead"], [-0.71, 0.63, 0.04, "lampRed"], [0.71, 0.63, 0.04, "lampRed"]],
 };
+
+/** The cab dome's half section at full height ([z, y], base to crown): from the head-on view, its sides upright to 3.7 m, then arched to 4.05 m. */
+const GSE_DOME: Pt[] = [[1.2, 3.36], [1.18, 3.52], [1.13, 3.7], [1.0, 3.87], [0.78, 3.97], [0.43, 4.03], [0, 4.05]];
+/** Its stations, d behind the tip: the section's height and width scale. The glass dome rises from 2.5 m to 3.67 m; the cab's roof runs back to 6.2 m, then fairs down into the car's roof by 9.4 m. */
+const GSE_DOME_AT: ReadonlyArray<readonly [number, number, number]> = [[2.5, 0, 0.96], [2.79, 0.25, 0.97], [3.08, 0.5, 0.98], [3.37, 0.75, 0.99], [3.67, 1, 1], [3.75, 1, 1], [4.4, 1, 1], [4.45, 1, 1], [5.05, 1, 1], [6.2, 1, 1], [7.4, 0.7, 0.93], [8.6, 0.38, 0.82], [9.4, 0.2, 0.72]];
+
+/** A roof fairing over an air conditioner (d span on the car's body): rounded humps with black louvres at their ends. */
+function gseHump(m: MeshBuilder, X: (d: number) => number, C: number, d0: number, d1: number): void {
+  const sec: Pt[] = [[0.82, C - 0.16], [0.8, C + 0.1], [0.62, C + 0.2], [0, C + 0.22]];
+  const at: ReadonlyArray<readonly [number, number]> = [[d0, 0], [d0 + 0.45, 1], [d1 - 0.45, 1], [d1, 0]];
+  const halves = at.map(([, k]) => sec.map(([z, y]): Pt => [z * (0.85 + 0.15 * k), C - 0.16 + (y - C + 0.16) * k]));
+  loftHalves(m, at.map(([d]) => X(d)), halves, () => "gseRoof", () => C - 0.16);
+  for (const [a, e] of [[d0 + 0.5, d0 + 1.3], [d1 - 1.3, d1 - 0.5]] as const)
+    for (const sd of [1, -1]) block(m, "black", Math.min(X(a), X(e)), Math.max(X(a), X(e)), C - 0.03, C + 0.07, sd > 0 ? 0.795 : -0.83, sd > 0 ? 0.83 : -0.795);
+}
+
+/** The GSE's own fittings: the end car's raised cab dome, the roof fairings and the underfloor equipment. */
+function gseFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  const C = 3.7, L = car.length;
+  if (car.end) m.scope("cab dome", () => {
+    const halves = GSE_DOME_AT.map(([, kh, kz]) => GSE_DOME.map(([z, y]): Pt => [z * kz, 3.36 + (y - 3.36) * kh]));
+    // glass over the dome's front and in the cab's two side windows, the roof's colour over the top
+    const sideWindow = (d: number) => (d >= 3.75 && d < 4.4) || (d >= 4.45 && d < 5.05);
+    loftHalves(m, GSE_DOME_AT.map(([d]) => X(d - GSE_JOIN)), halves, (seg, edge) => {
+      const d = GSE_DOME_AT[seg]![0];
+      if (d < 3.67) return edge === 0 ? "gseBody" : "cabGlass";
+      if (edge >= 3 || (d >= 6.2 && edge >= 1)) return "gseRoof";
+      return sideWindow(d) && edge >= 1 ? "cabGlass" : "gseBody";
+    }, () => 3.36);
+  });
+  // the red valance low on the nose's sides, over the leading bogie, back to the underframe cover at 6.65 m
+  if (car.end) m.scope("valance", () => {
+    const [x0, x1] = [X(6.65 - GSE_JOIN), X(-0.02)];
+    for (const sd of [1, -1]) block(m, "gseBody", Math.min(x0, x1), Math.max(x0, x1), 0.45, 0.86, sd > 0 ? 1.37 : -1.405, sd > 0 ? 1.405 : -1.37);
+  });
+  m.scope("roof fairings", () => {
+    for (const [d0, d1] of car.end ? [[10.6 - GSE_JOIN, 14.0 - GSE_JOIN], [L - 4.2, L - 0.8]] : [[1.0, 4.4], [9.6, 13.0]]) gseHump(m, X, C, d0!, d1!);
+  });
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.34, 0.62, -1.15, 1.15));
+  void b;
+}
+
+/** The GSE's paint by livery: its body, roof and line colours under the names its fittings draw with. */
+const gsePalette = (body: string, roof: string) => ({ gseBody: c(body, 0.3), gseRoof: c(roof, 0.4), gseSilver: c("#d8d8da", 0.3), gseCover: c(body, 0.45), gseText: c("#ece6d6", 0.4), skirtG: c("#d8d8da", 0.35), black: c("#16181b", 0.4) });
+
+export const GSE: ShinkansenSeries = {
+  endLength: 21.3, midLength: 20.0, W: 1.439, Y: 1.3, S: 3.45, C: 3.7, lean: 0.97, B: 0.2, A: 0.86,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: GSE_FACE,
+  // the 1.0 m windows in a black band, 1.18 m panes 1.36 m apart; narrow doors (0.6 m by 1.82 m, a
+  // small window 2.28 - 2.73 m up), one behind the observation saloon and one at the inner end on the
+  // end car, one at the front of each middle car
+  windows: [[1.84, 2.86]], windowW: 1.18, pitch: 1.36, door: [1.13, 2.95, 2.28, 2.73], doorW: 0.6, doorGlassW: 0.26,
+  layout: {
+    end: { doors: [[6.8 - GSE_JOIN, 7.4 - GSE_JOIN, 1], [GSE_END - 1.6, GSE_END - 1.0, -1]], windows: [[4.77 - GSE_JOIN, 6.51 - GSE_JOIN], ...gseRow(7.58 - GSE_JOIN, GSE_END - 1.78)] },
+    middle: { doors: [[0.5, 1.1, 1]], windows: gseRow(1.5, 19.0) },
+  },
+  // the end car's leading bogie 5.0 m behind the tip (the side view), all others 13.8 m apart on the bodies
+  bogieCentres: 13.8, centredBogies: true, endBogies: [5.0 - GSE_JOIN, GSE_END - 2.85], wheelR: 0.43, wheelbase: 2.1,
+  fittings: gseFittings,
+  lodRoof: { d: [3.1, 7.4], hw: 1.1, y: [3.6, 4.05], mat: "gseRoof" },
+  liveries: {
+    // rose vermilion with the "rouge bordeaux" roof, a vermilion-orange line under the windows and the
+    // "moonlight silver" underframe covers (ja.wikipedia, the colours' names and swatches; the body and
+    // the line sampled from the sunlit photographs, 249/49/9 and 209/28/11, where the published
+    // swatch #d04b26 reads brown)
+    rose: {
+      title: "Rose vermilion", number: "70051",
+      palette: { ...gsePalette("#e0401c", "#9f3042"), red: c("#e0401c", 0.3), line: c("#f2601e", 0.3) },
+      bands: [[0, 0.86, "skirtG"], [0.86, 1.66, "red"], [1.66, 1.7, "line"], [1.7, 1.84, "red"], [1.84, 2.86, "black"], [2.86, 9, "red"]], doors: [[0, 9, "red"]],
+      roof: "gseRoof", skirt: "skirtG",
+      endSweeps: [
+        { mat: "gseSilver", front: GSE_PILLAR_FRONT, back: GSE_PILLAR_BACK },
+        { mat: "cabGlass", front: [[1.78, 1.158], [2.95, 2.856]], back: [[1.78, 4.36], [2.95, 4.36]] },
+      ],
+      endLettering: [{ text: "ROMANCECAR GSE", d: 5.2 - GSE_JOIN, y: 1.42, h: 0.1, mat: "gseText" }],
+    },
+    // the LSE's (7000 series) Romancecar colours: vermilion orange with two white lines low on the
+    // body, a grey window band, orange over it (a livery the GSE never carried)
+    lse: {
+      title: "LSE colours", number: "70052",
+      palette: { ...gsePalette("#ef2300", "#9a9da1"), orange: c("#ef2300", 0.3), grey: c("#6a6a6a", 0.35), white: c("#f2f2ef") },
+      bands: [[0, 0.86, "skirtG"], [0.86, 1.3, "orange"], [1.3, 1.36, "white"], [1.36, 1.44, "orange"], [1.44, 1.5, "white"], [1.5, 1.74, "orange"], [1.74, 2.96, "grey"], [2.96, 9, "orange"]], doors: [[0, 9, "orange"]],
+      roof: "gseRoof", skirt: "skirtG",
+      endSweeps: [
+        { mat: "gseSilver", front: GSE_PILLAR_FRONT, back: GSE_PILLAR_BACK },
+        { mat: "cabGlass", front: [[1.78, 1.158], [2.95, 2.856]], back: [[1.78, 4.36], [2.95, 4.36]] },
+      ],
+      endLettering: [{ text: "ROMANCECAR GSE", d: 5.2 - GSE_JOIN, y: 1.55, h: 0.1, mat: "white" }],
+    },
+  },
+  // 268.7 t a 7-car set (Tc about 35 t); 4 of 7 cars motored, 4 x 190 kW each: 435 kW a car on average
+  weight: { end: 35, middle: 40 }, power: 435, maxspeed: 110,
+};
+
+/** The GSE's window panes from d0 to d1 on a car's body: about 1.18 m panes and 0.18 m black pillars, 1.36 m apart (the side view). */
+function gseRow(d0: number, d1: number): Array<readonly [number, number]> {
+  const n = Math.max(1, Math.round((d1 - d0 + 0.18) / 1.36)), w = (d1 - d0 + 0.18) / n;
+  return Array.from({ length: n }, (_, i) => [d0 + i * w, d0 + (i + 1) * w - 0.18] as const);
+}
 
 // ---------------------------------------------------------------------------
 // Kintetsu 80000 "Hinotori" (2020): the cab face, the window band, the premium end car's high windows.
@@ -346,12 +479,6 @@ export const GSE: ShinkansenSeries = {
 // side view photo-80000.jpg (147 px/m, rail to roof 3.74 m), the face from photo-hinotori-10.jpg and
 // photo-kintetsu-80000-series-hinotori-2022-04-02.jpg, the layout from the Kasumigaura photograph.
 // Edges along the car are [y, d behind the nose's tip].
-
-import type { Ring } from "./meshCore.ts";
-import { sideDecal, sidePanel, type SliceBody } from "./sliceBody.ts";
-import type { SeriesCabFace } from "./seriesCab.ts";
-import type { SeriesLayout, ShinkansenLivery } from "./shinkansen.ts";
-import { block } from "./vehicleParts.ts";
 
 /** The red frame's back edge on the cab side: up beside the nose, then back along the roof's edge as the red line. */
 const HINO_FRAME: Pt[] = [[1.45, 0.66], [1.55, 0.72], [1.95, 1.0], [2.35, 1.34], [2.6, 1.66], [2.85, 2.05], [3.0, 2.45], [3.08, 2.8], [3.12, 3.05]];
