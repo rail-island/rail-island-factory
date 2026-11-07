@@ -111,8 +111,8 @@ side between its highest and lowest point, unless a slab's top is level).
 | building | pad | `when` | measured |
 |---|---|---|---|
 | `proc-building-sky-glass-office` (Glass Office Tower, [skyscrapers.md](skyscrapers.md)) | small, a 17 m deck in place of the mast | `{ helipad: "roof" }` (the default `none` has no pad) | `size` 17, on the crown's roof |
-| `proc-building-hospital` (Hospital, draft, [hospital.md](hospital.md)) | small (air ambulances, H145 class), a 20 m deck raised over the ward block's roof | none | `centre` [-14, 28.4, -9], `size` 20 |
-| `proc-building-industry-offshore-platform` (Offshore oil platform, draft, [industry.md](industry.md#offshore-platform)) | large (S-92 / Mi-8 class), a 27 m helideck cantilevered off the quarters | none | `centre` [25.5, 39.7, 8.5], `size` 27 |
+| `proc-building-hospital` (Hospital, [hospital.md](hospital.md)) | small (air ambulances, H145 class), a 20 m deck raised over the ward block's roof | none | `centre` [-14, 28.4, -9], `size` 20 |
+| `proc-building-industry-offshore-platform` (Offshore oil platform, [industry.md](industry.md#offshore-platform)) | large (S-92 / Mi-8 class), a 27 m helideck cantilevered off the quarters | none | `centre` [25.5, 39.7, 8.5], `size` 27 |
 
 A design's low detail may draw its deck in the same material or not; the export always
 measures the full model. `test/export.test.ts` ("helipads") checks the three and the

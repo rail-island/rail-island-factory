@@ -17,10 +17,10 @@ import { materialPositions } from "../generator/meshAudit";
 describe("hospital", () => {
   const d = DESIGNS.get("proc-building-hospital")!;
 
-  it("is registered as a draft building in its own family", () => {
+  it("is registered as a confirmed building in its own family", () => {
     expect(HOSPITALS.map((h) => proceduralId(h.id))).toEqual(["proc-building-hospital"]);
     expect(d).toBe(HOSPITALS[0]);
-    expect(isDraft(d.id)).toBe(true);
+    expect(isDraft(d.id)).toBe(false);
   });
 
   it("stays within the building budget, grounded, deterministic and free of z-fighting", () => {

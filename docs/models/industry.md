@@ -56,7 +56,7 @@ turbine hall:
 | chemical-factory | chemical-factory, oil-refinery | Chemical/refinery process train, columns, platforms, pipe rack and storage |
 | industry-oil-pump | industry-oil-pump | Two sizes, open trestle, crank wheels on the gear reducer, pitman arms and horsehead; the `pumping` clip moves the mechanism ([animation.md](animation.md)) |
 | industry-wind-turbine | industry-wind-turbine | Two heights; three-section tapered tower with flanges, entrance platform and transformer kiosk; nacelle with cooler, wind sensors and obstruction light; spinner and three twisted aerofoil blades with red tips, turned by the `wind` clip ([animation.md](animation.md)) |
-| industry-offshore-platform | (new, a draft) | Steel jacket on the waterline, cellar and main decks, living quarters with a lifeboat station, process and power modules, workover derrick, pedestal crane, flare boom and a large helideck ([below](#offshore-platform)) |
+| industry-offshore-platform | (new) | Steel jacket on the waterline, cellar and main decks, living quarters with a lifeboat station, process and power modules, workover derrick, pedestal crane, flare boom and a large helideck ([below](#offshore-platform)) |
 
 ## Geometry and export
 
@@ -79,7 +79,7 @@ the old geometry's coordinates.
 
 `proc-building-industry-offshore-platform` (`generator/offshorePlatform.ts`, re-exported by
 `industry.ts`, which stays the family's JS entry) is an oil and gas production platform at sea,
-the factory's counterpart of OpenTTD's oil rig. It is a **draft** (not in
+the factory's counterpart of OpenTTD's oil rig. It is **confirmed** (in
 `generator/catalogModels.json`), has no parameters and is listed in `NOT_IN_CITIES`
 (`generator/cityVariants.ts`): no city stands it on land; it is placed by hand.
 
