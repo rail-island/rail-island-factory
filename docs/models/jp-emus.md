@@ -14,7 +14,7 @@
 | `proc-vehicle-kintetsu-hinotori` | Kintetsu Hinotori | `hinotori`, `ace` | 21.6 / 20.5 m | cab face: raked windscreen, upper glass, LED bar, red frame |
 | `proc-vehicle-jr-e259` | JR E259 Narita Express | `nex`, `original` | 21.43 / 20.5 m | cab face with gangway door |
 | `proc-vehicle-jnr-485` | JNR 485 series | `jnr`, `kyushu` | 21.0 / 20.5 m | the bonnet, diamond pantograph |
-| `proc-vehicle-hankyu-9000` | Hankyu 9000 series | `maroon`, `allMaroon` | 19.0 / 19.0 m, 3 doors | flat cab |
+| `proc-vehicle-hankyu-9000` | Hankyu 9000 series | `maroon`, `allMaroon` | 19.0 / 19.0 m, 3 doors | cab face (`HK_FACE`) |
 
 Each is a `ShinkansenSeries` ([shinkansen.md](shinkansen.md)) built by the same code: the end
 car (the default), the middle car raising its pantograph and the articulated train of 3 - 8
@@ -175,6 +175,35 @@ coupled train is the prototype's formation.
 - **Game properties**: 35 t an end car and 40 t a middle car (268.7 t a 7-car set), 435 kW a car
   (four motor cars of 4 x 190 kW over seven cars), 110 km/h; OpenTTD capacities 56 and 60 seats.
 
+
+## Hankyu 9000 series
+
+Rebuilt from four photographs (assets/hankyu-9000/SOURCES.md) on a `cabFace` (`HK_FACE`), its
+own layout (`HK_LAYOUT`) and fittings (`hkFittings`) in place of the generic flat cab:
+
+- **Face** (head-on photo of 9002, 197 px/m upright, 190 px/m across): upright at the lamps,
+  leaning back 8 cm up the windscreens and rounding over into the roof (join 0.45 m behind the
+  tip); plan corners 0.22 m, swept 0.3 m back, bowed 5 cm. Two windscreens (lat 0.49 - 1.24 m,
+  1.93 - 3.38 m) in white frames with the destination and type boards behind their heads; the
+  gangway door between them (leaf +-0.37 m, 1.17 - 3.03 m, its window 1.76 - 2.92 m) in a
+  stainless frame (+-0.44 m) running from 1.08 m up into the headlight box (+-0.31 m,
+  3.3 - 3.56 m, four LED lamps); tail and marker lamp boxes (0.64 - 1.08 m, 1.37 - 1.56 m), the
+  number "9000" over the left one, thin bright strips under the windscreens, chrome strips at
+  1.1 m; the pale grey skirt (0.28 - 1.0 m) in a bar under the coupler and two cheeks turning back
+  round the corners; the coupler at 0.88 m.
+- **Sides** (projective fit over the side of 9000): doors 1.3 m wide every 5.75 m (end car
+  tip-d 3.65, 9.4, 15.15 m; intermediate car 3.5, 9.25, 15.0 m from its end), each with two
+  narrow windows; one 2.8 m two-pane window (a bright mullion at its middle, no pier) between doors and a 1.5 m one at each plain end, a 0.55 m one
+  behind the end car's crew door (tip-d 0.65 - 1.3 m, its grab rails beside it); windows
+  1.94 - 2.91 m in bright frames; two LED boards under the eaves.
+- **Paint**: maroon all over, the roof ivory from the shoulder (3.22 m) up - the band over the
+  eaves; `allMaroon` the same face with a grey roof.
+- **Roof and running gear**: a long low cover over the air conditioning along the crown; bogies
+  13.0 m apart centred on the body. The single-arm pantographs are on the end cars
+  (`endPantograph: true`, `pantographAt`: tip-d 15.6 m, over the inner bogie, photo of 9100): the
+  lone end car raises its own, in a train both end cars raise theirs, the intermediate cars have
+  none (the test checks the end car reaches the wire and the middle car stays in the gauge).
+
 ## Deviations
 
 - The E259's wrap-round windows and the 103's later variants are simplified.
@@ -196,8 +225,15 @@ coupled train is the prototype's formation.
   car's interior ladder to the cab are left out; the cab roof's fairing into the car's roof (6.2 -
   9.4 m behind the tip) and the roof fairings' sizes are read from three-quarter views only.
 
+- The GSE's and the Hinotori's real cars are articulated or on their own bogies in ways the kit
+  approximates with two bogies a car; the GSE's raised driver's cab over the saloon is the
+  nose's crown.
+- The E235's and E259's wrap-round windows and the 103's later variants are simplified.
+- The Hankyu 9000's Mc 9000 carries two pantographs on the prototype, the kit one per end car;
+  the skirt's facets and the underfloor equipment are simplified.
+
 ## Checking
 
 `pnpm exec vitest run test/jpEmus.test.ts` (ids, parameters and two liveries each; the end and
 middle cars at their lengths and real widths inside the UIC gauge, in budget, without coplanar
-faces, on two bogies, the middle car's pantograph raised; the commuter cars' four doors).
+faces, on two bogies, the pantograph car's pantograph raised (the middle car's, the Hankyu's end car's); the commuter cars' four doors).
