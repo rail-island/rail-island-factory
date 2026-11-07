@@ -164,7 +164,7 @@ export type Item =
   | { k: "rig"; masts: readonly Mast[]; bowsprit?: { len: number; rise: number }; stays?: boolean; name?: string }
   | { k: "rail"; u: readonly [number, number]; y: number; hw: number; h?: number; mat?: string; name?: string }
   // the detail items (docs/models/world-ships.md, "Detail"): drawn only where a spec asks for them
-  | { k: "bulwark"; u: readonly [number, number]; h: number; t?: number; mat?: string; name?: string }
+  | { k: "bulwark"; u: readonly [number, number]; h: number; t?: number; mat?: string; inner?: string; cap?: string; name?: string }
   | { k: "anchors"; u: number; y: number; s: number; mat?: string; name?: string }
   | { k: "mooring"; at: readonly number[]; hw: number; s?: number; winch?: boolean; mat?: string; name?: string }
   | { k: "catwalk"; u: readonly [number, number]; y: number; z?: number; w?: number; pitch?: number; mat?: string; name?: string }
@@ -190,6 +190,8 @@ export interface Sail {
   tack?: number;
   /** A lateen's or crab-claw's forward reach beyond the mast. */
   fwd?: number;
+  /** A square sail's plane ahead of the mast's axis, metres (default the mast's radius + 0.15): a sail on a thinner upper mast. */
+  off?: number;
 }
 
 export interface Mast {
@@ -1361,8 +1363,8 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
             top.quad([a.x, a.yd + it.h, a.zi], [b.x, b.yd + it.h, b.zi], [b.x, b.yd + it.h, b.zo], [a.x, a.yd + it.h, a.zo], [0, 1, 0]);
           }
           out.draw(m, it.mat ?? "hull");
-          inn.draw(m, it.mat ?? "hull");
-          top.draw(m, it.mat ?? "hull");
+          inn.draw(m, it.inner ?? it.mat ?? "hull");
+          top.draw(m, it.cap ?? it.mat ?? "hull");
         }
       });
       return;
@@ -1700,8 +1702,9 @@ function drawSail(c: ShipCtx, ms: Mast, s: Sail, at: (y: number) => number): voi
   switch (s.kind) {
     case "square": {
       const [w0, w1] = s.w ?? [4, 3];
-      const u0 = at(y0) + ms.r + 0.15;
-      const u1 = at(y1) + ms.r + 0.15;
+      const off = s.off ?? ms.r + 0.15;
+      const u0 = at(y0) + off;
+      const u1 = at(y1) + off;
       const belly = (w0 + w1) * 0.06;
       const um = (u0 + u1) / 2 + belly;
       const ym = (y0 + y1) / 2;

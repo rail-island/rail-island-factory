@@ -1349,6 +1349,11 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-cutty-sark": [
     { title: "Wikipedia: Cutty Sark", url: "https://en.wikipedia.org/wiki/Cutty_Sark" },
     { title: "Wikimedia Commons: CuttySarkAndHMSWorcester.jpg", url: "https://commons.wikimedia.org/wiki/File:CuttySarkAndHMSWorcester.jpg" },
+    { title: "Wikimedia Commons: Cutty Sark (1987).jpg", url: "https://commons.wikimedia.org/wiki/File:Cutty_Sark_(1987).jpg" },
+    { title: "Wikimedia Commons: Cutty sark October 2003.jpg", url: "https://commons.wikimedia.org/wiki/File:Cutty_sark_October_2003.jpg" },
+    { title: "Wikimedia Commons: Northeast View of the Cutty Sark in Greenwich.jpg", url: "https://commons.wikimedia.org/wiki/File:Northeast_View_of_the_Cutty_Sark_in_Greenwich.jpg" },
+    { title: "Wikimedia Commons: Cutty Sark 2012 landscaping.JPG", url: "https://commons.wikimedia.org/wiki/File:Cutty_Sark_2012_landscaping.JPG" },
+    { title: "Wikimedia Commons: Cutty Sark stern.jpg", url: "https://commons.wikimedia.org/wiki/File:Cutty_Sark_stern.jpg" },
   ],
   "proc-vehicle-ship-dhow": [
     { title: "Wikipedia: Dhow", url: "https://en.wikipedia.org/wiki/Dhow" },

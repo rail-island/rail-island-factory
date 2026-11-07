@@ -94,7 +94,7 @@ ventilators, well-deck cranes and aerials; the Amazon boat's canoe on the roof a
 | `veh-ship-felucca` | Felucca | 9.0 x 3.0 x 13.4 | 0.6 (0.0447) | clipper / transom | 2305 (100) | - |
 | `veh-ship-kettuvallam` | Kerala Houseboat | 20.0 x 4.5 x 4.3 | 0.8 (0.186) | canoe / canoe | 1568 (98) | - |
 | `veh-ship-sedov` | Sedov | 108.0 x 14.6 x 58.0 | 6.3 (0.1086) | clipper / cruiser | 6107 (100) | - |
-| `veh-ship-cutty-sark` | Cutty Sark | 64.7 x 11.0 x 47.0 | 6.1 (0.1298) | clipper / cruiser | 4890 (100) | - |
+| `veh-ship-cutty-sark` | Cutty Sark | 64.7 x 11.0 x 46.8 | 6.1 (0.1305) | clipper / cruiser | 8590 (98) | - |
 | `veh-ship-bluenose` | Bluenose | 43.6 x 8.2 x 40.2 | 4.8 (0.1194) | clipper / transom | 3977 (81) | - |
 | `veh-ship-ss-great-britain` | SS Great Britain | 98.0 x 15.4 x 44.8 | 5.5 (0.1228) | clipper / cruiser | 8561 (100) | - |
 | `veh-ship-viking-longship` | Viking Longship | 23.0 x 5.2 x 12.6 | 1.0 (0.0794) | canoe / canoe | 1872 (96) | - |
@@ -110,7 +110,17 @@ ventilators, well-deck cranes and aerials; the Amazon boat's canoe on the roof a
 Notes:
 
 - **Tall ships**: Sedov's four masts (three square-rigged with six sails each, the jigger
-  gaff-rigged), Cutty Sark's three (the mizzen's spanker in place of the crossjack), Bluenose's
+  gaff-rigged), Cutty Sark's three (measured off the side photographs: fore, main and mizzen
+  at 0.34, 0.59 and 0.81 of the hull from the stem; white lower masts and topmasts over
+  varnished poles, black tops and yards slung on their masts; fore and main with course,
+  double topsails, topgallant and royal, the main a skysail, the mizzen a bare crossjack yard
+  under its topsails and the spanker; shrouds with ratlines to deadeyes on the hull side,
+  topmast and topgallant shrouds to the tops and crosstrees, backstays, the stays mast to
+  mast; bowsprit, jib-boom and flying jib-boom out over the stem head with dolphin striker,
+  martingale, bobstays and four jibs on their stays; the Muntz metal bottom, the gilt sheer
+  line, the bow and counter scrollwork, Nannie; white-lined bulwarks with a teak cap, open
+  rails on the forecastle and the short poop, two teak deckhouses, the boats on the after one
+  under davits), Bluenose's
   two gaff masts with topsails and jibs, SS Great Britain's six masts of 1843 as preserved in Bristol (the second
   square-rigged and painted white with black bands, the others gaff-rigged, jibs on the steep
   bowsprit), the round funnel on its casing between masts 2 and 3, the band of painted gunports
