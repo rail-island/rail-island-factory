@@ -35,7 +35,7 @@ does not have, and plays nothing there.
 | Slot | On | Plays | The game sets |
 |---|---|---|---|
 | `horn` | rail and road vehicles, ships | a one-shot | `call` (why it sounds), where the design has one |
-| `engine` | rail and road vehicles | a loop | `rpm`, `load`, `state` (a diesel's revs, effort and whether it runs), `rate`, `intensity` (a steam beat) or `speed`, `load` (an electric's share of its top speed and effort), whichever the design has |
+| `engine` | rail and road vehicles, helicopters | a loop | `rpm`, `load`, `state` (a diesel's revs, effort and whether it runs), `rate`, `intensity` (a steam beat), `speed`, `load` (an electric's share of its top speed and effort) or `spin`, `load` (a helicopter rotor's speed and effort), whichever the design has |
 | `bell` | buildings | a one-shot | nothing |
 
 A slot is `{ id, params?, calls? }`: a rail-island-music design id and the
@@ -73,6 +73,12 @@ into every model, and even a type added to it changes how esbuild names the
 minified identifiers of all of them. A model's JS therefore never changes for its
 sounds. A design that sets `game.sounds` itself fails the build.
 
+The four helicopters run rail-island-music's `helicopter` loop in their engine slot, stated
+in the table with their rotor `size` (0 a 10.2 m rotor, 1 a 21.3 m one: the Bell 206 0, the
+H145 0.07, the S-92 0.63, the Mi-8 1) and their main `blades` (2, 5, 4, 5). The game sets
+`spin` (the rotor's speed, 0 stopped to 1 full; a runtime engine parameter, never pinned)
+and `load`.
+
 ## Derived defaults
 
 The table lists only the slots that differ. Every other vehicle slot is derived
@@ -92,7 +98,7 @@ the game keeps no rule of its own:
 | ship | `ship-horn`, pitch 196 Hz (20 studs) to 70 Hz (120 studs), 0.7 to 2.2 s; the world fleet's steamships state a `steam-whistle` in the table ([world-ships.md](world-ships.md)) | - |
 | road vehicle, group `bus` | none | `diesel-engine-bus`, as measured (no size) |
 | road vehicle, group `truck` | none | `diesel-engine-truck`, as measured (no size) |
-| aircraft, cable cars | none | none |
+| aircraft, cable cars | none | none (the helicopters state theirs in the table, below) |
 
 Only a steam locomotive whistles as it leaves a platform (`STEAM_CALLS`) and a
 tram rings its bell as it moves off from a stop (`TRAM_CALLS`, the two short

@@ -224,7 +224,7 @@ export function sweep(ids: readonly string[]): void {
           const times = readAccessor(json, bin, a.samplers[0]!.input);
           expect(clip.duration).toBeCloseTo(times[times.length - 1]!, 5);
           expect(clip.tracks.map((t) => t.name)).toEqual(
-            a.channels.map((c) => `${nodes[c.target.node]!.name}.${c.target.path === "rotation" ? "quaternion" : "position"}`),
+            a.channels.map((c) => `${nodes[c.target.node]!.name}.${c.target.path === "rotation" ? "quaternion" : c.target.path === "scale" ? "scale" : "position"}`),
           );
           clip.tracks.forEach((t, k) => {
             const v = readAccessor(json, bin, a.samplers[a.channels[k]!.sampler]!.output);

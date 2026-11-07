@@ -343,8 +343,12 @@ open over 2 s, eased, from wherever they stand; the model always arrives shut
 node named `gear`) gets **Gear up** and **Gear down**, which hide and show it as the
 game does in flight; a big jet with flaps (`flaps` clips) gets **Flaps out** and
 **Flaps in**, and Concorde (its `droop` clip) **Nose down** and **Nose up**, each
-moving over 3 s, eased, from wherever it stands; the model always arrives gear down,
-flaps in and nose up ([../models/world-aircraft.md](../models/world-aircraft.md)).
+moving over 3 s, eased, from wherever it stands. A helicopter or a propeller aircraft (its
+`spin` clip) gets **Spin up** and **Spin down**: the rotors or propellers run down to a stop
+(the blur disc gone, a helicopter's blades drooping) or up to full speed over 3 s, the
+turning clips playing at the eased speed. The model always arrives gear down, flaps in,
+nose up and spinning at full speed ([../models/world-aircraft.md](../models/world-aircraft.md),
+[../models/animation.md](../models/animation.md#spin)).
 Behind the doors each car's cabin
 shows only while one of its doors opens or stands open; **Interior on / Interior
 off** shows every cabin with the doors shut and cuts the model away just under the

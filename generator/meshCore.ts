@@ -34,6 +34,18 @@ export interface MaterialSpec {
    */
   glass?: boolean;
   /**
+   * The material is see-through at this opacity (0..1, below 1): a rotor's or a
+   * propeller's blur disc. The JS model's material is transparent and writes no
+   * depth; the GLB's is alphaMode BLEND (docs/models/js-format.md).
+   */
+  opacity?: number;
+  /**
+   * Options the JS model hands its MeshStandardMaterial as they are (a see-through
+   * material's `transparent`, `opacity` and `depthWrite: false`; `seeThrough`).
+   * Data, not code in the builder: every model's JS bundles the builder.
+   */
+  jsMaterial?: Record<string, unknown>;
+  /**
    * A named surface (surfaces.ts SURFACES) the game binds a photo to; `color` stays
    * the honest flat colour. Set both with `surfaceMaterial(id)`: the JS model then
    * carries box-projected UVs at `surfaceTile` units per repeat and lists the
@@ -42,6 +54,11 @@ export interface MaterialSpec {
   surface?: string;
   /** Model units one repeat of the surface's photo spans (from its preset). */
   surfaceTile?: number;
+}
+
+/** A see-through material at `opacity` (0..1): the GLB's alpha and the JS model's options. */
+export function seeThrough(spec: MaterialSpec, opacity: number): MaterialSpec {
+  return { ...spec, opacity, jsMaterial: { transparent: true, opacity, depthWrite: false } };
 }
 
 /**
@@ -90,7 +107,7 @@ export type Vec3 = [number, number, number];
  */
 export interface AnimationTrack {
   node: string;
-  path: "rotation" | "translation";
+  path: "rotation" | "translation" | "scale";
   values: number[];
 }
 
@@ -165,7 +182,7 @@ export interface FountainWater {
  * every `state` clip as a pantograph leaves them alone. A consumer that does not
  * know a drive leaves its clip alone.
  */
-export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: DoorSide } | { drive: "motion" } | { drive: "flaps" } | { drive: "droop" };
+export type ClipDrive = { drive: "time" } | { drive: "distance"; speed: number } | { drive: "state" } | { drive: "door"; side: DoorSide } | { drive: "motion" } | { drive: "flaps" } | { drive: "droop" } | { drive: "spin" };
 
 /** A side of a vehicle, seen facing its +X end: right is +Z. */
 export type DoorSide = "left" | "right";
@@ -526,7 +543,7 @@ export class MeshCore {
     if (t.length < 2 || t[0] !== 0 || t.some((v, i) => i > 0 && v <= t[i - 1]!)) throw new Error(`animation "${clip.name}": times must start at 0, rising`);
     const d = clip.drive;
     const k = d?.drive;
-    if (!(/^(time|state|motion|flaps|droop)$/.test(k) || (k === "distance" && d.speed > 0) || (k === "door" && /^(left|right)$/.test(d.side)))) throw new Error(`animation "${clip.name}": bad drive`);
+    if (!(/^(time|state|motion|flaps|droop|spin)$/.test(k) || (k === "distance" && d.speed > 0) || (k === "door" && /^(left|right)$/.test(d.side)))) throw new Error(`animation "${clip.name}": bad drive`);
     for (const track of clip.tracks) {
       if (!this.parts.some((p) => p.name === track.node)) throw new Error(`animation "${clip.name}": no part "${track.node}"`);
       if (/[\s.:/\[\]]/.test(track.node)) throw new Error(`animated part "${track.node}" has a name three.js cannot bind`);
@@ -752,12 +769,6 @@ export class MeshCore {
     } finally {
       this.pendingColors = null;
     }
-  }
-
-  /** Whether any triangle carries a corner colour (see `triShaded`). */
-  hasVertexColors(): boolean {
-    for (const g of this.groups.values()) if (g.col) return true;
-    return false;
   }
 
   quad(mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3): void {

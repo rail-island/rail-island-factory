@@ -10,7 +10,7 @@ function vehicle(extra: Partial<ResolvedVehicle> = {}): ResolvedVehicle {
   return {
     feature: "train", name: "Loco", introYear: 1960, vehicleLife: 30, modelLife: 40, reliabilityDecay: 20,
     costFactor: 120, runningCostFactor: 100, capacity: 0, cargo: "PASS", climates: ["temperate", "arctic", "tropical"],
-    railType: "ELRL", refitClasses: [], weight: 87, power: 3000, speed: 120, traction: "electric", tram: false, largeAircraft: false,
+    railType: "ELRL", refitClasses: [], weight: 87, power: 3000, speed: 120, traction: "electric", tram: false, largeAircraft: false, helicopter: false,
     ...extra,
   };
 }
@@ -172,6 +172,14 @@ describe("encodeGrf", () => {
     expect(props[2]).toContain(" 0c 3e 0d 28 0e 64 0b 78 0f 96 00 11 0a 09 02 0a 01 08 ff ");
     // an aircraft without a refittable cargo is disabled by OpenTTD: passengers always are
     expect(props[2]).toMatch(/18 01 00 13 00 00 00 00$/);
+  });
+
+  it("writes a helicopter with OpenTTD's helicopter subtype, never large", () => {
+    // property 09: 0 a helicopter, 2 an aeroplane (the GRF wrote every aircraft as a plane before)
+    const vehicles = [{ vehicle: vehicle({ feature: "aircraft", speed: 246, capacity: 9, helicopter: true }), parts: [part(0x501)] }];
+    const { entries } = parse(encodeGrf({ ...set, vehicles }));
+    const props = entries.filter((e) => e.type === 0xff && e.data[0] === 0x00 && e.data[1] !== 0x08).map((e) => hex(e.data));
+    expect(props[0]).toContain(" 09 00 0a 00 08 ff ");
   });
 
   // Regression: OpenTTD gives a GRF's new aircraft an acceleration of 0, and such an

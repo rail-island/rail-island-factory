@@ -66,6 +66,7 @@ import { TOWERS } from "./towers.ts";
 import { LANDMARKS } from "./landmarks.ts";
 import { INDUSTRY_MIGRATION } from "./industryMigration.ts";
 import { INDUSTRY } from "./industry.ts";
+import { HOSPITALS } from "./hospital.ts";
 import { STATIONS } from "./stations.ts";
 import { AIRCRAFT } from "./aircraft.ts";
 import { SHIPS } from "./ships.ts";
@@ -227,6 +228,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: TOWERS, source: "towers.ts", meta: "buildings" },
   { designs: LANDMARKS, source: "landmarks.ts", meta: "buildings" },
   { designs: INDUSTRY, source: "industry.ts", meta: "buildings" },
+  { designs: HOSPITALS, source: "hospital.ts", meta: "buildings" },
   { designs: STATIONS, source: "stations.ts", meta: "buildings" },
   { designs: VILLAGE_HOUSES, source: "village.ts", meta: "village" },
   { designs: VEHICLES, source: "vehicles.ts", meta: "vehicles" },

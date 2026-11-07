@@ -54,6 +54,13 @@ export interface Volume {
    * door shows the interior (doors.ts).
    */
   openings?: Opening[];
+  /**
+   * A second plan the body narrows to above `y0`, reached at `y1` and kept above
+   * it (a tram cab's windscreen leaning in at the corners): the half width of a
+   * point at height y blends from `plan` to `upper.plan` between y0 and y1. The
+   * plan's stations and these must be the same span. Omit for upright sides.
+   */
+  upper?: { y0: number; y1: number; plan: Pt[] };
 }
 
 /** A doorway through side `s` of a volume, over the side-view box x0..x1, y0..y1 (source metres). */
@@ -128,9 +135,17 @@ export function sectionHalf(section: Pt[], y: number): number {
 export const halfWidth = (v: Volume): number => Math.max(...v.section.map((p) => Math.abs(p[0])));
 export const hiAt = (v: Volume, x: number): number => (v.top ? lerp(v.top, x) : Infinity);
 export const loAt = (v: Volume, x: number): number => (v.bottom ? lerp(v.bottom, x) : -Infinity);
+/** The scale of the section's half width at x and height y: the plan's, blended into `upper`'s above its y0. */
+export function planK(v: Volume, x: number, y: number): number {
+  const k = lerp(v.plan, x) / halfWidth(v);
+  if (!v.upper) return k;
+  const { y0, y1, plan } = v.upper;
+  const t = Math.min(1, Math.max(0, (y - y0) / (y1 - y0)));
+  return k + (lerp(plan, x) / halfWidth(v) - k) * t;
+}
 /** The x of every plan and elevation station within the plan, ascending. */
 const stations = (v: Volume): number[] =>
-  [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? [])].map((p) => p[0]))]
+  [...new Set([...v.plan, ...(v.top ?? []), ...(v.bottom ?? []), ...(v.upper?.plan ?? [])].map((p) => p[0]))]
     .filter((x) => x >= v.plan[0]![0] - 1e-9 && x <= v.plan[v.plan.length - 1]![0] + 1e-9)
     .sort((a, b) => a - b);
 
@@ -185,6 +200,7 @@ export class Coach {
       const k = lerp(v.plan, x) / hw0;
       const hi = Math.max(hiAt(v, x), y0 + 0.002);
       const lo = Math.min(loAt(v, x), y1 - 0.002);
+      if (v.upper) return poly.map(([z, y]) => { const yy = Math.min(hi, Math.max(lo, y)); return [z * planK(v, x, yy), yy]; });
       return poly.map(([z, y]) => [z * k, Math.min(hi, Math.max(lo, y))]);
     };
     // internal band boundaries sit 2.5 mm above their nominal heights, so the

@@ -49,6 +49,12 @@ export interface DeclaredSounds {
 }
 
 export const SOUND_TABLE: Readonly<Record<string, DeclaredSounds>> = {
+  // The helicopters (worldRotorcraft.ts): the rotor and turbine loop, pinned by rotor size
+  // (0 a 10.2 m rotor, 1 a 21.3 m one: (diameter - 10.2) / 11.1) and the main blade count.
+  "proc-vehicle-bell-206": { sounds: { engine: { id: "helicopter", params: { size: 0, blades: 2 } } } },
+  "proc-vehicle-airbus-h145": { sounds: { engine: { id: "helicopter", params: { size: 0.07, blades: 5 } } } },
+  "proc-vehicle-sikorsky-s92": { sounds: { engine: { id: "helicopter", params: { size: 0.63, blades: 4 } } } },
+  "proc-vehicle-mil-mi8": { sounds: { engine: { id: "helicopter", params: { size: 1, blades: 5 } } } },
   // The bells: the bigger the church, the deeper its bell.
   "proc-building-baroque-church": { sounds: { bell: { id: "church-bell", params: { pitch: 440, strikes: 3 } } } },
   "proc-building-church-vrchlabi": { sounds: { bell: { id: "church-bell", params: { pitch: 494, strikes: 3 } } } },

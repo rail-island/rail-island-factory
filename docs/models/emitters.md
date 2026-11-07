@@ -5,7 +5,7 @@ locomotive exhaust and ship funnel, as points the game starts its smoke, steam a
 a fountain's water (pools and jets); how a design records them, where the export carries them,
 and the checks.
 **Code** - `generator/meshCore.ts` (`Emitter`, `emit`, `emitters`), `generator/threeBuilder.ts`,
-`generator/meshBuilder.ts`, `generator/industry.ts`, `generator/steamParts.ts`,
+`generator/meshBuilder.ts`, `generator/industry.ts`, `generator/offshorePlatform.ts`, `generator/steamParts.ts`,
 `generator/dieselParts.ts`, `generator/dmuKit.ts`, `generator/ships.ts`,
 `generator/legacyVehicles.ts`, `generator/fountains.ts`, `test/emitters.test.ts`, `test/emitterCheck.ts`, `test/catalogSweep.ts`
 **See also** - [js-format.md](js-format.md), [industry.md](industry.md), [remaining-models.md](remaining-models.md),
@@ -39,6 +39,7 @@ plant's `type`). Nothing is derived from an old model's coordinates.
 | `industry.ts` `stack()` | smoke at the chimney mouth; with `flare`, a gas-flare flame instead (the refinery) |
 | `industry.ts` `coolingTower()` | steam at the tower's top |
 | `industry.ts` `industrialProcess` | the chemical plant's steam from its two tallest columns |
+| `offshorePlatform.ts` `flare()` | the offshore platform's flare burning at the tip of its boom |
 | `steamParts.ts` `chimney()` | every steam locomotive's chimney smoke |
 | `dieselParts.ts` / `dmuKit.ts` `exhaust()`, and each diesel's own exhaust | diesel exhaust smoke |
 | `ships.ts`, `legacyVehicles.ts` | ship funnels and exhaust stacks |
@@ -88,7 +89,7 @@ covering it (`test/emitterCheck.ts`). The catalog sweep (`test/catalogSweep.ts`)
 design's defaults and sampled combinations, from the builds it makes anyway;
 `test/emitters.test.ts` checks every combination of the listed smokers and the steam locomotives.
 It also requires the chimneys, power plants, foundry, mill, process plant, ships with funnels and
-every steam locomotive to emit, the refinery to flare, and the chimney's smoke to rise with its
+every steam locomotive to emit, the refinery and the offshore platform to flare, and the chimney's smoke to rise with its
 `height`. For the fountains it requires each to state its style, pools and jets, a drawn water
 face at every pool, a nozzle under every jet, and every jet to land inside a pool at that pool's
 height; nothing else states fountain water.

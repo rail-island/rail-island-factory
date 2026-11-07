@@ -25,6 +25,7 @@ const SMOKERS = [
   "proc-building-industry-factory-a",
   "proc-building-industry-power-plant",
   "proc-building-chemical-factory",
+  "proc-building-industry-offshore-platform",
   "proc-vehicle-cruise-ferry",
   "proc-vehicle-ocean-liner",
   "proc-vehicle-passenger-ferry",

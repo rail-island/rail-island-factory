@@ -39,6 +39,12 @@ export const PALETTE: Record<string, MaterialSpec> = {
   roofGreen: { color: "#6e9a4e" },
   crown: { color: "#cfd3d8", metallic: 0.5, roughness: 0.3 },
   red: { color: "#d43b2b" },
+  // the glass office's rooftop helideck (docs/models/skyscrapers.md, "Helipad"): its
+  // touchdown surface is the export's helipad material (GameProperties.helipad)
+  helipad: { color: "#4e545b", roughness: 0.8 },
+  helipadPaint: { color: "#f1f0ea" },
+  helipadMark: { color: "#e8b428" },
+  helipadLight: { color: "#3cc85a" },
 };
 
 // --- parameters -------------------------------------------------------------------
@@ -65,7 +71,16 @@ export const SKYSCRAPER_PARAMS: readonly ParamSpec[] = [
  * office on its podium's flanks and back.
  */
 const BRICK_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS, ...partyParams(["left", "right"])];
-const OFFICE_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS, ...partyParams(["left", "right", "back"])];
+/** The glass office's rooftop helideck in place of its mast (a helicopter stop in the game). */
+const HELIPAD_PARAM: ParamSpec = { name: "helipad", title: "Helipad", default: "none", values: [
+  { value: "none", title: "None" }, { value: "roof", title: "Roof pad" },
+] };
+const OFFICE_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS, HELIPAD_PARAM, ...partyParams(["left", "right", "back"])];
+
+/** The helideck's square side (m), above the crown blades: a small pad (HELIPAD_D.small, 16 m) with a margin. */
+const HELIDECK_SIDE = 17;
+/** The deck's underside above the crown's roof (m), clear of the crown blades' tops. */
+const HELIDECK_LIFT = 3.4;
 
 const TWISTED_PARAMS: readonly ParamSpec[] = [...SKYSCRAPER_PARAMS,
   { name: "twist", title: "Twist", default: "quarter", values: [
@@ -318,9 +333,10 @@ export function glassOffice(params?: ParamValues): MeshBuilder {
     m.box("glassDark", 0, 0, crown, crown, top, top + 8);
     floorBands(m, "steel", rect(crown, crown), top, top + 8, 2, 0.3, 0.3);
     m.box("steel", 0, 0, crown + 1, crown + 1, top + 8, top + 9);
-    m.box("dark", 0, 0, 9 * k, 9 * k, top + 9, top + 13);
+    if (m.choices.helipad !== "roof") m.box("dark", 0, 0, 9 * k, 9 * k, top + 9, top + 13);
   });
-  mast(m, 0, 0, top + 13, mastHeight);
+  if (m.choices.helipad === "roof") helideck(m, top + 9, crown);
+  else mast(m, 0, 0, top + 13, mastHeight);
   entrance(m, podium / 2, 0);
   m.scope("sky garden belt", () => {
     m.box("steel", 0, 0, shaft + 3, shaft + 3, belt - 1, belt);
@@ -332,6 +348,54 @@ export function glassOffice(params?: ParamValues): MeshBuilder {
     for (const x of [-8, -4, 0, 4, 8]) m.box("crown", x * k, 0, 0.35, crown + 1.8, top + 2, top + 12 - Math.abs(x) * 0.35);
   });
   return m;
+}
+
+/**
+ * The glass office's helideck on the crown's roof at `roof`: a square steel deck
+ * HELIDECK_SIDE across on four columns and a stair core, its touchdown surface in
+ * the material `helipad`, with the white edge and "H", the yellow aiming circle (an
+ * octagon of stripes) and a green light at each corner.
+ */
+function helideck(m: TowerMesh, roof: number, crown: number): void {
+  const half = HELIDECK_SIDE / 2;
+  const y0 = roof + HELIDECK_LIFT;
+  const y1 = y0 + 0.4;
+  const paint = y1 + 0.03;
+  m.scope("helideck", () => {
+    m.scope("columns", () => {
+      const c = Math.min(crown / 2 - 1, half - 1.5);
+      for (const x of [-c, c]) for (const z of [-c, c]) m.box("steel", x, z, 0.8, 0.8, roof, y0);
+      m.box("dark", 0, 0, 3, 3, roof, y0);
+    });
+    m.scope("deck", () => m.box("helipad", 0, 0, HELIDECK_SIDE, HELIDECK_SIDE, y0, y1));
+    m.scope("markings", () => {
+      const e = 0.5;
+      for (const sg of [-1, 1]) {
+        m.box("helipadPaint", 0, sg * (half - 0.5), HELIDECK_SIDE - 0.6, e, y1, paint);
+        m.box("helipadPaint", sg * (half - 0.5), 0, e, HELIDECK_SIDE - 1.8, y1, paint);
+      }
+      const r = half * 0.62;
+      const chord = 2 * r * Math.tan(Math.PI / 8);
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        m.box("helipadMark", r * Math.cos(a), r * Math.sin(a), 0.6, chord, y1, paint + 0.01, -a);
+      }
+      const hh = HELIDECK_SIDE * 0.34;
+      const hw = HELIDECK_SIDE * 0.22;
+      for (const sg of [-1, 1]) m.box("helipadPaint", sg * (hw / 2 - 0.4), 0, 0.8, hh, y1, paint + 0.02);
+      m.box("helipadPaint", 0, 0, hw - 1.6, 0.8, y1, paint + 0.03);
+    });
+    m.scope("lights", () => {
+      for (const x of [-1, 1]) for (const z of [-1, 1]) m.box("helipadLight", x * (half - 0.6), z * (half - 0.6), 0.35, 0.35, y1, y1 + 0.3);
+    });
+    // a safety net's frame round the deck, a little below it
+    m.scope("safety shelf", () => {
+      for (const sg of [-1, 1]) {
+        m.box("steel", 0, sg * (half + 0.75), HELIDECK_SIDE + 3, 1.5, y0 - 0.25, y0 - 0.1);
+        m.box("steel", sg * (half + 0.75), 0, 1.5, HELIDECK_SIDE, y0 - 0.25, y0 - 0.1);
+      }
+    });
+  });
 }
 
 /** The art deco tower's setback tiers (width, depth, bottom, top, bays) and crown, shared by the full model and its LOD. */
@@ -889,9 +953,11 @@ export function glassOfficeLod(params?: ParamValues): MeshBuilder {
       boxMass("steel", 0, 0, shaft + 3, shaft + 3, belt - 1, belt),
       boxMass("facadeDark", 0, 0, crown, crown, top + 0.6, top + 8, false),
       boxMass("steel", 0, 0, crown + 1, crown + 1, top + 8, top + 9),
-      boxMass("dark", 0, 0, 9 * k, 9 * k, top + 9, top + 13),
       ...[-8, -4, 0, 4, 8].map((x) => boxMass("crown", x * k, 0, 0.35, crown + 1.8, top + 2, top + 12 - Math.abs(x) * 0.35)),
-      ...mastMasses(0, 0, top + 13, mastHeight),
+      // the rooftop helideck in place of the plant box and the mast
+      ...(m.choices.helipad === "roof"
+        ? [boxMass("dark", 0, 0, 3, 3, top + 9, top + 9 + HELIDECK_LIFT), boxMass("helipad", 0, 0, HELIDECK_SIDE, HELIDECK_SIDE, top + 9 + HELIDECK_LIFT, top + 9.4 + HELIDECK_LIFT)]
+        : [boxMass("dark", 0, 0, 9 * k, 9 * k, top + 9, top + 13), ...mastMasses(0, 0, top + 13, mastHeight)]),
       canopyMass(podium / 2, 0),
     ];
   });
@@ -1112,7 +1178,7 @@ export const SKYSCRAPER_CATALOG: CatalogFields = {
 
 /** Every procedural skyscraper, by catalog id. The ids are stored in saved maps. */
 export const SKYSCRAPERS: ProceduralDesign[] = [
-  { params: OFFICE_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-glass-office", title: "Glass Office Tower", build: glassOffice, buildLod: glassOfficeLod },
+  { params: OFFICE_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-glass-office", title: "Glass Office Tower", build: glassOffice, buildLod: glassOfficeLod, game: { helipad: { material: "helipad", pad: "small", when: { helipad: "roof" } } } },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-art-deco", title: "Art Deco Tower", build: artDeco, buildLod: artDecoLod },
   { params: SKYSCRAPER_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-pagoda", title: "Pagoda Tower", build: pagoda, buildLod: pagodaLod },
   { params: BRICK_PARAMS, finishParams: SKYSCRAPER_FINISH_PARAMS, id: "sky-brick-residential", title: "Brick Apartment Tower", build: brickResidential, buildLod: brickResidentialLod },

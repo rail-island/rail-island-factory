@@ -200,7 +200,7 @@ function wheelset(m: MeshBuilder, name: string, x: number): void {
     const axle = ngon(10, 0.065, 0, x, AXLE_Y);
     m.sweep("steel", "z", axle, -0.9, axle, 0.9);
     for (const s of [-1, 1]) {
-      const [t0, t1] = side(s, 0.665, 0.78);
+      const [t0, t1] = side(s, 0.665, 0.8); // the standard tread: both rail heads under it
       m.tube("steel", "z", x, AXLE_Y, WHEEL_R, 0.31, t0, t1, TYRE_SIDES, Math.PI / TYRE_SIDES);
       const hub = ngon(10, 0.1, 0, x, AXLE_Y);
       const [h0, h1] = side(s, 0.67, 0.8);

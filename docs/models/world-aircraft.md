@@ -200,7 +200,9 @@ Every propeller (wing, nose or the airship's) is a part `propeller-<n>` (the Zep
 `MeshCore.spin` and pivoted on its hub: a child of `airframe` when the gear retracts,
 beside the body when it is fixed. The clip **`propellers`** (`propellers.ts`
 `turnPropellers`, drive `time`, `PROP_PERIOD` = 0.24 s, 12 steps and the closing sample)
-turns each once about its axis, clockwise seen from behind.
+turns each once about its axis, clockwise seen from behind. Each propeller also has its blur
+disc `propeller-<n>-disc` (the Zeppelin's `propeller-left-disc`, ...), grown in at full speed by
+the clip `spin` ([animation.md](animation.md#spin)).
 
 The big jets - 707, 747-8, 777, A350 and An-225 (`flaps: true` on the brief,
 `WingSpec.flaps`) - have **Fowler flaps**: per wing, panels from the fuselage side to 72 %
@@ -237,7 +239,12 @@ or the fenestron's fan the part `tailrotor` (pivot on its hub, turning about Z);
 **`rotor`** (drive `time`, `ROTOR_PERIOD` = 0.48 s, 12 samples) turns the main rotor once,
 anticlockwise seen from above on the US designs and clockwise on the Airbus and Mil ones,
 and the tail rotor four times. Each step is under half a turn, so the interpolation turns the
-right way, and the loop closes on the first pose. The LOD stands the blades still.
+right way, and the loop closes on the first pose. Each main blade is its own child node
+`rotor-blade-<n>` on the hub, and the main and tail rotors have their blur discs `rotor-disc`
+and `tailrotor-disc` (a fenestron's inside its duct); the clip **`spin`** (drive `spin`) grows
+the discs in at full speed and droops the main blades 3 degrees when stopped, full speed being
+the rest pose ([animation.md](animation.md#spin)). The LOD stands the blades still and keeps
+the main disc.
 
 `airship(spec)` builds the Zeppelin NT: a body of revolution, three fins in a Y (one on top),
 the gondola with its wheel on the ground, the two side propellers on outriggers and the stern
@@ -248,18 +255,27 @@ propeller.
 - `game`: `weight` the maximum take-off mass (t), `power` a jet's total static thrust in kN
   times 10 (as the original airliners state it) or a propeller aircraft's shaft power (kW),
   `maxspeed` the cruising speed, `accel` null, `sizeClass` (small: light aircraft, business
-  jets, small turboprops, helicopters and the airship; medium: narrow bodies, regional jets,
-  larger turboprops; big: wide bodies and the big freighters) and `seatFrac`.
+  jets, small turboprops and the airship; medium: narrow bodies, regional jets,
+  larger turboprops; big: wide bodies and the big freighters) and `seatFrac`. The four
+  helicopters state no `sizeClass`: they are `aircraftKind: "helicopter"` with `flight`
+  (`heli()` in worldAircraft.ts; [game-properties.md](game-properties.md)) - the published
+  rate of climb (S-92 and H145 8.1 m/s, 1,600 ft/min; Mi-8 9 m/s; Bell 206B 6.9 m/s,
+  1,350 ft/min), a transit height (150 m for the light H145 and Bell 206, 300 m for the
+  S-92 and Mi-8) and the pad class their D-value fits (small: H145 13.6 m, Bell 206
+  12.1 m; large: S-92 20.9 m, Mi-8 25.4 m).
 - OpenTTD (`worldAircraftTable` in openttdTable.ts): the introduction year, typical seats
   (every aircraft is refittable to passengers), the freighters' payload in tonnes of goods
   (An-124, An-225, L-100, Dreamlifter, Beluga XL, the 747-8F variant), and presets of the
-  other liveries, lengths and gear. **The GRF encoder writes every aircraft as a plane**
-  (property 09 = 2): it has no helicopter subtype, so the helicopters and the airship are
-  planes in OpenTTD and need an airport. Supporting the subtype is a change to
-  `src/openttd/grf.ts` and the OpenTTD properties, not made here.
-- Sounds: none. `soundMapping.ts` derives no aircraft sound and rail-island-music has no
-  jet, propeller or rotor design yet; a rotor sound for the helicopters is a request to that
-  repository.
+  other liveries, lengths and gear. The GRF encoder writes the helicopters
+  (`aircraftKind: "helicopter"`) with **OpenTTD's helicopter subtype** (property 09 = 0, never
+  large), so they use OpenTTD's heliports, helipads and oil rigs; every other aircraft,
+  the airship included, is a plane (09 = 2). No GRF exported the helicopters before they
+  were written as helicopters, so no saved game holds a plane version of them.
+- Sounds: the helicopters run rail-island-music's `helicopter` loop (rotor slap, turbine,
+  tail rotor and wash) in their engine slot, their rotor size and blade count pinned in
+  `soundTable.ts` and the rotor speed (`spin`) and effort (`load`) the game's
+  ([sounds.md](sounds.md)). The aeroplanes and the airship have no sound: rail-island-music
+  has no jet or propeller design yet.
 
 ## References
 

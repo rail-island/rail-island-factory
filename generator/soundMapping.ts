@@ -49,11 +49,11 @@ export const SLOT_KINDS: Record<SoundSlotName, "oneShot" | "loop"> = { horn: "on
  * The parameters the game sets on each slot as it plays: never pinned by a model.
  * A horn's call is why it sounds; an engine's revs, effort and whether it runs
  * (diesel: `state`), its beat rate and effort (steam) or its speed and effort
- * (electric) follow the vehicle frame by frame.
+ * (electric) and a helicopter rotor's speed (`spin`) follow the vehicle frame by frame.
  */
 export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   horn: ["call"],
-  engine: ["rpm", "load", "state", "rate", "intensity", "speed"],
+  engine: ["rpm", "load", "state", "rate", "intensity", "speed", "spin"],
   bell: [],
 };
 

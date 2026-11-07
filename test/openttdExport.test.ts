@@ -54,6 +54,9 @@ describe("resolveVehicle", () => {
     expect(resolveVehicle(rec({ group: "tram" }), {}).tram).toBe(true);
     expect(resolveVehicle(rec({ category: "Aircraft", group: "aircraft", game: { weight: 1, power: 1, maxspeed: 800, accel: null, sizeClass: "small" } }), {}).largeAircraft).toBe(false);
     expect(resolveVehicle(rec({ category: "Aircraft", group: "aircraft", game: { weight: 1, power: 1, maxspeed: 800, accel: null, sizeClass: "medium" } }), {}).largeAircraft).toBe(true);
+    // a helicopter is OpenTTD's helicopter subtype, never a large aircraft, though it states no sizeClass
+    const heli = resolveVehicle(rec({ category: "Aircraft", group: "aircraft", game: { weight: 3.8, power: 1540, maxspeed: 246, accel: null, aircraftKind: "helicopter", flight: { climb: 8.1, cruiseHeight: 150, pad: "small" } } }), {});
+    expect(heli).toMatchObject({ helicopter: true, largeAircraft: false });
     expect(() => resolveVehicle(rec({ category: "Cable car", group: "cabin" }), {})).toThrow(/not a vehicle/);
   });
 

@@ -41,6 +41,8 @@ export interface ResolvedVehicle {
   tram: boolean;
   /** An aircraft that cannot land at a small airport (the game's medium and big classes). */
   largeAircraft: boolean;
+  /** A helicopter (game.aircraftKind): OpenTTD's helicopter subtype, landing on heliports, helipads and oil rigs. */
+  helicopter: boolean;
 }
 
 /**
@@ -147,7 +149,9 @@ export function resolveVehicle(r: CatalogRecord, params: Record<string, string>)
     traction: feature === "train" && pick("power") > 0 ? (traction ?? (r.group === "metro" ? "electric" : "diesel")) : null,
     tram: feature === "road" && r.group === "tram",
     // OpenTTD knows small and large aircraft; only a small one lands at a small airport.
-    largeAircraft: feature === "aircraft" && (gameVariant?.sizeClass ?? game.sizeClass ?? "big") !== "small",
+    // A helicopter has no airport class: it is OpenTTD's helicopter subtype, never large.
+    largeAircraft: feature === "aircraft" && game.aircraftKind !== "helicopter" && (gameVariant?.sizeClass ?? game.sizeClass ?? "big") !== "small",
+    helicopter: feature === "aircraft" && game.aircraftKind === "helicopter",
   };
 }
 

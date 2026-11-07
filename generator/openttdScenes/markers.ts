@@ -76,7 +76,7 @@ function vehicle(feature: OpenttdFeature, name: string, tram = false): ResolvedV
     costFactor: 1, runningCostFactor: 1, capacity: feature === "aircraft" ? 10 : 1, cargo: "PASS",
     climates: ["temperate", "arctic", "tropical", "toyland"], railType: "RAIL", refitClasses: ["passengers"],
     weight: 10, power: feature === "train" ? 2000 : 200, speed: feature === "aircraft" ? 400 : 100,
-    traction: feature === "train" ? "diesel" : null, tram, largeAircraft: false,
+    traction: feature === "train" ? "diesel" : null, tram, largeAircraft: false, helicopter: false,
   };
 }
 

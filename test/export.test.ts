@@ -11,6 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import { AIRCRAFT_CATALOG } from "../generator/aircraft";
 import { SKYSCRAPERS } from "../generator/skyscrapers";
+import { materialPositions } from "../generator/meshAudit";
 import { VEHICLES } from "../generator/vehicles";
 import { ALL_VEHICLES, BUILDINGS, DESIGNS, buildExport, generateReferences, vehicleSeat } from "../generator/generate";
 import { VILLAGE_HOUSES } from "../generator/village";
@@ -26,7 +27,7 @@ describe("exportMeta", () => {
     expect(meta.buildings.map((b) => b.id)).toEqual(SKYSCRAPERS.map((d) => d.id));
     for (const { game, ...b } of meta.buildings) {
       // the city variants (cityVariants.ts, test/cityVariants.test.ts) are the only game property a skyscraper has
-      if (game) expect(Object.keys(game), b.id).toEqual(["city"]);
+      if (game) expect(Object.keys(game), b.id).toEqual(b.id === "proc-building-sky-glass-office" ? ["city", "helipad"] : ["city"]);
       expect(b).toEqual({
         id: b.id,
         title: SKYSCRAPERS.find((d) => d.id === b.id)!.title,
@@ -141,7 +142,7 @@ describe("game properties", () => {
       for (const k of ["weight", "power", "maxspeed", "accel"] as const) expect(v.game, `${v.id} ${k}`).toHaveProperty(k);
     }
     for (const b of exportMeta(BUILDINGS).buildings) {
-      if (b.game) expect(Object.keys(b.game).every((k) => ["plaza", "block", "city", "sounds"].includes(k)), b.id).toBe(true);
+      if (b.game) expect(Object.keys(b.game).every((k) => ["plaza", "block", "city", "sounds", "helipad"].includes(k)), b.id).toBe(true);
     }
     expect(exportMeta(BUILDINGS).buildings.find((b) => b.id === "proc-building-brandenburg-gate")!.game).toEqual({
       plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" },
@@ -164,7 +165,7 @@ describe("game properties", () => {
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "red" }, maxspeed: 140 }] } }])).toThrow(/at the default/);
     expect(() => exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" } }, { params: { livery: "blue" } }] } }])).toThrow(/twice/);
     expect(exportVehicleMeta([{ ...base, params, game: { ...physics, variants: [{ params: { livery: "blue" }, maxspeed: 140 }] } }]).vehicles[0]!.game!.variants).toHaveLength(1);
-    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block and city/);
+    expect(() => exportMeta([{ ...base, id: "proc-building-test", game: { ...physics } }])).toThrow(/of a building may hold only plaza, block, city and helipad/);
   });
 
   it("carry an aircraft's passenger seat, a fraction of its length, and refuse one elsewhere", () => {
@@ -182,6 +183,54 @@ describe("game properties", () => {
     expect(exportVehicleMeta([{ ...plane, game: { ...physics, seatFrac: 0.3 } }]).vehicles[0]!.game!.seatFrac).toBe(0.3);
     expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, seatFrac: 1.5 } }])).toThrow(/invalid "seatFrac"/);
     expect(() => exportVehicleMeta([{ ...base, game: { ...physics, seatFrac: 0.3 } }])).toThrow(/for aircraft only/);
+  });
+
+  it("carry a helicopter's kind and flight figures, without an airport class, and refuse them elsewhere", () => {
+    // The game flies a helicopter off pads by its flight figures; sizeClass is for runways.
+    const heli = exportVehicleMeta(ALL_VEHICLES).vehicles.find((v) => v.id === "proc-vehicle-airbus-h145");
+    if (heli) {
+      expect(heli.game).toMatchObject({ aircraftKind: "helicopter", flight: { pad: "small" } });
+      expect(heli.game!.sizeClass).toBeUndefined();
+    }
+    const base = { id: "proc-vehicle-test", title: "Test", build: SKYSCRAPERS[0]!.build, buildLod: SKYSCRAPERS[0]!.buildLod };
+    const physics = { weight: 3, power: 1500, maxspeed: 240, accel: null };
+    const plane = { ...base, catalog: AIRCRAFT_CATALOG };
+    const flight = { climb: 8, cruiseHeight: 150, pad: "small" as const };
+    expect(exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight } }]).vehicles[0]!.game!.flight).toEqual(flight);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter" } }])).toThrow(/lack "flight"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight, sizeClass: "small" } }])).toThrow(/hold a "sizeClass"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight: { ...flight, climb: 0 } } }])).toThrow(/invalid "flight.climb"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, aircraftKind: "helicopter", flight: { ...flight, pad: "huge" as "small" } } }])).toThrow(/invalid "flight.pad"/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, flight } }])).toThrow(/for helicopters only/);
+    expect(() => exportVehicleMeta([{ ...base, game: { ...physics, aircraftKind: "helicopter", flight } }])).toThrow(/for aircraft only/);
+    expect(() => exportVehicleMeta([{ ...plane, game: { ...physics, helipad: { material: "helipad", pad: "small" } } }])).toThrow(/for buildings only/);
+  });
+});
+
+describe("helipads", () => {
+  // docs/models/game-properties.md, "Helipads": a building declares the material of its pad, the export measures it
+  it("measure the glass office's rooftop deck where its helipad parameter draws it, and refuse a pad the model does not draw", () => {
+    const office = exportMeta(SKYSCRAPERS).buildings.find((b) => b.id === "proc-building-sky-glass-office")!;
+    const pad = office.game!.helipad!;
+    expect(pad).toMatchObject({ pad: "small", when: { helipad: "roof" }, size: 17 });
+    // on the deck, above the crown, centred on the tower
+    const design = SKYSCRAPERS.find((d) => d.id.endsWith("sky-glass-office"))!;
+    const top = Math.max(...design.build({ helipad: "roof" }).positions().filter((_, i) => i % 3 === 1));
+    expect(pad.centre[0]).toBeCloseTo(0, 3);
+    expect(pad.centre[2]).toBeCloseTo(0, 3);
+    expect(pad.centre[1]).toBeGreaterThan(top - 1);
+    // the default tower keeps its mast and has no pad
+    expect(materialPositions(design.build(), "helipad")).toEqual([]);
+    const fake = { ...design, id: "proc-building-test", game: { helipad: { material: "helipad", pad: "small" as const } } };
+    expect(() => exportMeta([fake])).toThrow(/helipad material "helipad" is not drawn/);
+    expect(() => exportMeta([{ ...design, id: "proc-building-test", game: { helipad: { material: "helipad", pad: "small" as const, when: { helipad: "deck" } } } }])).toThrow(/does not resolve/);
+  });
+  it("measure the hospital's rooftop pad and the offshore platform's helideck on every build, each at least its class's D-value", () => {
+    const ids = ["proc-building-hospital", "proc-building-industry-offshore-platform"];
+    const pads = exportMeta(ids.map((id) => DESIGNS.get(id)!)).buildings.map((b) => b.game!.helipad!);
+    expect(pads.map((p) => [p.pad, p.when])).toEqual([["small", undefined], ["large", undefined]]);
+    expect(pads[0]!.size).toBeGreaterThanOrEqual(16);
+    expect(pads[1]!.size).toBeGreaterThanOrEqual(26);
   });
 });
 

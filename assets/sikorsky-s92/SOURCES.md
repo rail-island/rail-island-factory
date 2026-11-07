@@ -16,3 +16,4 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 - Sikorsky S-92 (Wikipedia "Sikorsky S-92"): in service from 2004; fuselage length 17.1 m, main rotor diameter 17.16 m (4 blades), height 4.95 m to the rotor head; about 19 seats (typical layout, approx.); maximum take-off mass about 12 t; about 3760 kW shaft power; cruising speed about 280 km/h.
 - Positions of the wing, engines, tail, gear legs, doors and windows are read off the photographs and published three-view drawings (approx.); the livery colours are approximations of the carriers' schemes.
+- Rate of climb about 8.1 m/s (1,600 ft/min; GlobalAir S-92 specifications, https://www.globalair.com/aircraft-specifications/sikorsky/sikorsky-s-92-specifications/1350); the game's transit height (300 m) is a game choice, not a published figure.

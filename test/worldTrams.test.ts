@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import { WORLD_TRAM_SPECS, WORLD_TRAMS_RIGHT_ONLY, WORLD_TRAMS_WITHOUT_DOORS } from "../generator/worldTrams";
-import { checkSpec, tramLength, tramLodBudget } from "../generator/worldTramKit";
+import { checkSpec, tramLength, tramLodBudget, tramTriangleBudget } from "../generator/worldTramKit";
 import { DESIGNS } from "../generator/generate";
 import { OPENTTD_TABLE } from "../generator/openttdTable";
 import { proceduralId } from "../generator/modelId";
@@ -63,8 +63,8 @@ describe("the world trams", () => {
         const m = t.build(params);
         const { json, bin } = parseGlb(m.toGlb(t.id));
         const ts = collectTriangles(json, bin);
-        // a rigid tram's budget is a road vehicle's 10,000; an articulated tram's 15,000
-        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(s.sections.length === 1 ? 10_000 : 15_000);
+        // a rigid tram's budget is a road vehicle's 10,000, and 5,000 more a joint
+        expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(tramTriangleBudget(s.sections.length));
         expect(m.interiorTriangleCount()).toBeLessThanOrEqual(2_000);
         // on the rail, centred, as long as its bodies (couplers and lamps beyond them; a horse ahead)
         const L = tramLength(s);
@@ -77,7 +77,8 @@ describe("the world trams", () => {
         expect(span(ts, 1)[0]).toBeCloseTo(0, 5);
         const [z0, z1] = span(ts, 2);
         // the open cars' running boards, an open top deck's floor reach a little further
-        expect(z1 - z0).toBeLessThanOrEqual(s.width + (s.open ? 0.5 : s.deck === "open" ? 0.12 : 0.06));
+        // (a cab's rear-view mirrors or camera arms stand out at each side)
+        expect(z1 - z0).toBeLessThanOrEqual(s.width + (s.open ? 0.5 : s.deck === "open" ? 0.12 : 0.06) + (s.nose?.mirrors ? 0.66 : 0));
         // the collector: raised to the trolley wire, its own lowering clip; none on the battery, ground-power and hydrogen cars
         const clips = (json as { animations?: Array<{ name: string }> }).animations?.map((a) => a.name) ?? [];
         const top = span(ts, 1)[1];
@@ -109,6 +110,25 @@ describe("the world trams", () => {
       });
     });
   }
+
+  it("lays each dressed nose on its body: head lamps at both cab ends, on the end's surface, and its mirrors at the cab", () => {
+    const dressed = WORLD_TRAM_SPECS.filter((t) => t.spec().nose);
+    expect(dressed.length).toBeGreaterThanOrEqual(10);
+    for (const t of dressed) {
+      const s = t.spec();
+      const L = tramLength(s);
+      const { json, bin } = parseGlb(t.build().toGlb(t.id));
+      const heads = collectTriangles(json, bin).filter((f) => f.material === "lampHead");
+      const xs = heads.flatMap((f) => f.p.map((q) => q[0]));
+      // the lamps sit on the end, never sunk behind it nor floating ahead of it (a lens 3.5 cm proud)
+      expect(Math.max(...xs), t.id).toBeLessThanOrEqual(L / 2 + 0.12);
+      expect(Math.max(...xs), t.id).toBeGreaterThan(L / 2 - 1.5);
+      if (s.doubleEnded) expect(Math.min(...xs), t.id).toBeLessThan(-L / 2 + 1.5);
+      const tree = JSON.stringify(t.build().sourceTree(t.id, t.id));
+      if (s.nose!.mirrors) expect(tree, t.id).toContain("mirrors");
+      if (s.nose!.panes) expect(tree, t.id).toContain("pane 1");
+    }
+  });
 
   it("draws the special rows' parts: the horse, the tram engine's chimney and smoke, the cable grip, the guided axles", () => {
     const names = (id: string, p = {}) => {

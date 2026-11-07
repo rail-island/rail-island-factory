@@ -7,7 +7,7 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { worldTram, worldTramLod, tramLodBudget, type WorldTramSpec } from "./worldTramKit.ts";
+import { worldTram, worldTramLod, tramLodBudget, type EndShape, type WorldTramSpec } from "./worldTramKit.ts";
 import {
   arm, bogies, chimney, lowArm, chimneyLod, classic, doorsAt, doubleDeck, g, grip, jacobs, lay, liveryParam, lowFloor, lrv, NO_COLLECTOR, pole, secDoors, tramDesign, truck, vintage,
   type WorldTram,
@@ -24,6 +24,14 @@ const lod = (s: WorldTramSpec): MeshBuilder => worldTramLod(s, tramLodBudget(s))
 
 export const PCC_PARAMS: readonly ParamSpec[] = [liveryParam(["pittsburgh", "Pittsburgh"], ["toronto", "Toronto"], ["philadelphia", "Philadelphia"])];
 
+/** The PCC's streamlined end: a rounded vee, the screen leaning in a little under the domed roof. */
+const PCC_NOSE: EndShape = {
+  plan: [[0, 0.6], [0.2, 0.78], [0.5, 0.9], [0.9, 0.98], [1.2, 1]],
+  upper: [[0, 0.52], [0.3, 0.74], [0.65, 0.89], [1.0, 0.97], [1.25, 1]],
+  top: [[0, 0.64], [0.2, 0.82], [0.5, 0.93], [1.0, 1]],
+  apron: [[0, 0.62], [0.3, -1]],
+};
+
 export function pccStreamlinerSpec(p?: ParamValues): WorldTramSpec {
   const v = resolveParams(PCC_PARAMS, p).livery;
   const red = v === "philadelphia" ? "#2e5e3a" : v === "toronto" ? "#c8102e" : "#9e1b32";
@@ -34,7 +42,23 @@ export function pccStreamlinerSpec(p?: ParamValues): WorldTramSpec {
     collector: pole(10.3, 4.8),
     colors: { skirt: red, body: red, upper: "#efe6c8" },
     paint: [[1.55, "body"], [3.5, "upper"]],
-    over: { pitch: 1.0 },
+    over: {
+      pitch: 1.0,
+      // the streamlined end: the screen in three panes, the destination sign over it, one head lamp
+      // in the middle of the dash, the ribbed anticlimber over the apron
+      frontShape: PCC_NOSE, screen: [1.68, 2.52], sign: 0,
+      cabPaint: [[1.6, "body"], [3.5, "upper"]],
+      nose: {
+        heads: [[1.02, 0, 0.12]], tails: [[0.95, 0.98, 0.04]], housing: "steel",
+        // the screen round the corners, its pillars, the sign laid on over it
+        screenBand: true, pillars: [0.4, 0.98],
+        panes: [{ y: [2.6, 2.78], z: [-0.6, 0.6], mat: "display" }],
+        pillarPaint: "seam", wipers: [0.2, -0.6], wiperLength: 0.55,
+        route: "", display: 0, ledPaint: "lettering", number: ["3318", 0.62, 1.45, 0.13, "upper"],
+        grille: [0.66, 0.7, 0.75, 1, "steel"],
+        bumper: [0.62, 0.74, "steel", 0.07],
+      },
+    },
   });
 }
 
@@ -182,6 +206,12 @@ export function buenosAiresPremetroSpec(): WorldTramSpec {
 
 export const HONG_KONG_PARAMS: readonly ParamSpec[] = [liveryParam(["classic", "Classic"], ["advertising", "Advertising"])];
 
+/** The Hong Kong tram's end: flat and upright with round corners. */
+const HONG_KONG_NOSE: EndShape = {
+  plan: [[0, 0.9], [0.12, 0.97], [0.25, 1]],
+  top: [[0, 0.93], [0.1, 0.98], [0.25, 1]],
+};
+
 export function hongKongTramSpec(p?: ParamValues): WorldTramSpec {
   const ad = resolveParams(HONG_KONG_PARAMS, p).livery === "advertising";
   return doubleDeck({
@@ -191,7 +221,25 @@ export function hongKongTramSpec(p?: ParamValues): WorldTramSpec {
     collector: lowArm(7.2),
     colors: ad ? { skirt: "#c8102e", body: "#f2f2ee", upper: "#c8102e" } : { skirt: "#1f6b3a", body: "#efe6c8", upper: "#1f6b3a" },
     paint: [[1.25, "skirt"], [2.25, "body"], [2.9, "skirt"], [4.6, "upper"]],
-    over: { pitch: 0.95 },
+    // the route number box on the roof's front
+    roofBoxes: [[0.3, 1.3, 0.42, 0.22, "body"]],
+    over: {
+      pitch: 0.95,
+      // the flat end: three windows on each deck, the display between them, one head lamp low in the
+      // dash and the black fender under it (the photographed car)
+      frontShape: HONG_KONG_NOSE, screen: [1.45, 2.3],
+      nose: {
+        heads: [[0.88, 0, 0.11]], tails: [[0.72, 0.8, 0.035], [0.86, 0.8, 0.035]], housing: "steel",
+        panes: [
+          { y: [1.45, 2.3], z: [-0.3, 0.3] }, { y: [1.45, 2.3], z: [0.38, 0.86] }, { y: [1.45, 2.3], z: [-0.86, -0.38] },
+          { y: [2.62, 2.86], z: [-0.42, 0.42], mat: "display" },
+          { y: [3.2, 4.02], z: [-0.3, 0.3] }, { y: [3.2, 4.02], z: [0.38, 0.86] }, { y: [3.2, 4.02], z: [-0.86, -0.38] },
+        ],
+        mirrors: "arm", mirrorY: 2.1,
+        bumper: [0.3, 0.62, "underframe", 0.06],
+        route: "1", display: 3, number: ["103", -0.55, 1.28, 0.1, "lampRed"], badges: [[1.12, 0, 0.06, "upper"]],
+      },
+    },
   });
 }
 
@@ -542,7 +590,7 @@ export const WORLD_REGION_TRAM_SPECS: readonly WorldTram[] = [
   T("glenelg-h-class", "Glenelg H Class", glenelgHClassSpec, glenelgHClass, glenelgHClassLod, g(24.0, 180, 60)),
   T("sydney-r-class", "Sydney R Class", sydneyRClassSpec, sydneyRClass, sydneyRClassLod, g(19.0, 160, 55)),
   T("christchurch-boon", "Christchurch Boon Tram", christchurchBoonSpec, christchurchBoon, christchurchBoonLod, g(9.0, 50, 35)),
-  T("horse-tram", "Horse Tram", horseTramSpec, horseTram, horseTramLod, g(2.8, 1, 10)),
+  T("horse-tram", "Horse Tram", horseTramSpec, horseTram, horseTramLod, g(2.8, 10, 10)), // a pair of horses starting the car: holds its 10 km/h on a 5 % grade in the game
   T("steam-tram", "Steam Tram", steamTramSpec, steamTram, steamTramLod, g(9.0, 75, 25, [{ params: { unit: "trailer" }, weight: 6.5, power: 0 }]), { params: STEAM_TRAM_PARAMS }),
   T("cable-car-dunedin", "Dunedin Cable Car", dunedinCableCarSpec, dunedinCableCar, dunedinCableCarLod, g(4.5, 0, 16)),
   T("dubai-citadis", "Dubai Tram", dubaiCitadisSpec, dubaiCitadis, dubaiCitadisLod, g(58.0, 720, 70)),

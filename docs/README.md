@@ -19,7 +19,8 @@
 | [models/commercial-streets.md](models/commercial-streets.md) | eleven additional street and historic commercial families, the 82-object legacy inventory and provisional mapping |
 | [models/panel-houses.md](models/panel-houses.md) | the panel houses of a housing estate (the slab and the point tower block): sections, storeys, facades, balconies, flat or pitched roofs, colours, party walls, city use and the `panel_estate` block type |
 | [models/commercial.md](models/commercial.md) | five Kenney-style commercial families with 3,000 architectural and finish variants, a 10,000-triangle ceiling, catalog and export |
-| [models/industry.md](models/industry.md) | Industry audit, eleven procedural families, budgets and future migration mapping |
+| [models/industry.md](models/industry.md) | Industry audit, twelve procedural families (the offshore platform with its helideck among them), budgets and future migration mapping |
+| [models/hospital.md](models/hospital.md) | the general hospital (a draft): ward block, treatment wing, emergency department and ambulance bay, the rooftop helipad it exports, budget and checks |
 | [models/vehicles.md](models/vehicles.md) | the procedural road and rail vehicles, budgets, articulation, pantograph operating poses, native-reference calibration and adding a vehicle |
 | [models/buses.md](models/buses.md) | the buses from vlakosimdb: the Karosa short and long families, the single models, the shared bus builder, sources and tests |
 | [models/rider-seat.md](models/rider-seat.md) | where the game's avatar sits riding a vehicle: the seat measured on every vehicle's roof (head section first, clear of pantographs), the `rider` meta field |
@@ -108,6 +109,7 @@
 | [models/trees.md](models/trees.md) | the fourteen tree species the game plants: one design each, high, low and coarse levels, the geometry kit, the stylised look (baked light and shade, ragged and wide crowns), budgets |
 | [models/woods.md](models/woods.md) | the woods types: distribution functions keyed by name, the cell context and the four-tree limit, the forest rule (edges, groves, glades, understorey), the modules, `woods.meta.json`, grove previews |
 | [models/sets.md](models/sets.md) | the set registry: structure, rail and road, block and catenary sets, frozen ids, defaults and aliases, landed sets and what each module holds (the seven block archetypes, their parameters and the shared city fill), previews, pins, `export/sets/` metas, modules and declarations |
+| [models/airfield.md](models/airfield.md) | the whole airport the airport set draws on the game's saved layout: the split with the game, `airfield` and its tags, the shared heights, the far level, the layout fixtures the preview pages and pins draw on |
 | [models/bridges.md](models/bridges.md) | the bridge types: what each builds over the game's path, the deck section, piers and abutments, structural spans and the cable types' shared towers, overhead members, part tags, triangle budgets per length |
 | [models/previews.md](models/previews.md) | the site's preview designs: one page per structure, rail and road type, decoration, catenary style, city block and texture; categories, bound types, preview parameters, the drawing kit, the block composer |
 | [models/characters.md](models/characters.md) | the characters the game's walk mode moves: the avatar, its frame, parts and pivots, the six clips (idle, walk, run, jump, fall, sit) and their drives, foot contact, the seat height, the low detail, `characters.meta.json`, the site's motion buttons |

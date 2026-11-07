@@ -14,7 +14,7 @@ import { ROTOR_SPECS, WORLD_ROTORCRAFT, WORLD_ROTORCRAFT_SPECS } from "../genera
 import { DESIGNS } from "../generator/generate";
 import { OPENTTD_TABLE } from "../generator/openttdTable";
 import { proceduralId } from "../generator/modelId";
-import { coverageCombinations, type ParamValues } from "../generator/design";
+import { coverageCombinations, HELIPAD_D, type ParamValues } from "../generator/design";
 import { geometry } from "../generator/airframeKit";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import { sample } from "./catalogCache";
@@ -30,12 +30,22 @@ function bounds(m: MeshBuilder): { min: number[]; max: number[] } {
   const g = m.toGlb("t");
   const view = new DataView(g.buffer, g.byteOffset, g.byteLength);
   const jsonLen = view.getUint32(12, true);
-  const json = JSON.parse(new TextDecoder().decode(g.subarray(20, 20 + jsonLen))) as { accessors: Array<{ min?: number[]; max?: number[]; type: string }>; meshes: Array<{ primitives: Array<{ attributes: { POSITION: number } }> }>; nodes: Array<{ mesh?: number; translation?: number[] }> };
+  const json = JSON.parse(new TextDecoder().decode(g.subarray(20, 20 + jsonLen))) as { accessors: Array<{ min?: number[]; max?: number[]; type: string }>; meshes: Array<{ primitives: Array<{ attributes: { POSITION: number } }> }>; nodes: Array<{ mesh?: number; translation?: number[]; children?: number[] }> };
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
-  for (const n of json.nodes) {
+  // a node's place in the model: its own translation and its parents' (a blur disc inside its propeller)
+  const parent = new Map<number, number>();
+  json.nodes.forEach((n, i) => n.children?.forEach((c) => parent.set(c, i)));
+  const placed = (i: number): number[] => {
+    const own = json.nodes[i]!.translation ?? [0, 0, 0];
+    const up = parent.get(i);
+    if (up === undefined) return own;
+    const p = placed(up);
+    return [own[0]! + p[0]!, own[1]! + p[1]!, own[2]! + p[2]!];
+  };
+  for (const [i, n] of json.nodes.entries()) {
     if (n.mesh === undefined) continue;
-    const t = n.translation ?? [0, 0, 0];
+    const t = placed(i);
     for (const p of json.meshes[n.mesh]!.primitives) {
       const a = json.accessors[p.attributes.POSITION]!;
       for (let k = 0; k < 3; k++) {
@@ -66,7 +76,28 @@ describe("the world aircraft", () => {
       expect(o, id).toBeDefined();
       expect(o!.capacity).toBeGreaterThan(0);
       expect(["PASS", "GOOD"]).toContain(o!.cargo);
-      expect(a.game.sizeClass, id).toBeDefined();
+      // a helicopter uses pads, not airport classes (docs/models/game-properties.md)
+      if (a.game.aircraftKind === "helicopter") {
+        expect(a.game.sizeClass, id).toBeUndefined();
+        expect(a.game.flight, id).toBeDefined();
+      } else expect(a.game.sizeClass, id).toBeDefined();
+    }
+  });
+
+  it("gives every rotor-kit design the helicopter kind, and the pad class its D-value fits", () => {
+    for (const a of WORLD_ROTORCRAFT_SPECS) {
+      const spec = ROTOR_SPECS[a.id];
+      if (!spec) {
+        expect(a.game.aircraftKind, a.id).toBeUndefined(); // the airship stays an aeroplane-like aircraft
+        continue;
+      }
+      expect(a.game.aircraftKind, a.id).toBe("helicopter");
+      const s = spec();
+      // the overall length with the rotors turning: the main disc ahead of the nose to the boom's end or the disc's rear
+      const d = Math.max(s.length, s.main.d + s.main.r) - Math.min(0, s.main.d - s.main.r);
+      const pad = a.game.flight!.pad;
+      expect(d, a.id).toBeLessThanOrEqual(HELIPAD_D[pad]);
+      if (pad === "large") expect(d, a.id).toBeGreaterThan(HELIPAD_D.small);
     }
   });
 
@@ -94,10 +125,11 @@ describe("the world aircraft", () => {
           expect(b.max[2]! - b.min[2]!, "span").toBeGreaterThan(span - 0.3);
           const retract = s.gear.retract && s.gear.kind !== "none" && s.gear.kind !== "floats";
           // the moving pieces are child nodes: the propellers, the flaps and a drooping nose
-          const moving = (p: string) => /^(propeller-\d+|flap-(left|right)-\d+|nose)$/.test(p);
+          const moving = (p: string) => /^(propeller-\d+(-disc)?|flap-(left|right)-\d+|nose)$/.test(p);
           expect(partsOf(m).filter((p) => !moving(p))).toEqual(retract ? ["airframe", "gear"] : []);
           const props = s.engines.reduce((t, e) => t + (e.kind === "prop" ? e.s.length * (e.s.includes(0) ? 1 : 2) : 0), 0);
-          expect(partsOf(m).filter((p) => p.startsWith("propeller-")), "a part per propeller").toHaveLength(props);
+          expect(partsOf(m).filter((p) => /^propeller-\d+$/.test(p)), "a part per propeller").toHaveLength(props);
+          expect(partsOf(m).filter((p) => /^propeller-\d+-disc$/.test(p)), "a blur disc per propeller").toHaveLength(props);
           expect(partsOf(m).some((p) => p.startsWith("flap-")), "flaps").toBe(s.wing.flaps === true);
           expect(partsOf(m).includes("nose"), "a drooping nose").toBe(s.fuselage.droop !== undefined);
         } else if (ROTOR_SPECS[a.id]) {
@@ -132,7 +164,7 @@ describe("the world aircraft", () => {
       const m = a.build();
       expect(partsOf(m), a.id).toEqual(expect.arrayContaining(["airframe", "rotor", "tailrotor"]));
       const clip = m.animations().find((c) => c.name === "rotor")!;
-      expect(m.clipDrives()).toEqual({ rotor: { drive: "time" } });
+      expect(m.clipDrives()).toEqual({ rotor: { drive: "time" }, spin: { drive: "spin" } });
       for (const t of clip.tracks) {
         const v = t.values;
         const n = v.length / 4;
@@ -171,7 +203,7 @@ describe("the world aircraft", () => {
       expect(clip, a.id).toBeDefined();
       expect(m.clipDrives()?.propellers, a.id).toEqual({ drive: "time" });
       expect(clip.times[clip.times.length - 1]).toBeCloseTo(PROP_PERIOD, 9);
-      expect(clip.tracks.map((t) => t.node).sort(), a.id).toEqual(partsOf(m).filter((p) => p.startsWith("propeller")).sort());
+      expect(clip.tracks.map((t) => t.node).sort(), a.id).toEqual(partsOf(m).filter((p) => p.startsWith("propeller") && !p.endsWith("-disc")).sort());
       for (const t of clip.tracks) {
         const v = t.values;
         const n = v.length / 4;
@@ -181,6 +213,37 @@ describe("the world aircraft", () => {
       }
       // no z-fighting a quarter of the way round
       expect(findCoplanarOverlaps(poseGlb(m.toGlb("t"), 3, m.animations().indexOf(clip))), a.id).toEqual([]);
+    }
+  });
+
+  it("spins every rotor and propeller up on the clip \"spin\": a blur disc at full speed (the rest pose), none and drooping blades stopped", () => {
+    // docs/models/animation.md, "Spin": time 1 is the rest pose, so a game that does not drive `spin` shows full speed
+    const turning = ALL.filter((a) => a.spec?.().engines.some((e) => e.kind === "prop") || a.id === "veh-zeppelin-nt" || ROTOR_SPECS[a.id]);
+    expect(turning.length).toBeGreaterThan(35);
+    for (const a of turning) {
+      const m = a.build();
+      expect(m.clipDrives()?.spin, a.id).toEqual({ drive: "spin" });
+      const k = m.animations().findIndex((c) => c.name === "spin");
+      const clip = m.animations()[k]!;
+      expect(clip.times[0]).toBe(0);
+      expect(clip.times[clip.times.length - 1]).toBe(1);
+      const discs = partsOf(m).filter((p) => p.endsWith("-disc"));
+      const spinners = ROTOR_SPECS[a.id] ? ["rotor", "tailrotor"] : partsOf(m).filter((p) => /^propeller-[a-z0-9]+$/.test(p));
+      expect(discs.sort(), a.id).toEqual(spinners.map((p) => `${p}-disc`).sort());
+      for (const t of clip.tracks.filter((x) => x.path === "scale")) {
+        expect(t.values.slice(-3), `${a.id} ${t.node} at full speed`).toEqual([1, 1, 1]);
+        expect(t.values[0]!, `${a.id} ${t.node} stopped`).toBeLessThan(0.01);
+      }
+      expect(clip.tracks.filter((x) => x.path === "scale").map((x) => x.node).sort(), a.id).toEqual(discs.sort());
+      // a helicopter's main blades droop when stopped and stand level at full speed
+      const droops = clip.tracks.filter((x) => x.path === "rotation");
+      expect(droops.length, a.id).toBe(ROTOR_SPECS[a.id] ? ROTOR_SPECS[a.id]!().main.blades : 0);
+      for (const t of droops) expect(t.values.slice(-4), `${a.id} ${t.node}`).toEqual([0, 0, 0, 1]);
+      // the disc material is see-through, and nothing z-fights at rest or stopped
+      const glb = m.toGlb("t");
+      expect(trisOf(glb).some((t) => t.material === "blur"), a.id).toBe(true);
+      expect(findCoplanarOverlaps(glb), a.id).toEqual([]);
+      expect(findCoplanarOverlaps(poseGlb(glb, 0, k)), `${a.id} stopped`).toEqual([]);
     }
   });
 

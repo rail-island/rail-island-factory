@@ -21,19 +21,19 @@ standing room); exterior triangles at the defaults.
 | `veh-tatra-t1` | Tatra T1 | 1 | 14.5 x 2.4 x 3.06 | pcc | BB | diamond | 1435 | 1952 / 95 | 5,086 | - |
 | `veh-tatra-t2` | Tatra T2 | 1 | 15.2 x 2.5 x 3.06 | pcc | BB | diamond | 1435 | 1955 / 100 | 5,862 | - |
 | `veh-tatra-t4` | Tatra T4D | 1 | 14 x 2.2 x 3.06 | tatra | BB | diamond | 1435 | 1968 / 105 | 5,558 | unit: motorCar, trailer |
-| `veh-tatra-k2` | Tatra K2 | 2 | 20.4 x 2.5 x 3.15 | tatra | BBJ | diamond | 1435 | 1966 / 157 | 7,984 | livery: classic, modern |
+| `veh-tatra-k2` | Tatra K2 | 2 | 20.4 x 2.5 x 3.15 | tatra | BBJ | diamond | 1435 | 1966 / 157 | 9,602 | livery: classic, modern |
 | `veh-tatra-t5c5` | Tatra T5C5 | 1 | 14.7 x 2.5 x 3.15 | angular | BB | diamond | 1435 | 1979 / 116 | 5,152 | - |
 | `veh-skoda-14t` | Skoda 14T | 5 | 31.2 x 2.46 x 3.46 | bulb, 2 cabs | BBB | arm | 1435 | 2005 / 202 | 8,534 | - |
-| `veh-skoda-15t` | Skoda 15T ForCity | 4 | 31.6 x 2.46 x 3.5 | pointed, 2 cabs | BBBB | arm | 1435 | 2009 / 210 | 9,200 | livery: prague, riga |
+| `veh-skoda-15t` | Skoda 15T ForCity | 4 | 31.6 x 2.46 x 3.5 | pointed, 2 cabs | BBBB | arm | 1435 | 2009 / 210 | 15,620 | livery: prague, riga |
 | `veh-skoda-13t` | Skoda 13T | 5 | 32.4 x 2.46 x 3.47 | modern, 2 cabs | BBB | arm | 1435 | 2008 / 210 | 8,014 | - |
 | `veh-skoda-29t` | Skoda 29T | 5 | 31.6 x 2.46 x 3.55 | pointed | BBB | arm | 1435 | 2015 / 200 | 7,434 | - |
 | `veh-skoda-10t` | Skoda 10T | 3 | 20 x 2.46 x 3.5 | modern, 2 cabs | BB | arm | 1435 | 2001 / 157 | 6,366 | livery: portland, tacoma |
 | `veh-vario-lf` | Vario LF | 1 | 15.1 x 2.48 x 3.15 | duewag | BB | arm | 1435 | 2004 / 120 | 5,384 | - |
 | `veh-ganz-csmg` | Ganz CSMG | 2 | 26.9 x 2.35 x 3.2 | angular | BBJ | diamond | 1435 | 1967 / 170 | 7,604 | - |
-| `veh-siemens-combino` | Siemens Combino | 5 | 31.5 x 2.3 x 3.4 | flat, 2 cabs | BBB | arm | 1435 | 1996 / 180 | 9,132 | length: 3, 5, 7; livery: basel, amsterdam, freiburg |
+| `veh-siemens-combino` | Siemens Combino | 5 | 31.5 x 2.3 x 3.4 | flat, 2 cabs | BBB | arm | 1435 | 1996 / 180 | 13,088 | length: 3, 5, 7; livery: basel, amsterdam, freiburg |
 | `veh-siemens-combino-supra` | Siemens Combino Supra | 9 | 54.5 x 2.4 x 3.5 | flat, 2 cabs | BBBBB | arm | 1435 | 2006 / 350 | 12,388 | - |
 | `veh-siemens-avenio` | Siemens Avenio | 4 | 38.15 x 2.4 x 3.55 | pointed, 2 cabs | BBBB | arm | 1435 | 2014 / 250 | 9,640 | livery: munich, hague |
-| `veh-siemens-ulf` | Vienna ULF | 5 | 26.3 x 2.4 x 3.3 | flat, 2 cabs | PPPP | arm | 1435 | 1997 / 136 | 6,768 | length: a, b |
+| `veh-siemens-ulf` | Vienna ULF | 5 | 26.3 x 2.4 x 3.3 | flat, 2 cabs | PPPP | arm | 1435 | 1997 / 136 | 12,264 | length: a, b |
 | `veh-vienna-e1` | Vienna Type E1 | 2 | 19.65 x 2.2 x 3.1 | duewag | BBJ | arm | 1435 | 1966 / 159 | 6,800 | unit: motorCar, trailer |
 | `veh-vienna-flexity` | Vienna Flexity | 5 | 34.8 x 2.4 x 3.4 | modern | BBBB | arm | 1435 | 2018 / 211 | 9,168 | - |
 | `veh-duewag-gt8` | Duewag GT8 | 3 | 26.7 x 2.35 x 3.2 | duewag | BBJJ | diamond | 1435 | 1956 / 190 | 8,698 | livery: rheinbahn, heidelberg |
@@ -43,7 +43,7 @@ standing room); exterior triangles at the defaults.
 | `veh-berlin-flexity` | Berlin Flexity | 5 | 30 x 2.4 x 3.6 | modern, 2 cabs | BBB | arm | 1435 | 2011 / 180 | 7,488 | length: short, long |
 | `veh-stadler-variobahn` | Stadler Variobahn | 5 | 31.8 x 2.3 x 3.4 | flat, 2 cabs | BBB | arm | 1435 | 2002 / 180 | 8,636 | livery: munich, graz |
 | `veh-stadler-tango` | Stadler Tango | 4 | 43.75 x 2.3 x 3.5 | pointed, 2 cabs | BBBB | arm | 1435 | 2009 / 280 | 10,484 | livery: geneva, basel |
-| `veh-zurich-cobra` | Zurich Cobra Be 5/6 | 5 | 37 x 2.4 x 3.6 | pointed | BBB | arm | 1000 | 2001 / 230 | 7,848 | - |
+| `veh-zurich-cobra` | Zurich Cobra Be 5/6 | 5 | 37 x 2.4 x 3.6 | pointed | BBB | arm | 1000 | 2001 / 230 | 11,686 | - |
 | `veh-zurich-tram-2000` | Zurich Tram 2000 | 2 | 21.65 x 2.2 x 3.3 | angular | BBJ | arm | 1000 | 1976 / 150 | 6,872 | - |
 | `veh-swiss-standard-tram` | Swiss Standard Tram | 1 | 13.75 x 2.2 x 3.1 | pcc, 2 cabs | BB | diamond | 1000 | 1940 / 100 | 5,680 | - |
 | `veh-brussels-pcc` | Brussels PCC 7900 | 3 | 27.8 x 2.2 x 3.2 | pcc, 2 cabs | BBJJ | arm | 1435 | 1971 / 160 | 9,324 | - |
@@ -52,14 +52,14 @@ standing room); exterior triangles at the defaults.
 | `veh-lisbon-remodelado` | Lisbon Remodelado | 1 | 8.4 x 2.3 x 3.25 | retro, 2 cabs | T | pole | 900 | 1936 / 58 | 3,576 | - |
 | `veh-milan-ventotto` | Milan Ventotto | 1 | 13.6 x 2.35 x 3.35 | retro | BB | diamond | 1445 | 1928 / 130 | 5,018 | - |
 | `veh-florence-sirio` | AnsaldoBreda Sirio | 5 | 32.4 x 2.4 x 3.4 | modern, 2 cabs | BBB | arm | 1435 | 2002 / 190 | 8,884 | livery: florence, milan, gothenburg |
-| `veh-alstom-citadis` | Alstom Citadis 402 | 7 | 44 x 2.4 x 3.3 | modern, 2 cabs | BBBB | arm | 1435 | 2006 / 300 | 10,438 | livery: bordeaux, dublin, dubai |
+| `veh-alstom-citadis` | Alstom Citadis 402 | 7 | 44 x 2.4 x 3.3 | modern, 2 cabs | BBBB | arm | 1435 | 2006 / 300 | 15,914 | livery: bordeaux, dublin, dubai |
 | `veh-alstom-citadis-x05` | Alstom Citadis X05 | 5 | 33.6 x 2.65 x 3.3 | modern, 2 cabs | BBB | arm | 1435 | 2016 / 210 | 8,916 | livery: sydney, nice |
 | `veh-alstom-tfs` | Alstom TFS | 3 | 30.3 x 2.3 x 3.3 | modern, 2 cabs | BBBB | arm | 1435 | 1987 / 170 | 8,946 | - |
 | `veh-translohr` | Translohr STE3 | 5 | 29.8 x 2.2 x 2.89 | pointed, 2 cabs | GGGG | arm | 1435 | 2006 / 127 | 7,266 | - |
 | `veh-caf-urbos` | CAF Urbos 3 | 7 | 44.4 x 2.65 x 3.4 | pointed, 2 cabs | BBBB | arm | 1435 | 2011 / 250 | 10,382 | livery: edinburgh, belgrade, kaohsiung |
 | `veh-flexity-outlook` | Bombardier Flexity Outlook | 5 | 32.8 x 2.3 x 3.45 | modern, 2 cabs | BBB | arm | 1435 | 2005 / 200 | 8,868 | livery: brussels, marseille, innsbruck |
 | `veh-croydon-cr4000` | Croydon CR4000 | 3 | 30.2 x 2.65 x 3.5 | duewag, 2 cabs | BBB | arm | 1435 | 2000 / 208 | 7,640 | - |
-| `veh-blackpool-balloon` | Blackpool Balloon | 1, double deck | 12.8 x 2.29 x 4.75 | pcc, 2 cabs | BB | pole | 1435 | 1934 / 94 | 5,938 | - |
+| `veh-blackpool-balloon` | Blackpool Balloon | 1, double deck | 12.8 x 2.29 x 4.75 | pcc, 2 cabs | BB | pole | 1435 | 1934 / 94 | 9,750 | - |
 | `veh-blackpool-flexity` | Blackpool Flexity 2 | 5 | 33 x 2.65 x 3.4 | modern, 2 cabs | BBB | arm | 1435 | 2012 / 222 | 8,916 | - |
 | `veh-sheffield-supertram` | Sheffield Supertram | 3 | 34.8 x 2.65 x 3.6 | duewag, 2 cabs | BBJJ | arm | 1435 | 1994 / 250 | 9,050 | - |
 | `veh-nottingham-incentro` | Nottingham Incentro | 5 | 33.4 x 2.4 x 3.4 | modern, 2 cabs | BBB | arm | 1435 | 2003 / 200 | 8,916 | - |
@@ -77,7 +77,7 @@ standing room); exterior triangles at the defaults.
 | `veh-helsinki-valmet` | Valmet Nr I | 2 | 20.05 x 2.3 x 3.3 | angular | BBJ | arm | 1000 | 1973 / 130 | 6,784 | - |
 | `veh-oslo-sl79` | Oslo SL79 | 2 | 21.65 x 2.5 x 3.3 | duewag | BBJ | arm | 1435 | 1982 / 170 | 6,780 | - |
 | `veh-gothenburg-m29` | Gothenburg M29 | 1 | 15 x 2.65 x 3.3 | duewag | BB | arm | 1435 | 1969 / 100 | 5,098 | - |
-| `veh-pcc-streamliner` | PCC Streamliner | 1 | 14.2 x 2.54 x 3.1 | pcc | BB | pole | 1435 | 1936 / 100 | 4,796 | livery: pittsburgh, toronto, philadelphia |
+| `veh-pcc-streamliner` | PCC Streamliner | 1 | 14.2 x 2.54 x 3.1 | pcc | BB | pole | 1435 | 1936 / 100 | 7,312 | livery: pittsburgh, toronto, philadelphia |
 | `veh-toronto-clrv` | Toronto CLRV | 1 | 15.2 x 2.54 x 3.4 | angular | BB | pole | 1435 | 1979 / 132 | 4,896 | - |
 | `veh-toronto-flexity` | Toronto Flexity Outlook | 5 | 30.6 x 2.54 x 3.84 | modern | BBB | arm | 1435 | 2014 / 251 | 8,002 | - |
 | `veh-birney-safety-car` | Birney Safety Car | 1 | 8.5 x 2.4 x 3.3 | retro, 2 cabs | T | pole | 1435 | 1916 / 40 | 3,624 | - |
@@ -89,7 +89,7 @@ standing room); exterior triangles at the defaults.
 | `veh-philadelphia-kawasaki` | Philadelphia Kawasaki LRV | 1 | 15.2 x 2.6 x 3.25 | angular | BB | pole | 1435 | 1981 / 100 | 5,120 | - |
 | `veh-rio-bonde` | Santa Teresa Bonde | 1, open | 9.2 x 2.3 x 3.1 | retro, 2 cabs | T | pole | 1100 | 1896 / 32 | 4,172 | - |
 | `veh-buenos-aires-premetro` | Buenos Aires Premetro | 1 | 15.6 x 2.6 x 3.3 | angular, 2 cabs | BB | arm | 1435 | 1987 / 120 | 5,978 | - |
-| `veh-hong-kong-tram` | Hong Kong Tram | 1, double deck | 11.98 x 2 x 4.5 | retro | T | diamond (low) | 1067 | 1949 / 115 | 4,792 | livery: classic, advertising |
+| `veh-hong-kong-tram` | Hong Kong Tram | 1, double deck | 11.98 x 2 x 4.5 | retro | T | diamond (low) | 1067 | 1949 / 115 | 6,788 | livery: classic, advertising |
 | `veh-hiroshima-green-mover` | Hiroshima Green Mover Max | 5 | 30.4 x 2.45 x 3.65 | modern, 2 cabs | BBB | arm | 1435 | 2005 / 150 | 8,868 | - |
 | `veh-toei-9000` | Toei 9000 | 1 | 13 x 2.2 x 3.55 | retro | BB | arm | 1372 | 2007 / 62 | 4,884 | - |
 | `veh-toyama-portram` | Toyama Portram | 2 | 18.4 x 2.4 x 3.6 | modern, 2 cabs | BB | arm | 1067 | 2006 / 80 | 6,180 | livery: red, green, blue |
@@ -112,12 +112,12 @@ standing room); exterior triangles at the defaults.
 | `veh-trieste-opicina` | Trieste Opicina Tram | 1 | 11 x 2.2 x 3.3 | retro, 2 cabs | BB | diamond | 1000 | 1935 / 90 | 5,116 | - |
 | `veh-budapest-ganz-uv` | Ganz UV | 1 | 14.4 x 2.3 x 3.15 | duewag | BB | diamond | 1435 | 1956 / 105 | 5,092 | - |
 | `veh-wroclaw-skoda-16t` | Skoda 16T | 5 | 31.2 x 2.4 x 3.46 | bulb | BBB | arm | 1435 | 2006 / 200 | 7,780 | - |
-| `veh-strasbourg-eurotram` | Strasbourg Eurotram | 7 | 36.5 x 2.4 x 3.4 | bulb, 2 cabs | BBBB | arm | 1435 | 1994 / 210 | 9,670 | - |
+| `veh-strasbourg-eurotram` | Strasbourg Eurotram | 7 | 36.5 x 2.4 x 3.4 | bulb, 2 cabs | BBBB | arm | 1435 | 1994 / 210 | 13,534 | - |
 | `veh-montpellier-citadis` | Montpellier Citadis 302 | 5 | 32.6 x 2.65 x 3.3 | modern, 2 cabs | BBB | arm | 1435 | 2000 / 220 | 8,176 | livery: line1, line2 |
 | `veh-gmunden-vario` | Gmunden Traunseetram | 3 | 31.9 x 2.4 x 3.4 | flat, 2 cabs | BBB | arm | 1000 | 2014 / 170 | 8,196 | - |
 | `veh-sarajevo-k2yu` | Tatra K2YU | 2 | 20.4 x 2.5 x 3.15 | tatra | BBJ | diamond | 1435 | 1973 / 157 | 7,208 | - |
 | `veh-turin-2800` | Turin Series 2800 | 2 | 20.45 x 2.3 x 3.3 | duewag | BBJ | diamond | 1435 | 1958 / 150 | 6,700 | - |
-| `veh-dubai-citadis` | Dubai Tram | 7 | 44 x 2.65 x 3.3 | modern, 2 cabs | BBBB | none | 1435 | 2014 / 300 | 10,218 | - |
+| `veh-dubai-citadis` | Dubai Tram | 7 | 44 x 2.65 x 3.3 | modern, 2 cabs | BBBB | none | 1435 | 2014 / 300 | 15,502 | - |
 
 Every parameter value title is in the 14 languages (`text/`): the city liveries with their own
 names in other languages (Prague, Munich, The Hague, ...) are translated, the others and every
@@ -146,6 +146,48 @@ the largest x), +Y up, +Z right, centred on x 0 and z 0, the treads on y 0.
   Porsche nose), `retro` (a bowed dash under the roof carried over the vestibule). Each is a plan
   taper, a top line (fractions from the windscreen's foot to the roof) and an apron. The cab
   volume paints the windscreen (`screen`) as glass and the destination display above it.
+- **A design's own nose.** `frontShape` (and `rearShape`, defaulting to the front's) replaces the
+  library's shape with one drawn from the design's photographs; an `EndShape` may add an `upper`
+  plan, the plan at the eave, which the cab narrows to from the screen's foot up (the
+  csdCoachParts `Volume.upper`: the screen's corners leaning in under a hood). `cabPaint` gives
+  the cab its own stack (a lamp band, a screen frame, a cap over the display). `nose`
+  (`NoseDress`) lays on the end's surface, found by searching back from the end at each point
+  (`noseAt`): `heads` and `tails` lamps (replacing the default pair), screen `pillars` and
+  `bars`, parked `wipers`, `mirrors` on arms or camera arms at the cab's top corners, a `bumper`
+  across the nose, and `panes` - framed windows and display boxes laid on the end in place of
+  the screen band (an old car's three front windows, a double-decker's rows; `screenBand` keeps
+  the band as well); the destination display's lit text (`route`: the route number in the
+  stroke font and a row of lit characters for the destination, amber `displayLed` by default,
+  on the band's sign or the pane `display`), the `number` painted on the nose, `badges` (a disc
+  in a steel ring), amber `indicators`, a `grille` of slats; a rubber gasket runs along the
+  screen band's foot and head (`noGasket` leaves it out), the wipers have arm and blade, the
+  lamps a chrome reflector ring. A cab roof box takes a sixth figure, its `rake`: a fairing sloping down to
+  the roof in two steps. The distant model keeps the shape but paints the cab in the body's
+  stack. These ten designs have their own noses (the reference photos in `assets/<name>/`):
+  - `veh-skoda-15t`: the ForCity's near-upright screen with leaning corners under a rounded hood,
+    the silver lamp band with paired head lamps, the red bumper with its black strip, the
+    Prague livery corrected to the photographed red, silver and black, one wiper, mirrors;
+  - `veh-siemens-combino`: the flat upright front, the screen from 1.25 m under the display's
+    black band, the big round lamps in silver bezels, the black coupler cover;
+  - `veh-alstom-citadis` (and `veh-dubai-citadis`, the same 402): the rounded bumper bulging
+    ahead of the raked screen, its corners leaning in, the lamps in a black band at its foot;
+  - `veh-strasbourg-eurotram`: the glass bubble sweeping back and in to the roof over the green
+    lamp panel, the white rim round the nose, CTS green, white and champagne silver;
+  - `veh-siemens-ulf`: the box front, the screen in a black frame, the lamps in black recesses in
+    the white panel, Wiener Linien grey, red and white;
+  - `veh-zurich-cobra`: the pointed blue jaw, the black lamp band, the screen leaning far back
+    under the blue display cap, VBZ blue below and over the windows;
+  - `veh-tatra-k2`: the round front, the wide screen and its corner panes in a cream frame, the
+    big head lamps in the red apron, the bumper rail over the cream skirt, the route number box;
+  - `veh-pcc-streamliner`: the rounded vee, the screen in three lights round the corners under the
+    sign, one head lamp in the dash, the anticlimber;
+  - `veh-blackpool-balloon`: the driver's screen in three lights, the indicator box between the
+    decks, the upper deck's two front windows;
+  - `veh-hong-kong-tram`: the flat end with three windows on each deck, the display between
+    them, one head lamp, the black fender and the route number box on the roof.
+  Each carries its route and fleet number as photographed where the font allows (15T "18" and
+  9203, Combino "8" and 326, Citadis "1", Eurotram "A" and 1003, ULF "J" and 25, Cobra "9" and
+  3002, K2 1123 in gold, PCC 3318, Balloon 726, Hong Kong "1" and 103).
 - **Ends.** `doubleEnded` gives both ends a cab and head lamps; a single-ended car's rear end has
   a rear window and tail lamps. `trailer` marks a unit's trailer: no head lamps, no collector.
 - **Windows and doors.** The side windows (`windows`, `pitch`, a double-decker's `upper`) fill
@@ -191,10 +233,12 @@ body, a clerestory, swinging doors) and `doubleDeck`; the layout helpers `lay`, 
 ## Triangle budget
 
 A rigid tram - one section, on bogies or a single truck - has at most **10,000 triangles** at
-full detail, like a road vehicle; an articulated tram, longer and of several bodies, at most
-**15,000** (`test/worldTrams.test.ts`, exterior triangles; the interior behind the doors has its
-own 2,000, [interiors.md](interiors.md)). Every world tram is within them today: the rigid cars
-up to the horse tram's 9,946, the articulated ones up to the KT8D5's 13,158.
+full detail, like a road vehicle; an articulated tram gets **5,000 more for each joint**: 15,000
+with one joint, 20,000 with two, 30,000 for a five-section car (`tramTriangleBudget`;
+`test/worldTrams.test.ts` and `test/trams.test.ts`, exterior triangles; the interior behind the
+doors has its own 2,000, [interiors.md](interiors.md)). Spend the room on the nose first. Every
+tram is within them today: the rigid cars up to the horse tram's 9,946, the articulated ones up
+to the Citadis 402's 15,914 (of its 40,000).
 
 ## The horse tram
 
@@ -273,7 +317,9 @@ four or more (a design with a length parameter takes its longest).
 ## Game properties, OpenTTD and sounds
 
 Each design states its weight, power and top speed from its published data (the trailers and
-the steam tram's trailer as variants). Its OpenTTD entry (`openttdTable.ts`, the trams' block) is
+the steam tram's trailer as variants). The horse tram is the exception: a horse has no rated power, so it
+states 10 kW (a pair of horses starting the car), enough for the game to hold its 10 km/h on a
+5 % grade; with 1 kW it crawled up the island's hills at 1-3 km/h. Its OpenTTD entry (`openttdTable.ts`, the trams' block) is
 a passenger road vehicle on tram track with seats and standing room; its presets export every
 livery, length and unit; `pnpm openttd:ids` gave the ids. A tram rings the derived tram bell;
 the steam tram's engine whistles and beats (`soundTable.ts`), its trailer is silent. No sound
@@ -294,8 +340,8 @@ design fits a horse's hooves or a cable's hum yet (a request to rail-island-musi
   sections). The Sydney R class is a closed drop-centre saloon, not a cross-bench car. The
   Kolkata two-car set is drawn as two sections joined by a short bellows. The steam tram's
   OpenTTD capacity stands for the engine and its trailer.
-- **Simplifications.** Roofs are one grey; the roof fairings are boxes in the body colour; no
-  mirrors, wipers or fleet numbers; the clerestory is a raised box. The Opicina car's cable
+- **Simplifications.** Roofs are one grey; the roof fairings are boxes in the body colour (the
+  dressed noses' raked); mirrors and wipers only on the ten dressed noses, no fleet numbers; the clerestory is a raised box. The Opicina car's cable
   pusher is only the buffer it leans on. The horse's hind legs bend at one joint, the hock, like
   its front legs at the knee; its harness does not follow the legs.
 - **Sizes.** Most figures are from the type's Wikipedia infobox and the operators' data; the

@@ -16,3 +16,4 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 - Mil Mi-8 (Wikipedia "Mil Mi-8"): in service from 1967; fuselage length 18.17 m, main rotor diameter 21.3 m (5 blades), height 5.65 m to the rotor head; about 24 seats (typical layout, approx.); maximum take-off mass about 12 t; about 2500 kW shaft power; cruising speed about 230 km/h.
 - Positions of the wing, engines, tail, gear legs, doors and windows are read off the photographs and published three-view drawings (approx.); the livery colours are approximations of the carriers' schemes.
+- Rate of climb about 9 m/s (the figure most often published for the Mi-8T / Hip C, e.g. https://vietnam.warbirdsresourcegroup.org/mi8.html; early TV2-117 engines are quoted lower, approx.); the game's transit height (300 m) is a game choice, not a published figure.

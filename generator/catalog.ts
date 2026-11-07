@@ -26,10 +26,13 @@ import { VEHICLE_CATALOG } from "./vehicles.ts";
 import { checkGameProperties, resolveParams, type CatalogFields, type GameProperties, type OpenttdProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import type { VehicleRig } from "./rig.ts";
 import { cityExport, extentOf, type CityExport } from "./cityVariants.ts";
+import { measureHelipad, type ExportedHelipad } from "./helipad.ts";
 
 /** A design's game properties as a meta entry carries them: a building's city use exported (cityVariants.ts). */
-export type ExportedGame = Omit<GameProperties, "city" | "variants"> & {
+export type ExportedGame = Omit<GameProperties, "city" | "variants" | "helipad"> & {
   city?: CityExport;
+  /** A building's helipad, measured by the export (helipad.ts). */
+  helipad?: ExportedHelipad;
   /** Its sounds by slot, written by the export (soundMapping.ts, docs/models/sounds.md). */
   sounds?: SoundMapping;
   variants?: Array<NonNullable<GameProperties["variants"]>[number] & { sounds?: SoundOverride }>;
@@ -424,8 +427,10 @@ export function listedEntry(entry: MetaEntry, design: ProceduralDesign, building
  */
 export function withCityUse(entry: MetaEntry, design: ProceduralDesign): MetaEntry {
   const city = cityExport(design, entry.group, (values) => measuredExtent(design, values), design.game?.city);
-  const { city: _declared, ...rest } = entry.game ?? {};
-  const game: ExportedGame = city ? { ...rest, city } : rest;
+  const { city: _declared, helipad: _pad, ...rest } = entry.game ?? {};
+  // a declared helipad, measured on the model (docs/models/game-properties.md, "Helipads")
+  const helipad = design.game?.helipad ? measureHelipad(design, design.game.helipad) : null;
+  const game: ExportedGame = { ...rest, ...(city ? { city } : {}), ...(helipad ? { helipad } : {}) };
   const { game: _old, ...base } = entry;
   return Object.keys(game).length ? { ...base, game } : base;
 }

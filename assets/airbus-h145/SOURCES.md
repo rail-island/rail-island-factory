@@ -16,3 +16,4 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 
 - Airbus Helicopters H145 (Wikipedia "Eurocopter EC145"): in service from 2014; fuselage length 11.64 m, main rotor diameter 11 m (5 blades), height 3.96 m to the rotor head; about 9 seats (typical layout, approx.); maximum take-off mass about 3.8 t; about 1540 kW shaft power; cruising speed about 246 km/h.
 - Positions of the wing, engines, tail, gear legs, doors and windows are read off the photographs and published three-view drawings (approx.); the livery colours are approximations of the carriers' schemes.
+- Rate of climb about 8.1 m/s (1,600 ft/min; GlobalAir H145 specifications, https://www.globalair.com/aircraft-specifications/airbus-helicopters/airbus-h145-specifications/1591); the game's transit height (150 m) is a game choice, not a published figure.

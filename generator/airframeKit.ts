@@ -30,7 +30,7 @@ import {
 } from "./airframeShapes.ts";
 import { airLod, lodAxleWheel, lodBar, type AirEngine, type AirFin, type AirPod, type AirWing } from "./lodAir.ts";
 import { lodPolygon } from "./lodKit.ts";
-import { axisQuat, turnPropellers, type PropellerNode } from "./propellers.ts";
+import { axisQuat, BLUR_MATERIAL, BLUR_SPEC, blurDisc, lodBlurDisc, turnPropellers, type PropellerNode } from "./propellers.ts";
 
 // --- the spec ----------------------------------------------------------------------------
 
@@ -225,7 +225,7 @@ const matOf = (key: string, scheme: Scheme, c: string): string => (scheme.colors
 
 /** The palette of a spec: the shared aircraft materials and the scheme's colours. */
 export function airframePalette(spec: AirframeSpec): Record<string, MaterialSpec> {
-  const out: Record<string, MaterialSpec> = { ...PALETTE, prop: { color: "#2a2b2e", roughness: 0.5 }, cowlRing: { color: "#3a3d42", metallic: 0.2, roughness: 0.5 } };
+  const out: Record<string, MaterialSpec> = { ...PALETTE, prop: { color: "#2a2b2e", roughness: 0.5 }, cowlRing: { color: "#3a3d42", metallic: 0.2, roughness: 0.5 }, [BLUR_MATERIAL]: BLUR_SPEC };
   for (const [c, hex] of Object.entries(spec.scheme.colors)) out[`${spec.schemeKey}${cap(c)}`] = { color: hex, roughness: 0.4 };
   return out;
 }
@@ -558,8 +558,10 @@ const wingUnder = (st: WingStation[], s: number): number => {
 function propeller(m: MeshBuilder, px: number, c: [number, number], r: number, blades: number, spinner: number, props: PropellerNode[], phase = 0): void {
   const [cy, cz] = c;
   const node = `propeller-${props.length + 1}`;
-  props.push({ node, axis: [1, 0, 0], dir: 1 });
+  props.push({ node, axis: [1, 0, 0], dir: 1, disc: `${node}-disc` });
   m.spin(node, [px, cy, cz], () => m.scope("propeller", () => {
+    // the blur disc a little ahead of the blades, inside the spinner's tip
+    blurDisc(m, `${node}-disc`, [px, cy, cz], [1, 0, 0], r, 0.06);
     for (let i = 0; i < blades; i++) {
       const t = phase + (i * 2 * Math.PI) / blades + Math.PI / 2;
       const radial: Vec3 = [0, Math.sin(t), Math.cos(t)];
@@ -1157,6 +1159,15 @@ export function airframeLod(spec: AirframeSpec): MeshBuilder {
           const z = side * s;
           const cw = Math.max(0.1, e.prop * 0.1);
           for (const [dx, nx] of [[0.02, 1], [-0.02, -1]] as const) lodPolygon(m, "prop", [[px + dx, yc - e.prop, z - cw], [px + dx, yc - e.prop, z + cw], [px + dx, yc + e.prop, z + cw], [px + dx, yc + e.prop, z - cw]], [nx, 0, 0]);
+        }
+      } });
+      // their blur discs (the full model's at full speed), given up after the blades
+      parts.push({ optional: 2, draw: (m) => {
+        for (const s of e.s) for (const side of s === 0 ? [1] : [-1, 1]) {
+          const w = s === 0 ? null : wingAt(g.wing, s);
+          const yc = s === 0 ? g.noseTip[1] : e.over ? w!.mid + w!.thick * 0.45 + e.r * 0.6 : w!.mid - (e.drop ?? propDrop(g, e.style, e.r));
+          const px = (s === 0 ? g.noseTip[0] + 0.08 : w!.lead + (e.ahead ?? e.r * 2.2) + 0.06);
+          lodBlurDisc(m, [px, yc, side * s], [1, 0, 0], e.prop, 0.06);
         }
       } });
       void nose;

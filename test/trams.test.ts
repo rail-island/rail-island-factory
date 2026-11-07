@@ -18,6 +18,7 @@ import { parseGlb } from "../generator/glbParse.ts";
 import { poseGlb } from "../generator/glbPose.ts";
 import { DOOR_POCKET_IN, DOOR_SAMPLES } from "../generator/doors.ts";
 import { Tram } from "../generator/tramKit.ts";
+import { tramTriangleBudget } from "../generator/worldTramKit.ts";
 import { collectTriangles } from "../generator/glbTriangles.ts";
 import { isLeaf, type TreeNode } from "../generator/sourceTree.ts";
 import type { ParamValues } from "../generator/design.ts";
@@ -72,7 +73,9 @@ describe("the tram and metro designs", () => {
     expect(Math.abs(s.min[2] + s.max[2])).toBeLessThan(0.03);
     expect(s.max[0] - s.min[0]).toBeGreaterThan(2 * (s.max[2] - s.min[2]));
     expect(s.max[1]).toBeLessThanOrEqual(6.5);
-    expect(s.triangles).toBeLessThanOrEqual(16_000);
+    // a tram's budget: 10,000 for one body and 5,000 more a joint (exterior); the metro car a rail vehicle's 16,000
+    if (METRO_DESIGNS.includes(d)) expect(s.triangles).toBeLessThanOrEqual(16_000);
+    else expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(tramTriangleBudget(m.rig?.sections?.length ?? 1));
     const fixed = walk(m.sourceTree(d.id, d.title).root).filter((n) => isLeaf(n) && n.max && !/(^|\/)roof-equipment\/pantographs(\/|$)/.test(n.id));
     expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
     expect(findCoplanarOverlaps(glb)).toEqual([]);

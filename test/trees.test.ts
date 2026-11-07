@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { SPECIES, TREES, treeModelOf, treeParts, type Species, type TreeDetail } from "../generator/trees";
 import type { MeshBuilder } from "../generator/meshBuilder";
+import { hasVertexColors } from "../generator/meshAudit";
 import baseline from "./fixtures/tree-baseline.json";
 
 const LEVELS: TreeDetail[] = ["coarse", "low", "high"];
@@ -56,7 +57,7 @@ describe("the tree species", () => {
   it.each([...SPECIES])("bakes light and shade into %s at every level", (species) => {
     for (const detail of LEVELS) {
       const m = built(species, detail);
-      expect(m.hasVertexColors(), `${species} ${detail}`).toBe(true);
+      expect(hasVertexColors(m), `${species} ${detail}`).toBe(true);
     }
     if (species === "deadtree") return;
     // the crown's underside is darker than its top: the painted light the stylised look rests on
