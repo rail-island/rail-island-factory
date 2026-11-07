@@ -150,7 +150,11 @@ A `Mast` carries its `sails`, each a double-sided face of the `sail` colour (so 
 side shows): `square` (bellied, on its yard), `gaff`, `bermuda`, `sprit`, `jib` (from a
 tack on the bow or bowsprit to the mast), `lateen` and `crabclaw` (on their long yards),
 `junk` (battened panels fanning aft). The stays run from each masthead to the next mast
-forward, the foremost to the bow or bowsprit, and shrouds to the sides.
+forward, the foremost to the bow or bowsprit, and shrouds to the sides. A square sail's
+optional `off` sets its plane ahead of the mast's axis (default the mast's radius + 0.15):
+a ship that draws its own stepped mast over a thin kit core (the Cutty Sark) hangs each
+sail just ahead of the section it covers. A `bulwark`'s optional `inner` and `cap` colour
+its inner face and its top (default its `mat`): white inside, a teak cap rail.
 
 ## The distant model
 

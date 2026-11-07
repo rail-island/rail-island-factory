@@ -8,7 +8,8 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
-import { shipLod, worldShip, type Item, type Mast, type Sail, type ShipSpec } from "./hullKit.ts";
+import { hullGeometry, shipLod, worldShip, type HullForm, type Item, type Mast, type Sail, type ShipSpec } from "./hullKit.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { colourParam, detailed, funnel, passengerFittings, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
 
 /** A rod between two points (u, y, z). */
@@ -75,32 +76,258 @@ export function sedovSpec(): ShipSpec {
   };
 }
 
+/**
+ * The Cutty Sark (1869) as restored at Greenwich (assets/ship-cutty-sark): a black
+ * hull over Muntz metal, a pale gilt line along the sheer, gilt scrollwork at the
+ * bow and the counter, Nannie under the bowsprit; solid bulwarks white inside with a
+ * teak cap amidships, open rails on the forecastle and the short poop; two teak
+ * deckhouses (the after one carrying the boats under their davits); three masts
+ * measured off the side photographs (fore 0.34, main 0.59, mizzen 0.81 of the hull
+ * from the stem), white lower masts, varnished upper masts and black yards: fore and
+ * main with course, double topsails, topgallant and royal, the main a skysail too,
+ * the mizzen a bare crossjack yard under its topsails and the spanker. Every yard
+ * hangs on its mast, every sail from its yard, the shrouds land on deadeyes on the
+ * hull side and the bowsprit, jib-boom and flying jib-boom run out of the bow with
+ * their stays, the jibs set on them.
+ */
 export function cuttySarkSpec(): ShipSpec {
   const L = 64.7;
-  const D = 6.6;
+  const D = 7.1;
+  const hull: HullForm = { fine: true, length: L, beam: 11, depth: D, draft: 6.1, bow: "clipper", stern: "cruiser", section: "keel", entry: 0.36, run: 0.3, rake: 0.07, sheer: [1.4, 2.2], forecastle: [9, 1.8], poop: [9.5, 1.5], boot: 0, stripe: 0, screws: 0 };
+  const g = hullGeometry(hull);
+  const cl = (u: number): number => Math.min(L, Math.max(0, u));
+  const deck = (u: number): number => g.deck(cl(u));
+  const side = (u: number, y: number): number => g.halfBeam(cl(u), y);
+  /** The main deck's sheer line, under the raised forecastle and poop. */
+  const sheer = (u: number): number => D + 1.4 * Math.max(0, (L / 2 - u) / (L / 2)) ** 2 + 2.2 * Math.max(0, (u - L / 2) / (L / 2)) ** 2;
+  /** The stem's fore edge at height y (the clipper stem rising from its forefoot). */
+  const stem = (y: number): number => {
+    let lo = L * 0.75;
+    let hi = L;
+    for (let k = 0; k < 40; k++) { const mid = (lo + hi) / 2; if (g.keel(mid) < y) lo = mid; else hi = mid; }
+    return lo;
+  };
+  const BUL: readonly [number, number] = [9.6, 55.5];
+  const items: Item[] = [];
+  const rope = (a: Vec3, b: Vec3, r = 0.04): Item => ({ k: "rod", a, b, r, mat: "rope", n: 3, name: "rigging" });
+  const spar = (a: Vec3, b: Vec3, r: number, mat: string, n = 8): Item => ({ k: "rod", a, b, r, mat, n, name: "spars" });
+  const blk = (u0: number, u1: number, z0: number, z1: number, y0: number, y1: number, mat: string, name: string): Item => ({ k: "box", u: [u0, u1], z: [z0, z1], y: [y0, y1], mat, name });
+  /** A deadeye on the hull's side (on the bulwark amidships, at the deck edge under an open rail), its chain plate down the side; the rope's foot. */
+  const feet: Item[] = [];
+  const deadeye = (u: number, sd: number): Vec3 => {
+    const yd = deck(u);
+    const onBulwark = u > BUL[0] + 0.3 && u < BUL[1] - 0.3;
+    const [y0, y1] = onBulwark ? [yd + 0.7, yd + 1.05] : [yd - 0.4, yd - 0.05];
+    const zs = side(u, yd);
+    const z0 = sd * (zs - 0.12);
+    const z1 = sd * (zs + 0.32);
+    feet.push(blk(u - 0.17, u + 0.17, Math.min(z0, z1), Math.max(z0, z1), y0, y1, "black", "deadeyes"));
+    const yc = yd - 1.1;
+    feet.push({ k: "rod", a: [u, y0 + 0.02, sd * (zs + 0.1)], b: [u, yc, sd * (side(u, yc) + 0.02)], r: 0.04, mat: "black", n: 3, name: "chain plates" });
+    return [u, y1 - 0.05, sd * (zs + 0.2)];
+  };
+  /** Ratlines across a fan of shrouds (first and last given, foot to head), every `step` metres up. */
+  const ratlines = (a0: Vec3, a1: Vec3, b0: Vec3, b1: Vec3, y0: number, y1: number, step: number): Item[] => {
+    const at = (p: Vec3, q: Vec3, y: number): Vec3 => { const t = (y - p[1]) / (q[1] - p[1]); return [p[0] + (q[0] - p[0]) * t, y, p[2] + (q[2] - p[2]) * t]; };
+    const out: Item[] = [];
+    for (let y = y0; y <= y1; y += step) out.push({ k: "rod", a: at(a0, a1, y), b: at(b0, b1, y), r: 0.022, mat: "rope", n: 3, name: "ratlines" });
+    return out;
+  };
+
+  interface Rigged { mast: Mast; head: (name: "top" | "topmast" | "tgallant" | "royal" | "truck") => Vec3; axis: (y: number) => number }
+  /**
+   * A square-rigged mast: stepped at u, H metres from the deck to the truck, raked aft
+   * `rake` at the truck; its yards at fractions of H with their full lengths, sails
+   * from `first` up (the mizzen's crossjack is bare); white lower mast, varnished
+   * topmast and topgallant pole, the top and the crosstrees, shrouds with ratlines,
+   * backstays, a fife rail at its foot.
+   */
+  const rig = (u: number, H: number, rake: number, yards: ReadonlyArray<readonly [number, number]>, first: number, r: readonly [number, number, number], topHw: number, nShrouds: number): Rigged => {
+    const yd = deck(u);
+    const truck = yd + H;
+    const base = yd - 0.1;
+    const ax = (y: number): number => u - (rake * (y - base)) / (truck - base);
+    const P = (y: number, z = 0): Vec3 => [ax(y), y, z];
+    const Y = yards.map(([f]) => yd + f * H);
+    const cap = Y[1]! - 0.35;
+    const top = cap - 1.6;
+    const tmHead = Y[2]! + 1.8;
+    const cross = tmHead - 1.2;
+    const tgHead = Y[3]! + 1.3;
+    const royalHead = Y[4]! + 0.8;
+    const [rLow, rTop, rTg] = r;
+    // the mast in three spars, each overlapping the one below at its doubling
+    items.push(spar(P(yd - 0.4), P(cap), rLow, "white", 10), spar(P(top + 0.05), P(tmHead), rTop, "white", 8), spar(P(cross - 0.1), P(truck + 0.1), rTg, "mast", 6));
+    items.push(blk(ax(top) - 2.3, ax(top) + 0.3, -topHw, topHw, top - 0.22, top, "black", "tops"));
+    items.push(blk(ax(cap) - 0.4, ax(cap) + 0.45, -0.42, 0.42, cap - 0.05, cap + 0.28, "white", "mast caps"));
+    items.push(blk(ax(cross) - 1.3, ax(cross) + 0.25, -topHw * 0.62, topHw * 0.62, cross - 0.16, cross, "black", "crosstrees"));
+    items.push(blk(ax(tmHead) - 0.32, ax(tmHead) + 0.3, -0.3, 0.3, tmHead - 0.05, tmHead + 0.22, "white", "mast caps"));
+    // the fife rail round the foot
+    items.push(blk(ax(yd) + 0.9, ax(yd) + 1.12, -1.1, 1.1, yd - 0.05, yd + 0.85, "teak", "fife rails"));
+    for (const sd of [1, -1]) items.push(blk(ax(yd) - 0.9, ax(yd) + 0.9, sd > 0 ? 0.9 : -1.1, sd > 0 ? 1.1 : -0.9, yd - 0.05, yd + 0.85, "teak", "fife rails"));
+    // the yards: slung on the mast, the sails hanging from them down to the yard below
+    const radius = (y: number): number => (y <= cap ? rLow : y <= tmHead ? rTop : rTg);
+    const sails: Sail[] = [];
+    yards.forEach(([, len], i) => {
+      const y = Y[i]!;
+      const half = len / 2;
+      const yr = Math.max(0.08, (half - 0.4) * 0.025);
+      if (i >= first) {
+        const y0 = i === 0 ? yd + 2.8 : Y[i - 1]!;
+        const off = Math.max(radius(y0), radius(y - 0.2)) + 0.15;
+        const w1 = half - 0.4;
+        const w0 = i === 0 ? w1 * 1.04 : yards[i - 1]![1] / 2 - 0.7;
+        sails.push({ kind: "square", y: [y0, y - 0.1], w: [w0, w1], off });
+        items.push({ k: "rod", a: [ax(y), y, 0], b: [ax(y) + off - 0.05, y, 0], r: 0.1, mat: "black", n: 4, name: "slings" });
+      } else {
+        const off = radius(y) + 0.1;
+        items.push(spar([ax(y) + off, y, -half], [ax(y) + off, y, half], yr, "spar", 5));
+        items.push({ k: "rod", a: [ax(y), y, 0], b: [ax(y) + off, y, 0], r: 0.1, mat: "black", n: 4, name: "slings" });
+      }
+    });
+    // the standing rigging: lower shrouds to deadeyes abreast and abaft the mast, with ratlines
+    for (const sd of [1, -1]) {
+      const head: Vec3 = [ax(top - 0.4), top - 0.4, sd * rLow * 0.8];
+      const fs = Array.from({ length: nShrouds }, (_, k) => deadeye(u - 0.2 - k * 0.85, sd));
+      for (const f of fs) items.push(rope(f, head, 0.045));
+      items.push(...ratlines(fs[0]!, head, fs[fs.length - 1]!, head, fs[0]![1] + 0.8, top - 1.8, 0.75));
+      // topmast shrouds to the top's rim, the futtocks under it
+      const th: Vec3 = [ax(cross - 0.2), cross - 0.2, sd * rTop * 0.8];
+      const tf = [0, 1, 2].map((k): Vec3 => [ax(top) - 0.1 - k * 0.75, top, sd * (topHw - 0.12)]);
+      for (const f of tf) items.push(rope(f, th, 0.035));
+      items.push(...ratlines(tf[0]!, th, tf[2]!, th, top + 0.7, cross - 1.5, 0.7));
+      items.push(rope([ax(top) - 0.6, top - 0.15, sd * (topHw - 0.15)], [ax(top - 2.4), top - 2.4, sd * rLow * 0.9], 0.04));
+      // topgallant shrouds to the crosstrees' ends
+      for (const du of [0.1, -0.9]) items.push(rope([ax(cross) + du, cross - 0.05, sd * (topHw * 0.62 - 0.08)], [ax(tgHead), tgHead, sd * rTg * 0.7], 0.03));
+      // the backstays: topmast (two), topgallant, royal (and skysail) to the side abaft the shrouds
+      const heads = [tmHead - 1.3, tmHead - 1.3, tgHead, royalHead, ...(yards.length > 5 ? [Y[5]! + 0.6] : [])];
+      heads.forEach((h, k) => items.push(rope(deadeye(u - 0.2 - (nShrouds + 0.4 + k) * 0.85, sd), [ax(h), h, sd * rTop * 0.6], 0.035)));
+    }
+    const heads = { top: P(top - 0.3), topmast: P(tmHead - 1.25), tgallant: P(tgHead), royal: P(royalHead), truck: P(truck - 0.3) };
+    return { mast: { u, y: [yd, truck], r: 0.1, rake, sails }, head: (n) => heads[n], axis: ax };
+  };
+
+  // the masts, measured off the side photographs (fractions of the hull from the stem 0.336, 0.593, 0.813)
+  const fore = rig(43.0, 35.2, 0.9, [[0.3, 22.6], [0.41, 20.2], [0.57, 18], [0.73, 14.2], [0.87, 11]], 0, [0.4, 0.28, 0.18], 2.2, 4);
+  const main = rig(26.3, 39.5, 1.2, [[0.28, 23.8], [0.38, 21.3], [0.53, 18.9], [0.68, 14.9], [0.81, 11.6], [0.92, 8.8]], 0, [0.42, 0.29, 0.19], 2.4, 5);
+  const mizzen = rig(12.2, 27.6, 1.4, [[0.32, 18.3], [0.43, 16.5], [0.59, 14.3], [0.75, 11], [0.89, 8.5]], 1, [0.34, 0.24, 0.15], 1.8, 3);
+  // the spanker on the mizzen, its boom over the poop and out past the taffrail
+  const boom = deck(5) + 2.1;
+  const gaff = mizzen.head("top")[1] - 0.4;
+  const mizzenMast: Mast = { ...mizzen.mast, sails: [...mizzen.mast.sails, { kind: "gaff", y: [boom, gaff], len: 13.9, head: 9 }] };
+
+  // bowsprit, jib-boom and flying jib-boom on one line, steeved 14 degrees, out of the bow over the stem head
+  const s0 = L - 3.2;
+  const y0 = deck(s0) - 0.3;
+  const bs = (u: number): Vec3 => [u, y0 + (u - s0) * 0.25, 0];
+  items.push(spar(bs(s0), bs(L + 6.8), 0.38, "white", 10), spar(bs(L + 2), bs(L + 14.8), 0.24, "mast", 8), spar(bs(L + 13), bs(L + 19.3), 0.15, "mast", 6));
+  items.push(blk(L + 6.55, L + 6.95, -0.36, 0.36, bs(L + 6.75)[1] - 0.42, bs(L + 6.75)[1] + 0.45, "white", "bowsprit cap"));
+  // the dolphin striker under the cap, the martingale stays to the booms' ends and its back ropes to the bow
+  const striker: Vec3 = [L + 6.3, bs(L + 6.7)[1] - 3, 0];
+  items.push(spar([L + 6.7, bs(L + 6.7)[1] - 0.3, 0], striker, 0.1, "black", 5));
+  items.push(rope(striker, bs(L + 14.7), 0.05), rope(striker, bs(L + 19.2), 0.04));
+  for (const sd of [1, -1]) {
+    const ub = L - 2.6;
+    const yb = deck(ub) - 0.7;
+    items.push(rope(striker, [ub, yb, sd * (side(ub, yb) + 0.02)], 0.05));
+    // the bowsprit shrouds
+    items.push(rope(bs(L + 5), [ub, yb + 0.3, sd * (side(ub, yb + 0.3) + 0.02)], 0.06));
+  }
+  // the bobstays from the cap and the bowsprit to the cutwater
+  for (const [ub, y] of [[L + 6.5, 7.6], [L + 3.6, 8.6]] as const) items.push(rope(bs(ub), [stem(y) - 0.15, y, 0], 0.07));
+  // the head stays: fore stay, fore topmast stay, inner and outer jib stays, flying jib stay; their jibs set on them
+  const head = (from: Vec3, to: Vec3): Item => rope(from, to, 0.05);
+  items.push(head(fore.head("top"), bs(L + 0.6)));
+  const jibs: ReadonlyArray<readonly [Vec3, Vec3, number, number, number]> = [
+    // [masthead, boom point, head fraction, clew u, clew height over the forecastle deck]
+    [fore.head("topmast"), bs(L + 6.6), 0.7, L - 5.6, 2.3],
+    [fore.head("topmast"), bs(L + 11), 0.74, L - 3, 3.8],
+    [fore.head("tgallant"), bs(L + 14.6), 0.76, L + 0.6, 5.8],
+    [fore.head("royal"), bs(L + 19.1), 0.78, L + 4.2, 8.2],
+  ];
+  for (const [mh, bp, f, cu, cy] of jibs) {
+    items.push(head(mh, bp));
+    const along = (t: number): readonly [number, number] => [bp[0] + (mh[0] - bp[0]) * t, bp[1] + (mh[1] - bp[1]) * t];
+    items.push({ k: "plate", pts: [along(0.03), along(f), [cu, deck(L) + cy]], z: 0, t: 0.09, mat: "sail", name: "jibs" });
+  }
+  // the stays between the masts: each masthead to the next mast forward
+  items.push(head(main.head("top"), [fore.axis(deck(43)) + 1.2, deck(44.2) + 0.9, 0]), head(main.head("topmast"), fore.head("top")), head(main.head("tgallant"), fore.head("topmast")), head(main.head("royal"), fore.head("tgallant")), head(main.head("truck"), fore.head("royal")));
+  items.push(head(mizzen.head("top"), [main.axis(deck(26.3)) - 0.6, deck(26.3) + 2.5, 0]), head(mizzen.head("topmast"), main.head("top")), head(mizzen.head("tgallant"), main.head("topmast")), head(mizzen.head("royal"), main.head("tgallant")));
+
+  // the hull's paint: the gilt line along the sheer, the scrollwork at the bow's trailboards and on the counter
+  const line = (pts: ReadonlyArray<readonly [number, number]>, w: number, name: string): Item => ({ k: "hullLine", pts: pts.filter(([u, y]) => side(u, y) > 0.2 && g.keel(cl(u)) < y - 0.3), w, mat: "gilt", name });
+  const sheerPts: Array<readonly [number, number]> = [];
+  for (let u = 0.6; u < L; u += 1.6) sheerPts.push([u, sheer(u) - 0.45]);
+  items.push(line(sheerPts, 0.16, "gilt line"));
+  /** A band of scrollwork from u0 to u1 between two gilt borders `lo` and `hi` over the sheer, a running scroll between them. */
+  const scroll = (u0: number, u1: number, lo: number, hi: number, turns: number, name: string): Item[] => {
+    const n = Math.round((u1 - u0) / 0.45);
+    const us = Array.from({ length: n + 1 }, (_, k) => u0 + ((u1 - u0) * k) / n);
+    const amp = (hi - lo) * 0.32;
+    return [
+      line(us.map((u) => [u, sheer(u) + lo] as const), 0.14, name),
+      line(us.map((u) => [u, sheer(u) + hi] as const), 0.14, name),
+      line(us.map((u, k) => [u, sheer(u) + (lo + hi) / 2 + amp * Math.sin((k / n) * Math.PI * 2 * turns)] as const), 0.17, name),
+    ];
+  };
+  items.push(...scroll(L - 9, L, 0.15, 1.25, 4, "bow scrollwork"));
+  items.push(...scroll(0.3, 7.5, 0.1, 1.0, 3, "stern scrollwork"));
+  // Nannie under the bowsprit: her body along the stem head, her head forward, her arm reaching out
+  const fy = deck(L) - 0.35;
+  items.push({ k: "plate", pts: [[stem(fy - 2.7) - 0.3, fy - 2.7], [stem(fy - 2.5) + 0.25, fy - 2.5], [stem(fy - 1.4) + 0.7, fy - 1.2], [stem(fy - 0.5) + 0.85, fy - 0.35], [stem(fy) + 0.3, fy], [stem(fy) - 0.5, fy]], z: 0, t: 0.7, mat: "white", name: "figurehead" });
+  items.push({ k: "cyl", u: stem(fy - 0.4) + 0.75, y: [fy - 0.55, fy + 0.05], r: 0.27, mat: "white", n: 8, name: "figurehead" });
+  for (const sd of [1, -1]) items.push({ k: "rod", a: [stem(fy - 1.0) + 0.5, fy - 0.9, sd * 0.3], b: [stem(fy - 1.0) + 1.6, fy - 0.55, sd * 0.45], r: 0.09, mat: "white", n: 5, name: "figurehead" });
+
+  // decks: houses, hatches, capstan, catheads and anchors, the wheel, skylight and companion on the poop
+  const poop = deck(5);
+  const fc = deck(L - 6);
+  items.push(
+    { k: "tier", u: [33.6, 41.3], y: [deck(37) - 0.1, deck(37) + 2.1], hw: 2.2, mat: "teak", top: "white", windows: [{ y: 0.9, h: 0.6, w: 0.6, pitch: 1.5 }], name: "forward deckhouse" },
+    { k: "tier", u: [16.8, 24.6], y: [deck(21) - 0.1, deck(21) + 2.1], hw: 2.3, mat: "teak", top: "white", windows: [{ y: 0.9, h: 0.6, w: 0.6, pitch: 1.5 }], name: "after deckhouse" },
+    { k: "cyl", u: 35, z: 1, y: [deck(37) + 2.0, deck(37) + 3.1], r: 0.2, mat: "black", name: "galley chimney" },
+    blk(28.6, 32.4, -1.7, 1.7, deck(30) - 0.05, deck(30) + 0.55, "teak", "hatches"), blk(28.75, 32.25, -1.55, 1.55, deck(30) + 0.5, deck(30) + 0.63, "black", "hatches"),
+    blk(45.4, 48, -1.3, 1.3, deck(47) - 0.05, deck(47) + 0.55, "teak", "hatches"), blk(45.55, 47.85, -1.15, 1.15, deck(47) + 0.5, deck(47) + 0.63, "black", "hatches"),
+    blk(13.8, 15.8, -1.1, 1.1, deck(15) - 0.05, deck(15) + 0.5, "teak", "hatches"),
+    { k: "cyl", u: 58.6, y: [fc - 0.05, fc + 0.85], r: 0.42, mat: "teak", n: 10, name: "capstan" },
+    { k: "cyl", u: 58.6, y: [fc + 0.85, fc + 1.0], r: 0.6, mat: "teak", n: 10, name: "capstan" },
+    { k: "cyl", u: 56.6, z: 0.9, y: [fc - 0.05, fc + 0.7], r: 0.18, mat: "black", name: "bitts" },
+    { k: "cyl", u: 56.6, z: -0.9, y: [fc - 0.05, fc + 0.7], r: 0.18, mat: "black", name: "bitts" },
+    { k: "anchors", u: L - 6.2, y: deck(L - 6.2) - 1.6, s: 1.3 },
+    blk(4.6, 7.2, -1, 1, poop - 0.05, poop + 0.75, "teak", "skylight"), blk(4.75, 7.05, -0.85, 0.85, poop + 0.7, poop + 0.82, "glass", "skylight"),
+    blk(7.6, 8.8, -0.65, 0.65, poop - 0.05, poop + 1.05, "teak", "companion"),
+    blk(1.3, 2.3, -0.35, 0.35, deck(1.8) - 0.05, deck(1.8) + 1.05, "teak", "wheel box"),
+    { k: "rod", a: [2.25, deck(1.8) + 1.3, 0], b: [2.42, deck(1.8) + 1.3, 0], r: 0.8, mat: "teak", n: 12, name: "wheel" },
+    { k: "cyl", u: 3.6, y: [deck(3.6) - 0.05, deck(3.6) + 1.15], r: 0.25, mat: "gilt", n: 8, name: "binnacle" },
+  );
+  for (const sd of [1, -1]) {
+    const u = L - 6.2;
+    const zs = side(u, fc);
+    items.push(blk(u - 0.35, u + 0.35, sd > 0 ? zs - 0.3 : -zs - 0.9, sd > 0 ? zs + 0.9 : -zs + 0.3, fc - 0.3, fc + 0.45, "black", "catheads"));
+  }
+  // the boats on chocks on the after house under their davits
+  const hy = deck(21) + 2.1;
+  items.push({ k: "boats", at: [20.7], z: 1.15, y: hy + 0.85, len: 6.4, r: 0.7, mat: "white", name: "boats" });
+  for (const sd of [1, -1]) {
+    for (const du of [-1.8, 1.8]) items.push(blk(20.7 + du - 0.15, 20.7 + du + 0.15, sd * 1.15 - 0.55, sd * 1.15 + 0.55, hy - 0.02, hy + 0.32, "teak", "boat chocks"));
+    for (const du of [-2.9, 2.9]) {
+      const u = 20.7 + du;
+      items.push({ k: "rod", a: [u, hy - 0.1, sd * 2.1], b: [u, hy + 2.4, sd * 2.1], r: 0.08, mat: "white", n: 5, name: "davits" });
+      items.push({ k: "rod", a: [u, hy + 2.35, sd * 2.1], b: [u - Math.sign(du) * 0.2, hy + 2.75, sd * 1.15], r: 0.08, mat: "white", n: 5, name: "davits" });
+      items.push(rope([u - Math.sign(du) * 0.2, hy + 2.7, sd * 1.15], [u - Math.sign(du) * 0.4, hy + 1.3, sd * 1.15], 0.03));
+    }
+  }
+
   return {
     kind: "sail",
-    hull: { fine: true, length: L, beam: 11, depth: D, draft: 6.1, bow: "clipper", stern: "cruiser", section: "keel", entry: 0.36, run: 0.28, rake: 0.07, sheer: [1.4, 2.2], forecastle: [9, 1.8], poop: [12, 1.6], boot: 0, stripe: 0.4, screws: 0 },
-    livery: { hull: "#1d2024", stripe: "#c9a14a", bottom: "#b87333", deck: "#a07a52", house: "#f2f0ea", sail: "#efe9da", spar: "#3b2a1a", mast: "#8a6a3a" },
+    hull,
+    livery: { hull: "#17191c", bottom: "#b08d3e", deck: "#a07a52", house: "#f2f0ea", sail: "#efe9da", spar: "#1d1f22", mast: "#b98a52", teak: "#7a4f2c", gilt: "#d6b45a", white: "#f1efe8", rope: "#2e2720" },
     items: detailed([
-      { k: "tier", u: [30, 38], y: [D - 0.1, D + 2.2], hw: 2.6, mat: "wood", windows: [{ y: 0.9, h: 0.6, w: 0.6, pitch: 1.6 }], name: "deckhouse" },
-      { k: "tier", u: [42, 47], y: [D - 0.1, D + 2.0], hw: 2.2, mat: "wood", name: "forward house" },
-      {
-        k: "rig", bowsprit: { len: 12, rise: 3 },
-        masts: [
-          withJibs(squareMast(48, D, 44, [8, 7.2, 6.6, 5.6, 4.6, 3.6], 0.4), [{ kind: "jib", y: [D + 4, D + 30], tack: L + 11, len: 11 }, { kind: "jib", y: [D + 3, D + 22], tack: L + 6, len: 9 }]),
-          squareMast(34, D, 47, [8.6, 7.8, 7, 6, 5, 4], 0.45),
-          // the mizzen's spanker in place of a crossjack
-          { ...squareMast(20, D, 38, [6.6, 6, 5.2, 4.4, 3.6], 0.35), sails: [...squareMast(20, D, 38, [6.6, 6, 5.2, 4.4, 3.6], 0.35).sails.slice(1), { kind: "gaff", y: [D + 3, D + 13], len: 11, head: 7 }] },
-        ],
-      },
-      { k: "bulwark", u: [0, L], h: 1, t: 0.18, mat: "black" },
-      ...[48, 34, 20].flatMap((u) => shrouds(u, 40, D, 5.2, 4)),
-      { k: "boats", at: [26, 40], z: 4.6, y: D + 1.6, len: 5, r: 0.7, mat: "white", name: "boats" },
-      { k: "cyl", u: 4, z: 0, y: [D + 1.4, D + 2.4], r: 0.45, mat: "wood", name: "wheel" },
-      { k: "plate", pts: [[L + 0.2, D + 0.6], [L + 1.4, D + 1.6], [L + 1.2, D + 2.4], [L, D + 1.4]], z: 0, t: 0.25, mat: "white", name: "figurehead" },
-      { k: "anchors", u: L - 3, y: D - 0.5, s: 1.3 },
-      { k: "mooring", at: [3, L - 5], hw: 4.4, s: 0.45, winch: true },
+      { k: "rig", stays: false, masts: [fore.mast, main.mast, mizzenMast] },
+      { k: "bulwark", u: BUL, h: 1.25, t: 0.2, mat: "black", inner: "white", cap: "teak" },
+      { k: "edgeRail", u: [0.3, 10], h: 1, pitch: 0.9, mat: "white", name: "poop rail" },
+      { k: "edgeRail", u: [55.3, L - 0.8], h: 0.95, pitch: 0.9, mat: "white", name: "forecastle rail" },
+      ...items,
+      ...feet,
     ]),
   };
 }
