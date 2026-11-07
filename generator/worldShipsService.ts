@@ -11,6 +11,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
 import { shipLod, worldShip, type Item, type ShipSpec } from "./hullKit.ts";
 import { colourParam, deckhouse, detailed, exhausts, fittings, funnel, liveryParam, mast, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
+import { hullGeometry, type HullForm } from "./hullKit.ts";
 
 /** A rod between two points (u, y, z). */
 const rod = (a: [number, number, number], b: [number, number, number], r: number, mat: string, name?: string): Item => ({ k: "rod", a, b, r, mat, ...(name ? { name } : {}) });
@@ -54,36 +55,159 @@ export function oceanTugSpec(p?: ParamValues): ShipSpec {
 }
 
 export const HARBOUR_TUG_PARAMS: readonly ParamSpec[] = [/* @__PURE__ */ liveryParam(["red", "Red"], ["black", "Black"], ["green", "Green"])];
+// A Damen ASD 3212-type azimuth stern drive harbour tug (assets/ship-harbour-tug: Svitzer Tyr,
+// Svitzer Freja, VB Malabata, Multratug 32): a raised forecastle from the house forward with the
+// towing winch and the bow staple, the house on it with the wheelhouse glazed all round, the two
+// raked exhaust stacks out of casings at the house's after corners, the low aft deck with the
+// towing hook; the cylindrical bow fender over the ribbed block fenders, the sheer fender band,
+// the inclined side fenders and the block fender round the stern.
 export function harbourTugSpec(p?: ParamValues): ShipSpec {
   const L = 32;
   const D = 5.4;
   const liv = pick(HARBOUR_TUG_PARAMS, p, "livery");
   const side = liv === "black" ? "#1d2024" : liv === "green" ? "#2f6a45" : "#b02a22";
+  const hull: HullForm = { length: L, beam: 12.8, depth: D, draft: 3.6, bow: "raked", stern: "transom", section: "round", entry: 0.42, run: 0.3, transom: 0.82, rake: 0.05, sheer: [0.3, 0.8], forecastle: [17, 1.0], boot: 0.3, stripe: 0, screws: 2, fine: true };
+  const g = hullGeometry(hull);
+  const dk = (u: number): number => g.deck(Math.min(L, Math.max(0, u)));
+  const hb = (u: number, y: number): number => g.halfBeam(Math.min(L, Math.max(0, u)), y);
+  // where the raked stem stands at height y (the keel rises to the deck there)
+  const stem = (y: number): number => {
+    let a = L - 8;
+    let b = L;
+    if (g.keel(b) <= y) return L;
+    for (let k = 0; k < 40; k++) {
+      const m = (a + b) / 2;
+      if (g.keel(m) < y) a = m;
+      else b = m;
+    }
+    return a;
+  };
+  const r3 = (v: number): number => Math.round(v * 1000) / 1000;
+  const items: Item[] = [];
+  // --- the fenders, every piece on the shell (rods half sunk into it) ---
+  // the ribbed block fenders round the bow, under the cylinder: a rib every 0.55 m or so, each from its
+  // place along the waterline-side curve at `lo` to the same fraction along the curve under the deck edge
+  const lo = 4.45;
+  const bowAft = L - 6.6;
+  const curve = (y: (u: number) => number): { at: (f: number) => [number, number, number] } => {
+    const end = stem(y(L)) - 0.04;
+    const pts: Array<[number, number, number, number]> = [];
+    let s = 0;
+    for (let k = 0; k <= 80; k++) {
+      const u = bowAft + ((end - bowAft) * k) / 80;
+      const yy = y(u);
+      const z = hb(u, yy);
+      if (pts.length) { const q = pts[pts.length - 1]!; s += Math.hypot(u - q[0], z - q[2]); }
+      pts.push([u, yy, z, s]);
+    }
+    return {
+      at: (f: number) => {
+        const t = f * s;
+        const k = Math.max(1, pts.findIndex((q) => q[3] >= t));
+        const a = pts[k - 1]!;
+        const b = pts[k]!;
+        const w = (t - a[3]) / Math.max(1e-9, b[3] - a[3]);
+        return [a[0] + (b[0] - a[0]) * w, a[1] + (b[1] - a[1]) * w, a[2] + (b[2] - a[2]) * w];
+      },
+    };
+  };
+  const cLo = curve(() => lo);
+  const cHi = curve((u) => dk(u) - 0.15);
+  const nRib = 16;
+  for (const sd of [1, -1]) {
+    for (let k = 0; k <= nRib; k++) {
+      const [ua, ya, za] = cLo.at(k / nRib);
+      const [ub, yb, zb] = cHi.at(k / nRib);
+      items.push(rod([r3(ua), r3(ya), r3(sd * (za + 0.12))], [r3(ub), r3(yb), r3(sd * (zb + 0.12))], 0.3, "skirt", "bow block fender"));
+    }
+  }
+  items.push(rod([r3(stem(lo) + 0.05), lo, 0], [r3(stem(dk(L) - 0.15) + 0.05), r3(dk(L) - 0.15), 0], 0.3, "skirt", "stem block fender"));
+  // the cylindrical bow fender over them, round the stem along the forecastle's edge
+  {
+    const us = [L - 7.5, L - 6.2, L - 5, L - 3.9, L - 2.9, L - 2, L - 1.25, L - 0.6, L - 0.2];
+    const plan: Array<[number, number]> = [...us.map((u): [number, number] => [u, g.plan(u)]), [L, 0], ...[...us].reverse().map((u): [number, number] => [u, -g.plan(u)])];
+    const off = plan.map(([u, z], k) => {
+      const [ua, za] = plan[Math.max(0, k - 1)]!;
+      const [ub, zb] = plan[Math.min(plan.length - 1, k + 1)]!;
+      const tu = ub - ua;
+      const tz = zb - za;
+      const l = Math.hypot(tu, tz) || 1;
+      // outward: the run goes from starboard round the stem to port
+      return [u - (tz / l) * 0.3, z + (tu / l) * 0.3, dk(u) + 0.2] as const;
+    });
+    for (let k = 0; k + 1 < off.length; k++) {
+      const [ua, za, ya] = off[k]!;
+      const [ub, zb, yb] = off[k + 1]!;
+      const l = Math.hypot(ub - ua, zb - za, yb - ya) || 1;
+      const e = 0.22 / l;
+      items.push(rod([r3(ua - (ub - ua) * e), r3(ya - (yb - ya) * e), r3(za - (zb - za) * e)], [r3(ub + (ub - ua) * e), r3(yb + (yb - ya) * e), r3(zb + (zb - za) * e)], 0.5, "skirt", "bow cylinder fender"));
+    }
+  }
+  // the sheer fender band from the stern to the bow's blocks, the inclined fenders under it aft
+  items.push({ k: "fender", u: [0.05, bowAft], y: [4.6, 5.2], out: 0.32, name: "sheer fender" });
+  for (const sd of [1, -1]) for (const u of [3.6, 5.9, 8.2, 10.5]) items.push(rod([u, 3.95, r3(sd * (hb(u, 3.95) + 0.08))], [u + 0.9, 4.75, r3(sd * (hb(u + 0.9, 4.75) + 0.08))], 0.2, "skirt", "inclined side fender"));
+  // the block fender round the stern: ribs on the quarters and across the transom
+  const sLo = 3.95;
+  for (const sd of [1, -1]) {
+    for (const u of [0.05, 0.6, 1.15, 1.7, 2.25, 2.8]) items.push(rod([u, sLo, r3(sd * (hb(u, sLo) + 0.12))], [u, r3(dk(u) - 0.12), r3(sd * (hb(u, dk(u) - 0.12) + 0.12))], 0.28, "skirt", "stern block fender"));
+  }
+  const zt = hb(0, 4.8) - 0.3;
+  for (let k = 0, n = Math.round((2 * zt) / 0.55); k <= n; k++) {
+    const z = r3(-zt + (2 * zt * k) / n);
+    items.push(rod([-0.1, sLo, z], [-0.1, r3(dk(0) - 0.12), z], 0.28, "skirt", "stern block fender"));
+  }
+  // --- the bulwark, closed across the transom ---
+  const zb = hb(0, dk(0)) - 0.03;
+  items.push({ k: "bulwark", u: [0, L], h: 1.0, t: 0.3 });
+  items.push({ k: "box", u: [0.01, 0.31], z: [-r3(zb), r3(zb)], y: [r3(dk(0) - 0.08), r3(dk(0) + 1.03)], mat: "hull", name: "transom bulwark" });
+  // --- the house on the forecastle, its after end at the break ---
+  const yH = 9.7;
+  const yW = 12.9;
+  items.push(
+    { k: "tier", u: [15.1, 26.4], y: [6.3, yH], hw: 3.9, lip: 0.35, windows: [{ y: 1.15, h: 0.8, w: 0.9, pitch: 1.85, from: 18, to: 25.4 }], front: { y: 1.15, h: 0.8, w: 0.9, n: 4 }, name: "deckhouse" },
+    ...[1, -1].map((sd): Item => ({ k: "box", u: [16.1, 16.95], z: sd > 0 ? [3.87, 3.94] : [-3.94, -3.87], y: [6.5, 8.55], mat: "houseTrim", name: "deckhouse door" })),
+    { k: "rail", u: [15.3, 26.2], y: yH, hw: 4.1, h: 0.9, name: "house top rail" },
+    // the wheelhouse, glazed all round: the side and front bands, the after panes
+    { k: "tier", u: [18.8, 24.4], y: [yH - 0.05, yW], hw: 2.9, lip: 0.4, windows: [{ y: 1.0, h: 1.75, w: 1.05, pitch: 1.4, from: 19.5, to: 23.7 }], front: { y: 1.0, h: 1.75, w: 1.05, n: 4 }, name: "wheelhouse" },
+    ...[-1.55, 0, 1.55].map((z): Item => ({ k: "box", u: [18.76, 18.84], z: [z - 0.6, z + 0.6], y: [yH + 0.95, yH + 2.7], mat: "glass", name: "wheelhouse after window" })),
+    { k: "rail", u: [19, 24.2], y: yW, hw: 3.15, h: 0.9, name: "wheelhouse top rail" },
+    { k: "mast", u: 21.2, y: [yW - 0.25, yW + 6.5], r: 0.15, yards: [[yW + 3.4, 1.1], [yW + 5.1, 0.7]], radar: true },
+    { k: "box", u: [22.8, 23.6], z: [-0.4, 0.4], y: [yW - 0.05, yW + 0.55], mat: "red", name: "fire monitor pedestal" },
+    rod([23.2, yW + 0.4, 0], [24.4, yW + 0.95, 0], 0.14, "red", "fire monitor"),
+    ...[2.4, -2.4].map((z): Item => ({ k: "cyl", u: 23.9, z, y: [yW - 0.05, yW + 0.3], r: 0.18, mat: "black", name: "searchlight" })),
+    ...[3.1, -3.1].map((z): Item => ({ k: "cyl", u: 25.6, z, y: [yH - 0.05, yH + 0.55], r: 0.32, n: 8, mat: "white", name: "liferaft" })),
+    // the exhaust stacks, raked aft out of their casings at the house's after corners
+    ...[2.7, -2.7].flatMap((z): Item[] => [
+      { k: "box", u: [16, 18], z: [z - 0.7, z + 0.7], y: [yH - 0.05, yH + 1.5], mat: "house", name: "exhaust casing", top: false },
+      { k: "box", u: [16, 18], z: [z - 0.7, z + 0.7], y: [yH + 1.5, yH + 1.9], mat: "funnel", name: "exhaust casing top" },
+      { k: "funnel", u: [16.6, 17.4], hw: 0.32, y: [yH + 1.8, yW + 2.1], rake: 1.3, round: true, bands: [["black", 1]], z, name: "exhaust stack" },
+    ]),
+  );
+  // --- the forecastle: the towing winch before the house, the bow staple, bollards ---
+  const yWn = dk(28);
+  items.push(
+    { k: "box", u: [26.7, 29.3], z: [-2.1, 2.1], y: [r3(yWn - 0.1), r3(yWn + 0.45)], mat: "steel", name: "towing winch bed" },
+    { k: "rod", a: [28, r3(yWn + 1.05), -1.7], b: [28, r3(yWn + 1.05), 1.7], r: 0.65, n: 12, mat: "red", name: "towing winch drum" },
+    ...[1, -1].map((sd): Item => ({ k: "rod", a: [28, r3(yWn + 1.05), sd * 1.65], b: [28, r3(yWn + 1.05), sd * 1.85], r: 0.85, n: 12, mat: "steel", name: "towing winch flange" })),
+    { k: "gantry", u: 30.5, hw: 0.9, y: r3(dk(30.5) - 0.05), h: 1.5, t: 0.28, mat: "steel", name: "bow towing staple" },
+    { k: "mooring", at: [29.9], hw: 2.4, s: 0.45 },
+  );
+  // --- the aft deck: the towing hook on its pedestal, the towing bow over it, bollards ---
+  const yHk = dk(12.3);
+  items.push(
+    { k: "cyl", u: 12.3, y: [r3(yHk - 0.05), r3(yHk + 1.2)], r: 0.4, mat: "steel", name: "towing hook pedestal" },
+    rod([12.3, r3(yHk + 1.0), 0], [11.1, r3(yHk + 1.0), 0], 0.16, "black", "towing hook"),
+    rod([11.15, r3(yHk + 1.05), 0], [11.0, r3(yHk + 0.6), 0], 0.12, "black", "towing hook"),
+    { k: "gantry", u: 7, hw: 4.6, y: r3(dk(7) - 0.05), h: 2.2, t: 0.3, mat: "steel", name: "towing bow" },
+    { k: "mooring", at: [2, 11], hw: 5.4, s: 0.5 },
+    { k: "anchors", u: 24, y: 5.75, s: 0.8 },
+    { k: "marks", at: [23, 13], y: [2.4, 4.2], step: 0.5, s: 0.3 },
+  );
   return {
     kind: "service",
-    hull: { length: L, beam: 12.8, depth: D, draft: 3.6, bow: "raked", stern: "transom", section: "round", entry: 0.42, run: 0.3, transom: 0.8, rake: 0.05, sheer: [0.3, 1.6], boot: 0.3, stripe: 0.6, screws: 2, fine: true },
+    hull,
     livery: { hull: side, stripe: "#1b1c1d", bottom: "#8f2a22", deck: "#6f7a77", house: "#f2f0ea", funnel: side },
-    items: [
-      // the rubber fenders: a band round the sheer, the heavy bow and stern fenders, tyres along the sides
-      { k: "fender", u: [0, L], y: [D - 0.9, D - 0.1], out: 0.4, name: "sheer fender" },
-      { k: "fender", u: [L - 3.4, L], y: [D - 2.4, D + 0.8], out: 0.7, name: "bow fender" },
-      { k: "fender", u: [0, 2.6], y: [D - 1.8, D - 0.2], out: 0.6, name: "stern fender" },
-      ...[8, 11, 14, 17, 20, 23].flatMap((u): Item[] => [1, -1].map((sd): Item => ({ k: "cyl", u, z: sd * 6.75, y: [D - 2.8, D - 1.2], r: 0.4, n: 8, mat: "skirt", name: "tyre fender" }))),
-      { k: "bulwark", u: [0, L], h: 0.9, t: 0.25 },
-      { k: "tier", u: [12, 22], y: [D - 0.1, D + 2.4], hw: 4.6, lip: 0.3, windows: [{ y: 0.9, h: 0.8, w: 0.8, pitch: 1.6 }], front: { y: 0.9, h: 0.8, w: 0.8, n: 5 }, name: "deckhouse" },
-      { k: "tier", u: [14.5, 21], y: [D + 2.4, D + 5.2], hw: 3.8, lip: 0.5, front: { y: 0.8, h: 1.4, w: 1.1, n: 5 }, windows: [{ y: 0.8, h: 1.4, w: 1.2, pitch: 1.5 }], name: "wheelhouse" },
-      { k: "rail", u: [15, 20.6], y: D + 5.2, hw: 3.5, h: 0.9, name: "wheelhouse top rail" },
-      mast(18, D + 5.2, D + 10, 0.12),
-      rod([20, D + 5.4, 0], [21.6, D + 6.2, 0], 0.15, "red", "fire monitor"),
-      ...[2.5, -2.5].flatMap((z): Item[] => [funnel([12.4, 14], 0.6, [D + 2.4, D + 6.5], [["funnel", 0.8], ["black", 1]], 0.2, z), { k: "cyl", u: 13.4, z: z * 1.06, y: [D + 6.2, D + 7], r: 0.16, mat: "black", name: "exhaust pipe" }]),
-      { k: "box", u: [24, 27], z: [-2, 2], y: [D, D + 0.8], mat: "steel", name: "towing winch bed" },
-      rod([25.5, D + 1.3, -1.6], [25.5, D + 1.3, 1.6], 0.75, "red", "towing winch drum"),
-      { k: "cyl", u: 6, z: 0, y: [D, D + 1.4], r: 0.5, mat: "steel", name: "towing hook" },
-      { k: "gantry", u: 7.5, hw: 4.6, y: D, h: 2.4, t: 0.35, mat: "steel", name: "towing bow" },
-      { k: "mooring", at: [3, 28.5], hw: 4.6, s: 0.5 },
-      { k: "anchors", u: L - 2.6, y: D - 0.6, s: 0.9 },
-      { k: "marks", at: [L * 0.8, L * 0.4], y: [2.4, 4.2], step: 0.5, s: 0.3 },
-    ],
+    items,
   };
 }
 

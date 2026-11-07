@@ -82,7 +82,7 @@ Notes:
 |---|---|---|---|---|---|---|
 | `veh-ship-cable-layer` | Cable Layer | 140.0 x 30.0 x 38.4 | 7.0 (0.1823) | raked / transom | 7530 (99) | - |
 | `veh-ship-ocean-tug` | Ocean-Going Tug | 80.0 x 18.0 x 30.4 | 6.5 (0.2138) | bulbous / transom | 6142 (99) | livery: black, red, blue |
-| `veh-ship-harbour-tug` | Harbour Tug | 32.0 x 12.8 x 15.8 | 3.6 (0.2278) | raked / transom | 5202 (99) | livery: red, black, green |
+| `veh-ship-harbour-tug` | Harbour Tug | 32.0 x 12.8 x 19.8 | 3.6 (0.1818) | raked / transom | 6754 (99) | livery: red, black, green |
 | `veh-ship-towboat` | Mississippi Towboat | 60.0 x 16.0 x 20.8 | 2.7 (0.1298) | barge / transom | 5550 (94) | - |
 | `veh-ship-stern-trawler` | Stern Trawler | 70.0 x 15.0 x 27.4 | 6.5 (0.2372) | bulbous / transom | 5588 (99) | livery: red, blue, green |
 | `veh-ship-purse-seiner` | Tuna Purse Seiner | 80.0 x 14.0 x 33.5 | 6.0 (0.1791) | raked / transom | 5345 (99) | - |
@@ -103,7 +103,9 @@ Notes:
 All 19 are detailed ships:
 fine hulls, detailed houses with radomes, monkey-island rails and fire monitors, the
 fittings, and their working gear - the tugs' winch drums, towing pins and staples and their
-rubber fenders (the harbour tug's sheer band, bow and stern fenders and tyres), the
+rubber fenders (the harbour tug - an ASD tug of the Damen 3212 kind with its forecastle, towing winch
+forward and hook aft - has its cylindrical bow fender over ribbed blocks, a sheer band, inclined side
+fenders and a ribbed stern fender, all on the shell), the
 trawlers' net drums, trawl doors and winches, the seiner's helideck, power block and net
 pile, the research ships' laboratory containers and deep-sea winches, the dredger's drag
 heads, hopper beams and rainbow nozzle, the offshore vessels' crash rails, cargo and

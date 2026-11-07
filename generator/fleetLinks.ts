@@ -1399,6 +1399,11 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-ship-harbour-tug": [
     { title: "Wikipedia: Tugboat", url: "https://en.wikipedia.org/wiki/Tugboat" },
     { title: "Wikimedia Commons: Ship and Tugs Sydney 1942 slnsw.jpg", url: "https://commons.wikimedia.org/wiki/File:Ship_and_Tugs_Sydney_1942_slnsw.jpg" },
+    { title: "Wikimedia Commons: Svitzer Tyr - Ystad-2018.jpg", url: "https://commons.wikimedia.org/wiki/File:Svitzer_Tyr_-_Ystad-2018.jpg" },
+    { title: "Wikimedia Commons: Svitzer Tyr - - Ystad-2018.jpg", url: "https://commons.wikimedia.org/wiki/File:Svitzer_Tyr_-_-_Ystad-2018.jpg" },
+    { title: "Wikimedia Commons: Svitzer Freja tug.jpg", url: "https://commons.wikimedia.org/wiki/File:Svitzer_Freja_tug.jpg" },
+    { title: "Wikimedia Commons: MULTRATUG 32 & MARGRETHE MAERSK (48489922037).jpg", url: "https://commons.wikimedia.org/wiki/File:MULTRATUG_32_%26_MARGRETHE_MAERSK_(48489922037).jpg" },
+    { title: "Wikimedia Commons: Remorqueur VB MALABATA port de Tanger KAUNAS.jpg", url: "https://commons.wikimedia.org/wiki/File:Remorqueur_VB_MALABATA_port_de_Tanger_KAUNAS.jpg" },
   ],
   "proc-vehicle-ship-heavy-lift": [
     { title: "Wikipedia: Heavy-lift ship", url: "https://en.wikipedia.org/wiki/Heavy-lift_ship" },
