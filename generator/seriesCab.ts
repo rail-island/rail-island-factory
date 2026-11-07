@@ -97,6 +97,8 @@ export interface SeriesCabFace {
   pods?: ReadonlyArray<{ lat: number; y: number; w: number; h: number; r?: number; proud: number; depth: number; mat: string; lamps?: ReadonlyArray<readonly [number, number, string]>; level?: boolean }>;
   /** Lettering on the face: text, lat of its centre, foot, letter height, ink. */
   texts?: ReadonlyArray<{ text: string; lat: number; y: number; h: number; mat: string }>;
+  /** The face's depth reshaped across it (cabNose.ts `reshape`; the distant model keeps the plain slices): a canopy, grooves and wing edges. */
+  reshape?: (lat: number, y: number, d: number) => number;
 }
 
 /** The body's half widths by height ([y, half width], ascending, crown last), from its own section at d. */
@@ -129,8 +131,10 @@ export interface FacePaint {
   S: number;
   A: number;
   number: string;
-  /** The livery's sweeps (shinkansen.ts `endSweeps`, d behind the tip), painted on the face's cab sides too. */
-  sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
+  /** The livery's sweeps (shinkansen.ts `endSweeps`, d behind the tip), painted on the face's cab sides too (and on its front and corners with `face`). */
+  sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number; face?: boolean }>;
+  /** The livery's own painted polygons on the face ([lat, y], like the face's `fields`, drawn under them): a canopy painted round its glass. */
+  fields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
 }
 
 /** Value of a [y, d] edge at height y (held past its ends). */
@@ -152,14 +156,14 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   out.push({ mat: p.roof, name: "roof", inside: (q) => (banded(q) ? q.y >= f.roofFrom : q.y >= p.S) });
   // a sweep on the cab sides, between the skirt's top and the shoulder (or its own top, over the cab's roof)
   (p.sweeps ?? []).forEach((w, i) => out.push({
-    mat: w.mat, name: `sweep ${i + 1}`, where: { side: true, y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
-    inside: (q) => q.side && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
+    mat: w.mat, name: `sweep ${i + 1}`, where: { ...(w.face ? {} : { side: true }), y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
+    inside: (q) => (w.face || q.side) && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
   }));
   (f.paint ?? []).forEach((w, i) => out.push({
     mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
     inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
   }));
-  (f.fields ?? []).forEach((r, i) => {
+  [...(p.fields ?? []), ...(f.fields ?? [])].forEach((r, i) => {
     // the polygon's bounds first: a point outside them is never inside it (inPoly is the scan's cost)
     const lats = r.pts.map((t) => t[0]), ys = r.pts.map((t) => t[1]);
     const [l0, l1, y0, y1] = [Math.min(...lats), Math.max(...lats), Math.min(...ys), Math.max(...ys)];
@@ -202,6 +206,7 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
   const n = new CabNose(m, {
     ...spec(f, e, xTip, half), dJoin: f.dJoin, dSide: f.dSide ?? f.dJoin / 2,
     base: p.face[0]?.[2] ?? p.sides[0]![2], layers: layers(f, p), cols: f.cols ?? [8, 4, 1, 1], ...(f.tolerance ? { tolerance: f.tolerance } : {}), capTop: p.roof, capBottom: p.skirt,
+    ...(f.reshape ? { reshape: f.reshape } : {}),
   });
   m.scope("skin", () => n.draw());
   const g = f.gangway;

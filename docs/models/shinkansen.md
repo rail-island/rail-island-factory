@@ -8,7 +8,7 @@
 
 | id | title | `livery` (default first) | end car / middle car | nose |
 |---|---|---|---|---|
-| `proc-vehicle-shinkansen-n700s` | Shinkansen N700S | `jrCentral`, `jrKyushu` | 27.35 / 25.0 m | 10.7 m "dual supreme wing" |
+| `proc-vehicle-shinkansen-n700s` | Shinkansen N700S | `jrCentral`, `jrKyushu` | 27.35 / 25.0 m | 10.7 m "dual supreme wing", a cab face (below) |
 | `proc-vehicle-shinkansen-e5` | Shinkansen E5 / H5 | `hayabusa` (E5), `h5` | 26.5 / 25.0 m | 15 m, the canopy cab |
 | `proc-vehicle-shinkansen-500` | Shinkansen 500 series | `original` (Nozomi), `kodama` | 27.0 / 25.0 m | 15 m needle as a cab face, the domed canopy, round body |
 | `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill", a cab face (below) |
@@ -128,6 +128,11 @@ combinations hashed before and after):
 
   `lodGlass` gives the distant model's windscreen (half width, heights) where the windscreen is
   `paint`, not a pane (the E6);
+
+- a cab face's `reshape` - its depth reshaped across the face (`cabNose.ts`; the distant model keeps the
+  plain slices): the N700S's canopy, valleys and wing crests; a livery sweep's `face` paints it on the face's
+  front and corners too, not only its cab sides (the N700S's black canopy for JR Kyushu);
+  `pantographCover` - a streamlined cover round the pantograph's base, the arm standing on its top;
 - `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
   cars (its rig support names both sections) and the cars' skirts are cut open at their inner
   ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
@@ -307,6 +312,28 @@ the 3.65 m roof), the head-on and three-quarter photographs for widths.
 - **Liveries** - `komachi` as above; `akita` keeps its white roof and red lines, with the same red nose.
 - About 14,700 triangles the end car, 8,400 an intermediate car.
 
+
+## The N700S
+
+Measured from the photographs in `assets/shinkansen-n700s/` (SOURCES.md lists the measurements). The end is
+a cab face joined to the body 9.0 m behind the tip, where the canopy reaches the roof; its depth is
+`n7Reshape`: the farther of a broad, rounded snout (the tip 1.0 m high, a deep U in plan, the chin curving
+under to 0.3 m) and the top surface, the higher of the wing body - a shallow valley on the centre line, the
+two crests at 1.1 - 1.5 m from it rising from the headlights (1.56 m high 0.6 m behind the tip) to the body's
+shoulder at the join - and the canopy, a narrow spine out of the valley that widens into the cab's bubble
+(the windscreen's foot 2.3 m high 3.9 m behind the tip, 2.9 m at 5 m, 3.3 m at 7 m), blended by a smooth
+maximum. The windscreen is one wide rounded pane (about 1.5 m across, 2.3 - 3.1 m high) painted on the
+bubble as an oval seen head-on, so its outline stays smooth on the curved canopy; the almond headlights
+(clear covers, black rims) fields on the snout's upper corners. The leading bogie stands under the canopy
+6.1 m behind the tip, 17.5 m ahead of the rear one; the skirts hang to 0.3 m (no underfloor box), the skirt
+colour to 0.9 m. Side: the crew door 9.15 - 9.75 m behind the tip, the front passenger door, 13 windows
+0.5 m wide at the 1.04 m seat pitch, the rear door; an intermediate car a door at each end and 20 windows.
+JR Central: the wide blue line (1.80 - 2.0 m) and the thin one (1.62 - 1.70 m) under the windows, the wide
+one ending in a point just ahead of the crew door, and the blade ahead of it (from 5.45 m up to 2.14 m at
+8.1 m); silver-grey skirts. JR Kyushu ("Kamome", 2022): red below 0.9 m, a thin red line dipping along the
+nose, the canopy black: one oval round the windscreen, a livery's `faceFields` (polygons on the cab face
+seen head-on, under the face's own fields). The pantograph stands on a streamlined cover.
+
 ## Deviations
 
 - The 500: the canopy is paint on the nose's own surface, not a separate bubble; the lower snout's lip
@@ -319,6 +346,12 @@ the 3.65 m roof), the head-on and three-quarter photographs for widths.
   N700S's wing edges are approximations.
 - The E5's sculpted white cheek (a bulge along the nose's lower sides) is painted, not shaped;
   its pantographs lack their noise shields; its doors' green edge lines are not drawn.
+
+  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses are
+  approximations. The N700S's nose (above) is measured, but a projective fit was not possible in its
+  side-on photograph (lengths along the nose stretched to the crew door's place); its windscreen is a
+  painted oval, the real lens wraps a little further round the canopy; the JR Kyushu canopy's thin gold edging, its
+  emblems and lettering and the pantograph's two roof fins are not drawn.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn. The 700's beak is no wider than the
   body, and its hump's waist is one straight flare at each height. Its

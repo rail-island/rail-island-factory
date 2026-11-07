@@ -107,7 +107,10 @@ sides back to a join, where the body volume takes over with the same section.
   straight run flaring out to the body's side (the Shinkansen 700's hump over its beak,
   shinkansen.md). Across a slice, u runs over the
   face (|u| <= 1), the corner arc (1..2), a straight run back to `dSide` (2..3)
-  and the cab side to `dJoin` (3..4). Crown and bottom caps close it.
+  and the cab side to `dJoin` (3..4). Crown and bottom caps close it. An optional
+  `reshape(lat, y, d)` returns the depth drawn in place of the slice's on the face
+  and corners (the run starts at the corner's reshaped depth): a relief no rounded
+  slice holds, the N700S's canopy, valleys and wing crests (shinkansen.md).
 - **Paint.** A base material and layers on top of it, each a predicate on a
   surface point (height, distance back, lateral position, side or face) that
   holds on one height interval at each u (found by testing the predicate every
