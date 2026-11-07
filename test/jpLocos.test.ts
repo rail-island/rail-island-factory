@@ -46,6 +46,14 @@ describe("the JNR locomotives and the Blue Train", () => {
     expect(design("proc-vehicle-jnr-dd51").build().rig!.supports).toHaveLength(3);
   });
 
+  it("draws the EF66 to its published figures: bogie centres 5.3 m apart, the body 17.1 m long in the distant model too", () => {
+    const ef = design("proc-vehicle-jnr-ef66").build();
+    expect(ef.rig!.supports!.map((s) => Math.round(s.x * 100) / 100)).toEqual([-5.3, 0, 5.3]);
+    expect(ef.rig!.supports!.every((s) => s.axles === 2)).toBe(true);
+    const low = glbStats(design("proc-vehicle-jnr-ef66").buildLod().toGlb("l"));
+    expect(low.max[0] - low.min[0]).toBeCloseTo(17.1, 1);
+  });
+
   it("builds the Blue Train's sleeper and dining car at 20.8 m with a door each side", () => {
     for (const unit of ["sleeper", "dining"]) {
       const m = design("proc-vehicle-blue-train-24").build({ unit });
