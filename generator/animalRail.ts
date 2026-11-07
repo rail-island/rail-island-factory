@@ -217,9 +217,9 @@ function coachBody(m: MeshBuilder): void {
         // the door: its frame, the window with its glazing bars, the handle
         for (const x of [-0.34, 0.34]) block(m, "beading", x - 0.015, x + 0.015, CO_WAIST, CO_ROOF - 0.08, ...z);
         block(m, "beading", -0.34, 0.34, CO_ROOF - 0.11, CO_ROOF - 0.08, ...z);
-        block(m, "glass", -0.24, 0.24, 1.98, 2.66, ...side(s, hw, hw + 0.004));
-        for (const x of [-0.25, 0, 0.25]) block(m, "beading", x - 0.016, x + 0.016, 1.96, 2.68, ...side(s, hw, hw + 0.016));
-        for (const y of [1.96, 2.32, 2.67]) block(m, "beading", -0.25, 0.25, y - 0.016, y + 0.016, ...side(s, hw, hw + 0.016));
+        block(m, "glass", -0.24, 0.24, 1.98, 2.66, ...side(s, hw + 0.002, hw + 0.006));
+        for (const x of [-0.25, 0, 0.25]) block(m, "beading", x - 0.016, x + 0.016, 1.96, 2.68, ...side(s, hw + 0.003, hw + 0.016));
+        for (const y of [1.96, 2.32, 2.67]) block(m, "beading", -0.25, 0.25, y - 0.016, y + 0.016, ...side(s, hw + 0.003, hw + 0.016));
         block(m, "brass", 0.25, 0.3, 1.86, 1.89, ...side(s, CO_HW, CO_HW + 0.04));
         // the panel mouldings either side of the door
         for (const [a, b] of [[-1.12, -0.44], [0.44, 1.12]] as const) {
@@ -251,7 +251,7 @@ function coachBody(m: MeshBuilder): void {
     m.scope("luggage", () => {
       const y = CO_ROOF + 0.1;
       block(m, "trunk", -0.95, -0.25, y, y + 0.32, -0.52, 0.42);
-      for (const x of [-0.8, -0.4]) block(m, "iron", x - 0.02, x + 0.02, y, y + 0.33, -0.53, 0.43);
+      for (const x of [-0.8, -0.4]) block(m, "iron", x - 0.02, x + 0.02, y + 0.005, y + 0.33, -0.53, 0.43);
       block(m, "trunkDark", -0.12, 0.5, y, y + 0.22, -0.3, 0.56);
       const roll = ngon(8, 0.13, 0, -0.38, y + 0.13);
       m.sweep("canvas", "x", roll, 0.6, roll, 1.05);
@@ -455,7 +455,7 @@ const MT_UPPER: Ring = ccw(chamferedRect(1.6, 0.9, 0.14));
 function mineTubEnd(m: MeshBuilder): void {
   // the wooden dumb buffer on its iron plate, the hook and a three-link chain
   block(m, "buffer", MT_FRAME, MT_FRAME + 0.12, 0.2, 0.36, -0.18, 0.18);
-  block(m, "iron", MT_FRAME - 0.01, MT_FRAME + 0.005, 0.18, 0.38, -0.2, 0.2);
+  block(m, "iron", MT_FRAME - 0.01, MT_FRAME + 0.005, 0.18, 0.37, -0.2, 0.2);
   block(m, "iron", MT_FRAME + 0.12, MT_FRAME + 0.2, 0.25, 0.29, -0.02, 0.02);
   m.rod("iron", [MT_FRAME + 0.2, 0.31, 0], [MT_FRAME + 0.2, 0.22, 0], 0.016, 5);
   // two links hanging from the hook's pin, the first in the x-y plane, the second across it
