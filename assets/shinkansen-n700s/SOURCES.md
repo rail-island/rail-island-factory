@@ -35,6 +35,12 @@ also gives the JR Central nose's profile.
   line 1.62 - 1.70 m; the blade from 5.45 m (1.66 m high) to its peak at 8.1 m (2.14 m) and back down to the
   crew door (1.97 m); the wide line's pointed end 0.6 m ahead of the crew door.
 
+- **Windscreen** (J30, `photo-jr-series-n700s-j30-nozomi-4.jpg`, and a close-up crop of it the user sent):
+  a grey frame about 2.4 times as wide as it is tall, its top nearly level, its ends rounded; a centre pane a
+  little wider at the top than at the bottom, about 0.6 of the frame's width, with no centre pillar and one
+  wiper parked from a pivot right of the centre up to the left; a grey pillar each side and a D-shaped side
+  pane (about 0.2 of the width each) wrapping round the canopy's corner, darker than the centre pane.
+
 ## Published figures
 
 - **Dimensions** - Wikipedia "N700S Series Shinkansen": end car 27.35 m, intermediate 25.0 m, 3.36 m wide, 3.6 m high, nose 10.7 m, bogie centres 17.5 m, 300 km/h (360 km/h tested), from 2020; JR Kyushu's 8000 series for the Nishi Kyushu Shinkansen (2022).

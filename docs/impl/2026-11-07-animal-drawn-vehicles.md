@@ -53,9 +53,10 @@ out of step, seeded) and `animal-call` (a one-shot: `species` horse/donkey/mule/
   replaces the horse tram's two test files; tests and docs (`trains.md`, `buses.md`, `sounds.md`,
   `model-animation.md`).
 
-Checks: see *How to test* and the final report of the run (factory `pnpm build:models`,
-`pnpm test`; webapp `pnpm typecheck`, `pnpm test`, `pnpm build`; music `pnpm typecheck`,
-`pnpm test`, `pnpm build` - all passed in the agent's run).
+Checks, on the merged masters: factory `pnpm build:models` (1069 models), `pnpm test` 10,904
+passed in 176 files (about 5 min 20 s on this machine, where master alone took 5 min 19 s); webapp
+`pnpm typecheck`, `pnpm test` 9,017 passed in 660 files, `pnpm build`; music `pnpm typecheck`,
+`pnpm test` 84 passed, `pnpm build`. All three branches are merged into `master`.
 
 ## How to test
 
