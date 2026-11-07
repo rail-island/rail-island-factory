@@ -409,29 +409,61 @@ export function jetfoilSpec(p?: ParamValues): ShipSpec {
 // ---------------------------------------------------------------------------
 // paddle steamers and river boats
 
+// DS Stadt Luzern (1928), Lake Lucerne: the shaft at 0.41 L (side photograph), the paddle boxes closed
+// in the sponson houses flush with the main deck's walls, 15.2 m over them; the saloon below the upper
+// deck aft, the upper saloon under a flat roof, the bridge-deck house with the wheelhouse on it ahead
+// of the white funnel with its black top and red cowls; the promenade deck forward over the open main
+// deck on stanchions, two tall masts, the plumb stem.
 export function swissPaddleSpec(): ShipSpec {
-  const L = 62.5;
-  const D = 2.8;
+  const L = 63.5;
+  const D = 3.9;
+  const U = D + 2.9; // the upper (promenade) deck
+  const wheel = 26;
+  const box: readonly [number, number] = [20.6, 31.4];
   return {
     kind: "passenger",
-    hull: { fine: true, length: L, beam: 7.5, depth: D, draft: 1.5, bow: "clipper", stern: "cruiser", section: "round", entry: 0.3, run: 0.22, rake: 0.06, sheer: [0.4, 1.2], boot: 0.2, stripe: 0.3, screws: 0 },
-    livery: { hull: "#f2f0ea", stripe: "#c9a14a", bottom: "#2f6a45", boot: "#1d2024", deck: "#8a5a33", house: "#f2f0ea", funnel: "#e8bf2a", red: "#c23128" },
+    hull: { fine: true, length: L, beam: 7.8, depth: D, draft: 1.6, bow: "plumb", stern: "cruiser", section: "round", entry: 0.3, run: 0.22, sheer: [0.5, 1.4], boot: 0.25, stripe: 0.22, screws: 0 },
+    livery: { hull: "#f2f0ea", stripe: "#1d2024", bottom: "#5c2a22", boot: "#7a2e24", deck: "#8a5a33", house: "#f2f0ea", funnel: "#f2efe6", red: "#c23128", roof: "#e6e4de" },
     items: detailed([
-      { k: "tier", u: [4, L - 14], y: [D - 0.1, D + 2.6], inset: 0.2, round: [3, 2], windows: [{ y: 0.8, h: 1.3, w: 1, pitch: 1.6 }], name: "saloon" },
-      { k: "tier", u: [6, 22], y: [D + 2.6, D + 4.8], hw: 3, round: [2, 0], windows: [{ y: 0.6, h: 1.1, w: 1, pitch: 1.6 }], name: "upper saloon" },
-      { k: "box", u: [26, 34], z: [-7.3, 7.3], y: [D + 2.6, D + 2.9], mat: "deck", name: "paddle bridge" },
-      { k: "tier", u: [30, 33], y: [D + 2.9, D + 5], hw: 1.4, front: { y: 0.6, h: 0.9, w: 0.6, n: 3 }, name: "wheelhouse" },
-      { k: "paddle", u: 30, r: 2.4, w: 2.4, z: 5.2, y: 2.5, box: "house", mat: "red", rays: "funnel" },
-      funnel([23, 26], 0.9, [D + 2.6, D + 8.8], [["funnel", 0.88], ["black", 1]], 0.5),
-      { k: "mast", u: L - 6, y: [D, D + 10], r: 0.12, yards: [[D + 7, 1.4]], name: "foremast" },
-      { k: "rail", u: [6.4, 21.6], y: D + 4.8, hw: 2.8, h: 0.9, name: "upper deck rail" },
-      { k: "rail", u: [L - 13.6, L - 3], y: D, hw: 2.8, h: 0.9, name: "foredeck rail" },
-      { k: "rail", u: [1, 4], y: D, hw: 2.9, h: 0.9, name: "after deck rail" },
-      { k: "canopy", u: [6.4, 14], hw: 3, y: D + 5.8, h: 0.5, mat: "white", posts: "spar", name: "awning" },
-      ...[1.2, L - 1].map((u): Item => ({ k: "cyl", u, z: 0, y: [D, D + 4], r: 0.05, mat: "spar", name: "flagstaff" })),
-      ...[1, -1].flatMap((sd): Item[] => [12, 40].map((u): Item => ({ k: "cyl", u, z: sd * 3.6, y: [D + 1, D + 1.6], r: 0.28, n: 8, mat: "red", name: "lifebuoy" }))),
-      ...exhausts([23, 26], 0.9, D + 8.8, 0.5),
-      ...passengerFittings({ L, B: 7.5, D, T: 1.5, fender: 0.15 }),
+      { k: "tier", u: [2.5, box[1]], y: [D - 0.1, U], inset: 0.2, round: [3, 0], top: "deck", windows: [{ y: 0.8, h: 1.3, w: 1.1, pitch: 1.75, to: box[0] - 0.8 }], name: "saloon" },
+      { k: "tier", u: [box[1], 44], y: [D - 0.1, U - 0.3], hw: 3, round: [0, 1.5], windows: [{ y: 0.8, h: 1.2, w: 1, pitch: 1.7 }], name: "forward saloon" },
+      { k: "tier", u: [box[1], 54.5], y: [U - 0.3, U], inset: -0.05, round: [0, 4], top: "deck", lip: 0, name: "promenade deck" },
+      ...[1, -1].flatMap((sd): Item[] => ([[34.5, 3.6], [38, 3.6], [41.5, 3.55], [45, 3.45], [48.5, 3.2], [52, 2.6]] as const).map(([u, z]): Item => ({ k: "cyl", u, z: sd * z, y: [D - 0.1, U - 0.3], r: 0.09, n: 6, mat: "house", name: "stanchion" }))),
+      { k: "box", u: box, z: [-7.65, 7.65], y: [U - 0.2, U], mat: "deck", name: "paddle bridge" },
+      {
+        k: "paddle", u: wheel, r: 2.3, w: 2.8, z: 5.75, y: 3.4, mat: "red", rays: "house",
+        casing: { u: box, y: [2.6, U - 0.2], out: 7.6, mat: "house", fan: "black", fanAt: [D + 0.25, 1.6], lights: { at: [22, 23.5, 29.5, 30.6], y: D + 1.6, r: 0.22 } },
+        sponson: { u: [15, 37.5], y: D, t: 0.4, taper: 4.5, mat: "house", deck: "deck", edge: "black" },
+      },
+      { k: "tier", u: [12, 23.4], y: [U, U + 2.4], hw: 3.5, lip: 0, windows: [{ y: 0.6, h: 1.2, w: 1.1, pitch: 1.6 }], name: "upper saloon" },
+      { k: "box", u: [3.6, 23.6], z: [-3.75, 3.75], y: [U + 2.4, U + 2.6], mat: "white", name: "upper deck roof" },
+      ...[1, -1].flatMap((sd): Item[] => [5.6, 8.8].map((u): Item => ({ k: "cyl", u, z: sd * 3.55, y: [U, U + 2.4], r: 0.06, n: 6, mat: "white", name: "roof post" }))),
+      { k: "tier", u: [26.6, 34.4], y: [U, U + 2.5], hw: 3.4, lip: 0, top: "roof", windows: [{ y: 0.6, h: 1.2, w: 1.1, pitch: 1.6 }], name: "bridge deck house" },
+      { k: "tier", u: [29.8, 34], y: [U + 2.5, U + 5.1], hw: 2, top: "white", front: { y: 1.1, h: 1, w: 0.7, n: 4 }, windows: [{ y: 1.1, h: 1, w: 0.8, pitch: 1.1 }], name: "wheelhouse" },
+      funnel([wheel - 2, wheel + 0.2], 1.05, [U, 16.4], [["funnel", 0.85], ["black", 1]], 0.15),
+      { k: "vents", at: [[27.5, 1.7], [27.5, -1.7]], y: U + 2.5, h: 1.5, r: 0.32, cowl: true, mat: "red", name: "funnel cowls" },
+      { k: "vents", at: [[35.2, 2.8], [35.2, -2.8]], y: U, h: 1.1, r: 0.28, cowl: true, mat: "red", name: "forward cowls" },
+      // the two masts, raked aft as on the photographs, with their shrouds and stays
+      { k: "rod", a: [13, U + 2.6, 0], b: [10.6, 22, 0], r: 0.13, n: 8, mat: "spar", name: "mainmast" },
+      { k: "rod", a: [39, U, 0], b: [36.4, 24.5, 0], r: 0.15, n: 8, mat: "spar", name: "foremast" },
+      ...[1, -1].flatMap((sd): Item[] => [
+        { k: "rod", a: [10.7, 21.4, 0], b: [8.5, U + 2.6, sd * 3.6], r: 0.025, mat: "rope", name: "mainmast shroud" },
+        { k: "rod", a: [36.5, 23.8, 0], b: [35, U, sd * 3.7], r: 0.025, mat: "rope", name: "foremast shroud" },
+      ]),
+      { k: "rod", a: [36.4, 24.2, 0], b: [L - 0.7, D + 6.3, 0], r: 0.025, mat: "rope", name: "forestay" },
+      { k: "rod", a: [10.6, 21.7, 0], b: [36.4, 24, 0], r: 0.025, mat: "rope", name: "masthead stay" },
+      { k: "rod", a: [10.6, 21.7, 0], b: [0.8, D + 5, 0], r: 0.025, mat: "rope", name: "backstay" },
+      { k: "boats", at: [23.2], z: 6.3, y: U + 0.6, len: 5, r: 0.6, mat: "white", name: "lifeboats" },
+      { k: "rail", u: [5.5, 11.3], y: U, hw: 3.7, h: 0.95, name: "upper deck rail aft" },
+      { k: "rail", u: [box[0] + 0.2, box[1] - 0.2], y: U, hw: 7.5, h: 0.95, name: "paddle bridge rail" },
+      { k: "rail", u: [34.2, 47], y: U, hw: 3.75, h: 0.95, name: "promenade rail" },
+      { k: "bulwark", u: [37.6, L], h: 1.15, t: 0.2, mat: "hull", name: "main deck bulwark" },
+      { k: "edgeRail", u: [0.3, 2.5], h: 0.9, name: "after deck rail" },
+      { k: "portholes", u: [36, 58], y: D - 1.1, pitch: 2.2, r: 0.2, name: "hull lights forward" },
+      { k: "portholes", u: [3, 13], y: D - 1.1, pitch: 2.2, r: 0.2, name: "hull lights aft" },
+      ...[0.8, L - 0.7].map((u): Item => ({ k: "cyl", u, z: 0, y: [D + 0.4, D + 5], r: 0.06, mat: "spar", name: "flagstaff" })),
+      ...[1, -1].flatMap((sd): Item[] => [38, 45].map((u): Item => ({ k: "cyl", u, z: sd * 3.78, y: [U + 0.3, U + 0.9], r: 0.3, n: 8, mat: "red", name: "lifebuoy" }))),
+      ...passengerFittings({ L, B: 7.8, D, T: 1.6, fender: 0.15 }),
     ]),
   };
 }
@@ -464,28 +496,52 @@ export function sternwheelerSpec(): ShipSpec {
   };
 }
 
+// The Saxon fleet's side-wheelers (Dresden 1926, Leipzig 1929; Meissen 1885 shares the plan): the
+// paddle wheels well forward (the shaft at 0.67 L, measured off a side photograph), each in a closed
+// casing 10 m long flush with the 12.9 m over the sponsons; the sun deck over the long after saloon
+// runs across the casings, the varnished wheelhouse on it ahead of the tall hinged funnel, a folding
+// mast for the funnel's tackle just forward of the casings, a low forward saloon with its roof deck.
 export function elbePaddleSpec(): ShipSpec {
   const L = 68.7;
-  const D = 2.4;
+  const D = 2.3;
+  const S = 4.45; // the sun deck: the after saloon's roof and the deck across the paddle boxes
+  const F = 4.25; // the forward saloon's roof deck
+  const wheel = 46; // the paddle shaft, metres from the stern
+  const box: readonly [number, number] = [41, 51];
+  const posts = [18, 22.5, 27, 31.5, 36, 40];
   return {
     kind: "passenger",
-    hull: { fine: true, length: L, beam: 6.6, depth: D, draft: 0.9, bow: "plumb", stern: "cruiser", section: "round", entry: 0.28, run: 0.22, sheer: [0.4, 1], boot: 0.15, stripe: 0.25, screws: 0 },
-    livery: { hull: "#f2f0ea", stripe: "#c9a14a", bottom: "#c23128", boot: "#1d2024", deck: "#8a5a33", house: "#f2f0ea", funnel: "#1d2024", red: "#c23128" },
+    hull: { fine: true, length: L, beam: 6.9, depth: D, draft: 1, bow: "plumb", stern: "cruiser", section: "round", entry: 0.28, run: 0.22, sheer: [0.35, 0.8], boot: 0.2, stripe: 0.12, screws: 0 },
+    livery: { hull: "#f2f0ea", stripe: "#2f6b4a", bottom: "#8f2a22", boot: "#2f6b4a", deck: "#8a5a33", house: "#f2f0ea", funnel: "#f2f0ea", red: "#c23128", green: "#2f6b4a", wood: "#6b3f22" },
     items: detailed([
-      { k: "tier", u: [6, 26], y: [D - 0.1, D + 2.4], inset: 0.25, round: [2.5, 0], windows: [{ y: 0.8, h: 1.1, w: 0.9, pitch: 1.5 }], name: "after saloon" },
-      { k: "tier", u: [40, L - 14], y: [D - 0.1, D + 2.4], inset: 0.25, round: [0, 2], windows: [{ y: 0.8, h: 1.1, w: 0.9, pitch: 1.5 }], name: "forward saloon" },
-      { k: "box", u: [30, 37], z: [-6.4, 6.4], y: [D + 2.4, D + 2.7], mat: "deck", name: "paddle bridge" },
-      { k: "tier", u: [32.5, 35], y: [D + 2.7, D + 4.6], hw: 1.2, front: { y: 0.6, h: 0.8, w: 0.6, n: 2 }, name: "wheelhouse" },
-      { k: "paddle", u: 33.5, r: 2.2, w: 2, z: 4.3, y: 2.3, box: "house", mat: "red", rays: "red" },
-      funnel([27, 29.6], 0.85, [D + 1.6, D + 8], [["funnel", 1]], 0.4),
-      { k: "mast", u: L - 8, y: [D, D + 8], r: 0.1, yards: [[D + 6, 1.2]], name: "foremast" },
-      { k: "canopy", u: [8, 24], hw: 3.3, y: D + 2.45, h: 0.6, mat: "white", name: "sun deck awning" },
-      { k: "rail", u: [6.4, 25.6], y: D + 2.4, hw: 3, h: 0.9, name: "after saloon roof rail" },
-      { k: "rail", u: [40.4, L - 14.4], y: D + 2.4, hw: 3, h: 0.9, name: "forward saloon roof rail" },
-      { k: "rail", u: [L - 13.6, L - 2], y: D, hw: 2.6, h: 0.9, name: "foredeck rail" },
-      ...[1.2, L - 1].map((u): Item => ({ k: "cyl", u, z: 0, y: [D, D + 3.6], r: 0.05, mat: "spar", name: "flagstaff" })),
-      ...[1, -1].flatMap((sd): Item[] => [14, 50].map((u): Item => ({ k: "cyl", u, z: sd * 3.2, y: [D + 0.9, D + 1.5], r: 0.26, n: 8, mat: "red", name: "lifebuoy" }))),
-      ...passengerFittings({ L, B: 6.6, D, T: 0.9, fender: 0.15 }),
+      { k: "tier", u: [5, box[1] + 1], y: [D - 0.1, S], inset: 0.25, round: [3, 0], top: "deck", windows: [{ y: 0.75, h: 1.05, w: 1.3, pitch: 1.9, to: box[0] - 0.8 }], name: "after saloon" },
+      { k: "tier", u: [box[1] + 1, 62.5], y: [D - 0.1, F], inset: 0.25, round: [0, 2.5], top: "deck", windows: [{ y: 0.7, h: 1, w: 1, pitch: 1.6 }], name: "forward saloon" },
+      { k: "box", u: box, z: [-6.5, 6.5], y: [S - 0.2, S], mat: "deck", name: "paddle bridge" },
+      {
+        k: "paddle", u: wheel, r: 1.6, w: 2.2, z: 4.9, y: 2.1, mat: "red", rays: "green",
+        casing: { u: box, y: [1.7, S - 0.2], out: 6.45, mat: "house", fanAt: [D + 0.1, 1.3], lights: { at: [41.9, 42.9, 43.9, 48.2, 49.2, 50.1], y: S - 0.85, r: 0.17 } },
+        sponson: { u: [36, 56], y: D, t: 0.35, taper: 4, mat: "house", deck: "deck", edge: "green" },
+      },
+      { k: "tier", u: [wheel - 2, wheel + 1.6], y: [S, S + 1.95], hw: 1.25, mat: "wood", top: "white", front: { y: 0.75, h: 0.8, w: 0.55, n: 3 }, windows: [{ y: 0.75, h: 0.8, w: 0.6, pitch: 0.9 }], name: "wheelhouse" },
+      funnel([wheel - 4.3, wheel - 2.9], 0.7, [S, 10.6], [["funnel", 0.6], ["green", 0.63], ["funnel", 0.66], ["green", 0.69], ["funnel", 0.84], ["black", 1]]),
+      // the folding mast that lowers the funnel for the bridges, its stay to the funnel's head
+      { k: "mast", u: box[1] + 0.6, y: [S, 10.6], r: 0.09, mat: "spar", name: "funnel mast" },
+      { k: "rod", a: [box[1] + 0.6, 10.3, 0], b: [wheel - 3.6, 9.6, 0], r: 0.03, mat: "rope", name: "funnel stay" },
+      { k: "canopy", u: [14, wheel - 2.6], hw: 3.25, y: S + 2, h: 0.35, mat: "white", posts: "white", name: "sun deck awning" },
+      ...[1, -1].flatMap((sd): Item[] => posts.map((u): Item => ({ k: "cyl", u, z: sd * 3.13, y: [S, S + 2.02], r: 0.05, n: 6, mat: "white", name: "awning post" }))),
+      // the sun deck's benches in rows across, and those on the forward saloon's roof
+      ...Array.from({ length: 12 }, (_, k) => 15.5 + k * 2.2).flatMap((u): Item[] => [1, -1].map((sd): Item => ({ k: "box", u: [u - 0.25, u + 0.25], z: sd > 0 ? [0.5, 2.7] : [-2.7, -0.5], y: [S, S + 0.45], mat: "wood", name: "bench" }))),
+      ...[54, 56.4].flatMap((u): Item[] => [1, -1].map((sd): Item => ({ k: "box", u: [u - 0.25, u + 0.25], z: sd > 0 ? [0.4, 2.2] : [-2.2, -0.4], y: [F, F + 0.45], mat: "wood", name: "bench" }))),
+      { k: "rail", u: [8.2, box[0] - 0.2], y: S, hw: 3.15, h: 0.9, name: "sun deck rail" },
+      { k: "rail", u: [box[0] + 0.2, box[1] - 0.2], y: S, hw: 6.4, h: 0.9, name: "paddle bridge rail" },
+      { k: "rail", u: [box[1] + 1.4, 58.5], y: F, hw: 2.7, h: 0.9, name: "forward saloon roof rail" },
+      { k: "edgeRail", u: [62.6, L - 0.4], h: 0.9, name: "foredeck rail" },
+      { k: "edgeRail", u: [0.4, 4.9], h: 0.9, name: "after deck rail" },
+      { k: "portholes", u: [6, 38], y: 1.55, pitch: 1.9, r: 0.22, name: "hull lights aft" },
+      { k: "portholes", u: [57.5, 64], y: 1.6, pitch: 1.9, r: 0.2, name: "hull lights forward" },
+      ...[0.8, L - 0.6].map((u): Item => ({ k: "cyl", u, z: 0, y: [D, D + 3.6], r: 0.05, mat: "spar", name: "flagstaff" })),
+      ...[1, -1].flatMap((sd): Item[] => [14, 30].map((u): Item => ({ k: "cyl", u, z: sd * 3.25, y: [D + 0.6, D + 1.15], r: 0.26, n: 8, mat: "red", name: "lifebuoy" }))),
+      ...passengerFittings({ L, B: 6.9, D, T: 1, fender: 0 }),
     ]),
   };
 }

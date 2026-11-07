@@ -130,7 +130,28 @@ export type Item =
   | { k: "boom"; a: Vec3; b: Vec3; w: number; mat?: string; name?: string }
   | { k: "boats"; at: readonly number[]; z: number; y: number; len: number; r: number; mat?: string; name?: string }
   | { k: "canopy"; u: readonly [number, number]; hw: number; y: number; h: number; mat: string; posts?: string; name?: string }
-  | { k: "paddle"; u: number; r: number; w: number; z: number; y: number; box?: string; mat?: string; stern?: boolean; rays?: string; name?: string }
+  | {
+    k: "paddle"; u: number; r: number; w: number; z: number; y: number; box?: string; mat?: string; stern?: boolean; rays?: string; name?: string;
+    /**
+     * Side wheels only, opt-in: the closed paddle box of a river or lake steamer - a casing from u0 to
+     * u1 between y0 (its skirt's foot, over the water) and y1 (its top, under the deck that spans it),
+     * its flat outer face at |z| = `out` (default the wheel's outer side + 0.4 m), its inboard wall
+     * just inside the hull's side, closed on top. `fan` paints a half disc on the outer face at the
+     * shaft (or the casing's foot when that is higher), with `rays` over it; `fanAt` sets the half
+     * disc's centre height and radius instead; `lights` puts round lights (glass) on the outer face.
+     */
+    casing?: {
+      u: readonly [number, number]; y: readonly [number, number]; out?: number; mat?: string; fan?: string; fanAt?: readonly [number, number];
+      lights?: { at: readonly number[]; y: number; r: number };
+    };
+    /**
+     * Side wheels only, opt-in: the sponson guards - the deck widened flush at `y` from the hull's side
+     * to the casing's face, fore and aft of the casing over `u`, tapering back to the hull over `taper`
+     * metres at each end; a closed slab `t` deep (`mat` sides and underside, `deck` on top) with a
+     * rubbing strake in `edge` along its outer edge and the casing's foot.
+     */
+    sponson?: { u: readonly [number, number]; y: number; t?: number; taper?: number; mat?: string; deck?: string; edge?: string };
+  }
   | { k: "foil"; u: number; span: number; y: number; chord: number; strut: number; inner?: number; mat?: string; name?: string }
   | { k: "skirt"; u: readonly [number, number]; hw: number; h: number; c: number; mat?: string; name?: string }
   | { k: "prop"; u: number; z: number; y: number; r: number; blades?: number; pylon?: number; mat?: string; name?: string }
@@ -795,6 +816,132 @@ function drawTier(c: ShipCtx, t: Tier, i: number): void {
   });
 }
 
+type PaddleItem = Extract<Item, { k: "paddle" }>;
+
+/** The inboard edge of a paddle box or sponson: just inside the hull's narrowest side over [u0, u1] at height y. */
+function paddleInboard(c: ShipCtx, u0: number, u1: number, y: number): number {
+  let s = Infinity;
+  for (let k = 0; k <= 8; k++) {
+    const u = u0 + ((u1 - u0) * k) / 8;
+    s = Math.min(s, c.side(u, Math.min(y, c.deck(u))));
+  }
+  return Math.max(0.1, s - 0.15);
+}
+
+/** The outer face of a closed paddle box: `casing.out`, or the wheel's outer side plus 0.4 m. */
+function paddleOut(it: PaddleItem): number {
+  return it.casing?.out ?? it.z + it.w / 2 + 0.4;
+}
+
+/** A closed paddle box (the paddle item's `casing`): its walls and top, and the painted fan on its outer faces. */
+function drawPaddleCasing(c: ShipCtx, it: PaddleItem, cs: NonNullable<PaddleItem["casing"]>): void {
+  const { m, x } = c;
+  const mat = cs.mat ?? "house";
+  const [u0, u1] = cs.u;
+  const [y0, y1] = cs.y;
+  const out = paddleOut(it);
+  const zin = paddleInboard(c, u0, u1, y0);
+  m.scope("paddle box", () => {
+    for (const sd of [1, -1]) m.box(mat, x((u0 + u1) / 2), (sd * (zin + out)) / 2, u1 - u0, out - zin, y0, y1);
+    if (cs.lights) {
+      const lt = cs.lights;
+      for (const sd of [1, -1]) {
+        const batch = new TriBatch();
+        const z = sd * (out + 0.02);
+        for (const u of lt.at) {
+          const ring = ngon(8, lt.r, 0, x(u), lt.y);
+          for (let k = 1; k + 1 < ring.length; k++) batch.add([ring[0]![0], ring[0]![1], z], [ring[k]![0], ring[k]![1], z], [ring[k + 1]![0], ring[k + 1]![1], z], [0, 0, sd]);
+        }
+        batch.draw(m, "glass");
+      }
+    }
+    if (!cs.fan && !it.rays) return;
+    // the fan: a half disc at the shaft (or the casing's foot), its rays, hub and rim over it
+    const yc = cs.fanAt?.[0] ?? Math.max(it.y, y0 + 0.05);
+    const R = cs.fanAt?.[1] ?? Math.max(0.3, Math.min(it.r * 1.05, y1 - yc - 0.15, (u1 - u0) / 2 - 0.1));
+    const xc = x(it.u);
+    const arc = (r: number, a: number, z: number): Vec3 => [xc + Math.cos(a) * r, yc + Math.sin(a) * r, z];
+    for (const sd of [1, -1]) {
+      if (cs.fan) {
+        const disc = new TriBatch();
+        const z = sd * (out + 0.02);
+        for (let k = 0; k < 10; k++) disc.add([xc, yc, z], arc(R, (k / 10) * Math.PI, z), arc(R, ((k + 1) / 10) * Math.PI, z), [0, 0, sd]);
+        disc.draw(m, cs.fan);
+      }
+      if (it.rays) {
+        const rays = new TriBatch();
+        const z = sd * (out + 0.04);
+        const r0 = R * 0.22;
+        const t = cs.fan ? 0.035 : 0.09;
+        for (let k = 0; k < 9; k++) {
+          const a = ((k + 0.5) / 9) * Math.PI;
+          rays.quad(arc(r0, a - t, z), arc(R * 0.93, a - t, z), arc(R * 0.93, a + t, z), arc(r0, a + t, z), [0, 0, sd]);
+        }
+        for (let k = 0; k < 6; k++) rays.add([xc, yc, z], arc(r0, (k / 6) * Math.PI, z), arc(r0, ((k + 1) / 6) * Math.PI, z), [0, 0, sd]);
+        for (let k = 0; k < 12; k++) {
+          const a0 = (k / 12) * Math.PI;
+          const a1 = ((k + 1) / 12) * Math.PI;
+          rays.quad(arc(R * 0.93, a0, z), arc(R, a0, z), arc(R, a1, z), arc(R * 0.93, a1, z), [0, 0, sd]);
+        }
+        rays.draw(m, it.rays);
+      }
+    }
+  });
+}
+
+/** The sponson guards (the paddle item's `sponson`): deck slabs flush with the main deck fore and aft of the casing, and their rubbing strake. */
+function drawSponsons(c: ShipCtx, it: PaddleItem, sp: NonNullable<PaddleItem["sponson"]>): void {
+  const { m, x } = c;
+  const t = sp.t ?? 0.3;
+  const taper = sp.taper ?? 3;
+  const out = paddleOut(it);
+  const [ca, cb] = it.casing?.u ?? [it.u - it.r * 1.15, it.u + it.r * 1.15];
+  const [s0, s1] = sp.u;
+  const zin = paddleInboard(c, s0, s1, sp.y);
+  const y = sp.y;
+  // plan outlines (u, |z|), each convex: the aft piece and the fore piece
+  const pieces: Array<Array<[number, number]>> = [];
+  if (ca > s0 + 0.05) pieces.push([[s0, zin], [Math.min(ca, s0 + taper), out], [ca, out], [ca, zin]]);
+  if (s1 > cb + 0.05) pieces.push([[cb, zin], [cb, out], [Math.max(cb, s1 - taper), out], [s1, zin]]);
+  m.scope("sponsons", () => {
+    for (const sd of [1, -1]) {
+      const deck = new TriBatch();
+      const body = new TriBatch();
+      for (const pc of pieces) {
+        const pts = pc.filter((p, k) => k === 0 || Math.hypot(p[0] - pc[k - 1]![0], p[1] - pc[k - 1]![1]) > 1e-6);
+        const P = (p: readonly [number, number], h: number): Vec3 => [x(p[0]), h, sd * p[1]];
+        const cu = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+        const cz = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+        for (let k = 1; k + 1 < pts.length; k++) {
+          deck.add(P(pts[0]!, y), P(pts[k]!, y), P(pts[k + 1]!, y), [0, 1, 0]);
+          body.add(P(pts[0]!, y - t), P(pts[k]!, y - t), P(pts[k + 1]!, y - t), [0, -1, 0]);
+        }
+        for (let k = 0; k < pts.length; k++) {
+          const a = pts[k]!;
+          const b = pts[(k + 1) % pts.length]!;
+          // the edge's outward normal in plan
+          let n: [number, number] = [b[1] - a[1], -(b[0] - a[0])];
+          if (n[0] * ((a[0] + b[0]) / 2 - cu) + n[1] * ((a[1] + b[1]) / 2 - cz) < 0) n = [-n[0], -n[1]];
+          body.quad(P(a, y - t), P(b, y - t), P(b, y), P(a, y), [n[0], 0, sd * n[1]]);
+        }
+      }
+      deck.draw(m, sp.deck ?? "deck");
+      body.draw(m, sp.mat ?? "hull");
+      if (sp.edge) {
+        // the rubbing strake: along the sponsons' outer edges and the casing's foot
+        const r = Math.min(0.1, t * 0.4);
+        const yc = y - t / 2;
+        const path: Array<[number, number]> = [[s0, zin], [Math.min(ca, s0 + taper), out], [Math.max(cb, s1 - taper), out], [s1, zin]];
+        for (let k = 0; k + 1 < path.length; k++) {
+          const a = path[k]!;
+          const b = path[k + 1]!;
+          if (Math.hypot(b[0] - a[0], b[1] - a[1]) > 0.05) m.rod(sp.edge, [x(a[0]), yc, sd * a[1]], [x(b[0]), yc, sd * b[1]], r, 6);
+        }
+      }
+    }
+  });
+}
+
 /** A superellipse plan about (cx, cz), `rx` along x, `rz` across. */
 function ovalRing(cx: number, cz: number, rx: number, rz: number, n = 16, ex = 2.6): Ring {
   const ring: Ring = [];
@@ -1096,6 +1243,8 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
             }
           }
         }
+        if (!it.stern && it.casing) drawPaddleCasing(c, it, it.casing);
+        if (!it.stern && it.sponson) drawSponsons(c, it, it.sponson);
       });
       return;
     }
@@ -1747,6 +1896,14 @@ function lodItem(c: ShipCtx, it: Item): LodPrim[] {
     case "boom": return [bar(it.mat ?? "steel", it.a, it.b, it.w)];
     case "canopy": return [box(it.mat, it.u[0], it.u[1], -it.hw, it.hw, it.y, it.y + it.h * 0.8)];
     case "paddle": {
+      if (!it.stern && it.casing) {
+        // the closed paddle boxes as drawn, a few centimetres inside their own faces
+        const [ca, cb] = it.casing.u;
+        const zin = paddleInboard(c, ca, cb, it.casing.y[0]);
+        const out = paddleOut(it) - 0.03;
+        const mat = it.casing.mat ?? "house";
+        return [1, -1].map((sd) => box(mat, ca + 0.03, cb - 0.03, sd > 0 ? zin : -out, sd > 0 ? out : -zin, it.casing!.y[0] + 0.03, it.casing!.y[1] - 0.03));
+      }
       const z0 = it.stern ? -it.w / 2 : it.z - it.w / 2;
       const z1 = it.stern ? it.w / 2 : it.z + it.w / 2;
       const prims = [box(it.box ?? it.mat ?? "red", it.u - it.r, it.u + it.r, z0, z1, it.y - it.r * 0.6, it.y + it.r)];
