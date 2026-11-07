@@ -869,7 +869,7 @@ const S100_PROFILE: Pt[] = [
   [1.04, 0.64], [1.12, 0.65], [1.21, 0.62], [1.31, 0.5], [1.45, 0.21], [1.56, 0.07], [1.67, 0], [1.78, 0.03], [1.9, 0.1], [2.06, 0.21],
   [2.33, 0.5], [2.5, 0.81], [2.8, 1.44], [3.06, 2.12], [3.24, 2.54], [3.4, 2.72], [3.6, 2.92], [3.8, 3.15], [3.91, 3.29], [3.96, 3.6], [4.0, S100_JOIN],
 ];
-const S100_ROWS = [1.04, 1.12, 1.21, 1.31, 1.45, 1.56, 1.63, 1.67, 1.71, 1.78, 1.87, 1.9, 1.98, 2.06, 2.14, 2.21, 2.33, 2.5, 2.65, 2.8, 2.95, 3.06, 3.24, 3.33, 3.4, 3.5, 3.6, 3.7, 3.8, 3.86, 3.91, 3.96, 4.0];
+const S100_ROWS = [1.04, 1.12, 1.21, 1.26, 1.31, 1.38, 1.45, 1.51, 1.56, 1.63, 1.67, 1.71, 1.78, 1.87, 1.9, 1.98, 2.06, 2.14, 2.21, 2.27, 2.33, 2.42, 2.5, 2.58, 2.65, 2.73, 2.8, 2.88, 2.95, 3.06, 3.15, 3.24, 3.33, 3.4, 3.5, 3.6, 3.7, 3.8, 3.86, 3.91, 3.96, 4.0];
 /** The plan: a flat front this wide (half width) by height, its corners reaching the body's side this far behind it. */
 const S100_FLAT: Pt[] = [[1.04, 0.02], [2.5, 0.02], [2.8, 0.45], [3.06, 0.75], [3.24, 0.95], [3.4, 1.0], [3.6, 0.98], [3.8, 0.92], [3.91, 0.75], [3.96, 0.4], [4.0, 0.05]];
 const S100_DEPTH: Pt[] = [[1.04, 2.2], [1.21, 2.75], [1.45, 3.8], [1.67, 4.3], [1.9, 4.3], [2.06, 4.2], [2.33, 3.9], [2.5, 3.6], [2.8, 3.0], [3.06, 2.4], [3.24, 2.1], [3.4, 1.95], [3.6, 1.75], [3.8, 1.55], [3.91, 1.4], [3.96, 1.0], [4.0, 0.3]];
@@ -888,7 +888,7 @@ const S100_CAP_SEAM = Array.from({ length: 20 }, (_, i) => {
   return { mat: "seam", pts: [at(a, 1), at(b, 1), at(b, 1.045), at(a, 1.045)], fine: 2 };
 });
 const S100_FACE: SeriesCabFace = {
-  dJoin: S100_JOIN, first: 7.95, roofFrom: 3.99, cols: [3, 10, 1, 1],
+  dJoin: S100_JOIN, first: 7.95, roofFrom: 3.99, cols: [3, 16, 1, 1],
   // the tip is the end car's front: its coupler lies under the cap, inside the skirt
   reach: 0,
   profile: S100_PROFILE, rows: S100_ROWS,
@@ -952,9 +952,11 @@ function s100Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, c
     });
     // the underside over the leading bogie, between its wheels' tops and the nose
     m.scope("nose underside", () => block(m, "under", x(S100_JOIN), x(3.0), 0.93, 1.03, -1.2, 1.2));
+    // the blue apron along the car's bottom, carried on over the leading bogie to the skirt
+    for (const sd of [1, -1]) m.scope(sd > 0 ? "apron right" : "apron left", () => block(m, "skirtG", x(S100_JOIN + 0.02), x(3.15), 0.86, 1.035, ...(sd > 0 ? [1.5, 1.54] : [-1.54, -1.5]) as [number, number]));
     m.scope("radio fin", () => m.slab("roofG", [[x(4.25), 3.95, -0.015], [x(3.85), 3.95, -0.015], [x(4.15), 4.24, -0.015], [x(4.3), 4.24, -0.015]], [0, 0, 0.03]));
   }
-  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.85 - 0.35, 0.85, -1.62 * 0.8, 1.62 * 0.8));
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.72 - 0.3, 0.72, -1.62 * 0.8, 1.62 * 0.8));
 }
 
 /** The 100's window pitch (one window a seat row, 1.04 m), 0.78 m wide. */
@@ -971,7 +973,7 @@ const S100_SLANT: Pt[] = [[1.95, 4.4], [2.98, 5.33]];
 export const S100: ShinkansenSeries = {
   // 26.05 m end car, 25.0 m intermediate car, 4.0 m high; the body narrowed from 3.38 m to 3.24 m; a high
   // shoulder (3.6 m) under a flat roof, the cab's roof nearly as wide as its windscreen
-  endLength: 26.05, midLength: 25.0, W: 1.62, Y: 1.5, S: 3.6, C: 4.0, lean: 0.965, B: 0.85, A: 1.04,
+  endLength: 26.05, midLength: 25.0, W: 1.62, Y: 1.5, S: 3.6, C: 4.0, lean: 0.965, B: 0.72, A: 1.04,
   nose: nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]), windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S100_FACE,
   // the leading bogie under the nose (d 4.73), the rear one 3.75 m in from the inner coupling
   endBogies: [26.05 - 0.25 - 3.5 - 17.5 - S100_JOIN, 26.05 - 0.25 - 3.5 - S100_JOIN],

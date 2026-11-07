@@ -173,8 +173,12 @@ photographs of 123-1 and G49. Drawn as a cab face (`S100_FACE`, `cabFace`), d be
 - **Skirt** (`s100Fittings`): from 0.3 m up to the face's foot at 1.04 m, its front upright under
   the cap (d 0.6 - 0.66), boxier toward the bottom, its rear edge slanted from d 3.2 to 2.4 ahead of
   the leading bogie (centre d 4.73), two boxes on its front corners; the dark underside over the
-  bogie; the distant model draws it as a block (`lodRoof`).
-- **Body**: 3.24 m wide (real 3.38), a high shoulder (3.6 m) under a flat roof, 4.0 m.
+  bogie; the distant model draws it as a block (`lodRoof`). The apron (the skirt's colour, from the
+  body's bottom at 0.72 m to 1.04 m) runs under every car, cut over the bogies, and on the end car
+  carries on over the leading bogie to the skirt (blue, JR West grey as in the K55 photograph).
+- **Body**: 3.24 m wide (real 3.38), a high shoulder (3.6 m) under a flat roof, 4.0 m. The face's
+  grid is fine (rows every 6 - 8 cm where it curves, 16 columns round each corner) so the glossy nose
+  shows no facets; the end car stays under 15,300 triangles.
 - **End car**: the crew door (a seam, d 6.08 - 6.68), the passenger door 6.84 - 7.62, 13 windows
   0.78 m wide at 1.04 m from d 8.42 (the 65 seats' rows), the rear door 21.95 - 22.7 over the rear
   bogie as photographed, the toilets behind it blank. **Middle car**: a door at each end, 20 windows.
