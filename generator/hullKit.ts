@@ -69,6 +69,12 @@ export interface HullForm {
   lift?: number;
   /** Twice the stations along the hull (a smoother entry, run and flare; the detailed ships). */
   fine?: boolean;
+  /**
+   * An old liner's counter stern: [its overhang aft of the sternpost, the height of its
+   * underside at the post, at the stern's tip] metres. The hull below it ends in an upright
+   * sternpost and the rudder hangs on that post. Unset: the stern's own counter.
+   */
+  counter?: readonly [number, number, number];
 }
 
 /** A row of windows on a tier: height above its base, pane height and width, pitch; along u from..to (default the tier's length). */
@@ -499,6 +505,8 @@ export function hullGeometry(f: HullForm): HullGeometry {
       const shape = f.bow === "clipper" ? 1 - (1 - t) * (1 - t) : f.bow === "canoe" ? t * t * 0.5 + t * 0.5 : f.bow === "barge" ? t : Math.pow(t, 1.25);
       return top * shape;
     }
+    // an overhanging counter over an upright sternpost
+    if (f.counter && u < f.counter[0]) return f.counter[1] + (f.counter[2] - f.counter[1]) * (1 - u / f.counter[0]);
     // the counter: the bottom rising into the stern
     const ua = L * run * (f.stern === "canoe" ? 1 : 0.8);
     if (u < ua) {
@@ -526,7 +534,13 @@ export function hullGeometry(f: HullForm): HullGeometry {
       mid = t < tb ? 0.55 + 0.45 * Math.sqrt(Math.max(0, 1 - Math.pow(1 - t / tb, 2))) : 1;
     }
     const w = Math.max(bowness, sternness);
-    const g = f.bow === "barge" && u > L * 0.5 ? mid : mid * (1 - w) + vee * w;
+    let g = f.bow === "barge" && u > L * 0.5 ? mid : mid * (1 - w) + vee * w;
+    if (f.counter) {
+      // under the counter the run fines down to the sternpost
+      const s = clamp01((u - f.counter[0]) / (L * 0.1));
+      const below = clamp01((f.counter[1] - y) / 2);
+      g *= 1 - below * (1 - (0.04 + 0.96 * Math.sqrt(s)));
+    }
     return plan(u) * g;
   };
   // stations: the run, the parallel middle body, the entry, finer at the ends
@@ -546,6 +560,7 @@ export function hullGeometry(f: HullForm): HullGeometry {
   for (const d of [-0.04, -0.015, 0, 0.3, 0.6].map((v) => v * L)) if (foot + d > ub && foot + d < L) add(foot + d);
   if (f.forecastle) for (const d of [-0.05, 0.6]) add(L - f.forecastle[0] - 0.6 + d + 0.05);
   if (f.poop) for (const d of [-0.05, 0.6]) add(f.poop[0] + 0.6 - d - 0.05);
+  if (f.counter) for (const d of [-0.02, 0.02, 0.6, 1.5]) add(f.counter[0] + d);
   const stations = [...st].sort((a, b) => a - b);
   const lift = f.lift ?? 0;
   if (!lift) return { form: f, L, plan, keel, deck, halfBeam, stations, centres };
@@ -653,8 +668,9 @@ function drawSternGear(c: ShipCtx, f: HullForm, zc: number): void {
   const hull = c.hull!;
   const chord = Math.max(0.3, f.draft * 0.5);
   // the rudder's after edge just inside the stern
-  const ur = Math.max(L * 0.012, chord / 2 + 0.05);
-  const top = Math.min(hull.keel(ur) + 0.05, f.draft * 1.1);
+  // under a counter the rudder hangs on the sternpost, its stock up into the counter
+  const ur = f.counter ? f.counter[0] - chord / 2 : Math.max(L * 0.012, chord / 2 + 0.05);
+  const top = f.counter ? hull.keel(ur) + 0.05 : Math.min(hull.keel(ur) + 0.05, f.draft * 1.1);
   const h = Math.max(0.3, top - f.draft * 0.12);
   const t = Math.max(0.06, f.beam * 0.012);
   m.scope("rudder", () => m.box("bottom", c.x(ur), zc, chord, t, Math.max(0, top - h), Math.max(top, 0.2)));

@@ -39,7 +39,7 @@ in `assets/ship-<name>/SOURCES.md`.
 | `veh-ship-oasis` | Oasis Class Cruise Ship | 362.0 x 47.0 x 75.2 | 9.3 (0.1237) | bulbous / transom | 16878 (93) | - |
 | `veh-ship-icon` | Icon Class Cruise Ship | 364.8 x 48.5 x 80.0 | 9.3 (0.1156) | bulbous / transom | 16862 (93) | - |
 | `veh-ship-queen-mary-2` | Queen Mary 2 | 345.0 x 41.0 x 63.4 | 10.0 (0.1577) | bulbous / transom | 14881 (99) | - |
-| `veh-ship-olympic` | Olympic Class Ocean Liner | 269.0 x 28.2 x 69.8 | 10.5 (0.1505) | plumb / cruiser | 13031 (99) | - |
+| `veh-ship-olympic` | Olympic Class Ocean Liner | 269.0 x 28.2 x 70.0 | 10.5 (0.15) | plumb / cruiser, counter | 19749 (93) | - |
 | `veh-ship-ss-united-states` | SS United States | 302.0 x 31.0 x 53.0 | 9.5 (0.1794) | raked / cruiser | 11111 (99) | - |
 | `veh-ship-normandie` | SS Normandie | 313.8 x 36.4 x 63.4 | 11.2 (0.1767) | clipper / cruiser | 10157 (99) | - |
 | `veh-ship-expedition-cruise` | Expedition Cruise Ship | 140.0 x 23.6 x 37.4 | 5.3 (0.1417) | ice / transom | 9529 (99) | - |
@@ -60,6 +60,17 @@ Notes:
   drawn as one superstructure with a green strip (approx.).
 - **Liners**: Olympic's four funnels (the aft one a dummy), United States's two, Normandie's
   three over her clipper bow and whaleback; Queen Mary 2's funnel and bridge wings.
+- **Olympic** (as built, 1911) is measured off the class's profile plan: the hull black up to
+  the B deck along the sheer (a `bulwark` over the C deck, so the distant model draws the
+  decks as one block), the forecastle and poop with the well decks between them and the
+  house, the white B-deck strake flush with the hull, the A-deck promenade open its whole
+  length under the boat deck (the cabins set in, their walls in shade, a screen and
+  stanchions at the side), the boat deck full width with its six deckhouses, the bridge and
+  its wings, sixteen boats on chocks in their davits (four a side forward and aft), the four
+  raked funnels standing on the boat deck through their houses with steam pipes and guys,
+  the raked masts with the crow's nest and the wireless aerials, the cranes and hatches of
+  the wells, forecastle and poop, the docking bridge, the gold line and the counter stern
+  (`counter`) over its sternpost and rudder.
 
 The first 21 (the Staten Island ferry to the bateau-mouche) are **detailed ships** (see
 "Detail" in [world-ships.md](world-ships.md)): `detailed()` gives every house tier its deck edge

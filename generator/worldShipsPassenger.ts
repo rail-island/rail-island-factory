@@ -8,7 +8,7 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
-import { shipLod, worldShip, type HullForm, type Item, type ShipSpec, type Tier } from "./hullKit.ts";
+import { hullGeometry, shipLod, worldShip, type HullForm, type Item, type ShipSpec, type Tier } from "./hullKit.ts";
 import { colourParam, detailed, exhausts, fittings, funnel, liferafts, liveryParam, mast, passengerFittings, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
 
 /** A rod between two points (u, y, z). */
@@ -696,33 +696,120 @@ export function queenMary2Spec(): ShipSpec {
   };
 }
 
+/**
+ * RMS Olympic as built (1911), measured off the class's profile plan and the
+ * photographs in assets/ship-olympic/: the hull black up to the B deck, the
+ * forecastle and poop one deck up with the well decks between them and the
+ * house, the white B-deck strake flush with the hull, the A-deck promenade open
+ * along its length under the boat deck, sixteen boats in their davits, the
+ * officers' quarters and the bridge at the front of the boat deck, four raked
+ * buff funnels with black tops (the aft one a dummy) on their deckhouses, two
+ * raked masts with the wireless aerials between them, and the cargo cranes.
+ */
 export function olympicSpec(): ShipSpec {
   const L = 269;
-  const D = 19.7;
+  const D = 20.4; // the C (shelter) deck: the well decks amidships
+  const hull: HullForm = { fine: true, length: L, beam: 28.2, depth: D, draft: 10.5, bow: "plumb", stern: "cruiser", section: "round", entry: 0.22, run: 0.16, rake: 0.008, sheer: [0.8, 3], forecastle: [40, 3.7], poop: [33, 2.4], boot: 0.35, stripe: 0, screws: 0, counter: [9, 17.2, 19.4] };
+  const g = hullGeometry(hull);
+  const dk = (u: number): number => g.deck(u);
+  const hb = (u: number): number => g.halfBeam(u, g.deck(u));
+  const B = D + 2.4; // B deck: the poop's level, the top of the black amidships
+  const A = D + 5.6; // A deck: the promenade
+  const BD = D + 8.6; // the boat deck
+  const HT = BD + 2.6; // the boat deck's houses
+  const H0 = 46; // the house's aft end (the aft well deck before it)
+  const H1 = 213.9; // its front (the forward well deck before it)
+  const funnels = [85, 122, 156, 192];
+  const FT = 53.2; // the funnels' tops, 175 ft over the keel
+  const RAKE = 3.6;
+  const fore = { u: 230.6, top: 70 };
+  const main = { u: 45.2, top: 69 };
+  const lean = 0.04; // the masts' rake aft, metres per metre
+  const mastAt = (m: { u: number; top: number }, y: number): [number, number, number] => [m.u - (y - dk(m.u)) * lean, y, 0];
+  const [ma, fa] = [mastAt(main, main.top - 1.2), mastAt(fore, fore.top - 1.2)];
+  const aerialY = (u: number): number => ma[1] + ((u - ma[0]) / (fa[0] - ma[0])) * (fa[1] - ma[1]);
+  const boats = [70.5, 80.8, 91, 101.3, 168.5, 178.5, 188.5, 198.6];
+  const BZ = 12.3; // the boats' centres off the centreline
+  const houses: Array<[number, number, string]> = [[181, 207.4, "officers' quarters"], [165, 177.4, "gymnasium and forward entrance"], [146, 163, "second funnel house"], [112, 138, "lounge house"], [80, 100, "aft entrance house"], [62, 77, "after deckhouse"]];
+  const F0 = BD - 0.02; // the funnels' foot, inside their houses
+  const fcU = (u: number, y: number): number => u - (RAKE * (y - F0)) / (FT - F0); // a funnel's centre at height y
+  const GY = HT + (FT - HT) * 0.7; // where the guys meet the funnels
+  // the cargo cranes: u, off the centreline, base height, jib heading (0 forward)
+  const cranes: Array<[number, number, number, number]> = [[249, 4, dk(249), Math.PI], [217.5, 5.2, dk(217.5), 0], [29.5, 5.2, dk(29.5), 0], [50, 6, BD, Math.PI]];
   return {
     kind: "passenger",
-    hull: { fine: true, length: L, beam: 28.2, depth: D, draft: 10.5, bow: "plumb", stern: "cruiser", section: "round", entry: 0.22, run: 0.16, rake: 0.008, sheer: [1.2, 2.4], forecastle: [40, 2.6], poop: [30, 2.4], boot: 0.4, stripe: 2.6, screws: 0 },
-    livery: { hull: "#1d2024", stripe: "#f2f0ea", bottom: "#b02a22", boot: "#f2f0ea", deck: "#c9b48a", house: "#f2f0ea", funnel: "#c99a4a", mast: "#c9b48a" },
-    items: detailed([
-      { k: "portholes", u: [20, 250], y: 14, pitch: 4, r: 0.3 },
-      ...decks({ u: [44, 216], y0: D - 0.2, n: 3, h: 2.8, round: [2, 4], inset: 0.3, dhw: 0.4, pitch: 2.6, step: [1, 2] }),
-      { k: "tier", u: [180, 200], y: [D + 8.2, D + 10.8], hw: 8, front: { y: 0.8, h: 1, w: 0.9, n: 7 }, wings: { hw: 14, h: 1.4 }, name: "bridge" },
-      ...[178, 150, 122, 94].map((u, i): Item => linerFunnel(u, 3.4, D + 8.2, 20, [["funnel", 0.85], ["black", 1]], 3.2 + i * 0)),
-      { k: "mast", u: 240, y: [D + 2.6, D + 50], r: 0.5, yards: [[D + 30, 2]], name: "foremast" },
-      { k: "mast", u: 34, y: [D + 2.4, D + 48], r: 0.5, name: "mainmast" },
-      { k: "boats", at: [96, 104, 112, 160, 168, 176, 184], z: 12.6, y: D + 9.5, len: 9, r: 1.2 },
-      { k: "portholes", u: [20, 250], y: 11, pitch: 4, r: 0.3, name: "lower portholes" },
-      { k: "portholes", u: [44, 216], y: 17, pitch: 3, r: 0.3, name: "upper portholes" },
-      // the funnels' guy wires, the boat deck's davits, the cowl ventilators, the well-deck cranes
-      ...[178, 150, 122, 94].flatMap((u): Item[] => [1, -1].map((sd): Item => rod([u - 3.2, D + 26, sd * 3], [u + 2, D + 8.4, sd * 12], 0.05, "rope", "funnel guy"))),
-      ...[96, 104, 112, 160, 168, 176, 184].flatMap((u): Item[] => [1, -1].map((sd): Item => ({ k: "box", u: [u - 0.2, u + 0.2], z: sd > 0 ? [12.2, 12.6] : [-12.6, -12.2], y: [D + 8.2, D + 11], mat: "white", name: "davit" }))),
-      { k: "vents", at: [[132, 6], [132, -6], [108, 6], [108, -6], [164, 6], [164, -6], [80, 4], [80, -4]], y: D + 8.2, h: 2, r: 0.45, cowl: true, mat: "white", name: "ventilators" },
-      ...[234, 226, 42, 34].map((u, i): Item => ({ k: "crane", u, z: (i % 2 ? -1 : 1) * 8, y: D + (u > 200 ? 2.6 : 2.4), h: 3, jib: 8, dir: Math.PI * (u > 200 ? 0.1 : 0.9), mat: "white", name: "well deck crane" })),
-      { k: "rail", u: [46, 214], y: D - 0.2 + 3 * 2.8, hw: 12.2, h: 1.1, name: "boat deck rail" },
-      rod([240, D + 50, 0], [L + 0.5, D + 2.6, 0], 0.06, "rope", "forestay"),
-      rod([34, D + 48, 0], [240, D + 50, 0], 0.06, "rope", "wireless aerials"),
-      ...fittings({ L, B: 28.2, D, fc: [40, 2.6], aft: [], draft: 10.5, rake: 0.01, rail: [30.4, L - 40.4] }),
-    ]),
+    hull,
+    livery: { hull: "#1d2024", bottom: "#8f2620", boot: "#b02a22", deck: "#c9b48a", house: "#f2f0ea", roof: "#d9d8d2", funnel: "#c98a3c", mast: "#a8865a", white: "#f2f0ea", gold: "#c9a227", boat: "#f2f0ea", shade: "#80837f" },
+    items: [
+      // the boat deck's houses (listed first: the distant model draws the hull's decks as one block and the funnels before them)
+      ...houses.map(([u0, u1, name]): Item => ({ k: "tier", u: [u0, u1], y: [BD, HT], hw: 6.5, lip: 0.15, windows: [{ y: 0.8, h: 1, w: 0.8, pitch: 2.4 }], front: { y: 0.8, h: 1, w: 0.8, n: 5 }, name })),
+      { k: "tier", u: [207.4, 211.2], y: [BD, HT], hw: 6.5, lip: 0.15, windows: [{ y: 0.9, h: 1.1, w: 0.9, pitch: 1.4 }], front: { y: 0.9, h: 1.1, w: 1.1, n: 8 }, wings: { hw: 14.15, h: 2.6, len: 2.2 }, name: "bridge" },
+      { k: "tier", u: [126.4, 136], y: [HT, HT + 1.3], hw: 4.2, lip: 0.1, mat: "white", windows: [{ y: 0.3, h: 0.7, w: 1, pitch: 1.6 }], name: "lounge clerestory" },
+      { k: "domes", u: [170, 170], n: 1, r: 2.2, y: HT - 0.02, h: 0.7, mat: "white", name: "forward staircase dome" },
+      { k: "domes", u: [93, 93], n: 1, r: 1.8, y: HT - 0.02, h: 0.6, mat: "white", name: "aft staircase dome" },
+      // the funnels stand on the boat deck inside their houses: raked, buff with black tops
+      ...funnels.map((u): Item => linerFunnel(u, 2.9, F0, FT - F0, [["funnel", (FT - 6.7 - F0) / (FT - F0)], ["black", 1]], RAKE)),
+      // each funnel's whistle and steam pipes up its forward and after faces, its guys to the deck's edge
+      ...funnels.flatMap((u): Item[] => [[3.95, 0.16], [-3.95, 0.12]].map(([du, r]): Item => rod([fcU(u, HT - 0.05) + du!, HT - 0.05, 0], [fcU(u, FT - 1.2) + du!, FT - 1.2, 0], r!, "funnel", "steam pipe"))),
+      ...funnels.flatMap((u): Item[] => [[-5.5, 1], [3.5, 1], [-5.5, -1], [3.5, -1]].map(([du, sd]): Item => rod([fcU(u, GY), GY, sd! * 2.2], [u + du!, BD + 0.1, sd! * 13.6], 0.05, "rope", "funnel guy"))),
+      // the hull above the C deck: black up to the B deck along the sheer, the white B-deck strake flush with it
+      { k: "bulwark", u: [H0, H1], h: 2.4, t: 0.3, mat: "hull", name: "C deck shell" },
+      ...[[H1, H1 + 0.05], [H0 - 0.05, H0]].map(([u0, u1]): Item => ({ k: "box", u: [u0!, u1!], z: [-(hb(u0!) - 0.005), hb(u0!) - 0.005], y: [dk(u0!) - 0.05, dk(u0!) + 2.4], mat: "hull", name: "C deck shell end" })),
+      { k: "tier", u: [H0, H1], y: [D - 0.2, A], inset: 0.03, lip: 0, top: "deck", windows: [{ y: 3.85, h: 0.85, w: 0.7, pitch: 1.9 }], front: { y: 3.7, h: 1, w: 0.9, n: 11 }, name: "B deck" },
+      // A deck: the cabins set in from the side under the boat deck (their walls in shade), the promenade open along its length
+      { k: "tier", u: [H0 + 2.4, H1 - 2.4], y: [A, BD], inset: 2.4, lip: 2.35, top: "deck", windows: [{ y: 0.9, h: 1.2, w: 1.1, pitch: 2.6 }], name: "A deck" },
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [H0 + 3.4, H1 - 3.4], z: sd > 0 ? [11.705, 11.72] : [-11.72, -11.705], y: [A + 0.02, BD - 0.32], mat: "shade", name: sd > 0 ? "promenade in shade" : "promenade in shade port" })),
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [H0 + 0.25, H1 - 0.25], z: sd > 0 ? [13.72, 14.0] : [-14.0, -13.72], y: [A - 0.02, A + 1.1], mat: "white", name: sd > 0 ? "promenade screen" : "promenade screen port" })),
+      ...[1, -1].flatMap((sd): Item[] => Array.from({ length: 56 }, (_, k) => H0 + 0.6 + k * ((H1 - H0 - 1.2) / 55)).map((u): Item => ({ k: "box", u: [u - 0.13, u + 0.13], z: sd > 0 ? [13.74, 13.98] : [-13.98, -13.74], y: [A + 1.05, BD - 0.27], mat: "white", name: "promenade stanchion" }))),
+      { k: "tier", u: [H1 - 0.45, H1 - 0.12], y: [A, BD - 0.26], inset: 0.1, lip: 0, mat: "white", front: { y: 1.1, h: 1.2, w: 1.2, n: 9 }, name: "A deck front screen" },
+      { k: "tier", u: [H0 + 0.12, H0 + 0.45], y: [A, BD - 0.26], inset: 0.1, lip: 0, mat: "white", name: "A deck aft screen" },
+      // the boat deck's white edge over the shaded promenade, its rail
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [H0 + 0.02, H1 - 0.02], z: sd > 0 ? [14.02, 14.08] : [-14.08, -14.02], y: [BD - 0.34, BD + 0.02], mat: "white", name: sd > 0 ? "boat deck edge" : "boat deck edge port" })),
+      ...[H0 + 0.02, H1 - 0.08].map((u): Item => ({ k: "box", u: [u, u + 0.06], z: [-14.02, 14.02], y: [BD - 0.34, BD + 0.02], mat: "white", name: "boat deck edge end" })),
+      { k: "rail", u: [H0 + 0.4, H1 - 0.4], y: BD, hw: 13.85, h: 1.1, name: "boat deck rail" },
+      // the boats in their chocks and their davits
+      { k: "boats", at: boats, z: BZ, y: BD + 1.5, len: 9.1, r: 1.15, name: "lifeboats" },
+      ...boats.flatMap((u): Item[] => [1, -1].flatMap((sd): Item[] => [u - 2.6, u + 2.6].map((uc): Item => ({ k: "box", u: [uc - 0.25, uc + 0.25], z: [sd * BZ - 0.75, sd * BZ + 0.75].sort((a, b) => a - b) as [number, number], y: [BD - 0.02, BD + 0.55], mat: "white", name: "boat chock" })))),
+      ...boats.flatMap((u): Item[] => [1, -1].flatMap((sd): Item[] => [u - 4.9, u + 4.9].flatMap((ud): Item[] => [
+        { k: "box", u: [ud - 0.3, ud + 0.3], z: [sd * 13.3 - 0.3, sd * 13.3 + 0.3].sort((a, b) => a - b) as [number, number], y: [BD - 0.02, BD + 0.9], mat: "white", name: "davit base" },
+        rod([ud, BD + 0.85, sd * 13.3], [ud, BD + 4.6, sd * 13.5], 0.15, "white", "davit"),
+        rod([ud, BD + 4.6, sd * 13.5], [ud, BD + 4.9, sd * BZ], 0.13, "white", "davit arm"),
+        rod([ud, BD + 4.9, sd * BZ], [ud + (ud < u ? 0.9 : -0.9), BD + 1.9, sd * BZ], 0.04, "rope", "boat fall"),
+      ]))),
+      { k: "vents", at: [[142, 5], [142, -5], [106, 5], [106, -5], [179.2, 4], [179.2, -4], [164, 3], [164, -3], [78.5, 3], [78.5, -3], [55, 6], [55, -6], [58.5, 2.5], [58.5, -2.5]], y: BD, h: 1.8, r: 0.45, cowl: true, mat: "white", name: "boat deck ventilators" },
+      // the hull: portholes deck by deck, the gold line along the sheer
+      ...Array.from({ length: 8 }, (_, k) => H0 + 1 + k * 20.9).map((u): Item => ({ k: "portholes", u: [u, u + 20], y: dk(u + 10) + 1.05, pitch: 2.2, r: 0.24, name: "C deck portholes" })),
+      { k: "portholes", u: [14, 258], y: D - 1.5, pitch: 2.4, r: 0.24, name: "D deck portholes" },
+      { k: "portholes", u: [22, 250], y: D - 4.3, pitch: 2.8, r: 0.22, name: "E deck portholes" },
+      { k: "portholes", u: [190, 250], y: D - 7, pitch: 3, r: 0.2, name: "F deck portholes" },
+      { k: "portholes", u: [233, 262], y: dk(245) - 1.6, pitch: 2.4, r: 0.24, name: "forecastle portholes" },
+      { k: "portholes", u: [8, 32], y: B - 1.2, pitch: 2.4, r: 0.24, name: "poop portholes" },
+      { k: "hullLine", pts: Array.from({ length: 28 }, (_, k) => Math.min(268.2, 1 + k * 10)).map((u): [number, number] => [u, D + 0.8 * Math.max(0, (134.5 - u) / 134.5) ** 2 + 3 * Math.max(0, (u - 134.5) / 134.5) ** 2 - 0.9]), w: 0.16, mat: "gold", name: "gold line" },
+      // the well decks: their bulwarks, hatches and cranes; the forecastle's hatch and cranes
+      { k: "bulwark", u: [33.6, H0], h: 1.2, mat: "hull", name: "aft well bulwark" },
+      { k: "bulwark", u: [H1, 229], h: 1.2, mat: "hull", name: "forward well bulwark" },
+      ...([[222, 3.4], [39.5, 3.2], [241, 3.5], [20, 3]] as const).map(([u, hw]): Item => ({ k: "hatches", u: [u - 2.6, u + 2.6], n: 1, hw, y: dk(u), h: 0.35, coaming: 0.7, mat: "wood", name: "hatch" })),
+      ...cranes.flatMap(([u, z, y, dir]): Item[] => [1, -1].map((sd): Item => ({ k: "crane", u, z: sd * z, y: y - 0.05, h: 2.6, jib: 7.5, dir: dir + sd * (dir > 0 ? -0.25 : 0.25), lift: 0.7, mat: "white", name: "cargo crane" }))),
+      // the rudder's stock above the waterline, black like the hull
+      { k: "box", u: [3.74, 9.01], z: [-0.18, 0.18], y: [10.5 + 0.35, 17.6], mat: "hull", name: "rudder above the waterline" },
+      // the docking bridge across the poop
+      { k: "box", u: [11.2, 13.2], z: [-hb(12.2) + 0.2, hb(12.2) - 0.2], y: [dk(12.2) + 2.5, dk(12.2) + 2.75], mat: "white", name: "docking bridge" },
+      { k: "box", u: [11.4, 13], z: [-1.6, 1.6], y: [dk(12.2) + 2.74, dk(12.2) + 4.6], mat: "white", name: "docking bridge cab" },
+      ...[-1, 1].flatMap((sd): Item[] => [2.2, 7.5].map((zz): Item => ({ k: "box", u: [12, 12.4], z: [sd * zz - 0.15, sd * zz + 0.15].sort((a, b) => a - b) as [number, number], y: [dk(12.2) - 0.05, dk(12.2) + 2.52], mat: "white", name: "docking bridge post" }))),
+      { k: "edgeRail", u: [0.6, 33.2], h: 1.1, name: "poop rail" },
+      // the raked masts: crow's nest, aerial spreaders, shrouds and stays, the wireless aerials between them
+      ...[fore, main].map((mm): Item => rod([mm.u, dk(mm.u) - 0.15, 0], mastAt(mm, mm.top), 0.42, "mast", mm === fore ? "foremast" : "mainmast")),
+      { k: "cyl", u: mastAt(fore, 36)[0], y: [35.6, 37.4], r: 0.95, mat: "mast", name: "crow's nest" },
+      ...[fore, main].map((mm): Item => rod([mastAt(mm, mm.top - 1.2)[0], mm.top - 1.2, -1.6], [mastAt(mm, mm.top - 1.2)[0], mm.top - 1.2, 1.6], 0.09, "mast", "aerial spreader")),
+      rod([mastAt(fore, 52)[0], 52, -2.6], [mastAt(fore, 52)[0], 52, 2.6], 0.1, "mast", "signal yard"),
+      ...[1, -1].map((sd): Item => rod([mastAt(main, main.top - 1.2)[0], main.top - 1.2, sd * 1.4], [mastAt(fore, fore.top - 1.2)[0], fore.top - 1.2, sd * 1.4], 0.04, "rope", "wireless aerial")),
+      rod([182, aerialY(182), 1.4], [181.6, HT - 0.02, 0.6], 0.04, "rope", "aerial lead-in"),
+      rod(mastAt(fore, fore.top - 0.6), [L - 0.3, dk(L - 0.3) + 0.4, 0], 0.06, "rope", "forestay"),
+      rod(mastAt(main, main.top - 0.6), [1.2, dk(1.2) + 0.4, 0], 0.06, "rope", "backstay"),
+      ...[1, -1].flatMap((sd): Item[] => [229.9, 231.4, 232.9].map((u): Item => rod(mastAt(fore, 46), [u, dk(u) + 0.05, sd * (hb(u) - 0.3)], 0.04, "rope", "foremast shroud"))),
+      ...[1, -1].flatMap((sd): Item[] => [40.6, 42.1, 43.6].map((u): Item => rod(mastAt(main, 45), [u, dk(u) + 0.05, sd * (hb(u) - 0.3)], 0.04, "rope", "mainmast shroud"))),
+      ...fittings({ L, B: 28.2, D: D + 3, fc: [40, 3.7], aft: [3, 31], draft: 10.5, rake: 0.01, rail: false }),
+    ],
   };
 }
 
