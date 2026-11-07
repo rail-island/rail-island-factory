@@ -1138,16 +1138,163 @@ export const E6: ShinkansenSeries = {
   weight: { end: 41, middle: 39 }, power: 1200, maxspeed: 320,
 };
 
+/**
+ * The 100 series (1985, JNR), measured on photo-100-x1-hamamatsu-19981020.jpg (set X1 near side-on; a
+ * projective fit along the car from the tip, the rear body end and the vertical scale at six columns,
+ * 35 - 80 px/m, checked by the 1.04 m window pitch) and the three-quarter photographs of the preserved
+ * 123-1. Distances are d behind the nose tip. The "shark" nose: an oval cap with its tip at 1.67 m, the
+ * top rising in a nearly straight line to the windscreen's foot (3.24 m at d 2.54), the flat windscreen
+ * raked about 42 degrees to the cab roof (3.91 m at d 3.29); in plan a wedge reaching the body's width
+ * 4.4 m back; the slit headlights on its sides (d 1.12 - 1.98 at 1.75 m); a deep skirt under it, its
+ * slanted rear edge ahead of the leading bogie. Not the 0 series' round bullet: no bulging dome, a far
+ * flatter top line and a windscreen standing in it.
+ */
+const S100_JOIN = 5.9;
+/** The face's centre line, [y, d]: the skirt's top under the cap, the cap's round front, the top line, the windscreen, the cab roof. */
+const S100_PROFILE: Pt[] = [
+  [1.04, 0.64], [1.12, 0.65], [1.21, 0.62], [1.31, 0.5], [1.45, 0.21], [1.56, 0.07], [1.67, 0], [1.78, 0.03], [1.9, 0.1], [2.06, 0.21],
+  [2.33, 0.5], [2.5, 0.81], [2.8, 1.44], [3.06, 2.12], [3.24, 2.54], [3.4, 2.72], [3.6, 2.92], [3.8, 3.15], [3.91, 3.29], [3.96, 3.6], [4.0, S100_JOIN],
+];
+const S100_ROWS = [1.04, 1.12, 1.21, 1.26, 1.31, 1.38, 1.45, 1.51, 1.56, 1.63, 1.67, 1.71, 1.78, 1.87, 1.9, 1.98, 2.06, 2.14, 2.21, 2.27, 2.33, 2.42, 2.5, 2.58, 2.65, 2.73, 2.8, 2.88, 2.95, 3.06, 3.15, 3.24, 3.33, 3.4, 3.5, 3.6, 3.7, 3.8, 3.86, 3.91, 3.96, 4.0];
+/** The plan: a flat front this wide (half width) by height, its corners reaching the body's side this far behind it. */
+const S100_FLAT: Pt[] = [[1.04, 0.02], [2.5, 0.02], [2.8, 0.45], [3.06, 0.75], [3.24, 0.95], [3.4, 1.0], [3.6, 0.98], [3.8, 0.92], [3.91, 0.75], [3.96, 0.4], [4.0, 0.05]];
+const S100_DEPTH: Pt[] = [[1.04, 2.2], [1.21, 2.75], [1.45, 3.8], [1.67, 4.3], [1.9, 4.3], [2.06, 4.2], [2.33, 3.9], [2.5, 3.6], [2.8, 3.0], [3.06, 2.4], [3.24, 2.1], [3.4, 1.95], [3.6, 1.75], [3.8, 1.55], [3.91, 1.4], [3.96, 1.0], [4.0, 0.3]];
+/** The headlight slit's chrome rim and its lens, [y, d] edges with rounded ends. */
+const s100Slit = (y0: number, y1: number, d0: number, d1: number, k: number): { front: Pt[]; back: Pt[] } => {
+  const ym = (y0 + y1) / 2, h = (y1 - y0) / 2;
+  return {
+    front: [[y0, d0 + k], [ym - h * 0.7, d0 + k * 0.3], [ym, d0], [ym + h * 0.7, d0 + k * 0.3], [y1, d0 + k]],
+    back: [[y0, d1 - k], [ym - h * 0.7, d1 - k * 0.3], [ym, d1], [ym + h * 0.7, d1 - k * 0.3], [y1, d1 - k]],
+  };
+};
+/** The oval cap's seam round the tip, a thin line in [lat, y] (centre 1.67 m, 0.62 m half wide, 0.45 m half tall). */
+const S100_CAP_SEAM = Array.from({ length: 20 }, (_, i) => {
+  const [a, b] = [(2 * Math.PI * i) / 20, (2 * Math.PI * (i + 1)) / 20];
+  const at = (t: number, k: number): Pt => [k * 0.62 * Math.cos(t), 1.67 + k * 0.45 * Math.sin(t)];
+  return { mat: "seam", pts: [at(a, 1), at(b, 1), at(b, 1.045), at(a, 1.045)], fine: 2 };
+});
+const S100_FACE: SeriesCabFace = {
+  dJoin: S100_JOIN, first: 7.95, roofFrom: 3.99, cols: [3, 16, 1, 1],
+  // the tip is the end car's front: its coupler lies under the cap, inside the skirt
+  reach: 0,
+  profile: S100_PROFILE, rows: S100_ROWS,
+  // r = the body's half width less the flat front (the kit holds it under 98 % of the half width)
+  corner: S100_FLAT.map(([y, a]): Pt => [y, Math.max(0.05, S100_HALF(y) - a)]),
+  cornerDepth: S100_DEPTH,
+  // the face takes the body's colour; the livery's bands show on the cab sides behind the corners
+  bands: (l) => [[0, 9, l.bands[0]![2]]],
+  paint: [
+    // the skirt's colour up under the cap, its edge rising from 1.04 m at d 2.8 to the cap
+    { mat: "skirtG", front: [[1.04, -9], [1.21, -9]], back: [[1.04, 2.8], [1.12, 1.7], [1.18, 1.0], [1.21, 0.62]] },
+    // the headlight slits: a chrome rim, the lamp ahead and dark glass behind
+    { mat: "frameSilver", ...s100Slit(1.63, 1.87, 1.1, 2.0, 0.06) },
+    { mat: "cabGlass", ...s100Slit(1.67, 1.83, 1.15, 1.95, 0.05) },
+    { mat: "lampHead", ...s100Slit(1.67, 1.83, 1.15, 1.5, 0.05) },
+    // the cab's side window, from the corner pillar back along the cab
+    { mat: "cabGlass", front: [[3.42, 2.92], [3.6, 3.1], [3.8, 3.34]], back: [[3.42, 5.0], [3.8, 4.75]] },
+  ],
+  decals: S100_CAP_SEAM,
+  // the flat windscreen in a thin black rubber
+  masks: [{ lat: [-0.95, 0.95], y: [3.3, 3.87], r: 0.07, mat: "black" }],
+  panes: [{ lat: [-0.91, 0.91], y: [3.33, 3.84], r: 0.05 }],
+  wipers: [[[-0.55, 3.36], [-0.15, 3.74]], [[0.35, 3.36], [0.75, 3.72]]],
+};
+/** The body's half width by height at the join (its section: W 1.62 at the belly, the side leaning in to the shoulder, the roof's elliptic arc). */
+function S100_HALF(y: number): number {
+  const [W, Y, S, C, lean] = [1.62, 1.5, 3.6, 4.0, 0.965];
+  if (y <= Y) return W * 0.97;
+  if (y <= S) return W + ((y - Y) / (S - Y)) * (W * lean - W);
+  return W * lean * Math.sqrt(Math.max(0, 1 - ((y - S) / (C - S)) ** 2));
+}
+
+/**
+ * The skirt under the nose (below the face, which starts at 1.04 m): its front upright under the cap
+ * (d 0.6 - 0.66), its plan boxier toward the bottom (0.3 m above the rail), its rear edge slanted from
+ * d 3.2 at the top to 2.4 at the bottom, clear of the leading wheels; two small boxes at its front
+ * corners; over the bogie behind it the dark underside; the radio fin on the cab roof.
+ */
+function s100Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  if (car.end) {
+    const x = (t: number) => X(t - S100_JOIN);
+    // a ring at height y: flat front +-a at d f, elliptic corners (r wide, D deep) to the side at hw, the rear at d r1
+    const ring = (f: number, a: number, hw: number, D: number, r1: number): Array<[number, number]> => {
+      const r = hw - a, k = 6, pts: Array<[number, number]> = [[r1, hw]];
+      for (let i = k; i >= 0; i--) { const t = (i / k) * (Math.PI / 2); pts.push([f + D * (1 - Math.cos(t)), a + r * Math.sin(t)]); }
+      for (let i = 0; i <= k; i++) { const t = (i / k) * (Math.PI / 2); pts.push([f + D * (1 - Math.cos(t)), -(a + r * Math.sin(t))]); }
+      pts.push([r1, -hw]);
+      const out = pts.map(([d, z]): [number, number] => [x(d), z]);
+      // counter-clockwise from above, as the mesh helpers wind
+      let area = 0;
+      for (let i = 0; i < out.length; i++) { const [p, q] = [out[i]!, out[(i + 1) % out.length]!]; area += p[0] * q[1] - q[0] * p[1]; }
+      return area > 0 ? out.reverse() : out;
+    };
+    const [yb, ym, yt] = [0.3, 0.7, 1.03];
+    const bottom = ring(0.6, 0.85, 1.53, 0.8, 2.4), mid = ring(0.63, 0.5, 1.53, 1.5, 2.84), top = ring(0.66, 0.02, 1.55, 2.2, 3.2);
+    m.scope("skirt", () => {
+      m.loft("skirtG", bottom, yb, mid, ym, false);
+      m.loft("skirtG", mid, ym, top, yt, false);
+      m.cap("skirtG", bottom, yb, false);
+      for (const sd of [1, -1]) m.scope(sd > 0 ? "box right" : "box left", () => block(m, "skirtG", x(0.72), x(0.52), yb, yb + 0.15, ...(sd > 0 ? [0.45, 1.0] : [-1.0, -0.45]) as [number, number]));
+    });
+    // the underside over the leading bogie, between its wheels' tops and the nose
+    m.scope("nose underside", () => block(m, "under", x(S100_JOIN), x(3.0), 0.93, 1.03, -1.2, 1.2));
+    // the blue apron along the car's bottom, carried on over the leading bogie to the skirt
+    for (const sd of [1, -1]) m.scope(sd > 0 ? "apron right" : "apron left", () => block(m, "skirtG", x(S100_JOIN + 0.02), x(3.15), 0.86, 1.035, ...(sd > 0 ? [1.5, 1.54] : [-1.54, -1.5]) as [number, number]));
+    m.scope("radio fin", () => m.slab("roofG", [[x(4.25), 3.95, -0.015], [x(3.85), 3.95, -0.015], [x(4.15), 4.24, -0.015], [x(4.3), 4.24, -0.015]], [0, 0, 0.03]));
+  }
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.72 - 0.3, 0.72, -1.62 * 0.8, 1.62 * 0.8));
+}
+
+/** The 100's window pitch (one window a seat row, 1.04 m), 0.78 m wide. */
+const s100Windows = (from: number, n: number): Array<readonly [number, number]> => Array.from({ length: n }, (_, i) => [from + 1.04 * i, from + 1.04 * i + 0.78] as const);
+
+/**
+ * The JNR livery (photo-100-x1-...: ivory, the blue window band 2.14 - 2.95 m and a thin blue line
+ * 1.98 - 2.06 m under it, both ending on the end car in one edge slanted forward at its foot, d 4.45 at
+ * the line to 5.3 at the band's head, ahead of the cab doors) and JR West's 2002 renewal (photo-jrw-...
+ * -121-5055: light grey, a dark grey window band over a yellow-green stripe, the same slant). The
+ * ivory or grey is swept over the bands ahead of the slant.
+ */
+const S100_SLANT: Pt[] = [[1.95, 4.4], [2.98, 5.33]];
 export const S100: ShinkansenSeries = {
-  endLength: 26.05, midLength: 25.0, W: 1.62, Y: 1.5, S: 3.1, C: 4.0, lean: 0.965, B: 0.85, A: 1.0,
-  // the sharper "shark" nose after the 0 series, the cab windscreen in a flat crown
-  nose: nose(5.2, 0.05, 2.2, [[0, 1.7], [0.3, 2.05], [1.5, 2.45], [4.0, 2.85], [5.0, 3.25], [5.8, 3.7], [7.0, 4.0]], [[0, 1.65], [0.3, 1.9], [1.5, 2.2], [4.0, 2.55], [5.8, 2.95], [7.0, 3.1]], [[0, 1.6], [1.0, 1.55], [2.5, 1.5]], [[0, 1.55], [0.8, 1.0]], [[0, 1.5], [0.4, 0.6], [2.0, 0.85]]),
-  windscreen: [4.6, 6.0, 0.07, 1.05], lamps: [1.6, 1.8],
-  windows: [[2.0, 2.6]], windowW: 0.9, pitch: 1.04, door: [1.35, 3.0, 2.05, 2.6], doorW: 0.7,
+  // 26.05 m end car, 25.0 m intermediate car, 4.0 m high; the body narrowed from 3.38 m to 3.24 m; a high
+  // shoulder (3.6 m) under a flat roof, the cab's roof nearly as wide as its windscreen
+  endLength: 26.05, midLength: 25.0, W: 1.62, Y: 1.5, S: 3.6, C: 4.0, lean: 0.965, B: 0.72, A: 1.04,
+  nose: nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]), windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S100_FACE,
+  // the leading bogie under the nose (d 4.73), the rear one 3.75 m in from the inner coupling
+  endBogies: [26.05 - 0.25 - 3.5 - 17.5 - S100_JOIN, 26.05 - 0.25 - 3.5 - S100_JOIN],
+  // the end car (photo-100-x1-...): the crew door (a seam) and then the passenger door behind the cab, 13
+  // windows (the 65 seats' rows), the rear door over the rear bogie with the toilets behind it; the
+  // intermediate car a door at each end and 20 windows (100 seats)
+  layout: {
+    end: { doors: [[6.84 - S100_JOIN, 7.62 - S100_JOIN, -1], [21.95 - S100_JOIN, 22.7 - S100_JOIN, 1]], windows: s100Windows(8.42 - S100_JOIN, 13) },
+    middle: { doors: [[0.55, 1.3, -1], [23.2, 23.95, 1]], windows: s100Windows(1.95, 20) },
+  },
+  sidePanels: {
+    end: [
+      { d: [6.08, 6.68], y: [1.38, 3.15], kind: "seam" },
+      { d: [6.24, 6.52], y: [2.55, 2.95], kind: "window" },
+    ],
+  },
+  windows: [[2.24, 2.86]], windowW: 0.78, pitch: 1.04, door: [1.35, 3.15, 2.5, 2.95], doorW: 0.78, doorGlassW: 0.24,
   bogieCentres: 17.5, wheelR: 0.455, wheelbase: 2.5,
+  // the diamond pantograph (PS202, photo-jrw-...-k58-pantograph.jpg) near the car's rear end
+  pantograph: "diamond", pantographAt: 25.0 - 0.5 - 2.2,
+  fittings: s100Fittings,
+  lodRoof: { d: [0.62, 3.0], hw: 1.45, y: [0.3, 1.04], mat: "skirtG" },
   liveries: {
-    jnr: { title: "JNR ivory, blue", palette: { ivory: c("#eeece2"), blue: c("#1d4596"), roofG: c("#e2e0d6", 0.6), skirtG: c("#1d4596") }, bands: [[0, 1.85, "ivory"], [1.85, 1.95, "blue"], [1.95, 2.72, "ivory"], [2.72, 2.95, "blue"], [2.95, 9, "ivory"]], roof: "roofG", skirt: "skirtG", number: "123-1" },
-    jrWest: { title: "JR West green", palette: { grey: c("#d9dcdd"), dark: c("#545a60"), green: c("#7dbb2e"), roofG: c("#c9cccd", 0.6), skirtG: c("#5b6167") }, bands: [[0, 1.85, "grey"], [1.85, 1.95, "green"], [1.95, 2.72, "grey"], [2.72, 2.95, "dark"], [2.95, 9, "grey"]], roof: "roofG", skirt: "skirtG", number: "121-3001" },
+    jnr: {
+      title: "JNR ivory, blue", number: "123-1",
+      palette: { ivory: c("#f1efe6"), blue: c("#1d4596"), roofG: c("#e4e2d8", 0.6), skirtG: c("#1d4596"), seam: c("#a9a79e", 0.5) },
+      bands: [[0, 1.98, "ivory"], [1.98, 2.06, "blue"], [2.06, 2.14, "ivory"], [2.14, 2.95, "blue"], [2.95, 9, "ivory"]], roof: "roofG", skirt: "skirtG",
+      endSweeps: [{ mat: "ivory", front: [[1.95, -9], [2.98, -9]], back: S100_SLANT }],
+    },
+    jrWest: {
+      title: "JR West green", number: "121-5055",
+      palette: { grey: c("#d6d9da"), dark: c("#4d5358"), green: c("#8cc43c"), roofG: c("#c9cccd", 0.6), skirtG: c("#a5aaad", 0.45), seam: c("#9a9ea1", 0.5) },
+      bands: [[0, 1.88, "grey"], [1.88, 2.11, "green"], [2.11, 2.95, "dark"], [2.95, 9, "grey"]], roof: "roofG", skirt: "skirtG",
+      endSweeps: [{ mat: "grey", front: [[1.85, -9], [2.98, -9]], back: [[1.85, 4.3], [2.98, 5.33]] }],
+    },
   },
   weight: { end: 57, middle: 56 }, power: 920, maxspeed: 230,
 };
