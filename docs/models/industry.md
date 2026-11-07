@@ -114,6 +114,12 @@ the factory's counterpart of OpenTTD's oil rig. It is **confirmed** (in
   `game: { helipad: { material: "helipad", pad: "large" } }` (no `when`: every build has it);
   the export measures `{ pad: "large", centre: [25.5, 39.7, 8.5], size: 27 }`
   ([game-properties.md](game-properties.md#helipads)).
+- **Placement** (`game.block`, `game.offshore`): one block rect, the jacket's base (x -24..24,
+  z -15.3..17.2 m: the battered legs at the waterline and the boat landing), as a fraction of the
+  96 x 48 m plan the flare and crane booms span. The game blocks and grades only that rect, so
+  nothing is reserved under the booms, and `offshore: true` stands it at sea level over the sea
+  without reclaiming the water ([game-properties.md](game-properties.md#buildings)).
+  `test/industry.test.ts` checks every vertex below the cellar deck lies inside the rect.
 - **Budget.** 6,954 triangles (the family's 10,000 ceiling). Its low detail
   (`offshorePlatformLod`, 304 triangles, `lodTriangles: 500` like the power and process plants)
   keeps the legs, two X braces, both decks and the gap between them, the quarters, modules,

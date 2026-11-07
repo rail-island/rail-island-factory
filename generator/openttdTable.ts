@@ -365,8 +365,8 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     presets: presets({ unit: "middleCar" }, { livery: "yamanote" }),
     formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
   }),
-  "proc-vehicle-odakyu-gse": pax(2018, 42, ELRL, {
-    variants: [at({ unit: "middleCar" }, { capacity: 52 })],
+  "proc-vehicle-odakyu-gse": pax(2018, 56, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 60 })],
     presets: presets({ unit: "middleCar" }, { livery: "lse" }),
     formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
   }),
