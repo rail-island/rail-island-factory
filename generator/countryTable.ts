@@ -68,6 +68,8 @@ const each = (code: string, ...ids: string[]): Array<[string, string]> => ids.ma
 
 export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
   ...each("cz",
+    // the Ceske Budejovice - Linz horse railway, the Prague horse tram
+    "animal-rail-budweis-coach", "animal-rail-budweis-wagon", "animal-tram-closed",
     // Czech and Czechoslovak railways
     "cd-110", "cd-130", "cd-140", "cd-150", "cd-163", "cd-169", "cd-180", "cd-230", "cd-263", "cd-451", "cd-460", "cd-470", "cd-471", "cd-680",
     "cd-704", "cd-710", "cd-714", "cd-742", "cd-749", "cd-750", "cd-771", "cd-781", "cd-810", "cd-812", "cd-843", "cd-green-white-coach", "cd-y-coach",
@@ -108,7 +110,7 @@ export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
   ...each("jp", "shinkansen-0", "shinkansen-n700s", "shinkansen-e5", "shinkansen-500", "shinkansen-700", "shinkansen-e6", "shinkansen-100", "shinkansen-e4",
     "jr-e235", "jnr-103", "odakyu-gse", "kintetsu-hinotori", "jr-e259", "jnr-485", "hankyu-9000", "jnr-c62", "jnr-d51", "jnr-ef66", "jnr-dd51",
     "blue-train-24", "jr-kiha40"),
-  ...each("us", "emd-gp9", "emd-sd40-2", "ge-es44ac", "emd-sd70ace", "emd-f7", "emd-f40ph", "ge-p42dc", "siemens-alc42", "prr-gg1", "amtrak-superliner",
+  ...each("us", "animal-tram-bobtail", "animal-bus-stagecoach", "emd-gp9", "emd-sd40-2", "ge-es44ac", "emd-sd70ace", "emd-f7", "emd-f40ph", "ge-p42dc", "siemens-alc42", "prr-gg1", "amtrak-superliner",
     "amtrak-acela", "up-big-boy", "prr-k4s", "nyc-hudson", "american-440", "budd-rdc", "pioneer-zephyr", "nyc-r160", "cta-5000", "us-caboose",
     "us-boxcar", "us-well-car", "sf-cable-car", "american-truck", "boeing-737", "boeing-747", "mcdonnell-douglas-md11"),
   // the world fleet (docs/specs/2026-11-05-world-vehicle-fleet-list.md): its list's origin column,
@@ -117,7 +119,7 @@ export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
   ...each("ae", "ship-dhow", "dubai-citadis"),
   ...each("ar", "buenos-aires-colectivo", "buenos-aires-premetro"),
   ...each("at", "doppelmayr-omega", "rosenbauer-panther", "siemens-ulf", "vienna-e1", "vienna-flexity", "gmunden-vario"),
-  ...each("au", "volgren-optimus", "sydney-leyland-atlantean", "ship-sydney-first-fleet", "ship-manly-freshwater", "ship-incat",
+  ...each("au", "animal-tram-double-deck", "volgren-optimus", "sydney-leyland-atlantean", "ship-sydney-first-fleet", "ship-manly-freshwater", "ship-incat",
     "kenworth-t909-road-train", "international-acco", "melbourne-w-class", "melbourne-b-class", "melbourne-e-class", "glenelg-h-class",
     "sydney-r-class"),
   ...each("be", "van-hool-exquicity", "van-hool-a330", "van-hool-astromega", "ship-hopper-dredger", "brussels-pcc"),
@@ -149,7 +151,7 @@ export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
   ...each("es", "irizar-i8", "pegaso-comet", "caf-urbos"),
   ...each("et", "addis-ababa-lrt"),
   ...each("fi", "helsinki-artic", "helsinki-valmet"),
-  ...each("fr", "poma-funitel", "vanoise-express", "irisbus-citelis", "heuliez-gx337", "renault-pr100", "iveco-crossway", "chausson-aph",
+  ...each("fr", "animal-bus-paris-omnibus", "poma-funitel", "vanoise-express", "irisbus-citelis", "heuliez-gx337", "renault-pr100", "iveco-crossway", "chausson-aph",
     "ship-bateau-mouche", "ship-normandie", "concorde", "caravelle", "dassault-falcon-7x", "atr-72", "renault-t", "renault-magnum", "berliet-t100",
     "citroen-h-van", "lohr-car-transporter", "alstom-citadis", "alstom-citadis-x05", "alstom-tfs", "translohr", "strasbourg-eurotram",
     "montpellier-citadis"),
@@ -158,7 +160,8 @@ export const COUNTRY_OF: ReadonlyMap<string, string> = new Map([
     "ship-queen-mary-2", "ship-olympic", "ship-narrowboat", "ship-thames-barge", "ship-cutty-sark", "ship-ss-great-britain", "dh-comet",
     "vickers-vc10", "hs-trident", "bac-111", "bae-146", "vickers-viscount", "dh-dragon-rapide", "bn-islander", "bedford-tk", "aec-mammoth-major",
     "scammell-contractor", "ford-transit-mk1", "dennis-fire-engine", "croydon-cr4000", "blackpool-balloon", "blackpool-flexity",
-    "sheffield-supertram", "nottingham-incentro", "horse-tram", "steam-tram"),
+    "sheffield-supertram", "nottingham-incentro", "steam-tram", "animal-tram-toastrack", "animal-rail-mine-tub", "animal-rail-trolley",
+    "animal-bus-knifeboard-omnibus", "animal-bus-wagonette"),
   ...each("gt", "chicken-bus"),
   ...each("hk", "ngong-ping-crystal", "ship-star-ferry", "hong-kong-tram"),
   ...each("hr", "koncar-tmk2200"),

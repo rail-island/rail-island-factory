@@ -26,8 +26,8 @@ const span = (ts: readonly Tri[], axis: number): [number, number] => {
 };
 
 describe("the world trams", () => {
-  it("are the list's 100 designs in the catalog's trams, each with its OpenTTD entry", () => {
-    expect(WORLD_TRAM_SPECS).toHaveLength(100);
+  it("are the list's 99 designs (the horse tram moved to the animal-drawn trams) in the catalog's trams, each with its OpenTTD entry", () => {
+    expect(WORLD_TRAM_SPECS).toHaveLength(99);
     for (const t of WORLD_TRAM_SPECS) {
       const id = proceduralId(t.id);
       const d = DESIGNS.get(id);
@@ -50,7 +50,7 @@ describe("the world trams", () => {
   });
 
   it("opens no doors on the open cars and the end-platform cars, and the single-ended cars' on the right only", () => {
-    expect([...WORLD_TRAMS_WITHOUT_DOORS].sort()).toEqual(["cable-car-dunedin", "christchurch-boon", "horse-tram", "rio-bonde", "steam-tram"].map((n) => `proc-vehicle-${n}`));
+    expect([...WORLD_TRAMS_WITHOUT_DOORS].sort()).toEqual(["cable-car-dunedin", "christchurch-boon", "rio-bonde", "steam-tram"].map((n) => `proc-vehicle-${n}`));
     expect(WORLD_TRAMS_RIGHT_ONLY.has("proc-vehicle-tatra-t1")).toBe(true);
     expect(WORLD_TRAMS_RIGHT_ONLY.has("proc-vehicle-siemens-combino")).toBe(false);
   });
@@ -66,14 +66,12 @@ describe("the world trams", () => {
         // a rigid tram's budget is a road vehicle's 10,000, and 5,000 more a joint
         expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(tramTriangleBudget(s.sections.length));
         expect(m.interiorTriangleCount()).toBeLessThanOrEqual(2_000);
-        // on the rail, centred, as long as its bodies (couplers and lamps beyond them; a horse ahead)
+        // on the rail, centred, as long as its bodies (couplers and lamps beyond them)
         const L = tramLength(s);
         const [x0, x1] = span(ts, 0);
         expect(x1 - x0).toBeGreaterThanOrEqual(L - 1e-6);
-        if (t.id !== "veh-horse-tram") {
-          expect(x0).toBeCloseTo(-x1, 3);
-          expect(x1 - x0).toBeLessThanOrEqual(L + 0.5);
-        }
+        expect(x0).toBeCloseTo(-x1, 3);
+        expect(x1 - x0).toBeLessThanOrEqual(L + 0.5);
         expect(span(ts, 1)[0]).toBeCloseTo(0, 5);
         const [z0, z1] = span(ts, 2);
         // the open cars' running boards, an open top deck's floor reach a little further
@@ -131,18 +129,16 @@ describe("the world trams", () => {
     }
   });
 
-  it("draws the special rows' parts: the horse, the tram engine's chimney and smoke, the cable grip, the guided axles", () => {
+  it("draws the special rows' parts: the tram engine's chimney and smoke, the cable grip, the guided axles", () => {
     const names = (id: string, p = {}) => {
       const m = WORLD_TRAM_SPECS.find((t) => t.id === id)!.build(p);
       return JSON.stringify(m.sourceTree(id, id));
     };
-    expect(names("veh-horse-tram")).toContain("horse");
     expect(names("veh-steam-tram")).toContain("chimney");
     expect(WORLD_TRAM_SPECS.find((t) => t.id === "veh-steam-tram")!.build().emitters().map((e) => e.kind)).toEqual(["smoke"]);
     expect(names("veh-cable-car-dunedin")).toContain("grip");
     expect(names("veh-translohr")).toContain("guide rollers");
     expect(names("veh-blackpool-balloon")).toContain("upper windows");
-    expect(names("veh-horse-tram")).toContain("knifeboard");
   });
 
   it("changes the body with a length or unit, and only the colours with a finish livery", () => {

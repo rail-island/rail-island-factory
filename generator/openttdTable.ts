@@ -143,6 +143,11 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     formations: [formation("4 coaches, driving trailer", {}, {}, {}, {}, [{ variant: "drivingTrailer" }, "turned"])],
   }), // approx.
 
+  // --- the animal-drawn railway vehicles (animalRail.ts) ------------------------------
+  "proc-vehicle-animal-rail-budweis-coach": pax(1832, 24, RAIL, { presets: presets({ team: "none" }) }), // approx.
+  "proc-vehicle-animal-rail-budweis-wagon": wagon(1832, 4, "GOOD", ["piece", "bulk"], { presets: presets({ team: "none" }) }), // approx.
+  "proc-vehicle-animal-rail-mine-tub": wagon(1850, 1, "COAL", ["bulk"], { presets: presets({ team: "none" }) }), // approx.
+  "proc-vehicle-animal-rail-trolley": pax(1870, 6, RAIL, { presets: presets({ team: "none" }) }), // approx.
   // --- steam locomotives -----------------------------------------------------------
   "proc-vehicle-csd-433-0": loco(1909, RAIL, { presets: presets({ livery: "redLining" }) }), // approx.
   "proc-vehicle-csd-456-0": loco(1925, RAIL, { presets: presets() }), // approx.
@@ -547,7 +552,11 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-glenelg-h-class": pax(1929, 110, null, { presets: presets() }), // approx.
   "proc-vehicle-sydney-r-class": pax(1933, 110, null, { presets: presets() }), // approx.
   "proc-vehicle-christchurch-boon": pax(1906, 50, null, { presets: presets() }), // approx.
-  "proc-vehicle-horse-tram": pax(1880, 40, null, { presets: presets() }), // approx.
+  // the animal-drawn trams (animalTrams.ts): presets the default horse, a pair and the trailer
+  "proc-vehicle-animal-tram-double-deck": pax(1880, 40, null, { presets: presets({ team: "2" }, { team: "none" }) }), // approx.
+  "proc-vehicle-animal-tram-closed": pax(1875, 24, null, { presets: presets({ team: "2" }, { team: "none" }) }), // approx.
+  "proc-vehicle-animal-tram-toastrack": pax(1876, 40, null, { presets: presets({ team: "2" }, { team: "none" }) }), // approx.
+  "proc-vehicle-animal-tram-bobtail": pax(1880, 16, null, { presets: presets({ animal: "mule" }, { team: "none" }) }), // approx.
   "proc-vehicle-steam-tram": pax(1885, 60, null, { presets: presets(...each("unit", "trailer")) }), // approx.: the engine's preset stands for engine and trailer
   "proc-vehicle-cable-car-dunedin": pax(1881, 50, null, { presets: presets() }), // approx.
   "proc-vehicle-istanbul-nostalgic": pax(1914, 50, null, { presets: presets() }), // approx.
@@ -563,6 +572,11 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   // (end of the world trams)
 
   // --- buses -----------------------------------------------------------------------
+  // the animal-drawn coaches (animalBuses.ts): presets the default pair and a four-in-hand
+  "proc-vehicle-animal-bus-knifeboard-omnibus": pax(1847, 26, null, { presets: presets({ team: "4" }) }), // approx.
+  "proc-vehicle-animal-bus-stagecoach": pax(1827, 9, null, { presets: presets({ team: "4" }) }), // approx.
+  "proc-vehicle-animal-bus-paris-omnibus": pax(1855, 40, null, { presets: presets({ team: "4" }) }), // approx.
+  "proc-vehicle-animal-bus-wagonette": pax(1860, 16, null, { presets: presets({ team: "4" }) }), // approx.
   "proc-vehicle-karosa-short": pax(1981, 90, null, {
     variants: [
       at({ variant: "b732" }, { introYear: 1982 }), at({ variant: "c734" }, { capacity: 50 }), at({ variant: "lc735" }, { introYear: 1983, capacity: 47 }),

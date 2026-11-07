@@ -1,7 +1,7 @@
 # Animation
 
-**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled, a state, a door or a chosen motion), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the horse tram's `trot`, the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the aircraft's `flaps` and `droop` clips, the site's Start/Stop, Up/Down, gear, flaps and nose buttons and a character's motion buttons, and the tests.
-**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/cd150.ts`, `generator/photoTrucks.ts`, `generator/busDetail.ts` and `generator/busAssembly.ts` (their rolling wheels), `generator/horseTram.ts` (`TROT_CLIP`, `trotPose`; its wheels and its horse), `generator/glbPose.ts`, `generator/propellers.ts`, `src/ModelViewer.tsx`, `src/viewerMotions.ts`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/horseTram.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
+**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled, a state, a door or a chosen motion), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the animal-drawn vehicles' team `gait`, the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the aircraft's `flaps` and `droop` clips, the site's Start/Stop, Up/Down, gear, flaps and nose buttons and a character's motion buttons, and the tests.
+**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/cd150.ts`, `generator/photoTrucks.ts`, `generator/busDetail.ts` and `generator/busAssembly.ts` (their rolling wheels), `generator/draftAnimals.ts` (`GAIT_CLIP`, `gaitPose`, `addGait`), `generator/animalTrams.ts` (its wheels), `generator/glbPose.ts`, `generator/propellers.ts`, `src/ModelViewer.tsx`, `src/viewerMotions.ts`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/animalDrawn.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
 **See also** - [steam-locomotives.md](steam-locomotives.md), [doors.md](doors.md) (the `door` clips), [characters.md](characters.md) (the `motion` clips), [lamps.md](lamps.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## Clips in the mesh builder
@@ -183,7 +183,7 @@ steam locomotives (whose `running` clip turns their wheels with the rods):
 | `proc-vehicle-tatra-815-tipper`, `proc-vehicle-praga-rv` | each wheel's rim, hub and eight nuts | `wheel-front-left-spin`, `wheel-front-right-spin`, `wheel-rear-<1, 2>-<left, right>` |
 | `proc-vehicle-mercedes-atego-1224` | the same, one rear axle | `wheel-front-<left, right>-spin`, `wheel-rear-1-<left, right>` |
 | the confirmed buses ([buses.md](buses.md)) | each outer wheel's rim, hub and ten nuts (an inner twin is a plain tyre) | `wheel-front-<left, right>-spin`, `wheel-rear-<1, 2>-<left, right>` (the axles behind the steered one, front first; on an articulated bus in its section's node) |
-| `proc-vehicle-horse-tram` | each wheelset: the axle and both eight-spoked wheels | `wheelset-1`, `wheelset-2`, top-level nodes beside the body (a single truck, no bogie) |
+| `proc-vehicle-animal-tram-double-deck` and the other animal-drawn vehicles | each wheelset or carriage wheel: spoked | `wheelset-1`, `wheelset-2` (the double-deck car's single truck, no bogie); each design's own wheel nodes |
 
 - **`MeshCore.spin(name, pivot, fn)`** draws `fn` as a part pivoted on the
   wheel's axle, a child node of the part being drawn (a bogie, a steered wheel,
@@ -203,15 +203,16 @@ steam locomotives (whose `running` clip turns their wheels with the rods):
   the steam clip's speed. All the nodes of one clip share the wheel diameter `d`.
 - The low-detail build stays static.
 
-## The horse tram's trot
+## The team's gait
 
-The horse ahead of `proc-vehicle-horse-tram` is a tree of `spin` parts - the body, its head,
-tail and per leg an upper part and a shin - and its clip **`trot`** turns the legs at shoulder,
-hip, knee and hock, nods the head, swishes the tail and lifts the body so the planted soles stand
-on the ground. Like `rolling` it is drive `distance` at `ROLLING_SPEED`: one loop is one 1.6 m
-stride, so the game plays it at `v / 5` with the tram's speed and the planted hooves do not
-slip; the low detail stays static. The gait, the parts and the checks are in
-[world-trams.md](world-trams.md#the-trot).
+Every animal-drawn vehicle's team ([draft-animals.md](draft-animals.md)) is a tree of `spin`
+parts per animal - `animal-<n>` the body, its `-head`, `-tail` and per leg an upper part and a
+shin - and its clip **`gait`** turns the legs at shoulder, hip, knee and hock in the species'
+gait (a trot's diagonal pairs, a camel's pace, a four-beat walk), nods the head, swishes the
+tail and lifts each body so the planted feet stand on the ground, every animal at its own phase.
+Like `rolling` it is drive `distance` at `ROLLING_SPEED`: one loop is one stride of the
+species, so the game plays it at `v / 5` with the vehicle's speed and the planted feet do not
+slip; the low detail stays static.
 
 ## Pantographs: liftable mechanisms
 
@@ -284,7 +285,7 @@ The clip's `clipDrives` entry states exactly this: `distance` at 5 m/s.
 `group.animations`) and sorts them by their drive (`userData.clipDrives`):
 
 - the **looping** clips (time, distance: a steam locomotive's running gear, the
-  rolling wheels of the CD 150, the photo trucks and the horse tram, the horse's trot) get **Start** and **Stop**. Start plays them in a loop
+  rolling wheels of the CD 150, the photo trucks and the animal-drawn vehicles, a team's gait) get **Start** and **Stop**. Start plays them in a loop
   through an `AnimationMixer`; Stop halts them where they are, the pose stays;
 - the **`state`** clips (the pantographs) get **Up** and **Down**, which move every
   working collector toward raised or folded over 1.5 s from wherever it stands -
@@ -322,9 +323,8 @@ wheelset to the part that carries it; per rolling design and sampled parameter
 combination one `rolling` clip on exactly its wheel nodes, turning forward about
 +Z only, a cycle per circumference at the steam speed; no z-fighting and no wheel
 below its rest at four samples; a JS model steering and rolling a front wheel at
-once; plain-wheeled vehicles without the clip. `test/horseTram.test.ts`: the trot's drive, closed loop,
-diagonal pairs and planted hooves without slip, the soles on the ground and no z-fighting at
-every sample, and the JS model's nested legs playing it.
+once; plain-wheeled vehicles without the clip. `test/animalDrawn.test.ts`: the gait's drive, closed loop
+and planted feet, every species on the ground.
 `test/pumpjack.test.ts`: the pitman arm, beam tail and crank keep their lengths at
 every sample, the beam rocks both ways and returns, one `time` clip on the four
 moving parts, no z-fighting and nothing below ground at every sixth sample, and a

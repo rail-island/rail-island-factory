@@ -13,9 +13,6 @@ import {
   type WorldTram,
 } from "./worldTramShapes.ts";
 import { citadis402 } from "./worldTramsEurope.ts";
-// the horse tram has its own builder (horseTram.ts); this module re-exports it for the JS model
-import { horseTram, horseTramLod, horseTramSpec } from "./horseTram.ts";
-export { horseTram, horseTramLod, horseTramSpec };
 
 const lod = (s: WorldTramSpec): MeshBuilder => worldTramLod(s, tramLodBudget(s));
 
@@ -590,7 +587,6 @@ export const WORLD_REGION_TRAM_SPECS: readonly WorldTram[] = [
   T("glenelg-h-class", "Glenelg H Class", glenelgHClassSpec, glenelgHClass, glenelgHClassLod, g(24.0, 180, 60)),
   T("sydney-r-class", "Sydney R Class", sydneyRClassSpec, sydneyRClass, sydneyRClassLod, g(19.0, 160, 55)),
   T("christchurch-boon", "Christchurch Boon Tram", christchurchBoonSpec, christchurchBoon, christchurchBoonLod, g(9.0, 50, 35)),
-  T("horse-tram", "Horse Tram", horseTramSpec, horseTram, horseTramLod, g(2.8, 10, 10)), // a pair of horses starting the car: holds its 10 km/h on a 5 % grade in the game
   T("steam-tram", "Steam Tram", steamTramSpec, steamTram, steamTramLod, g(9.0, 75, 25, [{ params: { unit: "trailer" }, weight: 6.5, power: 0 }]), { params: STEAM_TRAM_PARAMS }),
   T("cable-car-dunedin", "Dunedin Cable Car", dunedinCableCarSpec, dunedinCableCar, dunedinCableCarLod, g(4.5, 0, 16)),
   T("dubai-citadis", "Dubai Tram", dubaiCitadisSpec, dubaiCitadis, dubaiCitadisLod, g(58.0, 720, 70)),

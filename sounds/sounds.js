@@ -321,6 +321,438 @@ var helicopter = /* @__PURE__ */ loop({
   }
 });
 
+// sounds/designs/animals.ts
+var FOOT_PROFILES = {
+  // A shod horse on hard ground, measured: knock 540-770 Hz, click above 2.5 kHz, -20 dB in 90 ms.
+  hoof: { click: 0.8, clickHz: 3200, knock: 1, knockHz: 650, knockQ: 4, thud: 0.2, thudHz: 140, decay: 0.27, claws: 0, jingle: 0.1, creak: 0.04 },
+  // Cloven feet, measured on an ox cart: darker, mostly under 400 Hz, a double knock.
+  cloven: { click: 0.4, clickHz: 2200, knock: 1, knockHz: 480, knockQ: 2.5, thud: 0.45, thudHz: 115, decay: 0.3, claws: 0.022, jingle: 0.09, creak: 0.05 },
+  // Padded feet, modelled: a soft thud and a shuffle, almost no click.
+  padded: { click: 0.1, clickHz: 900, knock: 0.8, knockHz: 300, knockQ: 0.8, thud: 1, thudHz: 85, decay: 0.42, claws: 0, jingle: 0, creak: 0.035 }
+};
+function footPitch(size) {
+  return Math.pow(2, -(size - 0.5) * 1.6);
+}
+function footDecay(foot, size) {
+  return FOOT_PROFILES[foot].decay * (0.7 + 0.8 * size);
+}
+function gaitOffsets(rate) {
+  const walk = [0, 0.26, 0.5, 0.76];
+  const trot = [0, 0.07, 0.5, 0.57];
+  const k = Math.max(0, Math.min(1, (rate - 3.5) / 2.5));
+  return walk.map((w, i) => w + (trot[i] - w) * k);
+}
+function teamAnimals(count) {
+  const out = [];
+  for (let k = 0; k < count; k++) {
+    const r = seeded(1752133478 + k * 7919);
+    out.push({
+      phase: k === 0 ? 0 : 0.12 + 0.76 * r(),
+      pitch: k === 0 ? 1 : 0.93 + 0.14 * r(),
+      level: k === 0 ? 1 : 0.8 + 0.2 * r(),
+      rnd: seeded(121062999 + k * 104729)
+    });
+  }
+  return out;
+}
+var THUD_ATTACK = 12e-4;
+var STRIKE_ATTACK = 6e-4;
+var TEAM_SCATTER = 0.06;
+var MAX_COUNT = 6;
+var HOOF_TRIM = 0.14;
+var RATE = { name: "rate", title: "Footfalls per second", kind: "number", min: 0, max: 16, step: 0.1, default: 3, unit: "/s" };
+var FOOT = {
+  name: "foot",
+  title: "Foot",
+  kind: "choice",
+  values: [
+    { value: "hoof", title: "Hooves (horse, donkey, mule)" },
+    { value: "cloven", title: "Cloven hooves (cow, ox)" },
+    { value: "padded", title: "Padded feet (camel, elephant)" }
+  ],
+  default: "hoof"
+};
+var SIZE2 = { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
+var STRIDE = { name: "stride", title: "Stride", kind: "number", min: 0.5, max: 3, step: 0.05, default: 1.4, unit: "m" };
+var COUNT = { name: "count", title: "Team", kind: "number", min: 1, max: MAX_COUNT, step: 1, default: 1 };
+function teamShare(count) {
+  return Math.pow(Math.max(1, count), -0.7);
+}
+var hoofBeat = /* @__PURE__ */ loop({
+  id: "hoof-beat",
+  title: "Hoof beat",
+  category: "animals",
+  description: "A draft team's footfalls: hooves, cloven hooves or padded feet at the rate its speed gives, one to six animals out of step, with the harness jingling; silent while it stands.",
+  params: [RATE, FOOT, SIZE2, STRIDE, COUNT, LEVEL],
+  start(ctx, dest, t, initial) {
+    const out = gain(ctx, num(initial, "level") * HOOF_TRIM);
+    out.connect(dest);
+    const sources = [];
+    const noise2 = noiseSource(ctx, true);
+    noise2.start(t);
+    sources.push(noise2);
+    const lanes = [];
+    const animals = teamAnimals(MAX_COUNT);
+    const addLane = (at) => {
+      const animal = animals[lanes.length];
+      const clickBp = filter(ctx, "bandpass", 3e3, 1.2);
+      const click = gain(ctx);
+      noise2.connect(clickBp).connect(click).connect(out);
+      const knockBp = filter(ctx, "bandpass", 650, 4);
+      const knock2 = gain(ctx);
+      noise2.connect(knockBp).connect(knock2).connect(out);
+      const thudOsc = ctx.createOscillator();
+      thudOsc.type = "sine";
+      const thud = gain(ctx);
+      thudOsc.connect(thud).connect(out);
+      thudOsc.start(at);
+      sources.push(thudOsc);
+      lanes.push({ animal, clickBp, click, knockBp, knock: knock2, thudOsc, thud, next: at, grid: at, foot: 0 });
+    };
+    const jingle = gain(ctx);
+    for (const [hz, level] of [[3100, 1], [5300, 0.6]]) {
+      const bp = filter(ctx, "bandpass", hz, 18);
+      const g = gain(ctx, level * 6);
+      noise2.connect(bp).connect(g).connect(jingle);
+    }
+    jingle.connect(out);
+    const creakOsc = ctx.createOscillator();
+    creakOsc.type = "sawtooth";
+    creakOsc.frequency.value = 38;
+    const creakBp = filter(ctx, "bandpass", 1100, 2.5);
+    const creak = gain(ctx);
+    creakOsc.connect(creakBp).connect(creak).connect(out);
+    creakOsc.start(t);
+    sources.push(creakOsc);
+    const harness = seeded(1785294439);
+    let v = initial;
+    let moving = false;
+    for (let i = 0; i < Math.round(num(v, "count")); i++) addLane(t);
+    const base = voiceOf(out, sources, Infinity);
+    let stopped = false;
+    const footfall = (lane, at, accent) => {
+      const foot = choice(v, "foot");
+      const p = FOOT_PROFILES[foot];
+      const size = num(v, "size");
+      const pitch = footPitch(size) * lane.animal.pitch;
+      const decay = footDecay(foot, size);
+      const share = teamShare(lanes.length) * lane.animal.level * accent;
+      const weight = 0.6 + 0.8 * size;
+      lane.clickBp.frequency.setValueAtTime(p.clickHz * Math.sqrt(pitch), at);
+      lane.knockBp.frequency.setValueAtTime(p.knockHz * pitch, at);
+      lane.knockBp.Q.setValueAtTime(p.knockQ, at);
+      const strikes = p.claws > 0 ? [0, p.claws * (0.7 + 0.6 * size)] : [0];
+      strikes.forEach((d, i) => {
+        const s = at + d;
+        const l = share * (i === 0 ? 1 : 0.65);
+        lane.click.gain.setTargetAtTime(p.click * l * 2.2, s, STRIKE_ATTACK);
+        lane.click.gain.setTargetAtTime(0, s + 2e-3, 0.012);
+        lane.knock.gain.setTargetAtTime(p.knock * l * 5, s, STRIKE_ATTACK);
+        lane.knock.gain.setTargetAtTime(0, s + 3e-3, decay / 6.9);
+      });
+      lane.thudOsc.frequency.setValueAtTime(p.thudHz * pitch * 1.5, at);
+      lane.thudOsc.frequency.setTargetAtTime(p.thudHz * pitch, at + 1e-3, 0.012);
+      lane.thud.gain.setTargetAtTime(p.thud * share * weight * 0.8, at, THUD_ATTACK);
+      lane.thud.gain.setTargetAtTime(0, at + 6e-3, decay * 0.8 / 6.9);
+      if (p.jingle > 0 && harness() < 0.35) {
+        const n = 2 + Math.floor(harness() * 3);
+        for (let i = 0; i < n; i++) {
+          const s = at + 0.01 + i * (0.018 + 0.02 * harness());
+          jingle.gain.setTargetAtTime(p.jingle * share * (1 - i * 0.2), s, 1e-3);
+          jingle.gain.setTargetAtTime(0, s + 3e-3, 0.03);
+        }
+      }
+    };
+    return {
+      endsAt: Infinity,
+      stop(at) {
+        stopped = true;
+        base.stop(at);
+      },
+      set(values) {
+        v = values;
+      },
+      tick(now, horizon) {
+        if (stopped) return;
+        const rate = num(v, "rate");
+        const count = Math.round(num(v, "count"));
+        if (rate <= 0) {
+          moving = false;
+          return;
+        }
+        while (lanes.length < count) addLane(now);
+        const team = lanes.slice(0, count);
+        const cycle = 4 / rate;
+        if (!moving) {
+          moving = true;
+          for (const lane of team) {
+            lane.grid = now + lane.animal.phase * cycle;
+            lane.next = lane.grid;
+            lane.foot = 0;
+          }
+        }
+        for (const lane of team) {
+          if (lane.grid < now) lane.grid = now;
+          if (lane.next < now) lane.next = now;
+        }
+        const offsets = gaitOffsets(rate);
+        const p = FOOT_PROFILES[choice(v, "foot")];
+        for (; ; ) {
+          let lane;
+          for (const l of team) if (l.next < now + horizon && (!lane || l.next < lane.next)) lane = l;
+          if (!lane) break;
+          const at = lane.next;
+          footfall(lane, at, lane.foot % 2 === 0 ? 1 : 0.8);
+          if (lane === team[0] && lane.foot === 0 && p.creak > 0) {
+            creak.gain.setTargetAtTime(p.creak * 0.6, at + 0.05, 0.06);
+            creak.gain.setTargetAtTime(0, at + 0.2, 0.06);
+          }
+          const from = offsets[lane.foot];
+          lane.foot = (lane.foot + 1) % 4;
+          const to = lane.foot === 0 ? 1 : offsets[lane.foot];
+          const gap = (to - from) * cycle;
+          const scatter = team.length > 1 ? (lane.animal.rnd() * 2 - 1) * TEAM_SCATTER : 0;
+          lane.grid += gap;
+          lane.next = Math.max(at + 5e-3, lane.grid + gap * scatter);
+        }
+      }
+    };
+  }
+});
+function bray(cycles, hee, haw) {
+  const heePitch = [];
+  const heeAmp = [[0, 0]];
+  const hawPitch = [];
+  const hawAmp = [[0, 0]];
+  for (const [s, h, w] of cycles) {
+    heePitch.push([s, hee * 0.9], [s + h, hee * 1.08]);
+    heeAmp.push([s, 0], [s + 0.04, 0.55], [s + h - 0.03, 0.5], [s + h, 0]);
+    const e = s + h;
+    hawPitch.push([e, haw * 1.12], [e + w * 0.3, haw], [e + w, haw * 0.85]);
+    hawAmp.push([e, 0], [e + 0.03, 1], [e + w * 0.7, 0.85], [e + w, 0]);
+  }
+  return [
+    { wave: "sawtooth", pitch: heePitch, amp: heeAmp, formants: [[1300, 5, 1], [2700, 6, 0.6]], lowpass: [[0, 4500]], vibrato: [9, 30] },
+    { wave: "sawtooth", pitch: hawPitch, amp: hawAmp, formants: [[650, 3, 1], [1150, 4, 0.8], [2500, 5, 0.4]], lowpass: [[0, 3800]], flutter: [28, 0.35] }
+  ];
+}
+var CALLS = {
+  horse: {
+    seconds: 1.5,
+    trim: 0.6,
+    parts: [
+      {
+        wave: "triangle",
+        pitch: [[0, 1470], [0.2, 1580], [0.5, 1500], [1, 1250], [1.4, 1150]],
+        amp: [[0, 0], [0.05, 0.9], [0.5, 0.8], [1.2, 0.55], [1.45, 0]],
+        formants: [],
+        lowpass: [[0, 5e3]],
+        vibrato: [7, 40],
+        flutter: [12, 0.45]
+      },
+      {
+        wave: "sawtooth",
+        pitch: [[0.45, 500], [0.9, 420], [1.4, 360]],
+        amp: [[0.4, 0], [0.5, 0.45], [1.2, 0.4], [1.45, 0]],
+        formants: [[700, 3, 1], [1250, 4, 0.6]],
+        lowpass: [[0, 3e3]],
+        flutter: [14, 0.5]
+      }
+    ],
+    breath: { hz: 1800, q: 0.8, amp: [[0, 0], [0.05, 0.08], [1.3, 0.06], [1.5, 0]] }
+  },
+  donkey: {
+    seconds: 3,
+    trim: 1.15,
+    parts: bray(
+      [
+        [0, 0.28, 0.42],
+        [0.72, 0.3, 0.45],
+        [1.49, 0.3, 0.48],
+        [2.29, 0.24, 0.42]
+      ],
+      820,
+      190
+    ),
+    breath: { hz: 2200, q: 0.9, amp: [[0, 0], [0.05, 0.25], [2.8, 0.2], [3, 0]] }
+  },
+  mule: {
+    seconds: 2.1,
+    trim: 1.05,
+    parts: [
+      {
+        wave: "triangle",
+        pitch: [[0, 1150], [0.15, 1250], [0.5, 1e3]],
+        amp: [[0, 0], [0.05, 0.8], [0.45, 0.6], [0.55, 0]],
+        formants: [],
+        lowpass: [[0, 5e3]],
+        vibrato: [8, 40],
+        flutter: [12, 0.4]
+      },
+      ...bray(
+        [
+          [0.55, 0.25, 0.42],
+          [1.25, 0.25, 0.5]
+        ],
+        900,
+        250
+      )
+    ],
+    breath: { hz: 2e3, q: 0.9, amp: [[0, 0], [0.05, 0.12], [1.9, 0.12], [2.1, 0]] }
+  },
+  cow: {
+    seconds: 2.5,
+    trim: 0.8,
+    parts: [
+      {
+        wave: "sawtooth",
+        pitch: [[0, 185], [0.5, 215], [1.9, 218], [2.35, 190]],
+        amp: [[0, 0], [0.12, 0.7], [1.1, 0.8], [1.3, 1], [2.1, 0.9], [2.4, 0]],
+        formants: [[420, 2, 0.8], [850, 3.5, 1], [2300, 4, 0.15]],
+        // closed ("mmm"), then open ("ooo"), then closing
+        lowpass: [[0, 320], [1.1, 420], [1.35, 1500], [2.05, 1400], [2.4, 450]],
+        vibrato: [5, 12]
+      }
+    ],
+    breath: { hz: 500, q: 0.7, amp: [[0, 0], [0.1, 0.03], [2.3, 0.03], [2.5, 0]] }
+  },
+  camel: {
+    seconds: 2.2,
+    trim: 1,
+    parts: [
+      {
+        wave: "sawtooth",
+        pitch: [[0, 125], [0.5, 135], [1.2, 120], [1.5, 200], [2, 260]],
+        amp: [[0, 0], [0.06, 0.9], [1.2, 0.8], [1.5, 0.6], [1.9, 0.55], [2.15, 0]],
+        formants: [[260, 3, 1], [520, 3, 0.5], [1100, 4, 0.15]],
+        lowpass: [[0, 900]],
+        flutter: [22, 0.6]
+      },
+      {
+        // the subharmonic gurgle, an octave under
+        wave: "sawtooth",
+        pitch: [[0, 63], [0.5, 68], [1.2, 60]],
+        amp: [[0, 0], [0.08, 0.6], [1.2, 0.5], [1.4, 0]],
+        formants: [],
+        lowpass: [[0, 400]],
+        flutter: [17, 0.8]
+      }
+    ],
+    breath: { hz: 350, q: 0.8, amp: [[0, 0], [0.1, 0.12], [2, 0.1], [2.2, 0]] }
+  },
+  elephant: {
+    seconds: 1.9,
+    trim: 0.6,
+    parts: [
+      {
+        wave: "sawtooth",
+        pitch: [[0, 560], [0.12, 640], [0.75, 735], [1.4, 560], [1.8, 500]],
+        amp: [[0, 0], [0.04, 1], [0.9, 0.9], [1.5, 0.6], [1.85, 0]],
+        formants: [[2200, 3, 0.8], [3100, 4, 1], [3700, 5, 0.6]],
+        lowpass: [[0, 7e3]],
+        vibrato: [11, 35]
+      },
+      {
+        // a twin a little off: the trumpet's rasp
+        wave: "square",
+        pitch: [[0, 568], [0.12, 650], [0.75, 746], [1.4, 568], [1.8, 507]],
+        amp: [[0, 0], [0.04, 0.5], [0.9, 0.45], [1.5, 0.3], [1.85, 0]],
+        formants: [[1100, 2, 0.5], [2900, 3, 1]],
+        lowpass: [[0, 6e3]]
+      }
+    ],
+    breath: { hz: 3e3, q: 1.2, amp: [[0, 0], [0.04, 0.35], [1.4, 0.25], [1.9, 0]] }
+  }
+};
+function follow(param, curve, t, scale) {
+  const [first, ...rest] = curve;
+  param.setValueAtTime(first[1] * scale, t + first[0]);
+  for (const [s, value] of rest) param.linearRampToValueAtTime(value * scale, t + s);
+}
+var CALL_TRIM = 0.35;
+var animalCall = /* @__PURE__ */ oneShot({
+  id: "animal-call",
+  title: "Animal call",
+  category: "animals",
+  description: "A draft animal's call, sounded by the player's horn: a horse's whinny, a donkey's bray, a mule between the two, a cow's moo, a camel's groan or an elephant's trumpet.",
+  params: [
+    {
+      name: "species",
+      title: "Species",
+      kind: "choice",
+      values: [
+        { value: "horse", title: "Horse (whinny)" },
+        { value: "donkey", title: "Donkey (bray)" },
+        { value: "mule", title: "Mule" },
+        { value: "cow", title: "Cow (moo)" },
+        { value: "camel", title: "Camel (groan)" },
+        { value: "elephant", title: "Elephant (trumpet)" }
+      ],
+      default: "horse"
+    },
+    { name: "pitch", title: "Pitch", kind: "number", min: 0.7, max: 1.4, step: 0.01, default: 1 },
+    LEVEL
+  ],
+  play(ctx, dest, t, v) {
+    const shape = CALLS[choice(v, "species")];
+    const pitch = num(v, "pitch");
+    const tract = Math.sqrt(pitch);
+    const out = gain(ctx, num(v, "level") * CALL_TRIM * shape.trim);
+    out.connect(dest);
+    const end = t + shape.seconds + 0.1;
+    const sources = [];
+    const run = (s) => {
+      s.start(t);
+      s.stop(end);
+      sources.push(s);
+      return s;
+    };
+    for (const part of shape.parts) {
+      if (part.amp.length < 2 || part.pitch.length === 0) continue;
+      const osc = run(ctx.createOscillator());
+      osc.type = part.wave;
+      follow(osc.frequency, part.pitch, t, pitch);
+      if (part.vibrato) {
+        const lfo = run(ctx.createOscillator());
+        lfo.frequency.value = part.vibrato[0];
+        const depth = gain(ctx, part.vibrato[1]);
+        lfo.connect(depth).connect(osc.detune);
+      }
+      const env = gain(ctx);
+      follow(env.gain, part.amp, t, 1);
+      let last = env;
+      if (part.flutter) {
+        const [rate, depth] = part.flutter;
+        const fl = gain(ctx, 1 - depth / 2);
+        const lfo = run(ctx.createOscillator());
+        lfo.frequency.value = rate;
+        const d = gain(ctx, depth / 2);
+        lfo.connect(d).connect(fl.gain);
+        env.connect(fl);
+        last = fl;
+      }
+      const lp = filter(ctx, "lowpass", part.lowpass[0][1] * tract, 0.7);
+      follow(lp.frequency, part.lowpass, t, tract);
+      osc.connect(env);
+      last.connect(lp);
+      if (part.formants.length === 0) lp.connect(out);
+      else {
+        for (const [hz, q, level] of part.formants) {
+          const bp2 = filter(ctx, "bandpass", hz * tract, q);
+          const g = gain(ctx, level * 1.6);
+          lp.connect(bp2).connect(g).connect(out);
+        }
+      }
+    }
+    const breath = run(noiseSource(ctx, true));
+    const bp = filter(ctx, "bandpass", shape.breath.hz * tract, shape.breath.q);
+    const be = gain(ctx);
+    follow(be.gain, shape.breath.amp, t, 1);
+    breath.connect(bp).connect(be).connect(out);
+    return voiceOf(out, sources, end);
+  }
+});
+
 // sounds/designs/bells.ts
 var CHURCH_PARTIALS = [
   { ratio: 0.5, level: 0.5, ring: 9 },
@@ -1278,7 +1710,7 @@ var DIESEL_PROFILES = {
 function dieselProfile(engine) {
   return DIESEL_PROFILES[engine] ?? DIESEL_PROFILES.mainline;
 }
-var SIZE2 = { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
+var SIZE3 = { name: "size", title: "Size", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 };
 function sizeScale(size) {
   return 1.2 - 0.4 * size;
 }
@@ -1537,7 +1969,7 @@ function dieselEngineOf(kind) {
     params: [
       { name: "rpm", title: "Revs", kind: "number", min: 0, max: 1, step: 0.05, default: 0.4 },
       { name: "load", title: "Effort", kind: "number", min: 0, max: 1, step: 0.05, default: 0.5 },
-      SIZE2,
+      SIZE3,
       STATE,
       LEVEL
     ],
@@ -1969,6 +2401,8 @@ var SOUNDS = [
   tramBell,
   shipHorn,
   helicopter,
+  hoofBeat,
+  animalCall,
   riverRapids,
   waterfall,
   springFountain,
@@ -1984,6 +2418,7 @@ var CATEGORIES = [
   { id: "trains", title: "Trains", description: "Locomotives and the railway: horns, whistles, the exhaust beat, diesel engines (railcars, shunters, mainline locomotives, buses and trucks) running, starting and stopping, electric locomotives and trains old and new, the Shinkansen, the level crossing's bell and the tram bell." },
   { id: "ships", title: "Ships", description: "Vessels in port and at sea." },
   { id: "aircraft", title: "Aircraft", description: "Aircraft in the air and on the pad: the helicopter's rotor and turbine." },
+  { id: "animals", title: "Animals", description: "Draft animals: their hooves and their calls." },
   { id: "water", title: "Water", description: "Ambient water, played while it is in view: rivers, waterfalls, springs and the sea." },
   { id: "nature", title: "Nature", description: "Ambient life of the land: woods and their birds." },
   { id: "bells", title: "Bells", description: "Tower bells tolling: a village church, Westminster's Great Bell and Notre-Dame's bourdon." },

@@ -28,9 +28,11 @@ three trucks reproduced from the game ([trucks.md](trucks.md)) and the buses
 and no `steer` (a rail vehicle follows the track). The articulated trams - the
 KT8D5, KT4 and GT4 ([trams.md](trams.md)) - the TGV's trailer set
 ([foreign-units.md](foreign-units.md)) and the VT 18.16's full train, every car a
-section on its own two bogies ([dr-vt1816.md](dr-vt1816.md)), also have sections and joints. The horse tram is two
-sections and no joint - the horse hitched ahead of its car, on two lone supports under its legs
-([world-trams.md](world-trams.md)). The site shows
+section on its own two bogies ([dr-vt1816.md](dr-vt1816.md)), also have sections and joints. An animal-drawn rail or tram
+car is two sections and no joint - its team hitched ahead of the car, on two lone supports under
+its legs; an animal-drawn road coach is a semi-truck's two sections, the team and fore-carriage
+towing the body from the king bolt, steered by two empty nodes under the leaders' forelegs
+([animal-drawn-vehicles.md](animal-drawn-vehicles.md)). The site shows
 only the joint sliders. The air and water vehicles have none.
 
 ## The rig
@@ -45,6 +47,7 @@ interface VehicleRig {
   sections?: Array<{ node; pivot: [x, y, z] }>;      // front first; pivot = the node's rest origin
   joints?: Array<{ node; sections: [front, rear]; front; rear; profile: Array<[z, y]>; folds; depth; material; frame?: { width; depth } }>;
   maxBendDeg?: number;
+  team?: { section: number; rehitchable: boolean };  // an animal-drawn vehicle's team
 }
 ```
 
@@ -56,6 +59,9 @@ interface VehicleRig {
 - `sections[i].pivot` is section i's hinge with the section ahead (`[0, 0, 0]` for the
   first). For a bus it is the middle of the gap the joint covers, 0.6 m above the
   road; for the truck the king pin.
+- `team` marks an animal-drawn vehicle's team section: the index of the section the animals
+  stand in and whether the game may hitch it at the other end when the vehicle turns back (a
+  rail or tram car's, `true`; a road coach's, `false`).
 - A joint is described, not stored: its front and rear faces' x, its inner (valley)
   cross-section, the number of outer ridges and their depth, and optionally the
   `frame` ring round its middle (`width` along the bus, `depth` out of the valleys) that

@@ -113,6 +113,12 @@ export interface VehicleRig {
   joints?: JointRig[];
   /** The largest bend at any hinge, degrees. */
   maxBendDeg?: number;
+  /**
+   * An animal-drawn vehicle's team (docs/models/animal-drawn-vehicles.md): the index of
+   * the section the animals stand in, and whether the game may hitch it at the other
+   * end when the vehicle turns back (a rail or tram car's; a road coach's never).
+   */
+  team?: { section: number; rehitchable: boolean };
 }
 
 /**

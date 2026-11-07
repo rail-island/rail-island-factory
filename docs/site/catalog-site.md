@@ -157,6 +157,10 @@ To see what deploys - the build's thumbnails and figures - run `pnpm build` and
 - **Characters.** The characters (category `Characters`, the avatar) have a
   first-row chip of their own, with no second row
   ([../models/characters.md](../models/characters.md)).
+- **Animals.** The draft animals (category `Animals`, `proc-animal-<species>`) have a
+  first-row chip of their own, with no second row; each stands in its harness and walks its
+  gait ([../models/draft-animals.md](../models/draft-animals.md)). The game meta files do not
+  list them.
 - **Trees and Woods.** The tree species (category `Trees`) have a first-row chip
   of their own; a tree's page also offers a *Coarse (distant forest)* level of
   detail ([../models/lod.md](../models/lod.md)). The **Woods** chip (category

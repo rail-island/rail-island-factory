@@ -16,14 +16,15 @@ export interface GameSounds {
   variants?: Array<{ params: Record<string, string>; sounds?: SoundOverride }>;
 }
 
-export const SLOT_ORDER: readonly SoundSlotName[] = ["horn", "engine", "bell"];
-export const SLOT_TITLES: Record<SoundSlotName, string> = { horn: "Horn", engine: "Engine", bell: "Bell" };
+export const SLOT_ORDER: readonly SoundSlotName[] = ["horn", "engine", "bell", "call"];
+export const SLOT_TITLES: Record<SoundSlotName, string> = { horn: "Horn", engine: "Engine", bell: "Bell", call: "Call" };
 
 /** The parameters the game sets as it plays each slot (generator/soundMapping.ts RUNTIME_PARAMS). */
 export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   horn: ["call"],
   engine: ["rpm", "load", "state", "rate", "intensity", "speed", "spin"],
   bell: [],
+  call: [],
 };
 
 /** Where a design's page is on the sound catalog. */

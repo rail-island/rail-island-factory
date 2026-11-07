@@ -424,7 +424,8 @@ describe("the Structures, Rails and roads, City blocks, Props and Textures chips
     expect(groupOf({ category: "Rails and roads", group: "roadType" } as never)).toBe("way");
     expect(groupOf({ category: "City blocks", group: "commercial" } as never)).toBe("block");
     expect(groupOf({ category: "Textures", group: "texture" } as never)).toBe("texture");
-    expect(GROUPS.map((g) => g.id)).toEqual(expect.arrayContaining(["structure", "way", "block", "prop", "texture"]));
+    expect(GROUPS.map((g) => g.id)).toEqual(expect.arrayContaining(["structure", "way", "block", "prop", "texture", "animal"]));
+    expect(groupOf({ category: "Animals", group: "animal" } as never)).toBe("animal");
   });
 
   it("splits Structures by set and Rails and roads by kind on the second row, with names", async () => {
