@@ -80,7 +80,7 @@ Notes:
 
 | id | title | L x B x H (m) | draft (draftFrac) | bow / stern | triangles (LOD) | params |
 |---|---|---|---|---|---|---|
-| `veh-ship-cable-layer` | Cable Layer | 140.0 x 30.0 x 38.4 | 7.0 (0.1823) | raked / transom | 7530 (99) | - |
+| `veh-ship-cable-layer` | Cable Layer | 133.0 (145.5 over the stern sheaves) x 24.0 x 49.4 | 7.5 (0.1518) | raked / transom | 9791 (99) | - |
 | `veh-ship-ocean-tug` | Ocean-Going Tug | 80.0 x 18.0 x 30.4 | 6.5 (0.2138) | bulbous / transom | 6142 (99) | livery: black, red, blue |
 | `veh-ship-harbour-tug` | Harbour Tug | 32.0 x 12.8 x 15.8 | 3.6 (0.2278) | raked / transom | 5202 (99) | livery: red, black, green |
 | `veh-ship-towboat` | Mississippi Towboat | 60.0 x 16.0 x 20.8 | 2.7 (0.1298) | barge / transom | 5550 (94) | - |
@@ -108,7 +108,7 @@ trawlers' net drums, trawl doors and winches, the seiner's helideck, power block
 pile, the research ships' laboratory containers and deep-sea winches, the dredger's drag
 heads, hopper beams and rainbow nozzle, the offshore vessels' crash rails, cargo and
 tuggers, the crane vessel's lattice booms, hook blocks, grillage and fairleads, the cable
-layer's carousel rim, tensioner frames, plough and ROV hangar; the drillship's braced derrick,
+layer's (after CS Cable Innovator) cable tank hatch, cable highway, linear engine and tensioner frames, A-frame on its feet and rams and three stern sheaves in their fairings, lifeboats in davits; the drillship's braced derrick,
 drill pipe and risers; the fireboat's hose reels and searchlight; the Shannon's fender collar and
 the pilot boat's heavy fenders and boarding deck rail.
 

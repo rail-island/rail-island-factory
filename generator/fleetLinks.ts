@@ -1326,6 +1326,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikipedia: Cable layer", url: "https://en.wikipedia.org/wiki/Cable_layer" },
     { title: "Wikimedia Commons: 2024-11-26 03 CABLE INNOVATOR - IMO 9101132 \u2013 Victoria, BC CAN.jpg", url: "https://commons.wikimedia.org/wiki/File:2024-11-26_03_CABLE_INNOVATOR_-_IMO_9101132_%E2%80%93_Victoria,_BC_CAN.jpg" },
     { title: "Wikimedia Commons: Cable Ship - Global Sentinel - Tyco Telecom.jpg", url: "https://commons.wikimedia.org/wiki/File:Cable_Ship_-_Global_Sentinel_-_Tyco_Telecom.jpg" },
+    { title: "Wikimedia Commons: Port Side of CS Cable Innovator.jpg", url: "https://commons.wikimedia.org/wiki/File:Port_Side_of_CS_Cable_Innovator.jpg" },
   ],
   "proc-vehicle-ship-capesize": [
     { title: "Wikipedia: Capesize", url: "https://en.wikipedia.org/wiki/Capesize" },
