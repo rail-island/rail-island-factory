@@ -87,7 +87,7 @@ ventilators, well-deck cranes and aerials; the Amazon boat's canoe on the roof a
 | `veh-ship-sedov` | Sedov | 108.0 x 14.6 x 58.0 | 6.3 (0.1086) | clipper / cruiser | 6107 (100) | - |
 | `veh-ship-cutty-sark` | Cutty Sark | 64.7 x 11.0 x 47.0 | 6.1 (0.1298) | clipper / cruiser | 4890 (100) | - |
 | `veh-ship-bluenose` | Bluenose | 43.6 x 8.2 x 40.2 | 4.8 (0.1194) | clipper / transom | 3977 (81) | - |
-| `veh-ship-ss-great-britain` | SS Great Britain | 98.0 x 15.4 x 44.8 | 5.5 (0.1228) | clipper / cruiser | 7457 (100) | - |
+| `veh-ship-ss-great-britain` | SS Great Britain | 98.0 x 15.4 x 44.8 | 5.5 (0.1228) | clipper / cruiser | 8561 (100) | - |
 | `veh-ship-viking-longship` | Viking Longship | 23.0 x 5.2 x 12.6 | 1.0 (0.0794) | canoe / canoe | 1872 (96) | - |
 | `veh-ship-voyaging-canoe` | Polynesian Voyaging Canoe | 18.7 x 5.4 x 13.0 | 0.8 (0.0578) | canoe / canoe, twin | 2378 (98) | - |
 | `veh-ship-gondola` | Venetian Gondola | 11.0 x 1.4 x 2.3 | 0.3 (0.1087) | canoe / canoe | 1060 (98) | - |

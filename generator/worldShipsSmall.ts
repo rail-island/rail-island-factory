@@ -217,7 +217,7 @@ export function greatBritainSpec(): ShipSpec {
       { k: "hullLine", pts: spacedPts(0.6, 4.5, 0.8).map((u) => [u, dk(u) - 1 - (u - 0.6) * 0.05] as const), w: 0.9, mat: "gold", name: "stern carving" },
       { k: "plate", pts: [[L - 1.4, dk(L) - 2], [L + 0.2, dk(L) - 0.6], [L + 0.3, dk(L) + 1.9], [L - 0.6, dk(L) + 2.4], [L - 1.2, dk(L) + 1]], z: 0, t: 0.6, mat: "gold", name: "stem crest" },
       // the funnel on the engine-room casing
-      { k: "funnel", u: [55.6, 58.4], hw: 1.4, y: [D - 0.1, D + 12], rake: 0, round: true, bands: [["funnel", 0.5], ["black", 0.53], ["funnel", 1]], name: "funnel" },
+      { k: "funnel", u: [55.4, 58.6], hw: 1.6, y: [D - 0.1, D + 12], rake: 0, round: true, bands: [["funnel", 0.5], ["black", 0.53], ["funnel", 1]], name: "funnel" },
       { k: "tier", u: [53.8, 62.2], y: [D - 0.1, D + 1.8], hw: 2.6, mat: "buff", top: "white", lip: 0.1, windows: [{ y: 0.7, h: 0.6, w: 0.6, pitch: 1.6 }], name: "engine-room casing" },
       ...companion(63.4, 66.4, 1.4, 2),
       ...companion(43.6, 47.2, 1.5, 2),
@@ -248,6 +248,8 @@ export function greatBritainSpec(): ShipSpec {
       ...[D + 3.5, D + 8, D + 12.5].map((y): Item => ({ k: "cyl", u: 68.3, z: 0, y: [y, y + 0.35], r: 0.58, n: 10, mat: "black", name: "mast band" })),
       { k: "cyl", u: 68.3, z: 0, y: [D + 14.9, D + 22], r: 0.5, n: 10, mat: "black", name: "main mast doubling" },
       { k: "bulwark", u: [0, L], h: 1.0, t: 0.25, mat: "black" },
+      // the iron railing standing on the bulwark
+      { k: "edgeRail", u: [4, L - 6], h: 1.9, pitch: 2.6, mat: "black", name: "railing" },
       ...masts.flatMap(([u, h], i): Item[] => shroudsOf(u, D + h - 4, i < 2 ? 3 : 2)),
       ...davitBoat(31, 7, 0.8),
       ...davitBoat(60.5, 7, 0.8),
