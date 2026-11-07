@@ -32,6 +32,9 @@ export interface WorldShip {
   references: string;
 }
 
+/** The acceleration (m/s2) a ship without an engine states: a sailing ship gathering way, a towed barge. */
+export const UNPOWERED_ACCEL = 0.3;
+
 /**
  * A ship's game properties: its running figures and the waterline's draftFrac,
  * measured off the built model the first time the export asks (the model's
@@ -53,7 +56,9 @@ function shipGame(w: WorldShip): GameProperties {
     }
     return (memo = { d, v });
   };
-  const game = { weight: w.game.weight, power: w.game.power, maxspeed: w.game.maxspeed, accel: null } as GameProperties;
+  // a ship without an engine (power 0: a sailing ship, a towed barge) states its own
+  // acceleration, which the game would otherwise derive from that power as zero
+  const game = { weight: w.game.weight, power: w.game.power, maxspeed: w.game.maxspeed, accel: w.game.power > 0 ? null : UNPOWERED_ACCEL } as GameProperties;
   Object.defineProperty(game, "draftFrac", { enumerable: true, get: () => calc().d });
   Object.defineProperty(game, "variants", { enumerable: true, get: () => (calc().v.length ? calc().v : undefined) });
   return game;
