@@ -144,10 +144,10 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   }), // approx.
 
   // --- the animal-drawn railway vehicles (animalRail.ts) ------------------------------
-  "proc-vehicle-animal-rail-budweis-coach": pax(1832, 24, RAIL, { presets: presets({ team: "none" }) }), // approx.
-  "proc-vehicle-animal-rail-budweis-wagon": wagon(1832, 4, "GOOD", ["piece", "bulk"], { presets: presets({ team: "none" }) }), // approx.
+  "proc-vehicle-animal-rail-budweis-coach": pax(1832, 12, RAIL, { presets: presets({ team: "none" }) }), // approx.
+  "proc-vehicle-animal-rail-budweis-wagon": wagon(1832, 3, "GOOD", ["piece", "bulk"], { presets: presets({ team: "none" }) }), // approx.
   "proc-vehicle-animal-rail-mine-tub": wagon(1850, 1, "COAL", ["bulk"], { presets: presets({ team: "none" }) }), // approx.
-  "proc-vehicle-animal-rail-trolley": pax(1870, 6, RAIL, { presets: presets({ team: "none" }) }), // approx.
+  "proc-vehicle-animal-rail-trolley": pax(1880, 6, RAIL, { presets: presets({ team: "none" }) }), // approx.
   // --- steam locomotives -----------------------------------------------------------
   "proc-vehicle-csd-433-0": loco(1909, RAIL, { presets: presets({ livery: "redLining" }) }), // approx.
   "proc-vehicle-csd-456-0": loco(1925, RAIL, { presets: presets() }), // approx.
