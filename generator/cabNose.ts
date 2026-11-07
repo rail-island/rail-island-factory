@@ -84,6 +84,13 @@ export interface NoseSpec {
   /** The material of the crown cap and the bottom cap. */
   capTop?: string;
   capBottom?: string;
+  /**
+   * The face's and corners' depth reshaped (default unchanged): given a point's lateral position
+   * (unsigned), height and the depth the slice gives it, the depth drawn - a relief across the face
+   * that no rounded slice holds (a canopy standing forward of grooves and wing edges, the N700S's).
+   * The straight run starts at the corner's reshaped depth; the depth stays clamped to `dJoin`.
+   */
+  reshape?: (lat: number, y: number, d: number) => number;
 }
 
 const lerp = (pts: Pt[], y: number): number => {
@@ -156,13 +163,15 @@ export class CabNose {
     if (au <= 1) {
       lat = au * a;
       d = dF + b * au * au;
+      if (s.reshape) d = s.reshape(lat, y, d);
     } else if (au <= 2) {
       const th = ((au - 1) * Math.PI) / 2;
       lat = a + r * Math.sin(th);
       d = dF + b + rd * (1 - Math.cos(th));
+      if (s.reshape) d = s.reshape(lat, y, d);
     } else {
       lat = hw;
-      const dA = dF + b + rd;
+      const dA = s.reshape ? s.reshape(hw, y, dF + b + rd) : dF + b + rd;
       const dS = Math.min(Math.max(dA, s.dSide), s.dJoin);
       d = au <= 3 ? dA + (au - 2) * (dS - dA) : dS + (au - 3) * (s.dJoin - dS);
     }

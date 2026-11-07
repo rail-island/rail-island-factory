@@ -64,7 +64,7 @@ export interface ShinkansenLivery {
    * the side between a front and a back edge, [y, d] by height (d behind the nose's or cab face's
    * tip, ascending y), later sweeps over earlier ones; a cab face paints them on its cab sides too.
    */
-  endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
+  endSweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number; face?: boolean }>;
   /** A flag of paint beside every door, on the side toward the car's middle: its width, gap from the door, heights and paint (SBB's red door marks). */
   doorFlags?: { w: number; gap: number; y: readonly [number, number]; mat: string };
   /** Paint over each door's span above its head on every car, bands [y0, y1, mat]: a door's colour carried up the side. */
@@ -136,6 +136,8 @@ export interface ShinkansenSeries {
   pantograph?: "single" | "diamond";
   /** The pantograph's centre, d behind the car's front (an end car's tip), in place of 1.5 m ahead of the rear bogie. */
   pantographD?: number;
+  /** A streamlined cover on the roof round the pantograph's base, the arm standing on its top: its length and half width at the roof and at its top, its height and paint (the N700S's). */
+  pantographCover?: { len: number; hw: number; top: readonly [number, number]; h: number; mat: string };
   /** With `endPantograph` true: the rear end car's pantograph folded down, only the leading one raised. */
   trailingLowered?: boolean;
   /** Fittings on the sides of the end car and of an intermediate car: service doors, grilles, displays. */
@@ -419,14 +421,32 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       } else if (pantograph) m.scope("pantograph", () => {
         const x = X(pantographAt(s, end, tr));
         const raised = pantograph !== "lowered";
-        block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
-        if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
-        else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised });
+        const cv = s.pantographCover;
+        if (cv) {
+          m.scope("cover", () => pantographCover(m, x, s.C, cv));
+          singleArm(m, { xc: x, roofY: s.C + cv.h, baseY: s.C + cv.h + 0.2, h: 1, raised });
+        } else {
+          block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
+          if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
+          else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised });
+        }
       });
       if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr });
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
+}
+
+/** A pantograph's streamlined cover: a frustum from a rounded rectangle sunk in the roof to a smaller one at its top. */
+function pantographCover(m: MeshBuilder, x: number, C: number, cv: NonNullable<ShinkansenSeries["pantographCover"]>): void {
+  const ring = (len: number, hw: number): Array<[number, number]> => {
+    const r = Math.min(hw * 0.9, len / 2 - 0.01), k = 4, out: Array<[number, number]> = [];
+    for (const [cx, cz, a0] of [[len / 2 - r, -(hw - r), -90], [len / 2 - r, hw - r, 0], [-(len / 2 - r), hw - r, 90], [-(len / 2 - r), -(hw - r), 180]] as const)
+      for (let j = 0; j <= k; j++) { const a = ((a0 + (90 * j) / k) * Math.PI) / 180; out.push([x + cx + r * Math.cos(a), cz + r * Math.sin(a)]); }
+    // counter-clockwise seen from above (+y) is a negative shoelace area in (x, z)
+    return out.reverse();
+  };
+  m.loft(cv.mat, ring(cv.len, cv.hw), C - 0.08, ring(cv.top[0], cv.top[1]), C + cv.h);
 }
 
 /** The skirt's cuts round a car's bogies; a Jacobs set's car in the train open at its inner ends over the joints' bogies (`joint`). */
@@ -783,16 +803,129 @@ function gameOf(s: ShinkansenSeries, params: readonly ParamSpec[]): GameProperti
 const c = (hex: string, r = 0.4) => paint(hex, r);
 const nose = (len: number, tip: number, power: number, C: Pt[], S: Pt[], Y: Pt[], A: Pt[], B: Pt[]): NoseShape => ({ len, tip, power, C, S, Y, A, B });
 
+// N700S (assets/shinkansen-n700s/SOURCES.md): the "dual supreme wing" nose as a cab face whose depth
+// is reshaped across it (`n7Reshape`): a broad, rounded snout; above it the wing body, whose two
+// crests run from the headlights back and up to the body's shoulder with a shallow valley between
+// them; and the canopy, a narrow spine rising out of the valley ahead of the windscreen and widening
+// into the cab's bubble, which merges into the roof at the join. Heights above the rail, d behind
+// the tip, lat from the centre line; the side photograph at about 125 px/m on the body's side.
+
+/** Where the nose meets the body's section (the canopy reaches the roof), and the side's half width. */
+const N7_JOIN = 9.0;
+const N7_HW = 1.62;
+type N7Tab = readonly Pt[];
+const n7 = (t: N7Tab, x: number) => edgeAt(t, x);
+/** The snout's centre line [y, d]: the chin curving under, the tip at 1.0 m, the top rounding back to the upper nose. */
+const N7_SNOUT: N7Tab = [[0.3, 2.6], [0.36, 1.8], [0.44, 1.25], [0.52, 0.9], [0.6, 0.62], [0.7, 0.38], [0.78, 0.22], [0.86, 0.1], [0.94, 0.03], [1.02, 0], [1.1, 0.01], [1.18, 0.06], [1.26, 0.14], [1.34, 0.25], [1.42, 0.4], [1.5, 0.58], [1.58, 0.8], [1.66, 1.0], [2.0, 1.4], [3.6, 2.0]];
+/** The snout's plan: its corner radius and the corner's depth back along the car by height (a broad, deep U). */
+const N7_CORNER: N7Tab = [[0.3, 1.25], [0.5, 1.2], [0.9, 1.1], [1.3, 1.05], [1.6, 1.1], [3.6, 1.1]];
+const N7_DEPTH: N7Tab = [[0.3, 1.5], [0.5, 1.6], [0.9, 2.1], [1.3, 2.4], [1.6, 2.6], [1.9, 1.5], [2.2, 0.6], [3.6, 0.3]];
+/** The wing body by d: the valley's height on the centre line, the crests' height and lat, the side's top at the body's half width. */
+const N7_H0: N7Tab = [[0.6, 1.52], [1.0, 1.58], [2.0, 1.68], [3.0, 1.75], [4.0, 1.85], [5.0, 1.95], [6.0, 2.08], [7.0, 2.25], [8.0, 2.55], [9.0, 2.95]];
+const N7_HC: N7Tab = [[0.6, 1.56], [1.0, 1.64], [2.0, 1.76], [3.0, 1.85], [4.0, 1.95], [5.0, 2.07], [6.0, 2.22], [7.0, 2.45], [8.0, 2.82], [9.0, 3.3]];
+const N7_LR: N7Tab = [[0.6, 1.1], [1.0, 1.18], [2.0, 1.28], [4.0, 1.36], [6.0, 1.42], [8.0, 1.48], [9.0, 1.5]];
+const N7_HS: N7Tab = [[0.6, 1.15], [1.0, 1.25], [2.0, 1.38], [3.0, 1.48], [4.0, 1.58], [5.0, 1.7], [6.0, 1.85], [7.0, 2.08], [8.0, 2.5], [9.0, 3.05]];
+/** The spine and canopy by d: the centre's height, the half width and how far its edge drops below the centre. */
+const N7_HB: N7Tab = [[0.8, 1.68], [1.5, 1.8], [2.5, 1.97], [3.3, 2.1], [3.7, 2.2], [3.95, 2.32], [4.35, 2.55], [4.7, 2.7], [5.1, 2.88], [5.5, 3.0], [6.1, 3.14], [7.0, 3.3], [8.0, 3.45], [9.0, 3.62]];
+const N7_WB: N7Tab = [[0.8, 0.32], [2.0, 0.42], [3.3, 0.55], [3.8, 0.72], [4.5, 0.82], [6.0, 0.86], [7.0, 0.97], [7.8, 1.2], [8.4, 1.45], [9.0, 1.7]];
+const N7_DROP: N7Tab = [[0.8, 0.16], [2.5, 0.18], [3.3, 0.25], [3.8, 0.55], [4.5, 0.9], [5.5, 1.1], [7.0, 1.1], [8.0, 0.8], [8.6, 0.62], [9.0, 0.5]];
+
+/** The nose's top surface height at (d, lat): the wing body or the canopy over it. */
+function n7Height(d: number, lat: number): number {
+  const [h0, hc, lr, hs] = [n7(N7_H0, d), n7(N7_HC, d), n7(N7_LR, d), n7(N7_HS, d)];
+  // the valley between the crests, then the crest rounding down to the side
+  const t = Math.min(1, Math.max(0, (lat - lr) / (N7_HW - lr)));
+  const wing = lat <= lr ? h0 + (hc - h0) * (lat / lr) ** 2 : hc - (hc - hs) * t * t;
+  // the canopy blended into the wing body (a smooth maximum, no crease the grid cannot follow)
+  const canopy = n7(N7_HB, d) - n7(N7_DROP, d) * (lat / n7(N7_WB, d)) ** 2.4;
+  const k = 0.07, h = Math.min(1, Math.max(0, 0.5 + (canopy - wing) / (2 * k)));
+  return wing + (canopy - wing) * h + k * h * (1 - h);
+}
+
+/** The first d at which the top surface reaches height y at lat (bisection; the surface rises toward the join). */
+function n7Top(lat: number, y: number): number {
+  if (n7Height(0, lat) >= y) return 0;
+  if (n7Height(N7_JOIN, lat) < y) return N7_JOIN;
+  let [a, b] = [0, N7_JOIN];
+  for (let i = 0; i < 18; i++) { const m = (a + b) / 2; if (n7Height(m, lat) >= y) b = m; else a = m; }
+  return (a + b) / 2;
+}
+
+/** The grid's rows (the paint's and the shape's heights). */
+const N7_ROWS = [0.3, 0.36, 0.44, 0.52, 0.6, 0.7, 0.78, 0.86, 0.9, 0.95, 1.0, 1.05, 1.12, 1.2, 1.28, 1.36, 1.42, 1.48, 1.54, 1.6, 1.65, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2.0, 2.06, 2.12, 2.18, 2.25, 2.32, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.48, 3.55, 3.6];
+/** The face's centre line, the snout's or the top's (the distant model's tip by height too). */
+const N7_PROFILE: Pt[] = N7_ROWS.map((y): Pt => [y, Math.round(Math.max(n7(N7_SNOUT, y), n7Top(0, y)) * 1e4) / 1e4]);
+/** The face's depth: behind both the snout's rounded front and the top surface. */
+const n7Reshape = (lat: number, y: number, d: number): number => Math.max(n7(N7_SNOUT, y) + d - n7(N7_PROFILE, y), n7Top(lat, y));
+
+/** An almond headlight on viewer's side sd: [lat, y], the inner end low, the outer end high under the crest. */
+const n7Lamp = (sd: number, grow: number): Pt[] =>
+  ([[0.93, 1.43], [1.04, 1.385], [1.2, 1.4], [1.33, 1.48], [1.4, 1.6], [1.3, 1.635], [1.15, 1.585], [1.0, 1.515]] as Pt[]).map(([l, y]): Pt => {
+    const [cl, cy] = [1.16, 1.5];
+    return [sd * (cl - 0.08 + (l - cl) * (1 + grow)), cy + (y - cy) * (1 + grow * 1.6)];
+  });
+/** The windscreen on the canopy's front, [lat, y]: wide at its foot, narrowing to the top, the corners rounded. */
+const N7_SCREEN: Pt[] = [[-0.45, 2.31], [0.45, 2.31], [0.56, 2.35], [0.62, 2.45], [0.58, 2.65], [0.5, 2.85], [0.38, 2.96], [0.27, 2.99], [-0.27, 2.99], [-0.38, 2.96], [-0.5, 2.85], [-0.58, 2.65], [-0.62, 2.45], [-0.56, 2.35]];
+
+const N700S_FACE: SeriesCabFace = {
+  dJoin: N7_JOIN, dSide: 6.0, first: N7_JOIN + 1.3, reach: 0, roofFrom: 9, wrap: true, cols: [10, 10, 1, 2], tolerance: 0.03,
+  profile: N7_PROFILE, corner: [...N7_CORNER], cornerDepth: [...N7_DEPTH], rows: N7_ROWS, reshape: n7Reshape,
+  // the lower snout in the skirt's colour (silver grey, JR Kyushu's red), white above
+  bands: (l) => [[0, 0.9, l.bands[0]![2]], [0.9, 9, "white"]],
+  // the canopy's side windows behind the windscreen's pillars, their rear ends rounded
+  paint: [{ mat: "cabGlass", front: [[2.55, 5.95], [2.85, 6.0], [3.05, 6.2]], back: [[2.55, 6.5], [2.7, 7.0], [2.9, 7.3], [3.0, 7.2], [3.05, 6.9]], top: 3.06 }],
+  fields: [{ mat: "cabGlass", pts: N7_SCREEN }, { mat: "cabMask", pts: n7Lamp(1, 0.14) }, { mat: "cabMask", pts: n7Lamp(-1, 0.14) }, { mat: "cabGlass", pts: n7Lamp(1, 0) }, { mat: "cabGlass", pts: n7Lamp(-1, 0) }, { mat: "lampHead", pts: n7Lamp(1, -0.35) }, { mat: "lampHead", pts: n7Lamp(-1, -0.35) }],
+  // the distant model's glass: inside the windscreen's outline
+  panes: [{ lat: [-0.42, 0.42], y: [2.36, 2.95], r: 0.2 }],
+  wipers: [[[0.3, 2.37], [-0.16, 2.86]]],
+};
+
+/** A thin line of paint along a centre line (d, y; y ascending) as a sweep's front and back edges by height. */
+function n7Line(pts: ReadonlyArray<readonly [number, number]>, t: number): { front: Pt[]; back: Pt[] } {
+  const dAt = (y: number) => edgeAt(pts.map(([d, yy]): Pt => [yy, d]), y);
+  const [y0, y1] = [pts[0]![1], pts[pts.length - 1]![1]];
+  const ys = Array.from({ length: 13 }, (_, i) => y0 + ((y1 - y0) * i) / 12);
+  return { front: ys.map((y): Pt => [y, dAt(y - t / 2)]), back: ys.map((y): Pt => [y, dAt(y + t / 2)]) };
+}
+
+const N7_PALETTE = { white: c("#f3f3f0"), roofG: c("#e8e8e5", 0.6), cabMask: c("#1b1d20", 0.3) };
+
 export const N700S: ShinkansenSeries = {
-  endLength: 27.35, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.6, lean: 0.96, B: 0.75, A: 1.05,
-  // the "dual supreme wing" nose: low and flat, its edges sharpened
-  nose: nose(10.7, 0.04, 2.6, [[0, 1.25], [0.6, 1.55], [3.0, 2.0], [6.0, 2.45], [8.4, 2.95], [9.6, 3.4], [10.8, 3.6]], [[0, 1.2], [0.6, 1.45], [3.0, 1.75], [6.0, 2.05], [8.4, 2.45], [9.6, 2.8], [10.8, 3.0]], [[0, 1.15], [1.5, 1.3], [4.0, 1.45]], [[0, 1.1], [1.5, 1.05]], [[0, 1.08], [0.6, 0.6], [2.0, 0.75]]),
-  windscreen: [8.0, 9.55, 0.07, 0.95], lamps: [2.6, 1.55],
-  windows: [[2.0, 2.6]], windowW: 0.9, pitch: 1.04, door: [1.3, 3.05, 1.95, 2.6], doorW: 1.0,
-  bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
+  endLength: 27.35, midLength: 25.0, W: N7_HW, Y: 1.45, S: 3.0, C: 3.6, lean: 0.96, B: 0.3, A: 0.9,
+  nose: nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]), windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: N700S_FACE,
+  // small windows with rounded ends, one a seat row (1.04 m); single-leaf plug doors, a narrow window high in the leaf
+  windows: [[2.09, 2.66]], windowW: 0.5, pitch: 1.04, door: [1.32, 3.25, 2.3, 2.9], doorW: 0.8, doorGlassW: 0.3,
+  layout: {
+    // the crew door just behind the canopy, the front passenger door, 13 seat rows, the rear door 0.75 m from the end
+    end: { doors: [[0.15, 0.75, -1], [1.15, 1.95, -1], [16.48, 17.28, 1]], windows: Array.from({ length: 13 }, (_, i): [number, number] => [2.85 + 1.04 * i, 3.35 + 1.04 * i]) },
+    // a door at each end, 20 seat rows between them
+    middle: { doors: [[0.35, 1.15, -1], [23.35, 24.15, 1]], windows: Array.from({ length: 20 }, (_, i): [number, number] => [2.12 + 1.04 * i, 2.62 + 1.04 * i]) },
+  },
+  // the leading bogie under the canopy's rear, 17.5 m ahead of the rear one; the skirts hang low: no underfloor box below them
+  endBogies: [6.1 - N7_JOIN, 23.6 - N7_JOIN], bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5, fittings: () => {},
+  pantographCover: { len: 3.6, hw: 0.72, top: [2.5, 0.52], h: 0.42, mat: "white" },
   liveries: {
-    jrCentral: { title: "JR Central", palette: { white: c("#f3f3f0"), blue: c("#1a3f9a"), roofG: c("#e6e6e3", 0.6), skirtG: c("#dcdcd8") }, bands: [[0, 1.75, "white"], [1.75, 1.92, "blue"], [1.92, 2.65, "white"], [2.65, 2.7, "blue"], [2.7, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "783-1" },
-    jrKyushu: { title: "JR Kyushu", palette: { white: c("#f3f3f0"), blue: c("#1a3f9a"), red: c("#c8102e"), roofG: c("#e6e6e3", 0.6), skirtG: c("#dcdcd8") }, bands: [[0, 1.75, "white"], [1.75, 1.92, "blue"], [1.92, 1.96, "red"], [1.96, 2.65, "white"], [2.65, 2.7, "blue"], [2.7, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "Y1" },
+    jrCentral: {
+      title: "JR Central", palette: { ...N7_PALETTE, blue: c("#123c96"), skirtG: c("#ccd0d3", 0.35) },
+      // the wide blue line under the windows, the thin one under it
+      bands: [[0, 0.9, "skirtG"], [0.9, 1.62, "white"], [1.62, 1.7, "blue"], [1.7, 1.8, "white"], [1.8, 2.0, "blue"], [2.0, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "783-1",
+      endSweeps: [
+        // the wide line's pointed front end just ahead of the crew door, and the blade ahead of it rising to the door
+        { mat: "blue", front: [[1.8, 9.0], [2.0, 8.45]], back: [[1.8, 9.0], [2.0, 9.0]] },
+        { mat: "blue", front: [[1.66, 5.45], [2.14, 8.1]], back: [[1.66, 5.45], [1.97, 9.1], [2.14, 8.1]] },
+      ],
+    },
+    jrKyushu: {
+      title: "JR Kyushu", palette: { ...N7_PALETTE, red: c("#c8102e", 0.45), kBlack: c("#141517", 0.35) },
+      // Nishi Kyushu Shinkansen "Kamome": red below 0.9 m, a thin red line under the windows
+      bands: [[0, 0.9, "red"], [0.9, 1.7, "white"], [1.7, 1.74, "red"], [1.74, 9, "white"]], roof: "roofG", skirt: "red", number: "Y1",
+      endSweeps: [
+        // the thin line dipping along the nose's side ahead of the crew door
+        { mat: "red", ...n7Line([[5.4, 1.41], [6.3, 1.44], [7.2, 1.53], [8.0, 1.62], [8.7, 1.68], [9.0, 1.7]], 0.04) },
+        // the black canopy (its thin gold edging is left out: a line across the canopy's grid costs 3,000 triangles)
+        { mat: "kBlack", face: true, top: 3.61, front: [[2.2, 3.4], [2.5, 3.9], [2.9, 4.6], [3.2, 5.3], [3.4, 6.2], [3.61, 7.5]], back: [[2.2, 4.3], [3.4, 8.9], [3.61, 9.0]] },
+      ],
+    },
   },
   weight: { end: 44, middle: 42 }, power: 1220, maxspeed: 300,
 };
