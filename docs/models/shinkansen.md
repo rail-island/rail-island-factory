@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | `proc-vehicle-shinkansen-n700s` | Shinkansen N700S | `jrCentral`, `jrKyushu` | 27.35 / 25.0 m | 10.7 m "dual supreme wing" |
 | `proc-vehicle-shinkansen-e5` | Shinkansen E5 / H5 | `hayabusa` (E5), `h5` | 26.5 / 25.0 m | 15 m, the canopy cab |
-| `proc-vehicle-shinkansen-500` | Shinkansen 500 series | `original` (Nozomi), `kodama` | 27.0 / 25.0 m | 15 m needle, round body |
+| `proc-vehicle-shinkansen-500` | Shinkansen 500 series | `original` (Nozomi), `kodama` | 27.0 / 25.0 m | 15 m needle as a cab face, the domed canopy, round body |
 | `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill" |
 | `proc-vehicle-shinkansen-e6` | Shinkansen E6 | `komachi`, `akita` | 23.075 / 20.5 m | 13 m, a mini-shinkansen 2.945 m wide |
 | `proc-vehicle-shinkansen-100` | Shinkansen 100 series | `jnr`, `jrWest` | 26.05 / 25.0 m | 5 m, after the 0 series |
@@ -134,6 +134,12 @@ combinations hashed before and after):
 - `lodRoof` - a block on the end car's roof in the distant model (the X 3800's turret);
 - `wheelbase: 0` cars hang each axle in horn guides reaching up into the body over the skirt's
   cut, on leaf springs.
+- `endCrown` - with a cab face, the end car's crown still rising behind the join ([d behind the body's
+  front, height], a crown-only nose of the body's full plan): the 500's roof reaching full height behind its
+  first door; a livery's `roofStripe` - its own paint along every car's crown out to a half width on the
+  roof's arc (the distant model's roof takes it), and `pantograph` - the livery's sets' own pantograph in
+  place of the series' (`"wing"`: the 500 W sets' T-shaped wing, a post hinged at its foot carrying a level
+  wing and its carbon, on a low shroud; drawn in `shinkansen.ts`);
 - a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over
   the nose (the Class 378's orange doors and yellow front); the front's band heights become
   paint edges of the car's slices.
@@ -158,7 +164,28 @@ transoms) and a skirt bottom on the centre coupler's draft gear or on the transo
 `seriesHelpers.ts` holds the paint, nose and flat-cab helpers, the one-colour `striped`
 livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE S-103 share.
 
+## The 500 series
+
+Matched to five photographs (assets/shinkansen-500/SOURCES.md; the side-on V5 end car at Himeji at
+84 px/m gives the profile). The end is a cab face (`S500_FACE`, d behind the tip): the tip 0.79 m up, the
+top rising at a third to the canopy's foot 2.75 m back at 1.92 m, the canopy (glass to about 6.7 m, a
+dark hood to 8.6 m) domed on top, the join 9.65 m back at a 3.49 m crown that `endCrown` lifts to the full
+3.69 m 14 m behind the tip. In plan the snout is a blunt spatula: elliptic corners, the lower half at
+full width 6.5 m behind its centre line, the top at the join. Its underside comes down to 0.3 m (the
+chin), the side skirt and the bogie fairings (three capsules each side, 3.25 - 7.5 m) to 0.3 m too. The
+paint: a tongue over the top from the tip round the canopy into the roof's stripe (lavender-grey on the
+`original` W sets, blue on the `kodama` V sets, whose roof stripe is a greyer blue), silver sides, a
+crease round the snout at 1.0 m, the dark window band (2.14 - 2.77 m) with the blue band under it
+(1.83 - 2.14 m) from 10.86 m behind the tip, silver round the first door (9.8 - 10.45 m). Windows 0.69 m
+wide, 1.01 m apart (`layout`); narrow doors with a narrow window. The headlights and tail lamps sit in
+the canopy's dark foot. The W sets raise T-shaped wing pantographs, the V sets single arms.
+
 ## Deviations
+
+- The 500: the canopy is paint on the nose's own surface, not a separate bubble; the lower snout's lip
+  under the crease does not stand proud; the "JR500 WEST JAPAN" lettering is not drawn; the W sets'
+  pantograph shroud is two low walls, not the full noise screen; the bogies show through the kit's skirt
+  cuts on the rear bogie and the middle cars, where the real cars carry bogie covers.
 
 - The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
   their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses and the
