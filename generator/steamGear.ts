@@ -113,19 +113,19 @@ export interface RunningGearSpec {
    * it in the x-y plane (positive upward) and `dz` outward from the rods' plane.
    */
   crossheadParts?: (m: MeshBuilder, s: number, at: (k: number, off?: number, dz?: number) => Vec3) => void;
-  /**
-   * An articulated locomotive's front engine unit (the Big Boy): these engines
-   * (indices into `engines`), their coupled wheels and these carrying wheels
-   * (indices into `wheels`) ride a frame that turns under the boiler. The
-   * builder draws them inside a rail bogie (MeshCore.bogie) with `drawStatic(m,
-   * paint, true)` and `drawSwivel`; everything else stays on the body.
-   */
-  swivel?: {
-    engines: number[];
-    carrying: number[];
-    /** The source x where the unit's frame ends and the body's begins (read by buildLoco). */
-    x1: number;
-  };
+}
+
+/**
+ * One turning unit of the running gear: a group of wheelsets (indices into
+ * `wheels`) and the engines that drive them (indices into `engines`), drawn as
+ * a rail bogie (MeshCore.bogie) that the game turns on the track under the body
+ * -- a carrying truck, a coupled group with its cylinders and motion, a tender
+ * truck. steamLoco.ts (`turningUnits`) works them out; wheels in no unit ride
+ * the body.
+ */
+export interface TurningUnit {
+  wheels: number[];
+  engines: number[];
 }
 
 type P2 = [number, number];
@@ -340,10 +340,14 @@ export class RunningGear {
   readonly duration: number;
   readonly times: number[];
   private readonly tracks: AnimationTrack[] = [];
-  /** The bogie node `drawSwivel` drew the front engine unit into, and the nodes it drew there. */
-  private swivelBogie: { node: string; parts: Set<string> } | null = null;
+  /** Per turning unit, the bogie node `drawUnit` drew it into and the moving parts it drew there. */
+  private readonly unitBogies: Array<{ node: string; parts: Set<string> } | null>;
 
-  constructor(readonly spec: RunningGearSpec, readonly X: (x: number) => number) {
+  constructor(readonly spec: RunningGearSpec, readonly X: (x: number) => number, readonly units: readonly TurningUnit[] = []) {
+    this.unitBogies = units.map(() => null);
+    units.forEach((u, k) => {
+      for (const e of u.engines) for (const i of spec.engines[e]!.coupled) if (!u.wheels.includes(i)) throw new Error(`turning unit ${k}: engine ${e}'s wheel ${i} is not in it`);
+    });
     const ref = spec.wheels[spec.reference]!;
     this.duration = (Math.PI * ref.d) / RUNNING_SPEED;
     this.times = Array.from({ length: N_SAMPLES + 1 }, (_, k) => Math.round(((k * this.duration) / N_SAMPLES) * 1e6) / 1e6);
@@ -381,16 +385,14 @@ export class RunningGear {
     return `${s > 0 ? "right" : "left"}${engine.name ? `-${engine.name}` : ""}`;
   }
 
-  /** Whether engine `index` rides the swivelling front unit. */
-  private swivelEngine(index: number): boolean {
-    return this.spec.swivel?.engines.includes(index) ?? false;
+  /** The turning unit engine `index` rides, or -1 for the body. */
+  unitOfEngine(index: number): number {
+    return this.units.findIndex((u) => u.engines.includes(index));
   }
 
-  /** Whether wheel `i` rides the swivelling front unit: a carrying wheel of it, or a coupled wheel of its engines. */
-  swivelWheel(i: number): boolean {
-    const sw = this.spec.swivel;
-    if (!sw) return false;
-    return sw.carrying.includes(i) || sw.engines.some((e) => this.spec.engines[e]!.coupled.includes(i));
+  /** The turning unit wheel `i` rides, or -1 for the body. */
+  unitOfWheel(i: number): number {
+    return this.units.findIndex((u) => u.wheels.includes(i));
   }
 
   /** The engine side whose crank a coupled wheel carries. */
@@ -401,13 +403,13 @@ export class RunningGear {
   /**
    * The static gear, drawn inside the body part: cylinders with covers and valve
    * chests, slide bars, the expansion link brackets, and the axle boxes of the
-   * carrying wheels. With `swivel` only the front engine unit's (drawn inside its
-   * bogie), without it everything else.
+   * carrying wheels -- of turning unit `unit` (drawn inside its bogie), or with
+   * -1 of everything on the body.
    */
-  drawStatic(m: MeshBuilder, paint: string, swivel = false): void {
+  drawStatic(m: MeshBuilder, paint: string, unit = -1): void {
     const z = this.spec.cylinderZ;
     for (const { engine, index, s, side: es } of this.sides) {
-      if (this.swivelEngine(index) !== swivel) continue;
+      if (this.unitOfEngine(index) !== unit) continue;
       m.scope(`cylinder ${this.suffix(engine, s)}`, () => {
         if (es.incline) return this.inclinedCylinder(m, paint, es, s);
         const { near, far, y, r } = es.cyl;
@@ -443,7 +445,7 @@ export class RunningGear {
       });
     }
     this.spec.wheels.forEach((w, i) => {
-      if (!w.outsideBoxes || this.swivelWheel(i) !== swivel) return;
+      if (!w.outsideBoxes || this.unitOfWheel(i) !== unit) return;
       const X = this.X(w.x);
       const ay = axleHeight(w);
       m.scope(`axle boxes ${i + 1}`, () => {
@@ -472,57 +474,58 @@ export class RunningGear {
   }
 
   /**
-   * The front engine unit's moving gear (`spec.swivel`), drawn inside the bogie
-   * being drawn as moving child parts of it (MeshCore.spin): its wheelsets, then
-   * its engines' rods and valve gear. Call inside `m.bogie`, before `drawParts`,
-   * which animates them with the rest.
+   * Turning unit `unit`'s moving gear, drawn inside the bogie being drawn as
+   * moving child parts of it (MeshCore.spin): its wheelsets, then its engines'
+   * rods and valve gear. Call inside `m.bogie`, before `drawParts`, which
+   * animates them with the rest.
    */
-  drawSwivel(m: MeshBuilder): void {
+  drawUnit(m: MeshBuilder, unit: number): void {
     const node = m.currentPartName();
-    if (!this.spec.swivel || !node) throw new Error("drawSwivel(): no swivel unit, or not inside a bogie");
-    this.swivelBogie = { node, parts: new Set() };
-    this.drawMoving(m, true);
+    if (!this.units[unit] || !node) throw new Error(`drawUnit(): no turning unit ${unit}, or not inside a bogie`);
+    this.unitBogies[unit] = { node, parts: new Set() };
+    this.drawMoving(m, unit);
   }
 
   /**
-   * The moving gear as parts, then the animation clip: a wheelset part per axle
-   * (wheels, axle, crank pins, counterweights, return cranks), then per engine
-   * side the coupling rod, crosshead, main rod and valve gear. Call after the
-   * body part. The front engine unit's parts, drawn by `drawSwivel`, are children
-   * of its bogie: their translations are taken relative to the bogie's pivot.
+   * The moving gear on the body as parts, then the animation clip: a wheelset
+   * part per axle (wheels, axle, crank pins, counterweights, return cranks), then
+   * per engine side the coupling rod, crosshead, main rod and valve gear. Call
+   * after the body part and every unit's bogie. A turning unit's parts, drawn by
+   * `drawUnit`, are children of its bogie: their translations are taken relative
+   * to the bogie's pivot.
    */
   drawParts(m: MeshBuilder): void {
-    this.drawMoving(m, false);
-    const sb = this.swivelBogie;
-    if (this.spec.swivel && !sb) throw new Error("drawParts(): the swivel unit was not drawn (drawSwivel)");
-    if (sb) {
+    this.drawMoving(m, -1);
+    this.units.forEach((u, k) => {
+      const sb = this.unitBogies[k];
+      if (!sb) throw new Error(`drawParts(): turning unit ${k} was not drawn (drawUnit)`);
       // the bogie's pivot as MeshCore.bogie sets it: its axles' mean, to the millimetre
-      const axles = this.spec.wheels.map((w, i) => ({ w, i })).filter(({ i }) => this.swivelWheel(i));
-      const mean = (f: (w: SteamWheel) => number) => Math.round((axles.reduce((t, a) => t + f(a.w), 0) / axles.length) * 1000) / 1000;
+      const axles = u.wheels.map((i) => this.spec.wheels[i]!);
+      const mean = (f: (w: SteamWheel) => number) => Math.round((axles.reduce((t, w) => t + f(w), 0) / axles.length) * 1000) / 1000;
       const pivot = [mean((w) => this.X(w.x)), mean(axleHeight), 0];
       for (const t of this.tracks) {
         if (t.path !== "translation" || !sb.parts.has(t.node)) continue;
-        t.values = t.values.map((v, k) => v - pivot[k % 3]!);
+        t.values = t.values.map((v, j) => v - pivot[j % 3]!);
       }
-    }
+    });
     m.animate({ name: RUNNING_CLIP, times: this.times, tracks: this.tracks, drive: { drive: "distance", speed: RUNNING_SPEED } });
   }
 
-  /** The moving parts of the swivelling unit (`swivel`) or of the rest, their tracks into `tracks`. */
-  private drawMoving(m: MeshBuilder, swivel: boolean): void {
+  /** The moving parts of turning unit `unit` (-1: the body's), their tracks into `tracks`. */
+  private drawMoving(m: MeshBuilder, unit: number): void {
     const spec = this.spec;
     const ref = spec.wheels[spec.reference]!;
     const tracks = this.tracks;
     const thetas = this.times.map((_, k) => (2 * Math.PI * k) / N_SAMPLES);
-    // a top-level part, or a moving child of the swivel bogie
+    // a top-level part, or a moving child of the unit's bogie
     const part = (name: string, pivot: Vec3, draw: () => void): void => {
-      if (!swivel) return void m.part(name, pivot, draw);
-      this.swivelBogie!.parts.add(name);
+      if (unit < 0) return void m.part(name, pivot, draw);
+      this.unitBogies[unit]!.parts.add(name);
       m.spin(name, pivot, draw);
     };
 
     spec.wheels.forEach((w, i) => {
-      if (this.swivelWheel(i) !== swivel) return;
+      if (this.unitOfWheel(i) !== unit) return;
       const name = `wheelset-${i + 1}`;
       const X = this.X(w.x);
       const ay = axleHeight(w);
@@ -545,7 +548,7 @@ export class RunningGear {
     });
 
     for (const { engine, index, s, side: es } of this.sides) {
-      if (this.swivelEngine(index) !== swivel) continue;
+      if (this.unitOfEngine(index) !== unit) continue;
       const sfx = this.suffix(engine, s);
       const poses = thetas.map((t) => es.solve(es.phi(t)));
       const rest = poses[0]!;

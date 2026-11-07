@@ -8,7 +8,7 @@
 
 import type { MaterialSpec } from "./meshBuilder.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
-import { RunningGear, type RunningGearSpec } from "./steamGear.ts";
+import { RunningGear, type RunningGearSpec, type TurningUnit } from "./steamGear.ts";
 import { Steam, halfAt, mirrored, type Pt } from "./steamParts.ts";
 
 export interface Window {
@@ -70,30 +70,126 @@ function prism(t: Steam, p: Prism, fallback = "paint"): void {
   t.section(p.mat ?? fallback, p.x0, p.x1, mirrored(p.half));
 }
 
-/** A locomotive (or tender) from its spec. */
-export function buildLoco(spec: LocoSpec): MeshBuilder {
+/**
+ * The shortest wheelbase (first to last axle, metres) whose running gear is
+ * split into turning units: below it a rigid frame stays on the rails on the
+ * game's curves (docs/models/steam-locomotives.md, "On curves").
+ */
+export const UNIT_WHEELBASE = 5.5;
+
+/** A turning unit (steamGear.ts) with the frames it carries: its stretch of the plate frames (source x) and its truck frames (indices into `bogies`). */
+export interface LocoUnit extends TurningUnit {
+  frame?: [number, number];
+  bogies: number[];
+}
+
+/**
+ * How a locomotive or tender rides a curve: its running gear split into turning
+ * units, front first, each a rail bogie the game turns on the track under the
+ * body -- every carrying truck (the carrying wheels inside one of the spec's truck
+ * frames, or a run of neighbouring carrying axles: a pony truck, a trailing
+ * truck), every engine's coupled wheels with its cylinders, motion and the
+ * plate frames from its cylinders to its last driver, a tender's trucks. The body
+ * then rests on the outermost units, and every wheel stays on the rails. Not
+ * real for a rigid locomotive, whose frame carries the coupled wheels, but a
+ * long rigid wheelbase laid along a chord leaves its middle wheels beside the
+ * rail. A short wheelbase (UNIT_WHEELBASE), or one that would leave fewer than
+ * two units, keeps its rigid frame: [].
+ */
+export function turningUnits(spec: LocoSpec): LocoUnit[] {
+  const g = spec.gear;
+  const xs = g.wheels.map((w) => w.x);
+  if (!xs.length || Math.max(...xs) - Math.min(...xs) < UNIT_WHEELBASE) return [];
+  const units: LocoUnit[] = [];
+  // the engines, merged where they drive the same wheels
+  g.engines.forEach((e, k) => {
+    const shared = units.find((u) => e.coupled.some((i) => u.wheels.includes(i)));
+    if (shared) {
+      shared.engines.push(k);
+      for (const i of e.coupled) if (!shared.wheels.includes(i)) shared.wheels.push(i);
+    } else if (e.coupled.length) units.push({ wheels: [...e.coupled], engines: [k], bogies: [] });
+  });
+  const coupled = new Set(units.flatMap((u) => u.wheels));
+  let free = g.wheels.map((_, i) => i).filter((i) => !coupled.has(i));
+  // the carrying wheels inside a truck frame (one without coupled wheels)
+  (spec.bogies ?? []).forEach((b, j) => {
+    const inside = (i: number) => g.wheels[i]!.x >= b.x0 - 0.01 && g.wheels[i]!.x <= b.x1 + 0.01;
+    if ([...coupled].some(inside)) return;
+    const wheels = free.filter(inside);
+    if (!wheels.length) return;
+    units.push({ wheels, engines: [], bogies: [j] });
+    free = free.filter((i) => !wheels.includes(i));
+  });
+  // the rest: runs of neighbouring carrying axles with no coupled wheel between them
+  free.sort((a, b) => g.wheels[a]!.x - g.wheels[b]!.x);
+  const between = (a: number, b: number) => [...coupled].some((c) => g.wheels[c]!.x > Math.min(a, b) && g.wheels[c]!.x < Math.max(a, b));
+  let run: LocoUnit | null = null;
+  for (const i of free) {
+    const x = g.wheels[i]!.x;
+    const prev = run ? g.wheels[run.wheels.at(-1)!]!.x : null;
+    if (run && prev !== null && Math.abs(x - prev) < 2.2 && !between(prev, x)) run.wheels.push(i);
+    else units.push((run = { wheels: [i], engines: [], bogies: [] }));
+  }
+  if (units.length < 2) return [];
+  for (const u of units) u.wheels.sort((a, b) => g.wheels[a]!.x - g.wheels[b]!.x);
+  const front = (u: LocoUnit) => g.wheels[u.wheels[0]!]!.x;
+  units.sort((a, b) => front(a) - front(b));
+  // an engine's stretch of the plate frames: from its cylinders past its last driver
+  const f = spec.frame;
+  if (f) {
+    const engines = units.filter((u) => u.engines.length);
+    for (const u of engines) {
+      const ws = u.wheels.map((i) => g.wheels[i]!);
+      const cyl = u.engines.flatMap((k) => [g.engines[k]!.cylinder.x0, g.engines[k]!.cylinder.x1]);
+      const lo = Math.min(...cyl, ...ws.map((w) => w.x - w.d / 2 - 0.1));
+      const hi = Math.max(...cyl, ...ws.map((w) => w.x + w.d / 2 + 0.1));
+      u.frame = [Math.max(f.x0, lo), Math.min(f.x1, hi)];
+    }
+    // neighbouring engines share the frame between them at the middle
+    for (let k = 1; k < engines.length; k++) {
+      const a = engines[k - 1]!.frame!;
+      const b = engines[k]!.frame!;
+      if (a[1] > b[0]) a[1] = b[0] = (a[1] + b[0]) / 2;
+    }
+    for (const u of engines) if (u.frame![1] - u.frame![0] < 0.1) delete u.frame;
+  }
+  return units;
+}
+
+/** The stretches of [x0, x1] left outside the ranges `cut`. */
+function outside(x0: number, x1: number, cut: Array<[number, number]>): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  let at = x0;
+  for (const [a, b] of [...cut].sort((p, q) => p[0] - q[0])) {
+    if (a > at + 0.1) out.push([at, Math.min(a, x1)]);
+    at = Math.max(at, b);
+  }
+  if (x1 > at + 0.1) out.push([at, x1]);
+  return out;
+}
+
+/** A locomotive (or tender) from its spec, its running gear split into `units` (turningUnits; [] draws it all on a rigid frame). */
+export function buildLoco(spec: LocoSpec, units: LocoUnit[] = turningUnits(spec)): MeshBuilder {
   const xc = (spec.heads[0] + spec.heads[1]) / 2;
   const t = new Steam(spec.palette, xc);
   const m = t.m;
-  const gear = new RunningGear(spec.gear, (x) => t.X(x));
-  // an articulated locomotive's front engine unit takes the frame ahead of its
-  // end and the truck frames there; the body keeps the rest
-  const split = spec.gear.swivel?.x1;
+  const gear = new RunningGear(spec.gear, (x) => t.X(x), units);
   const frames = (x0: number, x1: number) => {
     const f = spec.frame!;
     // 2 cm short of the stated ends, clear of the beams and running board ends there
-    m.scope("frames", () => { for (const s of [-1, 1]) t.sideBox("frame", s, x0 + 0.02, x1 - 0.02, 0.45, f.top, 0.52, 0.6); });
+    m.scope("frames", () => { for (const s of [-1, 1]) t.sideFrame("frame", s, x0 + 0.02, x1 - 0.02, 0.45, f.top, 0.52, 0.6); });
   };
   const bogieFrames = (list: NonNullable<LocoSpec["bogies"]>) => {
     if (!list.length) return;
     m.scope("bogie frames", () => {
       for (const b of list) for (const s of [-1, 1]) {
-        t.sideBox("black", s, b.x0, b.x1, b.y - 0.09, b.y + 0.09, 0.88, 0.97);
-        t.sideBox("steel", s, (b.x0 + b.x1) / 2 - 0.35, (b.x0 + b.x1) / 2 + 0.35, b.y - 0.2, b.y - 0.09, 0.89, 0.96);
+        t.sideFrame("black", s, b.x0, b.x1, b.y - 0.09, b.y + 0.09, 0.88, 0.97);
+        t.sideFrame("steel", s, (b.x0 + b.x1) / 2 - 0.35, (b.x0 + b.x1) / 2 + 0.35, b.y - 0.2, b.y - 0.09, 0.89, 0.96);
       }
     });
   };
-  const onSwivel = (b: { x1: number }) => split !== undefined && b.x1 <= split;
+  const unitBogies = new Set(units.flatMap((u) => u.bogies));
+  const unitFrames = units.flatMap((u) => (u.frame ? [u.frame] : []));
   m.part("body", [0, 0, 0], () => {
     const b = spec.boiler;
     if (b) m.scope("boiler", () => t.boiler(b));
@@ -117,7 +213,7 @@ export function buildLoco(spec: LocoSpec): MeshBuilder {
       const h = spec.handrail;
       m.scope("handrails", () => t.handrail(h.x0, h.x1, h.y, halfAt(boilerSection(b.r, b.y), h.y) + 0.07, 0));
     }
-    if (spec.frame) frames(split ?? spec.frame.x0, spec.frame.x1);
+    if (spec.frame) for (const [a, b] of outside(spec.frame.x0, spec.frame.x1, unitFrames)) frames(a, b);
     if (spec.runningBoard) {
       const r = spec.runningBoard;
       m.scope("running board", () => t.runningBoard(r.profile, r.half, r.mat ?? "black", r.valance ?? 0.12, r.valanceMat));
@@ -141,7 +237,7 @@ export function buildLoco(spec: LocoSpec): MeshBuilder {
     }
     for (const p of spec.prisms ?? []) m.scope(p.name, () => prism(t, p));
     for (const v of spec.volumes ?? []) m.scope(v.name, () => t.volume(v));
-    bogieFrames((spec.bogies ?? []).filter((b) => !onSwivel(b)));
+    bogieFrames((spec.bogies ?? []).filter((_, j) => !unitBogies.has(j)));
     if (spec.coal) {
       const c = spec.coal;
       t.coal(c.x0, c.x1, c.y, c.half, c.rise);
@@ -172,18 +268,18 @@ export function buildLoco(spec: LocoSpec): MeshBuilder {
     m.scope("cylinders and motion", () => gear.drawStatic(m, "paint"));
     spec.extras?.(t);
   });
-  if (split !== undefined) {
-    // the front engine: a rail bogie beside the body that the game turns under the
-    // boiler; its wheelsets and rods are moving parts of it, named as on a rigid frame
+  // the turning units: rail bogies beside the body that the game turns on the
+  // track; their wheelsets and rods are moving parts of them, named as on a rigid frame
+  units.forEach((u, k) => {
     m.bogie(() => {
-      m.scope("front engine", () => {
-        if (spec.frame) frames(spec.frame.x0, split);
-        bogieFrames((spec.bogies ?? []).filter(onSwivel));
-        m.scope("cylinders and motion", () => gear.drawStatic(m, "paint", true));
+      m.scope(u.engines.length ? "engine unit" : "truck", () => {
+        if (u.frame) frames(u.frame[0], u.frame[1]);
+        bogieFrames(u.bogies.map((j) => spec.bogies![j]!));
+        m.scope("cylinders and motion", () => gear.drawStatic(m, "paint", k));
       });
-      gear.drawSwivel(m);
+      gear.drawUnit(m, k);
     });
-  }
+  });
   gear.drawParts(m);
   return m;
 }

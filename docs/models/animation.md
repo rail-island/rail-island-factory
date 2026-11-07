@@ -161,14 +161,14 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   `steamGear.ts`): tyre, spokes, counterweights, crank boss, coupling rod, main
   rod and crosshead, return crank, eccentric rod, link, radius rod, lever, union
   link - so no two moving faces share a plane in any frame.
-- **A swivelling front engine** (`swivel` in the spec: the Big Boy, the CSD 636): the engines
-  and carrying wheels it names, with their coupled wheels, ride the front engine
-  unit, which `buildLoco` draws as a rail bogie (`bogie0`) inside the body. Their
-  wheelsets and rods are drawn by `drawSwivel` as moving child parts of that
-  bogie (`MeshCore.spin`), and their translation tracks are written relative to
-  its pivot, so the game can turn the unit under the boiler and the motion turns
-  with it. The poses are the same as on a rigid frame (tested in
-  `test/usSteam.test.ts`).
+- **Turning units** (`turningUnits`, steamLoco.ts; every long wheelbase,
+  [steam-locomotives.md](steam-locomotives.md) "On curves"): each carrying truck
+  and each engine with its coupled wheels is drawn by `buildLoco` as a rail bogie
+  (`bogie0`, `bogie1`, ...) beside the body. Its wheelsets and rods are drawn by
+  `drawUnit` as moving child parts of that bogie (`MeshCore.spin`), and their
+  translation tracks are written relative to its pivot, so the game can turn the
+  unit on the track and the motion turns with it. The poses are the same as on a
+  rigid frame (tested in `test/usSteam.test.ts`).
 
 ## Rolling wheels
 

@@ -32,13 +32,15 @@ const US_STEAM_PALETTE: Record<string, MaterialSpec> = {
 /**
  * A pilot and a knuckle coupler at a vehicle's end (e +1 the front, at source x
  * `head`): a slatted plate leaning back from the end, or a V-shaped cowcatcher
- * (`vee`) for the 19th-century engines; the coupler's face at the head.
+ * (`vee`) for the 19th-century engines; the coupler's face at the head. It
+ * reaches `depth` metres back from the head: a front pilot reaches the frames,
+ * so no gap shows between them.
  */
-function pilot(t: Steam, e: number, head: number, half: number, top: number, mat: string, vee = false): void {
+function pilot(t: Steam, e: number, head: number, half: number, top: number, mat: string, vee = false, depth = vee ? 1.1 : 0.55): void {
   const m = t.m;
   const face = t.X(head);
   m.scope(e > 0 ? "front pilot" : "rear pilot", () => {
-    const back = face - e * (vee ? 1.1 : 0.55);
+    const back = face - e * depth;
     if (vee) {
       // two raked planes meeting in a point under the coupler
       for (const s of [-1, 1]) {
@@ -55,11 +57,11 @@ function pilot(t: Steam, e: number, head: number, half: number, top: number, mat
   });
 }
 
-/** The headlight on the smokebox front: housing and lens. */
-function headlight(t: Steam, x: number, y: number, r: number): void {
+/** The headlight on the smokebox front: housing and lens, `n` sides each. */
+function headlight(t: Steam, x: number, y: number, r: number, n = 12): void {
   t.m.scope("headlight", () => {
-    t.cylX("black", x + 0.3, x - 0.06, 0, y, r + 0.06, 12);
-    t.cylX("lampHead", x - 0.065, x - 0.09, 0, y, r, 12);
+    t.cylX("black", x + 0.3, x - 0.06, 0, y, r + 0.06, n);
+    t.cylX("lampHead", x - 0.065, x - 0.09, 0, y, r, n);
   });
 }
 
@@ -110,14 +112,13 @@ function bigBoySpec(): LocoSpec {
         { coupled: [6, 7, 8, 9], main: 8, cylinder: { x0: 12.0, x1: 13.6, y: 1.12, r: 0.42 }, crank: 0.41, phase: -0.5, valveGear: true, name: "rear" },
       ],
       cylinderZ: 1.2, reference: 4, wheelMaterial: "wheel",
-      // the front engine, its four-wheel lead truck and its frame turn under the boiler
-      swivel: { engines: [0], carrying: [0, 1], x1: 12.0 },
     },
     number: { text: "4014", side: [22.9, 2.7, 1.63], front: [1.37, 2.85] },
     extras: (t) => {
-      headlight(t, 1.35, 3.55, 0.2);
+      // ten-sided: the triangles its four frame stretches need within the 16,000
+      headlight(t, 1.35, 3.55, 0.2, 10);
       bell(t, 1.9, 4.5);
-      pilot(t, 1, 0, 1.45, 1.35, "paint");
+      pilot(t, 1, 0, 1.45, 1.35, "paint", false, 1.0);
       t.m.scope("air pumps", () => { for (const s of [-1, 1]) t.cylY("graphite", 2.3, s * 1.35, 2.25, 3.3, 0.18, 6); });
       t.m.scope("drawbar", () => t.box("black", 24.6, 26.0, 0.8, 1.0, -0.15, 0.15));
     },
@@ -186,7 +187,7 @@ function k4sSpec(): LocoSpec {
     extras: (t) => {
       headlight(t, 1.0, 4.1, 0.2);
       bell(t, 2.8, 3.95);
-      pilot(t, 1, 0, 1.35, 1.3, "black");
+      pilot(t, 1, 0, 1.35, 1.3, "black", false, 0.8);
       t.m.scope("drawbar", () => t.box("black", 14.9, 16.2, 0.8, 1.0, -0.15, 0.15));
     },
   };
@@ -262,7 +263,7 @@ function hudsonSpec(): LocoSpec {
     extras: (t) => {
       t.m.scope("fin", () => t.box(grey, 0.9, 2.6, 3.95, 4.32, -0.05, 0.05));
       headlight(t, 0.75, 3.25, 0.16);
-      pilot(t, 1, 0, 1.4, 1.4, dark);
+      pilot(t, 1, 0, 1.4, 1.4, dark, false, 0.8);
       t.m.scope("drawbar", () => t.box("black", 16.2, 17.6, 0.8, 1.0, -0.15, 0.15));
     },
   };

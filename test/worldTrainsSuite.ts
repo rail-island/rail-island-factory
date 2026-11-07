@@ -99,10 +99,13 @@ describe("the eight countries' trains", () => {
             expect(t, `${label} ${sup.node}`).toBeDefined();
             expect(t![0]).toBeCloseTo(sup.x, 3);
             expect(t![1]).toBeGreaterThan(0.25);
-            expect(t![1]).toBeLessThan(0.82);
-            // a turning bogie stands two or three axles together; a single axle (a railbus, a Talgo car) is one
+            // a steam engine unit (steamLoco.ts turningUnits) rides its drivers: up to 80 in, axle at 1.01 m
+            const steam = d.catalog?.traction === "steam";
+            expect(t![1]).toBeLessThan(steam ? 1.03 : 0.82);
+            // a turning bogie stands two or three axles together; a single axle (a railbus, a Talgo car) is one;
+            // a steam engine unit carries all its coupled wheels, up to a decapod's five
             expect(sup.axles, label).toBeGreaterThanOrEqual(1);
-            expect(sup.axles, label).toBeLessThanOrEqual(3);
+            expect(sup.axles, label).toBeLessThanOrEqual(steam ? 5 : 3);
           }
           // doors open on a passenger car (a unit's cars, a coach), never on a locomotive
           const opens = m.animations().some((c) => c.drive.drive === "door");
