@@ -1,7 +1,7 @@
 // JNR locomotives and the Blue Train: the C62 4-6-4 express and the D51 2-8-2
 // freight steam locomotives (the steam kit, steamLoco.ts), the EF66 Bo-Bo-Bo
-// electric (the carbody kit), the DD51 centre-cab diesel (the hood unit kit,
-// usHoodKit.ts) and a 24-series Blue Train sleeper coach (the car builder,
+// electric (the carbody kit), the DD51 centre-cab diesel (its own builder,
+// jnrDd51.ts) and a 24-series Blue Train sleeper coach (the car builder,
 // usTransit.ts). Narrow-gauge (1,067 mm) prototypes at their real body size on
 // the game's standard-gauge wheelsets (docs/models/jr-kiha40.md, "Gauge"), inside
 // the UIC gauge. See docs/models/jnr-locos.md.
@@ -18,7 +18,8 @@ import { block } from "./vehicleParts.ts";
 import { sideLettering, sidePanel } from "./sliceBody.ts";
 import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, type CarbodySpec, type NoseShape } from "./carbodyKit.ts";
 import { bodyHalf, cabFaceLod, drawCabFace, type FacePaint, type FaceRect, type SeriesCabFace } from "./seriesCab.ts";
-import { buildUsHood, knuckleCoupler, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
+import { knuckleCoupler } from "./usHoodKit.ts";
+import { DD51_LIVERIES, buildDd51, dd51Lod } from "./jnrDd51.ts";
 import { diamond } from "./czElectricKit.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { drawCar, type CarDef } from "./usTransit.ts";
@@ -596,37 +597,12 @@ export function jnrEf66Lod(v?: ParamValues): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// DD51: the centre-cab diesel-hydraulic on two powered trucks and an idle one
+// DD51: the centre-cab diesel-hydraulic on two powered trucks and an idle one, drawn by its own
+// builder (jnrDd51.ts)
 
-const DD51_TRUCK = (r: number): BogieSpec => ({ axles: [-1.1, 1.1], wheelR: r, frameHalf: 1.75, frameTop: 0.95, frameBottom: 0.58, frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: 1.0 });
-export const DD51_SPEC: UsHoodSpec = {
-  length: 18.0, endSill: 8.45, deck: 1.3, sillBottom: 1.0, deckHalf: 1.47,
-  hood: { x0: -8.2, x1: -1.35, half: 1.12, top: 3.35, r: 0.18 },
-  front: { kind: "highHood", x0: 1.35, x1: 8.2 },
-  cab: { x0: -1.35, x1: 1.35, half: 1.47, top: 3.96, kind: "classic" },
-  radiator: { x0: -8.0, x1: -6.3, kind: "grilles", fans: [-7.15], fanR: 0.5 },
-  exhaustX: -3.6,
-  trucks: { centre: 5.9, sideFrame: "blomberg", spec: DD51_TRUCK(0.43), middle: DD51_TRUCK(0.43) },
-  tank: { x0: 2.4, x1: 3.9, y0: 0.5, half: 1.2 },
-  ditchLights: false,
-};
-const DD51_LIVERIES: Record<string, UsLivery> = {
-  jnr: {
-    title: "JNR red", railroad: "", letterH: 0.3, letterY: 1.0, number: "DD51 842",
-    palette: { ddRed: c("#c8462a"), ddGrey: c("#8f9396", 0.6), ddWhite: c("#efefea") },
-    body: [[0, 9, "ddRed"]], roof: "ddGrey", frame: "ddGrey", sillStripe: [0.04, 0.12, "ddWhite"], trucks: "underframe", pilot: "ddGrey",
-    letter: "ddWhite", numberMat: "ddWhite", rails: "ddWhite",
-  },
-  hokutosei: {
-    title: "Hokutosei blue", railroad: "", letterH: 0.3, letterY: 1.0, number: "DD51 1100",
-    palette: { ddBlue: c("#1d3f80"), ddGold: c("#c9a55a", 0.35), ddGrey: c("#8f9396", 0.6) },
-    body: [[0, 2.1, "ddBlue"], [2.1, 2.16, "ddGold"], [2.16, 9, "ddBlue"]], roof: "ddGrey", frame: "ddBlue", sillStripe: [0.04, 0.12, "ddGold"], trucks: "underframe", pilot: "ddBlue",
-    letter: "ddGold", numberMat: "ddGold", rails: "ddGold",
-  },
-};
 const DD51_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { jnr: "JNR red", hokutosei: "Hokutosei blue" })];
-export function jnrDd51(v?: ParamValues): MeshBuilder { return buildUsHood(DD51_SPEC, DD51_LIVERIES[resolveParams(DD51_PARAMS, v).livery!]!); }
-export function jnrDd51Lod(v?: ParamValues): MeshBuilder { return usHoodLod(DD51_SPEC, DD51_LIVERIES[resolveParams(DD51_PARAMS, v).livery!]!); }
+export function jnrDd51(v?: ParamValues): MeshBuilder { return buildDd51(DD51_LIVERIES[resolveParams(DD51_PARAMS, v).livery!]!); }
+export function jnrDd51Lod(v?: ParamValues): MeshBuilder { return dd51Lod(DD51_LIVERIES[resolveParams(DD51_PARAMS, v).livery!]!); }
 
 // ---------------------------------------------------------------------------
 // The Blue Train: the 24 series' 25-type two-tier B sleeper (OHaNe 25, 1974) and
