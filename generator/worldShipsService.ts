@@ -696,37 +696,105 @@ function oceanDrill(L: number, D: number) {
   return { length: L, beam: 42, depth: D, draft: 12, bow: "raked" as const, stern: "transom" as const, section: "round" as const, entry: 0.18, run: 0.12, transom: 0.9, rake: 0.04, boot: 1, stripe: 0, screws: 2 };
 }
 
+/**
+ * The cable layer, after CS Cable Innovator (IMO 9101132; assets/ship-cable-layer/): 145.5 m
+ * over its stern fairings, a tall red hull under a white sheer strake, the accommodation
+ * forward of midships with a forward-looking cab and the bridge glazed aft over the working
+ * deck, two teal casings with their exhausts, the cable tanks' hatches and the cable highway
+ * with its linear engine on the after deck, two deck cranes, the A-frame, and the three stern
+ * sheaves in their red fairings reaching 12.5 m beyond the transom. Positions are measured
+ * off the side photograph at 6.1 px/m from the stem (`fb`, metres from the bow), heights
+ * scaled 0.78 to the published draught.
+ */
 export function cableLayerSpec(): ShipSpec {
-  const L = 140;
-  const D = 12;
-  const B = 30;
+  const L = 133;
+  const D = 22;
+  const B = 24;
+  const T = 7.5;
+  const fb = (m: number): number => L - m;
+  // the house's decks: deck 1 on the weather deck, the bridge on top
+  const h = 2.9;
+  const y1 = D + h;
+  const y2 = D + 2 * h;
+  const y3 = D + 3 * h;
+  const y4 = D + 4 * h;
+  const top = D + 5 * h;
+  const sheave = { u: -9.8, y: D - 3.4, r: 2.4 };
   return {
     kind: "service",
-    hull: { length: L, beam: B, depth: D, draft: 7, bow: "raked", stern: "transom", section: "round", entry: 0.28, run: 0.12, transom: 0.9, rake: 0.05, sheer: [0, 2], forecastle: [34, 2.8], boot: 0.6, stripe: 0, screws: 2, fine: true },
-    livery: { hull: "#23426e", bottom: "#8f2a22", boot: "#f2f0ea", deck: "#6b6f6c", house: "#f2f0ea", funnel: "#23426e", crane: "#e8bf2a" },
+    hull: { length: L, beam: B, depth: D, draft: T, bow: "raked", stern: "transom", section: "round", entry: 0.3, run: 0.15, transom: 0.85, rake: 0.06, sheer: [0, 1.2], boot: 0.5, stripe: 3, screws: 2, fine: true },
+    livery: { hull: "#c73a2e", boot: "#c73a2e", bottom: "#7c2420", stripe: "#f2f2ee", deck: "#6b6f6c", house: "#f2f0ea", roof: "#c8cbc7", funnel: "#1e9aa5", teal: "#1e9aa5", crane: "#eceae4", hatch: "#7f8589", fairing: "#c73a2e" },
     items: [
-      ...deckhouse({ u: [108, 130], y0: D + 2.6, decks: 5, hw: 14, h: 2.9, wings: 15, detail: true }),
-      mast(122, D + 2.6 + 5 * 2.9, D + 26, 0.3),
-      { k: "helideck", u: 118, y: D + 2.6 + 5 * 2.9 + 1.4, r: 10, legs: 4 },
-      ...[8, -8].flatMap((z): Item[] => [funnel([100, 106], 2.2, [D + 2.6, D + 16], [["funnel", 0.85], ["black", 1]], 0.3, z), { k: "cyl", u: 104.4, z, y: [D + 15.6, D + 17.2], r: 0.4, mat: "black", name: "exhaust pipe" }]),
-      // the cable carousel with its rim and cone, its loading arm, the tensioners, the stern chute and sheaves
-      { k: "cyl", u: 62, z: 0, y: [D - 0.2, D + 5.5], r: 14, mat: "steel", n: 20, name: "carousel" },
-      { k: "cyl", u: 62, z: 0, y: [D + 5.5, D + 6], r: 14.4, mat: "yellow", n: 20, name: "carousel rim" },
-      { k: "cyl", u: 62, z: 0, y: [D + 5.5, D + 6.5], r: 3, mat: "grey", n: 12, name: "carousel hub" },
-      { k: "domes", u: [62, 62], n: 1, r: 4, y: D + 6.5, h: 1, mat: "grey", name: "carousel cone" },
-      { k: "gantry", u: 62, hw: 14.4, y: D, h: 9, t: 0.6, mat: "crane", name: "loading arm" },
-      { k: "box", u: [20, 40], z: [-1.6, 1.6], y: [D, D + 2.4], mat: "grey", name: "tensioners" },
-      ...[24, 30, 36].map((u): Item => ({ k: "box", u: [u - 1.2, u + 1.2], z: [-2.2, 2.2], y: [D + 2.4, D + 3.4], mat: "yellow", name: "tensioner frame" })),
-      { k: "box", u: [4, 20], z: [-0.8, 0.8], y: [D + 1, D + 1.6], mat: "steel", name: "cable chute" },
-      rod([1, D + 1.6, -4], [1, D + 1.6, 4], 2.2, "crane", "stern sheaves"),
-      { k: "gantry", u: 5, hw: 8, y: D, h: 11, t: 0.8, lean: 2, mat: "crane", name: "stern A-frame" },
-      // the plough on the deck and the ROV hangar beside its launch frame
-      { k: "box", u: [8, 18], z: [7, 12], y: [D, D + 3.6], mat: "yellow", name: "cable plough" },
-      { k: "tier", u: [84, 98], y: [D - 0.2, D + 6], hw: 12, lip: 0.3, windows: [{ y: 0.4, h: 4.6, w: 5, pitch: 8, from: 88, to: 94, mat: "grey" }], name: "ROV hangar" },
-      { k: "gantry", u: 90, hw: 3, y: D + 6, h: 5, t: 0.5, mat: "crane", name: "ROV launch frame" },
-      { k: "crane", u: 80, z: -12, y: D, h: 5, jib: 22, dir: -Math.PI * 0.95 },
-      { k: "freefall", u: 104, y: D + 3, len: 8, tilt: 0.55 },
-      ...fittings({ L, B, D, fc: [34, 2.8], aft: [], draft: 7 }),
+      // the house: two full-width decks from 22 m to 82.5 m behind the stem, deck 3 under the cab and the bridge
+      { k: "tier", u: [fb(82.5), fb(22)], y: [D - 0.2, y1], hw: 11.4, lip: 0.35, windows: [{ y: 1.1, h: 0.8, w: 0.9, pitch: 3 }], front: { y: 1.1, h: 0.8, w: 0.9, n: 7 }, name: "accommodation deck 1" },
+      { k: "tier", u: [fb(82), fb(22.6)], y: [y1, y2], hw: 11.2, lip: 0.35, windows: [{ y: 1.1, h: 0.8, w: 0.9, pitch: 3 }], front: { y: 1.1, h: 0.8, w: 0.9, n: 7 }, name: "accommodation deck 2" },
+      { k: "tier", u: [fb(81.5), fb(33)], y: [y2, y3], hw: 10, lip: 0.35, windows: [{ y: 1.1, h: 0.8, w: 0.9, pitch: 3 }], front: { y: 1.1, h: 0.8, w: 0.9, n: 6 }, name: "accommodation deck 3" },
+      { k: "tier", u: [fb(81), fb(51.5)], y: [y3, y4], hw: 10, lip: 0.35, windows: [{ y: 1.1, h: 0.8, w: 0.9, pitch: 2.4 }], front: { y: 1.1, h: 0.8, w: 0.9, n: 6 }, name: "accommodation deck 4" },
+      { k: "tier", u: [fb(81), fb(51.5)], y: [y4, top], hw: 10, lip: 0.7, windows: [{ y: 0.8, h: 1.5, w: 1.5, pitch: 1.9 }], front: { y: 0.8, h: 1.5, w: 1.5, n: 9 }, wings: { hw: 12, h: 2.5 }, name: "bridge" },
+      // the cable machinery house aft of it, one deck a little lower, the deck crane on its roof
+      { k: "tier", u: [fb(100.5), fb(82.5) + 0.4], y: [D - 0.2, y1 - 0.4], hw: 11.4, lip: 0.35, windows: [{ y: 1.1, h: 0.8, w: 0.9, pitch: 4.5, to: fb(83.5) }], name: "cable machinery house" },
+      { k: "rail", u: [fb(100), fb(83)], y: y1 - 0.4, hw: 11.2, h: 1, name: "machinery house rail" },
+      // the after bridge's windows over the working deck
+      ...[-8, -6, -4, -2, 0, 2, 4, 6, 8].map((z): Item => ({ k: "box", u: [fb(81) - 0.1, fb(81) - 0.03], z: [z - 0.75, z + 0.75], y: [y4 + 0.8, y4 + 2.3], mat: "glass", name: "after bridge window" })),
+      // the forward cab on deck 3, looking over the forecastle
+      { k: "tier", u: [fb(45), fb(33.5)], y: [y3, y3 + 3.4], hw: 6, lip: 0.5, windows: [{ y: 1, h: 1.4, w: 1.3, pitch: 1.8 }], front: { y: 1, h: 1.4, w: 1.3, n: 6 }, name: "forward cab" },
+      { k: "rail", u: [fb(32.4), fb(23.4)], y: y2, hw: 10.9, h: 1, name: "deck 2 rail" },
+      { k: "rail", u: [fb(80), fb(52.5)], y: top, hw: 9.8, h: 1, name: "bridge top rail" },
+      // the forward casing: teal from deck 3 to its mouth, its side panels down to deck 2, the exhausts
+      { k: "box", u: [fb(58), fb(50)], z: [-3, 3], y: [y3 - 0.3, D + 20.2], mat: "teal", name: "forward casing" },
+      { k: "box", u: [fb(58), fb(50)], z: [-3, 3], y: [D + 20.2, D + 20.9], mat: "black", name: "forward casing top" },
+      ...[1, -1].map((sd): Item => ({ k: "box", u: [fb(57.5), fb(50.5)], z: sd > 0 ? [9.6, 10.6] : [-10.6, -9.6], y: [y2, y4 - 0.15], mat: "teal", name: "casing side panel" })),
+      ...[52, 54, 56].map((m): Item => ({ k: "cyl", u: fb(m), z: 0, y: [D + 20.5, D + 22.3], r: 0.45, mat: "black", name: "exhaust pipe" })),
+      // the after casing on the bridge roof
+      { k: "box", u: [fb(75.5), fb(69)], z: [-2.6, 2.6], y: [top - 0.3, D + 18.2], mat: "teal", name: "after casing" },
+      { k: "box", u: [fb(75.5), fb(69)], z: [-2.6, 2.6], y: [D + 18.2, D + 18.8], mat: "black", name: "after casing top" },
+      ...[70.8, 73.8].map((m): Item => ({ k: "cyl", u: fb(m), z: 0, y: [D + 18.4, D + 20], r: 0.45, mat: "black", name: "exhaust pipe" })),
+      mast(fb(67), top, D + 27, 0.3),
+      // the radomes on their posts
+      ...([[40, 3, y3 + 3.4], [78, -4, top]] as const).flatMap(([m, z, y]): Item[] => [
+        { k: "cyl", u: fb(m), z, y: [y, y + 1.6], r: 0.15, mat: "white", name: "radome post" },
+        { k: "domes", u: [fb(m), fb(m)], n: 1, r: 0.8, y: y + 1.6, h: 0.5, z, mat: "white", name: "radome" },
+      ]),
+      // the lifeboats in their davits on deck 2, beside the bridge
+      { k: "boats", at: [fb(68)], z: 11, y: y2 + 1.83, len: 8.5, r: 1.3, name: "lifeboat" },
+      ...[1, -1].flatMap((sd): Item[] => [-1, 1].flatMap((e): Item[] => [
+        { k: "box", u: [fb(68) + e * 2.5 - 0.3, fb(68) + e * 2.5 + 0.3], z: sd > 0 ? [10.1, 11.2] : [-11.2, -10.1], y: [y2 - 0.1, y2 + 0.55], mat: "steel", name: "boat chock" },
+        rod([fb(68) + e * 4.7, y2, sd * 9.9], [fb(68) + e * 4.7, y3 + 1.6, sd * 11.4], 0.2, "white", "davit arm"),
+        rod([fb(68) + e * 4.7, y3 + 1.6, sd * 11.4], [fb(68) + e * 3.6, y2 + 2.6, sd * 11], 0.05, "rope", "davit fall"),
+      ])),
+      // the forecastle: the foremast with its platform, a crane
+      mast(fb(6), D + 0.4, D + 12, 0.4),
+      { k: "box", u: [fb(7.1), fb(4.9)], z: [-1.1, 1.1], y: [D + 9, D + 9.3], mat: "mast", name: "foremast platform" },
+      { k: "rail", u: [fb(7), fb(5)], y: D + 9.3, hw: 1.05, h: 0.9, name: "foremast platform rail" },
+      { k: "crane", u: fb(17), z: -5, y: D + 0.3, h: 2.5, jib: 9, dir: 0.5, lift: 0.5, name: "forecastle crane" },
+      // the cable tanks' hatches on the after deck: coamings closed to the deck, covers with their hubs
+      ...[25].flatMap((u): Item[] => [
+        { k: "cyl", u, z: 0, y: [D - 0.3, D + 1.2], r: 5, n: 20, mat: "hatch", name: "cable tank hatch" },
+        { k: "cyl", u, z: 0, y: [D + 1.2, D + 1.6], r: 1.4, n: 10, mat: "grey", name: "cable tank hub" },
+      ]),
+      // the cable highway: the trough aft to the chute, the linear engine and its tensioner frames
+      { k: "box", u: [0.6, 25], z: [-0.45, 0.45], y: [D - 0.1, D + 0.9], mat: "steel", name: "cable highway" },
+      { k: "box", u: [8, 18], z: [-1.4, 1.4], y: [D - 0.1, D + 2], mat: "grey", name: "linear cable engine" },
+      ...[10, 13, 16].map((u): Item => ({ k: "box", u: [u - 0.5, u + 0.5], z: [-1.8, 1.8], y: [D - 0.1, D + 2.6], mat: "yellow", name: "tensioner frame" })),
+      { k: "plate", pts: [[0.8, D + 0.6], [0.8, D - 0.3], [sheave.u, sheave.y + sheave.r - 0.3], [sheave.u, sheave.y + sheave.r + 0.3]], z: 0, t: 2, mat: "steel", name: "stern chute" },
+      // the three stern sheaves in their fairings over the transom
+      ...[-3.2, 0, 3.2].flatMap((z): Item[] => [
+        { k: "plate", pts: [[8, D - 1.6], [-8.4, D - 1.6], [-11.4, D - 3.2], [-12.4, D - 4.8], [-12.5, D - 6.6], [-12, T + 5.6], [-10.4, T + 3.2], [-7, T + 1.8], [-1.5, T + 1.2], [4, T + 2], [8, T + 3.6]], z, t: 2.4, mat: "fairing", name: "sheave fairing" },
+        { k: "rod", a: [sheave.u, sheave.y, z - 1.3], b: [sheave.u, sheave.y, z + 1.3], r: sheave.r, n: 12, mat: "steel", name: "stern sheave" },
+        rod([sheave.u, sheave.y, z - 1.4], [sheave.u, sheave.y, z + 1.4], 0.5, "black", "sheave hub"),
+      ]),
+      // the A-frame over the stern, parked leaning inboard, on its foot blocks with its rams
+      { k: "gantry", u: 3, hw: 7, y: D - 0.3, h: 13, t: 0.9, lean: -3, mat: "crane", name: "stern A-frame" },
+      ...[1, -1].flatMap((sd): Item[] => [
+        { k: "box", u: [2, 4], z: sd > 0 ? [6.2, 7.8] : [-7.8, -6.2], y: [D - 0.2, D + 1.2], mat: "crane", name: "A-frame foot" },
+        rod([10, D + 0.4, sd * 7], [4.5, D + 6, sd * 7], 0.3, "steel", "A-frame ram"),
+        { k: "box", u: [9.4, 10.6], z: sd > 0 ? [6.4, 7.6] : [-7.6, -6.4], y: [D - 0.2, D + 0.8], mat: "steel", name: "ram foot" },
+      ]),
+      // the deck cranes over the working deck
+      { k: "crane", u: fb(94), z: 5, y: y1 - 0.4, h: 4.5, jib: 20, dir: Math.PI, lift: 0.35, name: "deck crane" },
+      { k: "crane", u: 16, z: -7.5, y: D, h: 6, jib: 15, dir: Math.PI * 0.85, lift: 0.4, name: "stern crane" },
+      // the forecastle bulwark white, as the sheer strake under it
+      ...fittings({ L, B, D, fc: [24, 0], aft: [1.5, 29.5], draft: T, rake: 0.08 }).map((it): Item => (it.k === "bulwark" ? { ...it, mat: "stripe" } : it)),
     ],
   };
 }
