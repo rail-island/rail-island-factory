@@ -212,8 +212,9 @@ the largest x), +Y up, +Z right, centred on x 0 and z 0, the treads on y 0.
 - **Open sides** (`open`): a cross-bench car - underframe, floor, dashes, posts, benches of slats
   on cast-iron ends, curtain rails, the roof, running boards, truss rods, lifeguards.
 - **Roof equipment** (`roofBoxes`) and a `clerestory`.
-- **Extras** (`extra`, `extraLod`): what the kit cannot say, from `worldTramShapes.ts` - the
-  horse tram's distant horse (its full model is its own, below), the tram engine's chimney (with its smoke emitter), the
+- **Extras** (`extra`, `extraLod`, `extraSection`): what the kit cannot say, from `worldTramShapes.ts` - the
+  horse tram's distant horse (its full model is its own, below; `extraSection` makes it a
+  section of its own), the tram engine's chimney (with its smoke emitter), the
   cable car's grip and lever, the pusher buffer under the Opicina car's lower end.
 - **`checkSpec(spec)`** lists what the kit cannot draw well: a door off the straight side or over
   a truck's cut-out, a truck not under a section (or a joint, for a Jacobs bogie or portal), the
@@ -269,6 +270,27 @@ Harbor double-deck horse cars (`assets/horse-tram/`), green with cream panels an
   the bridle with blinkers and bit, the traces back to the swingletree and the reins back to the
   driver's dash. Its parts are jointed and **trot** (below).
 
+### Horse and car: two hitched sections
+
+The game poses the horse tram like a two-section articulated tram whose first section is the
+horse, so the horse stands on the track wherever it is - on the track's centre line between the
+rails through a curve, and at the track's height over a rise or a dip - instead of being carried
+5.3 m ahead of the car's wheelsets, rigid with the car:
+
+- `section0` (`CAR_SECTION`) is the car: saloon, ends, top deck and truck. It rides its two
+  wheelsets, the rig's lone supports at x -0.8 and 0.8.
+- `section1` (`HORSE_SECTION`) is the horse with its harness, traces and the swingletree, its
+  node pivoted at the draw hook's pin (`HORSE_HITCH`, x 3.24) it turns about. It rides two lone
+  supports of its own under its hind legs and forelegs (`HORSE_SUPPORTS`, recorded with `axleAt`;
+  no wheels are drawn there), so the game sets it by its own two points on the track.
+- No joint (`joints: []`): nothing is re-skinned between them, like a semi-trailer's hitch. The
+  trot's `horse` translation is written within the horse's section node.
+- The distant model is split the same way: the kit's `extraSection` puts the horse's boxes
+  (`extraLod`) in a section of their own at the hitch.
+
+The game counts an articulated car's distance clips (the trot and the rolling wheels, held by its
+root) along its front section, the horse.
+
 ### The trot
 
 The horse is a tree of moving parts (`MeshCore.spin`): `horse` (the body, pivot at its middle)
@@ -290,7 +312,7 @@ stands, and the site's **Start** and **Stop** play it with the wheels:
 
 The rest pose - the thumbnail, the source tree and the build's checks - is the horse standing
 square. The harness, traces and reins ride on the body, so they follow its bob but not the legs.
-`test/horseTram.test.ts` checks the budget, the drives, the closed loop, the pairs and the planted
+`test/horseTram.test.ts` checks the budget, the two hitched sections and the horse's supports, the horse between the rails, the drives, the closed loop, the pairs and the planted
 hoof's no-slip, the soles on the ground and no z-fighting through the stride, the JS model's
 nested parts playing the clip, and a static distant model; `test/rolling.test.ts` its wheels.
 
