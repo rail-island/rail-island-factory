@@ -134,6 +134,12 @@ document that owns it in the same change.** Conventions:
 - **`ship`** (`.agents/skills/ship/`) - use it whenever a ship is added or changed: the
   25,000/15,000-triangle budgets (4,000 for small craft), the hull kit, the house, fittings
   and cargo gear every ship carries, the waterline, OpenTTD, references and headless checks.
+- **`detailed-vehicle`** (`.agents/skills/detailed-vehicle/`) - use it whenever a vehicle is built or
+  reshaped from references, with the family's skill: at least three photos fetched one at a time,
+  measured in px/m, a characteristic nose and cab, and a render-and-compare check loop (side at true
+  scale, front, plan, windows and doors on every car, paint, roof, running gear) before reporting. When
+  several vehicles are requested, one subagent per vehicle, each reviewed by the master against the photos,
+  then merged with a byte-hash check and built and tested once.
 - **`vlakosimdb-transfer`** (`.agents/skills/vlakosimdb-transfer/`) - use it when
   reconstructing or correcting a vehicle from vlakosimdb: XML shapes, original
   BMP measurements, comparison-table optimization and presentation to the user.
