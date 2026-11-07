@@ -12,7 +12,7 @@
 | `proc-vehicle-shinkansen-e5` | Shinkansen E5 / H5 | `hayabusa` (E5), `h5` | 26.5 / 25.0 m | 15 m, the canopy cab |
 | `proc-vehicle-shinkansen-500` | Shinkansen 500 series | `original` (Nozomi), `kodama` | 27.0 / 25.0 m | 15 m needle, round body |
 | `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill" |
-| `proc-vehicle-shinkansen-e6` | Shinkansen E6 | `komachi`, `akita` | 23.075 / 20.5 m | 13 m, a mini-shinkansen 2.945 m wide |
+| `proc-vehicle-shinkansen-e6` | Shinkansen E6 | `komachi`, `akita` | 23.075 / 20.5 m | 13 m cab face ([The E6](#the-e6)), a mini-shinkansen 2.945 m wide |
 | `proc-vehicle-shinkansen-100` | Shinkansen 100 series | `jnr`, `jrWest` | 26.05 / 25.0 m | 5 m, after the 0 series |
 | `proc-vehicle-shinkansen-e4` | Shinkansen E4 Max | `max`, `toki` | 25.7 / 25.0 m | 11.5 m, double-deck, 4.485 m high |
 
@@ -122,6 +122,8 @@ combinations hashed before and after):
   rounded to a point in plan, the Giruno's); its `paint` lays colour fields over the whole
   surface, face and cab sides alike, between front and back edges in [y, d] (a field that runs
   from the front round the corners and back along a long nose: the Giruno's red and black);
+  `lodGlass` gives the distant model's windscreen (half width, heights) where the windscreen is
+  `paint`, not a pane (the E6);
 - `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
   cars (its rig support names both sections) and the cars' skirts are cut open at their inner
   ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
@@ -158,10 +160,37 @@ transoms) and a skirt bottom on the centre coupler's draft gear or on the transo
 `seriesHelpers.ts` holds the paint, nose and flat-cab helpers, the one-colour `striped`
 livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE S-103 share.
 
+## The E6
+
+The E6 is drawn with a `cabFace` (in place of the lofted nose tables), measured on
+`assets/shinkansen-e6/`: `photo-e6-z8.jpg` rectified to true scale by a projective fit along the side
+(the tip at d = 0, seven windows 0.89 m apart, the car's end 22.85 m back; heights from the rail and
+the 3.65 m roof), the head-on and three-quarter photographs for widths.
+
+- **Nose** - joined to the body's section 11.95 m behind the tip (the door follows at once, 12.2 -
+  13.05 m). A round snout 0.42 - 1.55 m high, its foremost point at 1.09 m, the coupler cover's seam
+  under it and the red over white split at 0.95 m; behind it the nose rises to the windscreen's foot
+  (3.6 m back, 1.98 m) and the canopy (3.0 m high from 6 to 7.5 m back), the roof reaching full height
+  at the join. The canopy is narrower than the nose under it: the face's bow (up to 2.2 m deep) is the
+  canopy's front, 0.65 m half wide; below 2.08 m the corners reach the full width within 2.4 - 5 m.
+- **Paint** - edges in [y, d] (`paint`): the red over the snout and nose, its lower sweep rising from
+  1.03 m (2 m back) to a point 10.9 m back at 2.0 m; the white wedge from a point at the headlights
+  (4.4 m, 1.43 m) up to the roof's edge, the silver arrow line along its top; the grey line under the
+  windows (2.02 - 2.09 m) along the body; the red roof over a silver band (3.1 - 3.2 m). The windscreen
+  (3.6 - 7.3 m back) in a black surround; the headlights' long dark lens (4.5 - 6.5 m, 1.48 - 2.05 m)
+  with two lamps at its front. A low white pilot under the nose (0.2 m high, 1.9 - 5.2 m back) and beige
+  equipment covers from 5.3 m back, down to 0.42 m (`B`).
+- **Sides** - windows 0.55 m wide, 2.16 - 2.66 m, 0.9 m apart: seven on the end car (E621), sixteen on
+  an intermediate car; doors 0.85 m wide with a 0.3 m window high in the leaf, behind the nose and at the
+  end car's rear, at the front of an intermediate car (its toilets at the rear); the LED destination
+  display beside each. Bogies 6.7 m and 20.85 m behind the tip; centred on the intermediate cars.
+- **Liveries** - `komachi` as above; `akita` keeps its white roof and red lines, with the same red nose.
+- About 14,700 triangles the end car, 8,400 an intermediate car.
+
 ## Deviations
 
 - The bodies' widths (above); the noses are drawn from tables, not measured drawings, and
-  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's and E6's pointed lower noses and the
+  their cab windscreens are panes laid on the crown's own facets ([vehicles.md](vehicles.md), "Closed ends"), and the nose below the body's shoulder takes the side's colour under the shoulder; the E5's pointed lower nose and the
   N700S's wing edges are approximations.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn.

@@ -70,6 +70,8 @@ export interface SeriesCabFace {
   wrap?: boolean;
   /** The windscreens and other panes, painted glass. */
   panes: readonly FaceRect[];
+  /** The distant model's glass, its half width and heights, in place of the panes' extent: a windscreen painted by `paint` (default the panes'). */
+  lodGlass?: { hw: number; y: readonly [number, number] };
   /** Round lamps on the face: lat, y, radius, lens. */
   lamps?: ReadonlyArray<readonly [number, number, number, string]>;
   /** A gangway door: its frame standing off the face (half width, sill, head, bar width) and the leaf's paint. */
@@ -273,7 +275,8 @@ export function cabFaceLod(face: SeriesCabFace, e: number, xTip: number, half: P
   const f: SeriesCabFace = face.lod ? { ...face, profile: face.lod.profile, corner: face.lod.corner, rows: face.lod.rows, ...(face.lod.bulge !== undefined ? { bulge: face.lod.bulge } : {}) } : face;
   const B = f.rows[0]!;
   const paint: LodBand[] = [...(f.lodBands ?? p.face).map(([a, b, mt]): LodBand => [Math.max(a, B), Math.min(b, f.roofFrom), mt]).filter(([a, b]) => b > a + 1e-6), [f.roofFrom, C, p.roof]];
-  const lo = Math.min(...f.panes.map((r) => r.y[0])), hi = Math.max(...f.panes.map((r) => r.y[1]));
-  const w = Math.max(...f.panes.map((r) => Math.max(Math.abs(r.lat[0]), Math.abs(r.lat[1]))));
-  return noseEnd(spec(f, e, xTip, half), paint, f.panes.length && f.lod?.glass !== false ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);
+  const g = face.lodGlass;
+  const lo = g ? g.y[0] : Math.min(...f.panes.map((r) => r.y[0])), hi = g ? g.y[1] : Math.max(...f.panes.map((r) => r.y[1]));
+  const w = g ? g.hw : Math.max(...f.panes.map((r) => Math.max(Math.abs(r.lat[0]), Math.abs(r.lat[1]))));
+  return noseEnd(spec(f, e, xTip, half), paint, (g || f.panes.length) && f.lod?.glass !== false ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);
 }
