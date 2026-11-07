@@ -167,6 +167,12 @@ wagons couple behind it in the ordinary consist.
 but implemented in this change: the new designs are built in rail-island-music, mapped to
 every species x count variant in the factory and played by the game.
 
+**Follow-up (user): "keep the tram bell, call only on player horn".** The animal call never
+sounds by itself: it plays only when the player presses Horn. The animal-drawn trams keep the
+tram bell on departure, as trams do today. A slot plays one design, so the call goes into a
+new `call` slot of its own (the player's Horn plays it where a vehicle has one, the `horn`
+slot otherwise), and the trams' `horn` slot stays the tram bell.
+
 ### What should the standalone Animals-category designs be used for in the game?
 | Option | What it means |
 |---|---|
@@ -231,16 +237,17 @@ than kept or aliased; the double-deck car returns under a new id on the animal k
      of it, quiet.
    - **The animal call** (proposed id `animal-call`): a one-shot with a `species` choice -
      horse neigh/whinny, donkey bray, mule (between the two), cow moo, camel groan, elephant
-     trumpet - and a `pitch` scale; it takes the horn's `call` parameter like every horn, so
-     the game sounds it on departure and on the player's Horn.
+     trumpet - and a `pitch` scale. The game never plays it by itself: only the player's
+     Horn sounds it.
    - Each design is matched against downloaded recordings (CC0, Public Domain Mark or CC BY),
      kept as excerpts with their sources in the music repository, with what was measured and
      what was modelled stated in its documentation; MP3 renders are sent to the user.
    - **The factory's mapping.** The factory re-imports the designs into its copy of the sound
      designs. Every animal-drawn vehicle's slots are derived from its team, per variant: the
      `engine` slot is the hoof beat with the species' foot, size and stride and the team count
-     pinned; the `horn` slot is the species' call with `departure` among its calls. The trailer
-     (count "none") is silent. The factory's sound check covers every variant.
+     pinned; a new `call` slot holds the species' call, played only by the player's Horn; the
+     trams' `horn` slot stays the tram bell on departure, the buses and trains have no `horn`
+     slot. The trailer (count "none") is silent. The factory's sound check covers every variant.
    Independent of 1-3 until the mapping step, which needs the vehicles' parameters.
 5. **The game (rail-island-webapp).** Import the new export. Extend the horse tram's handling
    (team as a front section on its own supports, its gait played by distance) from trams to
@@ -249,8 +256,8 @@ than kept or aliased; the double-deck car returns under a new id on the animal k
    end. Remove what referred only to the old horse tram and move its regression tests to the
    new vehicles. Import the new sound designs; drive the hoof beat's footfall rate from the
    vehicle's speed and the pinned stride (the way the steam beat's rate follows the wheels),
-   silent while standing, heard from the team's section; list the new ids among the sounds
-   the game plays. Depends on 2-4.
+   silent while standing, heard from the team's section; play the `call` slot on the
+   player's Horn where a vehicle has one; list the new ids among the sounds the game plays. Depends on 2-4.
 
 ## Database and persistent storage
 
@@ -300,8 +307,8 @@ No new database table, bucket, KV key or browser storage.
   carries it; only the rate's source (speed over stride) is new. One parametric design for
   all six species, not one per species: fewer permanent ids, and the species differences are
   character values the factory pins.
-- **The animal call as the horn slot**, so the player's Horn and the departure call work with
-  no new game slot.
+- **The animal call in a slot of its own** (`call`), so the trams keep their bell in the
+  `horn` slot and the call stays the player's alone; the player's Horn prefers `call`.
 - **Count "none" as the trailer** instead of separate trailer designs: one design per vehicle.
 
 ## Weaknesses and risks
@@ -326,9 +333,8 @@ No new database table, bucket, KV key or browser storage.
   re-imports the designs and maps them, then the game imports both. Out of order, the game
   warns about a slot naming a design it lacks and plays nothing there; harmless but must be
   sequenced.
-- **The tram bell.** The animal call takes the horn slot, so the animal-drawn trams lose the
-  tram bell they ring today. Open question: keep the bell for trams and give the call only to
-  the player's Horn?
+- **The new `call` slot** is a change to the factory's slot list and the game's playback;
+  a game without it ignores the slot (no call, the bell still rings).
 - **Reference recordings.** Freely licensed camel and elephant recordings are scarcer than
   horse or cow; a call may end up modelled with fewer measurements (stated in its docs).
 - **Many hooves.** A six-ox team or several teams in view may blur into noise or crowd the
