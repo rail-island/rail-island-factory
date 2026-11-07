@@ -3,12 +3,36 @@
 // generator/sets/airfieldFixtures.ts. The tags are the game's contract (TerminalBox).
 import { describe, expect, it } from "vitest";
 import * as airport from "../generator/sets/airport.ts";
+import * as station from "../generator/sets/station.ts";
 import { AIRFIELD_FIXTURES, AIRFIELD_SIZES, airfieldFixture } from "../generator/sets/airfieldFixtures.ts";
+import { towerBoxes, TOWER_HEIGHTS } from "../generator/props/airportProps.ts";
 
 const TYPES = Object.keys(airport.TYPE_META);
 const RUNWAY_TYPES = TYPES.filter((t) => airport.TYPE_META[t]!.runways);
-const MATERIALS = new Set(["brick", "wood", "roof", "steel", "glass", "sign", "column", "platform", "edge", "safety", "light"]);
+const MATERIALS = new Set(["brick", "wood", "roof", "steel", "glass", "sign", "column", "platform", "edge", "safety", "light", "netting"]);
 const deckOf = (boxes: readonly airport.AirfieldBox[]): airport.AirfieldBox[] => boxes.filter((b) => b.depthLayer === 1);
+/** A box's true extent, from the station set's mesh (a shape's cx..sz do not bound it). */
+const boundsOf = (b: airport.AirfieldBox): [number[], number[]] => station.stationBoxBounds(b as station.StationBox);
+/** A box's footprint in plan. */
+const planOf = (b: airport.AirfieldBox): airport.DeckRect => {
+  const [min, max] = boundsOf(b);
+  return { x0: min[0]!, x1: max[0]!, z0: min[2]!, z1: max[2]! };
+};
+const overlapIn = (a: airport.DeckRect, b: airport.DeckRect, margin = 0): boolean =>
+  a.x0 < b.x1 + margin - 1e-6 && b.x0 < a.x1 + margin - 1e-6 && a.z0 < b.z1 + margin - 1e-6 && b.z0 < a.z1 + margin - 1e-6;
+const triangles = (boxes: readonly airport.AirfieldBox[]): number => station.stationTriangles(boxes as station.StationBox[]);
+
+/**
+ * The triangle budget of a whole airport (docs/models/airfield.md, "Triangle budgets"):
+ * the field, its perimeter details and the control tower prop, counted as the game
+ * draws them. A runway airport's budget follows its size class.
+ */
+const BUDGET: Record<string, number | Record<string, number>> = {
+  grass_field: 8000,
+  regional: { small: 18000, medium: 30000, big: 40000 },
+  international: { small: 18000, medium: 30000, big: 40000 },
+  heliport: 12000,
+};
 
 describe("airfield", () => {
   it("draws every fixture for every type, from the box vocabulary only", () => {
@@ -33,10 +57,9 @@ describe("airfield", () => {
         expect(deck.length).toBeGreaterThan(0);
         expect(new Set(deck.map((b) => b.material)).size, `${name}/${type}`).toBe(1);
         expect(new Set(deck.map((b) => b.cy + b.sy / 2))).toEqual(new Set([airport.APRON_SURFACE]));
+        const plans = deck.map(planOf);
         for (let i = 0; i < deck.length; i++) for (let j = i + 1; j < deck.length; j++) {
-          const a = deck[i]!, b = deck[j]!;
-          const overlap = Math.abs(a.cx - b.cx) < (a.sx + b.sx) / 2 - 1e-6 && Math.abs(a.cz - b.cz) < (a.sz + b.sz) / 2 - 1e-6;
-          expect(overlap, `${name}/${type}: deck pieces ${i}/${j}`).toBe(false);
+          expect(overlapIn(plans[i]!, plans[j]!), `${name}/${type}: deck pieces ${i}/${j}`).toBe(false);
         }
       }
     }
@@ -133,7 +156,8 @@ describe("airfield", () => {
         const { boxes, details } = airport.airfield(layout, t, 20);
         const far = airport.airfieldLowDetail(boxes);
         expect(far.some((b) => b.depthLayer === 2 || b.label || b.material === "glass"), `${name}/${t}`).toBe(false);
-        expect(deckOf(far)).toEqual(deckOf(boxes));
+        // the deck's rectangles, without the rounded corners
+        expect(deckOf(far)).toEqual(deckOf(boxes).filter((b) => !b.shape));
         expect(airport.airfieldLowDetail(details), `${name}/${t}: details are near-only`).toHaveLength(0);
       }
     }
@@ -145,7 +169,8 @@ describe("airfield", () => {
       const f = layout.footprint;
       expect(details.length, name).toBeGreaterThan(0);
       for (const b of details) {
-        expect(Math.abs(b.cx - f.cx) <= f.w / 2 && Math.abs(b.cz - f.cz) <= f.d / 2, `${name}: a fitting off the footprint`).toBe(true);
+        const r = planOf(b);
+        expect(r.x0 >= f.cx - f.w / 2 && r.x1 <= f.cx + f.w / 2 && r.z0 >= f.cz - f.d / 2 && r.z1 <= f.cz + f.d / 2, `${name}: a fitting off the footprint`).toBe(true);
       }
     }
   });
@@ -153,13 +178,16 @@ describe("airfield", () => {
   /** Every pair of boxes overlapping in plan with a face on one plane above the ground. */
   const sharedPlanes = (boxes: readonly airport.AirfieldBox[], label: string): string[] => {
     const out: string[] = [];
-    const flat = boxes.filter((b) => !b.rotZ && !b.profile);
+    // level boxes and the shapes whose top and bottom are flat (a ring, an upright cylinder)
+    const flat = boxes.filter((b) => !b.rotZ && !b.rotX && !b.rotY && !b.profile && (!b.shape || b.shape === "ring" || b.shape === "cylinder"));
+    const plans = flat.map(planOf);
+    const ys = flat.map((b) => { const [min, max] = boundsOf(b); return [min[1]!, max[1]!]; });
     for (let i = 0; i < flat.length; i++) for (let j = i + 1; j < flat.length; j++) {
       const a = flat[i]!, b = flat[j]!;
-      if (Math.abs(a.cx - b.cx) >= (a.sx + b.sx) / 2 - 1e-6 || Math.abs(a.cz - b.cz) >= (a.sz + b.sz) / 2 - 1e-6) continue;
-      for (const fa of [a.cy - a.sy / 2, a.cy + a.sy / 2]) {
+      if (!overlapIn(plans[i]!, plans[j]!)) continue;
+      for (const fa of ys[i]!) {
         if (fa < 0) continue;
-        for (const fb of [b.cy - b.sy / 2, b.cy + b.sy / 2]) if (Math.abs(fa - fb) <= 1e-6) out.push(`${label}: ${a.material} ${i} / ${b.material} ${j} at y=${fa}`);
+        for (const fb of ys[j]!) if (Math.abs(fa - fb) <= 1e-6) out.push(`${label}: ${a.material} ${i} / ${b.material} ${j} at y=${fa}`);
       }
     }
     return out;
@@ -173,21 +201,129 @@ describe("airfield", () => {
     expect(overlaps).toEqual([]);
   });
 
-  it("draws a helipad with no flickering faces: lights seated into the slab, circle steps apart", () => {
+  it("draws a helipad with no flickering faces: lights seated into the slab, the circle one round ring", () => {
     // regression: the corner lights stood exactly on the slab's top and the aiming
-    // circle's diagonal steps overlapped each other at one height, so both flickered
+    // circle's diagonal steps overlapped each other at one height, so both flickered;
+    // and the circle was a staircase of rectangles, not round
     for (const pad of ["small", "large"] as const) {
       const boxes = airport.helipad({ cx: 5, cz: -7, pad }, "heliport");
       expect(sharedPlanes(boxes, pad)).toEqual([]);
       const slabTop = Math.max(...boxes.filter((b) => b.material === "platform").map((b) => b.cy + b.sy / 2));
       for (const l of boxes.filter((b) => b.material === "light")) expect(l.cy - l.sy / 2, `${pad}: a light's foot`).toBeLessThan(slabTop - 0.05);
-      // the circle's paint never overlaps itself in plan
       const circle = boxes.filter((b) => b.material === "safety");
-      for (let i = 0; i < circle.length; i++) for (let j = i + 1; j < circle.length; j++) {
-        const a = circle[i]!, b = circle[j]!;
-        const overlap = Math.abs(a.cx - b.cx) < (a.sx + b.sx) / 2 - 1e-6 && Math.abs(a.cz - b.cz) < (a.sz + b.sz) / 2 - 1e-6;
-        expect(overlap, `${pad}: circle pieces ${i}/${j}`).toBe(false);
+      expect(circle, pad).toHaveLength(1);
+      expect(circle[0]!.shape).toBe("ring");
+      expect(circle[0]!.sides).toBeGreaterThanOrEqual(24);
+      // centred on the pad, every vertex of its outer edge at one radius
+      const mesh = station.stationBoxMesh(circle[0] as station.StationBox).positions;
+      const radii = new Set<string>();
+      for (let i = 0; i < mesh.length; i += 3) radii.add(Math.hypot(mesh[i]! - 5, mesh[i + 2]! + 7).toFixed(4));
+      expect(radii.size, `${pad}: an inner and an outer radius`).toBe(2);
+    }
+  });
+
+  it("rounds every inside corner of the pavement, touching no pavement and no other fillet", () => {
+    for (const [name, layout] of Object.entries(AIRFIELD_FIXTURES)) {
+      if (layout.runways.length === 0) continue;
+      const deck = deckOf(airport.airfield(layout, "regional").boxes);
+      const rects = deck.filter((b) => !b.shape).map(planOf);
+      const fillets = deck.filter((b) => b.shape);
+      expect(fillets.length, name).toBeGreaterThanOrEqual(4);
+      for (const f of fillets) {
+        expect(f.shape).toBe("ring");
+        expect(f.ring?.fillet).toBe(true);
+        const r = planOf(f);
+        // a square, three of whose corners' neighbours are paved
+        expect(r.x1 - r.x0).toBeCloseTo(r.z1 - r.z0, 6);
+        expect(rects.some((p) => overlapIn(p, r)), `${name}: a fillet over pavement`).toBe(false);
+        expect(rects.filter((p) => overlapIn(p, r, 0.01)).length, `${name}: a fillet off every corner`).toBeGreaterThanOrEqual(2);
       }
+      const plans = fillets.map(planOf);
+      for (let i = 0; i < plans.length; i++) for (let j = i + 1; j < plans.length; j++) expect(overlapIn(plans[i]!, plans[j]!), `${name}: fillets ${i}/${j}`).toBe(false);
+    }
+  });
+
+  it("turns the taxi line round the spine's corners and marks a holding point on every runway link", () => {
+    const layout = airfieldFixture("regional", "medium");
+    const boxes = airport.airfield(layout, "regional").boxes;
+    const arcs = boxes.filter((b) => b.depthLayer === 2 && b.shape === "ring");
+    // the ladder's spine turns into a runway link at both of its ends
+    expect(arcs).toHaveLength(2);
+    for (const a of arcs) expect((a.ring!.a1! - a.ring!.a0!)).toBeCloseTo(Math.PI / 2, 6);
+    const links = layout.edges.filter((e) => e.kind === "runwayLink");
+    const nodes = new Map(layout.nodes.map((n) => [n.id, n]));
+    for (const e of links) {
+      const z = nodes.get(e.a)!.z;
+      // four bars across the link, broken round the centreline: some yellow paint 0.5 wide along Z on it
+      const bars = boxes.filter((b) => b.depthLayer === 2 && b.sx === 0.5 && b.color[0] === 226 && Math.abs(b.cz - z) < e.width / 2);
+      expect(new Set(bars.map((b) => b.cx.toFixed(2))).size, `link ${e.id}`).toBe(4);
+      // and a red sign beside it
+      expect(boxes.some((b) => b.material === "sign" && b.color[0] === 176 && Math.abs(b.cz - z) < e.width / 2 + 24), `link ${e.id}: its sign`).toBe(true);
+    }
+  });
+
+  it("keeps a corner's turn short of the next junction when the spine's end edge is short", () => {
+    // regression: a saved layout whose first stand link meets the spine 4 studs from its
+    // corner drew the 12-stud turn across that junction's line, paint on paint
+    const base = airfieldFixture("regional", "medium");
+    const corner = base.nodes.find((n) => n.id === 3)!;
+    const layout = {
+      ...base,
+      nodes: base.nodes.map((n) => (n.id === 5 || n.id === 6 ? { ...n, z: corner.z + 4 } : n)),
+      stands: base.stands.map((st, i) => (i === 0 ? { ...st, z: corner.z + 4 } : st)),
+    };
+    const boxes = airport.airfield(layout, "regional").boxes;
+    expect(sharedPlanes(boxes.filter((b) => b.depthLayer === 2), "short corner")).toEqual([]);
+  });
+
+  it("fences a paved field with one pane of chain-link per straight run, barbed wire over it, a barrier at the service gate", () => {
+    for (const t of ["regional", "international", "heliport"]) {
+      const layout = airfieldFixture(t, "medium");
+      const details = airport.airfield(layout, t).details;
+      const panes = details.filter((b) => b.material === "netting");
+      const posts = details.filter((b) => b.material === "steel" && !b.shape && b.sx === b.sz && b.sy > 3);
+      // a run is many bays long: far fewer panes than posts
+      expect(panes.length, t).toBeGreaterThanOrEqual(4);
+      expect(panes.length * 4, t).toBeLessThan(posts.length);
+      for (const p of panes) expect(Math.min(p.sx, p.sy, p.sz), `${t}: a pane is thin`).toBeLessThanOrEqual(0.4);
+      expect(details.filter((b) => b.shape === "bar").length, `${t}: barbed wire arms`).toBeGreaterThan(posts.length / 3);
+      expect(details.some((b) => b.material === "sign" && b.color[0] === 176), `${t}: the barrier`).toBe(true);
+    }
+    // a grass field's is timber post-and-rail, without mesh or wire
+    const grass = airport.airfield(airfieldFixture("grass_field", "medium"), "grass_field").details;
+    expect(grass.some((b) => b.material === "netting" || b.shape === "bar")).toBe(false);
+  });
+
+  it("stands the service area clear of the pavement: a vaulted hangar, a fire station and a fuel farm", () => {
+    for (const size of AIRFIELD_SIZES) for (const t of ["regional", "international"]) {
+      const layout = airfieldFixture(t, size);
+      const boxes = airport.airfield(layout, t).boxes;
+      const paved = deckOf(boxes).map(planOf);
+      const runways = layout.runways.map((rw) => ({ x0: rw.cx - rw.width / 2, x1: rw.cx + rw.width / 2, z0: rw.cz - rw.length / 2, z1: rw.cz + rw.length / 2 }));
+      const vault = boxes.filter((b) => b.shape === "arc" && b.rotY);
+      const tanks = boxes.filter((b) => b.shape === "cylinder" && b.material === "steel" && b.color[0] === 222);
+      expect(vault, `${t}/${size}: the hangar`).toHaveLength(1);
+      expect(tanks.length, `${t}/${size}: the fuel tanks`).toBe(t === "international" ? 3 : 2);
+      expect(boxes.filter((b) => b.material === "steel" && b.color[0] === 178).length, `${t}/${size}: the station's doors`).toBeGreaterThanOrEqual(3);
+      for (const b of [...vault, ...tanks]) {
+        const r = planOf(b);
+        expect(paved.some((p) => overlapIn(p, r, 9)), `${t}/${size}: on the pavement`).toBe(false);
+        expect(runways.some((p) => overlapIn(p, r, 19)), `${t}/${size}: by the runway`).toBe(false);
+      }
+    }
+  });
+
+  it("keeps every airport within its triangle budget, its tower included", () => {
+    for (const [name, layout] of Object.entries(AIRFIELD_FIXTURES)) {
+      const type = name.split(".")[0]!;
+      const size = name.split(".")[1]!;
+      const { boxes, details } = airport.airfield(layout, type, 20);
+      const meta = airport.TYPE_META[type]!;
+      const tower = meta.tower ? towerBoxes(TOWER_HEIGHTS[meta.tower.values.kind as keyof typeof TOWER_HEIGHTS]) : [];
+      const tris = triangles(boxes) + triangles(details) + tower.reduce((n, b) => n + (b.profile === "gable" ? 8 : 12), 0);
+      const limit = BUDGET[type]!;
+      const cap = typeof limit === "number" ? limit : limit[size] ?? limit.big!;
+      expect(tris, name).toBeLessThanOrEqual(cap);
     }
   });
 

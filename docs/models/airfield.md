@@ -2,12 +2,14 @@
 
 **Covers** - the airport set's drawing of a whole airport on the game's saved layout: what
 the module receives (the layout) and returns (the field's boxes and the perimeter
-details), the tags the game reacts to, the shared heights, the far level, the layout
-fixtures the site's preview pages and the pins draw on, and what stays in the game.
+details), the tags the game reacts to, the shapes it draws with, the shared heights, the
+deck and its rounded corners, the paint, the apron and the service area, the fence, the
+far level, the triangle budgets, the layout fixtures the site's preview pages and the
+pins draw on, and what stays in the game.
 **Code** - `generator/sets/airport.ts` (`airfield`, `airfieldLowDetail`, `pavementDeck`,
-`runwayNumber`, `APRON_SURFACE`, `PAD_SURFACE`, `TYPE_META`, `terminal`, `furniture`,
-`helipad`), `generator/sets/airfieldFixtures.ts`, `generator/previews/structures.ts`
-(`airportSketch`), `generator/sets/pinCases.ts`, `test/airfield.test.ts`
+`deckFillets`, `runwayNumber`, `APRON_SURFACE`, `PAD_SURFACE`, `TYPE_META`, `terminal`,
+`furniture`, `helipad`), `generator/sets/airfieldFixtures.ts`, `generator/previews/structures.ts`
+(`airportSketch`), `generator/sets/pinCases.ts`, `test/airfield.test.ts`, `.agents/skills/airport/`
 **See also** - [sets.md](sets.md), [previews.md](previews.md), [props.md](props.md) (the
 tower and windsock props), [surfaces.md](surfaces.md) (the `airport-*` pavements), the
 game's `docs/gameplay/aircraft.md`, the spec `../specs/2026-11-06-airfield-drawn-by-factory.md`
@@ -22,7 +24,7 @@ between the two repositories, and it does not change under the module's feet.
 
 | The module draws (this repository) | The game keeps |
 |---|---|
-| the paved deck, the runway paint and stencilled numbers, a grass strip's mown edges, the runway edge lights, the taxiway guide lines, stop bars, the international type's jet bridges, the helipads, the terminal, the name board, the perimeter fence and a grass field's markers, tufts and crates; the far level; the heights a vehicle stands at; each type's pavement surface | the layout solver, the taxi graph and the aircraft and helicopter sims; saving, validating and version-checking a layout (a layout from a newer build is drawn as a grass field); the world poses; binding the surface photos and tints; flashing the edge lights; the radar's turn and the windsock's swing; painting the airport's name on the `label` box; placing the tower and windsock props; the structure LOD layer |
+| the paved deck with its rounded inside corners and the apron's service road, the runway paint and stencilled numbers, a grass strip's mown edges, the runway edge lights, the taxiway guide lines and their turns, holding points with their signs, the PAPIs, stop bars, the international type's jet bridges, floodlight masts and parked ground vehicles, the helipads, the terminal, the name board, the service area (hangar, fire station, fuel farm), the perimeter fence and its service gate, a grass field's markers, tufts and crates; the far level; the heights a vehicle stands at; each type's pavement surface | the layout solver, the taxi graph and the aircraft and helicopter sims; saving, validating and version-checking a layout (a layout from a newer build is drawn as a grass field); the world poses; binding the surface photos and tints; flashing the edge lights; the radar's turn and the windsock's swing; painting the airport's name on the `label` box; placing the tower and windsock props; the structure LOD layer |
 
 ## `airfield(layout, type, heading)`
 
@@ -45,12 +47,79 @@ runs along an axis; a diagonal one would come with a new layout version on the g
 
 ### The deck
 
-Runways, taxiways and stands are ONE surface at ONE height (`APRON_SURFACE`, 0.5) in one
-material. Their rectangles overlap by construction, so `pavementDeck` cuts their union
-into disjoint rectangles first: overlapping coplanar faces flicker, and separating them
-in height reads as steps in the tarmac. A stand's pad is sized from the big taxiway and
-clamped to the layout's own stand spacing. The paint lies at one level above it and
-never overlaps in plan.
+Runways, taxiways, stands and the apron's service road are ONE surface at ONE height
+(`APRON_SURFACE`, 0.5) in one material. Their rectangles overlap by construction, so
+`pavementDeck` cuts their union into disjoint rectangles first: overlapping coplanar
+faces flicker, and separating them in height reads as steps in the tarmac. A stand's pad
+is sized from the big taxiway and clamped to the layout's own stand spacing.
+
+The **service road** is the strip between the stands' pads and the terminal's frontage,
+the terminal's length, cut short of its helipads and run half a stud under its plinth. It is
+ground like the rest, so every type paves it (the game holds the deck identical across the
+types); only its paint, masts and vehicles are a paved type's.
+
+**Rounded corners.** `deckFillets` finds every inside corner of the union (a grid vertex
+three of whose four cells are paved) and rounds it with a fillet - a `ring` shape with
+`fillet: true`, the same material at the same height, filling the corner between the arc
+and the two edges. Its radius is half the widest taxiway, at most 35% of the open ground
+before the next pavement either way (two corners facing across a gap leave grass between), and
+shrinks until its square touches no pavement and no other fillet. A fillet only fills
+ground the rectangles leave open, so the saved surfaces are unchanged.
+
+### The paint
+
+The paint lies at one level above the deck and never overlaps paint in plan:
+
+- **Runway markings** - centreline dashes, side stripes, threshold bars, aiming points
+  and the stencilled numbers (`runwayNumber` reads the heading).
+- **Taxi lines** - one along every edge, trimmed half a width where a stub meets the
+  spine. Where exactly two lines meet at a right angle (the spine's ends) both stop
+  short by half the narrower taxiway's width and a quarter `ring` of paint joins them.
+- **Holding points** - on every runway link, up to 10 studs off the runway's edge: two
+  dashed bars on the runway's side, two solid ones on the taxiway's, broken round the
+  centreline. A red mandatory sign stands beside each on the grass.
+- **Stop bars** across each stand; on the service road an edge line on the stands' side
+  and a dashed centre line.
+
+A runway end has a **PAPI** abeam its aiming point on the landing aircraft's left: four
+housings out from the edge, two white lenses and two red. Its lamps, and the floodlights,
+are `sign` in a lamp colour: only `light` flashes.
+
+## The apron and the service area
+
+At each gap between the stands (and beyond the outer two) the service road carries a
+**floodlight mast** (a round pole on a plinth, a head of three lamps) by the terminal and a
+parked **ground vehicle** on the stands' side, in turn a baggage train (a tractor and two
+carts), a fuel bowser and a belt loader. An international stand's **jet bridge** runs a
+fixed link out of the glazing to a round rotunda on its column, then a telescoping tunnel
+turned in plan (`rotY`) toward the parked aircraft's front left door, to the cab on its
+wheeled bogie; the tunnel and the cab are the shell the far level keeps.
+
+The **service area** stands on the open grass (`Ground`: inside the fence's reach, 10 studs
+off the pavement, 20 off a runway, off the terminal, the pads, the service gate's approach
+and what was placed before), each piece at the free spot nearest its target:
+
+| Type | Hangar | Fire station | Fuel farm |
+|---|---|---|---|
+| regional | at the terminal's south end, a barrel vault (`arc`, `rotY`) over steel walls, its three-leaf door to the field | beside it, three red doors, a drill tower, the crash tender | 2 tanks in a bund, at the north end |
+| international | the same, a quarter larger | the same | 3 tanks |
+| heliport | - | - | 1 tank |
+
+The **international terminal**'s roof bays are barrel vaults (`arc`) closed by round end
+walls (`cylinder`), glazed along the crown; the far level keeps the flat roof under them.
+
+## The fence
+
+The perimeter fence is drawn per straight run, not per bay: only the posts repeat (every
+8 studs, 10 on a grass field), so a run of any length costs a few boxes besides them.
+
+- **A paved field's** security fence: posts, a top and a bottom rail and ONE `netting`
+  pane per run, barbed wire on arms (`bar`s) leaning out from every second post with
+  three strands along them. At the service gate in the far cross-fence: stout gate
+  posts, a red and white lifting barrier and a guard booth inside.
+- **A grass field's** timber post-and-rail: posts and two rails per run.
+
+It opens wherever the terminal or the pavement meets it, and stays inside the footprint.
 
 ### The tags
 
@@ -64,6 +133,18 @@ reacts to these tags, so they are the contract:
 | `material: "wood"` on layer 2 at a grass field | textures it as a mown edge, with the grass photo darkened |
 | `lod: "shell"` | keeps it at the far level |
 | `label: true` | paints the airport's name on it |
+| `material: "netting"` | draws it grey, see-through and two-sided: a fence's chain-link, one pane (two triangles) when thin |
+
+### The shapes
+
+An airport box may be any station shape - a cylinder, sphere, dome, bar, arc or a flat
+`ring` - and may be turned in plan (`rotY`), exactly as a station box
+([station-types.md](station-types.md), "Shapes"). The module imports nothing, so
+`TerminalBox` repeats those fields; the game meshes a shape with the station set's
+`stationBoxMesh` and the site's preview draws the same mesh, so what is counted is
+what is drawn. A shape's `cx..sz` do not bound it: every test measures it by its mesh
+(`stationBoxBounds`). A ring's `sx`/`sz` are set to its full circle's square, which
+bounds it from outside.
 
 ### Shared heights and widths
 
@@ -78,8 +159,25 @@ reacts to these tags, so they are the contract:
 
 ## The far level
 
-`airfieldLowDetail(boxes)` keeps the deck and the `shell` boxes and makes glass opaque.
-The site's low-detail preview uses it, so it shows what the game draws at distance.
+`airfieldLowDetail(boxes)` keeps the deck's rectangles (not its rounded corners) and the
+`shell` boxes and makes glass opaque. The site's low-detail preview uses it, so it shows
+what the game draws at distance. New detail stays near-only, so a distant airport costs
+what it did.
+
+## Triangle budgets
+
+The whole airport as the game draws it - the field, the perimeter details and the control
+tower prop - counted with `stationTriangles` (`test/airfield.test.ts`):
+
+| Type | small | medium | big |
+|---|---:|---:|---:|
+| regional, international | 18,000 | 30,000 | 40,000 |
+| grass field | 8,000 | 8,000 | 8,000 |
+| heliport | 12,000 | | |
+
+At the fixtures a medium international airport draws about 11,500 with its tower, a
+heliport about 3,500: the fence, which drew 10,000 to 12,000 of an airport's triangles
+bay by bay, now draws about 3,000.
 
 ## The fixtures
 
@@ -105,17 +203,21 @@ drawing from its side (`field.*` in its `test/fixtures/set-pins.json`), taken be
 drawing moved here, so the move was proven 1:1.
 
 `test/airfield.test.ts` checks, over every fixture and type: the box vocabulary, one deck
-(one height, one material, no two pieces overlapping), every runway, taxiway and stand
-paved, `pavementDeck` tiling a union exactly, paint and lights on the paved types only,
-the runway numbers and their reciprocals, one name board, a jet bridge per stand at an
-international hub only, the helipads where the layout put them, the far level, the fence
-on the footprint, no shared visible plane (helipads included), and determinism.
+(one height, one material, no two pieces overlapping, measured by mesh), every runway,
+taxiway and stand paved, `pavementDeck` tiling a union exactly, the fillets (off the
+pavement, at a corner, never overlapping), the corner turns and the holding points with
+their signs, paint and lights on the paved types only, the runway numbers and their
+reciprocals, one name board, a jet bridge per stand at an international hub only, the
+helipads where the layout put them, the service area clear of the pavement, the fence
+(one pane per run, the barbed wire, the barrier; timber on grass) on the footprint, the
+far level, no shared visible plane (helipads included), the triangle budgets, and
+determinism.
 
 ## Helipads without flicker
 
 `helipad` seats each green corner light 0.1 studs into the slab, so no foot lies on the
-slab's top face. It draws the yellow aiming circle as eight stripes that never overlap in
-plan: the four square to the axes are one box each, and the four diagonal ones are
-staircases of rectangles, each one step deep and two long, that meet only along edges.
-`test/airfield.test.ts` checks every field, helipads included, for shared visible planes,
-and a pad on its own for seated lights and a circle that never overlaps itself.
+slab's top face. It draws the yellow aiming circle as one flat `ring` of 32 segments (256
+triangles), round and in one piece; it was once a staircase of rectangles on the
+diagonals, which read as steps and cost twice as much. `test/airfield.test.ts` checks
+every field, helipads included, for shared visible planes, and a pad on its own for
+seated lights and a circle that is one ring of two radii.

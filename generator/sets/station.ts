@@ -18,7 +18,9 @@ export interface StationLayout { version: number; rows: StationLayoutRow[] }
 
 export type StationBoxMaterial =
   | "platform" | "edge" | "roof" | "column" | "sign" | "safety"
-  | "steel" | "glass" | "brick" | "tile" | "wood" | "light";
+  | "steel" | "glass" | "brick" | "tile" | "wood" | "light"
+  /** See-through mesh (a chain-link fence): the game draws it grey, two-sided and part transparent. */
+  | "netting";
 
 /** One box of a station, in the station's frame (the game's station box vocabulary). */
 export interface StationBox {
@@ -31,6 +33,12 @@ export interface StationBox {
   /** The silhouette the game's structure LOD keeps at distance. */
   lod?: "shell" | "support";
   rotX?: number;
+  /**
+   * Turn about Y (radians, three.js sense: +X toward -Z), applied last, about the box's
+   * centre: a box or a shape laid at an angle in plan. A bar ignores it (its ends say
+   * where it runs).
+   */
+  rotY?: number;
   color: [number, number, number];
   material: StationBoxMaterial;
   depthLayer?: number;
@@ -49,6 +57,9 @@ export interface StationBox {
    *   absent) or round; cx..sz hold its centre and length, rotZ/rotX are not used.
    * - `arc` - a curved slab swept along Z: the elliptical arc `arc` about (cx, cy),
    *   sz long, centred on cz; sx/sy are not used.
+   * - `ring` - a flat piece in plan, sy thick, centred on (cx, cy, cz): the ring sector
+   *   `ring` (an annulus, a disc, a pie slice or a corner fillet); sx/sz, rotZ and
+   *   rotX are not used.
    */
   shape?: StationShape;
   /** A round shape's sides (3 to 24), an arc's segments (1 to 64). */
@@ -62,10 +73,20 @@ export interface StationBox {
    * its thickness.
    */
   arc?: StationArc;
+  /** A ring: its radii and the angles it sweeps in plan. */
+  ring?: StationRing;
 }
 
-export type StationShape = "cylinder" | "sphere" | "dome" | "bar" | "arc";
+export type StationShape = "cylinder" | "sphere" | "dome" | "bar" | "arc" | "ring";
 export interface StationArc { rx: number; ry: number; a0: number; a1: number; thick: number }
+/**
+ * A flat ring sector in plan about (cx, cz): between radius `rIn` (0: a disc or a pie
+ * slice) and `rOut`, from angle `a0` to `a1` (radians from +X toward +Z; default the
+ * whole turn). `fillet` instead fills between the outer arc and the corner where its
+ * two end tangents meet (a sweep below a half turn): the rounded inside corner of two
+ * paved strips, the arc's centre standing off the corner.
+ */
+export interface StationRing { rIn: number; rOut: number; a0?: number; a1?: number; fillet?: boolean }
 
 /** One type's layout recipe: the rows a fresh station of N tracks is laid out with. */
 export interface StationRecipe {
@@ -194,6 +215,14 @@ function roundSides(b: StationBox): number {
 function domeBands(n: number): number {
   return Math.max(1, Math.round(n / 4));
 }
+/** A ring's sweep, filled in: its radii, its two angles and whether it is a whole turn. */
+function ringOf(b: StationBox): { rIn: number; rOut: number; a0: number; a1: number; full: boolean; fillet: boolean } {
+  const r = b.ring ?? { rIn: 0, rOut: Math.min(b.sx, b.sz) / 2 };
+  const a0 = r.a0 ?? 0, a1 = r.a1 ?? 2 * Math.PI;
+  const fillet = !!r.fillet && Math.abs(a1 - a0) < Math.PI - 1e-6;
+  return { rIn: fillet ? 0 : Math.max(0, r.rIn), rOut: r.rOut, a0, a1, full: !fillet && Math.abs(a1 - a0) >= 2 * Math.PI - 1e-9, fillet };
+}
+
 /** Whether an arc is one glazed sheet: the game draws thin glass as a surface seen from both sides. */
 export function arcIsSheet(b: StationBox): boolean {
   return b.material === "glass" && (b.arc?.thick ?? 1) <= 0.4;
@@ -204,11 +233,12 @@ function roundBar(b: StationBox): boolean {
 }
 
 /**
- * Whether a box is a glass pane: the game draws thin flat glass as one two-sided
- * surface (two triangles), not a box whose faces would blend over one another.
+ * Whether a box is a pane: the game draws thin flat glass - and a thin sheet of
+ * chain-link `netting` - as one two-sided surface (two triangles), not a box whose
+ * faces would blend over one another.
  */
 export function isGlassPane(b: StationBox): boolean {
-  return b.material === "glass" && !b.shape && !b.label && Math.min(b.sx, b.sy, b.sz) <= 0.4;
+  return (b.material === "glass" || b.material === "netting") && !b.shape && !b.label && Math.min(b.sx, b.sy, b.sz) <= 0.4;
 }
 
 /** The triangles the game draws for one box of the station vocabulary. */
@@ -219,6 +249,13 @@ export function stationBoxTriangles(b: StationBox): number {
     case "dome": { const n = roundSides(b); return 2 * n * domeBands(n) - 2; }
     case "bar": return roundBar(b) ? 4 * sidesOf(b, 3, 24, 8) - 4 : 12;
     case "arc": { const k = sidesOf(b, 1, 64, 8); return arcIsSheet(b) ? 2 * k : 8 * k + 4; }
+    case "ring": {
+      const k = sidesOf(b, 1, 64, 16);
+      const r = ringOf(b);
+      if (r.fillet) return 4 * k + 4;
+      const ends = r.full ? 0 : 4;
+      return (r.rIn > 0 ? 8 * k : 4 * k) + ends;
+    }
     default: return isGlassPane(b) ? 2 : b.profile === "gable" ? 8 : 12;
   }
 }
@@ -390,6 +427,46 @@ export function stationBoxMesh(b: StationBox): StationMesh {
       flatQuad(p(k, -t, z0), p(k, t, z0), p(k, t, z1), p(k, -t, z1), t1);
       break;
     }
+    case "ring": {
+      const r = ringOf(b);
+      const k = sidesOf(b, 1, 64, 16);
+      const y0 = b.cy - hy, y1 = b.cy + hy;
+      const ang = (i: number): number => r.a0 + ((r.a1 - r.a0) * i) / k;
+      const p = (rad: number, i: number, y: number): V3 => [b.cx + rad * Math.cos(ang(i)), y, b.cz + rad * Math.sin(ang(i))];
+      const radial = (i: number): V3 => [Math.cos(ang(i)), 0, Math.sin(ang(i))];
+      const up: V3 = [0, 1, 0], down: V3 = [0, -1, 0];
+      // the outer wall, smooth
+      for (let i = 0; i < k; i++) quad(p(r.rOut, i, y0), p(r.rOut, i + 1, y0), p(r.rOut, i + 1, y1), p(r.rOut, i, y1), radial(i), radial(i + 1), radial(i + 1), radial(i));
+      // the point the faces fan from: the tangents' corner of a fillet, else the centre
+      const half = (r.a1 - r.a0) / 2;
+      const mid = r.a0 + half;
+      const apex = (y: number): V3 => r.fillet
+        ? [b.cx + (r.rOut / Math.cos(half)) * Math.cos(mid), y, b.cz + (r.rOut / Math.cos(half)) * Math.sin(mid)]
+        : [b.cx, y, b.cz];
+      if (r.rIn > 0) {
+        const inw = (i: number): V3 => { const o = radial(i); return [-o[0], 0, -o[2]]; };
+        for (let i = 0; i < k; i++) {
+          quad(p(r.rIn, i, y0), p(r.rIn, i + 1, y0), p(r.rIn, i + 1, y1), p(r.rIn, i, y1), inw(i), inw(i + 1), inw(i + 1), inw(i));
+          flatQuad(p(r.rIn, i, y1), p(r.rIn, i + 1, y1), p(r.rOut, i + 1, y1), p(r.rOut, i, y1), up);
+          flatQuad(p(r.rIn, i, y0), p(r.rIn, i + 1, y0), p(r.rOut, i + 1, y0), p(r.rOut, i, y0), down);
+        }
+      } else {
+        for (let i = 0; i < k; i++) {
+          tri(apex(y1), p(r.rOut, i, y1), p(r.rOut, i + 1, y1), up, up, up);
+          tri(apex(y0), p(r.rOut, i, y0), p(r.rOut, i + 1, y0), down, down, down);
+        }
+      }
+      if (!r.full) {
+        // the two ends: radial walls, or a fillet's two straight edges to its corner
+        const inner = (i: number, y: number): V3 => r.rIn > 0 ? p(r.rIn, i, y) : apex(y);
+        for (const [i, sgn] of [[0, -1], [k, 1]] as const) {
+          const a = ang(i);
+          const n: V3 = r.fillet ? radial(i) : [-Math.sin(a) * sgn, 0, Math.cos(a) * sgn];
+          flatQuad(inner(i, y0), p(r.rOut, i, y0), p(r.rOut, i, y1), inner(i, y1), n);
+        }
+      }
+      break;
+    }
     default: {
       if (isGlassPane(b)) {
         // one surface through the middle, across the pane's two larger sides
@@ -411,7 +488,21 @@ export function stationBoxMesh(b: StationBox): StationMesh {
       orientedBox([b.cx, b.cy, b.cz], turn([hx, 0, 0]), turn([0, hy, 0]), turn([0, 0, hz]));
     }
   }
+  if (b.rotY && b.shape !== "bar") {
+    yawAbout(positions, b.rotY, b.cx, b.cz);
+    yawAbout(normals, b.rotY, 0, 0);
+  }
   return { positions, normals };
+}
+
+/** Turn flat (x, y, z, ...) points about Y by `a` (three.js sense) about (ox, oz), in place. */
+function yawAbout(v: number[], a: number, ox: number, oz: number): void {
+  const c = Math.cos(a), s = Math.sin(a);
+  for (let i = 0; i < v.length; i += 3) {
+    const x = v[i]! - ox, z = v[i + 2]! - oz;
+    v[i] = ox + x * c + z * s;
+    v[i + 2] = oz - x * s + z * c;
+  }
 }
 
 /** A plain box's eight corners in the station frame, flat (x, y, z, x, y, z, ...). */
@@ -424,6 +515,7 @@ function boxCorners(b: StationBox): number[] {
     const x = x0 * cz - y0 * sz, y = x0 * sz + y0 * cz;
     out.push(b.cx + x, b.cy + y * cx - z0 * sx, b.cz + y * sx + z0 * cx);
   }
+  if (b.rotY) yawAbout(out, b.rotY, b.cx, b.cz);
   return out;
 }
 

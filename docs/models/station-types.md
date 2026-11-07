@@ -153,7 +153,7 @@ station type has no such field yet.
 
 ## Shapes
 
-Besides the box (and the gable prism), a station box may be one of five **shapes**
+Besides the box (and the gable prism), a station box may be one of six **shapes**
 (`StationBox.shape`). The set module meshes every one itself (`stationBoxMesh`: triangles in
 the station frame, a normal per vertex - smooth round sides, flat caps), and the game and the
 factory's preview both draw that mesh, so what the budget counts is what is drawn. A shape's
@@ -166,9 +166,15 @@ triangle count follows from its fields alone (`stationBoxTriangles`):
 | `dome` | the upper half of an ellipsoid, its base at the box's bottom | `sides` 4-24, even (8) | 2N x round(N/4) - 2 |
 | `bar` | a member from `from` to `to`, sx wide and sy deep | `sides` 4 or absent: square, else round | 12, or 4N - 4 |
 | `arc` | a curved slab swept along Z: the elliptical arc `arc` (`rx`, `ry`, `a0`, `a1`, `thick`) about (cx, cy), sz long | `sides`: segments 1-64 | 8N + 4; thin glass 2N |
+| `ring` | a flat piece in plan, sy thick, about (cx, cz): the ring sector `ring` (`rIn`, `rOut`, `a0`, `a1` from +X toward +Z, the whole turn by default) - an annulus, a disc (`rIn` 0) or a pie slice; with `fillet` the corner between the outer arc and its two end tangents (a paved inside corner) | `sides`: segments 1-64 (16) | annulus 8N, disc 4N, +4 when not a whole turn; fillet 4N + 4 |
 
-A box is 12 triangles, a gable prism 8, and a **glass pane** - glass no thicker than 0.4 studs,
-box or arc - 2: the game draws it as one two-sided surface. A round shape is turned so that no
+Any box or shape but a bar may also be **turned in plan** by `rotY` (radians, three.js sense:
++X toward -Z), applied last about its centre: after rotZ and rotX, as the game's Euler order
+YXZ does. A ring ignores rotZ and rotX.
+
+A box is 12 triangles, a gable prism 8, and a **pane** - glass, or a fence's chain-link
+`netting`, no thicker than 0.4 studs, box or arc - 2: the game draws it as one two-sided
+surface. A round shape is turned so that no
 flat faces along an axis (a box's face could lie in its plane); a three-sided prism keeps a
 corner pointing down its local -X (the heritage canopy's dagger boards). Every check that
 measures a box (`test/stationSet.test.ts`: the gauge, the name boards, the glass) measures a

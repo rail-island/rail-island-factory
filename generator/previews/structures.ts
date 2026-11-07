@@ -21,6 +21,7 @@ import { bollardBoxes, containerBoxes, craneBoxes, CRANE_DECKS, floodlightBoxes,
 import { towerBoxes, TOWER_HEIGHTS } from "../props/airportProps.ts";
 import type { PropBox } from "../props/propKit.ts";
 import { Sketch, type Rgb } from "./sketch.ts";
+import { drawStationBox } from "./stations.ts";
 
 /** Props drawn into the sketch at (x, z), turned `yaw` about Y and scaled by `k`. */
 function props(s: Sketch, boxes: readonly PropBox[], x: number, z: number, yaw = 0, k = 1): void {
@@ -173,7 +174,8 @@ function airportSketch(values: ParamValues | undefined, type: string, lod: boole
     const apron = APRON[type] ?? APRON.regional!;
     // the game darkens a mown edge to 0.72 of the deck's tint
     const color: Rgb = deck ? apron : mown ? [Math.round(apron[0] * 0.72), Math.round(apron[1] * 0.72), Math.round(apron[2] * 0.72)] : b.color;
-    s.box(s.mat(b.material, color, deck || mown ? surface : undefined), b);
+    // a shape (a helipad's ring, a fillet, a hangar's vault) through the station set's mesh, as the game draws it
+    drawStationBox(s, b, s.mat(b.material, color, deck || mown ? surface : undefined));
   }
   if (meta?.tower) {
     const fu = airport.furniture(layout.building, type);

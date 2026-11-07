@@ -232,6 +232,16 @@ describe("station set: primitives", () => {
     { ...base, shape: "bar", sides: 6, from: [0, 0, 0], to: [0, 3, 0], sx: 0.2, sy: 0.2 },
     { ...base, shape: "arc", sides: 12, arc: { rx: 5, ry: 4, a0: Math.PI, a1: 0, thick: 0.3 } },
     { ...base, shape: "arc", sides: 5, arc: { rx: 3, ry: 3, a0: 0.2, a1: 1.4, thick: 0.6 } },
+    { ...base, rotY: 0.7 },
+    { ...base, rotZ: 0.3, rotX: -0.2, rotY: -1.1 },
+    { ...base, shape: "cylinder", sides: 10, rotX: Math.PI / 2, rotY: Math.PI / 2 },
+    { ...base, shape: "arc", sides: 8, arc: { rx: 5, ry: 4, a0: Math.PI, a1: 0, thick: 0.3 }, rotY: Math.PI / 2 },
+    { ...base, shape: "ring", sides: 32, ring: { rIn: 3, rOut: 4 } },
+    { ...base, shape: "ring", sides: 12, ring: { rIn: 0, rOut: 4 } },
+    { ...base, shape: "ring", sides: 6, ring: { rIn: 1, rOut: 3, a0: 0, a1: Math.PI / 2 } },
+    { ...base, shape: "ring", sides: 6, ring: { rIn: 0, rOut: 3, a0: -2, a1: 0.5 } },
+    { ...base, shape: "ring", sides: 6, ring: { rIn: 0, rOut: 3, a0: Math.PI, a1: 1.5 * Math.PI, fillet: true } },
+    { ...base, shape: "ring", sides: 6, ring: { rIn: 1, rOut: 3, a0: 0.3, a1: 1.2 }, rotY: 0.4 },
   ];
   /** The signed volume of a triangle soup: positive when every face looks out. */
   function volume(pos: number[]): number {
@@ -249,6 +259,26 @@ describe("station set: primitives", () => {
       expect(mesh.normals.length).toBe(mesh.positions.length);
       expect(volume(mesh.positions), b.shape ?? "box").toBeGreaterThan(0);
     }
+  });
+  it("turns a box about Y last, the way three.js does, and lays a ring flat in plan", () => {
+    // three.js: a turn of +90 degrees about Y takes +X to -Z
+    const turned = station.stationBoxBounds({ ...base, cx: 0, cy: 0, cz: 0, sx: 4, sy: 1, sz: 1, rotY: Math.PI / 2 });
+    expect(turned[0][0]).toBeCloseTo(-0.5, 6);
+    expect(turned[1][2]).toBeCloseTo(2, 6);
+    const ring: station.StationBox = { ...base, cx: 0, cy: 0, cz: 0, sy: 0.2, shape: "ring", sides: 16, ring: { rIn: 3, rOut: 4 } };
+    const [min, max] = station.stationBoxBounds(ring);
+    expect(max[1]! - min[1]!).toBeCloseTo(0.2, 6);
+    expect(max[0]).toBeCloseTo(4, 6);
+    // a fillet fills the corner its two end tangents meet in, and no further
+    const fillet: station.StationBox = { ...ring, ring: { rIn: 0, rOut: 2, a0: Math.PI, a1: 1.5 * Math.PI, fillet: true } };
+    const [fmin, fmax] = station.stationBoxBounds(fillet);
+    expect([fmin[0], fmax[0], fmin[2], fmax[2]].map((v) => Math.round(v! * 1e6) / 1e6 + 0)).toEqual([-2, 0, -2, 0]);
+  });
+  it("draws a thin chain-link pane as one sheet, as it does thin glass", () => {
+    const pane: station.StationBox = { ...base, material: "netting", sx: 10, sy: 3, sz: 0.05 };
+    expect(station.isGlassPane(pane)).toBe(true);
+    expect(station.stationBoxTriangles(pane)).toBe(2);
+    expect(station.stationBoxMesh(pane).positions.length / 9).toBe(2);
   });
   it("draws a thin glass arc as one sheet", () => {
     const sheet: station.StationBox = { ...base, material: "glass", shape: "arc", sides: 10, arc: { rx: 5, ry: 4, a0: Math.PI, a1: 0, thick: 0.1 } };

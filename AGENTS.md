@@ -122,6 +122,10 @@ document that owns it in the same change.** Conventions:
 - **`bridge`** (`.agents/skills/bridge/`) - use it whenever a bridge type, the bridge kit or
   its site preview is added or changed: per-length triangle budget tiers, the deck and pier
   kit, structural spans and shared cable towers, overhead members, pins and checks.
+- **`airport`** (`.agents/skills/airport/`) - use it whenever an airport type, its terminal,
+  its fittings or its site preview is added or changed: the per-size triangle budgets
+  (30,000 for a medium airport), the one-deck rule and its fillets, paint that never lies
+  on paint, the station shapes, the fence, the service area, the far level, pins and checks.
 - **`road-vehicle`** (`.agents/skills/road-vehicle/`) - use it whenever a road
   vehicle model is added or changed: triangle budget, steered front wheels, the
   truck/trailer split, an articulated bus's sections and joints, checks.

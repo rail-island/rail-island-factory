@@ -29,6 +29,8 @@ const scale = (a: V, s: number): V => [a[0] * s, a[1] * s, a[2] * s];
 export const hex = (c: Rgb): string => `#${c.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("")}`;
 
 const ROUGHNESS: Record<string, number> = { steel: 0.38, glass: 0.06, light: 0.4, cable: 0.3, wire: 0.5 };
+/** Kinds drawn see-through and two-sided: a fence's chain-link mesh, as the game draws it. */
+const SEE_THROUGH: Record<string, Partial<MaterialSpec>> = { netting: { opacity: 0.45, doubleSided: true } };
 const METALLIC: Record<string, number> = { steel: 0.5, glass: 0.1, cable: 0.6, wire: 0.6, rail: 0.7 };
 
 /** A box in the game's vocabulary: centre and size, tilted about Z then X, turned about Y; or a gable prism. */
@@ -64,7 +66,7 @@ export class Sketch {
     if (!this.palette[name]) {
       this.palette[name] = surface
         ? surfaceMaterial(surface, { color: hex(color), roughness: ROUGHNESS[kind] ?? 0.9, metallic: METALLIC[kind] ?? 0 })
-        : { color: hex(color), roughness: ROUGHNESS[kind] ?? 0.7, metallic: METALLIC[kind] ?? 0 };
+        : { color: hex(color), roughness: ROUGHNESS[kind] ?? 0.7, metallic: METALLIC[kind] ?? 0, ...SEE_THROUGH[kind] };
       this.ranks.set(name, this.ranks.size);
     }
     return name;

@@ -73,10 +73,9 @@ function partSize(b: station.StationBox): number {
  * One box of the station vocabulary: a box through the sketch, a shape from the set's
  * own mesh (the game draws the same), grown by its material's coplanar step.
  */
-function drawStationBox(s: Sketch, b: station.StationBox): void {
-  const mat = s.mat(b.material, b.color);
+export function drawStationBox(s: Sketch, b: station.StationBox, mat: string = s.mat(b.material, b.color)): void {
   if (!b.shape) {
-    s.box(mat, b);
+    s.box(mat, b.rotY ? { ...b, yaw: b.rotY } : b);
     return;
   }
   const e = s.grow(mat);
@@ -88,6 +87,7 @@ function drawStationBox(s: Sketch, b: station.StationBox): void {
     grown = { ...grown, from: [b.from[0] - d[0]! * k, b.from[1] - d[1]! * k, b.from[2] - d[2]! * k], to: [b.to[0] + d[0]! * k, b.to[1] + d[1]! * k, b.to[2] + d[2]! * k] };
   }
   if (b.shape === "arc" && b.arc) grown = { ...grown, arc: { ...b.arc, thick: b.arc.thick + 2 * e } };
+  if (b.shape === "ring" && b.ring) grown = { ...grown, ring: { ...b.ring, rIn: b.ring.rIn > 0 ? Math.max(0.001, b.ring.rIn - e) : 0, rOut: b.ring.rOut + e } };
   s.triangles(mat, station.stationBoxMesh(grown).positions, b.shape === "arc" && station.arcIsSheet(b));
 }
 
