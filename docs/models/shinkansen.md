@@ -13,7 +13,7 @@
 | `proc-vehicle-shinkansen-500` | Shinkansen 500 series | `original` (Nozomi), `kodama` | 27.0 / 25.0 m | 15 m needle, round body |
 | `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill" |
 | `proc-vehicle-shinkansen-e6` | Shinkansen E6 | `komachi`, `akita` | 23.075 / 20.5 m | 13 m, a mini-shinkansen 2.945 m wide |
-| `proc-vehicle-shinkansen-100` | Shinkansen 100 series | `jnr`, `jrWest` | 26.05 / 25.0 m | 5 m, after the 0 series |
+| `proc-vehicle-shinkansen-100` | Shinkansen 100 series | `jnr`, `jrWest` | 26.05 / 25.0 m | the "shark" cab face, 5.9 m to the join |
 | `proc-vehicle-shinkansen-e4` | Shinkansen E4 Max | `max`, `toki` | 25.7 / 25.0 m | 11.5 m, double-deck, 4.485 m high |
 
 Each design's `unit` is the end car (the default: the car with the nose, a motor car),
@@ -157,6 +157,36 @@ transoms) and a skirt bottom on the centre coupler's draft gear or on the transo
 
 `seriesHelpers.ts` holds the paint, nose and flat-cab helpers, the one-colour `striped`
 livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE S-103 share.
+
+## The 100 series
+
+Measured on the near side-on photograph of set X1 (`assets/shinkansen-100/`, a projective fit
+along the car from the tip, the rear body end and the vertical scale at six columns, 35 - 80 px/m,
+which returns the 1.04 m window pitch) and checked against the three-quarter and head-on
+photographs of 123-1 and G49. Drawn as a cab face (`S100_FACE`, `cabFace`), d behind the tip:
+
+- **Nose**: an oval cap, its tip at 1.67 m, a seam round it 0.62 m half wide; the top line rising
+  nearly straight to the windscreen's foot (3.24 m at d 2.54); the flat windscreen raked about 42
+  degrees to the cab roof (3.91 m at d 3.29); in plan a wedge reaching the body's width about 4.4 m
+  back. The slit headlights (chrome rim, lamp ahead, dark glass behind) at d 1.1 - 2.0, 1.63 - 1.87
+  m. The cab side window back to d 5.0 - 5.45; the radio fin on the cab roof.
+- **Skirt** (`s100Fittings`): from 0.3 m up to the face's foot at 1.04 m, its front upright under
+  the cap (d 0.6 - 0.66), boxier toward the bottom, its rear edge slanted from d 3.2 to 2.4 ahead of
+  the leading bogie (centre d 4.73), two boxes on its front corners; the dark underside over the
+  bogie; the distant model draws it as a block (`lodRoof`).
+- **Body**: 3.24 m wide (real 3.38), a high shoulder (3.6 m) under a flat roof, 4.0 m.
+- **End car**: the crew door (a seam, d 6.08 - 6.68), the passenger door 6.84 - 7.62, 13 windows
+  0.78 m wide at 1.04 m from d 8.42 (the 65 seats' rows), the rear door 21.95 - 22.7 over the rear
+  bogie as photographed, the toilets behind it blank. **Middle car**: a door at each end, 20 windows.
+  Doors 0.78 m, 1.35 - 3.15 m, a narrow window. **Pantograph**: a PS202 diamond near the car's rear.
+- **Liveries**: JNR ivory, the blue window band 2.14 - 2.95 m and a blue line 1.98 - 2.06 m; JR
+  West's renewal light grey, a dark grey band 2.11 - 2.95 m over a yellow-green stripe 1.88 - 2.11 m;
+  both end on the end car in one edge slanted forward at its foot (d 4.4 - 5.33, `endSweeps`),
+  the skirts blue or grey. Numbers 123-1 and 121-5055.
+- **Deviations**: the cab canopy is not inset from the nose's sides (the face's rows are horizontal,
+  so the canopy's side panes sit on the nose's corners); the pantograph's shroud, the end car's small
+  toilet windows and the JR West Grand Hikari sets' own scheme are not drawn; the middle car's
+  layout is the 100-seat ordinary car's for every intermediate car.
 
 ## Deviations
 
