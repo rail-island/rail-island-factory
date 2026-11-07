@@ -8,6 +8,8 @@
 // the E6, a mini-shinkansen, keeps its 2.945 m). See docs/models/shinkansen.md.
 
 import { MeshBuilder, type MaterialSpec } from "./meshBuilder.ts";
+import type { Ring } from "./meshCore.ts";
+import { liftable } from "./liftable.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { paint } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
@@ -74,6 +76,10 @@ export interface ShinkansenLivery {
    * d[0] behind the tip back to d[1] at the shoulder and d[2] at y (a slanted rear end); both sides.
    */
   endRoofEdge?: { mat: string; y: number; d: readonly [number, number, number] };
+  /** A stripe of its own paint along the crown of every car, out to half width z on the roof's arc (the 500's blue-grey roof over silver sides); the distant model's roof takes it. */
+  roofStripe?: { z: number; mat: string };
+  /** This livery's sets' pantograph, in place of the series' (the 500's W sets' T-shaped wing, its V sets' single arm). */
+  pantograph?: "single" | "diamond" | "wing";
 }
 
 /** A fitting on a car's sides, both sides (d span behind the car's front, the end car's from its tip; sill and head). */
@@ -152,6 +158,8 @@ export interface ShinkansenSeries {
   cabWindows?: ReadonlyArray<readonly [number, number, number, number] | readonly [number, number, number, number, number]>;
   /** A cab face drawn as one painted surface (seriesCab.ts) in place of the nose: the body ends square `dJoin` behind its tip (both ends of a `single` railcar). */
   cabFace?: SeriesCabFace;
+  /** With a cab face: the end car's crown still rising behind the face's join, [d behind the body's front, crown height] (the 500's roof reaching full height behind its first door). */
+  endCrown?: Pt[];
   power: number;
   maxspeed: number;
   /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric); `none` an unpowered set of coaches. */
@@ -322,7 +330,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     spec: {
       length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: s.arc ?? 8, B: s.B, wl: s.W * 0.9, A: s.A, wa: s.W * 0.97,
       ...(end && !s.flatCab && !s.cabFace ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
-      ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: 0.25,
+      ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}),
+      // a crown rising behind a cab face: a nose of the body's full plan whose crown table ends past the join
+      ...(end && s.cabFace && s.endCrown ? { front: { len: 1e-3, tip: 1, power: 2, C: s.endCrown, S: [[0, s.S]] } } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: 0.25,
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
@@ -395,6 +405,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       });
       if (isDiesel(s))
         m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
+      if (l.roofStripe) m.scope("roof stripe", () => { for (const sd of [1, -1]) crownPane(m, b, X, sd, l.roofStripe!.mat, [0, L], [0, l.roofStripe!.z], 0.004); });
       if (end && l.endRoofEdge) m.scope("roof edge", () => roofEdge(m, b, X, l.endRoofEdge!, s.cabFace?.dJoin ?? 0));
       const panels = s.sidePanels?.[end ? "end" : "middle"];
       if (panels) m.scope("side panels", () => sidePanels(m, b, X, l, panels, end ? (s.cabFace?.dJoin ?? 0) : 0));
@@ -420,7 +431,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         const x = X(pantographAt(s, end, tr));
         const raised = pantograph !== "lowered";
         block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
-        if (s.pantograph === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
+        const kind = l.pantograph ?? s.pantograph;
+        if (kind === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
+        else if (kind === "wing") wingPantograph(m, x, s.C + 0.05, raised, l.roofStripe?.mat ?? l.roof);
         else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised });
       });
       if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr });
@@ -686,12 +699,13 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
 function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, X: (d: number) => number, cx: number, turned: boolean, section?: number, trucks: readonly boolean[] = [true, true], power?: SeriesPowerCar): { body: UnitBody; parts: LodPart[] } {
   const def = carDef(s, l, end, pantograph, l.number, false, power);
   const b = carbody({ ...def.spec, edges: [] });
-  const side: LodBand[] = [...((end && l.endBands) || l.bands).map(([a, e, mt]): [number, number, string] => [Math.max(a, s.B), Math.min(e, s.S), mt]).filter(([a, e]) => e > a + 1e-6), [s.S, s.C, l.roof]];
+  const roof = l.roofStripe?.mat ?? l.roof;
+  const side: LodBand[] = [...((end && l.endBands) || l.bands).map(([a, e, mt]): [number, number, string] => [Math.max(a, s.B), Math.min(e, s.S), mt]).filter(([a, e]) => e > a + 1e-6), [s.S, s.C, roof]];
   const at = (y: number) => { for (let k = 0; k <= 2000; k++) { const d = k * 0.01; if (b.B(d) <= y && b.C(d) >= y) return d; } return 0; };
   const ys = [s.B, s.Y, (s.Y + s.S) / 2, s.S, (s.S + s.C) / 2, s.C - 0.02];
   const spans = def.windows[0]!.spans;
   let body: UnitBody = {
-    y0: s.B, hw: [[s.B, s.W * 0.9], [s.A, s.W * 0.97], [s.Y, s.W], [s.S, s.W * s.lean], [s.C, 0.4]], side, roof: l.roof,
+    y0: s.B, hw: [[s.B, s.W * 0.9], [s.A, s.W * 0.97], [s.Y, s.W], [s.S, s.W * s.lean], [s.C, 0.4]], side, roof,
     front: end && s.cabFace ? cabFaceLod(s.cabFace, 1, X(-s.cabFace.dJoin), bodyHalf(b, 0), facePaint(s, l, l.number), s.C) : end ? { tip: ys.map((y) => [y, X(at(y))] as const), setback: [[s.B, 2.0], [s.C, 1.0]] } : { tip: [[s.B, X(0)]], ...(section !== undefined ? { hidden: true } : {}) },
     rear: end && s.single && s.cabFace ? cabFaceLod(s.cabFace, -1, -X(b.length + s.cabFace.dJoin), bodyHalf(b, 0), facePaint(s, l, l.number), s.C) : { tip: [[s.B, X(b.length)]], ...(section !== undefined ? { hidden: true } : {}) },
     windows: [{ u: [Math.min(X(spans[0]![0]), X(spans[spans.length - 1]![1])), Math.max(X(spans[0]![0]), X(spans[spans.length - 1]![1]))], y: [def.windows[0]!.y[0], def.windows[0]!.y[1]], mat: LOD_GLASS }],
@@ -811,19 +825,129 @@ export const E5: ShinkansenSeries = {
   weight: { end: 46, middle: 45 }, power: 1200, maxspeed: 320,
 };
 
+// --- the 500 series ------------------------------------------------------------
+//
+// Read from the side-on photo of the V5 end car at Himeji (photo-500kei-himeji.jpg, 84 px/m from
+// the 3.69 m body height and the 1.70 m door), the W2 end car 521-2 and the V2 end car 521-7002 at
+// three quarters, and 521-1 at the Kyoto Railway Museum head on (assets/shinkansen-500/SOURCES.md).
+// Heights over the rail, d behind the nose's tip.
+//
+// The nose: the tip at 0.79 m, a flat oval snout rising at a third to the canopy's foot 2.75 m back at
+// 1.92 m; the fighter-like canopy (glass, then a dark hood) on top from 2.75 to 8.6 m; the roof still
+// rising behind the first door (3.49 m at the join, 9.65 m, full 3.69 m 14 m back). In plan the nose
+// rounds to a blunt spatula (elliptic corners): its lower half full width 6.5 m behind its centre line,
+// its top at the join. A blue-grey tongue covers the top from the tip round the domed canopy into the
+// roof's stripe; a crease runs round the snout at 1.0 m, the lower body's edge. The first door 9.8 -
+// 10.45 m, the window band (dark, the blue band under it) from 10.86 m, windows 1.01 m apart.
+const S500_JOIN = 9.65;
+const S500_PROFILE: Pt[] = [
+  [0.3, 1.9], [0.4, 1.2], [0.5, 0.62], [0.6, 0.32], [0.7, 0.12], [0.79, 0], [0.88, 0.03], [0.97, 0.2], [1.07, 0.47], [1.18, 0.74], [1.29, 1.0], [1.48, 1.5], [1.64, 2.0], [1.8, 2.5],
+  [1.92, 2.78], [2.1, 3.15], [2.3, 3.6], [2.5, 4.07], [2.64, 4.45], [2.78, 4.8], [2.89, 5.1], [3.07, 6.0], [3.19, 7.0], [3.31, 8.0], [3.43, 9.0], [3.49, S500_JOIN],
+];
+/** The tongue's edge on the nose's sides ([y, d]): just under the snout's top, under the canopy, back into the roof stripe at the join. */
+const S500_TONGUE: Pt[] = [[1.03, 0.3], [1.08, 0.55], [1.2, 1.1], [1.4, 1.8], [1.6, 2.5], [1.8, 3.15], [2.0, 3.8], [2.3, 4.7], [2.6, 5.7], [2.75, 6.6], [2.8, 8.0], [3.1, 9.0], [3.4, 9.66], [3.6, 9.66]];
+/** A polygon from its right half ([lat, y], from the bottom of the centre line to its top), mirrored. */
+const mirror = (half: Pt[]): Pt[] => [...half, ...half.slice(1, -1).reverse().map(([l, y]): Pt => [-l, y])];
+const S500_ROWS = [...new Set([...S500_PROFILE.map(([y]) => y), 1.0, 1.02, 1.4, 2.0, 2.2, 2.4, 2.6, 2.7, 2.83, 3.0, 3.1, 3.25, 3.33, 3.37])].sort((a, b) => a - b);
+const S500_FACE: SeriesCabFace = {
+  dJoin: S500_JOIN, reach: 0, first: S500_JOIN + 1.15, roofFrom: 9, cols: [1, 14, 1, 1], tolerance: 0.02,
+  profile: S500_PROFILE,
+  // a round nose: the corner is the whole half width, as deep as the nose ahead of the join
+  corner: [[0.3, 2.0], [3.49, 2.0]],
+  // the snout's lower half blunter: full width 6.5 m behind its centre line up to the tip's height, the top reaching it at the join
+  cornerDepth: S500_PROFILE.map(([y, d]): Pt => { const t = Math.min(1, Math.max(0, (y - 1.1) / 0.8)); return [y, Math.max(0.05, Math.min(S500_JOIN - d, 6.5 + t * 9))]; }),
+  rows: S500_ROWS,
+  bands: (l) => [[0, 9, l.bands[0]![2]]],
+  lodBands: [[0, 1.6, "silver"], [1.6, 9, "tongue"]],
+  lod: { profile: [...S500_PROFILE.slice(0, -1), [3.69, S500_JOIN]], corner: [[0.3, 2.0], [3.69, 2.0]], rows: [0.3, 0.5, 0.79, 1.29, 1.92, 2.64, 3.07, 3.43, 3.69] },
+  paint: [
+    { mat: "tongue", front: [[1.03, -9], [3.7, -9]], back: S500_TONGUE, top: 9 },
+    { mat: "crease", front: [[1.0, -9], [1.02, -9]], back: [[1.0, 99], [1.02, 99]] },
+  ],
+  fields: [
+    // the canopy: its dark frame and hood, the glass in it (lat, y); the hood's rear end 8.6 m back
+    { mat: "canopy", pts: mirror([[0, 1.92], [0.45, 1.97], [0.68, 2.1], [0.8, 2.35], [0.86, 2.7], [0.84, 3.05], [0.7, 3.25], [0.4, 3.34], [0, 3.37]]) },
+    { mat: "cabGlass", pts: mirror([[0, 2.06], [0.42, 2.1], [0.62, 2.22], [0.74, 2.45], [0.79, 2.75], [0.76, 2.9], [0.6, 3.08], [0, 3.14]]) },
+  ],
+  panes: [],
+  // the headlights in the canopy's dark foot, under the glass
+  lamps: [[-0.6, 2.13, 0.05, "lampHead"], [-0.47, 2.05, 0.045, "lampHead"], [-0.32, 2.01, 0.035, "lampRed"], [0.32, 2.01, 0.035, "lampRed"], [0.47, 2.05, 0.045, "lampHead"], [0.6, 2.13, 0.05, "lampHead"]],
+};
+const S500_BLUE_GREY = "#8a90b6";
+const s500Palette = (top: string, band: string, stripe = top): Record<string, MaterialSpec> => ({
+  stripe: c(stripe, 0.4), silver: c("#c4cacf", 0.3), dark: c("#353c44", 0.4), blue: c(band), tongue: c(top, 0.35), crease: c("#5c6168", 0.6), canopy: c("#4a5159", 0.3), roofG: c("#b3b9bf", 0.4), skirtG: c("#b8bec3", 0.45),
+});
+// the window band dark, a blue band under it; silver ahead of the window band round the first door
+const s500Bands = (): Band[] => [[0, 1.83, "silver"], [1.83, 2.14, "blue"], [2.14, 2.77, "dark"], [2.77, 9, "silver"]];
+const S500_SWEEPS: ShinkansenLivery["endSweeps"] = [{ mat: "silver", front: [[1.8, -9], [2.8, -9]], back: [[1.8, 10.86], [2.8, 10.86]] }];
+
 export const S500: ShinkansenSeries = {
-  endLength: 27.0, midLength: 25.0, W: 1.6, Y: 1.3, S: 2.6, C: 3.69, lean: 0.92, B: 0.75, A: 1.1,
-  // the round body and the 15 m needle nose, the cab canopy far back
-  nose: nose(14.0, 0.03, 2.0, [[0, 1.55], [2.0, 2.0], [6.0, 2.55], [10.0, 3.05], [13.0, 3.45], [15.0, 3.69]], [[0, 1.5], [2.0, 1.85], [6.0, 2.15], [10.0, 2.35], [13.0, 2.5], [15.0, 2.6]], [[0, 1.45], [3.0, 1.35], [8.0, 1.3]], [[0, 1.4], [3.0, 1.1]], [[0, 1.35], [1.0, 0.7], [3.0, 0.75]]),
-  windscreen: [11.6, 13.4, 0.07, 0.9], lamps: [3.4, 1.85],
-  windows: [[1.95, 2.5]], windowW: 0.75, pitch: 1.0, door: [1.3, 3.0, 1.95, 2.55], doorW: 1.0,
-  bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
+  endLength: 27.0, midLength: 25.0, W: 1.6, Y: 1.5, S: 2.8, C: 3.69, lean: 0.93, B: 0.75, A: 1.05,
+  nose: nose(14.0, 0.03, 2.0, [[0, 1.55], [15.0, 3.69]], [[0, 1.5], [15.0, 2.6]], [[0, 1.45], [8.0, 1.3]], [[0, 1.4], [3.0, 1.1]], [[0, 1.35], [3.0, 0.75]]),
+  windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S500_FACE,
+  endCrown: [[0, 3.49], [0.35, 3.52], [1.35, 3.585], [2.35, 3.63], [3.35, 3.665], [4.35, 3.69]],
+  // small windows in the dark band, 1.04 m apart; narrow single-leaf plug doors with a narrow window high up
+  windows: [[2.2, 2.73]], windowW: 0.69, pitch: 1.04, door: [1.31, 3.0, 2.2, 2.72], doorW: 0.7, doorGlassW: 0.3,
+  // the leading bogie 5.4 m behind the tip (the photo's wheels), the rear one 17.5 m behind it
+  endBogies: [5.4 - S500_JOIN, 5.4 - S500_JOIN + 17.5],
+  bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5, fittings: s500Fittings,
+  // windows 1.01 m apart from 10.86 m behind the tip (body d 1.54), a door at each end
+  layout: {
+    end: { doors: [[0.15, 0.85, 1], [14.93, 15.63, 1]], windows: Array.from({ length: 13 }, (_, i): [number, number] => [1.54 + i * 1.01, 2.23 + i * 1.01]) },
+    middle: { doors: [[0.6, 1.3, -1], [23.2, 23.9, 1]], windows: Array.from({ length: 21 }, (_, i): [number, number] => [2.0 + i * 1.01, 2.69 + i * 1.01]) },
+  },
   liveries: {
-    original: { title: "Nozomi", palette: { grey: c("#a7b0b8"), dark: c("#3a4555"), blue: c("#2a4f9a"), roofG: c("#9aa3ab", 0.5), skirtG: c("#5d6670") }, bands: [[0, 1.85, "grey"], [1.85, 1.9, "blue"], [1.9, 2.55, "dark"], [2.55, 9, "grey"]], roof: "roofG", skirt: "skirtG", number: "521-1" },
-    kodama: { title: "Kodama", palette: { grey: c("#b9c0c6"), dark: c("#3a4555"), blue: c("#2a4f9a"), white: c("#eef0f1"), roofG: c("#a9b0b6", 0.5), skirtG: c("#5d6670") }, bands: [[0, 1.85, "white"], [1.85, 1.92, "blue"], [1.92, 2.55, "dark"], [2.55, 9, "grey"]], roof: "roofG", skirt: "skirtG", number: "521-7001" },
+    // the W sets: a lavender-grey top and roof, the T-shaped wing pantographs
+    original: { title: "Nozomi", palette: s500Palette(S500_BLUE_GREY, "#34529f"), bands: s500Bands(), roof: "roofG", skirt: "skirtG", number: "521-1", endSweeps: S500_SWEEPS, roofStripe: { z: 0.75, mat: "stripe" }, pantograph: "wing" },
+    // the V sets: a brighter blue top, single-arm pantographs
+    kodama: { title: "Kodama", palette: s500Palette("#3d5f9c", "#3f63ad", "#6f7a96"), bands: s500Bands(), roof: "roofG", skirt: "skirtG", number: "521-7001", endSweeps: S500_SWEEPS, roofStripe: { z: 0.75, mat: "stripe" }, pantograph: "single" },
   },
   weight: { end: 41, middle: 40 }, power: 1140, maxspeed: 300,
 };
+
+/** The 500's underfloor and, on the end car, the bogie fairings ahead of and beside the leading bogie: capsules on the nose's sides. */
+function s500Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  // the side skirt down to 0.31 m between the bogies' cuts (and from inside the nose over its join)
+  const [t0, t1, reach] = [car.trucks[0]!, car.trucks[1]!, 2.5 / 2 + 0.43 + 0.25];
+  const spans: Array<[number, number]> = car.end ? [[-0.3, t1 - reach], [t1 + reach, car.length - 0.02]] : [[0.02, t0 - reach], [t0 + reach, t1 - reach], [t1 + reach, car.length - 0.02]];
+  m.scope("underfloor", () => { for (const [a, e] of spans) if (e > a + 0.05) block(m, "skirtG", X(e), X(a), 0.31, 0.76, -1.41, 1.41); });
+  if (!car.end) return;
+  m.scope("bogie fairings", () => {
+    // d spans behind the tip; each a capsule of 8 sides round lat 1.36, 0.49 m up
+    for (const [d0, d1] of [[3.25, 4.4], [4.4, 6.25], [6.25, 7.5]] as const)
+      for (const sd of [1, -1]) {
+        const ring = (k: number): Ring => Array.from({ length: 8 }, (_, i): [number, number] => { const a = (i / 8) * Math.PI * 2; return [sd * 1.36 + 0.1 * k * Math.cos(a), 0.49 + 0.16 * k * Math.sin(a)]; });
+        const xa = X(d0 - S500_JOIN), xb = X(d1 - S500_JOIN), n = 4;
+        // rounded ends: the section grows over the first and last 0.35 m
+        const at = (t: number) => Math.sqrt(Math.max(0.04, 1 - Math.pow(Math.max(0, Math.abs(2 * t - 1) * (d1 - d0) / 2 - ((d1 - d0) / 2 - 0.35)) / 0.35, 2)));
+        for (let i = 0; i < n; i++) m.sweep("skirtG", "x", ring(at(i / n)), xa + ((xb - xa) * i) / n, ring(at((i + 1) / n)), xa + ((xb - xa) * (i + 1)) / n, i === 0 || i === n - 1);
+      }
+  });
+}
+
+/**
+ * A T-shaped wing pantograph (the 500's W sets): one streamlined post hinged at its foot, folding
+ * flat toward +X, carrying a level wing with its carbon strip; on a low shroud of `shroud` paint.
+ */
+function wingPantograph(m: MeshBuilder, x: number, roofY: number, raised: boolean, shroud: string): void {
+  const baseY = roofY + 0.25, post = RAIL_COLLECTOR_TOP - 0.12 - (baseY + 0.1);
+  m.scope("shroud", () => {
+    for (const sd of [1, -1]) m.slab(shroud, [[x - 2.2, roofY - 0.01, sd * 0.78], [x + 2.2, roofY - 0.01, sd * 0.78], [x + 1.6, roofY + 0.42, sd * 0.78], [x - 1.6, roofY + 0.42, sd * 0.78]], [0, 0, -sd * 0.05]);
+  });
+  m.scope("insulators", () => { for (const dx of [-0.25, 0.25]) insulator(m, x + dx, 0, roofY - 0.01, baseY); });
+  m.scope("base", () => block(m, "pantograph", x - 0.35, x + 0.35, baseY, baseY + 0.08, -0.12, 0.12));
+  const draw = (mm: MeshBuilder, lift: number) => {
+    const a = (lift * Math.PI) / 2, [px, py] = [x - 0.2, baseY + 0.1];
+    const [tx, ty] = [px + post * Math.cos(a), py + post * Math.sin(a)];
+    mm.scope("post", () => mm.rod("pantograph", [px, py, 0], [tx, ty, 0], 0.055, 8));
+    mm.scope("wing", () => {
+      mm.rod("pantograph", [tx, ty + 0.04, -0.9], [tx, ty + 0.04, 0.9], 0.04, 8);
+      block(mm, "carbon", tx - 0.025, tx + 0.025, ty + 0.08, ty + 0.12, -0.6, 0.6);
+    });
+  };
+  if (raised) liftable(m, "pantograph", draw);
+  else draw(m, 0);
+}
 
 export const S700: ShinkansenSeries = {
   endLength: 27.35, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.65, lean: 0.96, B: 0.75, A: 1.05,
