@@ -1455,6 +1455,8 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikipedia: LNG carrier", url: "https://en.wikipedia.org/wiki/LNG_carrier" },
     { title: "Wikimedia Commons: 2023-05-20 02 LNG tanker, GULF ENERGY - IMO 7390143.jpg", url: "https://commons.wikimedia.org/wiki/File:2023-05-20_02_LNG_tanker,_GULF_ENERGY_-_IMO_7390143.jpg" },
     { title: "Wikimedia Commons: LNG Carrier DSME.jpg", url: "https://commons.wikimedia.org/wiki/File:LNG_Carrier_DSME.jpg" },
+    { title: "Wikimedia Commons: Methanier aspher LNGRIVERS.jpg", url: "https://commons.wikimedia.org/wiki/File:Methanier_aspher_LNGRIVERS.jpg" },
+    { title: "Wikimedia Commons: LNG Carrier Fuji Lng.jpg", url: "https://commons.wikimedia.org/wiki/File:LNG_Carrier_Fuji_Lng.jpg" },
   ],
   "proc-vehicle-ship-lng-qmax": [
     { title: "Wikipedia: Q-Max", url: "https://en.wikipedia.org/wiki/Q-Max" },

@@ -104,7 +104,7 @@ are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `de
 
 Some items take detail options: a `tier`'s `lip` (the deck above overhanging the walls, its
 underside closed), a window row's `mat` (vent grilles, a painted line), `hatches`'
-`coaming`, `ridge`, `ribs` and `ribMat`, a `paddle`'s painted `rays` on its boxes, and `containers`' `rows` (one stack per row of boxes, the
+`coaming`, `ridge`, `ribs` and `ribMat`, a `paddle`'s painted `rays` on its boxes, `spheres`' `cap` (a tank cover's dome as a spherical cap of that height) and `ring` (a closed, railed walkway that wide round the equator on a skirt to the deck), and `containers`' `rows` (one stack per row of boxes, the
 lower and upper boxes in two colours).
 
 Shared shapes are in `worldShips.ts`: `oceanHull`, `deckhouse` (an accommodation stack

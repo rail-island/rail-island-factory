@@ -22,7 +22,7 @@ in `assets/ship-<name>/SOURCES.md`.
 | `veh-ship-seawise-giant` | Seawise Giant | 458.4 x 68.8 x 70.6 | 24.6 (0.3484) | raked / transom | 11115 (99) | - |
 | `veh-ship-aframax` | Aframax Tanker | 245.0 x 42.0 x 50.9 | 14.8 (0.2909) | bulbous / transom | 9074 (99) | livery: red, navy, black |
 | `veh-ship-product-tanker` | Product Tanker | 183.0 x 32.2 x 45.6 | 12.0 (0.2629) | bulbous / transom | 8598 (99) | livery: red, navy, green |
-| `veh-ship-lng-moss` | Moss LNG Carrier | 290.0 x 48.0 x 62.3 | 11.5 (0.1845) | bulbous / transom | 9571 (99) | - |
+| `veh-ship-lng-moss` | Moss LNG Carrier | 290.0 x 48.0 x 60.8 | 11.5 (0.1891) | bulbous / transom | 16260 (99) | - |
 | `veh-ship-lng-qmax` | Q-Max LNG Carrier | 345.0 x 53.8 x 63.0 | 12.0 (0.1905) | bulbous / transom | 9130 (99) | - |
 | `veh-ship-lpg-carrier` | LPG Carrier | 120.0 x 19.6 x 32.6 | 7.2 (0.2209) | bulbous / transom | 7071 (99) | - |
 | `veh-ship-chemical-tanker` | Chemical Tanker | 183.0 x 32.0 x 44.6 | 11.5 (0.2576) | bulbous / transom | 8925 (99) | livery: red, navy, green, black |
@@ -58,8 +58,15 @@ Notes:
 - **Tankers** share the deck (`tankDeck`): cargo lines on their supports, the red fire main,
   the catwalk on its posts, the manifold with its crossovers, the hose cranes, the tank hatches,
   the vent risers and the foam monitor platform; liveries recolour the hull. The Seawise Giant is at her lengthened 458.45 m.
-- **Gas carriers**: five Moss spheres on their skirts with their domes and the walkway over
-  them, the vent mast forward; the Q-Max's membrane trunk deck with its domes, walkway, vent
+- **Gas carriers**: the Moss carrier is drawn after the photographed Gulf Energy: five tank
+  covers nearly touching at a 40 m pitch, each a skirt from the deck to the walkway round the
+  sphere's equator (4 m up, closed, railed) and a dome 12 m over it (`spheres` with `cap` and
+  `ring`); the pipe rack over their crowns from the house to the forecastle, its cargo and vapour
+  lines on cross beams, resting on legs on each cover and on braced trestles in the gaps with
+  their vent masts; the tank domes with their gooseneck vents; the fire main and deck line on
+  supports; the manifolds, the cargo machinery house to starboard with its hose crane; the
+  accommodation tower with the funnel on a low deckhouse aft of it; the forward mast on its
+  deckhouse. Its distant model, as before, has room for the hull and the five covers only. The Q-Max's membrane trunk deck with its domes, walkway, vent
   masts and compressor house; a
   pressurised LPG carrier with three pairs of cylindrical tanks (the list's "LPG Carrier" is
   read as that type, not a 225 m VLGC).
