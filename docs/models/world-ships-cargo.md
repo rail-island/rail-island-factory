@@ -16,7 +16,7 @@ in `assets/ship-<name>/SOURCES.md`.
 | `veh-ship-emma-maersk` | Emma Maersk | 397.7 x 56.4 x 71.6 | 15.5 (0.2165) | bulbous / transom | 17827 (99) | load: full, empty |
 | `veh-ship-msc-gulsun` | MSC Gulsun Class | 399.9 x 61.5 x 78.6 | 16.0 (0.2036) | bulbous / transom | 19433 (99) | load: full, empty |
 | `veh-ship-panamax-container` | Panamax Container Ship | 294.0 x 32.2 x 51.5 | 12.0 (0.2331) | bulbous / transom | 11907 (99) | load: full, empty; livery: orange, green, blue |
-| `veh-ship-feeder-container` | Feeder Container Ship | 134.0 x 22.5 x 45.8 | 8.0 (0.1747) | bulbous / transom | 7755 (99) | load: full, empty |
+| `veh-ship-feeder-container` | Feeder Container Ship | 139.1 x 22.6 x 41.5 | 8.8 (0.2118) | bulbous / transom | 9821 (99) | load: full, empty |
 | `veh-ship-ideal-x` | Ideal X | 159.6 x 20.7 x 30.6 | 9.2 (0.3007) | raked / cruiser | 5840 (99) | - |
 | `veh-ship-vlcc` | Very Large Crude Carrier | 330.0 x 60.0 x 64.6 | 21.0 (0.3252) | bulbous / transom | 9930 (99) | livery: navy, green, black |
 | `veh-ship-seawise-giant` | Seawise Giant | 458.4 x 68.8 x 70.6 | 24.6 (0.3484) | raked / transom | 11115 (99) | - |
@@ -55,6 +55,12 @@ Notes:
   (the covers on their coamings alone). Each stack is one row of boxes (2.5 m) in two colours,
   its height and colours from a fixed seed, with lashing bridges in the bay gaps. The Triple E has its island bridge forward of midships and twin uptakes aft,
   Emma Maersk the bridge two-thirds forward, MSC Gulsun the bridge well forward.
+  The feeder is the Vega Scorpio (Zhejiang 950 type): seven 40 ft bays on green coamings, the
+  lashing bridges and the cell guides at the house standing on the deck between the covers, two
+  45 t cranes on the port side (green pedestal, column with its slewing collar and cab) with
+  their box jibs stowed forward in the cradles of tall rests (the after one in a bay gap, the
+  forward one on the forecastle), the house on a raised poop with the funnel on its roof, a
+  freefall boat aft, rescue boats in cradles with their davits, a provision crane and a foremast.
 - **Tankers** share the deck (`tankDeck`): cargo lines on their supports, the red fire main,
   the catwalk on its posts, the manifold with its crossovers, the hose cranes, the tank hatches,
   the vent risers and the foam monitor platform; liveries recolour the hull. The Seawise Giant is at her lengthened 458.45 m.
