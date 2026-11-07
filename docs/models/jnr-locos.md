@@ -25,19 +25,19 @@ on the factory's standard-gauge wheelsets, inside the UIC gauge.
   JNR scheme, side windows and grilles, two diamond pantographs, three two-axle bogies.
 - **DD51** - its own builder (`jnrDd51.ts`, measured from the photographs in
   `assets/jnr-dd51/`, figures in its SOURCES.md), on czElectricKit's lofted `shell`: the cab 3.0 m
-  long, full width (2.95 m), its eaves at 3.62 m and its roof crowned at 3.82 m, two windscreens
+  long, full width (2.95 m), its eaves at 3.64 m and its roof crowned at 3.82 m, two windscreens
   at each end either side of a round column (0.48 m, silver in JNR red, blue on the Hokutosei)
   that rises from the hood roof, a sun visor over them; on each side a door at one end and two
-  windows at the other, point-symmetric, the number under the line. The hoods, 2.16 m wide and
-  3.0 m high from the 1.25 m walkway, roll their roof edges (0.2 m); the radiator section at each
+  windows at the other, point-symmetric, the number under the line. The hoods, 2.3 m wide and
+  3.25 m high from the 1.25 m walkway (the windscreens sit on them, 3.28 - 3.56 m), roll their roof edges (0.2 m); the radiator section at each
   end (1.55 m) stands 0.03 m proud and 0.05 m higher, meshed above and below the line, its fan
   on the roof; the flat end, its corners and top rounded (0.13 / 0.12 m), carries the two
-  sealed-beam lamps in housings at +-0.72 m in the grey cap, the cut-out number between them and
+  sealed-beam lamps in housings at +-0.76 m in the grey cap, the cut-out number between them and
   the two-leaf end hatch 0.9 m wide off the centre line. Louvre groups over the side doors
   straddle the line, a louvred intake at the cab end, the low grille box beside each hood at the
   cab, the exhaust over each engine. Paint: JNR red (#c9412b) with the light grey (#c2c4c3)
   roofs and hood tops, the white line under them at the same height on hoods and cab
-  (2.53 - 2.65 m), the white running-board edge, black frame, light grey end beams; Hokutosei:
+  (2.79 - 2.91 m), the white running-board edge, black frame, light grey end beams; Hokutosei:
   blue with dark grey roofs, a gold band and a thin gold line under it, gold lamp surrounds, a
   grey beam and the round headboard. The end beams (0.45 - 1.25 m) carry the walkway frames, the
   chain, the tail lamps, the knuckle coupler and the hoses; two DT113 bogies at +-5.9 m (2.2 m

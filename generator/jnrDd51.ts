@@ -29,13 +29,13 @@ const DECK = 1.25; // the walkways' top
 const FRAME_BOTTOM = 0.9;
 const HALF = 1.475; // the frame's and the cab's half width
 const BEAM_BOTTOM = 0.45;
-const HOOD = { x0: 1.45, x1: 6.4, half: 1.08, top: 3.0, r: 0.2 };
+const HOOD = { x0: 1.45, x1: 6.4, half: 1.15, top: 3.25, r: 0.2 };
 /** The radiator section at each hood end: a little wider and taller than the hood. */
-const RAD = { x0: 6.25, x1: 7.8, half: 1.11, top: 3.05, r: 0.2, endR: 0.13, endRoll: 0.12 };
-const CAB = { half: 1.5, w: HALF, eave: 3.62, top: 3.82 };
+const RAD = { x0: 6.25, x1: 7.8, half: 1.18, top: 3.3, r: 0.2, endR: 0.13, endRoll: 0.12 };
+const CAB = { half: 1.5, w: HALF, eave: 3.64, top: 3.82 };
 /** The white line (or the gold band) under the grey hood top, at the same height on hoods and cab. */
-const LINE: readonly [number, number] = [2.53, 2.65];
-const SCREEN = { z0: 0.3, z1: 1.3, y0: 3.06, y1: 3.48 };
+const LINE: readonly [number, number] = [2.79, 2.91];
+const SCREEN = { z0: 0.3, z1: 1.3, y0: 3.28, y1: 3.56 };
 const TRUCK_X = 5.9;
 const DT113: BogieSpec = { axles: [-1.1, 1.1], wheelR: 0.43, frameHalf: 1.75, frameTop: 0.95, frameBottom: 0.58, frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: 1.0 };
 // the idle TR106: 1,600 mm wheelbase drawn as 1,460 mm so its brake cylinders clear the shared bogie's transoms
@@ -90,8 +90,8 @@ export const DD51_LIVERIES: Record<string, Dd51Livery> = {
   hokutosei: {
     title: "Hokutosei blue", number: "DD51 1093",
     palette: { ddBlue: paint("#1f3a86"), ddGold: { color: "#c9a55a", metallic: 0.4, roughness: 0.35 }, ddDark: paint("#3a3e44", 0.7), ddBeamDark: paint("#8b9095", 0.6) },
-    hood: [[0, 2.41, "ddBlue"], [2.41, 2.45, "ddGold"], [2.45, LINE[0], "ddBlue"], [LINE[0], LINE[1], "ddGold"], [LINE[1], HOOD.top - 0.12, "ddBlue"], [HOOD.top - 0.12, 9, "ddDark"]],
-    cab: [[0, 2.41, "ddBlue"], [2.41, 2.45, "ddGold"], [2.45, LINE[0], "ddBlue"], [LINE[0], LINE[1], "ddGold"], [LINE[1], CAB.eave, "ddBlue"], [CAB.eave, 9, "ddDark"]],
+    hood: [[0, 2.66, "ddBlue"], [2.66, 2.7, "ddGold"], [2.7, LINE[0], "ddBlue"], [LINE[0], LINE[1], "ddGold"], [LINE[1], HOOD.top - 0.12, "ddBlue"], [HOOD.top - 0.12, 9, "ddDark"]],
+    cab: [[0, 2.66, "ddBlue"], [2.66, 2.7, "ddGold"], [2.7, LINE[0], "ddBlue"], [LINE[0], LINE[1], "ddGold"], [LINE[1], CAB.eave, "ddBlue"], [CAB.eave, 9, "ddDark"]],
     body: "ddBlue", roof: "ddDark", column: "ddBlue", lampBox: "ddGold", numberMat: "ddGold", numberSide: "ddGold", rails: "ddRail", beam: "ddBeamDark", headboard: ["ddBlue", "ddRail"],
   },
 };
@@ -274,9 +274,9 @@ function hood(m: MeshBuilder, l: Dd51Livery, e: number): void {
             const xc = x + w / 2;
             decal(m, "black", sideAt, n, X(xc - 0.05), X(xc + 0.05), DECK + 1.0, DECK + 1.04);
             m.scope("louvre", () => {
-              surfacePanel(m, "louvre", sideAt, n, rect(Math.min(X(xc - 0.16), X(xc + 0.16)), 2.35, Math.max(X(xc - 0.16), X(xc + 0.16)), 2.85), -0.01, 0.006);
+              surfacePanel(m, "louvre", sideAt, n, rect(Math.min(X(xc - 0.16), X(xc + 0.16)), 2.6, Math.max(X(xc - 0.16), X(xc + 0.16)), 3.05), -0.01, 0.006);
               for (let k = 0; k < 6; k++) {
-                const y = 2.39 + k * 0.075;
+                const y = 2.64 + k * 0.07;
                 decal(m, l.body === "ddBlue" ? "ddDark" : l.roof, sideAt, n, X(xc - 0.14), X(xc + 0.14), y, y + 0.025, 0.012);
               }
             });
@@ -287,8 +287,8 @@ function hood(m: MeshBuilder, l: Dd51Livery, e: number): void {
       });
       // the louvred intake at the cab end of the hood
       m.scope("intake", () => {
-        surfacePanel(m, "louvre", sideAt, n, rect(Math.min(X(HOOD.x0 + 0.15), X(HOOD.x0 + 0.85)), 2.35, Math.max(X(HOOD.x0 + 0.15), X(HOOD.x0 + 0.85)), 2.83), -0.01, 0.008);
-        for (let k = 0; k < 6; k++) decal(m, l.roof, sideAt, n, X(HOOD.x0 + 0.18), X(HOOD.x0 + 0.82), 2.38 + k * 0.075, 2.405 + k * 0.075, 0.014);
+        surfacePanel(m, "louvre", sideAt, n, rect(Math.min(X(HOOD.x0 + 0.15), X(HOOD.x0 + 0.85)), 2.62, Math.max(X(HOOD.x0 + 0.15), X(HOOD.x0 + 0.85)), 3.05), -0.01, 0.008);
+        for (let k = 0; k < 6; k++) decal(m, l.roof, sideAt, n, X(HOOD.x0 + 0.18), X(HOOD.x0 + 0.82), 2.66 + k * 0.07, 2.685 + k * 0.07, 0.014);
       });
       // the low box with its grilles beside the hood at the cab
       m.scope("grille box", () => {
@@ -310,7 +310,7 @@ function hood(m: MeshBuilder, l: Dd51Livery, e: number): void {
     const face = RAD.x1;
     const yl = RAD.top - 0.36;
     m.scope("headlights", () => {
-      for (const z of [-0.72, 0.72]) {
+      for (const z of [-0.76, 0.76]) {
         block(m, l.lampBox, ...(e > 0 ? [face - 0.05, face + 0.06] : [-face - 0.06, -face + 0.05]) as [number, number], yl - 0.17, yl + 0.17, z - 0.18, z + 0.18);
         m.sweep("rubber", "x", ngon(12, 0.15, 0, z, yl), e * (face + 0.06), ngon(12, 0.15, 0, z, yl), e * (face + 0.07));
         m.sweep("lampHead", "x", ngon(12, 0.12, 0, z, yl), e * (face + 0.07), ngon(12, 0.12, 0, z, yl), e * (face + 0.075));
@@ -378,17 +378,17 @@ function cab(m: MeshBuilder, l: Dd51Livery): void {
       const dx1 = d * (CAB.half - 0.12), dx0 = d * (CAB.half - 0.78);
       m.scope("door", () => {
         const [a, b] = [Math.min(dx0, dx1), Math.max(dx0, dx1)];
-        for (const [p, q] of [[a, a + 0.025], [b - 0.025, b]] as const) decal(m, "ddSeam", at, n, p, q, DECK + 0.08, 3.38);
-        decal(m, "ddSeam", at, n, a, b, 3.36, 3.38);
-        pane(m, at, n, a + 0.14, b - 0.14, 2.78, 3.28, 0.05);
+        for (const [p, q] of [[a, a + 0.025], [b - 0.025, b]] as const) decal(m, "ddSeam", at, n, p, q, DECK + 0.08, 3.5);
+        decal(m, "ddSeam", at, n, a, b, 3.48, 3.5);
+        pane(m, at, n, a + 0.14, b - 0.14, 2.98, 3.42, 0.05);
         decal(m, "black", at, n, a + 0.06, a + 0.1, 2.0, 2.2);
-        for (const x of [a - 0.1, b + 0.1]) grab(m, l.rails, x, s, CAB.w, DECK + 0.2, 3.1, 0.035);
+        for (const x of [a - 0.1, b + 0.1]) grab(m, l.rails, x, s, CAB.w, DECK + 0.2, 3.3, 0.035);
       });
       m.scope("windows", () => {
         const w0 = -d * (CAB.half - 0.15);
-        pane(m, at, n, w0, w0 + d * 0.78, 2.85, 3.45, 0.07);
-        pane(m, at, n, w0 + d * 0.88, w0 + d * 1.58, 2.85, 3.45, 0.07);
-        sideText(m, l.numberSide, l.number, s, CAB.w + 0.006, w0 + d * 0.8, 2.22, 0.2);
+        pane(m, at, n, w0, w0 + d * 0.78, 2.98, 3.5, 0.07);
+        pane(m, at, n, w0 + d * 0.88, w0 + d * 1.58, 2.98, 3.5, 0.07);
+        sideText(m, l.numberSide, l.number, s, CAB.w + 0.006, w0 + d * 0.8, 2.45, 0.2);
       });
       // the steps under the door
       m.scope("steps", () => {
@@ -428,7 +428,7 @@ export function dd51Lod(l: Dd51Livery, budget = 100): MeshBuilder {
   }
   shells.push(czShellLod(cabShell(l), { side: lodBands(l.cab, DECK, CAB.top), end: lodBands(l.cab, DECK, CAB.top),
     endWindows: screen(SCREEN.z0, SCREEN.z1, SCREEN.y0, SCREEN.y1),
-    sideWindows: sideWindows([{ u: [-CAB.half + 0.15, -CAB.half + 1.73], y: [2.85, 3.45] }], 0.3, true),
+    sideWindows: sideWindows([{ u: [-CAB.half + 0.15, -CAB.half + 1.73], y: [2.98, 3.5] }], 0.3, true),
   }));
   const boxes: LocoBox[] = [
     { name: "frame", mat: "ddFrame", x: [-SILL, SILL], y: [FRAME_BOTTOM, DECK], w: HALF },
