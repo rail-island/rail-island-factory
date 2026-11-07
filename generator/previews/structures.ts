@@ -3,9 +3,9 @@
 // tunnel portals, one page per type. Each draws what its set module and props give a
 // type on a representative fixture: a stop on both kerbs of a short two-lane road, a
 // cable-car station on its levelled footprint, a port's quay with the props its grade is
-// furnished with, an airport's terminal and tower on a pad by its apron, a dam's wall
+// furnished with, a whole airport on a layout the game's solver saved, a dam's wall
 // across a flat valley, a portal's masonry round a bore. The game's own layout of a
-// port or an airport is richer: these show the type, not a placed instance.
+// port is richer: that preview shows the type, not a placed instance.
 
 import { resolveParams, type ParamSpec, type ParamValues } from "../design.ts";
 import type { MeshBuilder } from "../meshBuilder.ts";
@@ -14,6 +14,7 @@ import * as busStop from "../sets/busStop.ts";
 import * as cableCarStation from "../sets/cableCarStation.ts";
 import * as port from "../sets/port.ts";
 import * as airport from "../sets/airport.ts";
+import { airfieldFixture, type AirfieldSize } from "../sets/airfieldFixtures.ts";
 import * as dam from "../sets/dam.ts";
 import * as tunnelPortal from "../sets/tunnelPortal.ts";
 import { bollardBoxes, containerBoxes, craneBoxes, CRANE_DECKS, floodlightBoxes, hutBoxes, mooringPostBoxes } from "../props/portProps.ts";
@@ -136,47 +137,49 @@ export function portPreviewLod(values: ParamValues | undefined, type: string): M
 // --- airports ---
 
 export const AIRPORT_PARAMS: ParamSpec[] = [
-  { name: "pad", title: "Terminal pad", default: "large", preview: true, values: [{ value: "small", title: "24 studs" }, { value: "large", title: "48 studs" }] },
+  { name: "size", title: "Airport size", default: "medium", preview: true, values: [{ value: "small", title: "Small" }, { value: "medium", title: "Medium" }, { value: "big", title: "Big" }] },
 ];
-const APRON: Record<string, { color: Rgb; surface: SurfaceId }> = {
-  grass_field: { color: [96, 140, 70], surface: "airport-grass" },
-  regional: { color: [60, 60, 64], surface: "airport-asphalt" },
-  international: { color: [150, 150, 146], surface: "airport-concrete" },
-  heliport: { color: [150, 150, 146], surface: "airport-concrete" },
+/** The island's grass round the field, under the footprint the game flattens. */
+const AIRPORT_GROUND: Rgb = [140, 170, 100];
+/**
+ * The colour each type's deck is drawn in here, under its surface photo. The module's
+ * deck colours are the game's LINEAR averages of the tinted photos (its plain far level),
+ * which read near black on the site's flat thumbnails.
+ */
+const APRON: Record<string, Rgb> = {
+  grass_field: [96, 140, 70], regional: [60, 60, 64], international: [150, 150, 146], heliport: [150, 150, 146],
 };
 
+/**
+ * The whole airport the set module draws on a saved layout of the type at the chosen
+ * size (airfieldFixtures.ts): the deck on the type's pavement surface, the paint and
+ * fittings, the helipads, the terminal, the fence (near level only), on the island's
+ * grass, with the control tower prop at the furniture scale.
+ */
 function airportSketch(values: ParamValues | undefined, type: string, lod: boolean): Sketch {
-  const w = resolveParams(AIRPORT_PARAMS, values).pad === "small" ? 24 : 48;
-  const pad: airport.TerminalPad = { cx: 0, cz: 0, w, d: w };
-  const s = new Sketch();
-  const apron = APRON[type] ?? APRON.regional!;
+  const size = resolveParams(AIRPORT_PARAMS, values).size as AirfieldSize;
+  const layout = airfieldFixture(type, size);
   const meta = airport.TYPE_META[type];
-  // the type's helipads in a row along the apron's far edge, as a layout might stand them
-  const pads = meta?.helipads.count ?? 0;
-  const side = meta ? airport.HELIPAD_SIDE[meta.helipads.pad] : 0;
-  const gap = 4;
-  const row = pads * (side + gap);
-  const apronW = pads ? Math.max(w, side + 2 * gap) : w;
-  const apronD = Math.max(w * 1.6, row + gap);
-  // the terminal pad and the apron in front of it (-X), as the game paves them
-  s.box(s.mat("pavement", [168, 165, 158], "stop-concrete"), { cx: 0, cy: 0.1, cz: 0, sx: w, sy: 0.2, sz: w });
-  s.box(s.mat("pavement", apron.color, apron.surface), { cx: -(w + apronW) / 2, cy: 0.1, cz: 0, sx: apronW, sy: 0.2, sz: apronD });
-  for (let i = 0; i < pads; i++) {
-    const site: airport.HelipadSite = { cx: -(w / 2) - apronW / 2, cz: -row / 2 + (i + 0.5) * (side + gap), pad: meta!.helipads.pad };
-    for (const b of airport.helipad(site, type)) {
-      if (lod && b.lod !== "shell") continue;
-      s.box(s.mat(b.material, b.color), { ...b, cy: b.cy + 0.2 });
-    }
-  }
-  for (const b of airport.terminal(pad, type)) {
-    if (lod && b.lod !== "shell") continue;
-    s.box(s.mat(b.material, b.color), { ...b, cy: b.cy + 0.2 });
+  const surface = (meta?.surface ?? "airport-asphalt") as SurfaceId;
+  const s = new Sketch();
+  const f = layout.footprint;
+  s.box(s.mat("deck", AIRPORT_GROUND), { cx: f.cx, cy: -0.2, cz: f.cz, sx: f.w, sy: 0.4, sz: f.d });
+  const field = airport.airfield(layout, type, 0);
+  const boxes = lod ? airport.airfieldLowDetail(field.boxes) : [...field.boxes, ...field.details];
+  for (const b of boxes) {
+    // the deck, and a grass strip's mown edges, carry the pavement photo the game binds
+    const deck = b.depthLayer === 1;
+    const mown = type === "grass_field" && b.material === "wood" && b.depthLayer === 2;
+    const apron = APRON[type] ?? APRON.regional!;
+    // the game darkens a mown edge to 0.72 of the deck's tint
+    const color: Rgb = deck ? apron : mown ? [Math.round(apron[0] * 0.72), Math.round(apron[1] * 0.72), Math.round(apron[2] * 0.72)] : b.color;
+    s.box(s.mat(b.material, color, deck || mown ? surface : undefined), b);
   }
   if (meta?.tower) {
-    const f = airport.furniture(pad, type);
+    const fu = airport.furniture(layout.building, type);
     const kind = meta.tower.values.kind === "international" ? "international" : "regional";
-    const boxes = towerBoxes(TOWER_HEIGHTS[kind]);
-    props(s, lod ? boxes.filter((b) => b.lod === "shell") : boxes, f.tower.x, f.tower.z, 0, f.scale);
+    const tower = towerBoxes(TOWER_HEIGHTS[kind]);
+    props(s, lod ? tower.filter((b) => b.lod === "shell") : tower, fu.tower.x, fu.tower.z, 0, fu.scale);
   }
   return s;
 }

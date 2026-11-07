@@ -55,8 +55,8 @@ A preview's parameters split in two, shown in two blocks on the model page:
   rail mast over one track or a portal over two.
 - **Preview parameters** (`ParamSpec.preview`) - the fixture only, which the game takes from
   the world: a bridge's span, what its deck carries (one to three tracks, a narrow or wide
-  road) and its wires (none, a tram's, a railway's), a port's berth, an airport's terminal pad (an
-  airport's helipads stand in a row on its apron),
+  road) and its wires (none, a tram's, a railway's), a port's berth, an airport's size (the
+  page draws the whole airport on a layout the game's solver saved, [airfield.md](airfield.md)),
   a dam's valley, a way's length, a city block's size and sample.
 
 ## Drawing

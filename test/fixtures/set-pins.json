@@ -218,7 +218,7 @@
     "arcade.far": "c6b50e7ef97688ed"
   },
   "airport": {
-    "types": "7b1058bc35e61383",
+    "types": "49bfd7e54416c41c",
     "grass_field.small": "86ce81ba6f924f17",
     "grass_field.big": "a0337e8cd8fd1d67",
     "regional.small": "405a8464b1d9816f",
@@ -228,6 +228,17 @@
     "heliport.small": "a22bb553c5c89ec7",
     "heliport.big": "05e8865f6a24c7dc",
     "helipad.small": "95bbe977494a721c",
-    "helipad.large": "3020dfc9b2387c8a"
+    "helipad.large": "3020dfc9b2387c8a",
+    "airfield.grass_field.small": "f33235e0026da2fc",
+    "airfield.grass_field.medium": "720846124ff4f3bf",
+    "airfield.grass_field.big": "6241992689cfb7ac",
+    "airfield.regional.small": "b2b379d50715c339",
+    "airfield.regional.medium": "4c4e14718de55f0f",
+    "airfield.regional.big": "141295e1a9d9a378",
+    "airfield.international.small": "135a7bdfe05ee0af",
+    "airfield.international.medium": "a2a79d075b994f8d",
+    "airfield.international.big": "ba6a2711c5f71169",
+    "airfield.heliport": "e3164f84bb34f020",
+    "airfield.regional.tworunways": "356824489c00f326"
   }
 }
