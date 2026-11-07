@@ -137,7 +137,7 @@ combinations hashed before and after):
 - a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over
   the nose (the Class 378's orange doors and yellow front); the front's band heights become
   paint edges of the car's slices.
-- a cab face's `pods` - flat-fronted rounded housings standing off the face, with lamps on
+- a cab face's `pods` - flat-fronted rounded housings standing off the face (`level` stands one upright on a sloping face), with lamps on
   their fronts (the RAe TEE II's twin-lamp pods and its coupler cover), and `texts` - lettering
   on the face, its strokes cut finer so they follow a face curving between the grid's rows (the
   TEE emblem);

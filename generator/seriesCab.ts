@@ -90,7 +90,7 @@ export interface SeriesCabFace {
    * back sinks in, paint): a lamp pod, a coupler cover. A pod's lamps (lat offset from its centre,
    * radius, lens) sit on its front.
    */
-  pods?: ReadonlyArray<{ lat: number; y: number; w: number; h: number; r?: number; proud: number; depth: number; mat: string; lamps?: ReadonlyArray<readonly [number, number, string]> }>;
+  pods?: ReadonlyArray<{ lat: number; y: number; w: number; h: number; r?: number; proud: number; depth: number; mat: string; lamps?: ReadonlyArray<readonly [number, number, string]>; level?: boolean }>;
   /** Lettering on the face: text, lat of its centre, foot, letter height, ink. */
   texts?: ReadonlyArray<{ text: string; lat: number; y: number; h: number; mat: string }>;
 }
@@ -222,7 +222,15 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
       const ring: Pt[] = [];
       for (const [cx, cy, a0] of [[hx, hy, 0], [-hx, hy, 90], [-hx, -hy, 180], [hx, -hy, 270]] as const)
         for (let j = 0; j <= k; j++) { const a = ((a0 + (90 * j) / k) * Math.PI) / 180; ring.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
-      m.scope("housing", () => n.plate(pd.mat, pd.lat, pd.y, ring, pd.proud, pd.depth));
+      if (pd.level) {
+        // standing level off a face that slopes there: the housing's front upright, facing the face's plan normal
+        const f = n.frameAt(pd.lat, pd.y);
+        const k = Math.hypot(f.n[0], f.n[2]) || 1;
+        const nn: [number, number, number] = [f.n[0] / k, 0, f.n[2] / k], tt: [number, number, number] = [-nn[2], 0, nn[0]];
+        const t = tt[0] * f.t[0] + tt[2] * f.t[2] < 0 ? ([-tt[0], 0, -tt[2]] as [number, number, number]) : tt;
+        const pts = ring.map(([a, b]): [number, number, number] => [f.p[0] + nn[0] * pd.proud + t[0] * a, f.p[1] + b, f.p[2] + nn[2] * pd.proud + t[2] * a]);
+        m.scope("housing", () => m.slab(pd.mat, pts, [-nn[0] * pd.depth, 0, -nn[2] * pd.depth]));
+      } else m.scope("housing", () => n.plate(pd.mat, pd.lat, pd.y, ring, pd.proud, pd.depth));
       const at = { lat: pd.lat, y: pd.y };
       const disc = (rr: number): Pt[] => Array.from({ length: 12 }, (_, j) => [rr * Math.cos((2 * Math.PI * j) / 12), rr * Math.sin((2 * Math.PI * j) / 12)]);
       (pd.lamps ?? []).forEach(([dl, rr, lens], j) => m.scope(`lamp ${j + 1}`, () => {

@@ -41,8 +41,8 @@ export function chLivery(kind: "sbb" | "sbbRegio" | "tee" | "gottardo" | "rhb" |
 const TEE_PALETTE = { roofG: c("#8f9499", 0.55), alu: c("#b8bcbf", 0.3), boxRed: c("#c0272d", 0.5), cabMask: c("#1d1f22", 0.6) };
 /** d behind the tip: the wrap-round windscreen carried onto the cab sides, the pillar, the small rear-rounded quarter window. */
 const TEE_SWEEPS: NonNullable<ShinkansenLivery["endSweeps"]> = [
-  { mat: "frameSilver", front: [[2.24, 0], [3.13, 0]], back: [[2.24, 2.22], [3.13, 2.06]] },
-  { mat: "cabGlass", front: [[2.27, 0], [3.1, 0]], back: [[2.27, 2.18], [3.1, 2.02]] },
+  { mat: "frameSilver", front: [[2.24, 0], [3.05, 0]], back: [[2.24, 2.22], [3.05, 2.07]] },
+  { mat: "cabGlass", front: [[2.27, 0], [3.02, 0]], back: [[2.27, 2.18], [3.02, 2.03]] },
   { mat: "frameSilver", front: [[2.27, 2.3], [2.97, 2.3]], back: [[2.27, 2.52], [2.41, 2.7], [2.62, 2.77], [2.83, 2.7], [2.97, 2.52]] },
   { mat: "cabGlass", front: [[2.3, 2.33], [2.94, 2.33]], back: [[2.3, 2.5], [2.43, 2.67], [2.62, 2.74], [2.81, 2.67], [2.94, 2.5]] },
 ];
@@ -77,20 +77,24 @@ const TEE_RINGS = [-0.155, 0, 0.155].flatMap((cx) => Array.from({ length: 12 }, 
  * rounding 3 m back to the roof with the top lamp on it.
  */
 const TEE_FACE: SeriesCabFace = {
-  dJoin: 3.0, dSide: 1.8, first: 5.3, roofFrom: 3.9, reach: 0.3, bulge: 0.22, cols: [8, 4, 1, 2], tolerance: 0.015,
-  profile: [[0.72, 0.2], [0.95, 0.08], [1.2, 0.04], [1.45, 0.01], [1.6, 0], [1.75, 0.02], [1.9, 0.1], [2.0, 0.2], [2.07, 0.3], [2.12, 0.4], [2.2, 0.55], [2.27, 0.68], [3.1, 1.1], [3.3, 1.25], [3.5, 1.5], [3.65, 1.75], [3.8, 2.1], [3.92, 2.5], [4.0, 3.0]],
-  corner: [[0.72, 0.65], [1.6, 0.6], [2.0, 0.65], [2.27, 0.75], [3.1, 0.85], [3.45, 0.9], [3.8, 0.9], [4.0, 0.5]],
-  rows: [0.72, 0.85, 0.95, 1.2, 1.25, 1.3, 1.45, 1.6, 1.75, 1.84, 1.9, 2.0, 2.07, 2.12, 2.16, 2.2, 2.24, 2.27, 2.6, 3.1, 3.13, 3.3, 3.34, 3.4, 3.5, 3.65, 3.8, 3.9, 3.92, 4.0],
+  dJoin: 3.0, dSide: 2.2, first: 5.3, roofFrom: 3.9, reach: 0.3, cols: [7, 5, 1, 2], tolerance: 0.015,
+  // the snout: rounding down into the bumper and up into the chrome strip, the windscreen set back on it
+  profile: [[0.6, 0.56], [0.72, 0.42], [0.85, 0.3], [0.95, 0.23], [1.1, 0.14], [1.25, 0.07], [1.4, 0.025], [1.6, 0], [1.75, 0.025], [1.9, 0.09], [2.0, 0.17], [2.07, 0.26], [2.12, 0.34], [2.2, 0.5], [2.27, 0.66], [3.02, 1.04], [3.1, 1.08], [3.3, 1.2], [3.5, 1.42], [3.65, 1.66], [3.8, 2.0], [3.92, 2.45], [4.0, 3.0]],
+  // its plan: a short front between the pods, the corners sweeping back in long curves
+  bulge: [[0.72, 0.12], [1.6, 0.16], [2.27, 0.12], [3.1, 0.12], [4.0, 0.05]],
+  corner: [[0.72, 0.85], [1.6, 0.8], [2.27, 0.82], [3.1, 0.85], [3.45, 0.9], [3.8, 0.9], [4.0, 0.5]],
+  cornerDepth: [[0.72, 1.0], [1.6, 1.25], [2.0, 1.1], [2.27, 0.95], [3.1, 1.0], [3.45, 1.05], [3.65, 0.9], [3.8, 0.7], [4.0, 0.3]],
+  rows: [0.6, 0.72, 0.85, 0.95, 1.1, 1.25, 1.3, 1.4, 1.6, 1.75, 1.84, 1.9, 2.0, 2.07, 2.12, 2.16, 2.2, 2.24, 2.27, 3.02, 3.05, 3.1, 3.3, 3.34, 3.4, 3.5, 3.65, 3.8, 3.9, 3.92, 4.0],
   masks: [
     // the coupler's pocket, the windscreen's chrome frame
     { lat: [0.0, 0.42], y: [0.85, 1.3], r: 0.06, mat: "cabMask" },
-    { lat: [-1.45, 1.45], y: [2.24, 3.13], r: 0.1, mat: "frameSilver" },
+    { lat: [-1.45, 1.45], y: [2.24, 3.05], r: 0.1, mat: "frameSilver" },
     // the louvred grille under the left lamp pod
     { lat: [-1.18, -0.86], y: [0.85, 1.25], r: 0.04, mat: "cabMask" },
   ],
   panes: [
-    { lat: [-1.45, -0.68], y: [2.27, 3.1], r: 0.08 }, { lat: [-0.62, -0.04], y: [2.27, 3.1], r: 0.08 },
-    { lat: [0.04, 0.62], y: [2.27, 3.1], r: 0.08 }, { lat: [0.68, 1.45], y: [2.27, 3.1], r: 0.08 },
+    { lat: [-1.45, -0.68], y: [2.27, 3.02], r: 0.08 }, { lat: [-0.62, -0.04], y: [2.27, 3.02], r: 0.08 },
+    { lat: [0.04, 0.62], y: [2.27, 3.02], r: 0.08 }, { lat: [0.68, 1.45], y: [2.27, 3.02], r: 0.08 },
   ],
   // the chrome strip along the paint line under the windscreen
   decals: [
@@ -100,14 +104,14 @@ const TEE_FACE: SeriesCabFace = {
     ...TEE_RINGS,
   ],
   pods: [
-    { lat: -0.84, y: 1.62, w: 0.74, h: 0.34, proud: 0.26, depth: 0.55, mat: "pod", lamps: [[-0.17, 0.12, "lampHead"], [0.17, 0.12, "lampHead"]] },
-    { lat: 0.84, y: 1.62, w: 0.74, h: 0.34, proud: 0.26, depth: 0.55, mat: "pod", lamps: [[-0.17, 0.12, "lampHead"], [0.17, 0.12, "lampHead"]] },
+    { lat: -0.84, y: 1.62, w: 0.74, h: 0.34, proud: 0.26, depth: 0.55, mat: "pod", lamps: [[-0.18, 0.14, "lampHead"], [0.18, 0.14, "lampHead"]] },
+    { lat: 0.84, y: 1.62, w: 0.74, h: 0.34, proud: 0.26, depth: 0.55, mat: "pod", lamps: [[-0.18, 0.14, "lampHead"], [0.18, 0.14, "lampHead"]] },
     // the red cover over the coupling's head
-    { lat: -0.42, y: 1.08, w: 0.75, h: 0.48, r: 0.07, proud: 0.32, depth: 0.5, mat: "boxRed" },
+    { lat: -0.42, y: 1.08, w: 0.75, h: 0.48, r: 0.07, proud: 0.4, depth: 0.6, mat: "boxRed", level: true },
   ],
   texts: [{ text: "TEE", lat: 0, y: 1.735, h: 0.2, mat: "emblem" }],
   roofLamp: [0, 3.52, 0.09],
-  wipers: [[[-0.3, 3.05], [-0.55, 2.4]], [[0.35, 3.05], [0.1, 2.4]]],
+  wipers: [[[-0.3, 2.98], [-0.55, 2.4]], [[0.35, 2.98], [0.1, 2.4]]],
 };
 
 /**
@@ -117,7 +121,7 @@ const TEE_FACE: SeriesCabFace = {
  * second (third in six cars) carries the four diamond pantographs, interlaced in pairs over its bogies.
  */
 export const RAE_TEE: ShinkansenSeries = {
-  endLength: 26.0, midLength: 24.43, W: 1.42, Y: 1.45, S: 3.67, C: 4.0, lean: 0.95, B: 0.72, A: 0.95,
+  endLength: 26.0, midLength: 24.43, W: 1.42, Y: 1.45, S: 3.67, C: 4.0, lean: 0.95, B: 0.6, A: 0.95,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: TEE_FACE,
   // the cab's side window on the right (+Z) side only, the destination board behind the door there and ahead of it on the left
   cabWindows: [[0.05, 1.05, 2.17, 3.2, 1], [2.3, 2.62, 2.35, 3.15, 1], [0.75, 1.07, 2.35, 3.15, -1]],
