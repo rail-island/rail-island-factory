@@ -33,6 +33,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"livery\",\"neutral\"]]": [
+    78.86000061035156,
+    23.5,
+    74.29999923706055
+   ]
+  }
  }
 }

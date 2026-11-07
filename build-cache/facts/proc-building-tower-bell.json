@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"roof\",\"teal\"],[\"storeys\",\"3\"]]": [
+    9.783700942993164,
+    24.58478546142578,
+    9.369999885559082
+   ]
+  }
  }
 }

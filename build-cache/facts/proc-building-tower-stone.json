@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"banners\",\"red\"],[\"storeys\",\"3\"]]": [
+    10.699999809265137,
+    21.600000381469727,
+    12.680000305175781
+   ]
+  }
  }
 }

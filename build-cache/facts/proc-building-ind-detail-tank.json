@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"layout\",\"horizontal\"]]": [
+    15,
+    6.71999979019165,
+    11
+   ]
+  }
  }
 }

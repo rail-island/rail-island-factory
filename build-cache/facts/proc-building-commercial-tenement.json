@@ -29,6 +29,32 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"entrance\",\"level\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"storeys\",\"4\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    14.210000038146973,
+    9.650000095367432
+   ],
+   "[[\"entrance\",\"paired\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"storeys\",\"5\"],[\"width\",\"extraWide\"]]": [
+    22.100000381469727,
+    17.40999984741211,
+    9.650000095367432
+   ],
+   "[[\"entrance\",\"paired\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"pitched\"],[\"storeys\",\"5\"],[\"width\",\"extraWide\"]]": [
+    22.25,
+    20.59000015258789,
+    9.724999904632568
+   ],
+   "[[\"entrance\",\"stoop\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"storeys\",\"5\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    17.40999984741211,
+    9.650000095367432
+   ],
+   "[[\"entrance\",\"stoop\"],[\"finish\",\"sage\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"storeys\",\"5\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    17.40999984741211,
+    9.650000095367432
+   ]
+  }
  }
 }

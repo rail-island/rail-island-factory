@@ -29,6 +29,22 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"finish\",\"blue\"],[\"size\",\"compact\"]]": [
+    28,
+    25.049999237060547,
+    26
+   ],
+   "[[\"finish\",\"brick\"],[\"size\",\"extended\"]]": [
+    36,
+    25.049999237060547,
+    26
+   ],
+   "[[\"finish\",\"cream\"],[\"size\",\"extended\"]]": [
+    36,
+    25.049999237060547,
+    26
+   ]
+  }
  }
 }

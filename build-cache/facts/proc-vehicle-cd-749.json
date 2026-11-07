@@ -56,6 +56,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"livery\",\"cd749\"]]": [
+    16.5,
+    4.599999892473221,
+    3.0907845497131348
+   ]
+  }
  }
 }

@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[]": [
+    19.5,
+    10.460000038146973,
+    13.119999885559082
+   ]
+  }
  }
 }

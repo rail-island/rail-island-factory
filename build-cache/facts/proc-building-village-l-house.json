@@ -29,6 +29,17 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"extras\",\"planters\"],[\"roof\",\"green\"],[\"roofShape\",\"gable\"],[\"side\",\"left\"],[\"storeys\",\"one\"],[\"walls\",\"white\"]]": [
+    10.899999618530273,
+    7.590156078338623,
+    10.559999942779541
+   ],
+   "[[\"extras\",\"planters\"],[\"roof\",\"green\"],[\"roofShape\",\"gable\"],[\"side\",\"left\"],[\"storeys\",\"two\"],[\"walls\",\"white\"]]": [
+    10.899999618530273,
+    10.190155982971191,
+    10.559999942779541
+   ]
+  }
  }
 }

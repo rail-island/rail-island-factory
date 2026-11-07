@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    14.1899995803833,
+    9.699999809265137
+   ]
+  }
  }
 }

@@ -29,6 +29,12 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"balcony\",\"none\"],[\"entrance\",\"porch\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"green\"],[\"shutters\",\"shutters\"],[\"storeys\",\"two\"],[\"walls\",\"white\"]]": [
+    7.420000076293945,
+    10.727499961853027,
+    10.949999809265137
+   ]
+  }
  }
 }

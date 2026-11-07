@@ -29,6 +29,17 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"chimney\",\"brick\"],[\"dormers\",\"none\"],[\"entrance\",\"canopy\"],[\"roof\",\"green\"],[\"roofShape\",\"gable\"],[\"storeys\",\"one\"],[\"walls\",\"white\"]]": [
+    9.899999618530273,
+    7.990156173706055,
+    8.710000038146973
+   ],
+   "[[\"chimney\",\"brick\"],[\"dormers\",\"none\"],[\"entrance\",\"canopy\"],[\"roof\",\"green\"],[\"roofShape\",\"gable\"],[\"storeys\",\"two\"],[\"walls\",\"white\"]]": [
+    9.899999618530273,
+    10.590156555175781,
+    8.710000038146973
+   ]
+  }
  }
 }

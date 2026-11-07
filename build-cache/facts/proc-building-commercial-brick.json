@@ -29,6 +29,62 @@
    "passenger": false,
    "interior": false
   },
-  "extents": {}
+  "extents": {
+   "[[\"entrance\",\"level\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    11.010000228881836,
+    8.5
+   ],
+   "[[\"entrance\",\"level\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"pitched\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.75,
+    14.1899995803833,
+    8.649999618530273
+   ],
+   "[[\"entrance\",\"level\"],[\"finish\",\"sage\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"wide\"]]": [
+    14,
+    11.010000228881836,
+    8.5
+   ],
+   "[[\"entrance\",\"level\"],[\"finish\",\"sand\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"board\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    11.010000228881836,
+    8.724999904632568
+   ],
+   "[[\"entrance\",\"level\"],[\"finish\",\"sand\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"narrow\"]]": [
+    5.900000095367432,
+    11.010000228881836,
+    8.5
+   ],
+   "[[\"entrance\",\"level\"],[\"finish\",\"sand\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"4\"],[\"width\",\"narrow\"]]": [
+    5.900000095367432,
+    14.210000038146973,
+    8.5
+   ],
+   "[[\"entrance\",\"level\"],[\"finish\",\"sand\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"4\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    14.210000038146973,
+    8.5
+   ],
+   "[[\"entrance\",\"paired\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"extraWide\"]]": [
+    22.100000381469727,
+    11.010000228881836,
+    9.369999885559082
+   ],
+   "[[\"entrance\",\"paired\"],[\"finish\",\"sage\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    11.010000228881836,
+    9.369999885559082
+   ],
+   "[[\"entrance\",\"stoop\"],[\"finish\",\"original\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    11.010000228881836,
+    9.369999885559082
+   ],
+   "[[\"entrance\",\"stoop\"],[\"finish\",\"sand\"],[\"partyBack\",\"no\"],[\"partyLeft\",\"no\"],[\"partyRight\",\"no\"],[\"roof\",\"flat\"],[\"sign\",\"none\"],[\"storeys\",\"3\"],[\"width\",\"standard\"]]": [
+    8.600000381469727,
+    11.010000228881836,
+    9.369999885559082
+   ]
+  }
  }
 }
