@@ -21,7 +21,7 @@ import {
   windowBands, type LodBand, type LodPart, type LodRect, type LodSections, type LodShell, type Table,
 } from "./lodKit.ts";
 import { sectionHalf, type Pt, type Volume } from "./csdCoachParts.ts";
-import type { NoseSpec } from "./cabNose.ts";
+import { bulgeAt, type NoseSpec } from "./cabNose.ts";
 import { frameMaps, scaleVolume, type CarFrame, type EndItem, type PxBox, type SideItem } from "./dmuKit.ts";
 
 /** The running gear's and roof equipment's materials, under every unit's own palette. */
@@ -320,12 +320,14 @@ export function coachBody(vols: readonly PlacedVolume[], o: CoachBodyOpts = {}):
  * and its rounded corners and bulge as the setback of a vee leaving out as
  * much plan.
  */
-export function noseEnd(s: Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "bulge" | "rows">, paint?: readonly LodBand[], windows?: readonly LodRect[]): UnitEnd {
-  const ys = [...new Set([...s.profile.map((p) => p[0]), ...s.half.map((p) => p[0]), ...s.corner.map((p) => p[0])])].filter((y) => y >= s.rows[0]! - 1e-9 && y <= s.rows[s.rows.length - 1]! + 1e-9).sort((a, b) => a - b);
+export function noseEnd(s: Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "cornerDepth" | "cornerRatio" | "bulge" | "rows">, paint?: readonly LodBand[], windows?: readonly LodRect[]): UnitEnd {
+  const ys = [...new Set([...s.profile.map((p) => p[0]), ...s.half.map((p) => p[0]), ...s.corner.map((p) => p[0]), ...(s.cornerDepth ?? []).map((p) => p[0]), ...(Array.isArray(s.bulge) ? s.bulge.map((p) => p[0]) : [])])].filter((y) => y >= s.rows[0]! - 1e-9 && y <= s.rows[s.rows.length - 1]! + 1e-9).sort((a, b) => a - b);
   const tip: Table = ys.map((y) => [y, Math.round(s.e * (s.xTip - lerp(s.profile, y)) * 1e4) / 1e4] as const);
   const setback: Table = ys.map((y) => {
-    const hw = lerp(s.half, y), r = Math.min(lerp(s.corner, y), hw * 0.98), a = hw - r, b = s.bulge ?? 0;
-    return [y, Math.round(((2 * (b * a / 3 + b * r + r * r * (1 - Math.PI / 4))) / Math.max(hw, 1e-6)) * 1e4) / 1e4] as const;
+    const hw = lerp(s.half, y), r = Math.min(lerp(s.corner, y), hw * 0.98), a = hw - r, b = bulgeAt(s.bulge, y);
+    // an elliptic corner (cornerDepth) leaves out its depth times its radius
+    const cd = s.cornerDepth ? lerp(s.cornerDepth, y) : s.cornerRatio ? lerp(s.cornerRatio, y) * r : r;
+    return [y, Math.round(((2 * (b * a / 3 + b * r + r * cd * (1 - Math.PI / 4))) / Math.max(hw, 1e-6)) * 1e4) / 1e4] as const;
   });
   return { tip, ...(setback.some(([, v]) => v > NOSE_VEE) ? { setback } : {}), ...(paint ? { paint } : {}), ...(windows ? { windows } : {}) };
 }

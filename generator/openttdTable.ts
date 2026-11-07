@@ -996,7 +996,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-ns-3700": loco(1910, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-ns-icr-coach": pax(1981, 52, RAIL, { variants: [at({ unit: "b" }, { capacity: 80 })], presets: presets({ unit: "b" }, ...each("livery", "yellowBlue")) }),
   // Switzerland (docs/models/switzerland-trains.md)
-  "proc-vehicle-sbb-rae-tee": series(1961, 30, 42, ELRL, { cars: 6, liveries: ["gottardo"] }),
+  // the machine car carries the kitchen, the customs and the mechanic's compartments: no seats
+  "proc-vehicle-sbb-rae-tee": pax(1961, 30, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 42 }), at({ unit: "powerCar" }, { capacity: 0 })],
+    presets: presets({ unit: "middleCar" }, { unit: "powerCar" }, ...each("livery", "gottardo")),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "powerCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{}, "turned"])],
+  }),
   "proc-vehicle-sbb-roter-pfeil": series(1935, 70, 70, ELRL, { single: true }),
   "proc-vehicle-sbb-icn": series(2000, 50, 60, ELRL, { cars: 7 }),
   "proc-vehicle-sbb-giruno": series(2019, 40, 50, ELRL, { cars: 8 }),

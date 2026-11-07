@@ -44,6 +44,12 @@ export interface NoseLayer {
   /** The scope its pieces are drawn in (the material's name when omitted). */
   name?: string;
   inside: (q: NoseQuery) => boolean;
+  /**
+   * Where `inside` can hold at all, a promise that saves the scan the points it cannot
+   * hold on: only on the face and its corners (|u| <= 2), only on the cab sides (|u| >= 2),
+   * only between two heights (closed).
+   */
+  where?: { face?: boolean; side?: boolean; y?: readonly [number, number] };
 }
 
 export interface NoseSpec {
@@ -61,8 +67,12 @@ export interface NoseSpec {
   half: Pt[];
   /** The plan's corner radius: [y, r], ascending y. */
   corner: Pt[];
-  /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge. */
-  bulge?: number;
+  /** The corner's depth back along the car: [y, depth], ascending y (default its radius; deeper, an elliptic corner: a face tapering in plan). */
+  cornerDepth?: Pt[];
+  /** Extra recess of the face at its edges (|u| = 1) over its centre: a parabolic plan bulge; by height ([y, bulge], ascending) for a face whose vee deepens or flattens. */
+  bulge?: number | readonly Pt[];
+  /** The corner arc's depth over its radius by height, [y, k] (default 1, a quarter circle): an elliptic corner, a nose rounded to a point in plan (the Giruno's; `cornerDepth` states the depth itself). */
+  cornerRatio?: Pt[];
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
   rows: number[];
   base: string;
@@ -86,6 +96,9 @@ const lerp = (pts: Pt[], y: number): number => {
   return pts[pts.length - 1]![1];
 };
 
+/** A face's bulge at height y: one value, or a [y, bulge] table. */
+export const bulgeAt = (b: number | readonly Pt[] | undefined, y: number): number => (b === undefined ? 0 : typeof b === "number" ? b : lerp(b as Pt[], y));
+
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const mul = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
@@ -106,12 +119,14 @@ export class CabNose {
   readonly yBot: number;
   readonly yTop: number;
   private readonly memo = new Map<string, [number, number] | null>();
+  /** The scan's surface points by column (see `column`). */
+  private readonly scanCols = new Map<string, Array<NoseQuery & { p: Vec3 }>>();
   /**
    * The heights every interval() scan samples, the same for every layer and
    * column, with the slice there (half width, corner radius, centreline face):
    * looked up once, not once a scan (the lookups were most of a nose's build).
    */
-  private scan?: { n: number; y: Float64Array; hw: Float64Array; r: Float64Array; dF: Float64Array };
+  private scan?: { n: number; y: Float64Array; hw: Float64Array; r: Float64Array; dF: Float64Array; rd: Float64Array };
   /** The pieces drawn so far, by scope name: material, triangles, normal. */
   private readonly out = new Map<string, Array<[string, Vec3[], Vec3]>>();
 
@@ -123,15 +138,17 @@ export class CabNose {
   /** The surface at (u, y): the query a layer sees and the model point. */
   at(u: number, y: number): NoseQuery & { p: Vec3 } {
     const s = this.s;
-    return this.atSlice(u, y, lerp(s.half, y), lerp(s.corner, y), lerp(s.profile, y));
+    return this.atSlice(u, y, lerp(s.half, y), lerp(s.corner, y), lerp(s.profile, y), s.cornerDepth ? lerp(s.cornerDepth, y) : -1);
   }
 
-  /** at(u, y) given the slice at y: its half width, its plan's corner radius and its centreline face. */
-  private atSlice(u: number, y: number, hw: number, corner: number, dF: number): NoseQuery & { p: Vec3 } {
+  /** at(u, y) given the slice at y: its half width, its plan's corner radius, its centreline face and the corner's depth (negative: its radius). */
+  private atSlice(u: number, y: number, hw: number, corner: number, dF: number, depth: number): NoseQuery & { p: Vec3 } {
     const s = this.s;
     const r = Math.min(corner, hw * 0.98);
+    // the corner's depth along the car: stated, or its radius times a ratio, else its radius (a round corner)
+    const rd = depth >= 0 ? depth : s.cornerRatio ? lerp(s.cornerRatio, y) * r : r;
     const a = hw - r;
-    const b = s.bulge ?? 0;
+    const b = bulgeAt(s.bulge, y);
     const au = Math.min(4, Math.abs(u));
     const sg = u < 0 ? -1 : 1;
     let lat: number;
@@ -142,10 +159,10 @@ export class CabNose {
     } else if (au <= 2) {
       const th = ((au - 1) * Math.PI) / 2;
       lat = a + r * Math.sin(th);
-      d = dF + b + r * (1 - Math.cos(th));
+      d = dF + b + rd * (1 - Math.cos(th));
     } else {
       lat = hw;
-      const dA = dF + b + r;
+      const dA = dF + b + rd;
       const dS = Math.min(Math.max(dA, s.dSide), s.dJoin);
       d = au <= 3 ? dA + (au - 2) * (dS - dA) : dS + (au - 3) * (s.dJoin - dS);
     }
@@ -193,8 +210,20 @@ export class CabNose {
     const n = S.n;
     let first = -1;
     let last = -1;
-    for (let i = 0; i <= n; i++) {
-      if (L.inside(this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!))) {
+    const w = L.where;
+    if (w && ((w.face && Math.abs(u) > 2) || (w.side && Math.abs(u) < 2))) {
+      this.memo.set(key, null);
+      return null;
+    }
+    const Q = this.column(u);
+    // the samples within the layer's heights (the others cannot hold)
+    let i0 = 0, i1 = n;
+    if (w?.y) {
+      while (i0 <= n && S.y[i0]! < w.y[0]) i0++;
+      while (i1 >= 0 && S.y[i1]! > w.y[1]) i1--;
+    }
+    for (let i = i0; i <= i1; i++) {
+      if (L.inside(Q[i]!)) {
         if (first < 0) first = i;
         last = i;
       }
@@ -218,6 +247,23 @@ export class CabNose {
     return out;
   }
 
+  /**
+   * The surface points of the scan's samples at u: every layer's interval() at a column
+   * tests the same points, so they are worked out once a column (the scan was most of
+   * a face's build when a face carries many layers).
+   */
+  private column(u: number): Array<NoseQuery & { p: Vec3 }> {
+    const key = u.toFixed(7);
+    let q = this.scanCols.get(key);
+    if (!q) {
+      const S = this.samples();
+      q = new Array(S.n + 1);
+      for (let i = 0; i <= S.n; i++) q[i] = this.atSlice(u, S.y[i]!, S.hw[i]!, S.r[i]!, S.dF[i]!, S.rd[i]!);
+      this.scanCols.set(key, q);
+    }
+    return q;
+  }
+
   /** The scan's sample heights and the slice at each (see `scan`). */
   private samples(): NonNullable<CabNose["scan"]> {
     if (!this.scan) {
@@ -227,13 +273,15 @@ export class CabNose {
       const hw = new Float64Array(n + 1);
       const r = new Float64Array(n + 1);
       const dF = new Float64Array(n + 1);
+      const rd = new Float64Array(n + 1);
       for (let i = 0; i <= n; i++) {
         y[i] = this.yBot + ((this.yTop - this.yBot) * i) / n;
         hw[i] = lerp(s.half, y[i]!);
         r[i] = lerp(s.corner, y[i]!);
         dF[i] = lerp(s.profile, y[i]!);
+        rd[i] = s.cornerDepth ? lerp(s.cornerDepth, y[i]!) : -1;
       }
-      this.scan = { n, y, hw, r, dF };
+      this.scan = { n, y, hw, r, dF, rd };
     }
     return this.scan;
   }

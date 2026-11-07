@@ -52,10 +52,25 @@ combinations hashed before and after):
 - `endPantograph` - the end cars raise the pantographs (a short unit without middle motor cars);
   `"lead"` only the leading end car (a locomotive and its driving trailer, the IC225),
   `"trail"` only the rear one (a power-car train fed from one collector, the Eurostar);
+  `trailingLowered` with `true` folds the rear end car's down; `pantographD` - the
+  pantograph's centre at a given d behind the car's front (the FV-Dosto's behind its cab);
+- `sidePanels` - fittings on the end car's and the intermediate car's sides (d behind the
+  car's front): a seam (a service door's outline), a framed window, louvres pressed in the
+  side's paint, or a framed panel with a screen (a destination display); a livery's
+  `endRoofEdge` - paint along the end car's roof edges from the shoulder up to a height,
+  its rear end slanted (the FV-Dosto's red);
 - `endBogies`, `endSides` - a locomotive end car: its bogies at given d behind the nose
   (centred under its body, not the coaches' rule) and its own side windows and doors in
   place of the passenger layout (the IC225's Class 91, the HST's Class 43, the Eurostar's power cars); `endGrilles` -
-  its side grilles with vertical slats (the Class 43's radiator);
+  its side grilles with vertical slats (the Class 43's radiator); `midBogies` - an
+  intermediate car's bogies at given d behind its +X end (the Allegra's low-floor middle car,
+  a bogie near each end); `pantographAt` - where the raised pantograph stands, d behind the
+  body's +X end of the car raising it (default 1.5 m ahead of the rear bogie; the Allegra's
+  over the cab, the FLIRT's over its leading bogie), in the distant model too;
+- `jacobs` - Jacobs bogies: one bogie centred on each joint, carrying both cars (a car shown
+  alone stands on its joint bogies, half beyond its body; the cabin stops short of their
+  skirt cuts), the end car's leading bogie at `endBogies[0]` (the SBB FLIRT);
+  `onePantograph` - one pantograph only, on the second car;
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by
@@ -97,7 +112,20 @@ combinations hashed before and after):
   sides; `cols` and `tolerance` set the grid's resolution; the body ends square `dJoin` behind the tip and the face's
   slices meet the body's own section there (both ends of a `single` railcar). The distant model
   takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
-  regional and metro units, [germany-trains.md](germany-trains.md));
+  regional and metro units, [germany-trains.md](germany-trains.md)). The `bulge` may be a
+  table by height, a vee that deepens or flattens (the Roter Pfeil's cab); `lod` gives the
+  distant model its own profile, plan and rows, and `glass: false` leaves its panes out, for a
+  face with a bonnet drawn ahead of it in the series' `fittings`
+  ([switzerland-trains.md](switzerland-trains.md)). Its `cornerDepth` makes the corner arcs
+  elliptic by stating their depth back from the face ([y, depth]: a face tapering in plan, the
+  Allegra's and the ICN's), `cornerRatio` by stating the depth over the radius ([y, k]: a nose
+  rounded to a point in plan, the Giruno's); its `paint` lays colour fields over the whole
+  surface, face and cab sides alike, between front and back edges in [y, d] (a field that runs
+  from the front round the corners and back along a long nose: the Giruno's red and black);
+- `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
+  cars (its rig support names both sections) and the cars' skirts are cut open at their inner
+  ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
+  FLIRT's `jacobs` stands a lone car on its joint bogies instead);
 - `fluting` - bands of horizontal ribs on every car's sides, round the windows and doors (the car
   builder's `fluting`, which takes several bands); `roofRibs` - ribs along the roof either side of
   the crown (the Talgo III's stainless body);
@@ -109,6 +137,19 @@ combinations hashed before and after):
 - a livery's `doors` and `front` - the door leaves' own bands, and the cab front's bands over
   the nose (the Class 378's orange doors and yellow front); the front's band heights become
   paint edges of the car's slices.
+- a cab face's `pods` - flat-fronted rounded housings standing off the face (`level` stands one upright on a sloping face), with lamps on
+  their fronts (the RAe TEE II's twin-lamp pods and its coupler cover), and `texts` - lettering
+  on the face, its strokes cut finer so they follow a face curving between the grid's rows (the
+  TEE emblem);
+- `cabWindows` take a fifth element, +1 or -1, for a window on one side only (the TEE's cab
+  side window on the right, its destination board ahead of the door on the left, behind it on
+  the right);
+- `powerCar` - a machine car of its own among the intermediate cars, the unit value `powerCar`
+  ("Power car"): its length, centred bogies of any axle count (A1A), one window row and layout,
+  diamond pantographs at given d (one raised, the others folded, a folded one's base `lift`
+  higher where two interlace), a roof line on insulators between them, louvres on the roof's
+  edges, its slot in a train of n cars, its weight and power. It is the train's only pantograph
+  car; the other intermediate cars draw none, and the train's power is the power car's.
 
 A nose end never carries a gangway frame, buffered or not. A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its

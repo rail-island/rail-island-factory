@@ -39,14 +39,18 @@ export interface CarDef {
   under: string;
   /** A painted field over the bands from the front end: up to d behind it, between two heights (a nose's warning panel). */
   field?: { d: number; y: readonly [number, number]; mat: string };
+  /** Painted strips on both sides over the bands, the skirt and the roof's arc: d spans, between two heights (a double-deck coach's door strips). */
+  strips?: ReadonlyArray<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }>;
   /** Window rows: their sill and head, their d spans, frame paint. */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window. */
-  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[] };
+  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
   front?: { d: number; bands: readonly Band[]; roof?: string };
+  /** Both ends painted apart from the middle: their bands on the sides up to d from each end, and the end walls' paint (`cap`). */
+  ends?: { d: number; bands: readonly Band[]; cap?: string };
   /** Fluting: thin lines along the side between these heights (stainless cars). */
   /** Horizontal ribs on the sides, round the windows and doors: one band of them, or several. */
   fluting?: Flutes | readonly Flutes[];
@@ -55,6 +59,8 @@ export interface CarDef {
   /** Which ends are cabs (a flat cab end) and which carry a gangway diaphragm. */
   cabEnds: readonly number[];
   diaphragm: readonly [number, number] | null;
+  /** The diaphragm's half width inside its frame (default 0.5). */
+  diaphragmW?: number;
   /** Trucks at d, their spec; the coupler kind and height. */
   trucks: readonly number[];
   truck: BogieSpec;
@@ -66,6 +72,8 @@ export interface CarDef {
   lettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
   /** The cabin's d span (default the whole body): behind a nose's cab. */
   cabin?: readonly [number, number];
+  /** Repaints the shell over the bands' painter (default none): paint that changes along the car, its ends. */
+  repaint?: (base: Painter) => Painter;
   /** Anything else: roof equipment, underfloor boxes, a nose's windscreen. */
   extras?: (m: MeshBuilder, b: SliceBody, X: (d: number) => number) => void;
 }
@@ -74,9 +82,10 @@ const LEAF_INSET = 0.02;
 
 /** The body of a car. */
 export const carBody = (c: CarDef): SliceBody => {
-  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...(c.front?.bands ?? []).flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
+  const edges = [...new Set([...c.bands.flatMap(([a, b]) => [a, b]), ...(c.front?.bands ?? []).flatMap(([a, b]) => [a, b]), ...(c.ends?.bands ?? []).flatMap(([a, b]) => [a, b]), ...c.windows.flatMap((w) => [w.y[0], w.y[1]])])]
     .filter((y) => y > c.spec.Y + 0.01 && y < c.spec.S - 0.01).sort((a, b) => a - b);
-  return carbody({ ...c.spec, edges: [...new Set([...c.spec.edges, ...edges])].sort((a, b) => a - b) });
+  const strips = (c.strips ?? []).flatMap((p) => [p.d[0], p.d[1]]);
+  return carbody({ ...c.spec, edges: [...new Set([...c.spec.edges, ...edges])].sort((a, b) => a - b), ...(strips.length ? { stations: [...(c.spec.stations ?? []), ...strips] } : {}) });
 };
 
 /** The doors' leaf boxes on both sides: the doorways into the car's cabin. */
@@ -102,7 +111,14 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
           if (hi - lo > 1e-6) sidePanel(mm, b, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
         }
       });
-      mm.scope("glass", () => sidePanel(mm, b, X, s, "glass", d0 + 0.12, d1 - 0.12, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004));
+      mm.scope("glass", () => {
+        // a narrow window centred on the leaf, or the leaf's full width
+        const w = c.doors.glassW, dm = (d0 + d1) / 2, pair = c.doors.glassPair;
+        // a double leaf: two narrow windows `glassPair` apart, the leaves' seam between them
+        if (w && pair) for (const k of [-1, 1]) sidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
+        else sidePanel(mm, b, X, s, "glass", w ? dm - w / 2 : d0 + 0.12, w ? dm + w / 2 : d1 - 0.12, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
+        if (w && pair) sidePanel(mm, b, X, s, "rubber", dm - 0.012, dm + 0.012, y0 + 0.04, y1 - 0.04, 0.011, 0.004);
+      });
     }),
   );
   m.scope("step", () => sidePanel(m, b, X, s, c.under, d0, d1, y0 - 0.08, y0, 0.006, 0.2));
@@ -143,10 +159,22 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
   const b = carBody(c);
   const sides: Painter = bandPainter(c.bands, c.roof, c.under, c.skirt, c.spec.S);
   const front = c.front && { d: c.front.d, paint: bandPainter(c.front.bands, c.front.roof ?? c.roof, c.under, c.skirt, c.spec.S) };
-  const banded: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : sides)(d, y, r) : sides;
+  const en = c.ends && { ...c.ends, paint: bandPainter(c.ends.bands, c.roof, c.under, c.skirt, c.spec.S) };
+  const middle: Painter = en
+    ? (d, y, r) => (r === "cap" && en.cap ? en.cap : (d < en.d || d > c.spec.length - en.d) && r !== "bottom" && r !== "skirt" ? en.paint(d, y, r) : sides(d, y, r))
+    : sides;
+  const banded: Painter = front ? (d, y, r) => (d < front.d && r !== "bottom" && r !== "skirt" ? front.paint : middle)(d, y, r) : middle;
   // a warning panel paints over both
   const f = c.field;
-  const painter: Painter = f ? (d, y, r) => (r !== "bottom" && d <= f.d && y >= f.y[0] && y <= f.y[1] ? f.mat : banded(d, y, r)) : banded;
+  const fielded: Painter = f ? (d, y, r) => (r !== "bottom" && d <= f.d && y >= f.y[0] && y <= f.y[1] ? f.mat : banded(d, y, r)) : banded;
+  const strips = c.strips ?? [];
+  const stripped: Painter = strips.length
+    ? (d, y, r) => {
+      const p = r === "bottom" || r === "cap" ? undefined : strips.find((q) => d >= q.d[0] && d <= q.d[1] && y >= q.y[0] && y <= q.y[1]);
+      return p ? p.mat : fielded(d, y, r);
+    }
+    : fielded;
+  const painter: Painter = c.repaint ? c.repaint(stripped) : stripped;
   const leaves = leavesOf(c);
   const cut = leaves.map((l) => ({ ...l, d0: l.d0 - 0.002, d1: l.d1 + 0.002, y0: l.y0 - 0.002, y1: l.y1 + 0.002 }));
   m.scope("body", () => {
@@ -180,7 +208,7 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
           }
           faceLamps(m, e, e * x, c.cab!.lamps);
         });
-      } else if (c.diaphragm && !inside && !(e > 0 ? c.spec.front : c.spec.rear)) endDiaphragm(m, e, x, c.diaphragm[0], c.diaphragm[1], 0.5);
+      } else if (c.diaphragm && !inside && !(e > 0 ? c.spec.front : c.spec.rear)) endDiaphragm(m, e, x, c.diaphragm[0], c.diaphragm[1], c.diaphragmW ?? 0.5);
       if (!inside)
         m.scope("coupler", () => {
           const face = e * x + c.gap[e > 0 ? 0 : 1];

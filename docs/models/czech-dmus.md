@@ -100,14 +100,19 @@ sides back to a join, where the body volume takes over with the same section.
   rounded rectangle seen from above: the centreline face's distance back from
   the tip (`profile`, by height: an upright apron, a raked windscreen, the roof
   rounding to the crown), the body's half width (`half`, its section), the plan
-  corner's radius and an optional plan bulge. Across a slice, u runs over the
+  corner's radius and an optional plan bulge; an optional `cornerDepth` by height
+  makes the corner an ellipse reaching further back than its radius, so the face
+  tapers in plan (the RhB Allegra's and the ICN's, switzerland-trains.md). Across a slice, u runs over the
   face (|u| <= 1), the corner arc (1..2), a straight run back to `dSide` (2..3)
   and the cab side to `dJoin` (3..4). Crown and bottom caps close it.
 - **Paint.** A base material and layers on top of it, each a predicate on a
   surface point (height, distance back, lateral position, side or face) that
   holds on one height interval at each u (found by testing the predicate every
   6 mm up the nose and bisecting each end; the slice at each of those heights is
-  looked up once a nose, not once a column, which was most of its build time).
+  looked up once a nose, not once a column, which was most of its build time;
+  the surface points at a column are worked out once for all the layers, and a
+  layer's optional `where` - only the face, only the cab sides, between two
+  heights - skips the columns and heights where it cannot hold).
   The grid's columns are refined until
   every layer boundary is straight within 12 mm, each cell is cut along the
   boundaries, and cells of one colour are merged, so a rounded windscreen, a
