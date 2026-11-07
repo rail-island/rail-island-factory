@@ -165,18 +165,20 @@ the near side-on one (`assets/shinkansen-e5/SOURCES.md`): its nose is a cab face
 long, not the lofted nose tables, and the canopy cab its own bubble in the series' `fittings`.
 
 - **Nose** - the tip at the coupler (1.05 - 1.15 m) under the coupler hatch, its seam an ellipse
-  1.96 m wide across the front, the white lower jaw below it down to the skirt (0.5 m, the series'
-  skirt bottom); the top rising 1.72 m at 1 m, 2.03 m at 3.2 m, 2.27 m at 6 m, then over the cab to
-  the roof (3.62 m at 13.8 m). In plan a broad spatula (1.8 m wide 0.5 m back), the elliptic
-  corners (`cornerDepth`) reaching full width 3 - 5 m back low down and 7 m back at the green's
-  edge, so the green top sits narrower over the white cheeks.
-- **Canopy** - 1.9 - 2.1 m wide, rising out of the nose 6 m back, its crown 2.92 m at 7.2 m and
-  3.27 m at 10.1 m, running into the roof by 12 m; steep sides, sunk 0.55 m into the nose. Its glass
-  (painted per facet, its edges on fixed section angles so they run straight): a visor over the
-  front and crown to 9 m inside a green rim, then on the sides only to 10.2 m, its foot 2.42 m up
-  rising to the rear; the four headlights under the glass's top edge on the crown.
+  1.96 m wide across the front centred 1.25 m up, the white lower jaw below its middle down to the
+  skirt (0.5 m, the series' skirt bottom): about two thirds of the tip's height, as in the head-on
+  photograph U15. The top rises 1.72 m at 1 m, 2.03 m at 3.2 m, 2.27 m at 6 m, then low under the
+  canopy (2.6 m at 9.9 m) and up to the roof (3.62 m at 13.8 m). In plan the white jaw is a broad,
+  blunt spatula reaching full width 2.2 - 3.1 m back, and the green hood over it narrower, its
+  corners (`cornerDepth`) reaching full width 5 - 8 m back, so the jaw shows round its cheeks.
+- **Canopy** - 1.9 - 2.1 m wide, rising steeply out of the nose 6 m back (2.88 m at 6.6 m), its
+  crown 3.0 m at 7.2 m and 3.25 m at 10.1 m, up to 0.65 m over the nose beside it, running into the
+  roof by 12.6 m; steep flanks, sunk 0.55 m into the nose. Its glass (a lighter, blue-tinted,
+  reflective material, `e5Glass`; painted per facet, its edges on fixed section angles so they run
+  straight): a visor over the front and crown to 9.3 m inside a green rim, then on the sides only
+  to 10.4 m, its foot 2.5 m up rising to the rear; the four headlights under the glass's top edge.
 - **Paint** - the nose's `paint` fields: white round the lower nose, the tokiwa green from the
-  roof down over the whole nose to the hatch's middle (1.18 m), its edge level back to 4.5 m and
+  roof down over the whole nose to the hatch's middle (1.27 m), its edge level back to 4.5 m and
   then climbing over the white cheek to the stripe's top at the join; the stripe (pink, the H5's
   purple: the livery material `stripe`) 2.08 - 2.22 m on the body, dying out on the green's edge
   9 m back.
@@ -184,7 +186,7 @@ long, not the lofted nose tables, and the canopy cab its own bubble in the serie
   crew door's seam and window 15.3 - 16.25 m and the passenger door 16.4 - 17.4 m behind the tip;
   the doors' narrow windows high in the leaf. The leading bogie under the nose, 5.25 m behind the
   tip (17.5 m bogie centres).
-- **Distant model** - the face's profile and plan with its two bands, the canopy's glass a block.
+- **Distant model** - the face's profile and plan with its two bands, the canopy's glass a block of `e5Glass`.
 
 ## Deviations
 
