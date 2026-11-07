@@ -866,16 +866,112 @@ export const S100: ShinkansenSeries = {
   weight: { end: 57, middle: 56 }, power: 920, maxspeed: 230,
 };
 
+/**
+ * The E4 Max's line under the white (photo-e453-113-kumagaya-20210918.jpg, measured side-on by a projective
+ * fit over the window pitch): 2.08 - 2.37 m along the cars, falling along the nose's sides to the beak's rim,
+ * 1.15 - 1.30 m at the tip. Edges [y, d behind the tip]: where the line's top and its bottom reach a height.
+ */
+const E4_LINE_TOP: Pt[] = [[1.3, 0], [1.52, 1.5], [1.72, 3.4], [1.89, 5.4], [2.07, 7.3], [2.22, 8.3], [2.33, 9.2], [2.37, 9.8]];
+const E4_LINE_BOTTOM: Pt[] = [[1.15, 0], [1.32, 1.5], [1.5, 3.4], [1.68, 5.4], [1.87, 7.3], [2.0, 8.3], [2.08, 9.4]];
+/** The windscreen's outline [lat, y]: a wide eye, its flat top under the head's brow, the ends pointed and raised (photo-e4-frontview.jpg). */
+const E4_EYE: Pt[] = [[-1.05, 2.86], [-0.96, 2.68], [-0.75, 2.6], [0, 2.585], [0.75, 2.6], [0.96, 2.68], [1.05, 2.86], [0.95, 3.03], [0.7, 3.1], [-0.7, 3.1], [-0.95, 3.03]];
+/** A headlight's oval housing, the left one [lat, y]; its two lamps at lat 1.14 and 1.36. */
+const E4_LAMP: Pt[] = [[-1.5, 2.29], [-1.45, 2.18], [-1.3, 2.11], [-1.1, 2.11], [-0.98, 2.16], [-0.96, 2.25], [-1.04, 2.34], [-1.23, 2.39], [-1.42, 2.37]];
+const mirrorLat = (pts: readonly Pt[]): Pt[] => pts.map(([a, y]): Pt => [-a, y]).reverse();
+/** The beak's outline seen head on [lat, y]: the crease over its top, from the line at its sides up to 1.85 m (photo-e4-frontview.jpg). */
+const E4_BEAK_ARC: Pt[] = [[-1.06, 1.3], [-1.0, 1.5], [-0.85, 1.68], [-0.55, 1.8], [0, 1.85], [0.55, 1.8], [0.85, 1.68], [1.0, 1.5], [1.06, 1.3]];
+const E4_BEAK_CREASE: Pt[] = [...E4_BEAK_ARC, ...E4_BEAK_ARC.map(([a, y]): Pt => [a * 0.965, y - 0.035]).reverse()];
+
+/**
+ * The E4's 11.5 m nose (photo-e453-113-kumagaya-20210918.jpg side-on, photo-e4-frontview.jpg head on,
+ * photo-shinkansene4newcolorandoldcolor.jpg and photo-e4-p13.jpg three-quarter): a rounded beak 2.1 m wide
+ * standing out at the bottom, its tip 1.18 m above the rail and its top a shelf at 2.0 - 2.3 m, the
+ * headlights in oval housings on the shelf's broad corners; behind it the tall head rises steeply, the
+ * eye-shaped windscreen set high (2.6 - 3.1 m, 4.0 - 5.1 m behind the tip) under its brow, and runs back
+ * over a bulbous dome to the roof; its sides hollow between the head and the beak's shelf.
+ */
+const E4_FACE: SeriesCabFace = {
+  dJoin: 11.5, dSide: 8.0, first: 12.9, reach: 0, roofFrom: 4.48, cols: [7, 5, 1, 1], tolerance: 0.02, wrap: true,
+  profile: [[0.42, 1.4], [0.62, 0.62], [0.8, 0.3], [1.0, 0.1], [1.18, 0], [1.4, 0.1], [1.66, 0.41], [1.89, 0.97], [2.04, 1.5], [2.15, 1.92], [2.23, 2.55], [2.32, 3.26], [2.43, 3.75], [2.54, 3.92], [2.65, 4.04], [3.06, 5.12], [3.3, 5.44], [3.6, 6.34], [3.81, 7.2], [4.02, 8.03], [4.19, 8.85], [4.3, 9.4], [4.42, 10.4], [4.485, 11.5]],
+  // the plan: the beak's front rounded (a bow) and narrower than the shelf above it, whose corners carry
+  // the lamps face on; the head over the eye rounded in deep corners that leave a hollow beside it
+  corner: [[0.42, 0.8], [0.8, 0.7], [1.1, 0.6], [1.89, 0.55], [2.04, 0.4], [2.15, 0.3], [2.32, 0.3], [2.43, 0.4], [2.54, 0.6], [2.65, 0.8], [3.06, 1.0], [4.485, 1.0]],
+  cornerDepth: [[0.42, 2.4], [0.8, 2.6], [1.1, 2.8], [1.89, 2.9], [2.04, 2.6], [2.15, 2.3], [2.32, 2.0], [2.43, 2.4], [2.54, 3.0], [2.65, 3.4], [3.06, 2.6], [3.3, 2.3], [3.6, 2.0], [3.81, 1.8], [4.02, 1.6], [4.19, 1.3], [4.3, 1.0], [4.42, 0.8], [4.485, 0]],
+  bulge: [[0.42, 0.5], [0.8, 0.7], [1.1, 1.1], [1.89, 1.1], [2.04, 0.6], [2.15, 0.6], [2.32, 0.5], [2.43, 0.45], [2.54, 0.4], [2.65, 0.35], [3.06, 0.3], [3.3, 0.3], [3.6, 0.25], [3.81, 0.2], [4.02, 0.15], [4.19, 0.1], [4.3, 0.05], [4.42, 0]],
+  rows: [0.42, 0.62, 0.8, 1.0, 1.18, 1.4, 1.66, 1.89, 2.04, 2.15, 2.32, 2.43, 2.54, 2.65, 2.85, 3.06, 3.3, 3.6, 3.81, 4.02, 4.19, 4.3, 4.42, 4.485],
+  // the centre line's colours (the distant model's); the paint below draws the line along the sides
+  bands: () => [[0, 1.15, "blue"], [1.15, 1.3, "line"], [1.3, 9, "white"]],
+  // the distant model's nose on fewer rows: the beak, its shelf, the eye and the dome
+  lod: { profile: [[0.42, 1.4], [1.18, 0], [2.2, 2.3], [3.0, 5.0], [4.485, 11.5]], corner: [[0.42, 0.8], [1.18, 0.6], [2.2, 0.4], [3.0, 1.0]], rows: [0.42, 1.18, 2.2, 3.0, 4.485], bulge: [[0.42, 0.6], [1.18, 1.0], [2.2, 0.55], [3.0, 0.3], [4.485, 0]], cornerDepth: [[0.42, 2.5], [1.18, 2.8], [2.2, 2.2], [3.0, 2.8], [4.485, 0]], glass: false },
+  paint: [
+    // blue under the line (reaching under it, so that no gap opens at its edge), the line falling forward
+    // from the body's height to the beak's rim; the face's bands, wrapped round to the join, white over it
+    { mat: "blue", front: [[0.3, -9], [1.299, -9], ...E4_LINE_TOP], back: [[0.3, 99], [2.37, 99]] },
+    { mat: "line", front: [[1.15, -9], [1.299, -9], ...E4_LINE_TOP], back: [...E4_LINE_BOTTOM, [2.081, 99], [2.37, 99]] },
+  ],
+  fields: [
+    // the windscreen's black rubber surround, and the headlights' dark housings
+    { mat: "cabMask", pts: E4_EYE.map(([a, y]): Pt => [a * 1.045, 2.84 + (y - 2.84) * 1.17]) },
+    { mat: "cabMask", pts: E4_LAMP },
+    { mat: "cabMask", pts: mirrorLat(E4_LAMP) },
+    { mat: "crease", pts: E4_BEAK_CREASE },
+  ],
+  panes: [{ lat: [-0.99, 0.99], y: [2.61, 3.07], r: 0.19 }],
+  lamps: [[-1.36, 2.26, 0.075, "lampHead"], [-1.14, 2.24, 0.075, "lampHead"], [1.14, 2.24, 0.075, "lampHead"], [1.36, 2.26, 0.075, "lampHead"]],
+  wipers: [[[0.45, 2.63], [0.62, 2.99]]],
+};
+
+/** The E4 end car's two narrow doors on the nose's sides (d behind the tip; sill, head; the window's width, sill and head), the -Z side's order (the +Z side's windows the other way round). */
+const E4_NOSE_DOORS: ReadonlyArray<readonly [number, number, number, number]> = [[8.07, 8.69, 1.24, 3.07], [9.32, 9.98, 1.16, 3.14]];
+const E4_NOSE_DOOR_GLASS: ReadonlyArray<readonly [number, number, number]> = [[0.3, 2.3, 2.82], [0.42, 2.19, 2.95]];
+
+/** The E4's fittings: the end car's crew doors on the nose's sides and the underfloor equipment. */
+function e4Fittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  if (car.end) m.scope("nose doors", () => {
+    const dTip = E4_FACE.dJoin, t = 0.014;
+    for (const sd of [1, -1]) E4_NOSE_DOORS.forEach(([a, e, y0, y1], i) => {
+      const [d0, d1] = [a - dTip, e - dTip];
+      sidePanel(m, b, X, sd, "rubber", d0, d0 + t, y0, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d1 - t, d1, y0, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d0 + t, d1 - t, y1 - t, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d0 + t, d1 - t, y0, y0 + t, 0.005, 0.004);
+      // the small window on the -Z side's first door, the tall one on its second; the +Z side the other way round
+      const [w, g0, g1] = E4_NOSE_DOOR_GLASS[sd < 0 ? i : 1 - i]!, dm = (d0 + d1) / 2;
+      sidePanel(m, b, X, sd, "rubber", dm - w / 2, dm + w / 2, g0, g1, 0.007, 0.03);
+      sidePanel(m, b, X, sd, "glass", dm - w / 2 + 0.03, dm + w / 2 - 0.03, g0 + 0.03, g1 - 0.03, 0.012, 0.004);
+    });
+  });
+  m.scope("underfloor", () => block(m, "under", X(car.trucks[1]! - 2.6), X(car.trucks[0]! + 2.6), 0.3, 0.42, -1.62 * 0.75, 1.62 * 0.75));
+}
+
+/** The E4's window rows (body d): the end car's four on each deck behind the nose, the intermediate car's six between its doors. */
+const E4_END_WINDOWS: Array<readonly [number, number]> = [[0.42, 1.94], [2.34, 3.86], [4.26, 5.78], [6.18, 6.8]];
+const E4_MID_WINDOWS: Array<readonly [number, number]> = [[7.06, 8.6], [9.0, 10.54], [10.95, 12.49], [12.9, 14.44], [14.86, 16.4], [16.84, 17.46]];
+
 export const E4: ShinkansenSeries = {
-  endLength: 25.7, midLength: 25.0, W: 1.62, Y: 1.2, S: 3.85, C: 4.485, lean: 0.97, B: 0.65, A: 0.9,
-  // the double-deck car's long nose: a low pointed snout under a tall cab
+  // 25.7 m end cars (11.5 m of nose), 25.0 m intermediate cars, 4.485 m high (ja.wikipedia)
+  endLength: 25.7, midLength: 25.0, W: 1.62, Y: 1.0, S: 3.9, C: 4.485, lean: 0.97, B: 0.42, A: 0.75,
   nose: nose(9.4, 0.06, 2.4, [[0, 1.3], [1.0, 1.7], [4.5, 2.4], [7.5, 3.1], [9.4, 3.7], [10.8, 4.2], [11.5, 4.485]], [[0, 1.25], [1.0, 1.6], [4.5, 2.2], [7.5, 2.85], [9.4, 3.4], [11.5, 3.85]], [[0, 1.2], [2.0, 1.2]], [[0, 1.15], [1.5, 0.9]], [[0, 1.1], [0.6, 0.5], [2.0, 0.65]]),
-  windscreen: [9.3, 10.9, 0.07, 1.05], lamps: [2.4, 1.6],
-  windows: [[1.25, 1.85], [2.7, 3.35]], windowW: 0.85, pitch: 1.0, door: [1.1, 3.05, 1.8, 2.6], doorW: 1.0,
-  bogieCentres: 17.5, wheelR: 0.455, wheelbase: 2.5,
+  windscreen: [9.3, 10.9, 0.07, 1.05], lamps: [2.4, 1.6], cabFace: E4_FACE,
+  // two decks: the lower deck's windows 1.10 - 1.69 m, the upper's 3.03 - 3.72 m; the doors with a narrow window
+  windows: [[1.1, 1.69], [3.03, 3.72]], windowW: 1.52, pitch: 1.94, door: [1.15, 3.14, 2.19, 2.93], doorW: 1.05, doorGlassW: 0.34,
+  layout: {
+    end: { doors: [[8.79, 9.84, 1]], windows: E4_END_WINDOWS },
+    middle: { doors: [[4.02, 5.07, -1], [19.5, 20.55, 1]], windows: E4_MID_WINDOWS },
+  },
+  sidePanels: {
+    // the intermediate car's three toilet windows across the line, and the two-leaf hatch at its rear end
+    middle: [
+      { d: [0.59, 1.15], y: [1.92, 2.62], kind: "window" }, { d: [1.6, 2.16], y: [1.92, 2.62], kind: "window" }, { d: [2.58, 3.14], y: [1.92, 2.62], kind: "window" },
+      { d: [22.15, 23.38], y: [1.03, 3.46], kind: "seam" }, { d: [23.47, 24.43], y: [1.03, 3.46], kind: "seam" },
+    ],
+  },
+  // 17.5 m bogie centres; the end car's rear bogie 3.0 m from its inner end, the leading one under the nose
+  bogieCentres: 17.5, wheelR: 0.455, wheelbase: 2.5, endBogies: [-6.64, 10.86], midBogies: [3.95, 21.45],
+  fittings: e4Fittings,
   liveries: {
-    max: { title: "E4 Max", palette: { white: c("#eef0f1"), blue: c("#2a4f9a"), yellow: c("#f2c31a"), roofG: c("#d9dcdf", 0.6), skirtG: c("#2a4f9a") }, bands: [[0, 2.15, "blue"], [2.15, 2.25, "yellow"], [2.25, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-101" },
-    toki: { title: "Toki", palette: { white: c("#eef0f1"), blue: c("#2a4f9a"), pink: c("#e58aa6"), roofG: c("#d9dcdf", 0.6), skirtG: c("#2a4f9a") }, bands: [[0, 2.15, "blue"], [2.15, 2.25, "pink"], [2.25, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-104" },
+    max: { title: "E4 Max", palette: { white: c("#eef0f1"), blue: c("#22327a"), line: c("#efb51c"), roofG: c("#eef0f1", 0.45), skirtG: c("#22327a"), cabMask: c("#15181c", 0.3), crease: c("#aeb4bb", 0.5) }, bands: [[0, 2.08, "blue"], [2.08, 2.37, "line"], [2.37, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-101" },
+    toki: { title: "Toki", palette: { white: c("#eef0f1"), blue: c("#22327a"), line: c("#f2949a"), roofG: c("#eef0f1", 0.45), skirtG: c("#22327a"), cabMask: c("#15181c", 0.3), crease: c("#aeb4bb", 0.5) }, bands: [[0, 2.08, "blue"], [2.08, 2.37, "line"], [2.37, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "E453-104" },
   },
   weight: { end: 52, middle: 50 }, power: 840, maxspeed: 240,
 };

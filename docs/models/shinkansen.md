@@ -14,7 +14,7 @@
 | `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill" |
 | `proc-vehicle-shinkansen-e6` | Shinkansen E6 | `komachi`, `akita` | 23.075 / 20.5 m | 13 m, a mini-shinkansen 2.945 m wide |
 | `proc-vehicle-shinkansen-100` | Shinkansen 100 series | `jnr`, `jrWest` | 26.05 / 25.0 m | 5 m, after the 0 series |
-| `proc-vehicle-shinkansen-e4` | Shinkansen E4 Max | `max`, `toki` | 25.7 / 25.0 m | 11.5 m, double-deck, 4.485 m high |
+| `proc-vehicle-shinkansen-e4` | Shinkansen E4 Max | `max`, `toki` | 25.7 / 25.0 m | 11.5 m cab face: beak, eye windscreen, double-deck, 4.485 m high |
 
 Each design's `unit` is the end car (the default: the car with the nose, a motor car),
 `middleCar` (raising its single-arm pantograph to the game's wire) or `train` with `cars`
@@ -114,7 +114,7 @@ combinations hashed before and after):
   takes its profile, plan, bands and the panes as glass (the VT 98 and the other short-nosed
   regional and metro units, [germany-trains.md](germany-trains.md)). The `bulge` may be a
   table by height, a vee that deepens or flattens (the Roter Pfeil's cab); `lod` gives the
-  distant model its own profile, plan and rows, and `glass: false` leaves its panes out, for a
+  distant model its own profile, plan and rows (and corner depths, the E4's), and `glass: false` leaves its panes out, for a
   face with a bonnet drawn ahead of it in the series' `fittings`
   ([switzerland-trains.md](switzerland-trains.md)). Its `cornerDepth` makes the corner arcs
   elliptic by stating their depth back from the face ([y, depth]: a face tapering in plan, the
@@ -166,6 +166,24 @@ livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE 
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
   measurement dome, the observation windows) is not drawn.
 - The E4's double-deck cars have the doors at the lower deck's level and the standard cabin.
+
+## The E4 Max
+
+Drawn from photographs (assets/shinkansen-e4/SOURCES.md, with the measurements): the end car's 11.5 m
+nose is a cab face (`E4_FACE`, `dJoin` 11.5, its coupling plane at the tip): a rounded beak 2.1 m wide
+standing out at the bottom (tip 1.18 m, a bow of 1.1 m in plan, its outline a light crease painted head on),
+the shelf over it at 2.0 - 2.3 m with the oval lamp housings on its broad corners, the eye-shaped
+windscreen high on the head (2.6 - 3.1 m, 4.0 - 5.1 m behind the tip), the dome to the roof. The line
+(yellow on `max`, pink on `toki`: one place, only the colour changed in 2014) runs at 2.08 - 2.37 m and
+falls along the nose's sides to the beak's rim (`paint` edges `E4_LINE_TOP`/`E4_LINE_BOTTOM`). Two windows
+rows on every car, by photo (`layout`): the end car's four a deck behind the nose and its one door near the
+rear, two narrow crew doors on the nose's sides (`e4Fittings`; the small window first on the left side, the
+tall one first on the right); the intermediate car's toilet windows across the line, two doors, six windows
+a deck and the two-leaf hatch at its rear end (`sidePanels`). The leading bogie stands under the nose
+(`endBogies` -6.64 m behind the body), 17.5 m ahead of the rear one. The distant model has its own coarse
+nose (`lod` with `cornerDepth`) without the face's glass, so that the line stays within its 100 triangles.
+Deviations: the hollow beside the head is shallower than the real one (the nose's doors need the flat side
+from 8 m back); every intermediate car is the E455 type; the roof's raised covers are not drawn.
 
 ## Checking
 
