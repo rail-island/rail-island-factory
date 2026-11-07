@@ -184,15 +184,144 @@ export const E235: ShinkansenSeries = {
   weight: { end: 28, middle: 33 }, power: 560, maxspeed: 120, fittings: e235Fittings,
 };
 
+// --- JNR 103 series (S103) ------------------------------------------------
+// The low-cab Kuha 103 as it ran from the 1970s (photo-kuha103-1.jpg, photo-1986-kuha103-149.jpg,
+// photo-jnr-ec-tc103-188.jpg, photo-l25-tc103-178-680.jpg; assets/jnr-103/SOURCES.md): the flat,
+// upright steel front without a gangway door, its three windscreens in one recessed frame, the
+// twin sealed-beam headlights in a housing on the forehead between the train-number box (left)
+// and the destination box (right), the tail lights in round housings low at the corners; the
+// AU75 air conditioner and the flat ventilators on the roof, the PS16 diamond pantograph on the
+// Moha. Lateral positions are seen from ahead (the viewer's right positive), heights over the rail,
+// d behind the face (measured at 235 px/m on the head-on photo of Kuha 103-188).
+
+/** The 103's door pitch along the side (4.78 m, a projective fit over the four doors of Kuha 103-178). */
+const S103_PITCH = 4.78;
+/** Where the face meets the body's own section, behind the face (the forehead's round over into the roof). */
+const S103_JOIN = 0.35;
+/** The door centres: the Kuha's d behind its face, the intermediate car's d behind its body's end. */
+const S103_END_DOORS = [0, 1, 2, 3].map((i) => 2.52 + S103_PITCH * i);
+const S103_MID_DOORS = [0, 1, 2, 3].map((i) => 2.58 + S103_PITCH * i);
+
+/** One car side's windows from its door centres: a door-pocket window beside each door, a pair of sashes between them, one window and its pocket at the car's plain end. */
+function s103Windows(doors: readonly number[], end: "cab" | "plain", L: number): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  if (end === "cab") out.push([doors[0]! - 0.65 - 0.63, doors[0]! - 0.65 - 0.2]);
+  else out.push([doors[0]! - 0.65 - 1.7, doors[0]! - 0.65 - 0.78], [doors[0]! - 0.65 - 0.63, doors[0]! - 0.65 - 0.2]);
+  for (let i = 0; i + 1 < doors.length; i++) {
+    const e = doors[i]! + 0.65;
+    out.push([e + 0.2, e + 0.63], [e + 0.78, e + 1.7], [e + 1.78, e + 2.7], [e + 2.85, e + 3.28]);
+  }
+  const e = doors[doors.length - 1]! + 0.65;
+  out.push([e + 0.2, e + 0.63], [e + 0.78, Math.min(e + 1.7, L - 0.2)]);
+  return out;
+}
+
+const S103_LAYOUT = {
+  end: {
+    doors: S103_END_DOORS.map((c, i): [number, number, number] => [c - 0.65 - S103_JOIN, c + 0.65 - S103_JOIN, i % 2 ? -1 : 1]),
+    windows: s103Windows(S103_END_DOORS, "cab", 19.5).map(([a, b]): [number, number] => [a - S103_JOIN, b - S103_JOIN]),
+  },
+  middle: {
+    doors: S103_MID_DOORS.map((c, i): [number, number, number] => [c - 0.65, c + 0.65, i % 2 ? -1 : 1]),
+    windows: s103Windows(S103_MID_DOORS, "plain", 19.5),
+  },
+};
+
+/** The 103's flat front (all positions measured on photo-jnr-ec-tc103-188.jpg). */
+const S103_FACE: SeriesCabFace = {
+  // the coupler plane 0.13 m ahead of the face, so that the step plate over the coupler reaches it
+  dJoin: S103_JOIN, dSide: 0.2, reach: 0.13, roofFrom: 9,
+  // upright from the body's foot to the forehead, rounding over into the roof
+  profile: [[1.0, 0], [3.3, 0], [3.45, 0.02], [3.55, 0.07], [3.61, 0.15], [3.65, S103_JOIN]],
+  corner: [[1.0, 0.13], [3.3, 0.13], [3.55, 0.09], [3.65, 0.04]], cols: [6, 3, 1, 1],
+  rows: [1.0, 1.12, 1.3, 1.75, 2.03, 2.45, 2.89, 3.1, 3.3, 3.45, 3.55, 3.61, 3.65],
+  masks: [
+    // the windscreens' recessed frame, its H-rubber, the number and destination boxes
+    { lat: [-1.3, 1.3], y: [2.03, 2.89], r: 0.08, mat: "recess" },
+    { lat: [-1.24, 1.24], y: [2.09, 2.85], r: 0.06, mat: "sash" },
+    { lat: [-1.1, -0.54], y: [2.97, 3.21], r: 0.1, mat: "frameSilver" },
+    { lat: [-1.07, -0.57], y: [3.0, 3.18], r: 0.08, mat: "blind" },
+    { lat: [0.48, 1.16], y: [2.96, 3.33], r: 0.1, mat: "frameSilver" },
+    { lat: [0.51, 1.13], y: [2.99, 3.3], r: 0.08, mat: "blind" },
+  ],
+  // three windscreens of one height, the two pillars between them narrow
+  panes: [{ lat: [-1.21, -0.43], y: [2.12, 2.82], r: 0.04 }, { lat: [-0.39, 0.39], y: [2.12, 2.82], r: 0.03 }, { lat: [0.43, 1.21], y: [2.12, 2.82], r: 0.04 }],
+  texts: [{ text: "21T", lat: -0.82, y: 3.04, h: 0.1, mat: "black" }, { text: "TOKYO", lat: 0.82, y: 3.09, h: 0.11, mat: "black" }],
+  pods: [
+    // the twin sealed-beam headlights' housing on the forehead
+    { lat: 0, y: 3.445, w: 0.56, h: 0.3, r: 0.14, proud: 0.06, depth: 0.05, mat: "body", level: true, lamps: [[-0.135, 0.085, "lampHead"], [0.135, 0.085, "lampHead"]] },
+    // the tail lights' round housings low at the corners
+    { lat: -1.11, y: 1.23, w: 0.2, h: 0.2, proud: 0.05, depth: 0.04, mat: "body", lamps: [[0, 0.07, "lampRed"]] },
+    { lat: 1.11, y: 1.23, w: 0.2, h: 0.2, proud: 0.05, depth: 0.04, mat: "body", lamps: [[0, 0.07, "lampRed"]] },
+    // the two footsteps under the windscreens and the step plate over the coupler
+    { lat: -0.41, y: 1.81, w: 0.16, h: 0.035, r: 0.01, proud: 0.05, depth: 0.03, mat: "body" },
+    { lat: 0.39, y: 1.81, w: 0.16, h: 0.035, r: 0.01, proud: 0.05, depth: 0.03, mat: "body" },
+    { lat: 0, y: 1.12, w: 0.46, h: 0.04, r: 0.01, proud: 0.12, depth: 0.03, mat: "body" },
+  ],
+  wipers: [[[0.82, 2.15], [0.57, 2.62]], [[-0.82, 2.15], [-0.57, 2.62]]],
+};
+
+/** The roof's equipment, the gutters and the window sashes, and the underfloor box (the series' fittings). */
+function s103Fittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+  const L = car.length, j = car.end ? S103_JOIN : 0, C = S103.C;
+  // the equipment boxes between the bogies, not one long case: the Moha's control and resistor boxes, the Kuha's few
+  const boxes: ReadonlyArray<readonly [number, number, number, number]> = car.end
+    ? [[4.6, 6.4, 0.55, 1.1], [7.6, 8.6, 0.4, 0.9], [10.4, 12.6, 0.6, 1.15], [13.2, 13.9, 0.45, 0.6]]
+    : [[4.5, 6.9, 0.6, 1.15], [7.4, 9.3, 0.55, 1.1], [9.8, 11.2, 0.5, 1.15], [11.7, 13.9, 0.62, 1.15]];
+  m.scope("underfloor", () => {
+    block(m, "under", X(car.trucks[1]! - 1.9), X(car.trucks[0]! + 1.9), S103.B - 0.12, S103.B, -S103.W * 0.8, S103.W * 0.8);
+    boxes.forEach(([d0, d1, h, hw], i) => m.scope(`box ${i + 1}`, () => block(m, "under", X(d1 - j), X(d0 - j), S103.B - h, S103.B - 0.12, -hw, hw)));
+  });
+  // the AU75 air conditioner across the middle of the roof: a low box, its top chamfered
+  const au: Array<[number, number]> = [[-1.0, C - 0.22], [1.0, C - 0.22], [1.0, C + 0.22], [0.85, C + 0.36], [-0.85, C + 0.36], [-1.0, C + 0.22]];
+  const mid = (car.end ? 9.75 - j : L / 2);
+  m.scope("air conditioner", () => {
+    m.sweep("au75", "x", au, X(mid + 2.3), au, X(mid - 2.3));
+    // its louvres along both sides
+    for (const z of [1, -1]) block(m, "louvre", X(mid + 1.9), X(mid - 1.9), C + 0.02, C + 0.18, z > 0 ? 1.0 : -1.012, z > 0 ? 1.012 : -1.0);
+  });
+  // the flat ventilators on the crown
+  const vent: Array<[number, number]> = [[-0.38, C - 0.12], [0.38, C - 0.12], [0.38, C + 0.08], [0.25, C + 0.15], [-0.25, C + 0.15], [-0.38, C + 0.08]];
+  const vents = car.end ? [1.9, 4.4, 14.9, 17.4].map((d) => d - j) : [2.9, 5.4, 14.1];
+  m.scope("ventilators", () => vents.forEach((d, i) => m.scope(`ventilator ${i + 1}`, () => m.sweep("au75", "x", vent, X(d + 0.5), vent, X(d - 0.5)))));
+  // the rain gutters along the roof's edges
+  m.scope("gutters", () => { for (const sd of [1, -1]) sidePanel(m, b, X, sd, "body", 0.05, L - 0.05, S103.S - 0.06, S103.S - 0.01, 0.02, 0.03); });
+  // the two-pane windows' aluminium sashes: the meeting rail of the lowering upper and the rising lower sash
+  const rows = car.end ? S103_LAYOUT.end.windows : S103_LAYOUT.middle.windows;
+  const [w0, w1] = S103.windows[0]!;
+  m.scope("sashes", () => {
+    for (const sd of [1, -1]) for (const [a, e] of rows) if (e - a > 0.6)
+      for (const [p, q, y0, y1] of [[a + 0.03, e - 0.03, 2.38, 2.42], [a + 0.03, e - 0.03, w0 + 0.03, w0 + 0.065], [a + 0.03, e - 0.03, w1 - 0.065, w1 - 0.03], [a + 0.03, a + 0.065, w0 + 0.065, w1 - 0.065], [e - 0.065, e - 0.03, w0 + 0.065, w1 - 0.065]] as const)
+        sidePanel(m, b, X, sd, "frameSilver", p, q, y0, y1, 0.016, 0.006);
+  });
+  if (car.end) m.scope("crew door", () => {
+    // the crew door behind the cab, its window and grab rail
+    for (const sd of [1, -1]) {
+      const [d0, d1] = [0.45 - j, 1.03 - j];
+      for (const [a, e, y0, y1] of [[d0, d0 + 0.02, 1.03, 2.97], [d1 - 0.02, d1, 1.03, 2.97], [d0, d1, 2.95, 2.97], [d0, d1, 1.03, 1.05]] as const)
+        sidePanel(m, b, X, sd, "rubber", a, e, y0, y1, 0.005, 0.004);
+      sidePanel(m, b, X, sd, "rubber", d0 + 0.1, d1 - 0.1, 2.02, 2.8, 0.007, 0.03);
+      sidePanel(m, b, X, sd, "glass", d0 + 0.13, d1 - 0.13, 2.05, 2.77, 0.012, 0.004);
+      sidePanel(m, b, X, sd, "frameSilver", d1 + 0.06, d1 + 0.09, 1.5, 2.6, 0.018, 0.008);
+    }
+  });
+}
+
+/** The 103's paint: one colour all over, the roof grey; the recess, the blinds and the roof units. */
+const s103Palette = (body: string, recess: string) => ({ body: c(body, 0.45), recess: c(recess, 0.5), cabMask: c(body, 0.45), blind: c("#f2f1ea", 0.4), sash: c("#8c9194", 0.4), black: c("#1d1f22", 0.5), au75: c("#b4b8ba", 0.55), louvre: c("#6b6f72", 0.6), roofG: c("#8f9396", 0.65), skirtG: c("#2a2c2f") });
+
 export const S103: ShinkansenSeries = {
-  endLength: 20.0, midLength: 20.0, W: 1.416, Y: 1.35, S: 3.2, C: 3.65, lean: 0.985, B: 1.0, A: 1.1,
-  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.416, 2.0, 2.75, "cabMask", 1.55),
-  windows: [[1.95, 2.75]], windowW: 1.0, pitch: 1.2, door: [1.15, 3.0, 1.95, 2.7], doorW: 1.3, doorCount: 4,
-  bogieCentres: 13.8, wheelR: 0.43, wheelbase: 2.1, pantograph: "diamond",
+  // 20.0 m over the couplers, a 19.5 m body 2.832 m wide (Wikipedia "103 series"), its sides upright
+  endLength: 20.0, midLength: 20.0, W: 1.416, Y: 1.2, S: 3.22, C: 3.65, lean: 0.99, B: 1.0, A: 1.1,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S103_FACE, layout: S103_LAYOUT,
+  windows: [[1.97, 2.78]], windowW: 0.92, pitch: 1.2, door: [1.17, 2.97, 2.08, 2.85], doorW: 1.3, doorCount: 4, doorGlassW: 0.4, doorGlassPair: 0.65,
+  // DT33 / TR64 bogies 13.8 m apart, centred on the 19.5 m body; the PS16 over the Moha's rear bogie, one
+  // in the 4-car Kuha-Moha-Moha-Kuha set (the Moha 102 has none)
+  bogieCentres: 13.8, wheelR: 0.43, wheelbase: 2.1, pantograph: "diamond", pantographAt: 16.5, onePantograph: true,
+  endBogies: [2.85 - S103_JOIN, 16.65 - S103_JOIN], midBogies: [2.85, 16.65], fittings: s103Fittings,
   liveries: {
-    chuo: { title: "Chuo orange", palette: { body: c("#f15a22", 0.45), cabMask: c("#f15a22", 0.45), roofG: c("#7d8084", 0.6), skirtG: c("#2a2c2f") }, bands: [[0, 9, "body"]], roof: "roofG", skirt: "skirtG", number: "KUHA 103-1" },
-    yamanote: { title: "Yamanote green", palette: { body: c("#9acd32", 0.45), cabMask: c("#9acd32", 0.45), roofG: c("#7d8084", 0.6), skirtG: c("#2a2c2f") }, bands: [[0, 9, "body"]], roof: "roofG", skirt: "skirtG", number: "KUHA 103-271" },
+    chuo: { title: "Chuo orange", palette: s103Palette("#f15a22", "#c94a1b"), bands: [[0, 9, "body"]], roof: "roofG", skirt: "body", number: "KUHA 103-1" },
+    yamanote: { title: "Yamanote green", palette: s103Palette("#9acd32", "#7eaa28"), bands: [[0, 9, "body"]], roof: "roofG", skirt: "body", number: "KUHA 103-271" },
   },
   weight: { end: 30, middle: 40 }, power: 440, maxspeed: 100,
 };
