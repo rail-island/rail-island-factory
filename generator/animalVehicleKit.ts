@@ -20,7 +20,7 @@
 
 import { MeshBuilder } from "./meshBuilder.ts";
 import type { MaterialSpec, Vec3 } from "./meshCore.ts";
-import { rollWheels } from "./rolling.ts";
+import { rollWheels, ROLLING_CLIP, ROLLING_SAMPLES, ROLLING_SPEED } from "./rolling.ts";
 import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import type { VehicleRig } from "./rig.ts";
 import { addGait, animalPalette, drawTeam, SPECIES_SPECS, teamGame, teamLod, teamOf, teamParams, placeTeam } from "./draftAnimals.ts";
@@ -106,7 +106,7 @@ export function buildAnimalVehicle(s: AnimalVehicleSpec, params?: ParamValues): 
       team: { section: 1, rehitchable: true },
     } satisfies VehicleRig;
   }
-  for (const r of s.rolling) rollWheels(m, r.nodes, r.diameter);
+  rollAll(m, s.rolling);
   return m;
 }
 
@@ -116,14 +116,15 @@ export function buildAnimalVehicleLod(s: AnimalVehicleSpec, params?: ParamValues
   if (s.kind === "road") {
     const kp = s.kingpin!;
     m.part(SECTION0, [0, 0, 0], () => teamLod(m, team.species, team.count, s.hitch[0]));
-    m.part(SECTION1, kp, () => s.lod(m));
     const lead = Math.max(...placeTeam(team.species, team.count, s.hitch[0]).map((p) => p.x)) + SPECIES_SPECS[team.species].legs.front;
+    const half = (s.track ?? 1.6) / 2;
+    // the steered nodes before the body's section: a part follows its parent's other descendants
+    for (const [name, z] of [["wheel-front-left", -half], ["wheel-front-right", half]] as const) m.part(name, [r4(lead), 0, z], () => {}, SECTION0);
+    m.part(SECTION1, kp, () => s.lod(m));
     m.rig = {
       sections: [{ node: SECTION0, pivot: [0, 0, 0] }, { node: SECTION1, pivot: kp }], joints: [], maxBendDeg: TEAM_BEND_DEG,
       steer: { axles: [{ nodes: ["wheel-front-left", "wheel-front-right"], wheelbase: r4(lead - kp[0]) }], maxAngleDeg: 40, track: s.track ?? 1.6 },
     } satisfies VehicleRig;
-    const half = (s.track ?? 1.6) / 2;
-    for (const [name, z] of [["wheel-front-left", -half], ["wheel-front-right", half]] as const) m.part(name, [r4(lead), 0, z], () => {}, SECTION0);
   } else if (!team.count) {
     s.lod(m);
   } else {
@@ -135,6 +136,31 @@ export function buildAnimalVehicleLod(s: AnimalVehicleSpec, params?: ParamValues
 }
 
 const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
+
+/**
+ * The one `rolling` clip of every rolling wheel: a single size is `rollWheels`'s; with
+ * several (a coach's small front and big rear wheels) one cycle is the biggest wheel's
+ * turn and each smaller one turns as many times further as its size is smaller - a
+ * whole number of quarter turns, so the loop closes without a jump (its spokes are
+ * four-fold at least).
+ */
+export function rollAll(m: MeshBuilder, rolling: AnimalVehicleSpec["rolling"]): void {
+  if (!rolling.length) return;
+  if (rolling.length === 1) return rollWheels(m, rolling[0]!.nodes, rolling[0]!.diameter);
+  const big = Math.max(...rolling.map((r) => r.diameter));
+  const duration = (Math.PI * big) / ROLLING_SPEED;
+  const times = Array.from({ length: ROLLING_SAMPLES + 1 }, (_, k) => Math.round(((k * duration) / ROLLING_SAMPLES) * 1e6) / 1e6);
+  const turn = (f: number): number[] => times.flatMap((_, k) => {
+    const a = (-2 * Math.PI * f * k) / ROLLING_SAMPLES;
+    return [0, 0, Math.sin(a / 2), Math.cos(a / 2)];
+  });
+  const tracks = rolling.flatMap((r) => {
+    const ratio = big / r.diameter;
+    if (Math.abs(ratio * 4 - Math.round(ratio * 4)) > 1e-6) throw new Error(`rollAll(): wheel ratio ${ratio} is not a whole number of quarter turns`);
+    return r.nodes.map((node) => ({ node, path: "rotation" as const, values: turn(ratio) }));
+  });
+  m.animate({ name: ROLLING_CLIP, times, tracks, drive: { drive: "distance", speed: ROLLING_SPEED } });
+}
 
 /**
  * The design of an animal-drawn vehicle. `fns` are the build functions as its module

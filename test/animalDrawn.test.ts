@@ -22,6 +22,7 @@ import { teamSounds, withSounds, soundsFor } from "../generator/soundMapping";
 import { OPENTTD_TABLE } from "../generator/openttdTable";
 import { proceduralId } from "../generator/modelId";
 import type { VehicleRig } from "../generator/rig";
+import type { ExportedGame } from "../generator/catalog";
 
 const VEHICLES: readonly ProceduralDesign[] = [...ANIMAL_TRAMS, ...ANIMAL_RAIL, ...ANIMAL_BUSES];
 
@@ -182,7 +183,6 @@ describe("the animal-drawn vehicles", () => {
         const sections = rig!.sections!;
         expect(sections).toHaveLength(2);
         expect(rig!.joints).toEqual([]);
-        const team = placeTeam(t.species, t.count, 0);
         if (road) {
           // the team and fore-carriage tow the body, hinged at the king bolt, steered under the leaders
           expect(rig!.team).toEqual({ section: 0, rehitchable: false });
@@ -212,7 +212,7 @@ describe("the animal-drawn vehicles", () => {
 
       it("sounds its team: the hoof beat, the animal's call, a tram's bell; the trailer silent", () => {
         const src = { category: d.catalog!.category, group: d.catalog!.group };
-        const game = withSounds(d.game, d, src)!;
+        const game = withSounds(d.game as ExportedGame, d, src)!;
         expect(game.sounds?.engine?.id).toBe("hoof-beat");
         expect(game.sounds?.call).toEqual({ id: "animal-call", params: { species: "horse" } });
         expect(game.sounds?.horn?.id).toBe(d.catalog!.group === "tram" ? "tram-bell" : undefined);

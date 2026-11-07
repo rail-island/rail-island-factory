@@ -38,11 +38,8 @@ import { BUS_CATALOG } from "./buses.ts";
 import { block, side } from "./vehicleParts.ts";
 import { TAU } from "./characterKit.ts";
 import { lodBlock, lodSideBox, lodWheel } from "./lodKit.ts";
-import { ROLLING_CLIP, ROLLING_SAMPLES, ROLLING_SPEED } from "./rolling.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
-import { animalVehicleDesign, buildAnimalVehicle, TEAM_BEND_DEG, type AnimalVehicleSpec } from "./animalVehicleKit.ts";
-import { animalPalette, placeTeam, SPECIES_SPECS, teamLod, teamOf } from "./draftAnimals.ts";
-import type { VehicleRig } from "./rig.ts";
+import { animalVehicleDesign, buildAnimalVehicle, buildAnimalVehicleLod, type AnimalVehicleSpec } from "./animalVehicleKit.ts";
 
 // ---------------------------------------------------------------------------
 // the palettes
@@ -129,59 +126,6 @@ function rearWheels(m: MeshBuilder, x: number, w: Wheel): void {
     carriageWheel(m, "rear-wheel-right", x, w, 1);
   });
 }
-
-/**
- * The coach's rolling clip: both wheel pairs in one clip of one rear revolution, the
- * front wheels turning `rear.r / fore.r` times as far. (The kit's `rolling` lists
- * add a clip each, and a model has one "rolling" clip, so a coach whose wheels differ
- * adds its own here and leaves the kit's list empty.) The ratio is a whole number of
- * quarter turns over one, so the front wheel - 12 spokes on a 16-sided tyre - looks
- * the same where the clip loops.
- */
-function rollCoach(m: MeshBuilder, fore: Wheel, rear: Wheel): void {
-  const ratio = rear.r / fore.r;
-  if (Math.abs(ratio * 4 - Math.round(ratio * 4)) > 1e-6) throw new Error(`rollCoach(): wheel ratio ${ratio} is not a whole number of quarter turns`);
-  const duration = (2 * Math.PI * rear.r) / ROLLING_SPEED;
-  const times = Array.from({ length: ROLLING_SAMPLES + 1 }, (_, k) => Math.round(((k * duration) / ROLLING_SAMPLES) * 1e6) / 1e6);
-  const turn = (f: number): number[] => times.flatMap((_, k) => {
-    const a = (-2 * Math.PI * f * k) / ROLLING_SAMPLES;
-    return [0, 0, Math.sin(a / 2), Math.cos(a / 2)];
-  });
-  m.animate({
-    name: ROLLING_CLIP,
-    times,
-    tracks: [
-      ...["rear-wheel-left", "rear-wheel-right"].map((node) => ({ node, path: "rotation" as const, values: turn(1) })),
-      ...["fore-wheel-left", "fore-wheel-right"].map((node) => ({ node, path: "rotation" as const, values: turn(ratio) })),
-    ],
-    drive: { drive: "distance", speed: ROLLING_SPEED },
-  });
-}
-
-/**
- * A coach's distant model, as the kit's `buildAnimalVehicleLod` draws a road vehicle's
- * but with the steered nodes drawn before the body's section: a part naming a parent
- * must follow the parent's other descendants (MeshCore.part), and the kit draws them
- * after `section1`, which throws. Replace with `buildAnimalVehicleLod` once the kit
- * draws them in that order.
- */
-function coachLod(s: AnimalVehicleSpec, params?: ParamValues): MeshBuilder {
-  const m = new MeshBuilder({ ...animalPalette(), ...s.palette });
-  const team = teamOf(params, { pair: s.pair });
-  const kp = s.kingpin!;
-  const half = (s.track ?? 1.6) / 2;
-  const lead = Math.max(...placeTeam(team.species, team.count, s.hitch[0]).map((p) => p.x)) + SPECIES_SPECS[team.species].legs.front;
-  m.part("section0", [0, 0, 0], () => teamLod(m, team.species, team.count, s.hitch[0]));
-  for (const [name, z] of [["wheel-front-left", -half], ["wheel-front-right", half]] as const) m.part(name, [r4(lead), 0, z], () => {}, "section0");
-  m.part("section1", kp, () => s.lod(m));
-  m.rig = {
-    sections: [{ node: "section0", pivot: [0, 0, 0] }, { node: "section1", pivot: kp }], joints: [], maxBendDeg: TEAM_BEND_DEG,
-    steer: { axles: [{ nodes: ["wheel-front-left", "wheel-front-right"], wheelbase: r4(lead - kp[0]) }], maxAngleDeg: 40, track: 2 * half },
-  } satisfies VehicleRig;
-  return m;
-}
-
-const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
 
 /** A fore-carriage: where its axle is, its wheel, its turntable's top and the pole's root (the kit's hitch). */
 interface Fore {
@@ -444,9 +388,8 @@ const KNIFEBOARD: AnimalVehicleSpec = {
     knifeboardPlatform(m);
     knifeboardBox(m);
     knifeboardGear(m);
-    rollCoach(m, KB_FORE, KB_REAR);
   },
-  rolling: [],
+  rolling: [{ nodes: ["rear-wheel-left", "rear-wheel-right"], diameter: 2 * KB_REAR.r }, { nodes: ["fore-wheel-left", "fore-wheel-right"], diameter: 2 * KB_FORE.r }],
   lod: (m) => {
     const k = KB;
     lodSideBox(m, "body", [[k.rear, k.floor], [-0.25, k.floor], [0.35, k.waist], [k.rear, k.waist]], -k.low, k.low);
@@ -464,7 +407,7 @@ const KNIFEBOARD: AnimalVehicleSpec = {
 };
 
 export const animalBusKnifeboardOmnibus = (p?: ParamValues) => buildAnimalVehicle(KNIFEBOARD, p);
-export const animalBusKnifeboardOmnibusLod = (p?: ParamValues) => coachLod(KNIFEBOARD, p);
+export const animalBusKnifeboardOmnibusLod = (p?: ParamValues) => buildAnimalVehicleLod(KNIFEBOARD, p);
 
 // ---------------------------------------------------------------------------
 // the Concord stagecoach
@@ -611,9 +554,8 @@ const STAGECOACH: AnimalVehicleSpec = {
     stagecoachRoof(m);
     stagecoachBoots(m);
     stagecoachGear(m);
-    rollCoach(m, SC_FORE, SC_REAR);
   },
-  rolling: [],
+  rolling: [{ nodes: ["rear-wheel-left", "rear-wheel-right"], diameter: 2 * SC_REAR.r }, { nodes: ["fore-wheel-left", "fore-wheel-right"], diameter: 2 * SC_FORE.r }],
   lod: (m) => {
     lodSideBox(m, "body", [[-1.18, 1.0], [1.18, 1.0], [1.05, 2.32], [-1.05, 2.32]], -SC_HALF, SC_HALF);
     lodBlock(m, -1.05, 1.05, 2.32, 2.4, -0.72, 0.72, { side: "roof" });
@@ -630,7 +572,7 @@ const STAGECOACH: AnimalVehicleSpec = {
 };
 
 export const animalBusStagecoach = (p?: ParamValues) => buildAnimalVehicle(STAGECOACH, p);
-export const animalBusStagecoachLod = (p?: ParamValues) => coachLod(STAGECOACH, p);
+export const animalBusStagecoachLod = (p?: ParamValues) => buildAnimalVehicleLod(STAGECOACH, p);
 
 // ---------------------------------------------------------------------------
 // the Paris omnibus
@@ -841,9 +783,8 @@ const PARIS: AnimalVehicleSpec = {
     parisPlatform(m);
     parisBox(m);
     parisGear(m);
-    rollCoach(m, PO_FORE, PO_REAR);
   },
-  rolling: [],
+  rolling: [{ nodes: ["rear-wheel-left", "rear-wheel-right"], diameter: 2 * PO_REAR.r }, { nodes: ["fore-wheel-left", "fore-wheel-right"], diameter: 2 * PO_FORE.r }],
   lod: (m) => {
     const k = PO;
     lodSideBox(m, "body", [[k.rear, k.floor], [0.95, k.floor], [1.45, k.waist], [k.rear, k.waist]], -k.low, k.low);
@@ -862,7 +803,7 @@ const PARIS: AnimalVehicleSpec = {
 };
 
 export const animalBusParisOmnibus = (p?: ParamValues) => buildAnimalVehicle(PARIS, p);
-export const animalBusParisOmnibusLod = (p?: ParamValues) => coachLod(PARIS, p);
+export const animalBusParisOmnibusLod = (p?: ParamValues) => buildAnimalVehicleLod(PARIS, p);
 
 // ---------------------------------------------------------------------------
 // the wagonette
@@ -978,9 +919,8 @@ const WAGONETTE: AnimalVehicleSpec = {
     wagonetteCanopy(m);
     wagonetteBox(m);
     wagonetteGear(m);
-    rollCoach(m, WG_FORE, WG_REAR);
   },
-  rolling: [],
+  rolling: [{ nodes: ["rear-wheel-left", "rear-wheel-right"], diameter: 2 * WG_REAR.r }, { nodes: ["fore-wheel-left", "fore-wheel-right"], diameter: 2 * WG_FORE.r }],
   lod: (m) => {
     const k = WG;
     lodSideBox(m, "body", [[k.rear, k.bed], [k.front, k.bed], [k.front, k.side], [k.rear, k.side]], -k.half, k.half);
@@ -996,7 +936,7 @@ const WAGONETTE: AnimalVehicleSpec = {
 };
 
 export const animalBusWagonette = (p?: ParamValues) => buildAnimalVehicle(WAGONETTE, p);
-export const animalBusWagonetteLod = (p?: ParamValues) => coachLod(WAGONETTE, p);
+export const animalBusWagonetteLod = (p?: ParamValues) => buildAnimalVehicleLod(WAGONETTE, p);
 
 /** The animal-drawn road coaches. */
 export const ANIMAL_BUSES: readonly ProceduralDesign[] = [
