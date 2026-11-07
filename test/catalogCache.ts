@@ -178,8 +178,16 @@ export function swept(id: string): boolean {
   if (ALL_DESIGNS || ALL_VARIANTS) return true;
   // the world fleet: its covering sample (generator/worldFleet.ts FLEET_SWEEP_SAMPLE, SWEPT_IDS)
   if (!SWEPT.has(id)) return false;
-  return !KIT_FAMILY_MODULES.has(src) || FIRST_OF_MODULE.get(src) === id;
+  return (!KIT_FAMILY_MODULES.has(src) && !ANIMAL_DRAWN_MODULES.has(src)) || FIRST_OF_MODULE.get(src) === id;
 }
+
+/**
+ * The animal-drawn vehicles' modules (docs/models/animal-drawn-vehicles.md): every design is a
+ * body on one kit, so the catalog sweep and the door, rig and rolling suites check each module's
+ * first design; test/animalDrawn.test.ts checks all twelve (budget, flicker, rig, supports, gait,
+ * LOD and sounds at every species' biggest team, an elephant and the trailer).
+ */
+export const ANIMAL_DRAWN_MODULES: ReadonlySet<string> = new Set(["animalTrams.ts", "animalRail.ts", "animalBuses.ts"]);
 
 /** The first item and SAMPLED_VARIANTS others evenly spread; all of them with TEST_ALL_VARIANTS=1. */
 export function sample<T>(list: readonly T[]): T[] {
