@@ -56,8 +56,8 @@ function jnrFront(t: Steam, headX: number, headY: number): void {
 
 /** C62 2's paint: gloss black, the white edging of the running boards and tyres, red coupling rods, a black buffer beam. */
 const C62_STEAM: Record<string, MaterialSpec> = {
-  paint: c("#1b1c1e", 0.45), wheel: c("#1b1c1e", 0.55), frame: c("#1b1c1e", 0.65), crimson: c("#8a2a22", 0.5), lining: c("#e8e6df", 0.55),
-  beam: c("#1b1c1e", 0.6), smokebox: c("#232426", 0.85), tyre: c("#cfcdc6", 0.5),
+  paint: c("#1b1c1e", 0.35), wheel: c("#1b1c1e", 0.55), frame: c("#1b1c1e", 0.65), crimson: c("#8a2a22", 0.5), lining: c("#e8e6df", 0.55),
+  beam: c("#1b1c1e", 0.6), smokebox: c("#2a2b2e", 0.5), rim: c("#46474b", 0.45), tyre: c("#cfcdc6", 0.5),
   plate: c("#1b1c1e", 0.45), plateText: { color: "#c9a64e", metallic: 0.5, roughness: 0.35 },
   stainless: { color: "#c9cdd1", metallic: 0.6, roughness: 0.3 }, marker: { color: "#b3221d", roughness: 0.3 },
   knuckle: c("#3a3b3d", 0.7), handrail: c("#c9ccce", 0.5),
@@ -68,6 +68,8 @@ const C62_TENDER_LENGTH = 8.375;
 /** The running board: the front deck, the slope behind the deflectors' foot, the board, the hump by the firebox and the cab step. */
 const C62_BOARD: Array<[number, number]> = [[0.25, 1.22], [0.6, 1.22], [1.66, 2.27], [9.0, 2.27], [9.2, 2.47], [9.85, 2.47], [10.05, 2.07], [10.8, 2.07]];
 const C62_DEFLECTOR_Z = 1.41;
+/** The dome casing's section: near-vertical sides rising out of the boiler into a round top. */
+const C62_CASING: Array<[number, number]> = [[-0.42, 3.2], [0.42, 3.2], [0.42, 3.6], [0.39, 3.76], [0.31, 3.88], [0.17, 3.95], [0, 3.97], [-0.17, 3.95], [-0.31, 3.88], [-0.39, 3.76], [-0.42, 3.6]];
 /** The deflector plate (convex pieces round its opening): the chamfered top front, the foot down the board's slope. */
 const C62_DEFLECTOR: Array<Array<[number, number]>> = [
   [[0.55, 2.87], [2.77, 2.87], [2.77, 3.53], [2.69, 3.64], [0.99, 3.64], [0.55, 3.1]],
@@ -118,6 +120,8 @@ function c62Front(t: Steam): void {
   });
   t.m.scope("smokebox door", () => {
     // the brass four-spoke handle in the middle of the door, the number plate above it
+    // the door's rim, catching the light round the round door
+    t.m.tube("rim", "x", 0, 2.75, 0.75, 0.69, t.X(1.1) + 0.05, t.X(1.1) + 0.079, 28);
     const X = t.X(1.1) + 0.101;
     block(t.m, "brass", X, X + 0.02, 2.73, 2.77, -0.2, 0.2);
     block(t.m, "brass", X, X + 0.02, 2.55, 2.95, -0.02, 0.02);
@@ -166,10 +170,11 @@ function c62Spec(): LocoSpec {
     palette: C62_STEAM,
     heads: [0, C62_LENGTH],
     beams: { front: false, rear: false },
-    boiler: { x0: 1.1, x1: 9.5, y: 2.75, r: 0.87, smokebox: 2.4, bands: [4.6, 6.2, 7.8], band: "black" },
+    boiler: { x0: 1.1, x1: 9.5, y: 2.75, r: 0.87, smokebox: 2.4, bands: [3.9, 7.7, 8.9], band: "rim", n: 28 },
     chimney: { x: 2.42, top: 3.98, r: 0.3 },
-    // the long casing over the sand and steam domes
-    domes: [{ x: 5.78, top: 3.97, r: 0.4, len: 3.2 }],
+    // the long casing over the sand and steam domes: a rounded loaf, its ends tapering down
+    volumes: [{ name: "dome casing", sec: C62_CASING, plan: [[4.18, 0.2], [4.35, 0.36], [4.6, 0.42], [7.0, 0.42], [7.25, 0.36], [7.42, 0.2]],
+      top: [[4.18, 3.62], [4.35, 3.84], [4.6, 3.95], [7.0, 3.95], [7.25, 3.84], [7.42, 3.62]], bands: [[3.2, 4.0, "paint"]] }],
     valves: { x: 8.5, top: 3.92 },
     handrail: { x0: 2.95, x1: 9.3, y: 3.25 },
     runningBoard: { profile: C62_BOARD, half: 1.4, valance: 0.07, valanceMat: "lining" },
@@ -229,12 +234,19 @@ function c62Tender(): LocoSpec {
       t.m.scope("lining", () => {
         // the white edge along the coal space's top and the water deck behind it
         for (const s of [-1, 1]) {
-          t.sideBox("lining", s, 0.3, 7.15, 3.09, 3.15, 1.42, 1.432);
-          t.sideBox("lining", s, 7.15, 8.15, 2.79, 2.85, 1.42, 1.432);
-          t.sideBox("lining", s, 7.12, 7.15, 2.85, 3.09, 1.42, 1.432);
+          t.sideBox("lining", s, 0.3, 7.15, 3.09, 3.17, 1.42, 1.455);
+          t.sideBox("lining", s, 7.15, 8.15, 2.79, 2.87, 1.42, 1.455);
+          t.sideBox("lining", s, 7.12, 7.15, 2.87, 3.09, 1.42, 1.455);
         }
       });
       t.m.scope("water filler", () => t.cylY("black", 7.65, 0, 2.85, 3.0, 0.3, 12));
+      t.m.scope("front bulkhead", () => {
+        // the coal space's front plate standing over the cab's gangway, the tool boxes at its corners
+        t.box("paint", 0.3, 0.42, 3.15, 3.55, -0.95, 0.95);
+        for (const s of [-1, 1]) t.sideBox("paint", s, 0.3, 1.0, 3.15, 3.5, 0.95, 1.4);
+        // the sloping coal floor's rear wall behind the heap
+        t.box("paint", 6.7, 7.15, 3.15, 3.3, -1.4, 1.4);
+      });
       t.m.scope("drawbar", () => t.box("black", 0, 0.3, 0.8, 1.0, -0.15, 0.15));
     },
   };
@@ -319,7 +331,8 @@ function d51TenderSpec(): LocoSpec {
 const c62 = (v?: ParamValues) => (resolveParams([UNIT_PARAM], v).unit === "tender" ? c62Tender() : c62Spec());
 const d51 = (v?: ParamValues) => { const p = resolveParams(D51_PARAMS, v); return p.unit === "tender" ? d51TenderSpec() : d51Spec(p.variant as D51Variant); };
 export function jnrC62(v?: ParamValues): MeshBuilder { return buildLoco(c62(v)); }
-export function jnrC62Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(c62(v)); }
+// the distant C62 draws its rounded dome casing as one of the kit's domes (a volume shell would not fit 100 triangles)
+export function jnrC62Lod(v?: ParamValues): MeshBuilder { const s = c62(v); return steamLocoLod(s.volumes ? { ...s, volumes: undefined, domes: [{ x: 5.8, top: 3.95, r: 0.42, len: 3.24 }] } : s); }
 export function jnrD51(v?: ParamValues): MeshBuilder { return buildLoco(d51(v)); }
 export function jnrD51Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(d51(v)); }
 export const jnrSteamSpec = (id: string, v?: ParamValues): LocoSpec => (id === "proc-vehicle-jnr-c62" ? c62(v) : d51(v));

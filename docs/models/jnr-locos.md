@@ -23,19 +23,19 @@ on the factory's standard-gauge wheelsets, inside the UIC gauge.
   drivers 5.2, 7.27 and 9.34 m (Boxpok centres, white tyres, red coupling rods), the trailing
   truck 10.95 and 12.05 m, the drawbar at 13.1 m. The boiler (centre 2.75 m, top 3.66 m) with its
   2.4 m smokebox from 1.1 m, the short chimney at 2.42 m (3.98 m), the long dome casing over the
-  sand and steam domes from 4.2 to 7.4 m, the wide firebox ahead of the cab (10.8 - 12.95 m, two
+  sand and steam domes from 4.2 to 7.4 m (a rounded volume tapering at its ends; a kit dome on the distant model), the wide firebox ahead of the cab (10.8 - 12.95 m, two
   side windows, the number plate and the depot plate under them, the white skirt line). The
   running board at 2.27 m drops down a slope to the front deck at 1.22 m and has the hump by the
   firebox and the lower step at the cab, all edged white (the line C62 2 has carried since 1970).
   The large deflectors (0.55 - 2.77 m, top 3.64 m, the chamfered top front, the foot down the
   board's slope, the opening at their rear) carry the stainless swallow. The black buffer beam
   (the red beams of other preserved engines are a museum look) with two marker lamps, the deck
-  rail, the LP403 headlight and C62 2's second smaller lamp, the brass "C62 2" plate and handle on
-  the smokebox door, the feedwater heater sunk in the smokebox top ahead of the chimney, the feed
+  rail, the LP403 headlight and C62 2's second smaller lamp, the brass "C62 2" plate, handle and the rim of
+  the round smokebox door (28-sided boiler), the feedwater heater sunk in the smokebox top ahead of the chimney, the feed
   pump on the left, the air pump on the right, the main reservoirs and pipes under the board, the
   cylinders clad in one block with the valve chests. The 10-22 tender (8.375 m, 21.475 m in all):
   the welded tank with its bevelled "boat" bottom, the coal space ahead of the lower water deck
-  (its white top edge stepping down), two three-axle bogies, the rear lamp and coupler.
+  (its white top edge stepping down, the front plate and tool boxes over the gangway), two three-axle bogies, the rear lamp and coupler.
   Deviations: the Boxpok openings are diamonds rather than ovals, the pipework is reduced to two
   pipes a side, the cab plates carry no lettering besides the number.
 - **D51** - a `LocoSpec` on the steam kit with its tender (`unit`): the JNR red buffer
