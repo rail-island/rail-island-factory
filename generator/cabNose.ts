@@ -73,6 +73,8 @@ export interface NoseSpec {
   bulge?: number | readonly Pt[];
   /** The corner arc's depth over its radius by height, [y, k] (default 1, a quarter circle): an elliptic corner, a nose rounded to a point in plan (the Giruno's; `cornerDepth` states the depth itself). */
   cornerRatio?: Pt[];
+  /** How far the face and its corners stand inside the body's half width, by height ([y, inset], ascending; default none): a cab narrower than the body, its straight run flaring out to the body's side by dSide (the Shinkansen 700's hump over its beak). */
+  planInset?: Pt[];
   /** The grid's rows, ascending; the first is the bottom, the last the crown. */
   rows: number[];
   base: string;
@@ -142,8 +144,10 @@ export class CabNose {
   }
 
   /** at(u, y) given the slice at y: its half width, its plan's corner radius, its centreline face and the corner's depth (negative: its radius). */
-  private atSlice(u: number, y: number, hw: number, corner: number, dF: number, depth: number): NoseQuery & { p: Vec3 } {
+  private atSlice(u: number, y: number, hwBody: number, corner: number, dF: number, depth: number): NoseQuery & { p: Vec3 } {
     const s = this.s;
+    // a face narrower than the body (planInset): its face and corners within hw, the straight run flaring out to the body's side
+    const hw = s.planInset ? hwBody - lerp(s.planInset, y) : hwBody;
     const r = Math.min(corner, hw * 0.98);
     // the corner's depth along the car: stated, or its radius times a ratio, else its radius (a round corner)
     const rd = depth >= 0 ? depth : s.cornerRatio ? lerp(s.cornerRatio, y) * r : r;
@@ -161,14 +165,14 @@ export class CabNose {
       lat = a + r * Math.sin(th);
       d = dF + b + rd * (1 - Math.cos(th));
     } else {
-      lat = hw;
+      lat = s.planInset && au <= 3 ? hw + (au - 2) * (hwBody - hw) : hwBody;
       const dA = dF + b + rd;
       const dS = Math.min(Math.max(dA, s.dSide), s.dJoin);
       d = au <= 3 ? dA + (au - 2) * (dS - dA) : dS + (au - 3) * (s.dJoin - dS);
     }
     d = Math.min(d, s.dJoin);
     const e = s.e;
-    return { u, y, d, lat: sg * lat, hw, side: au >= 2, p: [e * (s.xTip - d), y, -e * sg * lat] };
+    return { u, y, d, lat: sg * lat, hw: hwBody, side: au >= 2, p: [e * (s.xTip - d), y, -e * sg * lat] };
   }
 
   /** The outward normal at (u, y). */
@@ -182,7 +186,7 @@ export class CabNose {
   /** u of a lateral position on the face or its corner arc at height y. */
   uAt(lat: number, y: number): number {
     const s = this.s;
-    const hw = lerp(s.half, y);
+    const hw = lerp(s.half, y) - (s.planInset ? lerp(s.planInset, y) : 0);
     const r = Math.min(lerp(s.corner, y), hw * 0.98);
     const a = hw - r;
     const al = Math.abs(lat);

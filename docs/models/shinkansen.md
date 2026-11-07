@@ -11,7 +11,7 @@
 | `proc-vehicle-shinkansen-n700s` | Shinkansen N700S | `jrCentral`, `jrKyushu` | 27.35 / 25.0 m | 10.7 m "dual supreme wing" |
 | `proc-vehicle-shinkansen-e5` | Shinkansen E5 / H5 | `hayabusa` (E5), `h5` | 26.5 / 25.0 m | 15 m, the canopy cab |
 | `proc-vehicle-shinkansen-500` | Shinkansen 500 series | `original` (Nozomi), `kodama` | 27.0 / 25.0 m | 15 m needle as a cab face, the domed canopy, round body |
-| `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill" |
+| `proc-vehicle-shinkansen-700` | Shinkansen 700 / 923 | `jrCentral`, `doctorYellow` (the 923) | 27.35 / 25.0 m | 9.2 m "duck bill", a cab face (below) |
 | `proc-vehicle-shinkansen-e6` | Shinkansen E6 | `komachi`, `akita` | 23.075 / 20.5 m | 13 m, a mini-shinkansen 2.945 m wide |
 | `proc-vehicle-shinkansen-100` | Shinkansen 100 series | `jnr`, `jrWest` | 26.05 / 25.0 m | the "shark" cab face, 5.9 m to the join |
 | `proc-vehicle-shinkansen-e4` | Shinkansen E4 Max | `max`, `toki` | 25.7 / 25.0 m | 11.5 m cab face: beak, eye windscreen, double-deck, 4.485 m high |
@@ -122,6 +122,9 @@ combinations hashed before and after):
   rounded to a point in plan, the Giruno's); its `paint` lays colour fields over the whole
   surface, face and cab sides alike, between front and back edges in [y, d] (a field that runs
   from the front round the corners and back along a long nose: the Giruno's red and black);
+  its `planInset` ([y, inset], cabNose.ts) stands the face and its corners that far inside the
+  body's half width, the straight run behind them flaring out to the body's side by `dSide`: a
+  cab hump narrower than the beak under it (the 700's); unset, the face is as before;
 - `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
   cars (its rig support names both sections) and the cars' skirts are cut open at their inner
   ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
@@ -246,6 +249,33 @@ photographs of 123-1 and G49. Drawn as a cab face (`S100_FACE`, `cabFace`), d be
   toilet windows and the JR West Grand Hikari sets' own scheme are not drawn; the middle car's
   layout is the 100-seat ordinary car's for every intermediate car.
 
+
+## The 700
+
+The 700 (and the 923 on its body) is drawn with a `cabFace` (`S700_FACE`), measured from the
+photographs in `assets/shinkansen-700/` (the side of 724-54 by a projective fit over its fifteen
+windows at 1.04 m pitch, the camera at the sill's height; the fronts of C1 and C37 for widths):
+
+- **Nose** - 9.5 m to the full section (published 9.2 m), its tip on the coupling plane. The
+  beak's tip at 1.05 - 1.25 m, over a
+  grey lip rising back to the skirt's top; its top climbs gently to the slit headlights
+  (2.12 - 2.23 m, lat 0.13 - 0.82 m, two lamps each), 1.2 - 1.5 m behind the tip; the windscreen
+  from 2.47 to 2.95 m, its front pane 1.48 m wide 2.0 - 3.15 m behind the tip and its side panes
+  wrapped round the corners to 3.9 - 5.0 m, in one dark surround. The plan: tight corners on the
+  broad beak, elliptic corners up to 4.5 m deep at the windscreen; over the beak's cheeks the cab
+  hump stands up to 0.32 m inside the body's sides (`planInset`, from the C1 head-on at 229 px/m:
+  2.79 m wide at the lamps, 2.69 m at the windscreen's foot, the beak 3.38 m), the waist flaring
+  out to the sides by 9.1 m. The face's 32 rows keep its faceting below a thumbnail's notice.
+- **Bands** - the thick blue band under the windows (1.64 - 1.93 m) and the thin one under it
+  (1.47 - 1.56 m), over the doors on every car; on the nose the thick band ends in a point 7.24 m
+  behind the tip (its top corner 7.8 m, bottom 8.43 m), the thin band in a slanted cut at
+  8.97 - 9.45 m. Both liveries (the 923 yellow with the same blue bands, a grey skirt and its
+  black hatch on the beak's top; the hatch is in the body's colour on the 700).
+- **Sides** - windows 0.68 m wide, 2.0 - 2.55 m, 1.04 m pitch; doors 0.78 m wide with a 0.32 m
+  window (2.36 - 2.88 m); on the end car the crew door with its narrow window (9.52 - 10.02 m)
+  ahead of the passenger door (10.2 - 10.98 m).
+- **Bogies** - the leading bogie under the nose, 6.1 m behind the tip, 17.5 m ahead of the rear one.
+
 ## Deviations
 
 - The 500: the canopy is paint on the nose's own surface, not a separate bubble; the lower snout's lip
@@ -259,7 +289,9 @@ photographs of 123-1 and G49. Drawn as a cab face (`S100_FACE`, `cabFace`), d be
 - The E5's sculpted white cheek (a bulge along the nose's lower sides) is painted, not shaped;
   its pantographs lack their noise shields; its doors' green edge lines are not drawn.
 - The 700's two liveries share the 700's body: the 923 Doctor Yellow's own detail (its
-  measurement dome, the observation windows) is not drawn.
+  measurement dome, the observation windows) is not drawn. The 700's beak is no wider than the
+  body, and its hump's waist is one straight flare at each height. Its
+  distant model carries the side bands on to the nose's tip (the cab face's distant end paints by height).
 - The E4's double-deck cars have the doors at the lower deck's level and the standard cabin.
 
 ## The E4 Max

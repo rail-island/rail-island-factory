@@ -1111,16 +1111,64 @@ function wingPantograph(m: MeshBuilder, x: number, roofY: number, raised: boolea
   else draw(m, 0);
 }
 
+
+// The 700's cab face (assets/shinkansen-700/SOURCES.md; docs/models/shinkansen.md, "The 700"): the
+// "duck bill" (aero-stream) nose, 9.5 m to the full section. A broad, low beak with its tip at 1.1 m
+// rounds forward of the cab, its top rising gently to the slit headlights; the cab stands up behind it,
+// narrower, the windscreen's front pane and its wrapped side panes in one dark surround from 2.43 m to
+// 3.0 m; deep elliptic corners carry the face back to the body's sides. The side's two blue bands end
+// on the nose in points, the thick one ahead of the thin one.
+const S700_DJOIN = 9.5;
+/** The end car's body behind the face (endLength less the coupling gap and the face; the tip on the coupling plane). */
+const S700_END_BODY = 27.35 - 0.25 - S700_DJOIN;
+/** The sides' bands (body the livery's own colour): the thick blue band under the windows, the thin one under it. */
+const S700_BANDS: readonly Band[] = [[0, 1.47, "body"], [1.47, 1.56, "blue"], [1.56, 1.64, "body"], [1.64, 1.93, "blue"], [1.93, 9, "body"]];
+/** The lamp housings' outline, viewer's right (mirrored for the left): a slit under the windscreen, its outer end slanted. */
+const S700_LAMP: Pt[] = [[0.13, 2.12], [0.74, 2.12], [0.82, 2.23], [0.15, 2.23]];
+const S700_FACE: SeriesCabFace = {
+  dJoin: S700_DJOIN, dSide: S700_DJOIN - 0.4, reach: 0, first: 11.2, roofFrom: 3.3, cols: [8, 6, 3, 2], tolerance: 0.015,
+  profile: [[0.75, 0.4], [0.85, 0.15], [0.95, 0.04], [1.05, 0.0], [1.25, 0.0], [1.45, 0.08], [1.65, 0.28], [1.85, 0.62], [2.05, 1.05], [2.25, 1.5], [2.45, 1.95], [2.7, 2.5], [2.95, 3.15], [3.15, 4.0], [3.35, 5.2], [3.5, 6.5], [3.6, 7.9], [3.65, S700_DJOIN]],
+  // the plan: the beak broad with tight corners, the cab over it rounding back in deep elliptic corners
+  corner: [[0.75, 0.6], [1.05, 0.55], [1.4, 0.65], [1.8, 0.8], [2.2, 0.9], [2.6, 0.95], [3.0, 1.0], [3.4, 1.0], [3.65, 0.4]],
+  cornerDepth: [[0.75, 1.3], [1.05, 1.2], [1.4, 1.4], [1.8, 1.9], [2.2, 3.0], [2.6, 4.5], [3.0, 4.2], [3.4, 2.4], [3.65, 0.4]],
+  // the cab hump narrower than the beak's cheeks (C1 head-on, 229 px/m: 2.79 m wide at the lamps, 2.69 m at the
+  // windscreen's foot, the beak 3.38 m), flaring out to the body's sides behind the windscreen
+  planInset: [[1.6, 0], [1.7, 0.02], [1.8, 0.06], [1.9, 0.12], [2.0, 0.18], [2.1, 0.23], [2.2, 0.27], [2.3, 0.3], [2.45, 0.32], [2.8, 0.32], [3.0, 0.3], [3.15, 0.25], [3.3, 0.17], [3.45, 0.08], [3.6, 0]],
+  rows: [0.75, 0.82, 0.9, 0.97, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65, 1.75, 1.85, 1.95, 2.05, 2.15, 2.25, 2.35, 2.45, 2.58, 2.7, 2.83, 2.95, 3.05, 3.15, 3.25, 3.35, 3.43, 3.5, 3.56, 3.6, 3.65],
+  // the nose in the body's colour over a grey lip
+  bands: () => [[0, 0.95, "skirtG"], [0.95, 9, "body"]],
+  paint: [
+    // the grey lip rising back along the nose's bottom to the skirt's top
+    { mat: "skirtG", front: [[0.75, -9], [0.95, -9], [0.96, 1.8], [1.05, 3.6]], back: [[0.75, 99], [1.05, 99]] },
+    // the bands' pointed ends: the thin band's cut slanted, the thick band's point near its top
+    { mat: "body", front: [[1.45, -9], [1.95, -9]], back: [[1.45, 9.45], [1.47, 9.45], [1.56, 8.97], [1.64, 8.43], [1.86, 7.24], [1.93, 7.8], [1.95, 7.8]] },
+    // the windscreen's dark surround, round the front pane and the side panes
+    { mat: "cabMask", front: [[2.43, -9], [2.99, -9]], back: [[2.43, 3.95], [2.47, 4.0], [2.6, 4.5], [2.75, 4.8], [2.9, 5.0], [2.99, 4.85]] },
+    // the side panes, wrapped round the cab's corners behind a pillar
+    { mat: "cabGlass", front: [[2.47, 2.3], [2.7, 2.8], [2.95, 3.45]], back: [[2.47, 3.9], [2.6, 4.45], [2.75, 4.75], [2.9, 4.95], [2.95, 4.8]] },
+  ],
+  fields: [
+    { mat: "cabMask", pts: S700_LAMP },
+    { mat: "cabMask", pts: S700_LAMP.map(([x, y]): Pt => [-x, y]).reverse() },
+    // the 923's black hatch on the beak's top (the body's colour on the 700)
+    { mat: "hatch", pts: [[-0.42, 1.68], [0.42, 1.68], [0.38, 1.84], [-0.38, 1.84]] },
+  ],
+  panes: [{ lat: [-0.74, 0.74], y: [2.47, 2.95], r: 0.08, mat: "cabGlass" }],
+  lamps: [[-0.62, 2.175, 0.045, "lampHead"], [-0.36, 2.175, 0.045, "lampHead"], [0.36, 2.175, 0.045, "lampHead"], [0.62, 2.175, 0.045, "lampHead"]],
+};
+
 export const S700: ShinkansenSeries = {
   endLength: 27.35, midLength: 25.0, W: 1.62, Y: 1.45, S: 3.0, C: 3.65, lean: 0.96, B: 0.75, A: 1.05,
-  // the "duck bill": the nose flattened wide and low ahead of the cab
-  nose: nose(9.2, 0.18, 3.2, [[0, 1.15], [0.5, 1.4], [3.0, 1.75], [6.5, 2.2], [8.3, 2.85], [9.4, 3.4], [10.2, 3.65]], [[0, 1.12], [0.5, 1.33], [3.0, 1.6], [6.5, 1.9], [8.3, 2.4], [9.4, 2.85], [10.2, 3.0]], [[0, 1.08], [1.5, 1.3], [4.0, 1.45]], [[0, 1.05], [1.5, 1.05]], [[0, 1.02], [0.5, 0.6], [2.0, 0.75]]),
-  windscreen: [7.8, 9.4, 0.07, 1.05], lamps: [1.6, 1.4],
-  windows: [[2.0, 2.6]], windowW: 0.9, pitch: 1.04, door: [1.3, 3.05, 1.95, 2.6], doorW: 1.0,
+  nose: nose(0.1, 1, 2, [[0, 3.6]], [[0, 3.3]], [[0, 1.3]], [[0, 1.1]], [[0, 1.0]]), windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: S700_FACE,
+  // the leading bogie under the nose, 17.5 m ahead of the rear one (3.5 m in from the rear end)
+  endBogies: [S700_END_BODY - 21.0, S700_END_BODY - 3.5],
+  // the crew door with its narrow window, ahead of the passenger door behind the nose
+  sidePanels: { end: [{ d: [9.52, 10.02], y: [1.32, 3.0], kind: "seam" }, { d: [9.66, 9.9], y: [2.22, 2.78], kind: "window" }] },
+  windows: [[2.0, 2.55]], windowW: 0.68, pitch: 1.04, door: [1.3, 3.05, 2.36, 2.88], doorW: 0.78, doorGlassW: 0.32,
   bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
   liveries: {
-    jrCentral: { title: "JR Central", palette: { white: c("#f3f3f0"), blue: c("#1a3f9a"), roofG: c("#e6e6e3", 0.6), skirtG: c("#dcdcd8") }, bands: [[0, 1.75, "white"], [1.75, 1.92, "blue"], [1.92, 2.65, "white"], [2.65, 2.7, "blue"], [2.7, 9, "white"]], roof: "roofG", skirt: "skirtG", number: "723-1" },
-    doctorYellow: { title: "Doctor Yellow", palette: { yellow: c("#f0cf12"), blue: c("#1d4596"), roofG: c("#dcc02a", 0.6), skirtG: c("#1d4596") }, bands: [[0, 1.75, "yellow"], [1.75, 1.92, "blue"], [1.92, 9, "yellow"]], roof: "roofG", skirt: "skirtG", number: "923-1" },
+    jrCentral: { title: "JR Central", palette: { body: c("#f3f3f0"), blue: c("#1a3f9a"), hatch: c("#f3f3f0"), cabMask: c("#3a3f46", 0.35), roofG: c("#e6e6e3", 0.6), skirtG: c("#b9bcbe", 0.5) }, bands: S700_BANDS, roof: "roofG", skirt: "skirtG", number: "724-54" },
+    doctorYellow: { title: "Doctor Yellow", palette: { body: c("#f0cf12"), blue: c("#1d4596"), hatch: c("#1b1d20", 0.3), cabMask: c("#3a3f46", 0.35), roofG: c("#dcc02a", 0.6), skirtG: c("#9da1a4", 0.5) }, bands: S700_BANDS, roof: "roofG", skirt: "skirtG", number: "923-1" },
   },
   weight: { end: 45, middle: 43 }, power: 1100, maxspeed: 285,
 };
