@@ -102,6 +102,31 @@ export interface RailSupport {
   sections: number[];
 }
 
+/** Where a ship's screws, paddle wheels or air propellers stir the water. */
+export interface WaterChurn {
+  kind: "screw" | "paddle" | "air";
+  /** On the waterline under (or behind) the source, model frame, metres. */
+  at: Vec3;
+  /** How wide the churned water is: a screw's diameter, a wheel's width. */
+  width: number;
+}
+
+/**
+ * Where a ship meets the water (waterRig.ts): the game draws its wake, bow wave
+ * and churn foam from it. Model frame, metres.
+ */
+export interface WaterRig {
+  /** The stem on the waterline. */
+  bow: Vec3;
+  /** The stern on the waterline. */
+  stern: Vec3;
+  /** The waterline's greatest half-breadth. */
+  halfBeam: number;
+  /** The waterline's height above the keel (y). */
+  draft: number;
+  churn: WaterChurn[];
+}
+
 /** Everything of a vehicle the game may move. */
 export interface VehicleRig {
   /** A rail vehicle's supports, by x. */
@@ -113,6 +138,13 @@ export interface VehicleRig {
   joints?: JointRig[];
   /** The largest bend at any hinge, degrees. */
   maxBendDeg?: number;
+  /** A ship's waterline and churn sources, for the game's wake (not posed). */
+  water?: WaterRig;
+}
+
+/** Whether a rig has anything pose() moves: steered wheels, sections, joints or rail supports (a ship's water rig alone is not posed). */
+export function posable(rig: VehicleRig | null | undefined): boolean {
+  return !!rig && !!(rig.steer || rig.sections?.length || rig.joints?.length || rig.supports?.length);
 }
 
 /**

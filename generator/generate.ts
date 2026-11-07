@@ -184,7 +184,7 @@ import {
 } from "./catalog.ts";
 import { TREE_DIR, TREE_MAX_BYTES, type SourceTree } from "./sourceTree.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { VehicleRig } from "./rig.ts";
+import { posable, type VehicleRig } from "./rig.ts";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -648,7 +648,7 @@ export function generateModels(
         rig: b!.rig,
         side: sideView ? glbSideFrame(b!.bytes) : null,
         seat: VEHICLE_IDS.has(design.id) ? vehicleSeat(design, b!.bytes) : null,
-        bundle: bundleFlags(design, b!.rig !== null),
+        bundle: bundleFlags(design, posable(b!.rig)),
         extents: {},
       };
       if (key !== null) cache.set(design.id, facts);

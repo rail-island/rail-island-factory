@@ -26,6 +26,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields, ProceduralDesign } from "./design.ts";
 import { block } from "./vehicleParts.ts";
+import { measureWaterRig } from "./waterRig.ts";
 
 const PALETTE: Record<string, MaterialSpec> = {
   // the cruise ferry
@@ -524,6 +525,21 @@ function cfFunnel(m: MeshBuilder): void {
   });
 }
 
+/**
+ * Sets a ship's water rig (waterRig.ts) off the drawn model: the waterline at
+ * `draftFrac` of its height (the game's own figure, in SHIPS), the outline
+ * measured along the bow's axis and one screw's churn under the stern.
+ */
+function withWater(m: MeshBuilder, draftFrac: number, along: "x" | "z"): void {
+  const pos = m.positions();
+  let top = 0;
+  for (let i = 1; i < pos.length; i += 3) top = Math.max(top, pos[i]!);
+  const draft = top * draftFrac;
+  const hull = measureWaterRig(pos, draft, along, []);
+  const width = Math.round(Math.max(0.6, hull.halfBeam * 0.5) * 1000) / 1000;
+  m.rig = { ...(m.rig ?? {}), water: { ...hull, churn: [{ kind: "screw", at: [...hull.stern], width }] } };
+}
+
 export function cruiseFerry(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   const F = ALONG_X;
@@ -680,6 +696,7 @@ export function cruiseFerry(): MeshBuilder {
       railing(m, "steelGrey", [[28.2, -11.1], [33.8, -11.1]], 38.3, 1.0, 2.0);
     });
   });
+  withWater(m, 0.17, "x");
   return m;
 }
 
@@ -839,6 +856,7 @@ export function hydrofoilFerry(): MeshBuilder {
     });
     m.scope("rudder", () => block(m, "foilBlue", -17.05, -16.1, 0.57, 2.0, -0.05, 0.05));
   });
+  withWater(m, 0.28, "x");
   return m;
 }
 
@@ -1060,6 +1078,7 @@ export function passengerFerry(): MeshBuilder {
       for (const side of [1, -1]) m.prism("lakeSteel", ngon(8, 0.13, 0, side * 2.9, -16.8), y - 0.1, y + 0.4);
     });
   });
+  withWater(m, 0.15, "z");
   return m;
 }
 
