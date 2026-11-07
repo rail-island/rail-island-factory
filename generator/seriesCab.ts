@@ -9,7 +9,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { halfSlice, type SliceBody } from "./sliceBody.ts";
-import { CabNose, inRoundRect, type NoseLayer, type NoseQuery, type NoseSpec } from "./cabNose.ts";
+import { CabNose, inRoundRect, type NoseLayer, type NoseQuery, type NoseScan, type NoseSpec } from "./cabNose.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { noseEnd, type UnitEnd } from "./lodUnits.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
@@ -43,9 +43,11 @@ export interface SeriesCabFace {
   /** The face's bow: its edges this much behind its centre (by height, [y, bulge], for a vee that deepens or flattens). */
   bulge?: number | readonly Pt[];
   /** The distant model's end in place of the face's own profile, plan and rows: a face with a low bonnet ahead of it drawn apart (the series' fittings). */
-  lod?: { profile: Pt[]; corner: Pt[]; rows: number[]; bulge?: number | readonly Pt[]; glass?: boolean };
+  lod?: { profile: Pt[]; corner: Pt[]; rows: number[]; bulge?: number | readonly Pt[]; glass?: boolean; cornerDepth?: Pt[] };
   /** The corner arc's depth over its radius by height (cabNose.ts `cornerRatio`). */
   cornerRatio?: Pt[];
+  /** The face standing inside the body's half width by height, [y, inset] (cabNose.ts `planInset`): a cab narrower than the body below it. */
+  planInset?: Pt[];
   /** Grid rows, ascending, from the body's bottom to its crown (the profile's and the paint's heights). */
   rows: number[];
   /** The face's paint by height (default the livery's `front`, else its side bands); the roof's colour from `roofFrom` up. */
@@ -70,6 +72,8 @@ export interface SeriesCabFace {
   wrap?: boolean;
   /** The windscreens and other panes, painted glass. */
   panes: readonly FaceRect[];
+  /** The distant model's glass, its half width and heights, in place of the panes' extent: a windscreen painted by `paint` (default the panes'). */
+  lodGlass?: { hw: number; y: readonly [number, number] };
   /** Round lamps on the face: lat, y, radius, lens. */
   lamps?: ReadonlyArray<readonly [number, number, number, string]>;
   /** A gangway door: its frame standing off the face (half width, sill, head, bar width) and the leaf's paint. */
@@ -93,6 +97,8 @@ export interface SeriesCabFace {
   pods?: ReadonlyArray<{ lat: number; y: number; w: number; h: number; r?: number; proud: number; depth: number; mat: string; lamps?: ReadonlyArray<readonly [number, number, string]>; level?: boolean }>;
   /** Lettering on the face: text, lat of its centre, foot, letter height, ink. */
   texts?: ReadonlyArray<{ text: string; lat: number; y: number; h: number; mat: string }>;
+  /** The face's depth reshaped across it (cabNose.ts `reshape`; the distant model keeps the plain slices): a canopy, grooves and wing edges. */
+  reshape?: (lat: number, y: number, d: number) => number;
 }
 
 /** The body's half widths by height ([y, half width], ascending, crown last), from its own section at d. */
@@ -125,8 +131,10 @@ export interface FacePaint {
   S: number;
   A: number;
   number: string;
-  /** The livery's sweeps (shinkansen.ts `endSweeps`, d behind the tip), painted on the face's cab sides too. */
-  sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number }>;
+  /** The livery's sweeps (shinkansen.ts `endSweeps`, d behind the tip), painted on the face's cab sides too (and on its front and corners with `face`). */
+  sweeps?: ReadonlyArray<{ mat: string; front: readonly Pt[]; back: readonly Pt[]; top?: number; face?: boolean }>;
+  /** The livery's own painted polygons on the face ([lat, y], like the face's `fields`, drawn under them): a canopy painted round its glass. */
+  fields?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>;
 }
 
 /** Value of a [y, d] edge at height y (held past its ends). */
@@ -139,6 +147,16 @@ export function edgeAt(pts: readonly Pt[], y: number): number {
   return pts[pts.length - 1]![1];
 }
 
+/** edgeAt on one polyline, cached by height: the nose's scan tests the same heights in every column (same values, so the same bytes). */
+function edgeMemo(pts: readonly Pt[]): (y: number) => number {
+  const memo = new Map<number, number>();
+  return (y) => {
+    let v = memo.get(y);
+    if (v === undefined) { v = edgeAt(pts, y); memo.set(y, v); }
+    return v;
+  };
+}
+
 function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   const onFace = (q: NoseQuery) => Math.abs(q.u) <= 2;
   const banded = (q: NoseQuery) => f.wrap || onFace(q);
@@ -147,15 +165,21 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   for (const [y0, y1, mat] of p.face) out.push({ mat, name: `${mat} face`, inside: (q) => banded(q) && q.y >= y0 && q.y < y1 && (onFace(q) || q.y >= p.A) });
   out.push({ mat: p.roof, name: "roof", inside: (q) => (banded(q) ? q.y >= f.roofFrom : q.y >= p.S) });
   // a sweep on the cab sides, between the skirt's top and the shoulder (or its own top, over the cab's roof)
-  (p.sweeps ?? []).forEach((w, i) => out.push({
-    mat: w.mat, name: `sweep ${i + 1}`, where: { side: true, y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
-    inside: (q) => q.side && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
-  }));
-  (f.paint ?? []).forEach((w, i) => out.push({
-    mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
-    inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= edgeAt(w.front, q.y) && q.d <= edgeAt(w.back, q.y),
-  }));
-  (f.fields ?? []).forEach((r, i) => {
+  (p.sweeps ?? []).forEach((w, i) => {
+    const [front, back] = [edgeMemo(w.front), edgeMemo(w.back)];
+    out.push({
+      mat: w.mat, name: `sweep ${i + 1}`, where: { ...(w.face ? {} : { side: true }), y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
+      inside: (q) => (w.face || q.side) && q.y >= p.A && q.y < (w.top ?? p.S) && q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.d >= front(q.y) && q.d <= back(q.y),
+    });
+  });
+  (f.paint ?? []).forEach((w, i) => {
+    const [front, back] = [edgeMemo(w.front), edgeMemo(w.back)];
+    out.push({
+      mat: w.mat, name: `paint ${i + 1}`, where: { y: [w.front[0]![0], w.front[w.front.length - 1]![0]] },
+      inside: (q) => q.y >= w.front[0]![0] && q.y <= w.front[w.front.length - 1]![0] && q.y < (w.top ?? f.roofFrom) && q.d >= front(q.y) && q.d <= back(q.y),
+    });
+  });
+  [...(p.fields ?? []), ...(f.fields ?? [])].forEach((r, i) => {
     // the polygon's bounds first: a point outside them is never inside it (inPoly is the scan's cost)
     const lats = r.pts.map((t) => t[0]), ys = r.pts.map((t) => t[1]);
     const [l0, l1, y0, y1] = [Math.min(...lats), Math.max(...lats), Math.min(...ys), Math.max(...ys)];
@@ -166,8 +190,9 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   return out;
 }
 
-const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "cornerDepth" | "cornerRatio" | "bulge" | "rows"> => ({
+const spec = (f: SeriesCabFace, e: number, xTip: number, half: Pt[]): Pick<NoseSpec, "e" | "xTip" | "profile" | "half" | "corner" | "cornerDepth" | "cornerRatio" | "bulge" | "rows" | "planInset"> => ({
   e, xTip, profile: f.profile, half, corner: f.corner, rows: f.rows, ...(f.bulge ? { bulge: f.bulge } : {}), ...(f.cornerDepth ? { cornerDepth: f.cornerDepth } : {}), ...(f.cornerRatio ? { cornerRatio: f.cornerRatio } : {}),
+  ...(f.planInset ? { planInset: f.planInset } : {}),
 });
 
 const rect = (x0: number, x1: number, y0: number, y1: number): Pt[] => {
@@ -192,13 +217,71 @@ function subdivide(pts: readonly Pt[], k: number): Pt[] {
   return out;
 }
 
+/**
+ * A face's painted skin as CabNose.draw() emits it: its scopes, each with its facets. The skin
+ * depends only on the face, its end, tip, body section and paint, and a design builds the same
+ * face for every unit, livery and train length it is asked for, so the skin is worked out once
+ * and replayed into later builds: the same calls in the same order, so the same bytes.
+ */
+type Skin = Array<[string, Array<[string, Vec3[], Vec3]>]>;
+type Vec3 = [number, number, number];
+/**
+ * The face's scan by body section and paint, shared by its skins at every end and tip (cabNose.ts
+ * NoseScan). Both caches keep the most recently used entries only (a build of every combination of
+ * every design would otherwise hold every skin it drew), and a scan keeps only its intervals once
+ * its first skin is drawn: the later skins ask the same intervals.
+ */
+const CACHE_SIZE = 48;
+const SKINS = new Map<string, Skin>();
+const SCANS = new Map<string, NoseScan>();
+const FACE_IDS = new WeakMap<SeriesCabFace, number>();
+let faceCount = 0;
+const faceId = (f: SeriesCabFace): number => {
+  let id = FACE_IDS.get(f);
+  if (id === undefined) FACE_IDS.set(f, (id = ++faceCount));
+  return id;
+};
+const skinKey = (v: unknown): string => JSON.stringify(v, (_k, x: unknown) => (Object.is(x, -0) ? "-0" : x));
+function cached<T>(cache: Map<string, T>, key: string, make: () => T): T {
+  let v = cache.get(key);
+  if (v !== undefined) cache.delete(key);
+  else v = make();
+  cache.set(key, v);
+  if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
+  return v;
+}
+
 /** Draws a cab face on end e (+1 the +X end), its tip at model x e * xTip, joined to the body's section `half`. */
 export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint): void {
   const n = new CabNose(m, {
     ...spec(f, e, xTip, half), dJoin: f.dJoin, dSide: f.dSide ?? f.dJoin / 2,
     base: p.face[0]?.[2] ?? p.sides[0]![2], layers: layers(f, p), cols: f.cols ?? [8, 4, 1, 1], ...(f.tolerance ? { tolerance: f.tolerance } : {}), capTop: p.roof, capBottom: p.skirt,
+    ...(f.reshape ? { reshape: f.reshape } : {}),
   });
-  m.scope("skin", () => n.draw());
+  const id = faceId(f);
+  const skin = cached(SKINS, `${id}|${skinKey([e, xTip, half, p])}`, () => {
+    const shared = cached(SCANS, `${id}|${skinKey([half, p])}`, (): NoseScan => ({ memo: new Map(), scanCols: new Map() }));
+    // record what draw() emits (it calls only scope and facets)
+    const rec: Skin = [];
+    let cur: Array<[string, Vec3[], Vec3]> | null = null;
+    const recorder = {
+      scope<T>(name: string, fn: () => T): T {
+        if (cur) throw new Error("drawCabFace: a nested scope in the skin");
+        const list: Array<[string, Vec3[], Vec3]> = [];
+        rec.push([name, list]);
+        cur = list;
+        try { return fn(); } finally { cur = null; }
+      },
+      facets(mat: string, pts: Vec3[], normal: Vec3): void {
+        if (!cur) throw new Error("drawCabFace: skin facets outside a scope");
+        cur.push([mat, pts, normal]);
+      },
+    } as unknown as MeshBuilder;
+    new CabNose(recorder, { ...n.s, shared }).draw();
+    shared.scanCols.clear();
+    return rec;
+  });
+  m.scope("skin", () => { for (const [name, list] of skin) m.scope(name, () => { for (const [mat, pts, normal] of list) m.facets(mat, pts, normal); }); });
   const g = f.gangway;
   if (g)
     m.scope("gangway door", () => {
@@ -270,10 +353,11 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
 
 /** The distant model's end of a cab face: its profile and plan, the face's bands and the panes as glass. */
 export function cabFaceLod(face: SeriesCabFace, e: number, xTip: number, half: Pt[], p: FacePaint, C: number): UnitEnd {
-  const f: SeriesCabFace = face.lod ? { ...face, profile: face.lod.profile, corner: face.lod.corner, rows: face.lod.rows, ...(face.lod.bulge !== undefined ? { bulge: face.lod.bulge } : {}) } : face;
+  const f: SeriesCabFace = face.lod ? { ...face, profile: face.lod.profile, corner: face.lod.corner, rows: face.lod.rows, ...(face.lod.bulge !== undefined ? { bulge: face.lod.bulge } : {}), ...(face.lod.cornerDepth ? { cornerDepth: face.lod.cornerDepth } : {}) } : face;
   const B = f.rows[0]!;
   const paint: LodBand[] = [...(f.lodBands ?? p.face).map(([a, b, mt]): LodBand => [Math.max(a, B), Math.min(b, f.roofFrom), mt]).filter(([a, b]) => b > a + 1e-6), [f.roofFrom, C, p.roof]];
-  const lo = Math.min(...f.panes.map((r) => r.y[0])), hi = Math.max(...f.panes.map((r) => r.y[1]));
-  const w = Math.max(...f.panes.map((r) => Math.max(Math.abs(r.lat[0]), Math.abs(r.lat[1]))));
-  return noseEnd(spec(f, e, xTip, half), paint, f.panes.length && f.lod?.glass !== false ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);
+  const g = face.lodGlass;
+  const lo = g ? g.y[0] : Math.min(...f.panes.map((r) => r.y[0])), hi = g ? g.y[1] : Math.max(...f.panes.map((r) => r.y[1]));
+  const w = g ? g.hw : Math.max(...f.panes.map((r) => Math.max(Math.abs(r.lat[0]), Math.abs(r.lat[1]))));
+  return noseEnd(spec(f, e, xTip, half), paint, (g || f.panes.length) && f.lod?.glass !== false ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);
 }

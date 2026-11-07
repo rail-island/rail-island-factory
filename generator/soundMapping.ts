@@ -18,6 +18,7 @@ import legacyTargets from "./legacyTargets.json";
 import { proceduralId } from "./modelId.ts";
 import { SOUND_TABLE, type DeclaredSounds } from "./soundTable.ts";
 import { resolveParams, type ParamValues, type ProceduralDesign, type VehicleGameVariant } from "./design.ts";
+import { ANIMAL_PARAM, SPECIES_SPECS, TEAM_PARAM, teamOf, teamSelections } from "./draftAnimals.ts";
 import type { SoundMapping, SoundOverride, SoundSlot, SoundSlotName } from "./soundTable.ts";
 
 /** The music export's format the factory reads (also checked by importSounds.ts). */
@@ -40,10 +41,10 @@ export interface SoundsCatalog {
 export const SOUNDS_CATALOG = catalog as SoundsCatalog;
 
 /** Every slot, in the order the site and the export list them. */
-export const SOUND_SLOTS: readonly SoundSlotName[] = ["horn", "engine", "bell"];
+export const SOUND_SLOTS: readonly SoundSlotName[] = ["horn", "engine", "bell", "call"];
 
 /** What each slot plays: a one-shot horn or bell, a loop engine. */
-export const SLOT_KINDS: Record<SoundSlotName, "oneShot" | "loop"> = { horn: "oneShot", engine: "loop", bell: "oneShot" };
+export const SLOT_KINDS: Record<SoundSlotName, "oneShot" | "loop"> = { horn: "oneShot", engine: "loop", bell: "oneShot", call: "oneShot" };
 
 /**
  * The parameters the game sets on each slot as it plays: never pinned by a model.
@@ -55,13 +56,14 @@ export const RUNTIME_PARAMS: Record<SoundSlotName, readonly string[]> = {
   horn: ["call"],
   engine: ["rpm", "load", "state", "rate", "intensity", "speed", "spin"],
   bell: [],
+  call: [],
 };
 
 /** The calls the game makes on a horn by itself; `player` is the player's and always sounds. */
 export const AUTO_CALLS: readonly string[] = ["departure", "crossing", "tunnel"];
 
 /** The slots a vehicle may have, and a building's. */
-export const VEHICLE_SLOTS: readonly SoundSlotName[] = ["horn", "engine"];
+export const VEHICLE_SLOTS: readonly SoundSlotName[] = ["horn", "engine", "call"];
 export const BUILDING_SLOTS: readonly SoundSlotName[] = ["bell"];
 
 /** What is wrong with one slot, against the imported designs; empty when it plays. */
@@ -274,6 +276,31 @@ export function derivedSounds(src: SoundSource, weight: number | null | undefine
   return {};
 }
 
+/**
+ * An animal-drawn vehicle's slots, derived from its team (draftAnimals.ts): the hoof
+ * beat as its engine, with the species' foot, size and stride and the team's count
+ * pinned (the game sets the footfall rate from the speed), and the species' call,
+ * which only the player's Horn plays. A tram keeps its bell on departure; a horse
+ * railway's coach and a road coach sound no horn. The trailer (team `none`) is
+ * silent but for a tram's bell.
+ */
+export function teamSounds(src: SoundSource, params: ParamValues): SoundMapping {
+  const { species, count } = teamOf(params);
+  const out: SoundMapping = {};
+  if (src.group === "tram") out.horn = tramBell();
+  if (!count) return out;
+  const s = SPECIES_SPECS[species];
+  out.engine = { id: "hoof-beat", params: { foot: s.foot, size: s.size, stride: s.stride, count } };
+  out.call = { id: "animal-call", params: { species } };
+  return out;
+}
+
+/** Whether a design is animal-drawn: it carries the team's two parameters. */
+export const isAnimalDrawn = (design: ProceduralDesign): boolean => {
+  const names = (design.params ?? []).map((p) => p.name);
+  return names.includes(ANIMAL_PARAM) && names.includes(TEAM_PARAM);
+};
+
 const sameSlot = (a: SoundSlot | undefined, b: SoundSlot | undefined) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 /** The design's slots: the derived ones, each replaced by a stated one. */
@@ -302,6 +329,7 @@ export function withSounds<G extends { weight?: number | null; sounds?: SoundMap
   table: Readonly<Record<string, DeclaredSounds>> = SOUND_TABLE,
 ): G | undefined {
   const stated = declaredSounds(design, table);
+  if (isAnimalDrawn(design)) return withTeamSounds(game, design, src);
   const declared = stated?.sounds ?? {};
   const base = designSlots(design, src, declared);
   const key = (p: ParamValues) => JSON.stringify(Object.entries(p).sort());
@@ -328,6 +356,31 @@ export function withSounds<G extends { weight?: number | null; sounds?: SoundMap
     if (!variants.some((x) => key(x.params) === key(v.params))) variants.push({ params: { ...v.params }, sounds: overrideOf(v) });
   }
   if (!game && !Object.keys(base).length) return game;
+  const out = { ...(game ?? {}), sounds: base } as G;
+  if (variants.length) out.variants = variants as G["variants"];
+  return out;
+}
+
+/** withSounds for an animal-drawn vehicle: every species and team selection's slots, a variant carrying what differs from the default's. */
+function withTeamSounds<G extends { sounds?: SoundMapping; variants?: Array<VehicleGameVariant & { sounds?: SoundOverride }> }>(game: G | undefined, design: ProceduralDesign, src: SoundSource): G | undefined {
+  const specs = design.params ?? [];
+  const base = teamSounds(src, resolveParams(specs));
+  const key = (p: ParamValues) => JSON.stringify(Object.entries(p).sort());
+  const variants: Array<VehicleGameVariant & { sounds?: SoundOverride }> = (game?.variants ?? []).map((v) => {
+    const { sounds: _old, ...rest } = v;
+    return rest;
+  });
+  for (const sel of teamSelections(specs)) {
+    const nonDefault: ParamValues = Object.fromEntries(Object.entries(sel).filter(([k, v]) => specs.find((p) => p.name === k)!.default !== v));
+    if (!Object.keys(nonDefault).length) continue;
+    const own = teamSounds(src, sel);
+    const sounds: SoundOverride = {};
+    for (const slot of SOUND_SLOTS) if (!sameSlot(own[slot], base[slot])) sounds[slot] = own[slot] ?? null;
+    if (!Object.keys(sounds).length) continue;
+    const at = variants.findIndex((x) => key(x.params) === key(nonDefault));
+    if (at >= 0) variants[at] = { ...variants[at]!, sounds };
+    else variants.push({ params: nonDefault, sounds });
+  }
   const out = { ...(game ?? {}), sounds: base } as G;
   if (variants.length) out.variants = variants as G["variants"];
   return out;

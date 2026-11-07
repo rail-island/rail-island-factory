@@ -71,6 +71,12 @@ export interface SteamWheel {
   spokes: number;
   /** Axle boxes and springs outside the wheels (carrying axles of a truck, tender axles). */
   outsideBoxes?: boolean;
+  /**
+   * A box-spoked (Boxpok) centre: `spokes` broad hollow spokes waisted at mid
+   * radius, so the openings between them are oval rather than slots; the tyre
+   * has four facets per spoke. Off (plain spokes) by default.
+   */
+  box?: boolean;
 }
 
 /** One engine: a cylinder per side driving a group of coupled wheels. */
@@ -106,6 +112,10 @@ export interface RunningGearSpec {
   reference: number;
   /** Paint of spokes, hubs and counterweights. */
   wheelMaterial: string;
+  /** The coupling rods' material (C62 2's are painted red); the bright "rod" steel by default. */
+  couplingMat?: string;
+  /** The main rods' material (D51 51's are painted red like its coupling rods); the bright "rod" steel by default. */
+  mainMat?: string;
   /**
    * More parts riding on an inclined cylinder's crosshead (the Rocket's feed pump
    * ram), drawn into its moving part at rest on side s: `at(k, off, dz)` is the
@@ -139,7 +149,7 @@ const polar = (r: number, a: number): P2 => [r * Math.cos(a), r * Math.sin(a)];
  * A tyre's facets: twice the spokes, so a turn by one spoke pitch maps the
  * whole wheel onto itself (see turnsPerCycle); 24 or 18 for a disc wheel.
  */
-export const tyreSides = (w: SteamWheel): number => (w.spokes > 0 ? 2 * w.spokes : w.d >= 1.2 ? 24 : 18);
+export const tyreSides = (w: SteamWheel): number => (w.spokes > 0 ? (w.box ? 4 : 2) * w.spokes : w.d >= 1.2 ? 24 : 18);
 /** The axle height of a wheel standing on a flat facet. */
 export const axleHeight = (w: SteamWheel): number => (w.d / 2) * Math.cos(Math.PI / tyreSides(w));
 
@@ -583,9 +593,10 @@ export class RunningGear {
         link("coupling-rod", (p) => crankAt(back, p), (p) => crankAt(front, p), () => {
           const a = crankAt(back, rest);
           const b = crankAt(front, rest);
-          bar(m, "rod", s, a, b, 0.06, 0.06, Z.coupling0, Z.coupling1, false);
+          const mat = spec.couplingMat ?? "rod";
+          bar(m, mat, s, a, b, 0.06, 0.06, Z.coupling0, Z.coupling1, false);
           for (const x of xs) {
-            pin(m, "rod", s, crankAt(x, rest), 0.1, Z.coupling0 - 0.004, Z.coupling1 + 0.004, 12);
+            pin(m, mat, s, crankAt(x, rest), 0.1, Z.coupling0 - 0.004, Z.coupling1 + 0.004, 12);
           }
         }, false);
       }
@@ -616,7 +627,7 @@ export class RunningGear {
         }
       }, false);
       link("main-rod", (p) => p.crosshead, (p) => p.crank, () => {
-        bar(m, "rod", s, rest.crosshead, rest.crank, 0.055, 0.08, Z.main0, Z.main1);
+        bar(m, spec.mainMat ?? "rod", s, rest.crosshead, rest.crank, 0.055, 0.08, Z.main0, Z.main1);
       });
       if (engine.valveGear) {
         link("eccentric-rod", (p) => p.returnCrank!, (p) => p.linkFoot!, () => {
@@ -666,7 +677,27 @@ export class RunningGear {
     const hubR = Math.max(0.13, R * 0.2);
     m.scope("hub", () => pin(m, mat, s, [X, ay], hubR, Z.tyre0 + 0.01, Z.hub1, w.spokes >= 8 ? w.spokes : 12));
     const zo = s * Z.spoke1;
-    if (w.spokes > 0) {
+    if (w.spokes > 0 && w.box) {
+      m.scope("spokes", () => {
+        // each spoke a pair of trapezoids meeting at mid radius: broad at the hub and
+        // the rim, waisted between, so the openings are ovals across the middle
+        const c: P2 = [X, ay];
+        const r0 = hubR - 0.02;
+        const r1 = ri + 0.015;
+        const rm = (r0 + r1) / 2;
+        const half = Math.sin(Math.PI / w.spokes);
+        for (let k = 0; k < w.spokes; k++) {
+          const a = ((k + 0.5) / w.spokes) * Math.PI * 2;
+          const u: P2 = polar(1, a);
+          const v: P2 = [-u[1], u[0]];
+          const at = (r: number, h: number): P2 => add(c, add(scale(u, r), scale(v, h)));
+          for (const [ra, wa, rb, wb] of [[r0, r0 * half * 0.92, rm, rm * half * 0.3], [rm, rm * half * 0.3, r1, r1 * half * 0.92]] as const) {
+            const pts: P2[] = [at(ra, -wa), at(rb, -wb), at(rb, wb), at(ra, wa)];
+            m.slab(mat, pts.map(([x, y]): Vec3 => [x, y, zo]), [0, 0, -s * (Z.spoke1 - Z.spoke0)]);
+          }
+        }
+      });
+    } else if (w.spokes > 0) {
       m.scope("spokes", () => {
         for (let k = 0; k < w.spokes; k++) {
           const a = ((k + 0.5) / w.spokes) * Math.PI * 2;

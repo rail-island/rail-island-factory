@@ -113,3 +113,22 @@ describe("series cab faces", () => {
     }
   });
 });
+
+// drawCabFace records a face's skin once and replays it into later builds with the same face,
+// end and paint (generator/seriesCab.ts, SKINS): a replayed build must be byte-identical to one
+// that works the face out afresh (a copy of the face spec misses the cache).
+describe("cab face skin replay", () => {
+  it("builds the same bytes from a replayed skin as from a fresh one", async () => {
+    const { E6, N700S, buildSeries, seriesParams } = await import("../generator/shinkansen.ts");
+    for (const s of [E6, N700S]) {
+      const params = seriesParams(s);
+      for (const v of [{ unit: "endCar" }, { unit: "train", cars: "3" }] as Array<Record<string, string>>) {
+        const first = buildSeries(s, params, v).toGlb("replay");
+        const again = buildSeries(s, params, v).toGlb("replay");
+        const fresh = buildSeries({ ...s, cabFace: { ...s.cabFace! } }, params, v).toGlb("replay");
+        expect(Buffer.from(again).equals(Buffer.from(first))).toBe(true);
+        expect(Buffer.from(fresh).equals(Buffer.from(first))).toBe(true);
+      }
+    }
+  });
+});

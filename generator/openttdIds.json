@@ -30,6 +30,18 @@
     "proc-vehicle-amsterdam-9g": 750,
     "proc-vehicle-amtrak-acela": 128,
     "proc-vehicle-amtrak-superliner": 133,
+    "proc-vehicle-animal-bus-knifeboard-omnibus": 831,
+    "proc-vehicle-animal-bus-paris-omnibus": 833,
+    "proc-vehicle-animal-bus-stagecoach": 832,
+    "proc-vehicle-animal-bus-wagonette": 834,
+    "proc-vehicle-animal-rail-budweis-coach": 827,
+    "proc-vehicle-animal-rail-budweis-wagon": 828,
+    "proc-vehicle-animal-rail-mine-tub": 829,
+    "proc-vehicle-animal-rail-trolley": 830,
+    "proc-vehicle-animal-tram-bobtail": 826,
+    "proc-vehicle-animal-tram-closed": 824,
+    "proc-vehicle-animal-tram-double-deck": 823,
+    "proc-vehicle-animal-tram-toastrack": 825,
     "proc-vehicle-antonov-an124": 607,
     "proc-vehicle-antonov-an148": 563,
     "proc-vehicle-antonov-an2": 609,
@@ -877,6 +889,38 @@
       "proc-vehicle-amtrak-superliner?unit=sleeper": {
         "id": 4946,
         "size": 8
+      },
+      "proc-vehicle-animal-rail-budweis-coach?": {
+        "id": 10162,
+        "size": 4
+      },
+      "proc-vehicle-animal-rail-budweis-coach?team=none": {
+        "id": 10166,
+        "size": 4
+      },
+      "proc-vehicle-animal-rail-budweis-wagon?": {
+        "id": 10170,
+        "size": 4
+      },
+      "proc-vehicle-animal-rail-budweis-wagon?team=none": {
+        "id": 10174,
+        "size": 4
+      },
+      "proc-vehicle-animal-rail-mine-tub?": {
+        "id": 10178,
+        "size": 4
+      },
+      "proc-vehicle-animal-rail-mine-tub?team=none": {
+        "id": 10182,
+        "size": 4
+      },
+      "proc-vehicle-animal-rail-trolley?": {
+        "id": 10186,
+        "size": 4
+      },
+      "proc-vehicle-animal-rail-trolley?team=none": {
+        "id": 10190,
+        "size": 4
       },
       "proc-vehicle-blue-train-24?": {
         "id": 5854,
@@ -4256,6 +4300,86 @@
         "id": 2680,
         "size": 6
       },
+      "proc-vehicle-animal-bus-knifeboard-omnibus?": {
+        "id": 3412,
+        "size": 4
+      },
+      "proc-vehicle-animal-bus-knifeboard-omnibus?team=4": {
+        "id": 3416,
+        "size": 4
+      },
+      "proc-vehicle-animal-bus-paris-omnibus?": {
+        "id": 3428,
+        "size": 4
+      },
+      "proc-vehicle-animal-bus-paris-omnibus?team=4": {
+        "id": 3432,
+        "size": 4
+      },
+      "proc-vehicle-animal-bus-stagecoach?": {
+        "id": 3420,
+        "size": 4
+      },
+      "proc-vehicle-animal-bus-stagecoach?team=4": {
+        "id": 3424,
+        "size": 4
+      },
+      "proc-vehicle-animal-bus-wagonette?": {
+        "id": 3436,
+        "size": 4
+      },
+      "proc-vehicle-animal-bus-wagonette?team=4": {
+        "id": 3440,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-bobtail?": {
+        "id": 3400,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-bobtail?animal=mule": {
+        "id": 3404,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-bobtail?team=none": {
+        "id": 3408,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-closed?": {
+        "id": 3376,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-closed?team=2": {
+        "id": 3380,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-closed?team=none": {
+        "id": 3384,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-double-deck?": {
+        "id": 3364,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-double-deck?team=2": {
+        "id": 3368,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-double-deck?team=none": {
+        "id": 3372,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-toastrack?": {
+        "id": 3388,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-toastrack?team=2": {
+        "id": 3392,
+        "size": 4
+      },
+      "proc-vehicle-animal-tram-toastrack?team=none": {
+        "id": 3396,
+        "size": 4
+      },
       "proc-vehicle-ashok-leyland-captain?": {
         "id": 1714,
         "size": 4
@@ -4818,7 +4942,8 @@
       },
       "proc-vehicle-horse-tram?": {
         "id": 3336,
-        "size": 4
+        "size": 4,
+        "retired": true
       },
       "proc-vehicle-hyundai-elec-city?": {
         "id": 2228,

@@ -10,7 +10,7 @@ import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ALL_VEHICLES, DESIGNS } from "../generator/generate";
 import { parseGlb } from "../generator/glbTriangles";
 import { MeshBuilder } from "../generator/meshBuilder";
-import { drawJoint, jointTriangles, pose, steerAngles, steerLock, type JointRig, type SectionRig, type SteerRig, type VehicleRig } from "../generator/rig";
+import { drawJoint, jointTriangles, pose, posable, steerAngles, steerLock, type JointRig, type SectionRig, type SteerRig, type VehicleRig } from "../generator/rig";
 import { block } from "../generator/vehicleParts";
 import { pageKey, poseControls, poseOf, posePreview, previewKey, steerLockDeg, type CatalogRecord } from "../src/catalogQuery";
 import { intersectingPairs, worldTriangles, type Tri } from "./collision";
@@ -144,7 +144,8 @@ for (const d of ALL_VEHICLES.filter((v) => checkedBySuites(v.id))) {
   RIGS.set(d.id, built(d.id).rig);
   forget(d.id);
 }
-const RIGGED = ALL_VEHICLES.filter((d) => RIGS.has(d.id) && RIGS.get(d.id) !== null).map((d) => [d.id] as const);
+/** The vehicles with something pose() moves (a ship's water rig alone is not: rig.ts posable). */
+const RIGGED = ALL_VEHICLES.filter((d) => posable(RIGS.get(d.id))).map((d) => [d.id] as const);
 /** The rigged vehicles with steered wheels: every road vehicle (an articulated tram has none). */
 const STEERED = RIGGED.filter(([id]) => RIGS.get(id)!.steer !== undefined);
 const ARTICULATED = RIGGED.filter(([id]) => (RIGS.get(id)!.joints ?? []).length > 0);
@@ -183,7 +184,8 @@ describe("the rigged vehicles", () => {
       expect(rig.supports!.length).toBeGreaterThanOrEqual(2);
       if (!rig.sections) continue;
       expect(rig.sections.length).toBeGreaterThanOrEqual(2);
-      expect(rig.joints).toHaveLength(rig.sections.length - 1);
+      // an animal-drawn car's team is hitched with no joint (rig.team)
+      expect(rig.joints).toHaveLength(rig.sections.length - 1 - (rig.team ? 1 : 0));
     }
     expect(rail.filter((id) => RIGS.get(id)!.sections)).toEqual(expect.arrayContaining(["proc-vehicle-tatra-kt8", "proc-vehicle-tatra-kt4", "proc-vehicle-kvag-gt4"]));
   });

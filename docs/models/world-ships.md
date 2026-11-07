@@ -86,7 +86,7 @@ are `bottom` (keel to draft), `boot`, `hull`, `stripe`; the deck is drawn in `de
 | `domes`, `spheres`, `tanks`, `pipes` | tank domes, Moss LNG spheres on their skirts (a dome too: Icon's AquaDome, a radome), cylindrical gas tanks, deck piping |
 | `helideck`, `gantry`, `boom`, `boats` | a helideck with its H, a portal or A-frame, an unloading boom or drag arm, lifeboats and tenders |
 | `canopy`, `rail`, `portholes` | an arched roof (thatch, awnings), railings, a row of round lights in the hull |
-| `paddle` | side paddle wheels with their boxes, or a stern wheel |
+| `paddle` | side paddle wheels with their boxes, or a stern wheel; each wheel is a part turned by the ship's `rolling` clip ([animation.md](animation.md#rolling-wheels)) |
 | `foil`, `skirt`, `prop` | hydrofoils on struts, a hovercraft's skirt, air propellers on pylons |
 | `rig` | masts with their sails, a bowsprit and stays |
 | `bulwark` | a solid bulwark following the deck edge on both sides, from u0 to u1 |
@@ -175,8 +175,10 @@ neighbours' planes, so no two coplanar faces fight.
 ## Game properties, OpenTTD and sounds
 
 - **`game`**: displacement (t), installed power (kW), service speed (km/h) from the
-  published figures in each `SOURCES.md`; `accel` null; `draftFrac` measured. A sailing
-  ship without an engine states power 0.
+  published figures in each `SOURCES.md`; `accel` null (the game derives it from power
+  and weight); `draftFrac` measured. A sailing ship or a barge without an engine states
+  power 0 and `accel` `UNPOWERED_ACCEL` (0.3 m/s2) instead, since the game would derive
+  zero from no power and the ship would never get under way.
 - **OpenTTD**: container ships, feeders, ro-ro and car carriers carry `GOOD` (TEU or units
   as crates; no default climate has `VEHI`), tankers and gas carriers `OIL_` (liquid; the
   chemical tanker hazardous too), bulkers `COAL`, `IORE` or `GRAI` with the bulk refit, the

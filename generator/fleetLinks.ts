@@ -689,7 +689,7 @@ export const FLEET_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikipedia: Hong Kong Tramways", url: "https://en.wikipedia.org/wiki/Hong_Kong_Tramways" },
     { title: "Wikimedia Commons: 13-08-09-hongkong-by-RalfR-026.jpg", url: "https://commons.wikimedia.org/wiki/File:13-08-09-hongkong-by-RalfR-026.jpg" },
   ],
-  "proc-vehicle-horse-tram": [
+  "proc-vehicle-animal-tram-double-deck": [
     { title: "Wikipedia: Horsecar", url: "https://en.wikipedia.org/wiki/Horsecar" },
     { title: "Wikimedia Commons: 20040610 Victor Harbor Tramway.jpg", url: "https://commons.wikimedia.org/wiki/File:20040610_Victor_Harbor_Tramway.jpg" },
   ],

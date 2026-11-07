@@ -90,3 +90,33 @@ it('stands the offshore platform on the waterline with a large helideck and a bu
   const xs = lp.filter((_, i) => i % 3 === 0);
   expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(PLATFORM_HELIDECK.side, 5);
 });
+
+// The game blocks and grades only the jacket's base (docs/models/industry.md, "Offshore
+// platform"): its block rect, a fraction of the plan, must hold everything the model stands
+// on - every vertex below the cellar deck - and leave the flare and crane booms outside it.
+it('blocks the offshore platform on its jacket alone and marks it offshore', () => {
+  const d = INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-offshore-platform')!;
+  expect(d.game!.offshore).toBe(true);
+  const rects = d.game!.block!.rects;
+  expect(rects).toHaveLength(1);
+  const r = rects[0]!;
+  const pos = d.build().positions();
+  let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+  for (let i = 0; i < pos.length; i += 3) {
+    x0 = Math.min(x0, pos[i]!); x1 = Math.max(x1, pos[i]!); z0 = Math.min(z0, pos[i + 2]!); z1 = Math.max(z1, pos[i + 2]!);
+  }
+  const w = x1 - x0, dd = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const rx0 = cx + (r.x - r.w / 2) * w, rx1 = cx + (r.x + r.w / 2) * w;
+  const rz0 = cz + (r.z - r.d / 2) * dd, rz1 = cz + (r.z + r.d / 2) * dd;
+  for (let i = 0; i < pos.length; i += 3) {
+    if (pos[i + 1]! >= 20) continue;
+    expect(pos[i]!).toBeGreaterThanOrEqual(rx0 - 1e-3);
+    expect(pos[i]!).toBeLessThanOrEqual(rx1 + 1e-3);
+    expect(pos[i + 2]!).toBeGreaterThanOrEqual(rz0 - 1e-3);
+    expect(pos[i + 2]!).toBeLessThanOrEqual(rz1 + 1e-3);
+  }
+  // the booms overhang it: the rect is about half the plan, inside it
+  expect(r.w * r.d).toBeLessThan(0.4);
+  expect(Math.abs(r.x) + r.w / 2).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(r.z) + r.d / 2).toBeLessThanOrEqual(0.5);
+});
