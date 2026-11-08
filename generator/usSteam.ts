@@ -526,7 +526,7 @@ const HU_LEAD = [2.5, 4.85];
 const HU_DRIVERS = [6.8, 8.934, 11.068];
 const HU_TRAILING: Array<[number, number]> = [[13.07, ft(0, 36)], [14.79, ft(0, 51)]];
 /** The bullet nose: half an ellipsoid about the boiler's axis (height y, radius r), its tip at source x `tip`, its equator at `x`, the casing's front. */
-const HU_DOME = { y: 3.2, r: 1.12, tip: 0.75, x: 2.0 };
+const HU_DOME = { y: 3.2, r: 1.12, tip: 1.05, x: 2.0 };
 /** The casing over the boiler, the right half of its section bottom to top (its bottom is cut by HU_CASING_BOTTOM). */
 const HU_CASING: Pt[] = [[1.45, 1.2], ...Array.from({ length: 9 }, (_, i): Pt => {
   // the shoulder: a full quarter round from the side to the flat top over the vent
@@ -546,8 +546,8 @@ const HU_CAB_HALF: Pt[] = [[1.45, 1.42], [1.45, 4.0], [1.35, 4.25], [1.0, 4.4], 
  * cradle sweeping back and up under the nose to its top (HU_CRADLE).
  */
 const HU_DECK = 2.06;
-const HU_CRADLE = 2.55;
-const HU_PILOT: Array<[number, number, number, number]> = [[0.15, 0.1, 1.28, 1.1], [0.32, 0.02, 1.36, 1.15], [0.55, 0.06, 1.36, 1.15], [1.2, 0.2, 1.36, 1.15], [1.9, 0.38, 1.36, 1.15], [HU_DECK, 0.5, 1.33, 1.1], [2.3, 0.76, 1.3, 1.0], [HU_CRADLE, 1.02, 1.25, 0.85]];
+const HU_CRADLE = 2.3;
+const HU_PILOT: Array<[number, number, number, number]> = [[0.15, 0.1, 1.28, 1.1], [0.32, 0.02, 1.36, 1.15], [0.55, 0.06, 1.36, 1.15], [1.2, 0.2, 1.36, 1.15], [1.9, 0.38, 1.36, 1.15], [HU_DECK, 0.5, 1.33, 1.1], [HU_CRADLE, 0.76, 1.3, 1.0]];
 const HU_PILOT_REAR = 2.0;
 /** The dark band along the cab's rear half and the tender, between two aluminium stripes. */
 const HU_BAND: [number, number] = [2.15, 2.75];
@@ -668,8 +668,7 @@ function hudsonPilot(t: Steam): void {
     });
     // three slots up each cheek, and the coupler's opening in the nose
     m.scope("slots", () => { for (const s of [-1, 1]) for (const y of [0.42, 0.83, 1.32]) huPilotPanel(t, "black", s * 0.92, y, 0.34, 0.09, 0.012); });
-    m.scope("coupler opening", () => huPilotPanel(t, "black", 0, 0.88, 0.48, 0.38, 0.012));
-    knuckleCoupler(m, 1, t.X(0) - 0.6, t.X(0), COUPLER_Y);
+    // the coupler folds away behind the closed face: none drawn at the front
   });
   // the aluminium sheets continuing the pilot's sides back to the shelf, their rear edge
   // slanting up from the foot past the lead truck to the cylinders, the steps behind that
@@ -685,7 +684,7 @@ function hudsonPilot(t: Steam): void {
     // the ladder's stringer along the edge
     for (const s of [-1, 1]) m.rod("silver", huP(t, b0[0] + 0.12, b0[1] + 0.25, s * 1.3), huP(t, b1[0] - 0.02, b1[1] - 0.05, s * 1.3), 0.025, 6);
     // its inner edge a chord inside the nose's equator, so the nose hides it
-    const cowl: Pt[] = [[0.8, 2.5], [1.45, 2.5], [1.45, 3.15], [1.118, 3.15]];
+    const cowl: Pt[] = [[0.6, HU_CRADLE], [1.45, HU_CRADLE], [1.45, 2.8], [1.0, 2.8]];
     for (const s of [-1, 1]) m.slab("pilot", cowl.map(([z, y]) => huP(t, HU_DOME.x - 0.015, y, s * z)), [-0.015, 0, 0]);
   });
 }
@@ -753,12 +752,17 @@ function hudsonNose(t: Steam): void {
   });
   // the crest: the casing's top run forward over the nose and down its face to the headlight
   const lip = HU_TOP - (yc + r);
-  m.scope("crest", () => huBlade(t, "paint", Math.PI / 2, 0.33, 9, (f) => (f < 0.6 ? 0.32 - 0.17 * f : 0.218 - 0.2 * (f - 0.6)), (f) => (f < 0.55 ? lip : lip - (lip - 0.07) * ((f - 0.55) / 0.45))));
-  m.scope("blade", () => huBlade(t, "paint", -0.22, -0.95, 4, (f) => 0.035 - 0.015 * f, (f) => 0.12 - 0.08 * f));
+  // a narrow aluminium fin standing proud of the nose from the casing's top down to the headlight
+  m.scope("crest", () => {
+    huBlade(t, "pilot", Math.PI / 2, 0.3, 10, (f) => 0.06 - 0.02 * f, (f) => lip + 0.03 - (lip + 0.03 - 0.1) * f);
+    t.box("pilot", HU_DOME.x - 0.02, 2.08, HU_TOP, HU_TOP + 0.03, -0.06, 0.06);
+  });
+  m.scope("blade", () => huBlade(t, "pilot", -0.25, -0.95, 4, (f) => 0.035 - 0.015 * f, (f) => 0.1 - 0.06 * f));
   m.scope("headlight", () => {
-    t.cylX("black", 1.1, 0.52, 0, yc, 0.31, 18);
-    t.cylX("silver", 0.52, 0.47, 0, yc, 0.31, 18);
-    t.cylX("lampHead", 0.49, 0.465, 0, yc, 0.23, 18);
+    // at the nose's tip on the centre line, standing 0.3 m out of it
+    t.cylX("black", tip + 0.3, tip - 0.25, 0, yc, 0.31, 18);
+    t.cylX("silver", tip - 0.25, tip - 0.3, 0, yc, 0.31, 18);
+    t.cylX("lampHead", tip - 0.28, tip - 0.305, 0, yc, 0.23, 18);
   });
 }
 
