@@ -463,9 +463,14 @@ const BRIDGE_ROTUNDA = 2.8;
  */
 const BRIDGE_OFFSET = 10;
 const BRIDGE_OFFSET_MIN = 6.5;
-/** The two telescoping sections, and how much of the inner stays in the outer at full stretch. */
-const BRIDGE_OUTER = 11;
-const BRIDGE_INNER = 12;
+/**
+ * The two telescoping sections, and how much of the inner stays in the outer at full
+ * stretch: absolute studs, NOT at furniture scale -- the gap a tunnel spans is set by
+ * the aircraft's length against the stand-to-terminal clearance, and aircraft are not
+ * drawn at furniture scale.
+ */
+const BRIDGE_OUTER = 10;
+const BRIDGE_INNER = 13;
 const BRIDGE_OVERLAP = 1;
 /** The cab, from its rear (where the tunnel ends) to its door face; the bogie behind the tunnel's end. */
 const BRIDGE_CAB = 3;
@@ -1261,14 +1266,14 @@ function jetBridge(boxes: TerminalBox[], b: TerminalPad, st: AirfieldStand, s: n
       box(cx, h + 0.3 * s, 0, len + 0.5 * s, 0.6 * s, w + 0.5 * s, [236, 231, 214], "roof"),
     ];
   };
-  const outerLen = BRIDGE_OUTER * s, innerLen = BRIDGE_INNER * s, cab = BRIDGE_CAB * s;
+  const outerLen = BRIDGE_OUTER, innerLen = BRIDGE_INNER, cab = BRIDGE_CAB * s;
   const legTop = 0.2 * s, legBase = PAVE_TOP + 1.6 * s;
   return {
     stand: st.id,
     pivot: { x: px, z: pz },
     floor,
     radius,
-    reach: [radius + outerLen, radius + outerLen + innerLen - BRIDGE_OVERLAP * s],
+    reach: [radius + outerLen, radius + outerLen + innerLen - BRIDGE_OVERLAP],
     lift: [...BRIDGE_LIFT_RANGE],
     maxSlope: BRIDGE_MAX_SLOPE,
     cabDepth: cab,

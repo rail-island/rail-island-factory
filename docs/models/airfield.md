@@ -114,9 +114,11 @@ leaves. The drawing is split by what moves:
   wheels on the apron under the tunnel `bogieBack` short of its end, and its **leg**, one
   stud tall, which the game stretches from the wheels (`legBase`) to the tunnel's underside
   (`legTop` under the floor). With them, the limits a pose keeps to: `reach` (the tunnel's
-  length in plan, rotunda axis to the cab's rear: the outer section alone to both sections
-  less a stud of overlap), `lift` (the cab floor, 2 to 9 studs whatever the furniture
-  scale, since aircraft are not drawn at it), `maxSlope` (0.15), and the pose at **rest**.
+  length in plan, rotunda axis to the cab's rear: the outer section alone, 10 studs, to
+  both sections less a stud of overlap, 22 studs, past the rotunda's radius), `lift` (the
+  cab floor, 2 to 9 studs). The tunnel's lengths and the lift are absolute studs, while
+  everything else is at furniture scale: the gap a tunnel spans is set by the aircraft's
+  length against the stand-to-terminal clearance, and aircraft are not drawn at it; `maxSlope` (0.15), and the pose at **rest**.
 
 A pose (`JetBridgePose`) is the tunnel's `yaw` (radians about +Y, three.js sense), its
 `length`, the cab floor's `lift` and the cab's `cabYaw`. At **rest** the tunnel lies short
