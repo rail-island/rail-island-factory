@@ -12,7 +12,7 @@
 | `proc-vehicle-emd-f40ph` | EMD F40PH (draft) | `livery`: `phaseIII`, `phaseII` | 17.12 m | about 11,000 |
 | `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 12,400 - 13,600 |
 | `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 13,800 |
-| `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 13,300 - 14,400 |
+| `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 12,700 - 13,700 |
 | `proc-vehicle-amtrak-superliner` | Amtrak Superliner | `unit`: `coach`, `sleeper` | 25.91 m | 11,500 - 11,600 |
 | `proc-vehicle-amtrak-acela` | Acela Express | `unit`: `powerCar`, `businessClass`, `firstClass`, `cafe`, `train` (`cars` 3 - 8, default 4) | 21.22 m power car, 26.64 m coach | about 15,300 the power car, 6,800 - 7,200 a coach |
 
@@ -128,11 +128,30 @@ nose along the surface's chord (`chordBox`).
   m) and the eight-pane filter panel behind the X intake (11.75 - 15.15 m), the right one
   neither. Roof: cab hatch, horns, hatches, exhaust at 8.15 m, the radiator mesh with two fans
   over the X intakes.
-- **PRR GG1** - the welded streamlined body, the hoods falling from the centre cab to both
-  rounded noses, two diamond pantographs over the cab's ends (the rear one raised to the
-  game's wire, the front one folded), and the running gear: on each half three 57 in drivers
-  and the two-axle guiding truck under one frame, a bogie node each. The five gold
-  pinstripes gather into the "cat whiskers" at both noses.
+- **PRR GG1** - Loewy's welded body on its own slice body (`gg1Body`, the carbody kit's shell and
+  painter with the GG1's own section, no kit change): the lower body upright and full width (10 ft 4 in)
+  from its foot (1.22 m) to the shelf (2.85 m) along both hoods; over the shelf each hood's upper part
+  leans in and narrows from nearly the body's width at the end to 2.0 m at the cab, its crown at 3.86 m,
+  so the crew look forward past it through the rounded windows in the cab's front corners; the shelf
+  sweeps up 0.45 m into those corners over the last 2.2 m; the raised centre cab (4.15 m, its front
+  wall 5.9 m from each end, raked and rounded over at the top). The ends stand nearly upright, blunt and
+  rounding to the full width over 1.15 m, the crown rounding over at the top; on each the door in its
+  gaps, the arched opening with the headlight, the keystone (PRR schemes, with the number), grab irons
+  and ladder rungs, and the marker housings on the hood's top corners (red and white lamps, a number
+  board with its numerals). Ahead of each end the deck and the cast pilot with the MU sockets, corner
+  steps and handrails, 0.75 m to the coupler face. On each side the crew window (red-framed on 4935),
+  the doors (gaps, a narrow window, a grab iron, the ladder under them), the louvres, the keystone at the
+  middle, and the long four-panel grille low on one hood (diagonally opposite). Two diamond pantographs
+  on the hoods 3.4 m from the ends (the rear raised, the front folded, 4.5 m folded over the rail). The
+  running gear: on each half three 57 in drivers (1.48, 3.56, 5.64 m from the centre) in the frame's
+  side plates with pedestals and axle-box covers, one bogie node, and the two-axle guiding truck
+  (8.05, 10.52 m) under its cast side frame, a bogie node of its own. **Brunswick green** (4935) and
+  **Tuscan red** (4913): the five gold pinstripes (2.24 - 2.56 m) leave the level 1.8 - 2.7 m from each
+  end and sweep down in quarter ellipses to meet at the end's lower corner (`gg1StripePath`), a fine
+  line along the foot round both ends, the teardrops behind the marker housings, the spaced
+  PENNSYLVANIA across the cab and the number on each hood. **Penn Central** (4879): black, the white
+  logo on the cab with PENN CENTRAL under it and the large numbers on the hoods, no stripes.
+  Measurements in assets/prr-gg1/SOURCES.md.
 - **Amtrak Superliner** - the bi-level long-distance car, measured on photographs of coach 34515 and
   a sleeper side-on, the end of coach 34122 and the ends of sleepers 32112 and 32038
   (assets/amtrak-superliner/SOURCES.md has the measurements): 85 ft long and 16 ft 2 in high, the
@@ -185,7 +204,7 @@ nose along the surface's chord (`chordBox`).
 
 Simplified schemes: colour fields, stripes and plain stroke letters, no heralds or logos
 (but the F40PH's Amtrak wordmark and the F7's Santa Fe nose herald).
-Running numbers are illustrative, but for the GG1's preserved 4935 and 4800.
+Running numbers are illustrative, but for the GG1's 4935, 4913 and 4879 (photographed units).
 
 ## Deviations
 
@@ -199,7 +218,7 @@ Running numbers are illustrative, but for the GG1's preserved 4935 and 4800.
   and the sleeper's corridor windows are assumed. Places along the car are good to about 0.3 m.
 - The P42DC's and ALC-42's interiors and the Acela's cabins are not drawn. The F7 set's units
   are hinged as one articulated vehicle, not coupled loose.
-- The GG1's quill drive and its frames are simplified; its wheels have six spokes.
+- The GG1's quill drive and cast frames are simplified to plates, pedestals and covers; the hoods' upper side screens on one side are not drawn.
 
 ## Checking
 

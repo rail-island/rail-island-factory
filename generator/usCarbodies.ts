@@ -1964,162 +1964,493 @@ function alcLod(l: AlcLivery): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// PRR GG1: a double-ended streamlined electric, 2-C+C-2 on two articulated frames
+// PRR GG1: a double-ended streamlined electric, 2-C+C-2 on two articulated frames.
+// Raymond Loewy's welded body (assets/prr-gg1/SOURCES.md): the full-width lower
+// body up to the shelf along both hoods; over the shelf each hood's upper part,
+// set in and narrowing toward the raised centre cab, so the crew look forward
+// past it through the windows in the cab's front corners; the rounded, nearly
+// upright ends with their door, headlight and marker housings; the deck and
+// pilot ahead of each end. The five pinstripes run along the side and sweep down
+// to a point at each end's lower corner.
 
 const GG1_LENGTH = ft(79, 6); // 24.23 m over the coupler faces
-const GG1_REACH = 0.45;
+/** The end's face behind the coupler face: the deck and the pilot stand ahead of it. */
+const GG1_REACH = 0.75;
 const GG1_BODY = GG1_LENGTH - 2 * GG1_REACH;
+const GG1_TIP = GG1_LENGTH / 2 - GG1_REACH;
+const GG1_W = ft(10, 4) / 2;
+/** The body's lower edge, the shelf along the hoods and the hoods' crown. */
+const GG1_FOOT = 1.22;
+const GG1_SHELF = 2.85;
+const GG1_HOOD = 3.86;
+/** The cab's front wall (d from each tip) and its rake back to the cab's own section. */
+const GG1_CAB_D = 5.9;
+const GG1_RAKE = 0.22;
 const GG1_DRIVER_R = ft(0, 57) / 2;
 const GG1_LEAD_R = ft(0, 36) / 2;
-/** Axles from the centre of one half (toward its end): three drivers 6 ft 10 in apart, the guiding truck's two. */
-const GG1_DRIVERS = [ft(7, 0), ft(13, 10), ft(20, 8)];
-const GG1_LEAD = [ft(28, 6), ft(34, 6)];
-const GG1_CAB_FROM = 7.4;
+/** Axles from the locomotive's centre: three drivers 6 ft 10 in apart on each frame, then the guiding truck's two (69 ft over all). */
+const GG1_DRIVERS = [1.48, 3.56, 5.64];
+const GG1_LEAD = [8.05, 10.52];
+/** The pantographs' centres from each tip, on the hoods. */
+const GG1_PAN_D = 3.4;
 
-const gg1Nose = {
-  len: 3.0, tip: 0.3, power: 2.3,
-  C: [[0, 1.95], [0.15, 2.45], [0.45, 2.85], [1.0, 3.1], [3.0, 3.36], [6.0, 3.55], [GG1_CAB_FROM - 0.2, 3.62], [GG1_CAB_FROM + 0.25, 4.22], [GG1_CAB_FROM + 0.6, 4.35]] as Pt[],
-  S: [[0, 1.9], [0.2, 2.3], [0.6, 2.62], [1.2, 2.82], [3.0, 2.98], [GG1_CAB_FROM - 0.2, 3.12], [GG1_CAB_FROM + 0.3, 3.7], [GG1_CAB_FROM + 0.6, 3.78]] as Pt[],
-  Y: [[0, 1.78], [0.4, 1.62], [1.0, 1.58]] as Pt[],
-  A: [[0, 1.7], [0.4, 1.53]] as Pt[],
-  B: [[0, 1.68], [0.4, 1.5]] as Pt[],
+const gg1Add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const gg1Sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const gg1Mul = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
+/** A table's value at x, linear between its rows and clamped at both ends. */
+const gg1Lerp = (t: readonly Pt[], x: number): number => {
+  if (x <= t[0]![0]) return t[0]![1];
+  for (let i = 1; i < t.length; i++) if (x <= t[i]![0]) return t[i - 1]![1] + ((x - t[i - 1]![0]) / (t[i]![0] - t[i - 1]![0])) * (t[i]![1] - t[i - 1]![1]);
+  return t[t.length - 1]![1];
 };
 
-const GG1_SPEC: CarbodySpec = {
-  length: GG1_BODY, W: 1.56, Y: 1.58, S: 3.78, C: 4.35, lean: 0.95, arc: 7, B: 1.5, wl: 1.5, A: 1.53, wa: 1.55,
-  front: gg1Nose, rear: gg1Nose, edges: [], step: 0.8, noseStep: 0.2,
+/** The end's plan: blunt, rounding to the full width over its first metre. */
+const GG1_NOSE = { len: 1.15, tip: 0.38, power: 2.0 };
+/** The hood's crown and shoulder by d: the end stands nearly upright and rounds over at its top. */
+const GG1_NOSE_C: Pt[] = [[0, 3.62], [0.06, 3.73], [0.15, 3.8], [0.3, 3.845], [0.5, GG1_HOOD]];
+const GG1_NOSE_S: Pt[] = [[0, 3.45], [0.2, 3.52], [0.5, 3.56]];
+/** The hood's upper part over the shelf, its half width: nearly the body's at the end, narrowing toward the cab. */
+const GG1_UPPER: Pt[] = [[0, 1.5], [1.0, 1.46], [GG1_CAB_D, 1.0]];
+const GG1_LEAN = 0.88;
+
+/** A section of the GG1's body before the end's plan: the shelf (A), the upper part's foot (Y) and half width there (w), shoulder and crown. */
+interface Gg1Section { A: number; Y: number; w: number; S: number; C: number }
+const GG1_CAB: Gg1Section = { A: 3.8, Y: 3.82, w: GG1_W, S: 3.97, C: 4.15 };
+
+/** The shelf's sweep up into the cab's front corners: over this length before the cab, this much higher at its wall. */
+const GG1_SWEEP = [2.2, 0.45] as const;
+
+/** The hood at e from its end: the shelf curving up into the cab's front corners. */
+function gg1Hood(e: number): Gg1Section {
+  const f = GG1_CAB_D - GG1_SWEEP[0];
+  const A = GG1_SHELF + (e > f ? GG1_SWEEP[1] * ((e - f) / GG1_SWEEP[0]) ** 2 : 0);
+  return { A, Y: A + 0.08, w: gg1Lerp(GG1_UPPER, e), S: gg1Lerp(GG1_NOSE_S, e), C: gg1Lerp(GG1_NOSE_C, e) };
+}
+
+/** The section at e from the nearer end: the hood, the cab's raked front wall, the cab. */
+function gg1Section(e: number): Gg1Section {
+  if (e <= GG1_CAB_D) return gg1Hood(e);
+  if (e >= GG1_CAB_D + GG1_RAKE) return GG1_CAB;
+  // the wall leans back; its top rounds over into the cab's roof
+  const t = (e - GG1_CAB_D) / GG1_RAKE, h = gg1Hood(GG1_CAB_D), r = Math.sin((t * Math.PI) / 2);
+  const mix = (a: number, b: number, k = t) => a + (b - a) * k;
+  return { A: mix(h.A, GG1_CAB.A), Y: mix(h.Y, GG1_CAB.Y), w: mix(h.w, GG1_CAB.w), S: mix(h.S, GG1_CAB.S, r), C: mix(h.C, GG1_CAB.C, r) };
+}
+
+const gg1Plan = (e: number): number => {
+  const t = Math.min(1, Math.max(0, e / GG1_NOSE.len));
+  return Math.max(GG1_NOSE.tip, Math.pow(Math.max(0, 1 - Math.pow(1 - t, GG1_NOSE.power)), 1 / GG1_NOSE.power));
 };
+
+/**
+ * The GG1's body as a slice body: the lower body upright from the foot to the
+ * shelf (the slice's skirt), the shelf's ledge (its lower body), the hood's
+ * upper part leaning in (its side) and the roof's arc; in the cab the ledge
+ * closes and the side stands to the eaves.
+ */
+function gg1Body(): SliceBody {
+  const L = GG1_BODY;
+  const sec = (d: number) => gg1Section(Math.min(d, L - d));
+  const k = (d: number) => gg1Plan(Math.min(d, L - d));
+  const st = new Set<number>();
+  const at = [0, 0.03, 0.06, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 0.9, 1.0, 1.15, GG1_CAB_D - GG1_SWEEP[0], GG1_CAB_D - 1.5, GG1_CAB_D - 0.95, GG1_CAB_D - 0.5, GG1_CAB_D - 0.2, GG1_CAB_D, GG1_CAB_D + GG1_RAKE / 3, GG1_CAB_D + (2 * GG1_RAKE) / 3, GG1_CAB_D + GG1_RAKE];
+  for (const d of at) for (const x of [d, L - d]) st.add(Math.round(x * 1000) / 1000);
+  return {
+    length: L,
+    B: () => GG1_FOOT, wl: (d) => GG1_W * k(d), A: (d) => sec(d).A, wa: (d) => GG1_W * k(d),
+    Y: (d) => sec(d).Y, w: (d) => sec(d).w * k(d), S: (d) => sec(d).S, C: (d) => sec(d).C,
+    edges: () => [], lean: GG1_LEAN, arc: 6, stations: [...st].sort((a, b) => a - b),
+  };
+}
+
+/** The lofted shell at d and height y on side s, as the loft draws it: the point and its outward normal. */
+function gg1Surface(b: SliceBody, X: (d: number) => number, d: number, y: number, s: number): { p: Vec3; n: Vec3 } {
+  const z = (dd: number, yy: number): number => {
+    const h = shellSlice(b, Math.min(b.length, Math.max(0, dd)));
+    for (let k = 1; k + 1 < h.length; k++) {
+      const [za, ya] = h[k]!;
+      const [zb, yb] = h[k + 1]!;
+      if ((yy - ya) * (yy - yb) <= 0 && Math.abs(yb - ya) > 1e-9) return za + ((yy - ya) / (yb - ya)) * (zb - za);
+    }
+    return h[1]![0];
+  };
+  const P = (dd: number, yy: number): Vec3 => [X(dd), yy, z(dd, yy)];
+  const h = 0.01;
+  let n = norm(cross(gg1Sub(P(d, y + h), P(d, y - h)), gg1Sub(P(d + h, y), P(d - h, y))));
+  if (n[2] < 0) n = gg1Mul(n, -1);
+  const p = P(d, y);
+  return { p: [p[0], p[1], s * p[2]], n: [n[0], n[1], s * n[2]] };
+}
+
+/** Decal triangles in (d, y) laid on the shell of side s, `proud` off it along its normal. */
+function gg1Decal(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, tris: Pt[], proud: number): void {
+  const pts = tris.map(([d, y]): Vec3 => {
+    const q = gg1Surface(b, X, d, y, s);
+    return gg1Add(q.p, gg1Mul(q.n, proud));
+  });
+  m.facets(mat, pts, [0, 0, s]);
+}
+
+/** A ribbon along a path of [d, y, half width] in (d, y), as decal triangles. */
+function gg1Ribbon(path: ReadonlyArray<readonly [number, number, number]>): Pt[] {
+  const tris: Pt[] = [];
+  const off = (j: number): [Pt, Pt] => {
+    const [a, c] = [path[Math.max(0, j - 1)]!, path[Math.min(path.length - 1, j + 1)]!];
+    const l = Math.hypot(c[0] - a[0], c[1] - a[1]) || 1;
+    const [nd, ny] = [-(c[1] - a[1]) / l, (c[0] - a[0]) / l];
+    const [d, y, w] = path[j]!;
+    return [[d - nd * w, y - ny * w], [d + nd * w, y + ny * w]];
+  };
+  for (let j = 0; j + 1 < path.length; j++) {
+    const [p0, p1] = off(j);
+    const [q0, q1] = off(j + 1);
+    tris.push(p0, q0, q1, p0, q1, p1);
+  }
+  return tris;
+}
+
+/** The five pinstripes' heights along the side, their width, and the point at each end's lower corner where they meet. */
+const GG1_STRIPES = [2.24, 2.32, 2.4, 2.48, 2.56];
+const GG1_STRIPE_W = 0.045;
+const GG1_MEET: Pt = [0.14, 1.3];
+
+/** Stripe i's path from the front end's meeting point to the rear's: a quarter ellipse down from where it leaves the level (higher stripes further back). */
+export function gg1StripePath(i: number): Array<[number, number, number]> {
+  const y = GG1_STRIPES[i]!, d0 = 1.8 + 0.22 * i, [dc, yc] = GG1_MEET;
+  const bend: Array<[number, number, number]> = [];
+  const n = 14;
+  for (let j = n; j >= 0; j--) {
+    const t = ((j / n) * Math.PI) / 2;
+    bend.push([d0 - (d0 - dc) * Math.sin(t), yc + (y - yc) * Math.cos(t), (GG1_STRIPE_W / 2) * (1 - 0.8 * Math.sin(t) ** 4)]);
+  }
+  return [...bend, ...[...bend].reverse().map(([d, yy, w]): [number, number, number] => [GG1_BODY - d, yy, w])];
+}
+
+/** A rectangle on the body's upright side (the cab, the hoods' lower body: z = W) over d0..d1, y0..y1, `proud` off it. */
+function gg1Flat(m: MeshBuilder, X: (d: number) => number, s: number, mat: string, d0: number, d1: number, y0: number, y1: number, proud: number, depth = 0.01): void {
+  const z = s * (GG1_W + proud);
+  m.slab(mat, [[X(d0), y0, z], [X(d1), y0, z], [X(d1), y1, z], [X(d0), y1, z]], [0, 0, -s * depth]);
+}
+
+/** A polygon (d, y) on the upright side, `proud` off it. */
+function gg1FlatPoly(m: MeshBuilder, X: (d: number) => number, s: number, mat: string, poly: Pt[], proud: number, depth = 0.01): void {
+  const z = s * (GG1_W + proud);
+  m.slab(mat, poly.map(([d, y]): Vec3 => [X(d), y, z]), [0, 0, -s * depth]);
+}
+
+/** A window on the cab's side: its frame and glass. */
+function gg1Window(m: MeshBuilder, X: (d: number) => number, s: number, d0: number, d1: number, y0: number, y1: number, frame: string): void {
+  gg1Flat(m, X, s, frame, d0, d1, y0, y1, 0.006, 0.02);
+  gg1Flat(m, X, s, "cabGlass", d0 + 0.05, d1 - 0.05, y0 + 0.05, y1 - 0.05, 0.012, 0.004);
+}
+
+/** A door's outline (its gaps) on the cab's side: the stripes stay painted across the leaf. */
+function gg1DoorGaps(m: MeshBuilder, X: (d: number) => number, s: number, d0: number, d1: number, y0: number, y1: number): void {
+  const g = 0.025;
+  for (const [a, c, p, q] of [[d0, d0 + g, y0, y1], [d1 - g, d1, y0, y1], [d0, d1, y1 - g, y1]] as const) gg1Flat(m, X, s, "rubber", a, c, p, q, 0.01, 0.012);
+}
+
+/** The keystone (the PRR's herald) as a polygon centred at (u, v), w wide and h high. */
+const keystone = (u: number, v: number, w: number, h: number): Pt[] => [
+  [u - 0.36 * w, v - h / 2], [u + 0.36 * w, v - h / 2], [u + 0.5 * w, v + 0.3 * h], [u + 0.42 * w, v + h / 2], [u - 0.42 * w, v + h / 2], [u - 0.5 * w, v + 0.3 * h],
+];
+
+/** A GG1 livery: its body paint and how it is lettered. */
+interface Gg1Livery extends CarbodyLivery {
+  body: string;
+  /** The PRR's five pinstripes, the line along the body's foot and the markers' teardrops, in this paint. */
+  stripes?: string;
+  /** The window frames on the cab's sides. */
+  frame: string;
+  /** The PRR's lettering (the spaced name, the keystones) or Penn Central's (the logo and its name). */
+  style: "prr" | "pc";
+}
 
 const GG1_PAL = {
-  brunswick: paint("#1e2d24"), tuscan: paint("#6e2a20"), gold: paint("#d4b05a", 0.4), pcBlack: paint("#1b1c1e"), pcWhite: paint("#eeeeea"),
-  truckBlack: paint("#242527", 0.85),
+  brunswick: paint("#1e2d24"), tuscan: paint("#5f231b"), gold: paint("#d4b05a", 0.4), pcBlack: paint("#1b1c1e"), pcWhite: paint("#eeeeea"),
+  truckBlack: paint("#242527", 0.85), keystoneRed: paint("#b3262a", 0.5), trimRed: paint("#a3282b", 0.5),
 };
 const pickGg1 = (...n: Array<keyof typeof GG1_PAL>) => Object.fromEntries(n.map((k) => [k, GG1_PAL[k]]));
 
-/** The five pinstripes along the side, gathering into the "cat whiskers" toward each nose. */
-function pinstripes(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number): void {
-  const ys = [1.92, 2.17, 2.42, 2.67, 2.92];
-  const yc = 2.15, gather = 3.2;
-  for (const y of ys) {
-    const at = (d: number) => {
-      const e = Math.min(d, GG1_BODY - d);
-      return yc + (y - yc) * Math.min(1, Math.max(0.12, e / gather));
-    };
-    stripDecal(m, b, X, s, "gold", 0.12, GG1_BODY - 0.12, (d) => at(d) - 0.018, (d) => at(d) + 0.018, 0.005, 60);
-  }
-}
+/** The PRR schemes: the body one colour from foot to roof, the gold stripes and lettering. */
+const prrScheme = (title: string, body: "brunswick" | "tuscan", number: string, frame: string): Gg1Livery => ({
+  title, palette: pickGg1(body, "gold", "truckBlack", "keystoneRed", "trimRed"), body, stripes: "gold", frame, style: "prr",
+  bands: [[0, 9, body]], roof: body, skirt: body, under: "truckBlack", number, numberMat: "gold",
+});
 
-export const GG1_LIVERIES: Record<string, CarbodyLivery> = {
-  brunswick: {
-    title: "Brunswick green", palette: pickGg1("brunswick", "gold", "truckBlack"),
-    bands: [[0, 9, "brunswick"]], roof: "brunswick", skirt: "brunswick", under: "truckBlack",
-    number: "4935", numberMat: "gold", decals: pinstripes,
-  },
-  tuscan: {
-    title: "Tuscan red", palette: pickGg1("tuscan", "gold", "truckBlack"),
-    bands: [[0, 9, "tuscan"]], roof: "tuscan", skirt: "tuscan", under: "truckBlack",
-    number: "4800", numberMat: "gold", decals: pinstripes,
-  },
+export const GG1_LIVERIES: Record<string, Gg1Livery> = {
+  brunswick: prrScheme("Brunswick green", "brunswick", "4935", "trimRed"),
+  tuscan: prrScheme("Tuscan red", "tuscan", "4913", "rubber"),
   pennCentral: {
-    title: "Penn Central", palette: pickGg1("pcBlack", "pcWhite", "truckBlack"),
-    bands: [[0, 9, "pcBlack"]], roof: "pcBlack", skirt: "pcBlack", under: "truckBlack",
-    lettering: { text: "PENN CENTRAL", d: GG1_BODY / 2, y: 2.3, h: 0.36, mat: "pcWhite" },
-    number: "4872", numberMat: "pcWhite",
+    title: "Penn Central", palette: pickGg1("pcBlack", "pcWhite", "truckBlack"), body: "pcBlack", frame: "rubber", style: "pc",
+    bands: [[0, 9, "pcBlack"]], roof: "pcBlack", skirt: "pcBlack", under: "truckBlack", number: "4879", numberMat: "pcWhite",
   },
 };
 
-/** A GG1 wheelset at x: tyres, wheel centres (spoked on the drivers), axle and its boxes. */
-function gg1Wheel(m: MeshBuilder, x: number, r: number, spokes: boolean): void {
+/** Letters on the upright side centred at d, their foot at y, h high, `pitch` apart. */
+function gg1Letters(m: MeshBuilder, X: (d: number) => number, s: number, mat: string, text: string, d: number, y: number, h: number, pitch: number, proud = 0.008): void {
+  const w = h * 0.58, gap = pitch - w;
+  const width = strokeWidth(text, w, gap);
+  const dir = Math.sign(X(0) - X(1));
+  const z = s * (GG1_W + proud);
+  const tris = strokeText(text, -width / 2, y, h, w, gap, false, h * 0.13).map(([u, v]): Vec3 => [X(d - dir * s * u), v, z]);
+  m.facets(mat, tris, [0, 0, s]);
+}
+
+/** Penn Central's logo on the cab's side centred at d: the white field and the black lines that leave its P over C. */
+function pcLogo(m: MeshBuilder, X: (d: number) => number, s: number, d: number): void {
+  const [w, h, y0] = [0.72, 1.3, 1.92];
+  const dir = Math.sign(X(0) - X(1));
+  // u across the logo as seen from outside (0 left, 1 right), v up
+  const pt = (u: number, v: number): Pt => [d - dir * s * (u - 0.5) * w, y0 + v * h];
+  const rect = (mat: string, u0: number, u1: number, v0: number, v1: number, proud: number) =>
+    gg1FlatPoly(m, X, s, mat, [pt(u0, v0), pt(u1, v0), pt(u1, v1), pt(u0, v1)], proud, 0.004);
+  rect("pcWhite", 0, 1, 0, 1, 0.006);
+  for (const [u0, u1, v0, v1] of [[0.2, 0.3, 0.1, 0.9], [0.2, 0.8, 0.8, 0.9], [0.7, 0.8, 0.5, 0.9], [0.4, 0.8, 0.5, 0.6], [0.4, 0.5, 0.1, 0.5], [0.4, 0.8, 0.1, 0.2]] as const)
+    rect("pcBlack", u0, u1, v0, v1, 0.009);
+}
+
+/** The sides' paint, lettering, windows, doors, louvres and the hood's grille on side s. */
+function gg1Side(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, l: Gg1Livery): void {
+  const L = GG1_BODY, M = L / 2;
+  /** d at offset o from the middle toward the front (+X) end, or toward the rear. */
+  const both = (o0: number, o1: number): Array<[number, number]> => [[M - o1, M - o0], [M + o0, M + o1]];
+  if (l.stripes) {
+    const mat = l.stripes;
+    m.scope("paint", () => {
+      // over the grilles' slats: the stripes run across them
+      for (let i = 0; i < GG1_STRIPES.length; i++) gg1Decal(m, b, X, s, mat, gg1Ribbon(gg1StripePath(i)), 0.009);
+      // the fine line along the body's foot, round both ends
+      const foot: Array<[number, number, number]> = [0, 0.05, 0.1, 0.2, 0.3, 0.45, 0.6, 0.8, 1.0, 1.15].map((d) => [d, 1.29, 0.015]);
+      gg1Decal(m, b, X, s, mat, gg1Ribbon([...foot, ...[...foot].reverse().map(([d, y, w]): [number, number, number] => [L - d, y, w])]), 0.005);
+      // the teardrops behind the marker housings
+      for (const e of [1, -1]) {
+        const at = (d: number) => (e > 0 ? d : L - d);
+        const path: Array<[number, number, number]> = [];
+        for (let j = 0; j <= 10; j++) {
+          const d = 1.2 + (1.4 * j) / 10;
+          const w = 0.055 * Math.sqrt(Math.min(1, (d - 1.19) / 0.06)) * Math.pow((2.6 - d) / 1.4, 0.7);
+          path.push([at(d), 3.42 - 0.03 * ((d - 1.2) / 1.4), w]);
+        }
+        gg1Decal(m, b, X, s, mat, gg1Ribbon(path), 0.005);
+      }
+    });
+  }
+  m.scope("cab windows", () => {
+    for (const [d0, d1] of both(4.5, 5.2)) gg1Window(m, X, s, d0, d1, 2.98, 3.66, l.frame);
+  });
+  m.scope("doors", () => {
+    for (const [d0, d1] of both(2.55, 3.25)) {
+      gg1DoorGaps(m, X, s, d0, d1, GG1_FOOT + 0.08, 3.68);
+      gg1Window(m, X, s, d0 + 0.2, d1 - 0.2, 3.1, 3.55, l.frame);
+      // the grab iron beside the door and the ladder under it, down to the frame
+      const dh = s > 0 ? d1 + 0.07 : d0 - 0.07;
+      m.rod("handrail", [X(dh), 1.6, s * (GG1_W + 0.045)], [X(dh), 3.0, s * (GG1_W + 0.045)], 0.014, 6);
+      for (const d of [d0 + 0.1, d1 - 0.1]) m.rod("handrail", [X(d), 0.45, s * (GG1_W - 0.04)], [X(d), GG1_FOOT + 0.02, s * (GG1_W - 0.04)], 0.018, 4);
+      for (const y of [0.5, 0.8]) m.rod("handrail", [X(d0 + 0.1), y, s * (GG1_W - 0.04)], [X(d1 - 0.1), y, s * (GG1_W - 0.04)], 0.016, 4);
+    }
+  });
+  m.scope("louvres", () => {
+    for (const [d0, d1] of both(1.45, 2.1)) {
+      gg1Flat(m, X, s, "grille", d0, d1, 2.98, 3.58, 0.004, 0.012);
+      for (let d = d0 + 0.07; d < d1 - 0.05; d += 0.09) gg1Flat(m, X, s, "louvre", d, d + 0.035, 3.03, 3.53, 0.007, 0.004);
+    }
+  });
+  // the long grille low on one hood of each side (diagonally opposite), its cab end raked
+  m.scope("hood grille", () => {
+    const [y0, y1] = [1.95, 2.6];
+    const at = (d: number) => (s > 0 ? d : L - d);
+    const panels: Array<[number, number]> = [[1.35, 2.2], [2.26, 3.11], [3.17, 4.02], [4.08, 4.95]];
+    panels.forEach(([a, c], i) => {
+      const rake = i === panels.length - 1 ? 0.18 : 0;
+      gg1FlatPoly(m, X, s, "grille", [[at(a), y0], [at(c), y0], [at(c + rake), y1], [at(a), y1]], 0.004, 0.012);
+      for (let y = y0 + 0.06; y < y1 - 0.05; y += 0.085) gg1Flat(m, X, s, "louvre", at(a + 0.05), at(c - 0.05 + rake * ((y - y0) / (y1 - y0))), y, y + 0.03, 0.006, 0.003);
+    });
+  });
+  if (l.style === "prr") {
+    m.scope("lettering", () => gg1Letters(m, X, s, "gold", "PENNSYLVANIA", M, 1.62, 0.3, 0.75));
+    m.scope("number", () => {
+      for (const d of [4.4, L - 4.4]) gg1Letters(m, X, s, "gold", l.number, d, 1.62, 0.3, 0.23);
+    });
+    m.scope("keystone", () => {
+      gg1FlatPoly(m, X, s, "gold", keystone(M, 3.36, 0.36, 0.42), 0.006, 0.004);
+      gg1FlatPoly(m, X, s, "keystoneRed", keystone(M, 3.36, 0.3, 0.36), 0.009, 0.003);
+    });
+  } else {
+    m.scope("logo", () => pcLogo(m, X, s, M));
+    m.scope("lettering", () => gg1Letters(m, X, s, "pcWhite", "PENN CENTRAL", M, 1.45, 0.22, 0.19));
+    m.scope("number", () => {
+      for (const d of [4.4, L - 4.4]) gg1Letters(m, X, s, "pcWhite", l.number, d, 1.45, 0.42, 0.33);
+    });
+  }
+}
+
+/** Everything on end e (+1 the +X end) of the body: the cab's corner windows, marker housings, door, headlight, deck, pilot and coupler. */
+function gg1End(m: MeshBuilder, b: SliceBody, X: (d: number) => number, e: number, l: Gg1Livery): void {
+  const L = GG1_BODY;
+  const at = (d: number) => (e > 0 ? d : L - d);
+  const face = GG1_TIP; // |x| of the end's face
+  m.scope("windscreen", () => {
+    // in the cab's front wall beside the hood: the wall rakes back from the hood's outline to the cab's
+    const h = gg1Section(GG1_CAB_D);
+    const zh = (y: number) => (y <= h.S ? h.w + ((h.w * GG1_LEAN - h.w) * (y - h.Y)) / (h.S - h.Y) : h.w * GG1_LEAN);
+    const xw = (z: number, y: number) => {
+      const t = Math.min(1, Math.max(0, (z - zh(y)) / Math.max(0.05, GG1_W - zh(y))));
+      return e * (face - GG1_CAB_D - GG1_RAKE * t + 0.03);
+    };
+    for (const s of [1, -1]) {
+      const ring = (z0: number, z1: number, y0: number, y1: number, r: number): Vec3[] => {
+        const pts: Pt[] = [[z0, y0], [z1, y0], [z1, y1 - r], [z1 - r * 0.3, y1 - r * 0.3], [z1 - r, y1], [z0 + r, y1], [z0 + r * 0.3, y1 - r * 0.3], [z0, y1 - r]];
+        return pts.map(([z, y]): Vec3 => [xw(z, y), y, s * z]);
+      };
+      m.slab("rubber", ring(1.08, 1.5, 3.36, 3.8, 0.13), [-e * 0.16, 0, 0]);
+      m.slab("cabGlass", ring(1.13, 1.45, 3.41, 3.75, 0.1).map((p): Vec3 => [p[0] + e * 0.008, p[1], p[2]]), [-e * 0.02, 0, 0]);
+    }
+  });
+  m.scope("markers", () => {
+    // a housing on each side of the hood's top corner: the marker lamps on its front and flank, the number board behind them
+    for (const s of [1, -1]) {
+      const [d0, d1, y0, y1] = [0.22, 1.15, 3.3, 3.53];
+      const ym = (y0 + y1) / 2;
+      const out = (d: number, y: number): Vec3 => {
+        const q = gg1Surface(b, X, at(d), ym, s);
+        const n = norm([q.n[0], 0, q.n[2]]);
+        return [q.p[0] + n[0] * 0.12, y, q.p[2] + n[2] * 0.12];
+      };
+      const box = [out(d0, y0), out(d1, y0), out(d1, y1), out(d0, y1)];
+      m.slab(l.body, box, [0, 0, -s * 0.22]);
+      const [fx, fz] = [box[0]![0], box[0]![2]];
+      m.sweep("lampRed", "x", ngon(8, 0.05, 0, fz - s * 0.07, ym), fx - e * 0.01, ngon(8, 0.05, 0, fz - s * 0.07, ym), fx + e * 0.02);
+      for (const [d, lens] of [[d0 + 0.12, "lampRed"], [d0 + 0.26, "lampHead"]] as const) {
+        const p = out(d, ym);
+        m.sweep(lens, "z", ngon(8, 0.045, 0, p[0], ym), p[2] - s * 0.01, ngon(8, 0.045, 0, p[0], ym), p[2] + s * 0.012);
+      }
+      const [p0, p1] = [out(d0 + 0.36, ym), out(d1 - 0.05, ym)];
+      m.slab("black", [[p0[0], y0 + 0.04, p0[2] + s * 0.006], [p1[0], y0 + 0.04, p1[2] + s * 0.006], [p1[0], y1 - 0.04, p1[2] + s * 0.006], [p0[0], y1 - 0.04, p0[2] + s * 0.006]], [0, 0, -s * 0.01]);
+      // its white numerals, read from outside (toward +X on the +Z side)
+      const xc = (p0[0] + p1[0]) / 2, zAt = (x: number) => p0[2] + ((p1[2] - p0[2]) * (x - p0[0])) / (p1[0] - p0[0]);
+      const width = strokeWidth(l.number, 0.058, 0.022);
+      const txt = strokeText(l.number, -width / 2, ym - 0.05, 0.1, 0.058, 0.022, false, 0.016);
+      m.facets("white", txt.map(([u, v]): Vec3 => [xc + s * u, v, zAt(xc + s * u) + s * 0.012]), [0, 0, s]);
+    }
+  });
+  m.scope("end door", () => {
+    const x = e * (face + 0.004);
+    const flat = (mat: string, poly: Pt[], proud: number, depth = 0.008) =>
+      m.slab(mat, poly.map(([z, y]): Vec3 => [x + e * proud, y, z]), [-e * depth, 0, 0]);
+    // the arched opening over the door with the headlight, the door's gaps under it
+    const arch = (hw: number, y0: number, y1: number): Pt[] => {
+      const pts: Pt[] = [[-hw, y0], [hw, y0]];
+      for (let i = 0; i <= 6; i++) {
+        const a = (i / 6) * Math.PI;
+        pts.push([hw * Math.cos(a), y1 - hw + hw * Math.sin(a)]);
+      }
+      return pts;
+    };
+    flat("black", arch(0.3, 2.98, 3.52), 0.002, 0.006);
+    m.sweep("steel", "x", ngon(14, 0.19, 0, 0, 3.2), x - e * 0.01, ngon(14, 0.19, 0, 0, 3.2), x + e * 0.05);
+    m.sweep("lampHead", "x", ngon(14, 0.15, 0, 0, 3.2), x + e * 0.05, ngon(14, 0.15, 0, 0, 3.2), x + e * 0.06);
+    for (const [z0, z1, y0, y1] of [[-0.36, -0.335, GG1_FOOT + 0.1, 2.98], [0.335, 0.36, GG1_FOOT + 0.1, 2.98]] as const)
+      flat("rubber", [[z0, y0], [z1, y0], [z1, y1], [z0, y1]], 0.003, 0.006);
+    if (l.stripes) flat(l.stripes, [[-GG1_W * GG1_NOSE.tip, 1.275], [GG1_W * GG1_NOSE.tip, 1.275], [GG1_W * GG1_NOSE.tip, 1.305], [-GG1_W * GG1_NOSE.tip, 1.305]], 0.002, 0.004);
+    if (l.style === "prr") {
+      flat("gold", keystone(0, 2.7, 0.42, 0.46), 0.003, 0.004);
+      flat("keystoneRed", keystone(0, 2.7, 0.36, 0.4), 0.006, 0.003);
+      // the number in the keystone, read from ahead of the end
+      const width = strokeWidth(l.number, 0.06, 0.02);
+      const txt = strokeText(l.number, -width / 2, 2.63, 0.11, 0.06, 0.02, false, 0.016);
+      m.facets("gold", txt.map(([u, v]): Vec3 => [x + e * 0.009, v, -e * u]), [e, 0, 0]);
+    }
+    // grab irons either side of the door, the ladder's rungs on its side
+    for (const z of [-0.5, 0.5]) m.rod("handrail", [x + e * 0.06, 1.45, z], [x + e * 0.06, 3.2, z], 0.016, 6);
+    for (const y of [1.55, 1.85, 2.15, 2.45]) m.rod("handrail", [x + e * 0.07, y, 0.05], [x + e * 0.07, y, 0.31], 0.015, 4);
+  });
+  m.scope("deck", () => {
+    // the deck ahead of the end, the cast pilot under it with the MU sockets, the steps at its corners
+    const [x0, x1] = [face - 0.02, GG1_LENGTH / 2 - 0.14];
+    const xs = (a: number, c: number): [number, number] => (e > 0 ? [a, c] : [-c, -a]);
+    block(m, l.under, ...xs(x0, x1), 1.08, 1.2, -1.45, 1.45);
+    pilotPlate(m, l.under, e, x1 - 0.02, 0.2, 1.08, 1.32, 0.45, 0.7);
+    for (const s of [1, -1]) {
+      for (const z of [0.5, 0.75, 1.0]) m.sweep("steel", "x", ngon(10, 0.075, 0, s * z, 0.95), e * (x1 - 0.16), ngon(10, 0.075, 0, s * z, 0.95), e * (x1 + 0.02));
+      // the corner step: its tread hung from the deck
+      block(m, "walk", ...xs(x1 - 0.48, x1 - 0.08), 0.6, 0.65, ...side(s, 1.12, 1.42));
+      for (const x of [x1 - 0.45, x1 - 0.11]) m.rod(l.under, [e * x, 0.62, s * 1.4], [e * x, 1.08, s * 1.4], 0.025, 4);
+      m.rod("handrail", [e * (x1 - 0.05), 1.2, s * 1.42], [e * (x1 - 0.05), 2.0, s * 1.42], 0.02, 6);
+      m.rod("handrail", [e * (x1 - 0.05), 2.0, s * 1.42], [e * (face + 0.05), 2.0, s * 1.42], 0.02, 6);
+    }
+  });
+  m.scope("coupler", () => knuckleCoupler(m, e, GG1_LENGTH / 2 - 0.75, GG1_LENGTH / 2, COUPLER_Y));
+  m.scope("running gear", () => gg1Half(m, e, { under: l.under }));
+}
+
+/** A GG1 wheelset at x: tyres, wheel centres, axle and its boxes. */
+function gg1Wheel(m: MeshBuilder, x: number, r: number, box: number): void {
   m.scope("wheelset", () => {
     const ay = r * Math.cos(Math.PI / 24);
     const axle = ngon(8, 0.09, 0, x, ay);
     m.sweep("steel", "z", axle, -0.85, axle, 0.85);
     for (const s of [-1, 1]) {
       extrude(m, "steel", "z", ngon(24, r, Math.PI / 24, x, ay), side(s, 0.665, 0.8));
-      extrude(m, "wheel", "z", ngon(20, r * 0.86, 0, x, ay), side(s, 0.8, 0.82));
-      if (spokes) for (let k = 0; k < 6; k++) {
-        const a = (k * Math.PI) / 3;
-        const q: Vec3 = [x + Math.cos(a) * r * 0.78, ay + Math.sin(a) * r * 0.78, 0];
-        m.rod("bogie", [x, ay, s * 0.825], [q[0], q[1], s * 0.825], 0.045, 6);
-      }
-      extrude(m, "bogie", "z", ngon(8, 0.16, Math.PI / 8, x, ay), side(s, 0.82, 0.9));
+      extrude(m, "wheel", "z", ngon(16, r * 0.86, 0, x, ay), side(s, 0.8, 0.82));
+      extrude(m, "bogie", "z", ngon(8, box, Math.PI / 8, x, ay), side(s, 0.82, 1.12));
     }
   });
 }
 
 /**
- * One half's running gear toward end e: the three drivers in their frame, one
+ * One half's running gear toward end e: the three drivers in their cast frame, one
  * bogie node (the articulated frames turn about the centre hinge), and the
  * two-axle guiding truck ahead of them, a bogie node of its own.
  */
 function gg1Half(m: MeshBuilder, e: number, spec: { under: string }): void {
   const span = (a: number, b: number): [number, number] => [Math.min(e * a, e * b), Math.max(e * a, e * b)];
   m.scope("driving frame", () => m.bogie(() => {
-    for (const a of GG1_DRIVERS) gg1Wheel(m, e * a, GG1_DRIVER_R, true);
-    const [f0, f1] = span(GG1_DRIVERS[0]! - 0.9, GG1_DRIVERS[2]! + 0.9);
-    block(m, spec.under, f0, f1, 1.0, 1.48, -1.05, 1.05);
-    for (const s of [-1, 1]) block(m, "bogie", f0, f1, 0.62, 1.0, ...side(s, 0.9, 1.0));
+    for (const a of GG1_DRIVERS) gg1Wheel(m, e * a, GG1_DRIVER_R, 0.16);
+    const [f0, f1] = span(GG1_DRIVERS[0]! - 0.85, GG1_DRIVERS[2]! + 0.95);
+    block(m, spec.under, f0, f1, 1.0, 1.2, -1.0, 1.0);
+    for (const s of [-1, 1]) {
+      // the frame's side plate, the pedestals between the wheels and the axle boxes' covers
+      block(m, "bogie", f0, f1, 0.55, 1.2, ...side(s, 1.0, 1.1));
+      for (const a of GG1_DRIVERS) {
+        block(m, "bogie", ...span(a - 0.28, a + 0.28), 0.38, 0.55, ...side(s, 1.0, 1.1));
+        m.sweep("bogie", "z", ngon(10, 0.17, 0, e * a, GG1_DRIVER_R), s * 1.1, ngon(10, 0.14, 0, e * a, GG1_DRIVER_R), s * 1.2);
+      }
+    }
   }));
   m.scope("guiding truck", () => m.bogie(() => {
-    for (const a of GG1_LEAD) gg1Wheel(m, e * a, GG1_LEAD_R, false);
-    const [g0, g1] = span(GG1_LEAD[0]! - 0.6, GG1_LEAD[1]! + 0.5);
-    for (const s of [-1, 1]) block(m, "bogie", g0, g1, 0.42, 0.78, ...side(s, 0.9, 1.0));
-    block(m, spec.under, g0, g1, 0.78, 0.95, -0.95, 0.95);
+    for (const a of GG1_LEAD) gg1Wheel(m, e * a, GG1_LEAD_R, 0.12);
+    const [g0, g1] = span(GG1_LEAD[0]! - 0.55, GG1_LEAD[1]! + 0.45);
+    for (const s of [-1, 1]) {
+      // the cast side frame over the wheels, the journal boxes under it
+      block(m, "bogie", g0, g1, 0.5, 0.92, ...side(s, 0.98, 1.08));
+      for (const a of GG1_LEAD) block(m, "bogie", ...span(a - 0.22, a + 0.22), 0.28, 0.5, ...side(s, 0.98, 1.12));
+    }
+    block(m, spec.under, ...span(GG1_LEAD[0]! + 0.5, GG1_LEAD[1]! - 0.5), 0.6, 0.95, -0.98, 0.98);
   }));
-  // the frame's extension over the guiding truck, carrying the body's end
+  // the frame's extension over the guiding truck to the deck, carrying the body's end
   m.scope("frame extension", () => {
-    const [a, b] = span(GG1_DRIVERS[2]! + 0.9, GG1_LEAD[0]! - 0.6);
-    block(m, spec.under, a, b, 1.0, 1.48, -1.0, 1.0);
+    const [a, b] = span(GG1_DRIVERS[2]! + 0.95, GG1_TIP);
+    block(m, spec.under, a, b, 1.0, 1.2, -1.05, 1.05);
   });
 }
 
-export function buildGg1(l: CarbodyLivery): MeshBuilder {
+export function buildGg1(l: Gg1Livery): MeshBuilder {
   const m = new Builder({ ...CARBODY_PALETTE, ...l.palette });
-  const b = carbody({ ...GG1_SPEC, edges: edgesOf(l, GG1_SPEC.Y, GG1_SPEC.S) });
-  const tip = GG1_LENGTH / 2 - GG1_REACH;
-  const X = (d: number) => tip - d;
+  const b = gg1Body();
+  const X = (d: number) => GG1_TIP - d;
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, painter(l, GG1_BODY, true)));
-    for (const s of [1, -1])
-      m.scope(s > 0 ? "right side" : "left side", () => {
-        if (l.decals) m.scope("paint", () => l.decals!(m, b, X, s));
-        // the cab windows at each end of the centre cab, the louvres along it
-        m.scope("cab windows", () => {
-          for (const d of [GG1_CAB_FROM + 0.75, GG1_BODY - GG1_CAB_FROM - 1.45]) sideWindow(m, b, X, s, d, d + 0.7, 3.0, 3.55);
-        });
-        m.scope("louvres", () => {
-          for (let i = 0; i < 4; i++) {
-            const d = GG1_CAB_FROM + 2.0 + i * 1.3;
-            sideGrille(m, b, X, s, d, d + 0.9, 3.05, 3.55);
-          }
-        });
-        if (l.lettering) m.scope("lettering", () => sideLettering(m, b, X, s, l.lettering!.text, l.lettering!.d, l.lettering!.y, l.lettering!.h, l.lettering!.mat, 0.012));
-        m.scope("number", () => sideLettering(m, b, X, s, l.number, GG1_BODY / 2, l.lettering ? 1.82 : 3.1, 0.24, l.numberMat, 0.012));
-      });
+    m.scope("shell", () => carbodyShell(m, b, X, (_d, _y, region) => (region === "bottom" ? l.under : l.body)));
+    for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => gg1Side(m, b, X, s, l));
   });
-  for (const e of [1, -1])
-    m.scope(e > 0 ? "front end" : "rear end", () => {
-      const at = (d: number) => (e > 0 ? d : GG1_BODY - d);
-      m.scope("windscreen", () => {
-        for (const s of [1, -1]) {
-          const [d0, d1] = e > 0 ? [GG1_CAB_FROM - 0.15, GG1_CAB_FROM + 0.4] : [at(GG1_CAB_FROM + 0.4), at(GG1_CAB_FROM - 0.15)];
-          crownPane(m, b, X, s, "rubber", [d0, d1], [0.15, 0.85], 0.006, 4, 3);
-          crownPane(m, b, X, s, "cabGlass", [d0 + 0.03, d1 - 0.03], [0.2, 0.8], 0.012, 4, 3);
-        }
-      });
-      m.scope("headlight", () => noseLamps(m, b, X, e, [[0, 2.55, 0.13, "lampHead"], [-0.75, 1.95, 0.07, e > 0 ? "lampHead" : "lampRed"], [0.75, 1.95, 0.07, e > 0 ? "lampHead" : "lampRed"]]));
-      m.scope("pilot", () => pilotPlate(m, l.skirt, e, tip - 0.1, 0.15, 1.55, 1.2, 0.45, 0.7));
-      m.scope("coupler", () => knuckleCoupler(m, e, tip - 0.35, GG1_LENGTH / 2, COUPLER_Y));
-      m.scope("running gear", () => gg1Half(m, e, { under: l.under }));
-    });
+  for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => gg1End(m, b, X, e, l));
   m.scope("roof", () => {
-    // the two diamond pantographs over the cab's ends, the rear one raised
+    // the two diamond pantographs on the hoods, the rear one raised
     for (const e of [1, -1])
       m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => {
-        const x = X(e > 0 ? GG1_CAB_FROM + 1.6 : GG1_BODY - GG1_CAB_FROM - 1.6);
-        diamond(m, { xc: x, roofY: 4.33, baseY: 4.62, raised: e < 0 });
+        diamond(m, { xc: e * (GG1_TIP - GG1_PAN_D), roofY: 3.82, baseY: 4.26, raised: e < 0 });
       });
-    m.scope("horn", () => horn(m, 1, X(GG1_CAB_FROM + 3.2), 0.4, 4.48));
+    m.scope("horn", () => horn(m, 1, X(GG1_CAB_D + 0.7), 0.4, 4.25));
   });
   return m;
 }
@@ -3031,12 +3362,27 @@ export function emdF40phLod(params?: ParamValues): MeshBuilder {
 const pickAlcLivery = (v?: ParamValues): AlcLivery => ALC_LIVERIES[resolveParams(ALC_PARAMS, v).livery!]!;
 export function siemensAlc42(params?: ParamValues): MeshBuilder { return buildAlc42(pickAlcLivery(params)); }
 export function siemensAlc42Lod(params?: ParamValues): MeshBuilder { return alcLod(pickAlcLivery(params)); }
-export function prrGg1(params?: ParamValues): MeshBuilder { return buildGg1(pick(GG1_PARAMS, GG1_LIVERIES, params)); }
+export function prrGg1(params?: ParamValues): MeshBuilder { return buildGg1(GG1_LIVERIES[resolveParams(GG1_PARAMS, params).livery!]!); }
+/** The GG1 from afar: the hoods' section with their rounded ends, the raised cab over it, the four running gears and the pantographs. */
 export function prrGg1Lod(params?: ParamValues): MeshBuilder {
-  const tip = GG1_LENGTH / 2 - GG1_REACH;
-  return locoCarbodyLod(GG1_SPEC, pick(GG1_PARAMS, GG1_LIVERIES, params), tip, [7.3, -7.3], 3.3, {
-    rearNose: true, pantographs: [tip - (GG1_BODY - GG1_CAB_FROM - 1.6), tip - (GG1_CAB_FROM + 1.6)], roofY: 4.33,
-  });
+  const l = GG1_LIVERIES[resolveParams(GG1_PARAMS, params).livery!]!;
+  const X = (d: number) => GG1_TIP - d;
+  const tip = (rear: boolean) => ([[GG1_FOOT, 0], [3.62, 0], [3.8, 0.15], [GG1_HOOD, 0.5]] as const).map(([y, d]) => [y, X(rear ? GG1_BODY - d : d)] as const);
+  const setback: Array<readonly [number, number]> = [[GG1_FOOT, 0.9], [GG1_HOOD, 0.7]];
+  const h = gg1Hood(GG1_PAN_D);
+  const body: UnitBody = {
+    y0: GG1_FOOT, hw: [[GG1_FOOT, GG1_W], [GG1_SHELF, GG1_W], [h.Y, h.w], [h.S, h.w * GG1_LEAN], [GG1_HOOD, 0.45]],
+    side: [[GG1_FOOT, GG1_HOOD, l.body]], roof: l.body,
+    front: { tip: tip(false), setback }, rear: { tip: tip(true), setback },
+  };
+  const cab = GG1_TIP - GG1_CAB_D;
+  const pan = GG1_TIP - GG1_PAN_D;
+  const parts: LodPart[] = [
+    roofPart(l.body, -cab, cab, GG1_W, GG1_W * GG1_LEAN, GG1_SHELF, GG1_CAB.C),
+    ...bogieParts([[GG1_DRIVERS[1]!, 2.9], [-GG1_DRIVERS[1]!, 2.9], [9.28, 1.6], [-9.28, 1.6]], GG1_FOOT),
+    ...pantographParts([pan, -pan], GG1_HOOD, 4.26),
+  ];
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...l.palette }, bodies: [body], parts }, 100);
 }
 
 const acelaLodCar = (c: AcelaCar, X: (d: number) => number, cx: number, turned: boolean, section?: number): { body: UnitBody; parts: LodPart[] } => {
