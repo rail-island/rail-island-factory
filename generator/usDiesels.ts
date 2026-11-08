@@ -11,12 +11,15 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { DIESEL_LOCO_CATALOG } from "./cd163.ts";
 import { paint } from "./dieselParts.ts";
 import { buildUsHood, usHoodLod, type Band, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
+import { GP9_PAINT, buildGp9, gp9Lod, type Gp9Livery } from "./usGp9.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 
 // ---------------------------------------------------------------------------
 // Measures (published figures; docs/models/us-diesels.md)
 
+// The GP9 itself is drawn from photographs by usGp9.ts (GP9_BODY); this spec keeps the
+// first, kit-drawn measures that the WDM-2 (inLocos.ts) is built on.
 const GP9_LENGTH = ft(56, 2); // 17.12 m over the couplers
 export const GP9_SPEC: UsHoodSpec = {
   length: GP9_LENGTH, endSill: 8.0, deck: 1.55, sillBottom: 1.15, deckHalf: 1.56,
@@ -114,25 +117,6 @@ function unionPacific(s: UsHoodSpec, number: string): UsLivery {
   };
 }
 
-function pennsylvania(number: string): UsLivery {
-  return {
-    title: "Pennsylvania", railroad: "PENNSYLVANIA", letterH: 0.4, letterY: 1.3, number,
-    palette: pick("prrGreen", "prrBuff", "truckBlack"),
-    body: [[0, 9, "prrGreen"]], roof: "prrGreen", frame: "prrGreen", sillStripe: [0.06, 0.1, "prrBuff"],
-    trucks: "truckBlack", pilot: "prrGreen", letter: "prrBuff", numberMat: "prrBuff", rails: "prrBuff",
-  };
-}
-
-function santaFe(number: string): UsLivery {
-  return {
-    title: "Santa Fe", railroad: "SANTA FE", letterH: 0.55, letterY: 1.15, number,
-    palette: pick("atsfBlue", "atsfYellow", "truckBlack"),
-    body: [[0, 9, "atsfBlue"]], ends: [[0, 9, "atsfYellow"]], cab: [[0, 9, "atsfBlue"]], roof: "atsfBlue",
-    frame: "truckBlack", sillStripe: [0.06, 0.12, "atsfYellow"], trucks: "truckBlack", pilot: "truckBlack",
-    letter: "atsfYellow", numberMat: "atsfYellow", rails: "atsfYellow", noseStripes: "atsfYellow",
-  };
-}
-
 function burlingtonNorthern(s: UsHoodSpec, number: string): UsLivery {
   return {
     title: "BN Cascade", railroad: "BURLINGTON NORTHERN", letterH: 0.36, letterY: 1.3, number,
@@ -187,11 +171,8 @@ function norfolkSouthern(number: string): UsLivery {
 
 type Liveries = Record<string, UsLivery>;
 
-export const GP9_LIVERIES: Liveries = {
-  unionPacific: unionPacific(GP9_SPEC, "150"),
-  pennsylvania: pennsylvania("7006"),
-  santaFe: santaFe("2894"),
-};
+/** The GP9's schemes as photographed (usGp9.ts): UP 211, PRR 7048 and 7000, ATSF 2879. */
+export const GP9_LIVERIES: Record<string, Gp9Livery> = GP9_PAINT;
 export const SD40_LIVERIES: Liveries = {
   burlingtonNorthern: burlingtonNorthern(SD40_SPEC, "7800"),
   conrail: conrail("6450"),
@@ -221,10 +202,10 @@ export const SD70_PARAMS = liveryParam(SD70_LIVERIES);
 const liveryOf = (params: readonly ParamSpec[], l: Liveries, v?: ParamValues): UsLivery => l[resolveParams(params, v).livery!]!;
 
 export function emdGp9(params?: ParamValues): MeshBuilder {
-  return buildUsHood(GP9_SPEC, liveryOf(GP9_PARAMS, GP9_LIVERIES, params));
+  return buildGp9(GP9_LIVERIES[resolveParams(GP9_PARAMS, params).livery!]!);
 }
 export function emdGp9Lod(params?: ParamValues): MeshBuilder {
-  return usHoodLod(GP9_SPEC, liveryOf(GP9_PARAMS, GP9_LIVERIES, params));
+  return gp9Lod(GP9_LIVERIES[resolveParams(GP9_PARAMS, params).livery!]!);
 }
 export function emdSd40(params?: ParamValues): MeshBuilder {
   return buildUsHood(SD40_SPEC, liveryOf(SD40_PARAMS, SD40_LIVERIES, params));
