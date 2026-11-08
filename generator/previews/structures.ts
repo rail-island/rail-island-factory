@@ -166,7 +166,9 @@ function airportSketch(values: ParamValues | undefined, type: string, lod: boole
   const f = layout.footprint;
   s.box(s.mat("deck", AIRPORT_GROUND), { cx: f.cx, cy: -0.2, cz: f.cz, sx: f.w, sy: 0.4, sz: f.d });
   const field = airport.airfield(layout, type, 0);
-  const boxes = lod ? airport.airfieldLowDetail(field.boxes) : [...field.boxes, ...field.details];
+  // the jet bridges at rest, where the game parks them while no aircraft stands at the gate
+  const boxes = lod ? airport.airfieldLowDetail(field.boxes, field.bridges)
+    : [...field.boxes, ...field.details, ...field.bridges.flatMap((b) => airport.jetBridgeBoxes(b, b.rest))];
   for (const b of boxes) {
     // the deck, and a grass strip's mown edges, carry the pavement photo the game binds
     const deck = b.depthLayer === 1;

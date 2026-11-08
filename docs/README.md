@@ -24,6 +24,7 @@
 | [models/vehicles.md](models/vehicles.md) | the procedural road and rail vehicles, budgets, articulation, pantograph operating poses, native-reference calibration and adding a vehicle |
 | [models/buses.md](models/buses.md) | the buses from vlakosimdb: the Karosa short and long families, the single models, the shared bus builder, sources and tests |
 | [models/rider-seat.md](models/rider-seat.md) | where the game's avatar sits riding a vehicle: the seat measured on every vehicle's roof (head section first, clear of pantographs), the `rider` meta field |
+| [models/boarding-door.md](models/boarding-door.md) | where the game's jet bridge docks: the forward left main-deck door measured on every aeroplane (the `door` material's upright panels), the `door` meta field |
 | [models/vehicle-rig.md](models/vehicle-rig.md) | what the game moves: steered front wheels, articulated sections and the joint renderer, the `rig`, `pose()` / `renderJoint()`, the Pose sliders |
 | [models/parameters.md](models/parameters.md) | parametric models: enum parameters, the default-only thumbnail, `params` in the meta entries and the JS model, the site's picker |
 | [models/csd-coaches.md](models/csd-coaches.md) | the CSD coaches from vlakosimdb: sources, the shared coach builder, deviations, the native-raster comparison and tests |
@@ -134,4 +135,5 @@ it was built), not reference.
 - [Tree](../.agents/skills/tree/SKILL.md): five seeds, tree LOD budgets and headless previews.
 - [Road vehicle](../.agents/skills/road-vehicle/SKILL.md): road geometry and articulation.
 - [Railroad vehicle](../.agents/skills/railroad-vehicle/SKILL.md): rail geometry, operating pantographs and verification.
+- [Animal](../.agents/skills/animal/SKILL.md): draft animals' 5,000-triangle budget, jointed legs, faces and gait checks.
 - [Vlakosimdb transfer](../.agents/skills/vlakosimdb-transfer/SKILL.md): XML profiles, native-pixel comparison tables, optimization and user-facing evidence.

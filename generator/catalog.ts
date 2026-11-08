@@ -110,6 +110,13 @@ export interface MetaEntry {
    */
   rider?: [number, number, number];
   /**
+   * Where a jet bridge docks to this aeroplane (boardingDoor.ts): the middle of the
+   * sill of its forward left main-deck door, on the skin -- the model's own frame,
+   * metres. Measured by the build; absent on a helicopter and on a model that draws
+   * no door (docs/models/boarding-door.md).
+   */
+  door?: [number, number, number];
+  /**
    * What the game needs of the model beyond its geometry (design.ts
    * GameProperties): a vehicle's running figures, a ship's draft, a landmark's
    * plaza rules. Always present for a vehicle.
@@ -338,6 +345,7 @@ export function metaEntry(
   rig: VehicleRig | null = null,
   side: ThumbSide | null = null,
   seat: readonly [number, number, number] | null = null,
+  door: readonly [number, number, number] | null = null,
 ): MetaEntry {
   return {
     id: proceduralId(design.id),
@@ -357,6 +365,7 @@ export function metaEntry(
     ...(design.params?.length ? { params: design.params.map((p) => ({ ...p, values: p.values.map((v) => ({ ...v })) })) } : {}),
     ...(rig ? { rig: JSON.parse(JSON.stringify(rig)) as VehicleRig } : {}),
     ...(seat ? { rider: [r4(seat[0]), r4(seat[1]), r4(seat[2])] as [number, number, number] } : {}),
+    ...(door ? { door: [r4(door[0]), r4(door[1]), r4(door[2])] as [number, number, number] } : {}),
     ...gameWithSounds(design, fields),
   };
 }
@@ -506,6 +515,7 @@ export function exportVehicleMeta(
   rigs: ReadonlyMap<string, VehicleRig> = new Map(),
   sides: ReadonlyMap<string, ThumbSide> = new Map(),
   seats: ReadonlyMap<string, readonly [number, number, number]> = new Map(),
+  doors: ReadonlyMap<string, readonly [number, number, number]> = new Map(),
 ): VehicleExportMeta {
   for (const d of designs) {
     checkGameProperties(withoutSounds(d), true);
@@ -514,7 +524,7 @@ export function exportVehicleMeta(
   return {
     note: NOTE,
     count: designs.length,
-    vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null, seats.get(d.id) ?? null)),
+    vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null, seats.get(d.id) ?? null, doors.get(d.id) ?? null)),
   };
 }
 

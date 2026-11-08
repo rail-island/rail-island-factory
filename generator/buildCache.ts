@@ -1,5 +1,6 @@
 // The build cache (docs/guide/build-cache.md): what `pnpm build:models` learns of a
 // design by building it -- its counts and bounds, rig, side-view frame, rider seat,
+// an aircraft's boarding door,
 // the JS bundle's switches, the extents the legacy table and the OpenTTD formations
 // measure, that it passed the z-fighting and LOD checks -- and a confirmed model's
 // thumbnail, kept under build-cache/ and committed, so a build skips every design
@@ -60,6 +61,8 @@ export interface DesignFacts {
   side: SideFrame | null;
   /** A vehicle's rider seat, else null. */
   seat: Vec3 | null;
+  /** An aeroplane's boarding door (boardingDoor.ts), else null; absent from facts written before doors were measured. */
+  door?: Vec3 | null;
   /** The JS bundle's switches (jsModel.ts bundleFlags). */
   bundle: BundleFlags;
   /** The model's extents along x, y and z, by the parameter values measured (paramsKey). */
@@ -166,6 +169,9 @@ export function designKey(graph: SourceGraph, design: ProceduralDesign, source: 
     }))
     .digest("hex");
 }
+
+/** The boarding door's measurement: part of an aircraft's key only, so adding it re-keys no other design. */
+export const BOARDING_DOOR_SOURCE = path.join(GENERATOR_DIR, "boardingDoor.ts");
 
 /** The folder of the per-design facts files. */
 const FACTS_DIR = "facts";

@@ -186,6 +186,9 @@ object is the built group's `userData.rig`.
 
 Every vehicle also carries `rider`: where the game's avatar sits riding it, a point
 on its roof in the model's frame, measured by the build ([rider-seat.md](rider-seat.md)).
+An aeroplane with a drawn door carries `door` too: the middle of its forward left
+main-deck door's sill, where the game's jet bridge docks, measured the same way
+([boarding-door.md](boarding-door.md)).
 The buses take `BUS_CATALOG` (category `Road vehicles`, group `bus`), the trams
 `TRAM_CATALOG` (`Rail vehicles`, group `tram`) and the metro car `METRO_CATALOG`
 (`Rail vehicles`, group `metro`) ([trams.md](trams.md)).

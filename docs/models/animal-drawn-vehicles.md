@@ -67,9 +67,10 @@ a semi-trailer. The rig's `team` is `{ section: 0, rehitchable: false }`.
 
 ## Budget
 
-At most **10,000 triangles and 1,000 more for every animal after the first**, at the default team
-and at each species' biggest (`test/animalDrawn.test.ts`): the body keeps to about 6,000, the
-animals are drawn lighter in a team of four or six (`detailFor`). The distant model is the body's
+At most **10,000 triangles for the vehicle and its team's budget on top** - 5,000 an animal alone or
+in a pair, a bigger team's animals 10,000 together (`animalBudget`; at most 20,000 in all) - at
+every species and team (`test/animalDrawn.test.ts`): the body keeps to about 6,000, the animals
+are drawn lighter in a team of three to six (`detailFor`; [draft-animals.md](draft-animals.md)). The distant model is the body's
 boxes and the team's (`teamLod`), at most 500.
 
 ## Game figures, sounds and OpenTTD
