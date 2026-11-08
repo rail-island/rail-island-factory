@@ -12,7 +12,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLoco, type LocoSpec } from "./steamLoco.ts";
-import type { Steam } from "./steamParts.ts";
+import { mirrored, type Steam } from "./steamParts.ts";
 import { STEAM_CATALOG, UNIT_PARAM } from "./steamLocos.ts";
 import { steamLocoLod } from "./lodSteam.ts";
 import { knuckleCoupler } from "./usHoodKit.ts";
@@ -443,50 +443,254 @@ function bigBoyTenderSpec(): LocoSpec {
 
 // ---------------------------------------------------------------------------
 // PRR K4s 4-6-2: the Pennsylvania's express Pacific, 80 in drivers and a Belpaire firebox
+//
+// Measured on the 1914 general arrangement drawing (assets/prr-k4s/drawing-k4s.jpg, 92.3 px/m
+// from the published 36 ft 2 in wheelbase) and the 1927 builder's photo of 5400 (65.2 px/m from
+// the drivers' 6 ft 11 in pitch); the front end, cab and tender as on the preserved 1361 and 3750
+// (SOURCES.md, "Measurements"). Source x from the front coupler face, 0.17 m ahead of the pilot.
+
+/** The axles: lead truck, drivers (6 ft 11 in apart), the trailing truck 10 ft 6 in behind. */
+const K4_AXLES = [1.27, 3.35, 4.87, 6.98, 9.09, 12.29];
+/** The boiler: the smokebox's centre and radius (the kit adds 4 cm), its front face and end, the conical course's end and the rear rings. */
+const K4_Y = 2.99;
+const K4_R = 0.98;
+const K4_FRONT = 1.43;
+const K4_SMOKEBOX = 3.09;
+const K4_CONE = 7.4;
+const K4_Y1 = 3.07;
+const K4_R1 = 1.1;
+/** The Belpaire firebox's front, the cab's front and rear, the running board's height. */
+const K4_BELPAIRE = 9.17;
+const K4_CAB: [number, number] = [12.97, 14.6];
+const K4_BOARD = 2.05;
+/** The Belpaire firebox's right half: flat sides and a flat top joined by square shoulders. */
+const K4_FIREBOX: Pt[] = [[1.0, 1.55], [1.12, 1.95], [1.12, 3.85], [1.08, 4.03], [0.98, 4.13], [0.84, 4.18], [0, 4.19]];
+const K4_NUMBER = "1361";
+
+/** A quad facing away from `inside`. */
+function k4Quad(m: MeshBuilder, mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3, inside: Vec3): void {
+  const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  let n: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const mid = [(a[0] + c[0]) / 2 - inside[0], (a[1] + c[1]) / 2 - inside[1], (a[2] + c[2]) / 2 - inside[2]];
+  if (n[0] * mid[0]! + n[1] * mid[1]! + n[2] * mid[2]! < 0) n = [-n[0], -n[1], -n[2]];
+  m.facets(mat, [a, b, c, a, c, d], n);
+}
+
+/**
+ * The K4s's cast steel pilot under its beam: a face leaning back toward the rail and
+ * narrowing from the beam's width to the bottom, its cheeks swept back clear of the
+ * lead truck, the coupler through it, the front deck behind the beam, the steps.
+ */
+function k4sPilot(t: Steam): void {
+  const m = t.m;
+  m.scope("front pilot", () => {
+    t.box("black", 0.15, 0.5, 0.95, 1.38, -1.32, 1.32);
+    const P = (x: number, y: number, z: number): Vec3 => [t.X(x), y, z];
+    // the face: from the beam's foot (x 0.18, 1.0 m) to the rail (x 0.45, 0.1 m)
+    const ft: Vec3[] = [P(0.18, 0.98, -1.25), P(0.18, 0.98, 1.25), P(0.45, 0.1, 0.85), P(0.45, 0.1, -0.85)];
+    const bk: Vec3[] = [P(0.8, 0.98, -1.2), P(0.8, 0.98, 1.2), P(0.82, 0.1, 0.85), P(0.82, 0.1, -0.85)];
+    const inside = P(0.5, 0.55, 0);
+    k4Quad(m, "black", ft[0]!, ft[1]!, ft[2]!, ft[3]!, inside);
+    k4Quad(m, "black", bk[0]!, bk[1]!, bk[2]!, bk[3]!, inside);
+    for (const [i, j] of [[0, 3], [1, 2]] as const) k4Quad(m, "black", ft[i]!, bk[i]!, bk[j]!, ft[j]!, inside);
+    k4Quad(m, "black", ft[2]!, ft[3]!, bk[3]!, bk[2]!, inside);
+    // three ribs across the face
+    for (const k of [0.3, 0.55, 0.8]) {
+      const y = 0.98 - k * 0.88, x = 0.18 + k * 0.27, hz = 1.25 - k * 0.4;
+      m.slab("black", [P(x - 0.012, y + 0.035, -hz + 0.05), P(x - 0.012, y + 0.035, hz - 0.05), P(x - 0.012, y - 0.035, hz - 0.05), P(x - 0.012, y - 0.035, -hz + 0.05)], [-0.03, 0, 0]);
+    }
+    // the deck behind the beam, up to the smokebox saddle
+    t.box("black", 0.48, 1.5, 1.32, 1.36, -1.25, 1.25);
+    // the steps at the beam's ends and up to the front platform
+    for (const s of [-1, 1]) {
+      t.sideBox("black", s, 0.25, 0.55, 0.5, 0.54, 1.2, 1.42);
+      for (const y of [1.6, 1.82]) t.sideBox("black", s, 0.98, 1.22, y - 0.03, y, 1.2, 1.42);
+      t.sideBox("black", s, 1.2, 1.23, 1.36, K4_BOARD - 0.04, 1.2, 1.42);
+    }
+    knuckleCoupler(m, 1, t.X(0) - 0.6, t.X(0), COUPLER_Y);
+  });
+}
+
+/** The K4s's smokebox front: the keystone number plate on the door, the headlight on top with its number boards, the turbo-generator, the marker lamps. */
+function k4sFront(t: Steam): void {
+  const m = t.m;
+  m.scope("keystone", () => {
+    // the PRR keystone: gold rim, red field, gold number, on the door over the dart handle
+    const X = t.X(K4_FRONT) + 0.105;
+    const shape = (k: number): Vec3[] => ([[-0.23, 0.24], [0.23, 0.24], [0.23, 0.16], [0.15, -0.24], [-0.15, -0.24], [-0.23, 0.16]] as const).map(([z, y]): Vec3 => [X, K4_Y - 0.04 + y * k, z * k]);
+    m.slab("gold", shape(1), [-0.015, 0, 0]);
+    m.slab("keystone", shape(0.86).map(([x, y, z]): Vec3 => [x + 0.004, y, z]), [-0.006, 0, 0]);
+    bbLegend(m, K4_NUMBER, [X + 0.004, K4_Y - 0.02, 0], [0, 0, -1], [0, 1, 0], [1, 0, 0], 0.13);
+  });
+  m.scope("headlight", () => {
+    // the electric headlight on top of the smokebox front, its number boards on its sides
+    t.cylX("black", 1.12, 1.78, 0, 4.24, 0.25, 12);
+    t.cylX("lampHead", 1.11, 1.12, 0, 4.24, 0.19, 12);
+    t.box("black", 1.3, 1.72, 3.96, 4.02, -0.16, 0.16);
+    for (const s of [-1, 1]) {
+      t.sideBox("black", s, 1.3, 1.64, 4.1, 4.36, 0.25, 0.29);
+      bbLegend(m, K4_NUMBER, [t.X(1.47), 4.23, s * 0.29], [s, 0, 0], [0, 1, 0], [0, 0, s], 0.13);
+    }
+  });
+  m.scope("turbo-generator", () => {
+    t.cylZ("black", 1.95, 4.12, -0.2, 0.2, 0.13, 8);
+    t.box("black", 1.85, 2.05, 3.95, 4.04, -0.12, 0.12);
+  });
+  m.scope("smokebox door ring", () => {
+    // the door's rim and eight of its dogs on the smokebox front
+    const X = t.X(K4_FRONT);
+    m.tube("smokeboxRim", "x", 0, K4_Y, K4_R * 0.82 + 0.06, K4_R * 0.82 - 0.03, X + 0.01, X + 0.05, 16, Math.PI / 16);
+    for (let k = 0; k < 8; k++) {
+      const a = Math.PI / 8 + (k * Math.PI) / 4;
+      const [z, y] = [Math.cos(a) * (K4_R * 0.82 + 0.12), K4_Y + Math.sin(a) * (K4_R * 0.82 + 0.12)];
+      t.box("smokeboxRim", K4_FRONT - 0.04, K4_FRONT + 0.01, y - 0.035, y + 0.035, z - 0.035, z + 0.035);
+    }
+  });
+  m.scope("grab rail", () => {
+    // across the smokebox front over the door, on two stand-offs
+    m.rod("steel", [t.X(K4_FRONT - 0.07), 3.86, -0.5], [t.X(K4_FRONT - 0.07), 3.86, 0.5], 0.02, 6);
+    for (const z of [-0.45, 0.45]) t.box("steel", K4_FRONT - 0.07, K4_FRONT + 0.02, 3.845, 3.875, z - 0.015, z + 0.015);
+  });
+  m.scope("marker lamps", () => {
+    for (const s of [-1, 1]) {
+      t.box("black", K4_FRONT - 0.1, K4_FRONT + 0.06, 3.55, 3.72, s * 0.72 - 0.07, s * 0.72 + 0.07);
+      t.endPanel("glass", 1, K4_FRONT - 0.1, s * 0.72 - 0.045, s * 0.72 + 0.045, 3.59, 3.68, 0.01);
+    }
+  });
+}
+
+/** The boiler behind the smokebox, the pipes, the handrails, the fittings on the running boards. */
+function k4sBoiler(t: Steam): void {
+  const m = t.m;
+  const P = (x: number, y: number, z: number): Vec3 => [t.X(x), y, z];
+  m.scope("boiler", () => {
+    // the conical course up to the rear rings, which run into the Belpaire firebox
+    const ring = (r: number, y: number) => ngon(20, r, Math.PI / 20, 0, y);
+    m.sweep("paint", "x", ring(K4_R1, K4_Y1), t.X(K4_CONE), ring(K4_R + 0.02, K4_Y), t.X(K4_SMOKEBOX), false);
+    t.cylX("paint", K4_CONE, K4_BELPAIRE + 0.15, 0, K4_Y1, K4_R1, 20, false);
+  });
+  m.scope("steam pipes", () => {
+    // outside steam pipes from the smokebox's sides down through the running board to the steam chests
+    for (const s of [-1, 1]) {
+      m.rod("paint", P(2.72, 2.6, s * 0.84), P(2.66, 2.0, s * 1.14), 0.12, 8);
+      m.rod("paint", P(2.66, 2.0, s * 1.14), P(2.52, 1.62, s * 1.2), 0.12, 8);
+    }
+  });
+  m.scope("handrails", () => {
+    // 8 cm off the smokebox, the conical course and the firebox's flat sides
+    const y = 3.45;
+    const pts: Array<[number, number]> = [[1.6, 0.99], [K4_SMOKEBOX, 0.99], [K4_CONE, 1.11], [K4_BELPAIRE - 0.1, 1.11], [K4_BELPAIRE + 0.05, 1.2], [K4_CAB[0] - 0.05, 1.2]];
+    for (const s of [-1, 1]) {
+      for (let i = 0; i + 1 < pts.length; i++) m.rod("steel", P(pts[i]![0], y, s * pts[i]![1]), P(pts[i + 1]![0], y, s * pts[i + 1]![1]), 0.02, 6, false);
+      for (const [x, z] of [[2.2, 0.99], [5.2, 1.04], [8.2, 1.11], [11.2, 1.2]] as const) t.sideBox("steel", s, x - 0.015, x + 0.015, y - 0.015, y + 0.015, z - 0.13, z - 0.015);
+    }
+  });
+  m.scope("air pumps", () => {
+    // the cross-compound air pump on the left running board ahead of the firebox
+    for (const x of [8.2, 8.58]) {
+      t.cylY("pipe", x, -1.27, K4_BOARD, 2.95, 0.15, 10);
+      t.cylY("pipe", x, -1.27, 2.95, 3.02, 0.11, 10);
+    }
+    // on the right, the pumps hung under the running board ahead of the drivers, clear of the crosshead
+    for (const x of [3.33, 3.72]) {
+      t.cylY("pipe", x, 1.47, 1.45, K4_BOARD - 0.04, 0.17, 10, false);
+      t.cylY("pipe", x, 1.47, 1.38, 1.45, 0.12, 10, false);
+    }
+  });
+  m.scope("running board box", () => t.sideBox("pipe", 1, 4.9, 6.3, K4_BOARD, 2.45, 1.16, 1.45));
+  m.scope("reach rod", () => m.rod("steel", P(12.9, 2.22, -1.32), P(5.4, 2.22, -1.32), 0.025, 6));
+  m.scope("whistle", () => {
+    t.cylY("steel", 10.0, 0.3, 4.1, 4.4, 0.045, 8);
+    t.cylY("brass", 10.0, 0.3, 4.4, 4.48, 0.06, 8);
+  });
+}
+
+/** The cab: its long roof over the firebox's back and the tender's front, the number plates, the ladders. */
+function k4sCab(t: Steam): void {
+  const m = t.m;
+  m.scope("cab roof", () => {
+    m.scope("roof", () => t.section("roof", 12.92, 15.25, mirrored([[1.63, 3.58], [1.6, 3.9], [1.38, 4.15], [0.9, 4.33], [0, 4.39]])));
+    // the hood forward over the firebox's back, shading the front windows
+    m.scope("hood", () => t.section("roof", 11.8, 13.1, mirrored([[1.3, 3.92], [1.22, 4.12], [0.9, 4.3], [0, 4.36]])));
+    m.scope("ventilator", () => t.box("roof", 12.95, 14.9, 4.37, 4.45, -0.18, 0.18));
+  });
+  m.scope("numbers", () => {
+    for (const s of [-1, 1]) {
+      // gold-rimmed plate under the window
+      t.sideBox("gold", s, 13.47, 14.13, 2.21, 2.56, 1.558, 1.568);
+      t.sidePlate(s, 13.8, 2.28, K4_NUMBER, 1.56, 0.17);
+    }
+  });
+  m.scope("cab steps", () => {
+    for (const s of [-1, 1]) {
+      for (const x of [14.25, 14.55]) t.sideBox("black", s, x - 0.025, x + 0.025, 0.95, 1.95, 1.42, 1.5);
+      for (const y of [1.0, 1.4]) t.sideBox("black", s, 14.27, 14.53, y - 0.03, y, 1.42, 1.5);
+      t.sideBox("steel", s, 14.62, 14.65, 2.1, 3.4, 1.5, 1.53);
+    }
+  });
+}
 
 function k4sSpec(): LocoSpec {
+  const [lead0, lead1, d0, d1, d2, trail] = K4_AXLES as [number, number, number, number, number, number];
   return {
     title: "PRR K4s",
-    palette: { ...US_STEAM_PALETTE, paint: { color: "#1e2b23", roughness: 0.55 }, wheel: { color: "#1c1d1f", roughness: 0.6 }, frame: { color: "#1c1d1f", roughness: 0.65 }, lining: { color: "#d4b05a", roughness: 0.4 }, plate: { color: "#1e2b23", roughness: 0.55 }, plateText: { color: "#d4b05a", roughness: 0.4 } },
-    heads: [0, 16.2],
-    beams: { front: false, rear: false },
-    boiler: { x0: 1.0, x1: 11.2, y: 3.05, r: 0.95, smokebox: 1.9, bands: [4.6, 7.0, 9.4] },
-    chimney: { x: 2.0, top: 4.55, r: 0.3 },
-    domes: [{ x: 4.8, top: 4.35, r: 0.4, len: 1.1 }, { x: 7.1, top: 4.38, r: 0.42 }],
-    valves: { x: 10.2, top: 4.3 },
-    handrail: { x0: 2.0, x1: 11.0, y: 3.25 },
-    runningBoard: { profile: [[0.8, 1.5], [2.0, 1.5], [2.4, 2.15], [12.0, 2.15]], half: 1.5, valance: 0.08 },
-    frame: { x0: 0.8, x1: 14.8, top: 2.05 },
-    cab: {
-      x0: 12.0, x1: 14.9, half: [[1.55, 1.9], [1.55, 3.95], [1.35, 4.25], [0.85, 4.45], [0, 4.52]], roofY: 4.2,
-      windows: [{ x0: 12.35, x1: 13.1, y0: 3.15, y1: 3.8 }, { x0: 13.3, x1: 14.1, y0: 3.15, y1: 3.8 }],
-      front: [{ z0: 0.85, z1: 1.3, y0: 3.4, y1: 3.85 }, { z0: -1.3, z1: -0.85, y0: 3.4, y1: 3.85 }],
+    palette: {
+      ...US_STEAM_PALETTE,
+      // Brunswick green, near black; the smokebox and stack graphite
+      paint: { color: "#1f2c24", roughness: 0.55 }, wheel: { color: "#1c1d1f", roughness: 0.6 }, frame: { color: "#1c1d1f", roughness: 0.65 },
+      smokebox: { color: "#3c3f42", roughness: 0.7, metallic: 0.2 },
+      smokeboxRim: { color: "#55595d", roughness: 0.5, metallic: 0.3 },
+      roof: { color: "#1b231e", roughness: 0.7 },
+      lining: { color: "#d4b05a", roughness: 0.4 }, gold: { color: "#c9a24e", roughness: 0.4, metallic: 0.3 },
+      plate: { color: "#1f2c24", roughness: 0.55 }, plateText: { color: "#d4b05a", roughness: 0.4 },
+      keystone: { color: "#b3261e", roughness: 0.5 },
+      pipe: { color: "#2a2e2c", roughness: 0.45, metallic: 0.3 },
     },
-    // the Belpaire firebox: flat-topped with square shoulders
-    prisms: [{ name: "firebox", x0: 9.6, x1: 12.0, half: [[1.15, 2.3], [1.15, 3.8], [1.05, 4.08], [0.8, 4.2], [0, 4.22]] }],
-    bogies: [{ x0: 1.5, x1: 4.2, y: 0.6 }],
+    heads: [0, 14.86],
+    beams: { front: false, rear: false },
+    // the smokebox; the conical course and the rear rings are drawn over the barrel's stub (k4sBoiler)
+    boiler: { x0: K4_FRONT, x1: K4_SMOKEBOX + 0.2, y: K4_Y, r: K4_R, smokebox: K4_SMOKEBOX - K4_FRONT, bands: [] },
+    chimney: { x: 2.48, top: 4.57, r: 0.3 },
+    // the sand dome and the steam dome
+    domes: [{ x: 5.96, top: 4.53, r: 0.5 }, { x: 8.07, top: 4.45, r: 0.45 }],
+    valves: { x: 9.6, top: 4.42 },
+    // the front platform ahead of the smokebox, the running boards along the boiler
+    runningBoard: { profile: [[0.95, K4_BOARD], [K4_CAB[0] + 0.03, K4_BOARD]], half: 1.5, valance: 0.1 },
+    frame: { x0: 1.4, x1: 14.45, top: 1.6 },
+    cab: {
+      x0: K4_CAB[0], x1: K4_CAB[1], half: [[1.56, 1.95], [1.56, 3.62], [1.5, 3.88], [1.3, 4.1], [0.85, 4.25], [0, 4.3]], roofY: 4.3,
+      // the sash window in two panes; the front windows beside the firebox
+      windows: [{ x0: 13.56, x1: 13.98, y0: 2.74, y1: 3.42 }, { x0: 14.04, x1: 14.46, y0: 2.74, y1: 3.42 }],
+      front: [{ z0: 1.15, z1: 1.48, y0: 2.95, y1: 3.5 }, { z0: -1.48, z1: -1.15, y0: 2.95, y1: 3.5 }],
+    },
+    prisms: [{ name: "firebox", x0: K4_BELPAIRE, x1: K4_CAB[0] + 0.08, half: K4_FIREBOX }],
+    bogies: [{ x0: lead0 - 0.35, x1: lead1 + 0.35, y: 0.55 }, { x0: trail - 0.6, x1: trail + 0.65, y: 0.68 }],
     gear: {
       wheels: [
-        { x: 2.15, d: ft(0, 36), spokes: 10, outsideBoxes: true },
-        { x: 3.65, d: ft(0, 36), spokes: 10, outsideBoxes: true },
-        { x: 5.6, d: ft(0, 80), spokes: 20 },
-        { x: 7.8, d: ft(0, 80), spokes: 20 },
-        { x: 10.0, d: ft(0, 80), spokes: 20 },
-        { x: 12.75, d: ft(0, 50), spokes: 12, outsideBoxes: true },
+        { x: lead0, d: ft(0, 36), spokes: 10, outsideBoxes: true },
+        { x: lead1, d: ft(0, 36), spokes: 10, outsideBoxes: true },
+        { x: d0, d: ft(0, 80), spokes: 20 },
+        { x: d1, d: ft(0, 80), spokes: 20 },
+        { x: d2, d: ft(0, 80), spokes: 20 },
+        { x: trail, d: ft(0, 50), spokes: 12, outsideBoxes: true },
       ],
-      engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 2.3, x1: 3.5, y: 1.1, r: 0.38 }, crank: 0.36, phase: 0.4, valveGear: true }],
-      cylinderZ: 1.15, reference: 3, wheelMaterial: "wheel",
+      // 27 by 28 in cylinders
+      engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 1.92, x1: 3.06, y: 1.03, r: 0.4 }, crank: 0.356, phase: 0.4, valveGear: true }],
+      cylinderZ: 1.2, reference: 3, wheelMaterial: "wheel",
     },
-    number: { text: "1361", side: [13.6, 2.6, 1.55], front: [1.02, 2.55] },
     extras: (t) => {
-      headlight(t, 1.0, 4.1, 0.2);
-      bell(t, 2.8, 3.95);
-      pilot(t, 1, 0, 1.35, 1.3, "black", false, 0.8);
-      t.m.scope("drawbar", () => t.box("black", 14.9, 16.2, 0.8, 1.0, -0.15, 0.15));
+      k4sBoiler(t);
+      bell(t, 4.06, 4.06);
+      k4sFront(t);
+      k4sPilot(t);
+      k4sCab(t);
+      t.m.scope("drawbar", () => t.box("black", 14.4, 14.86, 0.8, 1.0, -0.15, 0.15));
     },
   };
 }
 
+/** The 130-P-75 tender 1361 has carried since the 1950s: 13,475 US gallons and 22 tons of coal. */
 function k4sTenderSpec(): LocoSpec {
   return {
     title: "PRR K4s tender",
@@ -495,16 +699,42 @@ function k4sTenderSpec(): LocoSpec {
     beams: { front: false, rear: false },
     frame: { x0: 0.3, x1: 12.9, top: 1.3 },
     prisms: [
-      { name: "tank", x0: 0.3, x1: 12.8, half: [[1.55, 1.3], [1.55, 3.55]] },
-      { name: "coal sides", x0: 0.6, x1: 5.6, half: [[1.55, 3.55], [1.55, 3.9]] },
+      // flat sides, the lower edge turned in over the trucks, the top edge rounded
+      { name: "tank", x0: 0.45, x1: 12.8, half: [[1.45, 1.3], [1.55, 1.42], [1.55, 3.55], [1.5, 3.62]] },
+      // the coal space's raised sides over the front
+      { name: "coal sides", x0: 0.5, x1: 5.0, half: [[1.55, 3.55], [1.55, 4.0], [1.47, 4.06]] },
     ],
-    coal: { x0: 0.8, x1: 5.4, y: 3.9, half: 1.35, rise: 0.4 },
+    coal: { x0: 0.7, x1: 4.85, y: 4.0, half: 1.4, rise: 0.3 },
     bogies: [{ x0: 1.2, x1: 4.6, y: 0.6 }, { x0: 8.4, x1: 11.8, y: 0.6 }],
     gear: { wheels: [1.7, 2.9, 4.1, 8.9, 10.1, 11.3].map((x) => ({ x, d: ft(0, 36), spokes: 0 })), engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel" },
-    lamps: { front: [], rear: [[12.82, 3.2, 0]] },
+    lamps: { front: [], rear: [[12.72, 3.62, 0]] },
     extras: (t) => {
-      t.m.scope("lettering", () => { for (const s of [-1, 1]) t.sidePlate(s, 6.8, 2.6, "PENNSYLVANIA", 1.55, 0.3); });
-      pilot(t, -1, 13.4, 1.3, 1.2, "black");
+      const m = t.m;
+      // the coal space's sides sloping down to the tank top behind it
+      m.scope("coal sides", () => { for (const s of [-1, 1]) t.deflector(s, [[5.0, 3.56], [5.95, 3.56], [5.0, 4.0]], 1.52); });
+      // "PENNSYLVANIA" in gold Roman letters along the tank's middle
+      m.scope("lettering", () => {
+        const h = 0.34, w = h * 0.66, gap = h * 0.45;
+        const width = strokeWidth("PENNSYLVANIA", w, gap);
+        for (const s of [-1, 1]) {
+          const u0 = t.X(6.6) + (s > 0 ? -width / 2 : width / 2);
+          m.facets("plateText", strokeText("PENNSYLVANIA", u0, 2.2, h, w, gap, s < 0, h * 0.13).map(([u, v]): Vec3 => [u, v, s * 1.554]), [0, 0, s]);
+        }
+      });
+      m.scope("top fittings", () => {
+        // the water hatch
+        t.cylY("black", 9.4, 0, 3.55, 3.74, 0.36, 12);
+      });
+      m.scope("rear ladders", () => {
+        for (const s of [-1, 1]) for (const z of [1.2, 1.46]) t.sideBox("steel", s, 12.8, 12.85, 1.4, 3.55, z - 0.02, z + 0.02);
+      });
+      m.scope("front steps", () => {
+        for (const s of [-1, 1]) {
+          for (const x of [0.5, 0.8]) t.sideBox("black", s, x - 0.025, x + 0.025, 0.95, 1.3, 1.42, 1.5);
+          t.sideBox("black", s, 0.52, 0.78, 1.0, 1.03, 1.42, 1.5);
+        }
+      });
+      pilot(t, -1, 13.4, 1.3, 1.2, "black", false, 0.45);
     },
   };
 }
@@ -695,7 +925,11 @@ export function upBigBoyLod(params?: ParamValues): MeshBuilder {
   return steamLocoLod(spec.boiler ? { ...spec, domes: BB_DOMES } : spec, 200);
 }
 export function prrK4s(params?: ParamValues): MeshBuilder { return buildLoco(k4s(params)); }
-export function prrK4sLod(params?: ParamValues): MeshBuilder { return steamLocoLod(k4s(params)); }
+export function prrK4sLod(params?: ParamValues): MeshBuilder {
+  // from afar the boiler runs at the conical course's mean size from the smokebox into the firebox
+  const spec = k4s(params);
+  return steamLocoLod(spec.boiler ? { ...spec, boiler: { ...spec.boiler, x1: K4_BELPAIRE + 0.1, y: 3.03, r: 1.03 } } : spec);
+}
 export function nycHudson(params?: ParamValues): MeshBuilder { return buildLoco(hudson(params)); }
 export function nycHudsonLod(params?: ParamValues): MeshBuilder { return steamLocoLod(hudson(params), 200); }
 export function american440(params?: ParamValues): MeshBuilder { return buildLoco(american(params)); }
