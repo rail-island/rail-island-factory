@@ -1091,7 +1091,7 @@ const gg1Lerp = (t: readonly Pt[], x: number): number => {
 };
 
 /** The end's plan: blunt, rounding to the full width over its first metre. */
-const GG1_NOSE = { len: 1.0, tip: 0.45, power: 2.0 };
+const GG1_NOSE = { len: 1.15, tip: 0.38, power: 2.0 };
 /** The hood's crown and shoulder by d: the end stands nearly upright and rounds over at its top. */
 const GG1_NOSE_C: Pt[] = [[0, 3.62], [0.06, 3.73], [0.15, 3.8], [0.3, 3.845], [0.5, GG1_HOOD]];
 const GG1_NOSE_S: Pt[] = [[0, 3.45], [0.2, 3.52], [0.5, 3.56]];
@@ -1139,7 +1139,7 @@ function gg1Body(): SliceBody {
   const sec = (d: number) => gg1Section(Math.min(d, L - d));
   const k = (d: number) => gg1Plan(Math.min(d, L - d));
   const st = new Set<number>();
-  const at = [0, 0.03, 0.06, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 0.9, 1.0, GG1_CAB_D - GG1_SWEEP[0], GG1_CAB_D - 1.5, GG1_CAB_D - 0.95, GG1_CAB_D - 0.5, GG1_CAB_D - 0.2, GG1_CAB_D, GG1_CAB_D + GG1_RAKE / 3, GG1_CAB_D + (2 * GG1_RAKE) / 3, GG1_CAB_D + GG1_RAKE];
+  const at = [0, 0.03, 0.06, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 0.9, 1.0, 1.15, GG1_CAB_D - GG1_SWEEP[0], GG1_CAB_D - 1.5, GG1_CAB_D - 0.95, GG1_CAB_D - 0.5, GG1_CAB_D - 0.2, GG1_CAB_D, GG1_CAB_D + GG1_RAKE / 3, GG1_CAB_D + (2 * GG1_RAKE) / 3, GG1_CAB_D + GG1_RAKE];
   for (const d of at) for (const x of [d, L - d]) st.add(Math.round(x * 1000) / 1000);
   return {
     length: L,
@@ -1202,7 +1202,7 @@ const GG1_MEET: Pt = [0.14, 1.3];
 
 /** Stripe i's path from the front end's meeting point to the rear's: a quarter ellipse down from where it leaves the level (higher stripes further back). */
 export function gg1StripePath(i: number): Array<[number, number, number]> {
-  const y = GG1_STRIPES[i]!, d0 = 1.55 + 0.2 * i, [dc, yc] = GG1_MEET;
+  const y = GG1_STRIPES[i]!, d0 = 1.8 + 0.22 * i, [dc, yc] = GG1_MEET;
   const bend: Array<[number, number, number]> = [];
   const n = 14;
   for (let j = n; j >= 0; j--) {
@@ -1307,7 +1307,7 @@ function gg1Side(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: numb
       // over the grilles' slats: the stripes run across them
       for (let i = 0; i < GG1_STRIPES.length; i++) gg1Decal(m, b, X, s, mat, gg1Ribbon(gg1StripePath(i)), 0.009);
       // the fine line along the body's foot, round both ends
-      const foot: Array<[number, number, number]> = [0, 0.05, 0.1, 0.2, 0.3, 0.45, 0.6, 0.8, 1.0].map((d) => [d, 1.29, 0.015]);
+      const foot: Array<[number, number, number]> = [0, 0.05, 0.1, 0.2, 0.3, 0.45, 0.6, 0.8, 1.0, 1.15].map((d) => [d, 1.29, 0.015]);
       gg1Decal(m, b, X, s, mat, gg1Ribbon([...foot, ...[...foot].reverse().map(([d, y, w]): [number, number, number] => [L - d, y, w])]), 0.005);
       // the teardrops behind the marker housings
       for (const e of [1, -1]) {
