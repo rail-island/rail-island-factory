@@ -123,6 +123,17 @@ export interface RunningGearSpec {
    * it in the x-y plane (positive upward) and `dz` outward from the rods' plane.
    */
   crossheadParts?: (m: MeshBuilder, s: number, at: (k: number, off?: number, dz?: number) => Vec3) => void;
+  /**
+   * Leaner wheels, for an engine with many big drivers (the Big Boy's sixteen): a
+   * disc wheel's centre drawn as its two faces only (its rim lies hidden inside the
+   * tyre), hubs and crank pin bosses with 8 sides. Off by default.
+   */
+  leanWheels?: boolean;
+  /**
+   * Openings drawn on the outer face of every coupled disc wheel: `n` dark lozenges
+   * round the hub (a Boxpok centre read from afar), 2 triangles each. None by default.
+   */
+  discOpenings?: number;
 }
 
 /**
@@ -675,7 +686,8 @@ export class RunningGear {
     const mat = this.spec.wheelMaterial;
     m.scope("tyre", () => m.tube("tyre", "z", X, ay, R, ri, ...side(s, Z.tyre0, Z.tyre1), n, -Math.PI / 2 + Math.PI / n));
     const hubR = Math.max(0.13, R * 0.2);
-    m.scope("hub", () => pin(m, mat, s, [X, ay], hubR, Z.tyre0 + 0.01, Z.hub1, w.spokes >= 8 ? w.spokes : 12));
+    const lean = this.spec.leanWheels === true;
+    m.scope("hub", () => pin(m, mat, s, [X, ay], hubR, Z.tyre0 + 0.01, Z.hub1, lean ? 8 : w.spokes >= 8 ? w.spokes : 12));
     const zo = s * Z.spoke1;
     if (w.spokes > 0 && w.box) {
       m.scope("spokes", () => {
@@ -716,10 +728,36 @@ export class RunningGear {
       m.scope("disc", () => {
         const disc = ngon(n, ri + 0.01, -Math.PI / 2 + Math.PI / n, X, ay);
         const [a, b] = side(s, Z.spoke0 + 0.02, Z.spoke1 - 0.02);
-        m.sweep(mat, "z", disc, a, disc, b);
+        if (!lean) m.sweep(mat, "z", disc, a, disc, b);
+        else {
+          // the two faces; the rim between them is inside the tyre
+          for (const [z, dir] of [[a, -1], [b, 1]] as const) {
+            const pts: Vec3[] = [];
+            for (let k = 1; k + 1 < disc.length; k++) pts.push([disc[0]![0], disc[0]![1], z], [disc[k]![0], disc[k]![1], z], [disc[k + 1]![0], disc[k + 1]![1], z]);
+            m.facets(mat, pts, [0, 0, dir]);
+          }
+        }
       });
     }
     if (phi === null) return;
+    const holes = this.spec.discOpenings ?? 0;
+    if (w.spokes === 0 && holes > 0) {
+      m.scope("openings", () => {
+        // on the disc's outer face, 3 mm proud: radial lozenges between hub and rim
+        const z = s * (Z.spoke1 - 0.02 + 0.003);
+        const [r0, r1] = [hubR + 0.04, ri - 0.04];
+        const rm = (r0 + r1) / 2;
+        const half = Math.min(0.42, (Math.PI / holes) * 0.62);
+        const pts: Vec3[] = [];
+        for (let k = 0; k < holes; k++) {
+          const a = phi + Math.PI / holes + (k / holes) * Math.PI * 2;
+          const at = (r: number, da: number): Vec3 => { const p = add([X, ay], polar(r, a + da)); return [p[0], p[1], z]; };
+          const q = [at(r0, 0), at(rm, -half), at(r1, 0), at(rm, half)];
+          pts.push(q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!);
+        }
+        m.facets("coal", pts, [0, 0, s]);
+      });
+    }
     const rc = main ? main.e.crank : this.spec.engines.find((e) => e.coupled.some((i) => this.spec.wheels[i] === w))?.crank ?? 0.3;
     const crank = add([X, ay], polar(rc, phi));
     m.scope("counterweight", () => {
@@ -731,7 +769,7 @@ export class RunningGear {
     });
     m.scope("crank pin", () => {
       // the boss on the wheel, and the pin through the rods outside it
-      pin(m, mat, s, crank, 0.13, Z.spoke0, Z.boss1, 12);
+      pin(m, mat, s, crank, 0.13, Z.spoke0, Z.boss1, lean ? 8 : 12);
       pin(m, "steel", s, crank, 0.05, Z.boss1 - 0.01, main ? Z.main1 + 0.012 : Z.coupling1 + 0.012);
     });
     if (main?.e.valveGear) {
