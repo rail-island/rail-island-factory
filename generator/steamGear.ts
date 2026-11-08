@@ -123,6 +123,12 @@ export interface RunningGearSpec {
    * it in the x-y plane (positive upward) and `dz` outward from the rods' plane.
    */
   crossheadParts?: (m: MeshBuilder, s: number, at: (k: number, off?: number, dz?: number) => Vec3) => void;
+  /**
+   * Leaner wheels, for an engine with many big drivers (the Big Boy's sixteen): a
+   * disc wheel's centre drawn as its two faces only (its rim lies hidden inside the
+   * tyre), hubs and crank pin bosses with 8 sides. Off by default.
+   */
+  leanWheels?: boolean;
 }
 
 /**
@@ -675,7 +681,8 @@ export class RunningGear {
     const mat = this.spec.wheelMaterial;
     m.scope("tyre", () => m.tube("tyre", "z", X, ay, R, ri, ...side(s, Z.tyre0, Z.tyre1), n, -Math.PI / 2 + Math.PI / n));
     const hubR = Math.max(0.13, R * 0.2);
-    m.scope("hub", () => pin(m, mat, s, [X, ay], hubR, Z.tyre0 + 0.01, Z.hub1, w.spokes >= 8 ? w.spokes : 12));
+    const lean = this.spec.leanWheels === true;
+    m.scope("hub", () => pin(m, mat, s, [X, ay], hubR, Z.tyre0 + 0.01, Z.hub1, lean ? 8 : w.spokes >= 8 ? w.spokes : 12));
     const zo = s * Z.spoke1;
     if (w.spokes > 0 && w.box) {
       m.scope("spokes", () => {
@@ -716,7 +723,15 @@ export class RunningGear {
       m.scope("disc", () => {
         const disc = ngon(n, ri + 0.01, -Math.PI / 2 + Math.PI / n, X, ay);
         const [a, b] = side(s, Z.spoke0 + 0.02, Z.spoke1 - 0.02);
-        m.sweep(mat, "z", disc, a, disc, b);
+        if (!lean) m.sweep(mat, "z", disc, a, disc, b);
+        else {
+          // the two faces; the rim between them is inside the tyre
+          for (const [z, dir] of [[a, -1], [b, 1]] as const) {
+            const pts: Vec3[] = [];
+            for (let k = 1; k + 1 < disc.length; k++) pts.push([disc[0]![0], disc[0]![1], z], [disc[k]![0], disc[k]![1], z], [disc[k + 1]![0], disc[k + 1]![1], z]);
+            m.facets(mat, pts, [0, 0, dir]);
+          }
+        }
       });
     }
     if (phi === null) return;
@@ -731,7 +746,7 @@ export class RunningGear {
     });
     m.scope("crank pin", () => {
       // the boss on the wheel, and the pin through the rods outside it
-      pin(m, mat, s, crank, 0.13, Z.spoke0, Z.boss1, 12);
+      pin(m, mat, s, crank, 0.13, Z.spoke0, Z.boss1, lean ? 8 : 12);
       pin(m, "steel", s, crank, 0.05, Z.boss1 - 0.01, main ? Z.main1 + 0.012 : Z.coupling1 + 0.012);
     });
     if (main?.e.valveGear) {

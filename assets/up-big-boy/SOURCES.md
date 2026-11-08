@@ -13,6 +13,10 @@ Used for: Big Boy 4014 at Cajon Summit and from the side: the boiler, the two en
 |---|---|---|---|---|
 | `photo-big-boy-4014-cajon.jpg` | Union Pacific Big Boy 4014 Cajon Summit October 13th, 2019.jpg | https://commons.wikimedia.org/wiki/File:Union_Pacific_Big_Boy_4014_Cajon_Summit_October_13th,_2019.jpg | Fan Railer | CC BY-SA 4.0 |
 | `photo-big-boy-4014-side.jpg` | Union Pacific Big Boy 4014 (14055328885).jpg | https://commons.wikimedia.org/wiki/File:Union_Pacific_Big_Boy_4014_(14055328885).jpg | Raymond Shobe | CC BY-SA 2.0 |
+| `photo-up-4014-porta-road-altoona-pa.jpg` | UP 4014 Porta Road Altoona PA.jpg | https://commons.wikimedia.org/wiki/File:UP_4014_Porta_Road_Altoona_PA.jpg | Fan Railer | CC BY-SA 4.0 | smokebox front, headlight, number boards, pilot deck and air pumps |
+| `photo-union-pacific-big-boy-4012-may-10th-2021.jpg` | Union Pacific Big Boy 4012 May 10th, 2021.jpg | https://commons.wikimedia.org/wiki/File:Union_Pacific_Big_Boy_4012_May_10th,_2021.jpg | Fan Railer | CC BY-SA 4.0 | side elevation |
+| `photo-union-pacific-big-boy-4-8-8-4-4018-at-fair-park-09-2006-0.jpg` | Union Pacific Big Boy 4-8-8-4 -4018 at Fair Park 09.2006 0.jpg | https://commons.wikimedia.org/wiki/File:Union_Pacific_Big_Boy_4-8-8-4_-4018_at_Fair_Park_09.2006_0.jpg | McKaby | CC BY-SA 4.0 | side elevation |
+| `photo-big-boy-4023.jpg` | Big Boy 4023.jpg | https://commons.wikimedia.org/wiki/File:Big_Boy_4023.jpg | MONGO | Public domain | side elevation |
 
 ## Published figures
 

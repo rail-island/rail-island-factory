@@ -7,7 +7,9 @@
 // `unit` parameter), at their real size on the US loading gauge. Pilots and
 // knuckle couplers replace the European buffer beams. See docs/models/us-steam.md.
 
-import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
+import type { Vec3 } from "./meshCore.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLoco, type LocoSpec } from "./steamLoco.ts";
 import type { Steam } from "./steamParts.ts";
@@ -75,74 +77,325 @@ function bell(t: Steam, x: number, y: number): void {
 
 // ---------------------------------------------------------------------------
 // Union Pacific Big Boy 4-8-8-4: two engines of four 68 in drivers under one boiler
+//
+// Measured from the photographs in assets/up-big-boy/ (SOURCES.md): 4014 at Cajon and
+// Altoona fitted along the drivers' published pitch, the head-on views of 4018 and 4023
+// scaled by the pilot beam. Source x from the front coupler face.
 
 const BB_DRIVER = ft(0, 68);
+/** The boiler: centre height, the front ring's radius (the smokebox 4 cm more) and the rear rings' (107 in over the firebox). */
+const BB_Y = 3.2;
+const BB_R0 = 1.2;
+const BB_R1 = 1.3;
+/** The smokebox front, the smokebox's end (where the barrel's conical course starts), the course's end, the cab front. */
+const BB_SMOKEBOX = 2.75;
+const BB_CONE: [number, number] = [7.3, 9.5];
+const BB_CAB = 21.0;
+/** The running board along the boiler, and the front deck on the pilot beam. */
+const BB_BOARD = 3.15;
+const BB_DECK = 1.57;
+/** The stacks' tops, 3 cm over their casing. */
+const BB_STACK = 4.77;
+
+/** The domes along the top: the long sand domes ahead of and behind the round steam dome (the distant model draws all three from this list). */
+const BB_DOMES = [{ x: 8.9, top: 4.93, r: 0.5, len: 3.0 }, { x: 11.2, top: 4.8, r: 0.42 }, { x: 15.2, top: 4.93, r: 0.5, len: 2.8 }];
+
+/**
+ * A long sand dome on the boiler's top: a rounded hump `len` long, `w` wide (half
+ * width), from inside the boiler to `top`, its ends sloping down round.
+ */
+function bbSandDome(t: Steam, x: number, len: number, w: number, top: number): void {
+  const y0 = BB_Y + BB_R0 * 0.8;
+  const h = top - y0;
+  // the cross-section: upright sides from inside the boiler, a flattened round top
+  const sec = (k: number, kh: number): Array<[number, number]> => {
+    const pts: Array<[number, number]> = [[w * k, y0]];
+    for (let i = 0; i <= 6; i++) {
+      const a = (i / 6) * Math.PI;
+      pts.push([w * k * Math.cos(a), y0 + h * kh * (0.55 + 0.45 * Math.pow(Math.sin(a), 0.6))]);
+    }
+    pts.push([-w * k, y0]);
+    return pts;
+  };
+  const stations: Array<[number, number, number]> = [[-0.5, 0.62, 0.72], [-0.5 + 0.12 / len, 0.88, 0.93], [-0.5 + 0.38 / len, 1, 1], [0.5 - 0.38 / len, 1, 1], [0.5 - 0.12 / len, 0.88, 0.93], [0.5, 0.62, 0.72]];
+  t.m.scope("sand dome", () => {
+    for (let i = 0; i + 1 < stations.length; i++) {
+      const [fa, ka, ha] = stations[i]!;
+      const [fb, kb, hb] = stations[i + 1]!;
+      const caps = i === 0 || i === stations.length - 2;
+      t.m.sweep("paint", "x", sec(ka, ha), t.X(x + fa * len), sec(kb, hb), t.X(x + fb * len), caps);
+    }
+  });
+}
+
+/** A white legend on a board's face: `text` centred at (u, v) of the face spanned by unit vectors `u` (reading direction) and `v` (up) from `o`, its normal `n`. */
+function bbLegend(m: MeshBuilder, text: string, o: Vec3, u: Vec3, v: Vec3, n: Vec3, h: number): void {
+  const w = h * 0.58, gap = h * 0.18;
+  const width = strokeWidth(text, w, gap);
+  const at = ([a, b]: [number, number]): Vec3 => [o[0] + u[0] * a + v[0] * b + n[0] * 0.004, o[1] + u[1] * a + v[1] * b + n[1] * 0.004, o[2] + u[2] * a + v[2] * b + n[2] * 0.004];
+  m.facets("plateText", strokeText(text, -width / 2, -h / 2, h, w, gap).map(at), n);
+}
+
+/** The Big Boy's front end: the slotted pilot, its beam and the knuckle coupler. */
+function bigBoyPilot(t: Steam): void {
+  const m = t.m;
+  m.scope("front pilot", () => {
+    // the pilot beam under the deck
+    t.box("paint", 0.12, 0.5, 1.22, 1.55, -1.49, 1.49);
+    // the slotted pilot: a flat face with its corners cut back, from the beam down to the rail
+    const plan: Array<[number, number]> = [[0.2, -0.95], [0.2, 0.95], [0.6, 1.42], [1.1, 1.42], [1.1, -1.42], [0.6, -1.42]];
+    m.slab("paint", plan.map(([x, z]): Vec3 => [t.X(x), 0.13, z]), [0, 1.11, 0]);
+    // two rows of slots across the face and its cut corners
+    const slots: Vec3[] = [];
+    const quad = (a: Vec3, b: Vec3, c: Vec3, d: Vec3) => slots.push(a, b, c, a, c, d);
+    for (const [y0, y1] of [[0.3, 0.62], [0.78, 1.08]] as const) {
+      for (let k = 0; k < 8; k++) {
+        const z = -0.79 + k * 0.226;
+        const X = t.X(0.2) + 0.004;
+        quad([X, y0, z - 0.045], [X, y0, z + 0.045], [X, y1, z + 0.045], [X, y1, z - 0.045]);
+      }
+      for (const s of [-1, 1]) for (const f of [0.3, 0.7]) {
+        // along the cut corner from (0.2, 0.95) to (0.6, 1.42), 4 mm proud
+        const [xa, za] = [0.2 + 0.4 * (f - 0.08), 0.95 + 0.47 * (f - 0.08)];
+        const [xb, zb] = [0.2 + 0.4 * (f + 0.08), 0.95 + 0.47 * (f + 0.08)];
+        const [ox, oz] = [-0.0031, 0.0026];
+        quad([t.X(xa + ox), y0, s * (za + oz)], [t.X(xb + ox), y0, s * (zb + oz)], [t.X(xb + ox), y1, s * (zb + oz)], [t.X(xa + ox), y1, s * (za + oz)]);
+      }
+    }
+    m.facets("coal", slots, [1, 0, 0]);
+    // the steps at the pilot's corners
+    for (const s of [-1, 1]) t.sideBox("black", s, 0.7, 1.05, 0.4, 0.44, 1.41, 1.6);
+    knuckleCoupler(m, 1, t.X(0) - 0.6, t.X(0), COUPLER_Y);
+  });
+}
+
+/**
+ * The Big Boy's front deck and smokebox front: the air pump shield with its two
+ * louvres, the headlight on it with the number box and the Union Pacific shield,
+ * the grab rails, the two angled number boards with the bell between them, the
+ * marker lamps.
+ */
+function bigBoyFront(t: Steam): void {
+  const m = t.m;
+  m.scope("louvres", () => {
+    for (const z of [-0.3, 0.3]) {
+      t.endPanel("coal", 1, 0.45, z - 0.2, z + 0.2, 1.92, 2.42, 0.01);
+      // the slats, 2 mm proud of the recess
+      const slats: Vec3[] = [];
+      const X = t.X(0.45) + 0.009;
+      for (let k = 0; k < 7; k++) {
+        const y = 1.97 + k * 0.064;
+        slats.push([X, y, z - 0.18], [X, y, z + 0.18], [X, y + 0.025, z + 0.18], [X, y, z - 0.18], [X, y + 0.025, z + 0.18], [X, y + 0.025, z - 0.18]);
+      }
+      m.facets("paint", slats, [1, 0, 0]);
+    }
+  });
+  m.scope("headlight", () => {
+    t.box("paint", 1.0, 1.52, 2.58, 2.8, -0.22, 0.22);
+    t.cylX("black", 1.55, 1.08, 0, 3.05, 0.27, 12);
+    t.cylX("lampHead", 1.075, 1.055, 0, 3.05, 0.2, 12);
+  });
+  // the number box beside the headlight, the shield on the shield's top edge
+  m.scope("number box", () => {
+    t.box("black", 1.12, 1.4, 2.58, 3.06, 0.32, 0.72);
+    bbLegend(m, "4014", [t.X(1.12), 2.94, 0.52], [0, 0, -1], [0, 1, 0], [1, 0, 0], 0.13);
+  });
+  m.scope("shield", () => {
+    // the Union Pacific shield standing on the shield's top edge, white rim round a black field
+    const shape: Array<[number, number]> = [[0, -0.2], [0.17, -0.1], [0.19, 0.14], [0.1, 0.19], [0, 0.16], [-0.1, 0.19], [-0.19, 0.14], [-0.17, -0.1]];
+    const at = (k: number, dx: number): Vec3[] => shape.map(([z, y]): Vec3 => [t.X(0.45) + dx, 2.64 + y * k, -0.62 + z * k]);
+    m.slab("white", at(1, 0.014), [-0.012, 0, 0]);
+    m.slab("black", at(0.86, 0.019), [-0.004, 0, 0]);
+  });
+  m.scope("grab rails", () => {
+    for (const s of [-1, 1]) {
+      const a: Vec3 = [t.X(0.55), 2.6, s * 0.95];
+      const b: Vec3 = [t.X(0.6), 3.4, s * 0.95];
+      const c: Vec3 = [t.X(2.2), 3.85, s * 0.95];
+      m.rod("steel", a, b, 0.025, 6, false);
+      m.rod("steel", b, c, 0.025, 6, false);
+      m.rod("steel", c, [t.X(BB_SMOKEBOX + 0.05), 3.85, s * 0.95], 0.025, 6, false);
+    }
+  });
+  m.scope("number boards", () => {
+    for (const s of [-1, 1]) {
+      // turned 25 degrees outward from the front, on brackets over the smokebox's front ring;
+      // the legend reads toward -z (the viewer's right) seen from ahead
+      const a = (25 * Math.PI) / 180;
+      const uu: Vec3 = [s * Math.sin(a), 0, -Math.cos(a)];
+      const nn: Vec3 = [Math.cos(a), 0, s * Math.sin(a)];
+      const c: Vec3 = [t.X(BB_SMOKEBOX + 0.3), 4.79, s * 0.52];
+      const hw = 0.36, hh = 0.14;
+      const corner = (p: number, q: number): Vec3 => [c[0] + uu[0] * p, c[1] + q, c[2] + uu[2] * p];
+      m.slab("black", [corner(-hw, -hh), corner(hw, -hh), corner(hw, hh), corner(-hw, hh)], [-nn[0] * 0.05, 0, -nn[2] * 0.05]);
+      bbLegend(m, "X4014", c, uu, [0, 1, 0], nn, 0.15);
+      t.box("black", BB_SMOKEBOX + 0.32, BB_SMOKEBOX + 0.4, 4.3, 4.66, s * 0.48 - 0.04, s * 0.48 + 0.04);
+    }
+  });
+  bell(t, BB_SMOKEBOX + 0.3, 4.47);
+  m.scope("deck steps", () => {
+    // up from the deck to the running board at each side
+    for (const s of [-1, 1]) for (const y of [2.0, 2.4, 2.8]) t.sideBox("black", s, BB_SMOKEBOX - 0.35, BB_SMOKEBOX - 0.1, y - 0.03, y, 1.3, 1.58);
+    for (const s of [-1, 1]) t.sideBox("black", s, BB_SMOKEBOX - 0.12, BB_SMOKEBOX - 0.1, BB_DECK, BB_BOARD - 0.04, 1.3, 1.58);
+  });
+  m.scope("marker lamps", () => {
+    for (const s of [-1, 1]) {
+      t.box("black", BB_SMOKEBOX - 0.12, BB_SMOKEBOX + 0.06, 4.1, 4.28, s * 0.78 - 0.08, s * 0.78 + 0.08);
+      t.endPanel("glass", 1, BB_SMOKEBOX - 0.12, s * 0.78 - 0.05, s * 0.78 + 0.05, 4.14, 4.24, 0.01);
+    }
+  });
+}
+
+/** The pipes under the running board, the safety valves and whistle, the handrails along the boiler. */
+function bigBoyPipework(t: Steam): void {
+  const m = t.m;
+  const P = (x: number, y: number, z: number): Vec3 => [t.X(x), y, z];
+  m.scope("steam pipes", () => {
+    const pipe = (r: number, pts: Vec3[]) => { for (let i = 0; i + 1 < pts.length; i++) m.rod("black", pts[i]!, pts[i + 1]!, r, 8); };
+    // the right side: the front engine's flexible pipe down from the boiler and forward to its
+    // cylinders' chest, under the long pipe along the boiler
+    pipe(0.17, [P(12.3, 2.62, 1.36), P(10.6, 2.1, 1.36), P(4.9, 2.1, 1.36), P(4.45, 1.8, 1.27)]);
+    t.cylX("black", 6.9, 13.0, 1.3, 2.62, 0.13, 8);
+    // the left side: the rear engine's steam pipe down from the smokebox and back to its
+    // cylinders' chest, under the reservoir drum
+    pipe(0.17, [P(6.9, 2.62, -1.36), P(9.4, 2.1, -1.36), P(12.4, 2.1, -1.36), P(12.75, 1.8, -1.27)]);
+    t.cylX("black", 10.2, 12.8, -1.3, 2.62, 0.24, 10);
+    // the main reservoir drums over the rear engine
+    for (const s of [-1, 1]) t.cylX("black", 13.6, 16.4, s * 1.3, 2.5, 0.22, 10);
+  });
+  m.scope("safety valves", () => {
+    for (const dz of [-0.14, 0.14]) t.cylY("steel", 17.8, dz, 4.42, 4.66, 0.07, 8);
+    t.cylY("steel", 18.4, 0, 4.42, 4.68, 0.05, 8);
+    t.cylY("steel", 18.4, 0, 4.68, 4.76, 0.09, 8);
+  });
+  m.scope("handrails", () => {
+    const y = 4.05;
+    // 8 cm off the smokebox, then off the rear rings
+    const off = (r: number) => Math.sqrt(r * r - (y - BB_Y) ** 2) + 0.08;
+    const [z0, z1] = [off(BB_R0 + 0.04), off(BB_R1)];
+    const zAt = (x: number) => (x >= BB_CONE[1] ? z1 : z0 + ((x - 3.2) / (BB_CONE[1] - 3.2)) * (z1 - z0));
+    for (const s of [-1, 1]) {
+      m.rod("steel", P(3.2, y, s * z0), P(BB_CONE[1], y, s * z1), 0.02, 6);
+      m.rod("steel", P(BB_CONE[1], y, s * z1), P(BB_CAB - 0.05, y, s * z1), 0.02, 6);
+      for (const x of [4.0, 9.5, 15.0, 20.4]) {
+        const z = zAt(x);
+        t.sideBox("steel", s, x - 0.015, x + 0.015, y - 0.015, y + 0.015, z - 0.14, z - 0.015);
+      }
+    }
+  });
+}
 
 function bigBoySpec(): LocoSpec {
   const drivers = [5.45, 7.3, 9.15, 11.0, 14.5, 16.35, 18.2, 20.05];
   return {
     title: "UP Big Boy",
-    palette: { ...US_STEAM_PALETTE, paint: { color: "#1d1e20", roughness: 0.6 }, wheel: { color: "#1d1e20", roughness: 0.6 }, frame: { color: "#1d1e20", roughness: 0.65 }, lining: { color: "#c4c8cc", roughness: 0.4 }, plate: { color: "#1d1e20", roughness: 0.6 }, plateText: { color: "#d9d9d4", roughness: 0.5 } },
+    palette: {
+      ...US_STEAM_PALETTE,
+      paint: { color: "#1d1e20", roughness: 0.6 }, wheel: { color: "#1d1e20", roughness: 0.6 }, frame: { color: "#1d1e20", roughness: 0.65 },
+      lining: { color: "#c4c8cc", roughness: 0.4 }, plate: { color: "#1d1e20", roughness: 0.6 }, plateText: { color: "#d9d9d4", roughness: 0.5 },
+      // 4014's graphite smokebox and stack casing
+      smokebox: { color: "#4b4e52", roughness: 0.5, metallic: 0.3 },
+    },
     heads: [0, 26.0],
     beams: { front: false, rear: false },
-    boiler: { x0: 1.35, x1: 19.0, y: 3.35, r: 1.2, smokebox: 2.6, bands: [6.5, 9.5, 12.5, 15.5], band: "lining" },
-    chimney: { x: 3.0, top: 4.85, r: 0.36 },
-    domes: [{ x: 6.4, top: 4.75, r: 0.45, len: 2.6 }, { x: 11.6, top: 4.72, r: 0.42 }],
-    valves: { x: 17.6, top: 4.7 },
-    handrail: { x0: 3.2, x1: 18.8, y: 3.55 },
-    runningBoard: { profile: [[0.9, 1.55], [2.6, 1.55], [3.2, 2.25], [21.0, 2.25]], half: 1.6, valance: 0.1 },
+    // the barrel's rear rings and conical course are drawn over it (bigBoyBoiler); it reaches into the cab
+    boiler: { x0: BB_SMOKEBOX, x1: BB_CAB + 0.3, y: BB_Y, r: BB_R0, smokebox: BB_CONE[0] - BB_SMOKEBOX, bands: [] },
+    // the rear of the two stacks in tandem; the casing over them and the feedwater heater ahead
+    chimney: { x: 5.65, top: BB_STACK, r: 0.28 },
+    // the steam dome; the sand domes are drawn round-topped (bbSandDome)
+    domes: [BB_DOMES[1]!],
+    // the deck on the pilot beam, and the running board along the boiler from the smokebox front (no riser across)
+    runningBoard: { profile: [[0.1, BB_DECK], [BB_SMOKEBOX - 0.1, BB_DECK], [BB_SMOKEBOX - 0.1, BB_BOARD], [BB_CAB, BB_BOARD]], half: 1.6, valance: 0.06, valanceMat: "lining" },
     frame: { x0: 1.0, x1: 24.8, top: 2.15 },
     cab: {
-      x0: 21.0, x1: 24.6, half: [[1.63, 1.95], [1.63, 4.15], [1.45, 4.45], [0.9, 4.78], [0, 4.9]], roofY: 4.45,
-      windows: [{ x0: 21.4, x1: 22.4, y0: 3.3, y1: 4.0 }, { x0: 22.6, x1: 23.6, y0: 3.3, y1: 4.0 }],
-      front: [{ z0: 0.95, z1: 1.45, y0: 3.6, y1: 4.1 }, { z0: -1.45, z1: -0.95, y0: 3.6, y1: 4.1 }],
+      // its roof's crown level with the boiler's top
+      x0: BB_CAB, x1: 24.6, half: [[1.63, 1.95], [1.63, 4.0], [1.45, 4.3], [0.9, 4.53], [0, 4.6]], roofY: 4.3,
+      // a small window ahead, the big one with the running number under it toward the rear
+      windows: [{ x0: 21.3, x1: 22.05, y0: 3.2, y1: 3.85 }, { x0: 22.55, x1: 23.95, y0: 3.0, y1: 3.85 }],
+      front: [{ z0: 1.22, z1: 1.52, y0: 3.55, y1: 4.0 }, { z0: -1.52, z1: -1.22, y0: 3.55, y1: 4.0 }],
     },
-    prisms: [{ name: "firebox", x0: 17.0, x1: 21.0, half: [[1.3, 2.3], [1.3, 3.6], [1.15, 4.15], [0.75, 4.5], [0, 4.58]] }],
-    bogies: [{ x0: 1.4, x1: 4.2, y: 0.62 }, { x0: 22.0, x1: 24.6, y: 0.7 }],
+    prisms: [
+      // on the front deck: the shield over the air pumps
+      { name: "air pump shield", x0: 0.45, x1: 1.65, half: [[1.0, 1.55], [1.0, 2.52], [0.92, 2.6]] },
+      // over the smokebox: the feedwater heater and the stacks' casing, flat-topped
+      { name: "stack casing", x0: 3.1, x1: 6.2, half: [[0.42, 4.2], [0.42, 4.7], [0.36, 4.74]], mat: "smokebox" },
+      // the firebox's sides under the boiler, down between the rear engine and the trailing truck
+      { name: "firebox", x0: 16.9, x1: BB_CAB, half: [[1.2, 1.85], [1.3, 2.2], [1.3, 3.08]] },
+    ],
+    bogies: [{ x0: 1.4, x1: 4.2, y: 0.62 }, { x0: 22.0, x1: 24.75, y: 0.7 }],
     gear: {
       wheels: [
         { x: 2.05, d: ft(0, 36), spokes: 0, outsideBoxes: true },
         { x: 3.55, d: ft(0, 36), spokes: 0, outsideBoxes: true },
         ...drivers.map((x) => ({ x, d: BB_DRIVER, spokes: 0 })),
-        { x: 22.6, d: ft(0, 42), spokes: 0, outsideBoxes: true },
-        { x: 24.0, d: ft(0, 42), spokes: 0, outsideBoxes: true },
+        // the published 72 ft 5.5 in engine wheelbase
+        { x: 22.7, d: ft(0, 42), spokes: 0, outsideBoxes: true },
+        { x: 24.13, d: ft(0, 42), spokes: 0, outsideBoxes: true },
       ],
       engines: [
         { coupled: [2, 3, 4, 5], main: 4, cylinder: { x0: 3.0, x1: 4.6, y: 1.12, r: 0.42 }, crank: 0.41, phase: 0.3, valveGear: true, name: "front" },
         { coupled: [6, 7, 8, 9], main: 8, cylinder: { x0: 12.0, x1: 13.6, y: 1.12, r: 0.42 }, crank: 0.41, phase: -0.5, valveGear: true, name: "rear" },
       ],
       cylinderZ: 1.2, reference: 4, wheelMaterial: "wheel",
+      // sixteen 68 in drivers: their hidden disc rims left out for the detail above
+      leanWheels: true,
     },
-    number: { text: "4014", side: [22.9, 2.7, 1.63], front: [1.37, 2.85] },
     extras: (t) => {
-      // ten-sided: the triangles its four frame stretches need within the 16,000
-      headlight(t, 1.35, 3.55, 0.2, 10);
-      bell(t, 1.9, 4.5);
-      pilot(t, 1, 0, 1.45, 1.35, "paint", false, 1.0);
-      t.m.scope("air pumps", () => { for (const s of [-1, 1]) t.cylY("graphite", 2.3, s * 1.35, 2.25, 3.3, 0.18, 6); });
+      const m = t.m;
+      m.scope("boiler", () => {
+        // the conical course and the rear rings over the firebox, into the cab
+        const ring = (r: number) => ngon(20, r, Math.PI / 20, 0, BB_Y);
+        m.sweep("paint", "x", ring(BB_R1), t.X(BB_CONE[1]), ring(BB_R0 + 0.005), t.X(BB_CONE[0]), false);
+        t.cylX("paint", BB_CONE[1], BB_CAB + 0.3, 0, BB_Y, BB_R1, 20, false);
+      });
+      m.scope("front stack", () => t.cylY("smokebox", 4.75, 0, 4.68, BB_STACK, 0.33, 14));
+      for (const d of [BB_DOMES[0]!, BB_DOMES[2]!]) bbSandDome(t, d.x, d.len!, d.r, d.top);
+      // the smokebox saddle's foot under the smokebox, black like the frames
+      m.scope("saddle", () => t.box("black", BB_SMOKEBOX + 0.1, BB_CONE[0] - 0.05, 1.6, 2.0, -0.92, 0.92));
+      bigBoyPilot(t);
+      bigBoyFront(t);
+      bigBoyPipework(t);
+      m.scope("numbers", () => { for (const s of [-1, 1]) t.sidePlate(s, 23.25, 2.61, "4014", 1.63, 0.26); });
       t.m.scope("drawbar", () => t.box("black", 24.6, 26.0, 0.8, 1.0, -0.15, 0.15));
     },
   };
 }
 
 function bigBoyTenderSpec(): LocoSpec {
+  // 132 ft 9.25 in over both: 14.47 m behind the engine's 26.0; the last axle 117 ft 7 in behind the engine's first
+  const wheels = [1.75, 3.55, 5.29, 6.94, 8.59, 10.24, 11.89];
   return {
     title: "UP Big Boy tender",
     palette: bigBoySpec().palette,
-    heads: [0, 14.9],
+    heads: [0, 14.47],
     beams: { front: false, rear: false },
-    frame: { x0: 0.3, x1: 14.5, top: 1.35 },
+    frame: { x0: 0.3, x1: 14.1, top: 1.35 },
     prisms: [
-      { name: "tank", x0: 0.3, x1: 14.4, half: [[1.6, 1.35], [1.6, 3.9], [1.5, 4.1]] },
-      { name: "coal sides", x0: 0.6, x1: 6.8, half: [[1.6, 3.9], [1.6, 4.4], [1.45, 4.55]] },
+      // the tank: its sides flat, the lower edge tucked in over the trucks, the top edge rounded
+      { name: "tank", x0: 0.3, x1: 14.0, half: [[1.45, 1.35], [1.48, 2.15], [1.6, 2.25], [1.6, 4.15], [1.52, 4.32], [1.36, 4.4]] },
+      // the coal space's raised sides over the front
+      { name: "coal sides", x0: 0.45, x1: 6.2, half: [[1.38, 4.34], [1.38, 4.55], [1.3, 4.6]] },
     ],
-    coal: { x0: 0.8, x1: 6.6, y: 4.5, half: 1.35, rise: 0.35 },
-    bogies: [{ x0: 0.8, x1: 3.8, y: 0.62 }, { x0: 5.6, x1: 14.0, y: 0.62 }],
-    gear: { wheels: [1.55, 3.05, 6.4, 8.05, 9.7, 11.35, 13.0].map((x) => ({ x, d: ft(0, 42), spokes: 0 })), engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel" },
-    lamps: { front: [], rear: [[14.42, 3.6, 0]] },
+    coal: { x0: 0.6, x1: 6.0, y: 4.55, half: 1.2, rise: 0.1 },
+    bogies: [{ x0: 1.1, x1: 4.2, y: 0.62 }, { x0: 4.65, x1: 12.55, y: 0.62 }],
+    gear: { wheels: wheels.map((x) => ({ x, d: ft(0, 42), spokes: 0 })), engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel" },
+    lamps: { front: [], rear: [[14.2, 3.7, 0]] },
     extras: (t) => {
-      t.m.scope("lettering", () => { for (const s of [-1, 1]) t.sidePlate(s, 7.2, 3.0, "UNION PACIFIC", 1.6, 0.36); });
-      pilot(t, -1, 14.9, 1.3, 1.25, "paint");
+      // the railroad's name, widely spaced at mid height, straight on the tank
+      t.m.scope("lettering", () => {
+        const h = 0.32, w = h * 0.62, gap = h * 0.45;
+        const width = strokeWidth("UNION PACIFIC", w, gap);
+        for (const s of [-1, 1]) {
+          const u0 = t.X(7.3) + (s > 0 ? -width / 2 : width / 2);
+          t.m.facets("plateText", strokeText("UNION PACIFIC", u0, 2.39, h, w, gap, s < 0, h * 0.14).map(([u, v]): Vec3 => [u, v, s * 1.604]), [0, 0, s]);
+        }
+      });
+      // the full-depth front of the tank's sides, ahead of the tucked-in lower edge
+      t.m.scope("front skirt", () => { for (const s of [-1, 1]) t.sideBox("paint", s, 0.3, 1.9, 1.35, 2.25, 1.44, 1.6); });
+      t.m.scope("rear ladders", () => {
+        for (const s of [-1, 1]) for (const z of [1.15, 1.5]) t.sideBox("steel", s, 13.98, 14.04, 1.4, 4.4, z - 0.02, z + 0.02);
+      });
+      pilot(t, -1, 14.47, 1.3, 1.25, "paint", false, 0.45);
     },
   };
 }
@@ -396,7 +649,10 @@ const american = (params?: ParamValues): LocoSpec => {
 };
 
 export function upBigBoy(params?: ParamValues): MeshBuilder { return buildLoco(bigBoy(params)); }
-export function upBigBoyLod(params?: ParamValues): MeshBuilder { return steamLocoLod(bigBoy(params)); }
+export function upBigBoyLod(params?: ParamValues): MeshBuilder {
+  const spec = bigBoy(params);
+  return steamLocoLod(spec.boiler ? { ...spec, domes: BB_DOMES } : spec, 200);
+}
 export function prrK4s(params?: ParamValues): MeshBuilder { return buildLoco(k4s(params)); }
 export function prrK4sLod(params?: ParamValues): MeshBuilder { return steamLocoLod(k4s(params)); }
 export function nycHudson(params?: ParamValues): MeshBuilder { return buildLoco(hudson(params)); }
@@ -425,7 +681,7 @@ const AMERICAN_GAME: GameProperties = {
 };
 
 export const US_STEAM: ProceduralDesign[] = [
-  { id: "proc-vehicle-up-big-boy", title: "UP Big Boy", build: upBigBoy, buildLod: upBigBoyLod, params: [UNIT_PARAM], game: withTender(345, 4690, 129, 155), catalog: STEAM_CATALOG, loadingGauge: "us", references: "up-big-boy" },
+  { id: "proc-vehicle-up-big-boy", title: "UP Big Boy", build: upBigBoy, buildLod: upBigBoyLod, params: [UNIT_PARAM], game: withTender(345, 4690, 129, 155), lodTriangles: 200, catalog: STEAM_CATALOG, loadingGauge: "us", references: "up-big-boy" },
   { id: "proc-vehicle-prr-k4s", title: "PRR K4s", build: prrK4s, buildLod: prrK4sLod, params: [UNIT_PARAM], game: withTender(141, 2400, 161, 95), catalog: STEAM_CATALOG, loadingGauge: "us", references: "prr-k4s" },
   { id: "proc-vehicle-nyc-hudson", title: "NYC J-3a Hudson", build: nycHudson, buildLod: nycHudsonLod, params: [UNIT_PARAM], game: withTender(163, 3500, 161, 130), lodTriangles: 200, catalog: STEAM_CATALOG, loadingGauge: "us", references: "nyc-hudson" },
   { id: "proc-vehicle-american-440", title: "Golden Spike 4-4-0", build: american440, buildLod: american440Lod, params: AMERICAN_PARAMS, game: AMERICAN_GAME, catalog: STEAM_CATALOG, loadingGauge: "us", references: "american-440" },
