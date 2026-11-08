@@ -1,7 +1,7 @@
 # North American carbody locomotives and the Acela
 
 **Covers** - the streamlined North American designs (`proc-vehicle-emd-f7`, `proc-vehicle-emd-f40ph`, `proc-vehicle-ge-p42dc`, `proc-vehicle-siemens-alc42`, `proc-vehicle-prr-gg1`, `proc-vehicle-amtrak-superliner`, `proc-vehicle-amtrak-acela`): measures, liveries, the carbody kit they are lofted with, the Acela's cars and train, deviations and tests.
-**Code** - `generator/usCarbodies.ts` (`US_CARBODIES`), `generator/carbodyKit.ts`, `generator/sliceBody.ts`, `test/usCarbodies.test.ts`, `assets/emd-f7/`, `assets/emd-f40ph/`, `assets/ge-p42dc/`, `assets/siemens-alc42/`, `assets/prr-gg1/`, `assets/amtrak-superliner/`, `assets/amtrak-acela/`
+**Code** - `generator/usCarbodies.ts` (`US_CARBODIES`), `generator/carbodyKit.ts`, `generator/sliceBody.ts`, `generator/seriesCab.ts` (the Acela's cab face), `test/usCarbodies.test.ts`, `assets/emd-f7/`, `assets/emd-f40ph/`, `assets/ge-p42dc/`, `assets/siemens-alc42/`, `assets/prr-gg1/`, `assets/amtrak-superliner/`, `assets/amtrak-acela/`
 **See also** - [us-diesels.md](us-diesels.md), [loading-gauge.md](loading-gauge.md), [shinkansen-0.md](shinkansen-0.md), [vehicles.md](vehicles.md), [openttd-figures.md](openttd-figures.md)
 
 ## The designs
@@ -14,7 +14,7 @@
 | `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 10,300 |
 | `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 13,300 - 14,400 |
 | `proc-vehicle-amtrak-superliner` | Amtrak Superliner | `unit`: `coach`, `sleeper` | 25.91 m | 8,500 - 8,700 |
-| `proc-vehicle-amtrak-acela` | Acela Express | `unit`: `powerCar`, `businessClass`, `firstClass`, `cafe`, `train` (`cars` 3 - 8, default 4) | 21.22 m power car, 26.64 m coach | 7,200 - 10,200 a car |
+| `proc-vehicle-amtrak-acela` | Acela Express | `unit`: `powerCar`, `businessClass`, `firstClass`, `cafe`, `train` (`cars` 3 - 8, default 4) | 21.22 m power car, 26.64 m coach | about 15,300 the power car, 6,800 - 7,200 a coach |
 
 All are drawn at their real size to the US loading gauge ([loading-gauge.md](loading-gauge.md)),
 3.04 - 3.24 m wide. The F7, F40PH, P42DC and ALC-42 are diesel locomotives (`DIESEL_LOCO_CATALOG`),
@@ -96,16 +96,33 @@ nose along the surface's chord (`chordBox`).
   door on each side, a plug door opening onto the car's cabin (`plugDoor`, shared with the
   Acela's coaches). The coach has 12 large upper windows a side and four on the lower deck,
   the sleeper 14 smaller upper and six lower ones. Diaphragms at the upper deck's height.
-- **Acela Express** - the power car's long sloping nose, blunt and rounded at its tip; the
-  black mask sweeping across it and over the shoulders with the two-pane windscreen inside
-  it, a teardrop cab window on each side behind the mask's pillar, and under the windscreen
-  the blue band, its lower edge a smile, holding the four round headlights in a row; the
-  power car's sides silver (the coaches' dark window band left out), its single-arm
-  pantograph (raised) and grilles; the coaches' window bands (business class 13 windows a
-  side, first class 11 wider ones, the cafe 8) and end doors. `train` is an articulated set
-  (`articulate`, tramKit.ts): a power car at each end, the rear one turned, first class behind
-  the leading power car, the cafe in the middle of five or more cars (`acelaTrain`), bellows
-  between the cars, each car on its own two trucks.
+- **Acela Express** - matched against twelve photographs (assets/amtrak-acela/SOURCES.md). The
+  power car's nose is a cab face (`ACELA_FACE`, seriesCab.ts) from the tip to the cab door (6.4 m),
+  where the lofted body takes over: one convex curve from the cab roof - the long windscreen raked
+  about 18 degrees (its foot at 3.08 m, 1.4 m behind the tip, its head at 3.89 m), the blue band on
+  the sloping front, the silver bulb's most forward point at 1.7 m rolling down and under to the red
+  line 0.5 m back (measured on the Boston nose-side photograph, 242 px/m up the side) - a broad oval
+  in plan (elliptic corners swept back about 1.8 m), narrower at its foot, over a dark air dam set
+  back under it. The band's lower edge is a smile (low at the centre, higher round the corners),
+  with the four round headlights in a row (0.25 and 0.71 m off the centre); its ends sweep back
+  under the mask as the blue line that climbs to the cant at the cab door and runs along the top
+  of the side to the rear end, where it widens down the corner. The two-pane windscreen (2.3 m
+  wide) in a black rubber surround with two wipers; the dark navy mask over the whole cab roof and
+  the cab's upper sides, with a hexagonal cab side window in it, its front edge raked; the nose
+  hatch on its side. Behind the cab face the cab door (narrow window, handrails, step), the long
+  louvre panel along the machine room (d 7.6 - 15.6 m), the lower panels' seams, AMTRAK and the
+  running number 2004 on the lower panels; on the roof the long hatch with its radiator grille and
+  two single-arm pantographs with red arms (`armMat`, czElectricKit.ts) over the rear, the trailing
+  one raised; the rear end's roof and corners rounded. The dark skirt
+  under a thin red line along the whole train. The coaches: the tilt profile (upright foot, the
+  sides leaning in from the red line to the roof), stainless silver with the windows framed one by
+  one (1.0 m high) - business class 13 a side, first class 11 wider ones, the cafe four at each
+  end with the counter between - two narrow windows by the vestibule, one plug door each side at
+  the vestibule end (toward the leading power car), roof fairings over the air conditioning at
+  both ends. `train` is an articulated set (`articulate`, tramKit.ts): a power car at each end,
+  the rear one turned, first class behind the leading power car, the cafe in the middle of five
+  or more cars (`acelaTrain`), bellows between the cars, each car on its own two trucks. The
+  distant model keeps the cab's mask, band and blue cant line and the coaches' window strip.
 
 ## Liveries
 
@@ -116,7 +133,9 @@ Running numbers are illustrative, but for the GG1's preserved 4935 and 4800.
 ## Deviations
 
 - The trucks are the diesel toolkit's generic cast truck (the Acela's and the Charger's are
-  not modelled in detail); the Acela's tilt is not drawn.
+  not modelled in detail); the Acela's tilt is not drawn. The pantographs' base and head are the
+  kit's grey (only the arms red); the acela logos and the cab roof's number are left out; the cafe car's window layout
+  is not confirmed by a photograph.
 - The P42DC's and ALC-42's interiors and the Acela's cabins are not drawn. The F7 set's units
   are hinged as one articulated vehicle, not coupled loose.
 - The GG1's quill drive and its frames are simplified; its wheels have six spokes.

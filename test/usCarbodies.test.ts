@@ -84,11 +84,11 @@ describe("the US carbodies", () => {
     expect(f7.some((n) => n.startsWith("nose/headlights/hood/"))).toBe(true);
     expect(f7.filter((n) => n.startsWith("nose/class-lights/")).length).toBe(4);
     expect(f7.filter((n) => n.startsWith("nose/number-boards/")).length).toBe(6);
-    // the Acela: the mask, the teardrop side windows and four headlights in the blue band
+    // the Acela: one cab face - the blue band and line, the mask, the side windows, the windscreen's surround and two panes, wipers and four headlights
     const ac = scopes("proc-vehicle-amtrak-acela");
-    expect(ac.filter((n) => n.startsWith("nose/windscreen/side-window")).length).toBe(4);
-    expect(ac.filter((n) => n.startsWith("nose/headlight-band/")).length).toBeGreaterThan(0);
-    expect(ac.filter((n) => n.startsWith("nose/headlights/")).length).toBe(8);
+    for (const part of ["paint-1", "paint-2", "paint-3", "paint-4", "surround-1", "pane-1", "pane-2"]) expect(ac.filter((n) => n.startsWith(`nose/cab-face/skin/${part}/`)).length).toBeGreaterThan(0);
+    expect(new Set(ac.filter((n) => n.startsWith("nose/cab-face/lamps/")).map((n) => n.split("/")[3])).size).toBe(4);
+    expect(ac.filter((n) => n.startsWith("nose/cab-face/wipers/")).length).toBeGreaterThan(0);
   });
 
   it("keeps the F7's windscreen low under the cab roof, the grilles above the portholes", () => {

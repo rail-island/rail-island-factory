@@ -415,6 +415,8 @@ export interface SingleArmSpec {
   raisedTop?: number;
   lower?: number;
   upper?: number;
+  /** The arms' paint (the lower and upper arms, their shaft, knee and push rod; default "pantograph", as the base and head): the Acela's red. */
+  armMat?: string;
 }
 /**
  * The single-arm "half pantograph" (cd163.ts's, sized to fit): an A-frame lower
@@ -460,22 +462,23 @@ function singleArmAt(m: MeshBuilder, p: SingleArmSpec, lift: number): void {
     block(m, "pantograph", xc + d0, xc + d1, y + 0.05, y + 0.15, -0.14, 0.14); // the drive
   });
   const { xh, hingeY, kx, ky, hx, headY } = singleArmPose(p, lift);
+  const arm = p.armMat ?? "pantograph";
   m.scope("arms", () => {
-    for (const s of [-1, 1]) block(m, "pantograph", xh - 0.04, xh + 0.04, y + 0.04, y + 0.14, ...side(s, 0.34, 0.42));
+    for (const s of [-1, 1]) block(m, arm, xh - 0.04, xh + 0.04, y + 0.04, y + 0.14, ...side(s, 0.34, 0.42));
     const shaft = ngon(8, 0.035, 0, xh, hingeY);
-    m.sweep("pantograph", "z", shaft, -0.4, shaft, 0.4);
+    m.sweep(arm, "z", shaft, -0.4, shaft, 0.4);
     m.scope("lower arms", () => {
-      for (const s of [-1, 1]) m.rod("pantograph", [xh, hingeY, s * 0.3], [kx, ky, s * 0.04], 0.04);
+      for (const s of [-1, 1]) m.rod(arm, [xh, hingeY, s * 0.3], [kx, ky, s * 0.04], 0.04);
     });
     // the push rod, from the drive to the lower arm by the knee
-    pushRod(m, "pantograph", 0.016, [xc + h * 0.62, y + 0.08], (l) => {
+    pushRod(m, arm, 0.016, [xc + h * 0.62, y + 0.08], (l) => {
       const q = singleArmPose(p, l);
       return [q.kx + (q.xh - q.kx) * 0.07, q.ky + (q.hingeY - q.ky) * 0.07 - 0.03];
     }, lift);
     const knee = ngon(8, 0.05, 0, kx, ky + 0.005);
-    m.sweep("pantograph", "z", knee, -0.08, knee, 0.08);
+    m.sweep(arm, "z", knee, -0.08, knee, 0.08);
     m.scope("upper arms", () => {
-      for (const s of [-1, 1]) m.rod("pantograph", [kx, ky + 0.02, s * 0.04], [hx, headY, s * 0.32], 0.026);
+      for (const s of [-1, 1]) m.rod(arm, [kx, ky + 0.02, s * 0.04], [hx, headY, s * 0.32], 0.026);
     });
   });
   collectorHead(m, hx, headY);
