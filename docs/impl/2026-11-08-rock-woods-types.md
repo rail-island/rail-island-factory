@@ -58,7 +58,8 @@ carries part 1, cliffs and escarpments, which the spec's "builds on part 1" deci
   scrub; the map's woods table names the rock woods (ids 14-16).
 - Docs: `docs/gameplay/rocks.md` (new), `cliffs.md`, `terrain-editing.md`,
   `docs/rendering/woods.md`, `docs/tooling/factory-import.md`, `docs/README.md`.
-- Checks: `pnpm typecheck` passes; `pnpm test` and `pnpm build` - results in the hand-back.
+- Checks: `pnpm typecheck` passes; `pnpm test` 662 files, 9,100 tests passed; `pnpm build`
+  passes. The game half is commit 2932354 on the webapp branch.
 
 ## How to test
 
