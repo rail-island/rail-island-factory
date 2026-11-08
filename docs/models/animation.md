@@ -150,7 +150,11 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   (the Big Boy's 6) draws that many dark lozenges round the hub on each coupled disc wheel's face, a Boxpok
   centre read from afar, 2 triangles each; none by default. `cylinderMat` paints the cylinders, valve chests
   and their block (the K4s's black; the body paint by default) and `cylinderCoverMat` the cylinder covers
-  (bright steel by default).
+  (bright steel by default). `discOpeningSides` (the Dreyfuss Hudson's 8)
+  draws each opening as a round hole of that many sides at mid radius instead (a Scullin disc's lightening
+  holes). `driverMaterial` paints the coupled wheels' centres, counterweights and crank bosses apart from
+  the carrying wheels' `wheelMaterial` (the Hudson's aluminium drivers behind black truck wheels); the
+  steam distant model then draws the drivers' blocks in it too. Both unset by default.
 - **Per engine side** (`-right`, `-left`, plus `-front`/`-rear` on the Mallet):
   `coupling-rod` (translated round the crank circle), `crosshead` (sliding),
   `main-rod`, and with valve gear `eccentric-rod`, `expansion-link` (turning on

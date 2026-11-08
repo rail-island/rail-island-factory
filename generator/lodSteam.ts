@@ -409,7 +409,12 @@ export function steamLodSpec(spec: LocoSpec, ring: (y: number, r: number) => Tab
     }) });
   }
   const g = spec.gear;
-  parts.push({ draw: (m) => m.scope("running gear", () => wheelBlocks(m, g.wheelMaterial, g.wheels.map((w) => ({ X: X(w.x), d: w.d })), 0.84)) });
+  if (g.driverMaterial) {
+    // drivers painted apart from the carrying wheels (the Dreyfuss Hudson's): two sets of blocks
+    const coupled = new Set(g.engines.flatMap((e) => e.coupled));
+    const of = (drivers: boolean) => g.wheels.filter((_, i) => coupled.has(i) === drivers).map((w) => ({ X: X(w.x), d: w.d }));
+    parts.push({ draw: (m) => m.scope("running gear", () => { wheelBlocks(m, g.wheelMaterial, of(false), 0.84); wheelBlocks(m, g.driverMaterial!, of(true), 0.84); }) });
+  } else parts.push({ draw: (m) => m.scope("running gear", () => wheelBlocks(m, g.wheelMaterial, g.wheels.map((w) => ({ X: X(w.x), d: w.d })), 0.84)) });
   if (spec.frame) {
     const f = spec.frame;
     // the plate frames between the wheel groups: their sides only

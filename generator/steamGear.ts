@@ -138,6 +138,17 @@ export interface RunningGearSpec {
   cylinderMat?: string;
   /** The cylinder covers' material; the bright "steel" by default. */
   cylinderCoverMat?: string;
+  /**
+   * The paint of the coupled wheels' centres (hub, disc or spokes, counterweight,
+   * crank boss), where it differs from the carrying wheels' (the Dreyfuss Hudson's
+   * aluminium drivers behind black truck wheels); `wheelMaterial` by default.
+   */
+  driverMaterial?: string;
+  /**
+   * With `discOpenings`: each opening a round hole of this many sides at mid radius
+   * (a Scullin disc's lightening holes) instead of a radial lozenge. Lozenges by default.
+   */
+  discOpeningSides?: number;
 }
 
 /**
@@ -688,7 +699,7 @@ export class RunningGear {
     const R = w.d / 2;
     const n = tyreSides(w);
     const ri = R - Math.max(0.065, R * 0.085);
-    const mat = this.spec.wheelMaterial;
+    const mat = phi !== null && this.spec.driverMaterial ? this.spec.driverMaterial : this.spec.wheelMaterial;
     m.scope("tyre", () => m.tube("tyre", "z", X, ay, R, ri, ...side(s, Z.tyre0, Z.tyre1), n, -Math.PI / 2 + Math.PI / n));
     const hubR = Math.max(0.13, R * 0.2);
     const lean = this.spec.leanWheels === true;
@@ -754,9 +765,21 @@ export class RunningGear {
         const rm = (r0 + r1) / 2;
         const half = Math.min(0.42, (Math.PI / holes) * 0.62);
         const pts: Vec3[] = [];
+        const sides = this.spec.discOpeningSides ?? 0;
         for (let k = 0; k < holes; k++) {
           const a = phi + Math.PI / holes + (k / holes) * Math.PI * 2;
           const at = (r: number, da: number): Vec3 => { const p = add([X, ay], polar(r, a + da)); return [p[0], p[1], z]; };
+          if (sides >= 3) {
+            // a round hole about mid radius, a fan of `sides` triangles
+            const c = add([X, ay], polar(rm, a));
+            const hr = Math.min((r1 - r0) * 0.27, rm * Math.sin(Math.PI / holes) * 0.55);
+            for (let j = 0; j < sides; j++) {
+              const p = add(c, polar(hr, (j / sides) * Math.PI * 2));
+              const q = add(c, polar(hr, ((j + 1) / sides) * Math.PI * 2));
+              pts.push([c[0], c[1], z], [p[0], p[1], z], [q[0], q[1], z]);
+            }
+            continue;
+          }
           const q = [at(r0, 0), at(rm, -half), at(r1, 0), at(rm, half)];
           pts.push(q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!);
         }

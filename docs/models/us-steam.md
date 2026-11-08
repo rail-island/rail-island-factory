@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | `proc-vehicle-up-big-boy` | UP Big Boy | 4-8-8-4, two engines | 68 in | `unit` | 15,900 / 4,500 |
 | `proc-vehicle-prr-k4s` | PRR K4s | 4-6-2, Belpaire firebox | 80 in | `unit` | 12,400 / 3,900 |
-| `proc-vehicle-nyc-hudson` | NYC J-3a Hudson | 4-6-4, Dreyfuss streamlining | 79 in | `unit` | about 9,000 / 3,800 |
+| `proc-vehicle-nyc-hudson` | NYC J-3a Hudson | 4-6-4, Dreyfuss streamlining | 79 in | `unit` | 11,600 / 3,800 |
 | `proc-vehicle-american-440` | Golden Spike 4-4-0 | 4-4-0 American | 60 in | `unit`, `livery` (`jupiter`, `no119`) | 6,200 / 2,600 |
 
 Each is a `LocoSpec` drawn by `buildLoco` (steamLoco.ts) in source x from the front coupler
@@ -43,8 +43,10 @@ box), the bell, the railroad's name on the tender sides.
 - **K4s** - 1361 as preserved: Brunswick green, the smokebox, its door and the stack graphite, the
   red keystone with its gold rim and number on the door, 1361 on the headlight's number boards and on
   the gold-rimmed cab plates, "PENNSYLVANIA" in gold on the tender.
-- **J-3a Hudson** - Dreyfuss's light grey with the dark grey band along the running board
-  and the tender, the bullet nose with its fin, disc drivers; number 5450.
+- **J-3a Hudson** - Dreyfuss's grey casing and nose, the aluminium pilot, apron and drivers, black
+  truck wheels; the dark band between two aluminium stripes from the cab's middle along the tender,
+  "NEW YORK CENTRAL" in it; the dark blue NEW YORK CENTRAL SYSTEM herald on the pilot; number 5453
+  over the band on the cab sides.
 - **4-4-0** - `jupiter`: Central Pacific's royal blue jacket, maroon cab and tender, red wheels,
   brass, the balloon stack and a wood load (number 60); `no119`: Union Pacific No. 119's black
   jacket, maroon cab, the straight stack and coal.
@@ -112,10 +114,40 @@ source x from the coupler face, 0.17 m ahead of the pilot.
   space's raised sides sloping down to the tank top, the water hatch, the ladders, "PENNSYLVANIA".
   Its length is the model's earlier 13.4 m: no dimensioned source was found.
 
+## The Hudson's shape
+
+Measured on the 1938 Dreyfuss units (`assets/nyc-hudson/SOURCES.md`, "Measurements"): the axles to
+the published 14 ft driving and 40 ft 4 in engine wheelbases, the engine (16.3 m) and the tender
+(13.24 m) to the published 83 ft 7.5 in wheelbase and 97 ft 2 in over the couplers. Most of it is
+drawn in its own functions (usSteam.ts, `hudson*`) rather than by the kit, which has no boiler here.
+
+- **Nose** - half an ellipsoid on the boiler's axis (3.2 m, radius 1.12 m) bulging 0.95 m ahead of
+  the casing; the headlight (0.6 m across) standing 0.3 m out of its tip on the axis; the crest, a
+  narrow aluminium fin standing proud from the casing's top down to the headlight, and a thin blade
+  under the headlight.
+- **Pilot** - a rounded plate front (a superellipse in plan at each height) leaning back 0.5 m from
+  its rolled foot to the deck's edge at 2.06 m, then a low cradle under the nose to 2.3 m;
+  the herald on its centre line, three slots up each cheek; no front coupler is drawn (it folds
+  away behind the closed face, as photographed). The
+  aluminium apron continues its sides back to the shelf, its rear edge slanting up from the foot past
+  the first lead wheel to the cylinders, with the ladder's steps and stringer behind it; the cowl
+  beside the nose is aluminium to 2.8 m, so the nose's lower half shows.
+- **Casing** - one section (a quarter-round shoulder to the flat top over the vent) from the nose to
+  the cab: its lower edge the shelf at 2.45 m over the drivers, with its aluminium edge, arching down
+  behind the last driver to the skirt over the trailing truck at 1.42 m; the louvred vent and the
+  stack's opening on top (the smoke leaves there), the handrail and the grab rail round the nose,
+  the access handles along the shoulder, pipes and the air pumps under the shelf.
+- **Cab** - the casing's sides with a taller crown, two windows each side, the band on its rear half.
+- **Drivers** - aluminium discs (the gear's `driverMaterial`) with six round holes (`discOpenings`
+  with `discOpeningSides`), the truck wheels black.
+- **Distant model** - its own LodSpec (`hudsonLocoLod`): the steam adapter would draw the skirt's
+  depth over the drivers along the whole casing. The casing, skirt, cab (band and windows), pilot and
+  nose as shells, each driver an aluminium disc; the tender is the adapter's with the band added.
+
 ## Deviations
 
 - Wheels are the kit's spoked or disc wheels; the Big Boy's Boxpok drivers are discs with
-  openings drawn on them, the Hudson's Scullin drivers plain discs. Air pumps, feedwater heaters and pipework are reduced to
+  openings drawn on them, the Hudson's Scullin drivers discs with round holes drawn on them. Air pumps, feedwater heaters and pipework are reduced to
   a few cylinders (the Big Boy's air pumps stand behind their shield, its feedwater heater inside the
   stack casing, its pipes are a few 8-sided rods); the K4s's air pumps are plain drums and its keystone has no lettering but the number.
 - The Big Boy keeps the kit's smokebox door with its hinge straps and its cylinders' bright covers; it
