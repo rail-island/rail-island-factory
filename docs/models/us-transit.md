@@ -8,7 +8,7 @@
 
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
-| `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 11,600 - 11,900 |
+| `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 13,000 - 13,300 |
 | `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 6,900 - 7,300 |
 | `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 6,900 |
 
@@ -19,7 +19,7 @@ third-rail current collection not drawn.
 ## The car builder (`drawCar`)
 
 A `CarDef` is a carbody spec ([us-carbodies.md](us-carbodies.md), `carbodyKit.ts`) and its
-fittings: side paint bands, window rows (sill, head, spans; `onSide` a row on one side only), passenger doors (spans, sill,
+fittings: side paint bands, window rows (sill, head, spans; `onSide` a row on one side only, `cornerR` rounded corners), passenger doors (spans, sill,
 head, the leaf's window; `spanSides` a span on one side only) - plug doors that open onto the car's generic cabin (`openable`,
 `plugMove`, `sliceCabin`; doors.md, interiors.md) - stainless fluting (one band or several) broken over windows and
 doors, painted `strips` over the bands (d spans between two heights, down over the skirt: a
@@ -41,17 +41,22 @@ trucks a Jacobs bogie replaces.
   keeps the eight nearest its passenger end behind the baggage room - a 1.4 m sliding baggage
   door with its window and track, a blank section and a narrow window - and on the baggage
   end's engineer side has no passenger door. Ten flutes under the windows (1.16 - 2.0 m), a
-  plain letterboard, flutes along the roof; a red line along the skirt. On the roof the
+  plain letterboard, flutes along the roof, bare stainless all over; the windows have rounded
+  corners (`cornerR`). On the roof the
   radiator canopy (8.6 - 14.9 m from the front, 4.43 m high, ramped ends) with its radiator
   grilles, the engine air intake and the two exhausts (smoke emitters) on top, louvred vents
   near each end and two horns behind each dome. Under the floor an engine with its louvred
   casing and torque converter by each truck, its cardan shaft to the inner axle, the fuel
   tank, batteries and air reservoirs; step wells with two treads under each side door and
-  grab irons beside it. Each cab end (`rdcEndFace`) carries the end door's seams down to the
-  floor with grab irons both sides, three end windows, red class lamps in the top corners, a
-  rain gutter, and the headlight housing over the door: a rounded oblong set into the dome
-  with a black bezel and twin headlights; under the end the sill, a step plate and the
-  corner aprons.
+  grab irons beside it. The Budd trucks (`rdcTruck`, drawn with the extras): an outside frame
+  with rounded ends over SKF roller-bearing boxes, a drop equalizer sagging between the axles
+  with its springs, swing hangers, bolster springs and disc brakes on the axles. Each cab end
+  (`rdcEndFace`) carries the end door's seams down to the floor with grab irons both sides,
+  three tall end windows with rounded corners, red class lamps in the top corners, a rain
+  gutter, and the headlight housing over the door: a rounded oblong set into the dome with a
+  black bezel and twin headlights, under a brow rising from the end wall's top corners. Under
+  the floor the end sheet comes down to 0.52 m with the coupler in its pocket, the anticlimber
+  and step plate over it, MU sockets, air hoses and corner steps.
 - **Pioneer Zephyr** - its own module ([pioneer-zephyr.md](pioneer-zephyr.md)): the power
   car's nose is a hull of its own; the coach and the observation car are `CarDef`s drawn here.
 - **R160** - four doors a side, window pairs between them, fluting, the black front mask with

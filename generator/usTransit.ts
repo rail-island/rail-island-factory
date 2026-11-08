@@ -11,17 +11,17 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { MeshBuilder as Builder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
-import { bogieGeometry, buffers, coupling, exhaust, horn, paint, type BogieSpec } from "./dieselParts.ts";
-import { block } from "./vehicleParts.ts";
-import type { Pt } from "./sliceLoft.ts";
-import { halfSlice, sideDecal, sideLettering, sidePanel, sliceCabin, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
+import { bogieGeometry, buffers, coupling, exhaust, extrude, horn, paint, type BogieSpec } from "./dieselParts.ts";
+import { block, side } from "./vehicleParts.ts";
+import { add, mul, type Pt } from "./sliceLoft.ts";
+import { crownPoint, halfSlice, sideAt, sideDecal, sideLettering, sidePanel, sliceCabin, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
 import { openable, plugMove } from "./doors.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, type CarbodySpec, type Painter } from "./carbodyKit.ts";
 import { decalX, knuckleCoupler } from "./usHoodKit.ts";
 import { centreCoupler, enumParam } from "./emuParts.ts";
 import { METRO_CATALOG } from "./metro.ts";
-import { RAIL_CATALOG } from "./cd163.ts";
+import { RAIL_CATALOG, coil } from "./cd163.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
 import { bogieParts, fitUnit, roofPart, type UnitBody } from "./lodUnits.ts";
 
@@ -42,8 +42,8 @@ export interface CarDef {
   field?: { d: number; y: readonly [number, number]; mat: string };
   /** Painted strips on both sides over the bands, the skirt and the roof's arc: d spans, between two heights (a double-deck coach's door strips). */
   strips?: ReadonlyArray<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }>;
-  /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both). */
-  windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number }>;
+  /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square). */
+  windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both). */
   doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[] };
   /** The door leaves' own paint bands (default the side's bands). */
@@ -129,6 +129,26 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
   m.scope("step", () => sidePanel(m, b, X, s, c.under, d0, d1, y0 - 0.08, y0, 0.006, 0.2));
 }
 
+/** A rounded rectangle's outline in (u, v) from (u0, v0) to (u1, v1), corners of radius r in three points each. */
+export function roundedOutline(u0: number, u1: number, v0: number, v1: number, r: number): Pt[] {
+  const out: Pt[] = [];
+  for (const [cu, cv, a0] of [[u1 - r, v0 + r, -Math.PI / 2], [u1 - r, v1 - r, 0], [u0 + r, v1 - r, Math.PI / 2], [u0 + r, v0 + r, Math.PI]] as const)
+    for (let i = 0; i <= 2; i++) { const a = a0 + (i / 2) * (Math.PI / 2); out.push([cu + r * Math.cos(a), cv + r * Math.sin(a)]); }
+  return out;
+}
+
+/** A side panel with rounded corners (sidePanel's outline rounded): a slab `depth` deep, or with depth 0 its face alone. */
+function roundedSidePanel(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, d0: number, d1: number, y0: number, y1: number, r: number, proud: number, depth: number): void {
+  const dm = (d0 + d1) / 2;
+  const pts = roundedOutline(d0, d1, y0, y1, Math.min(r, (d1 - d0) / 2, (y1 - y0) / 2)).map(([d, y]): Vec3 => {
+    const q = sideAt(b, dm, y, s);
+    return add([X(d), y, q.z], mul(q.n, proud));
+  });
+  const n = sideAt(b, dm, (y0 + y1) / 2, s).n;
+  if (depth > 0) m.slab(mat, pts, mul(n, -depth));
+  else m.facets(mat, pts.slice(1, -1).flatMap((p, i) => [pts[0]!, p, pts[i + 2]!]), n);
+}
+
 /** Fluting along a side from d0 to d1 between heights, broken over windows and doors. */
 /** A band of side ribs: from y0 to y1, one every `pitch`, in `mat`. */
 export interface Flutes { y0: number; y1: number; pitch: number; mat: string }
@@ -188,6 +208,11 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
       m.scope(s > 0 ? "right side" : "left side", () => {
         c.windows.forEach((w, r) => rowOn(w, s) &&
           m.scope(`windows ${r + 1}`, () => w.spans.forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => {
+            if (w.cornerR) {
+              roundedSidePanel(m, b, X, s, w.frame, a, e, w.y[0], w.y[1], w.cornerR, 0.006, 0.03);
+              roundedSidePanel(m, b, X, s, "glass", a + 0.04, e - 0.04, w.y[0] + 0.04, w.y[1] - 0.04, Math.max(0.01, w.cornerR - 0.03), 0.012, 0);
+              return;
+            }
             sidePanel(m, b, X, s, w.frame, a, e, w.y[0], w.y[1], 0.006, 0.03);
             sidePanel(m, b, X, s, "glass", a + 0.04, e - 0.04, w.y[0] + 0.04, w.y[1] - 0.04, 0.012, 0.004);
           }))));
@@ -281,13 +306,14 @@ export const RDC_LENGTH = ft(85);
 const RDC_GAP = 0.25;
 const RDC_BODY = RDC_LENGTH - 2 * RDC_GAP;
 const RDC_TRUCKS = ft(59, 6);
+const RDC_TRUCK_D = [RDC_BODY / 2 - RDC_TRUCKS / 2, RDC_BODY / 2 + RDC_TRUCKS / 2];
 /** The end: the corners swept 0.3 m back in plan, the end wall's top rolling back into the roof as a dome. */
 const rdcEnd = {
   len: 0.3, tip: 0.88, power: 2,
   C: [[0, 3.5], [0.1, 3.7], [0.2, 3.81], [0.3, 3.89], [0.45, 3.95], [0.6, 3.98]] as Pt[],
   S: [[0, 3.2], [0.1, 3.25], [0.2, 3.28], [0.3, 3.3]] as Pt[],
 };
-const RDC_PAL = { ss: paint("#c6cacd", 0.3), ssDark: paint("#9da1a4", 0.4), rdcRed: paint("#b8222a"), under: paint("#2a2c2f", 0.85) };
+const RDC_PAL = { ss: paint("#c6cacd", 0.3), ssDark: paint("#9da1a4", 0.4), under: paint("#2a2c2f", 0.85) };
 
 /**
  * The side's openings, in metres from the coupling plane at that side's engineer end (the CB drawing,
@@ -325,17 +351,18 @@ function rdcDef(t: RdcType): CarDef {
   ];
   return {
     spec: { length: L, W: 1.533, Y: 1.15, S: 3.3, C: 3.98, lean: 0.975, arc: 8, B: 1.0, wl: 1.47, A: 1.08, wa: 1.52, front: rdcEnd, rear: rdcEnd, edges: [], step: 1.0, noseStep: 0.1 },
-    bands: [[0, 9, "ss"]], roof: "ss", skirt: "rdcRed", under: "under",
+    bands: [[0, 9, "ss"]], roof: "ss", skirt: "ss", under: "under",
     windows: [1, -1].flatMap((s) => [
-      { y: RDC_WIN.y, spans: wins(s), frame: "ssDark", onSide: s },
-      { y: RDC_CAB_WIN.y, spans: [at(s, true, RDC_CAB_WIN.p)], frame: "ssDark", onSide: s },
-      { y: RDC_TOILET.y, spans: small(s), frame: "ssDark", onSide: s },
+      { y: RDC_WIN.y, spans: wins(s), frame: "ssDark", onSide: s, cornerR: 0.13 },
+      { y: RDC_CAB_WIN.y, spans: [at(s, true, RDC_CAB_WIN.p)], frame: "ssDark", onSide: s, cornerR: 0.1 },
+      { y: RDC_TOILET.y, spans: small(s), frame: "ssDark", onSide: s, cornerR: 0.08 },
     ]),
     doors: { spans: doors.map(([sp]) => sp), spanSides: doors.map(([, s]) => s), y: [1.1, 3.22], glass: [2.3, 3.0], glassW: 0.5 },
     fluting: { y0: 1.16, y1: 2.0, pitch: 0.093, mat: "ssDark" },
-    cab: { panes: [[-1.26, -0.58, 2.18, 2.95], [0.58, 1.26, 2.18, 2.95], [-0.29, 0.29, 2.2, 2.97]], lamps: [[-1.12, 3.03, 0.055, "lampRed"], [1.12, 3.03, 0.055, "lampRed"]] },
+    cab: { panes: [], lamps: [[-1.12, 3.03, 0.055, "lampRed"], [1.12, 3.03, 0.055, "lampRed"]] },
     cabEnds: [1, -1], diaphragm: null,
-    trucks: [L / 2 - RDC_TRUCKS / 2, L / 2 + RDC_TRUCKS / 2], truck: truckSpec(ft(8, 6), ft(0, 16.5), 0.95),
+    // the Budd trucks are drawn with the extras (rdcTruck)
+    trucks: [], truck: truckSpec(ft(8, 6), ft(0, 16.5), 0.95),
     coupler: "knuckle", couplerY: 0.88, gap: [RDC_GAP, RDC_GAP],
     lettering: [{ text: bag ? "BUDD RDC-2" : "BUDD RDC-1", d: L / 2, y: 1.45, h: 0.18, mat: "ssDark" }],
     extras: (m, b, X) => {
@@ -343,7 +370,8 @@ function rdcDef(t: RdcType): CarDef {
       m.scope("door steps", () => doors.forEach(([[a, e], s]) => rdcSteps(m, X, s, a, e)));
       m.scope("roof", () => rdcRoof(m, b, X));
       m.scope("underfloor", () => rdcUnderfloor(m, X));
-      for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => rdcEndFace(m, e, Math.abs(X(e > 0 ? 0 : L))));
+      m.scope("running gear", () => RDC_TRUCK_D.forEach((d, i) => m.scope(`truck ${i + 1}`, () => m.bogie(() => rdcTruck(m, X(d))))));
+      for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => rdcEndFace(m, b, e, Math.abs(X(e > 0 ? 0 : L))));
     },
   };
 }
@@ -485,10 +513,23 @@ function hoodRing(w: number, y0: number, y1: number, r: number): Pt[] {
   return ring;
 }
 
-/** An RDC cab end at |x| = face, facing e: the end door's seams and grab irons, the headlight housing and its twin lamps, the end sill and the step plates under the corners. */
-function rdcEndFace(m: MeshBuilder, e: number, face: number): void {
+/** The end windows (z0, z1, sill, head): tall, with rounded corners (B&M 6211, Farina). */
+const RDC_END_PANES = [[-1.26, -0.58, 2.18, 2.95], [0.58, 1.26, 2.18, 2.95], [-0.29, 0.29, 2.2, 2.97]] as const;
+
+/** An RDC cab end at |x| = face, facing e: three rounded end windows, the end door's seams and grab irons, the headlight housing with its twin lamps and the brow over it, and under the floor the anticlimber, the end sheet with the coupler pocket, the step, the MU sockets and the air hoses. */
+function rdcEndFace(m: MeshBuilder, b: SliceBody, e: number, face: number): void {
   const x = e * face, { z, y0, y1, seam } = RDC_END_DOOR;
-  const ax = (a: number, b: number): [number, number] => (e > 0 ? [x + a, x + b] : [x - b, x - a]);
+  const ax = (a: number, c: number): [number, number] => (e > 0 ? [x + a, x + c] : [x - c, x - a]);
+  const flat = (mat: string, off: number, z0: number, z1: number, v0: number, v1: number, r: number) => {
+    const p = roundedOutline(z0, z1, v0, v1, r).map(([zz, yy]): Vec3 => [x + e * off, yy, zz]);
+    m.facets(mat, p.slice(1, -1).flatMap((q, i) => [p[0]!, q, p[i + 2]!]), [e, 0, 0]);
+  };
+  m.scope("end windows", () => {
+    for (const [z0, z1, v0, v1] of RDC_END_PANES) {
+      flat("rubber", 0.006, z0, z1, v0, v1, 0.1);
+      flat("cabGlass", 0.009, z0 + 0.03, z1 - 0.03, v0 + 0.03, v1 - 0.03, 0.07);
+    }
+  });
   m.scope("end door", () => {
     const on = x + e * 0.004;
     decalX(m, "rubber", on, e, -z, -z + seam, y0, y1);
@@ -504,15 +545,71 @@ function rdcEndFace(m: MeshBuilder, e: number, face: number): void {
     const bezel = hoodRing(h.z - 0.03, h.y0 + 0.03, h.y1 - 0.03, h.r - 0.03);
     m.sweep("black", "x", bezel, x + e * h.out, bezel, x + e * (h.out + 0.012));
     faceLamps(m, e, face + h.out + 0.012, [[-0.125, (h.y0 + h.y1) / 2, 0.08, "lampHead"], [0.125, (h.y0 + h.y1) / 2, 0.08, "lampHead"]]);
+    // the brow over the housing, rising from the end wall's top corners over the dome (B&M 6211)
+    const onDome = (zz: number, yy: number): Vec3 => {
+      let dd = 0;
+      for (let k = 0; k <= 80; k++) { dd = k * 0.01; if (crownPoint(b, e > 0 ? dd : b.length - dd, Math.abs(zz))[1] >= yy) break; }
+      return [e * (face - dd + 0.02), yy + 0.012, zz];
+    };
+    const brow: Pt[] = [[-0.85, 3.16], [-0.62, 3.42], [-0.42, 3.57], [0.42, 3.57], [0.62, 3.42], [0.85, 3.16]];
+    for (let i = 0; i + 1 < brow.length; i++) m.rod("ss", onDome(...brow[i]!), onDome(...brow[i + 1]!), 0.022, 6);
   });
   m.scope("end sill", () => {
-    block(m, "ss", ...ax(-0.3, 0.035), 0.93, 1.03, -1.3, 1.3);
-    block(m, "ssDark", ...ax(-0.1, 0.17), 1.045, 1.075, -0.5, 0.5);
+    // the anticlimber along the floor, the step plate before the end door
+    block(m, "ss", ...ax(-0.05, 0.07), 0.98, 1.08, -1.32, 1.32);
+    block(m, "ssDark", ...ax(0.06, 0.2), 1.05, 1.085, -0.5, 0.5);
+    // the end sheet down to 0.52 m, the coupler in its pocket, the MU sockets, air hoses and corner steps
+    const [a, c] = ax(-0.32, -0.01);
     for (const s of [-1, 1]) {
-      const sec: Pt[] = [[s * 0.4, 1.06], [s * 1.3, 1.06], [s * 1.2, 0.45], [s * 0.4, 0.45]];
-      const [a, b] = ax(-0.36, -0.01);
-      m.sweep("ss", "x", sec, a, sec, b);
+      const sec: Pt[] = [[s * 0.33, 1.06], [s * 1.32, 1.06], [s * 1.22, 0.52], [s * 0.33, 0.52]];
+      m.sweep("ss", "x", sec, a, sec, c);
+      block(m, "black", ...ax(-0.01, 0.05), 0.78, 0.9, ...((s > 0 ? [0.62, 0.74] : [-0.74, -0.62]) as [number, number]));
+      m.rod("black", [x + e * 0.03, 0.74, s * 0.48], [x + e * 0.16, 0.5, s * 0.42], 0.028, 6);
+      block(m, "ssDark", ...ax(-0.02, 0.12), 0.5, 0.53, ...((s > 0 ? [1.0, 1.25] : [-1.25, -1.0]) as [number, number]));
     }
+    block(m, "ss", a, c, 0.52, 0.62, -0.33, 0.33);
+    block(m, "black", ...ax(-0.36, -0.3), 0.62, 1.05, -0.33, 0.33);
+  });
+}
+
+/** The Budd truck at model x xc: an outside frame with rounded ends over SKF roller-bearing boxes, a drop equalizer under each side with its springs, swing hangers and bolster springs, disc brakes on the axles. */
+function rdcTruck(m: MeshBuilder, xc: number): void {
+  const R = ft(0, 16.5), ay = R * Math.cos(Math.PI / 20), a2 = ft(8, 6) / 2;
+  for (const dx of [-a2, a2])
+    m.scope("wheelset", () => {
+      const x = xc + dx;
+      const axle = ngon(8, 0.08, 0, x, ay);
+      m.sweep("steel", "z", axle, -0.9, axle, 0.9);
+      for (const s of [-1, 1]) {
+        extrude(m, "steel", "z", ngon(20, R, Math.PI / 20, x, ay), side(s, 0.665, 0.8));
+        extrude(m, "wheel", "z", ngon(16, R * 0.82, 0, x, ay), side(s, 0.8, 0.82));
+        m.scope("axle box", () => extrude(m, "bogie", "z", ngon(10, 0.13, 0, x, ay), side(s, 0.82, 1.03)));
+        m.scope("box cover", () => extrude(m, "spring", "z", ngon(10, 0.085, 0, x, ay), side(s, 1.03, 1.07)));
+        // the disc brake on the axle and its caliper
+        m.scope("brake disc", () => extrude(m, "steel", "z", ngon(14, 0.27, 0, x, ay), side(s, 0.3, 0.36)));
+        block(m, "bogie", x - 0.08, x + 0.08, ay + 0.2, ay + 0.33, ...side(s, 0.27, 0.39));
+      }
+    });
+  m.scope("frame", () => {
+    for (const s of [-1, 1]) {
+      // the side frame: a bar with rounded ends over the boxes, pedestal jaws round each box
+      const bar: Pt[] = [[-1.78, 0.72], [-1.7, 0.66], [1.7, 0.66], [1.78, 0.72], [1.78, 0.83], [1.7, 0.89], [-1.7, 0.89], [-1.78, 0.83]];
+      extrude(m, "bogie", "z", bar.map(([u, v]): [number, number] => [xc + u, v]), side(s, 0.9, 1.0));
+      for (const a of [-a2, a2]) for (const j of [-1, 1]) block(m, "bogie", xc + a + j * 0.16 - 0.035, xc + a + j * 0.16 + 0.035, ay + 0.02, 0.67, ...side(s, 0.9, 1.0));
+      // the drop equalizer from box to box, sagging between the axles, its springs up to the frame
+      const eq = (pts: Pt[]) => extrude(m, "bogie", "z", pts.map(([u, v]): [number, number] => [xc + u, v]), side(s, 0.93, 0.99));
+      eq([[-a2, ay + 0.13], [-0.95, 0.3], [-0.95, 0.4], [-a2, ay + 0.2]]);
+      eq([[-0.95, 0.3], [0.95, 0.3], [0.95, 0.4], [-0.95, 0.4]]);
+      eq([[0.95, 0.3], [a2, ay + 0.13], [a2, ay + 0.2], [0.95, 0.4]]);
+      for (const u of [-0.8, 0.8]) coil(m, "spring", xc + u, s * 0.965, 0.4, 0.66, 0.06, 3, 6);
+      // the swing hangers carrying the spring plank, the bolster springs on it
+      for (const u of [-0.36, 0.36]) block(m, "bogie", xc + u - 0.03, xc + u + 0.03, 0.47, 0.88, ...side(s, 1.005, 1.045));
+      for (const u of [-0.16, 0.16]) coil(m, "spring", xc + u, s * 0.78, 0.52, 0.8, 0.09, 3, 6);
+    }
+    // the spring plank, the bolster, the transoms
+    block(m, "bogie", xc - 0.4, xc + 0.4, 0.46, 0.52, -1.04, 1.04);
+    block(m, "bogie", xc - 0.26, xc + 0.26, 0.8, 0.95, -0.88, 0.88);
+    for (const u of [-0.62, 0.62]) block(m, "bogie", xc + u - 0.08, xc + u + 0.08, 0.7, 0.84, -0.9, 0.9);
   });
 }
 
@@ -526,7 +623,7 @@ export function buddRdcLod(params?: ParamValues): MeshBuilder {
   const t = resolveParams(RDC_PARAMS, params).variant as RdcType;
   const c = rdcDef(t), X = (d: number) => RDC_LENGTH / 2 - RDC_GAP - d;
   const parts = [
-    ...bogieParts(c.trucks.map((d) => [X(d), c.truck.frameHalf] as const), c.spec.B),
+    ...bogieParts(RDC_TRUCK_D.map((d) => [X(d), 1.78] as const), c.spec.B),
     roofPart("ss", X(RDC_CANOPY.d[0] + 0.4), X(RDC_CANOPY.d[1] - 0.4), 1.05, 0.8, 3.9, 4.43),
   ];
   return fitUnit({ palette: { ...CARBODY_PALETTE, ...RDC_PAL }, bodies: [carLodBody(c, X)], parts }, 100);
