@@ -91,6 +91,8 @@ export const CATEGORY_LABELS: Readonly<Record<string, string>> = {
 
 /** A vehicle's traction (meta `traction`): a grouping label in the vehicle picker. */
 export const TRACTION_LABELS: Readonly<Record<string, string>> = {
+  animal: "Animal",
+  cable: "Cable",
   diesel: "Diesel",
   electric: "Electric",
   steam: "Steam",

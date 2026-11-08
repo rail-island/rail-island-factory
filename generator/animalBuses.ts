@@ -38,8 +38,11 @@ import { BUS_CATALOG } from "./buses.ts";
 import { block, side } from "./vehicleParts.ts";
 import { TAU } from "./characterKit.ts";
 import { lodBlock, lodSideBox, lodWheel } from "./lodKit.ts";
-import type { ParamValues, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import { animalVehicleDesign, buildAnimalVehicle, buildAnimalVehicleLod, type AnimalVehicleSpec } from "./animalVehicleKit.ts";
+
+/** The road coaches: buses drawn by their team (the Animal chip and pill). */
+const ANIMAL_BUS_CATALOG: CatalogFields = { ...BUS_CATALOG, traction: "animal" };
 
 // ---------------------------------------------------------------------------
 // the palettes
@@ -372,7 +375,7 @@ const KNIFEBOARD: AnimalVehicleSpec = {
   id: "veh-animal-bus-knifeboard-omnibus",
   title: "Knifeboard Omnibus",
   kind: "road",
-  catalog: BUS_CATALOG,
+  catalog: ANIMAL_BUS_CATALOG,
   palette: KB_PALETTE,
   weight: 1.4,
   maxspeed: 15,
@@ -539,7 +542,7 @@ const STAGECOACH: AnimalVehicleSpec = {
   id: "veh-animal-bus-stagecoach",
   title: "Concord Stagecoach",
   kind: "road",
-  catalog: BUS_CATALOG,
+  catalog: ANIMAL_BUS_CATALOG,
   palette: SC_PALETTE,
   weight: 1.1,
   maxspeed: 20,
@@ -767,7 +770,7 @@ const PARIS: AnimalVehicleSpec = {
   id: "veh-animal-bus-paris-omnibus",
   title: "Paris Omnibus",
   kind: "road",
-  catalog: BUS_CATALOG,
+  catalog: ANIMAL_BUS_CATALOG,
   palette: PO_PALETTE,
   weight: 2.6,
   maxspeed: 15,
@@ -904,7 +907,7 @@ const WAGONETTE: AnimalVehicleSpec = {
   id: "veh-animal-bus-wagonette",
   title: "Wagonette",
   kind: "road",
-  catalog: BUS_CATALOG,
+  catalog: ANIMAL_BUS_CATALOG,
   palette: WG_PALETTE,
   weight: 0.9,
   maxspeed: 18,

@@ -13,10 +13,11 @@ import { Tram, articulate, type Pt, type PxBox, type SourceVolume, type TramMap 
 import { tramLod } from "./lodTrams.ts";
 import { TRAM_COLLECTOR_TOP } from "./collector.ts";
 
-/** The game-catalog fields of the trams: rail vehicles in their own pool. */
+/** The game-catalog fields of the trams: rail vehicles in their own pool, electric unless stated. */
 export const TRAM_CATALOG: CatalogFields = {
   category: "Rail vehicles",
   group: "tram",
+  traction: "electric",
   defaultScale: 1,
   license: "CC0",
   author: "Rail Island",

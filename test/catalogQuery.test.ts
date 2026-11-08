@@ -161,6 +161,34 @@ describe("the filter chips", () => {
     expect(chipLabel("unit")).toBe("Unit");
   });
 
+  it("files animal-drawn vehicles under an Animal chip in Trains and Road vehicles, and splits trams by traction", () => {
+    const fleet = prepareRows([
+      rec("loco-d", "CD 750", 1, { category: "Rail vehicles", group: "loco", traction: "diesel" }),
+      rec("coach", "Bmo", 1, { category: "Rail vehicles", group: "coach" }),
+      rec("horse-coach", "Budweis-Linz Coach", 1, { category: "Rail vehicles", group: "coach", traction: "animal" }),
+      rec("horse-wagon", "Mine Tub", 1, { category: "Rail vehicles", group: "wagon", traction: "animal" }),
+      rec("bus", "Citaro", 1, { category: "Road vehicles", group: "bus" }),
+      rec("truck", "Mixer", 1, { category: "Road vehicles", group: "truck" }),
+      rec("omnibus", "Knifeboard Omnibus", 1, { category: "Road vehicles", group: "bus", traction: "animal" }),
+      rec("tram-e", "Tatra T3", 1, { category: "Rail vehicles", group: "tram", traction: "electric" }),
+      rec("tram-c", "San Francisco cable car", 1, { category: "Rail vehicles", group: "tram", traction: "cable" }),
+      rec("tram-a", "Closed Horsecar", 1, { category: "Rail vehicles", group: "tram", traction: "animal" }),
+    ]);
+    expect(chipRows(fleet, { ...NO_CHIPS, group: "train" }).l2).toEqual(["animal", "coach", "loco"]);
+    expect(chipRows(fleet, { ...NO_CHIPS, group: "moto" }).l2).toEqual(["animal", "bus", "truck"]);
+    expect(chipRows(fleet, { ...NO_CHIPS, group: "tram" }).l2).toEqual(["animal", "cable", "electric"]);
+    // an Animal pick has no traction row of its own
+    expect(chipRows(fleet, { group: "train", l2: "animal", l3: null }).l3).toEqual([]);
+    const pick = (group: string, l2: string) => queryRows(fleet, "", "title", "asc", { group, l2, l3: null }).map((r) => r.id);
+    expect(pick("train", "animal")).toEqual(["horse-coach", "horse-wagon"]);
+    expect(pick("train", "coach")).toEqual(["coach"]);
+    expect(pick("moto", "animal")).toEqual(["omnibus"]);
+    expect(pick("moto", "bus")).toEqual(["bus"]);
+    expect(pick("tram", "animal")).toEqual(["tram-a"]);
+    expect(pick("tram", "electric")).toEqual(["tram-e"]);
+    expect(["animal", "cable"].map(chipLabel)).toEqual(["Animal", "Cable"]);
+  });
+
   it("filters the listing by the picked chips", () => {
     expect(ids({ group: "train" })).toEqual(["veh-bmo", "proc-vehicle-cd-150", "proc-vehicle-cd-163"]);
     expect(ids({ group: "train", l2: "loco" })).toEqual(["proc-vehicle-cd-150", "proc-vehicle-cd-163"]);

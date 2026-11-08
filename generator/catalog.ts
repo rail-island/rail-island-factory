@@ -70,7 +70,7 @@ export interface MetaEntry {
   category: string;
   /** The city block pool the model is drawn from; a vehicle's type (loco, unit, coach, ...). */
   group: string;
-  /** A locomotive's or a unit's traction: electric, diesel or steam. */
+  /** A locomotive's, a unit's or a tram's traction (electric, diesel, steam, cable), or `animal` for an animal-drawn vehicle. */
   traction?: string;
   /** A site preview's set type id, exactly as a saved game stores it; the site shows it in place of `id`. */
   gameId?: string;

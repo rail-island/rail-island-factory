@@ -7,7 +7,7 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";
-import type { GameProperties, ParamSpec, ParamValues, ProceduralDesign } from "./design.ts";
+import type { GameProperties, ParamSpec, ParamValues, ProceduralDesign, Traction } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { lodSideBox } from "./lodKit.ts";
 import { tramLodBudget, type Collector, type FrontKind, type Stack, type TramCtx, type TruckSpec, type WorldTramSpec } from "./worldTramKit.ts";
@@ -288,6 +288,8 @@ export interface WorldTram {
   finishParams?: readonly string[];
   game: GameProperties;
   references: string;
+  /** What drives it when it is not electric: a steam tram's engine, a cable car's rope. */
+  traction?: Traction;
 }
 
 export const g = (weight: number, power: number, maxspeed: number, variants?: GameProperties["variants"]): GameProperties =>
@@ -311,7 +313,7 @@ export function tramDesign(t: WorldTram): ProceduralDesign {
     ...(t.finishParams ? { finishParams: t.finishParams } : {}),
     references: t.references,
     lodTriangles: lodOf(t),
-    catalog: TRAM_CATALOG,
+    catalog: t.traction ? { ...TRAM_CATALOG, traction: t.traction } : TRAM_CATALOG,
   };
 }
 

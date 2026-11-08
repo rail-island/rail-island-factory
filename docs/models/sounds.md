@@ -94,7 +94,7 @@ the game keeps no rule of its own:
 | rail, `traction: "electric"`, top speed 200 km/h or more (`HIGH_SPEED_KMH`) | `loco-horn` by weight; calls `crossing`, `tunnel` | `electric-engine-shinkansen` (the TGVs, the Shinkansen) |
 | rail, `traction: "electric"`, group `unit` | `loco-horn` by weight; calls `crossing`, `tunnel` | `electric-engine-converter` (three-phase converters) |
 | rail, `traction: "electric"`, any other group (a locomotive) | `loco-horn` by weight; calls `crossing`, `tunnel` | `electric-engine-resistor` (blowers, gears, the controller's notches) |
-| rail, group `tram` | `tram-bell`; calls `departure` | none |
+| rail, group `tram` (any traction but `animal`) | `tram-bell`; calls `departure` | none |
 | every other rail vehicle (metro, coaches, wagons) | `loco-horn` by weight; calls `crossing`, `tunnel` | none |
 | ship | `ship-horn`, pitch 196 Hz (20 studs) to 70 Hz (120 studs), 0.7 to 2.2 s; the world fleet's steamships state a `steam-whistle` in the table ([world-ships.md](world-ships.md)) | - |
 | road vehicle, group `bus` | none | `diesel-engine-bus`, as measured (no size) |

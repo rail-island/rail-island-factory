@@ -15,7 +15,7 @@
 | `veh-kvag-gt4` | GT4 | - (tram_kvag_gt4) | two sections, one joint | 7,600 |
 | `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v); `livery`: `prague` (default), `budapest` | rigid | 11,300 / 10,500 |
 
-The trams take `TRAM_CATALOG` (category `Rail vehicles`, group `tram`), the metro
+The trams take `TRAM_CATALOG` (category `Rail vehicles`, group `tram`, traction `electric`), the metro
 car `METRO_CATALOG` (group `metro`). Every design has its `assets/<folder>/`
 (`tatra-t3`, `tatra-t6`, `tatra-kt8`, `tatra-kt4`, `gt4`, `metro-81-71`) with
 the native files, `SOURCES.md`, `PHOTOS.md` and `COMPARISON.md`.

@@ -41,7 +41,11 @@ weight and own top speed, the hitch, where the driver holds the reins, the body 
 coach's fore-carriage and king bolt), its rolling wheels, its distant model and its references -
 and exports `buildAnimalVehicle(spec, p)` and `buildAnimalVehicleLod(spec, p)` under its own names
 (the JS model imports build functions by name). `animalVehicleDesign` gives the design its
-parameters and its game figures (`teamGame`).
+parameters and its game figures (`teamGame`). Every design's catalog fields carry
+`traction: "animal"` (`HORSECAR_CATALOG`, `ANIMAL_COACH_CATALOG` and its wagon group,
+`ANIMAL_BUS_CATALOG`), which files it under the Animal chip of the site's Trains, Trams and
+Road vehicles rows and the game's Animal picker pill ([export.md](export.md),
+[../site/catalog-site.md](../site/catalog-site.md)).
 
 ### Rail and tram: the team a section ahead
 
