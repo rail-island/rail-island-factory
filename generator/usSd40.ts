@@ -14,7 +14,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { tubeX, type Band } from "./cd163.ts";
-import { block, bogieGeometry, exhaust, extrude, horn, paint, plate, side, tankX, type BogieSpec } from "./dieselParts.ts";
+import { block, bogieGeometry, coil, exhaust, extrude, horn, paint, plate, side, tankX, type BogieSpec } from "./dieselParts.ts";
 import { US_PALETTE, decalX, decalZ, knuckleCoupler, paintedSweep, sideText, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
@@ -285,27 +285,71 @@ export function buildSd40_2(p: Sd40Paint): MeshBuilder {
       m.scope(e > 0 ? "front truck" : "rear truck", () => m.bogie(() => {
         const xc = e * SD40_2_TRUCK_CENTRE;
         bogieGeometry(m, xc, HTC);
-        // the HT-C's deep cast side frame outside the toolkit's: low bellies between the axles, jaws over the axle boxes
-        m.scope("side frames", () => {
-          const xs = [-2.75, -2.45, -2.39, -1.75, -1.45, -0.62, -0.32, 0.32, 0.62, 1.45, 1.75, 2.39, 2.45, 2.75];
-          const bot = [0.8, 0.74, 0.7, 0.7, 0.5, 0.5, 0.7, 0.7, 0.5, 0.5, 0.7, 0.7, 0.74, 0.8];
-          const top = xs.map((x): [number, number] => [xc + x, Math.abs(x) > 2.4 ? 0.9 : 1.02]);
-          const bottom = xs.map((x, i): [number, number] => [xc + x, bot[i]!]);
-          for (const sd of sides) plate(m, p.trucks, top, bottom, ...side(sd, 1.065, 1.11));
-        });
-        // the HT-C's hydraulic dampers on the outer axle boxes, leaning in toward the bolster
-        m.scope("dampers", () => {
-          const ay = HTC.wheelR;
-          for (const dx of [-AXLE, AXLE])
-            for (const sd of sides) {
-              const z = sd * 1.13;
-              m.rod("bogie", [xc + dx, ay + 0.1, z], [xc + dx - Math.sign(dx) * 0.42, HTC.frameTop - 0.05, z], 0.045, 6);
-            }
-        });
+        m.scope("htc", () => htcCasting(m, p, xc));
       }));
   });
   m.scope("underframe", () => underframe(m, p));
   return m;
+}
+
+/**
+ * The HT-C's cast side frame outside the toolkit's, from the BN 7812 and NS 6155 photographs: a straight
+ * top chord, a deep web hiding most of each wheel with a low belly and three lightening holes between the
+ * axles, jaws either side of each axle box, the spring nest in its window over the box, and the hydraulic
+ * dampers on the outer axles.
+ */
+function htcCasting(m: MeshBuilder, p: Sd40Paint, xc: number): void {
+  const zi = 1.0, zo = 1.14, top = 1.08, win = 0.93, jawFoot = 0.4, belly = 0.45;
+  const ay = HTC.wheelR;
+  const axles = [-AXLE, 0, AXLE];
+  // the bottom edge from the rear end to the front: windows over the boxes, jaws, bellies
+  const bot: Array<[number, number]> = [[-2.85, 0.66], [-2.32, 0.58]];
+  for (let i = 0; i < axles.length; i++) {
+    const a = axles[i]!;
+    bot.push([a - 0.31, jawFoot], [a - 0.2, jawFoot], [a - 0.199, win], [a + 0.199, win], [a + 0.2, jawFoot], [a + 0.31, jawFoot]);
+    if (i + 1 < axles.length) {
+      const b = axles[i + 1]!;
+      bot.push([a + 0.311, 0.6], [a + 0.6, belly], [b - 0.6, belly], [b - 0.311, 0.6]);
+    }
+  }
+  bot.push([2.32, 0.58], [2.85, 0.66]);
+  const topLine = bot.map(([x]): [number, number] => [xc + x, Math.abs(x) > 2.5 ? top - ((Math.abs(x) - 2.5) / 0.35) * 0.16 : top]);
+  const bottom = bot.map(([x, y]): [number, number] => [xc + x, y]);
+  m.scope("side frames", () => {
+    for (const sd of sides) plate(m, p.trucks, topLine, bottom, ...side(sd, zi, zo));
+  });
+  m.scope("lightening holes", () => {
+    for (const sd of sides)
+      for (let i = 0; i + 1 < axles.length; i++) {
+        const mid = (axles[i]! + axles[i + 1]!) / 2;
+        const pts: Vec3[] = [];
+        for (const dx of [-0.36, 0, 0.36]) {
+          const q = ngon(8, 0.075, 0, xc + mid + dx, 0.66);
+          for (let k = 1; k + 1 < q.length; k++) for (const r of [q[0]!, q[k]!, q[k + 1]!]) pts.push([r[0], r[1], sd * (zo + 0.004)]);
+        }
+        m.facets("black", pts, [0, 0, sd]);
+      }
+  });
+  m.scope("axle boxes", () => {
+    for (const a of axles)
+      for (const sd of sides) {
+        block(m, p.trucks, xc + a - 0.19, xc + a + 0.19, ay - 0.17, ay + 0.17, ...side(sd, zi, zo + 0.04));
+        extrude(m, "spring", "z", ngon(8, 0.1, Math.PI / 8, xc + a, ay), side(sd, zo + 0.04, zo + 0.07));
+      }
+  });
+  m.scope("spring nests", () => {
+    for (const a of axles) for (const sd of sides) coil(m, "spring", xc + a, sd * 1.08, ay + 0.17, win, 0.1, 2, 6);
+  });
+  m.scope("dampers", () => {
+    for (const a of [-AXLE, AXLE])
+      for (const sd of sides) {
+        const z = sd * (zo + 0.08);
+        const lo = xc + a + Math.sign(a) * 0.12, hi = xc + a + Math.sign(a) * 0.5;
+        m.rod("bogie", [lo, ay + 0.05, z], [hi, top - 0.06, z], 0.05, 6);
+        block(m, "bogie", lo - 0.05, lo + 0.05, ay, ay + 0.1, ...side(sd, zo + 0.04, zo + 0.12));
+        block(m, "bogie", hi - 0.05, hi + 0.05, top - 0.11, top - 0.01, ...side(sd, zo, zo + 0.12));
+      }
+  });
 }
 
 function frame(m: MeshBuilder, p: Sd40Paint): void {
@@ -617,8 +661,11 @@ function underframe(m: MeshBuilder, p: Sd40Paint): void {
   const t = TANK;
   m.scope("fuel tank", () => {
     const sec = (k: number): Ring => {
-      const hw = t.half * k, bot = t.y0 + (1 - k) * 0.25;
-      return [[-hw, t.top], [hw, t.top], [hw, bot + 0.28], [hw - 0.12, bot + 0.08], [hw - 0.35, bot], [-(hw - 0.35), bot], [-(hw - 0.12), bot + 0.08], [-hw, bot + 0.28]];
+      // a bulged body: the sides swelling out below the top, the lower edges rounded on a 0.42 m radius
+      const hw = t.half * k, bot = t.y0 + (1 - k) * 0.2, r = 0.42 * k, cy = bot + r;
+      const right: Array<[number, number]> = [[hw - 0.06, t.top], [hw, t.top - 0.12]];
+      for (let i = 0; i <= 5; i++) { const a = (i / 5) * (Math.PI / 2); right.push([hw - r + r * Math.cos(a), cy - r * Math.sin(a)]); }
+      return [...right, ...right.slice().reverse().map(([z, y]): [number, number] => [-z, y])];
     };
     m.sweep(p.tank, "x", sec(1), t.x0 + 0.3, sec(1), t.x1 - 0.3, false);
     m.sweep(p.tank, "x", sec(0.86), t.x0, sec(1), t.x0 + 0.3, false);
@@ -630,16 +677,13 @@ function underframe(m: MeshBuilder, p: Sd40Paint): void {
       m.facets(p.tank, pts, [Math.sign(x), 0, 0]);
     }
     for (const sd of sides) {
-      decalZ(m, "white", sd * (t.half + 0.004), sd, -0.5, 0.3, t.top - 0.4, t.top - 0.26);
-      block(m, "steel", t.x1 - 0.7, t.x1 - 0.5, t.top - 0.36, t.top - 0.14, ...side(sd, t.half, t.half + 0.05));
-      extrude(m, "white", "z", ngon(10, 0.07, 0, t.x1 - 1.1, t.top - 0.28), side(sd, t.half, t.half + 0.02));
+      decalZ(m, "white", sd * (t.half + 0.004), sd, -0.5, 0.3, t.top - 0.3, t.top - 0.17);
+      block(m, "steel", t.x1 - 0.7, t.x1 - 0.5, t.top - 0.34, t.top - 0.16, ...side(sd, t.half, t.half + 0.05));
+      extrude(m, "white", "z", ngon(10, 0.07, 0, t.x1 - 1.1, t.top - 0.24), side(sd, t.half, t.half + 0.02));
     }
   });
   m.scope("air reservoirs", () => {
     for (const sd of sides) tankX(m, "tank", -3.3, 0.9, sd * 1.12, 1.12, 0.15);
-  });
-  m.scope("battery boxes", () => {
-    for (const sd of sides) block(m, p.frame, 3.65, 4.2, 0.85, SILL, ...side(sd, 1.0, 1.45));
   });
 }
 

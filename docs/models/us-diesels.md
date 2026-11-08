@@ -9,7 +9,7 @@
 | id | title | `livery` values (default first) | over couplers | truck centres | triangles |
 |---|---|---|---|---|---|
 | `proc-vehicle-emd-gp9` | EMD GP9 | `unionPacific`, `pennsylvania`, `santaFe` | 17.12 m | 9.45 m (B-B) | about 6,900 |
-| `proc-vehicle-emd-sd40-2` | EMD SD40-2 | `burlingtonNorthern`, `conrail`, `unionPacific` | 20.98 m | 13.26 m (C-C) | about 11,950 - 12,250 |
+| `proc-vehicle-emd-sd40-2` | EMD SD40-2 | `burlingtonNorthern`, `conrail`, `unionPacific` | 20.98 m | 13.26 m (C-C) | about 14,350 - 14,650 |
 | `proc-vehicle-ge-es44ac` | GE ES44AC | `bnsf`, `unionPacific`, `csx` | 22.30 m | 16.15 m (C-C) | about 9,000 |
 | `proc-vehicle-emd-sd70ace` | EMD SD70ACe | `unionPacific`, `norfolkSouthern`, `bnsf` | 22.63 m | 14.58 m (C-C) | about 9,100 |
 
@@ -68,8 +68,8 @@ header with the twin headlight (the horn on it) and the number boards on its ang
 corners, the sliding side window under an awning; the low nose (to x 8.95, 3.45 m)
 with rounded front corners and top edge, sand fillers, marker lights and the bell;
 corner step wells at all four corners, a snowplow at the front; HT-C trucks at
-43 ft 6 in with a deep cast side frame over the toolkit's and dampers on the outer axles; the fuel tank (x -3.4 - 3.5) with the
-air reservoirs over it. Running numbers are the photographed units (BN 7812,
+43 ft 6 in with their deep cast side frames (top chord, bellies with lightening holes, jaws, axle boxes, spring nests) over the toolkit's and dampers on the outer axles; the fuel tank (x -3.4 - 3.5) with the
+air reservoirs over it (its lower edges rounded). Running numbers are the photographed units (BN 7812,
 CR 6469, UP 3741).
 
 ## Liveries
