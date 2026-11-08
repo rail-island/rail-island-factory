@@ -633,104 +633,647 @@ export function buildF7(l: F7Livery, unit: F7Unit | "train" = "aUnit", units = 2
 
 // ---------------------------------------------------------------------------
 // GE P42DC Genesis
+//
+// Measured from the photographs in assets/ge-p42dc/ (SOURCES.md): the near-orthographic
+// side of 167 (51 px/m) for every opening, grille and step along the body and the face's
+// rake; 27 head-on (136 px/m) for the face's heights and widths; 78, 99, 107, 59 and 95
+// for the V-shaped face, its corner chamfers, the rear end and the Phase V fields; 145
+// for Phase III and 915 for VIA. d is metres back from the face's apex at the knee.
+
+import { drawShell, edgeRole, sliceHalf } from "./sliceBody.ts";
+import { add, sub } from "./sliceLoft.ts";
+import { plate } from "./vehicleParts.ts";
+import { lodRoofBox } from "./lodKit.ts";
 
 const P42_LENGTH = ft(69); // 21.03 m
 const P42_REACH = 0.4;
 const P42_BODY = P42_LENGTH - P42_REACH - 0.35;
 const P42_TRUCK = ft(43, 2.5) / 2;
+const P42_TIP = P42_LENGTH / 2 - P42_REACH;
 
-const P42_SPEC: CarbodySpec = {
-  length: P42_BODY, W: 1.52, Y: 1.4, S: 4.05, C: 4.37, lean: 0.94, arc: 5, B: 1.0, wl: 1.42, A: 1.32, wa: 1.49,
-  front: {
-    len: 1.2, tip: 0.55, power: 1.6,
-    C: [[0, 2.3], [0.12, 2.78], [0.55, 3.08], [0.75, 3.14], [1.55, 4.12], [1.95, 4.37]],
-    S: [[0, 2.2], [0.12, 2.68], [0.55, 2.98], [0.75, 3.04], [1.55, 3.86], [1.95, 4.05]],
-    Y: [[0, 1.6], [0.3, 1.45], [0.6, 1.4]],
-    A: [[0, 1.45], [0.4, 1.32]],
-    B: [[0, 1.42], [0.2, 1.05], [0.4, 1.0]],
-  },
-  cuts: truckCuts(P42_LENGTH / 2 - P42_REACH, P42_TRUCK, 1.95),
-  edges: [], step: 1.0, noseStep: 0.15,
+/** The section: 10 ft wide; the skirt's bottom, the body's foot and belly; the crease where the upper band leans in, its top; the crown (14 ft 4 in). */
+const P42_W = 1.524;
+const P42_B = 0.72, P42_A = 1.1, P42_Y = 1.12;
+const P42_CREASE = 3.3, P42_BAND = 4.02, P42_CROWN = 4.37;
+/** The section's top from the crease inward: the leaning band, the roof's rounded edge, [z, y]. */
+const P42_TOP: readonly Pt[] = [[P42_W, P42_CREASE], [1.33, P42_BAND], [1.2, 4.23], [1.06, 4.32], [0.75, 4.36], [0.375, P42_CROWN], [0, P42_CROWN]];
+/** The arc's points' half widths: the section's corners and the face's kink at the V's corner. */
+const P42_ARC_Z = [1.33, 1.27, 1.2, 1.06, 0.75, 0.375];
+/**
+ * The face: the knee's height; the upper face's rake (1.64 m up per metre back, 58.6 degrees);
+ * the V in plan, its corners `VD` behind the apex at half width `VW`; the corner chamfer to the
+ * full width over `CD`; the rounding where the face meets the roof.
+ */
+const P42_KNEE = 2.15, P42_RAKE = 1.64, P42_VD = 0.27, P42_VW = 1.27, P42_CD = 0.25, P42_ROUND = 0.14;
+/** The skirt's cut-outs: the front truck, and from the fairing's tail past the rear truck to the end. */
+const P42_CUTS: ReadonlyArray<readonly [number, number]> = [[1.55, 5.95], [13.55, P42_BODY]];
+const P42_CUT_R = 0.5;
+/** The rear end's corners, rounded in plan. */
+const P42_REAR_R = 0.12;
+
+const p42TopAt = (z: number): number => {
+  for (let i = 0; i + 1 < P42_TOP.length; i++) {
+    const [[za, ya], [zb, yb]] = [P42_TOP[i]!, P42_TOP[i + 1]!];
+    if (z <= za + 1e-9 && z >= zb - 1e-9) return za - zb < 1e-9 ? ya : ya + ((za - z) / (za - zb)) * (yb - ya);
+  }
+  return z > P42_W ? P42_CREASE : P42_CROWN;
 };
+/** The face's setback behind the apex at half width z (the knee's plan). */
+const p42Setback = (z: number): number => (z <= P42_VW ? (P42_VD * z) / P42_VW : P42_VD + P42_CD * Math.min(1, (z - P42_VW) / (P42_W - P42_VW)));
+/** The half width at d: the V, the corner chamfer, the rear's rounded corners. */
+function p42Plan(d: number): number {
+  let v = d <= P42_VD ? Math.max(0.03, (P42_VW * d) / P42_VD) : d < P42_VD + P42_CD ? P42_VW + ((P42_W - P42_VW) * (d - P42_VD)) / P42_CD : P42_W;
+  const t = d - (P42_BODY - P42_REAR_R);
+  if (t > 0) v = Math.min(v, P42_W - P42_REAR_R + P42_REAR_R * Math.sqrt(Math.max(0, 1 - (t / P42_REAR_R) ** 2)));
+  return v;
+}
+/** The upper face's height at (d, z). */
+const p42Face = (d: number, z: number): number => P42_KNEE + P42_RAKE * (d - p42Setback(z));
+const smin = (a: number, b: number, k: number): number => {
+  const h = Math.max(k - Math.abs(a - b), 0) / k;
+  return Math.min(a, b) - (h * h * k) / 4;
+};
+/** The body's top at (d, z): the section under the face. */
+const p42Top = (d: number, z: number): number => smin(p42TopAt(z), p42Face(d, z), P42_ROUND);
+
+/** The skirt's bottom: lifted to the foot over the cuts, the fairing's ends rounded. */
+function p42Skirt(d: number): number {
+  for (const [a, c] of P42_CUTS) {
+    if (d < a - 1e-9 || d > c + 1e-9) continue;
+    const e = Math.min(d - a, c >= P42_BODY - 1e-6 ? Infinity : c - d);
+    if (e >= P42_CUT_R) return P42_A;
+    return P42_B + (P42_A - P42_B) * Math.sqrt(Math.max(0, 1 - (1 - e / P42_CUT_R) ** 2));
+  }
+  return P42_B;
+}
+
+/** The P42's body as a slice body: its own section (the leaning band, the rounded roof) and the V-shaped face. */
+function p42Body(edges: readonly number[], extra: readonly number[] = []): SliceBody {
+  const L = P42_BODY;
+  const S = (d: number) => Math.min(P42_CREASE, p42Face(d, p42Plan(d)));
+  const st = new Set<number>([0, L, P42_VD, P42_VD + P42_CD, 0.52 + (P42_CREASE - P42_KNEE) / P42_RAKE, ...extra]);
+  for (let d = 0; d <= 2.0 + 1e-9; d += 0.08) st.add(d);
+  for (let d = 2.0; d < L; d += 1.0) st.add(d);
+  // a cut's ends and the stations round its arches
+  for (const [a, c] of P42_CUTS)
+    for (const e of [0, ...[1, 2, 3, 4].map((k) => P42_CUT_R * (1 - Math.cos((k / 4) * (Math.PI / 2))))]) {
+      st.add(a + e);
+      if (c < L - 1e-6) st.add(c - e);
+    }
+  for (const t of [0.12, 0.07, 0.03]) st.add(L - t);
+  const stations = [...st].map((d) => Math.round(d * 1000) / 1000).filter((d, i, a) => d >= 0 && d <= L && a.indexOf(d) === i).sort((p, q) => p - q);
+  return {
+    length: L,
+    B: p42Skirt, wl: (d) => Math.max(0.02, p42Plan(d) - 0.1), A: () => P42_A, wa: (d) => p42Plan(d) * 0.997,
+    Y: () => P42_Y, w: p42Plan, S, C: (d) => Math.max(S(d) + 0.01, p42Top(d, 0)),
+    edges: (d) => edges.map((y) => Math.min(S(d), Math.max(P42_Y, y))),
+    lean: 1, arc: P42_ARC_Z.length + 1, stations,
+    arcProfile: (d) => {
+      const w = p42Plan(d), s = S(d);
+      return P42_ARC_Z.map((z0, i): Pt => {
+        const z = Math.min(z0, w - 0.004 * (i + 1));
+        return [z, Math.max(s, p42Top(d, z))];
+      });
+    },
+  };
+}
+
+/** A P42 livery: the side's bands, the cab's field over the face and the cab, the upper band's paint, decorations. */
+export interface P42Livery extends CarbodyLivery {
+  /** The cab's paint: the face over `face` (its height at the centre and at the V's corners), the cab's side over `cabLine` ([d, y] to the band's top), the roof. */
+  cab: string;
+  face: readonly [number, number];
+  cabLine: readonly Pt[];
+  /** The leaning upper band's paint behind the cab. */
+  band: string;
+  /** The face under `face`, by height (default the side's bands). */
+  faceBands?: ReadonlyArray<readonly [number, number, string]>;
+  /** Phase V: the roof's paint coming down the band at the rear, its lower edge [d, y]. */
+  swoosh?: readonly Pt[];
+  /** VIA: a field over the side from the nose, its lower edge [d, y] up to the crease. */
+  wedge?: { mat: string; edge: readonly Pt[] };
+  truck: string;
+  pilot: string;
+  /** The side's lettering besides `lettering`: [text, d, y, h, paint]. */
+  marks?: ReadonlyArray<readonly [string, number, number, number, string]>;
+  /** The Amtrak travel mark under the lettering. */
+  travelMark?: string;
+  /** The side number: d of its centre, foot, height. */
+  sideNumber: readonly [number, number, number];
+}
 
 const P42_PAL = {
-  silver: paint("#c2c6ca", 0.35), amBlue: paint("#1f3f7a"), amRed: paint("#b8222a"), amWhite: paint("#f0f0ec"), amDark: paint("#23272d"),
-  viaBlue: paint("#1b2f6b"), viaYellow: paint("#f2c31a"), viaGrey: paint("#a8abaf", 0.4),
+  silver: paint("#c3c7cb", 0.35), amBlue: paint("#1f5b97"), amRed: paint("#c0262c"), amWhite: paint("#f0f0ec"), amDark: paint("#1f2124", 0.6),
+  p42Skirt: paint("#6c7177", 0.6), p42Truck: paint("#5d6064", 0.7), p42Pilot: paint("#3d4043", 0.8), p42Lens: paint("#3d7fc4", 0.2),
+  viaBlue: paint("#1f5f7e"), viaYellow: paint("#ecc22a"), viaGrey: paint("#aeb2b6", 0.4),
   truckBlack: paint("#242527", 0.85),
 };
 const pickP42 = (...n: Array<keyof typeof P42_PAL>) => Object.fromEntries(n.map((k) => [k, P42_PAL[k]]));
 
-export const P42_LIVERIES: Record<string, CarbodyLivery> = {
+export const P42_LIVERIES: Record<string, P42Livery> = {
   phaseV: {
-    title: "Amtrak Phase V", palette: pickP42("silver", "amBlue", "amRed", "amDark", "truckBlack"),
-    bands: [[0, 1.62, "amBlue"], [1.62, 1.68, "amRed"], [1.68, 3.75, "silver"], [3.75, 9, "amBlue"]],
-    roof: "amBlue", skirt: "amBlue", under: "truckBlack",
-    lettering: { text: "AMTRAK", d: 11.5, y: 2.55, h: 0.42, mat: "amBlue" },
-    number: "100", numberMat: "amBlue",
+    title: "Amtrak Phase V", palette: pickP42("silver", "amBlue", "amRed", "p42Skirt", "p42Truck", "p42Pilot", "p42Lens", "truckBlack"),
+    bands: [[0, 1.17, "amRed"], [1.17, 9, "silver"]],
+    roof: "amBlue", skirt: "p42Skirt", under: "truckBlack", truck: "p42Truck", pilot: "p42Pilot",
+    cab: "amBlue", band: "silver", face: [2.2, 2.48], cabLine: [[0.72, 2.48], [2.84, P42_CREASE], [4.0, P42_BAND]],
+    swoosh: [[13.4, P42_BAND], [14.3, 3.86], [15.3, 3.77], [P42_BODY, 3.75]],
+    lettering: { text: "AMTRAK", d: 5.7, y: 2.98, h: 0.3, mat: "amBlue" }, travelMark: "amBlue",
+    number: "78", numberMat: "amBlue", sideNumber: [14.6, 1.7, 0.62],
   },
   phaseIII: {
-    title: "Amtrak Phase III", palette: pickP42("silver", "amBlue", "amRed", "amWhite", "amDark", "truckBlack"),
-    bands: [[0, 2.0, "silver"], [2.0, 2.16, "amRed"], [2.16, 2.22, "amWhite"], [2.22, 2.38, "amBlue"], [2.38, 9, "silver"]],
-    roof: "silver", skirt: "amDark", under: "truckBlack",
-    lettering: { text: "AMTRAK", d: 11.5, y: 2.75, h: 0.42, mat: "amDark" },
-    number: "42", numberMat: "amDark",
+    title: "Amtrak Phase III", palette: pickP42("silver", "amBlue", "amRed", "amWhite", "amDark", "p42Lens", "truckBlack"),
+    bands: [[0, 1.17, "amDark"], [1.17, 1.9, "silver"], [1.9, 2.16, "amBlue"], [2.16, 2.36, "amWhite"], [2.36, 2.61, "amRed"], [2.61, 9, "silver"]],
+    roof: "amDark", skirt: "amDark", under: "truckBlack", truck: "truckBlack", pilot: "amDark",
+    cab: "amDark", band: "silver", face: [2.61, 2.61], cabLine: [[0.8, 2.61], [2.84, P42_CREASE], [3.4, P42_BAND]],
+    lettering: { text: "AMTRAK", d: 11.0, y: 2.72, h: 0.32, mat: "amDark" },
+    number: "145", numberMat: "amDark", sideNumber: [11.0, 2.19, 0.14],
   },
   via: {
-    title: "VIA Rail", palette: pickP42("viaBlue", "viaYellow", "viaGrey", "truckBlack"),
-    bands: [[0, 1.75, "viaBlue"], [1.75, 1.88, "viaYellow"], [1.88, 9, "viaGrey"]],
-    roof: "viaGrey", skirt: "viaBlue", under: "truckBlack",
-    lettering: { text: "VIA", d: 11.5, y: 2.6, h: 0.5, mat: "viaBlue" },
-    number: "901", numberMat: "viaBlue",
+    title: "VIA Rail", palette: pickP42("viaBlue", "viaYellow", "viaGrey", "amWhite", "amRed", "p42Pilot", "p42Lens", "truckBlack"),
+    bands: [[0, 1.3, "viaBlue"], [1.3, 1.45, "viaYellow"], [1.45, 9, "viaGrey"]],
+    roof: "viaBlue", skirt: "viaBlue", under: "truckBlack", truck: "truckBlack", pilot: "p42Pilot",
+    cab: "viaBlue", band: "viaBlue", face: [2.2, 2.2], faceBands: [[0, 9, "viaYellow"]],
+    // the blue comes down the cab from the nose and runs the length a little under the crease
+    cabLine: [[0.55, 2.2], [1.4, 2.7], [2.1, 2.93], [3.3, 3.07], [4.8, 3.15], [P42_BODY, 3.18]],
+    wedge: { mat: "viaYellow", edge: [[0, 1.45], [4.5, 1.5], [13.1, P42_CREASE]] },
+    lettering: { text: "VIA", d: 15.0, y: 2.7, h: 0.45, mat: "viaYellow" },
+    marks: [["CANADA", 11.2, 0.7, 0.24, "amWhite"]],
+    number: "915", numberMat: "amWhite", sideNumber: [2.45, 3.0, 0.2],
   },
 };
 
-export function buildP42(l: CarbodyLivery): MeshBuilder {
+const p42Lerp = (t: readonly Pt[], d: number): number => {
+  if (d <= t[0]![0]) return t[0]![1];
+  for (let i = 0; i + 1 < t.length; i++) {
+    const [[a, ya], [c, yc]] = [t[i]!, t[i + 1]!];
+    if (d <= c) return ya + ((d - a) / Math.max(1e-9, c - a)) * (yc - ya);
+  }
+  return t[t.length - 1]![1];
+};
+const p42BandOf = (bands: ReadonlyArray<readonly [number, number, string]>, y: number): string => {
+  for (const [a, c, mt] of bands) if (y >= a - 1e-9 && y < c - 1e-9) return mt;
+  return bands[bands.length - 1]![2];
+};
+/** The d where the cab's line crosses the band's middle: the shell's band changes paint there. */
+const p42CabSwitch = (l: P42Livery): number => {
+  const mid = (P42_CREASE + P42_BAND) / 2;
+  const t = l.cabLine;
+  for (let i = 0; i + 1 < t.length; i++) if (t[i]![1] <= mid && t[i + 1]![1] >= mid) return t[i]![0] + ((mid - t[i]![1]) / (t[i + 1]![1] - t[i]![1])) * (t[i + 1]![0] - t[i]![0]);
+  return t[t.length - 1]![0];
+};
+
+/** The upper face's point at half width z and height y on side s (the V's planes and the corner chamfers'), `out` off it, and its normal. */
+function p42FaceAt(X: (d: number) => number, z: number, y: number, s: number, out = 0): { p: Vec3; n: Vec3 } {
+  const a = z <= P42_VW ? P42_VD / P42_VW : P42_CD / (P42_W - P42_VW);
+  const n = norm([P42_RAKE, 1, s * P42_RAKE * a]);
+  const d = p42Setback(z) + (y - P42_KNEE) / P42_RAKE;
+  return { p: [X(d) + n[0] * out, y + n[1] * out, s * z + n[2] * out], n };
+}
+/** The lower face's point (the knee's V, vertical) at half width z and height y on side s, `out` off it, and its normal. */
+function p42LowAt(X: (d: number) => number, z: number, y: number, s: number, out = 0): { p: Vec3; n: Vec3 } {
+  const a = z <= P42_VW ? P42_VD / P42_VW : P42_CD / (P42_W - P42_VW);
+  const n = norm([1, 0, s * a]);
+  return { p: [X(p42Setback(z)) + n[0] * out, y, s * z + n[2] * out], n };
+}
+/** A flat panel (z, y polygon) on a face plane, `proud` off it and `depth` into it. */
+function p42FacePanel(m: MeshBuilder, X: (d: number) => number, s: number, mat: string, poly: readonly Pt[], proud: number, depth: number, low = false): void {
+  const at = low ? p42LowAt : p42FaceAt;
+  const pts = poly.map(([z, y]) => at(X, z, y, s, proud).p);
+  const zc = poly.reduce((t, p) => t + p[0], 0) / poly.length;
+  const n = at(X, zc, poly[0]![1], s).n;
+  m.slab(mat, pts, mul3(n, -depth));
+}
+/** A round lamp on the upper face, turned from it toward the front: its bezel and lens. */
+function p42FaceLamp(m: MeshBuilder, X: (d: number) => number, z: number, y: number, s: number, r: number, lens: string, sides = 12): void {
+  const { p, n: n0 } = p42FaceAt(X, z, y, s);
+  const n = norm([n0[0] + 0.9, n0[1], n0[2]]);
+  const u = norm(cross([0, 1, 0], n));
+  const v = norm(cross(n, u));
+  const out = 0.015 + (r + 0.03) * 0.5;
+  const ring = (rr: number, o: number): Vec3[] => Array.from({ length: sides }, (_, i) => {
+    const t = (2 * Math.PI * i) / sides;
+    return [0, 1, 2].map((k) => p[k]! + n[k]! * o + u[k]! * rr * Math.cos(t) + v[k]! * rr * Math.sin(t)) as Vec3;
+  });
+  m.slab("black", ring(r + 0.03, out), mul3(n, -(out + 0.1)));
+  m.slab(lens, ring(r, out + 0.008), mul3(n, -0.01));
+}
+const mul3 = (v: Vec3, k: number): Vec3 => [v[0] * k, v[1] * k, v[2] * k];
+/** A convex polygon (z, y) clipped to y <= lineY(z) (a straight line). */
+function clipUnder(poly: readonly Pt[], lineY: (z: number) => number): Pt[] {
+  const out: Pt[] = [];
+  const inside = (p: Pt) => p[1] <= lineY(p[0]) + 1e-9;
+  for (let i = 0; i < poly.length; i++) {
+    const [p, q] = [poly[i]!, poly[(i + 1) % poly.length]!];
+    if (inside(p)) out.push(p);
+    if (inside(p) !== inside(q)) {
+      const fp = p[1] - lineY(p[0]), fq = q[1] - lineY(q[0]);
+      const t = fp / (fp - fq);
+      out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+    }
+  }
+  return out;
+}
+
+/** A point on the body's surface at (d, y) on side s, `proud` off it along its normal. */
+function p42Surf(b: SliceBody, X: (d: number) => number, d: number, y: number, s: number, proud: number): Vec3 {
+  const P = (dd: number, yy: number): Vec3 => [X(dd), yy, s * sliceHalf(b, dd, yy)];
+  const e = 0.01;
+  const tD = sub(P(d + e, y), P(d - e, y));
+  const tY = sub(P(d, y + e), P(d, y - e));
+  let n = norm(cross(tD, tY));
+  if (n[2] * s < 0) n = mul3(n, -1);
+  return add(P(d, y), mul3(n, proud));
+}
+/** Decal triangles in (d, y) laid on the body's side (the side, the band, the skirt, a V face) on side s. */
+function p42Decal(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, tris: readonly Pt[], proud = 0.005): void {
+  const pts = tris.map(([d, y]) => p42Surf(b, X, d, y, s, proud));
+  for (let i = 0; i + 2 < pts.length; i += 3) {
+    const [a, c, e] = [pts[i]!, pts[i + 1]!, pts[i + 2]!];
+    const fn = cross(sub(c, a), sub(e, a));
+    if (Math.hypot(...fn) < 1e-12) continue;
+    m.facets(mat, [a, c, e], fn[2] * s >= 0 ? fn : mul3(fn, -1));
+  }
+}
+/** A strip decal from d0 to d1 between lo(d) and hi(d), cut at the heights in `breaks` (the section's creases). */
+function p42Strip(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, d0: number, d1: number, lo: (d: number) => number, hi: (d: number) => number, n: number, breaks: readonly number[] = [P42_CREASE]): void {
+  const tris: Pt[] = [];
+  const cols = [...new Set([...Array.from({ length: n + 1 }, (_, i) => d0 + ((d1 - d0) * i) / n), ...b.stations.filter((d) => d > d0 + 1e-4 && d < d1 - 1e-4)])].sort((p, q) => p - q);
+  for (let i = 0; i + 1 < cols.length; i++) {
+    const [a, c] = [cols[i]!, cols[i + 1]!];
+    if (c - a < 1e-5) continue;
+    const levels = (d: number) => {
+      const [l0, h0] = [lo(d), hi(d)];
+      return [l0, ...breaks.map((y) => Math.min(h0, Math.max(l0, y))), h0];
+    };
+    const [la, lc] = [levels(a), levels(c)];
+    for (let k = 0; k + 1 < la.length; k++) {
+      if (la[k + 1]! - la[k]! < 1e-5 && lc[k + 1]! - lc[k]! < 1e-5) continue;
+      tris.push([a, la[k]!], [c, lc[k]!], [c, lc[k + 1]!], [a, la[k]!], [c, lc[k + 1]!], [a, la[k + 1]!]);
+    }
+  }
+  p42Decal(m, b, X, s, mat, tris);
+}
+/** Lettering on the side (any part of it), centred at d, its foot at y, h tall, reading from outside. */
+function p42Lettering(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, text: string, d: number, y: number, h: number, mat: string): void {
+  const w = h * 0.58, gap = h * 0.18;
+  const width = strokeWidth(text, w, gap);
+  const tris = strokeText(text, -width / 2, y, h, w, gap, false, h * 0.13).map(([u, v]): Pt => [d - s * u, v]);
+  p42Decal(m, b, X, s, mat, tris, 0.009);
+}
+/** Amtrak's travel mark: three stripes fanning from a point at the front top, d0 its front, y1 its top. */
+function p42TravelMark(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, d0: number, y1: number): void {
+  const tris: Pt[] = [];
+  const ends: Array<readonly [number, number, number]> = [[1.75, 0.42, 0.3], [1.3, 0.8, 0.28], [0.72, 1.12, 0.24]];
+  for (const [k, [dd, dy, wd]] of ends.entries()) {
+    const p0: Pt = [d0 + 0.05 + k * 0.03, y1 - k * 0.04];
+    const p2: Pt = [d0 + dd, y1 - dy];
+    const p1: Pt = [d0 + dd * 0.45, y1 - dy * 0.15];
+    const n = 8;
+    const at = (t: number): Pt => [(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]];
+    for (let i = 0; i < n; i++) {
+      const [t0, t1] = [i / n, (i + 1) / n];
+      const [a, c] = [at(t0), at(t1)];
+      // tapered: a point at the front, `wd` thick at the end, below the curve
+      const [ha, hc] = [0.02 + wd * t0 ** 1.4, 0.02 + wd * t1 ** 1.4];
+      tris.push(a, c, [c[0], c[1] - hc], a, [c[0], c[1] - hc], [a[0], a[1] - ha]);
+    }
+  }
+  p42Decal(m, b, X, s, mat, tris, 0.009);
+}
+
+/** The band's (the leaning upper side's) half width at height y and its outward normal on side s. */
+const p42BandZ = (y: number): number => P42_W - ((y - P42_CREASE) * (P42_W - 1.33)) / (P42_BAND - P42_CREASE);
+const P42_BAND_N = norm([0, P42_W - 1.33, P42_BAND - P42_CREASE]);
+/** A panel on the band over d0..d1 and y0..y1: `proud` off it, `depth` deep. */
+function p42BandPanel(m: MeshBuilder, X: (d: number) => number, s: number, mat: string, d0: number, d1: number, y0: number, y1: number, proud: number, depth: number): void {
+  const n: Vec3 = [0, P42_BAND_N[1], s * P42_BAND_N[2]];
+  const pt = (d: number, y: number): Vec3 => add([X(d), y, s * p42BandZ(y)], mul3(n, proud));
+  m.slab(mat, [pt(d0, y0), pt(d1, y0), pt(d1, y1), pt(d0, y1)], mul3(n, -depth));
+}
+/** A louvred grille on the band: its frame, the opening and the slats. */
+function p42BandGrille(m: MeshBuilder, X: (d: number) => number, s: number, d0: number, d1: number, y0: number, y1: number, frame: string | null, pitch = 0.085): void {
+  if (frame) p42BandPanel(m, X, s, frame, d0 - 0.05, d1 + 0.05, y0 - 0.05, y1 + 0.05, 0.0075, 0.02);
+  p42BandPanel(m, X, s, "louvre", d0, d1, y0, y1, frame ? 0.011 : 0.0075, 0.02);
+  for (let y = y0 + 0.05; y < y1 - 0.03; y += pitch) p42BandPanel(m, X, s, "grille", d0 + 0.02, d1 - 0.02, y, y + 0.03, frame ? 0.017 : 0.014, 0.006);
+}
+/** A grille on the vertical side with horizontal slats. */
+function p42SideGrille(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number, y0: number, y1: number, frame: string, pitch = 0.075): void {
+  sidePanel(m, b, X, s, frame, d0 - 0.04, d1 + 0.04, y0 - 0.04, y1 + 0.04, 0.0075, 0.02);
+  sidePanel(m, b, X, s, "louvre", d0, d1, y0, y1, 0.011, 0.02);
+  for (let y = y0 + 0.04; y < y1 - 0.02; y += pitch) sidePanel(m, b, X, s, "grille", d0 + 0.02, d1 - 0.02, y, y + 0.028, 0.017, 0.006);
+}
+/** A panel's seam on the side: four thin dark strips round d0..d1, y0..y1. */
+function p42Seam(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number, y0: number, y1: number): void {
+  const t = 0.018;
+  for (const [a, c, e, f] of [[d0, d1, y0, y0 + t], [d0, d1, y1 - t, y1], [d0, d0 + t, y0 + t, y1 - t], [d1 - t, d1, y0 + t, y1 - t]] as const) sidePanel(m, b, X, s, "rubber", a, c, e, f, 0.0075, 0.01);
+}
+/** A vertical handrail standing off the side at d, from y0 to y1. */
+function p42Handrail(m: MeshBuilder, X: (d: number) => number, s: number, d: number, y0: number, y1: number): void {
+  const z = s * (P42_W + 0.07);
+  m.rod("handrail", [X(d), y0, z], [X(d), y1, z], 0.018, 6);
+  for (const y of [y0 + 0.04, y1 - 0.04]) m.rod("handrail", [X(d), y, s * (P42_W - 0.01)], [X(d), y, z], 0.012, 4, false);
+}
+/** A ladder hanging under the side from d0 to d1. */
+function p42Ladder(m: MeshBuilder, X: (d: number) => number, s: number, d0: number, d1: number, y0: number, y1: number): void {
+  const z = s * (P42_W - 0.06);
+  for (const d of [d0, d1]) block(m, "handrail", ...[X(d) - 0.02, X(d) + 0.02].sort((p, q) => p - q) as [number, number], y0, y1, ...side(s, P42_W - 0.1, P42_W - 0.03));
+  for (let y = y0 + 0.1; y < y1 - 0.05; y += 0.25) m.rod("handrail", [X(d0), y, z], [X(d1), y, z], 0.016, 4, false);
+}
+
+/** A GE truck under the P42 (Krupp design): the fish-belly side frames, coil springs either side of each axle box, swing arms, dampers, traction rods. */
+function p42Truck(m: MeshBuilder, xc: number, mat: string): void {
+  m.bogie(() => {
+    const r = 0.508, N = 20, ay = r * Math.cos(Math.PI / N);
+    const axles = [-1.372, 1.372];
+    for (const dx of axles)
+      m.scope("wheelset", () => {
+        const x = xc + dx;
+        const axle = ngon(8, 0.08, 0, x, ay);
+        m.sweep("steel", "z", axle, -0.95, axle, 0.95);
+        for (const s of [-1, 1]) {
+          extrude(m, "steel", "z", ngon(N, r, Math.PI / N, x, ay), side(s, 0.665, 0.8));
+          extrude(m, "wheel", "z", ngon(16, r * 0.82, 0, x, ay), side(s, 0.8, 0.82));
+        }
+      });
+    const xs = [-1.95, -1.62, -1.1, -0.62, 0, 0.62, 1.1, 1.62, 1.95];
+    const top: Pt[] = xs.map((x) => [xc + x, Math.abs(x) > 1.9 ? 0.98 : 1.05]);
+    const bot: Pt[] = xs.map((x, i) => [xc + x, [0.87, 0.86, 0.8, 0.48, 0.4, 0.48, 0.8, 0.86, 0.87][i]!]);
+    m.scope("frame", () => {
+      for (const s of [-1, 1]) plate(m, mat, top, bot, ...side(s, 0.96, 1.08));
+      for (const x of [-0.5, 0.5]) block(m, mat, xc + x - 0.1, xc + x + 0.1, 0.62, 0.95, -0.96, 0.96);
+      for (const x of [-1.88, 1.88]) block(m, mat, xc + x - 0.06, xc + x + 0.06, 0.86, 0.97, -0.96, 0.96);
+      for (const s of [-1, 1]) block(m, mat, xc - 0.24, xc + 0.24, 0.3, 0.56, ...side(s, 0.92, 1.1));
+    });
+    m.scope("axle boxes", () => {
+      for (const dx of axles)
+        for (const s of [-1, 1]) {
+          const x = xc + dx;
+          block(m, mat, x - 0.17, x + 0.17, ay - 0.17, ay + 0.15, ...side(s, 0.84, 1.1));
+          block(m, mat, x - 0.46, x + 0.46, ay + 0.03, ay + 0.1, ...side(s, 0.96, 1.08));
+          m.rod("spring", [x, ay + 0.15, s * 1.15], [x, 1.0, s * 1.15], 0.045, 6);
+        }
+    });
+    m.scope("primary suspension", () => {
+      for (const dx of axles)
+        for (const s of [-1, 1])
+          for (const o of [-0.36, 0.36]) {
+            const ring = ngon(8, 0.1, Math.PI / 8, xc + dx + o, s * 1.02);
+            m.prism("spring", ring, ay + 0.1, Math.abs(dx + o) > 1.6 ? 0.86 : 0.8);
+          }
+    });
+    m.scope("traction rods", () => {
+      for (const s of [-1, 1]) for (const dx of axles) m.rod(mat, [xc + dx * 0.78, ay - 0.04, s * 1.02], [xc + Math.sign(dx) * 0.24, 0.42, s * 1.02], 0.035, 6);
+    });
+    m.scope("brake cylinders", () => {
+      for (const s of [-1, 1]) for (const x of [-0.75, 0.75]) m.sweep(mat, "x", ngon(8, 0.07, 0, s * 1.12, 0.92), xc + x - 0.22, ngon(8, 0.07, 0, s * 1.12, 0.92), xc + x + 0.22);
+    });
+    m.scope("traction motors", () => {
+      for (const dx of axles) {
+        const motor = ngon(10, 0.3, 0, xc + dx - Math.sign(dx) * 0.55, ay + 0.06);
+        m.sweep(mat, "z", motor, -0.6, motor, 0.6);
+      }
+    });
+  });
+}
+
+export function buildP42(l: P42Livery): MeshBuilder {
   const m = new Builder({ ...CARBODY_PALETTE, ...l.palette });
-  const b = carbody({ ...P42_SPEC, edges: edgesOf(l, P42_SPEC.Y, P42_SPEC.S) });
-  const tip = P42_LENGTH / 2 - P42_REACH;
+  const tip = P42_TIP;
   const X = (d: number) => tip - d;
+  const L = P42_BODY;
+  const sw = p42CabSwitch(l);
+  const edges = [...new Set(l.bands.flatMap(([a, c]) => [a, c]))].filter((y) => y > P42_Y + 0.01 && y < P42_CREASE - 0.01).sort((p, q) => p - q);
+  const b = p42Body(edges, [sw, ...l.cabLine.map(([d]) => d)]);
+  const sideMat = (y: number) => p42BandOf(l.bands, y);
+  const lineAt = (d: number) => p42Lerp(l.cabLine, d);
+  const faceLine = (z: number) => l.face[0] + ((l.face[1] - l.face[0]) * Math.min(z, P42_VW)) / P42_VW;
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, painter(l, P42_BODY, false)));
+    m.scope("shell", () => {
+      const mat = (d: number, k: number) => {
+        const h = halfSlice(b, d);
+        const y = (h[k]![1] + h[k + 1]![1]) / 2;
+        const role = edgeRole(b, k).kind;
+        if (role === "bottom") return l.under;
+        if (role === "skirt") return l.skirt;
+        if (role === "lower" || role === "side") return sideMat(y);
+        if (d < sw) return l.cab;
+        return y < P42_BAND - 1e-6 ? l.band : l.cab;
+      };
+      const bands = (d: number): Array<[number, number, string]> => {
+        const ys = [...new Set([...halfSlice(b, d).map((p) => p[1]), P42_A, P42_CREASE, ...edges])].sort((p, q) => p - q);
+        const out: Array<[number, number, string]> = [];
+        for (let i = 0; i + 1 < ys.length; i++) {
+          const [y0, y1] = [ys[i]!, ys[i + 1]!];
+          if (y1 - y0 < 1e-6) continue;
+          const ym = (y0 + y1) / 2;
+          const mt = ym < P42_A ? l.skirt : ym < P42_CREASE ? sideMat(ym) : l.band;
+          const last = out[out.length - 1];
+          if (last && last[2] === mt) last[1] = y1;
+          else out.push([y0, y1, mt]);
+        }
+        return out;
+      };
+      drawShell(m, b, X, mat, bands);
+    });
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        m.scope("cab window", () => sideWindow(m, b, X, s, 1.95, 2.85, 3.05, 3.65));
-        m.scope("cab door", () => sidePanel(m, b, X, s, "black", 3.0, 3.6, 1.5, 3.6, 0.003, 0.004));
-        m.scope("grilles", () => {
-          for (const [a, c] of [[5.0, 7.6], [8.2, 10.6], [14.5, 19.4]] as const) sideGrille(m, b, X, s, a, c, 3.1, 3.85);
+        m.scope("paint", () => {
+          // the face under its line: the side's bands across the V's planes and the corner chamfers
+          for (const [a, c, mt] of l.faceBands ?? l.bands) {
+            const [y0, y1] = [Math.max(a, P42_KNEE), Math.min(c, Math.max(l.face[0], l.face[1]))];
+            if (y1 <= y0 + 1e-6) continue;
+            const v = clipUnder([[0, y0], [P42_VW, y0], [P42_VW, y1], [0, y1]], faceLine);
+            if (v.length >= 3) p42FacePanel(m, X, s, mt, v, 0.005, 0.002);
+            const yc = Math.min(y1, l.face[1]);
+            if (yc > y0 + 1e-6) p42FacePanel(m, X, s, mt, [[P42_VW, y0], [P42_W, y0], [P42_W, yc], [P42_VW, yc]], 0.005, 0.002);
+          }
+          // the cab's field down the side
+          const [c0] = l.cabLine[0]!;
+          const cEnd = l.cabLine.find(([, y]) => y >= P42_CREASE - 1e-6)?.[0] ?? l.cabLine[l.cabLine.length - 1]![0];
+          p42Strip(m, b, X, s, l.cab, c0, cEnd, lineAt, (d) => b.S(d), Math.ceil((cEnd - c0) / 0.2), []);
+          if (l.band !== l.cab) {
+            const top = l.cabLine[l.cabLine.length - 1]![0];
+            const zl = (d: number) => sliceHalf(b, d, lineAt(d));
+            // under the line over the band before the switch, the band's paint; over it after, the cab's
+            if (sw > cEnd) shapedCrownPane(m, b, X, s, l.band, [cEnd, sw], zl, (d) => p42Plan(d), 0.005, [cEnd + (sw - cEnd) / 2]);
+            if (top > sw) shapedCrownPane(m, b, X, s, l.cab, [sw, top], () => 1.33, zl, 0.005, [sw + (top - sw) / 3, sw + (2 * (top - sw)) / 3]);
+          }
+          if (l.swoosh) {
+            const t = l.swoosh;
+            const rows = Array.from({ length: 12 }, (_, i) => t[0]![0] + ((L - t[0]![0]) * (i + 1)) / 13);
+            shapedCrownPane(m, b, X, s, l.cab, [t[0]![0], L], () => 1.33, (d) => sliceHalf(b, d, p42Lerp(t, d)), 0.005, rows);
+          }
+          if (l.wedge) {
+            const e = l.wedge.edge;
+            const end = e[e.length - 1]![0];
+            const [c1] = l.cabLine[l.cabLine.length - 1]!;
+            p42Strip(m, b, X, s, l.wedge.mat, 0, end, (d) => Math.min(p42Lerp(e, d), b.S(d)), (d) => (d < c1 ? Math.min(b.S(d), lineAt(d), P42_CREASE) : Math.min(b.S(d), P42_CREASE)), 60, []);
+          }
         });
-        if (l.lettering) m.scope("lettering", () => sideLettering(m, b, X, s, l.lettering!.text, l.lettering!.d, l.lettering!.y, l.lettering!.h, l.lettering!.mat, 0.012));
-        m.scope("number", () => sideLettering(m, b, X, s, l.number, 3.9, 2.1, 0.3, l.numberMat, 0.012));
+        m.scope("cab window", () => {
+          for (const [d0, d1] of [[1.5, 2.03], [2.07, 2.6]] as const) {
+            p42BandPanel(m, X, s, "rubber", d0, d1, 3.43, 3.88, 0.0075, 0.03);
+            p42BandPanel(m, X, s, "glass", d0 + 0.04, d1 - 0.04, 3.47, 3.84, 0.011, 0.004);
+          }
+          // the mirror plate standing out at the window's front edge
+          const x = X(1.44);
+          const pt = (y: number, o: number): Vec3 => [x, y, s * (p42BandZ(y) + o)];
+          m.slab("frameSilver", [pt(3.38, -0.02), pt(3.38, 0.12), pt(4.0, 0.12), pt(4.0, -0.02)], [-0.04, 0, 0]);
+        });
+        m.scope("cab door", () => {
+          // the leaf's seam up the side and over the band, its window; the step well under it and its treads
+          const t = 0.018;
+          for (const [a, c] of [[2.84, 2.84 + t], [3.42 - t, 3.42]] as const) {
+            sidePanel(m, b, X, s, "rubber", a, c, 2.26, P42_CREASE, 0.0075, 0.01);
+            p42BandPanel(m, X, s, "rubber", a, c, P42_CREASE, 4.0, 0.0075, 0.01);
+          }
+          p42BandPanel(m, X, s, "rubber", 2.84 + t, 3.42 - t, 4.0 - t, 4.0, 0.0075, 0.01);
+          sidePanel(m, b, X, s, "rubber", 2.97, 3.29, 2.72, 3.24, 0.0075, 0.01);
+          sidePanel(m, b, X, s, "glass", 3.0, 3.26, 2.75, 3.21, 0.011, 0.004);
+          sidePanel(m, b, X, s, "black", 2.84, 3.42, 1.5, 2.26, 0.0075, 0.02);
+          for (const y of [1.6, 1.95]) sidePanel(m, b, X, s, "handrail", 2.88, 3.38, y, y + 0.04, 0.03, 0.03);
+          p42Handrail(m, X, s, 2.78, 1.55, 3.3);
+          p42Handrail(m, X, s, 3.5, 1.55, 3.3);
+        });
+        m.scope("ladders", () => {
+          p42Ladder(m, X, s, 2.96, 3.36, 0.36, P42_A);
+          p42Ladder(m, X, s, 19.12, 19.52, 0.36, P42_A);
+        });
+        m.scope("cab side", () => {
+          // the hatch by the nose and the cabinet under the window with its grille and slot
+          p42Seam(m, b, X, s, 0.62, 1.12, 1.5, 2.12);
+          surfaceDisc(m, b, X, 0.9, 1.75, s, "black", 0.03, 0.012, 0.02, 8);
+          p42Seam(m, b, X, s, 1.29, 2.67, 1.49, 2.24);
+          p42SideGrille(m, b, X, s, 1.9, 2.55, 1.62, 2.16, "grille");
+          sidePanel(m, b, X, s, "louvre", 1.58, 1.66, 1.64, 2.0, 0.011, 0.01);
+        });
+        m.scope("grilles", () => {
+          // the upper band: the cab's inertial filters (framed on the left, one fine grille on the right), the engine room's louvres
+          if (s < 0) for (const [a, c] of [[4.15, 5.01], [5.23, 6.08]] as const) p42BandGrille(m, X, s, a, c, 3.42, 3.94, "frameSilver", 0.06);
+          else p42BandGrille(m, X, s, 4.15, 6.08, 3.42, 3.94, "frameSilver", 0.045);
+          const louvres = s < 0 ? [[6.23, 6.93], [6.97, 7.68], [7.79, 8.79]] : [[6.23, 7.45], [7.55, 8.79]];
+          for (const [a, c] of louvres) p42BandGrille(m, X, s, a!, c!, 3.4, 3.96, null);
+          p42BandGrille(m, X, s, 14.15, 15.07, 3.4, 3.96, null);
+          // the radiator intakes: four panes in two frames over the rear truck
+          for (const [a, c] of [[15.22, 16.04], [16.08, 16.95], [17.09, 17.93], [17.97, 18.82]] as const) p42SideGrille(m, b, X, s, a, c, 1.56, 2.36, "grille");
+        });
+        m.scope("rear door", () => {
+          p42Seam(m, b, X, s, 19.07, 19.6, 1.49, 3.27);
+          sidePanel(m, b, X, s, "rubber", 19.17, 19.5, 2.65, 3.2, 0.0075, 0.01);
+          sidePanel(m, b, X, s, "glass", 19.2, 19.47, 2.68, 3.17, 0.011, 0.004);
+          p42Handrail(m, X, s, 18.98, 1.55, 3.2);
+          p42Handrail(m, X, s, 19.7, 1.55, 3.2);
+          // the engine room's hatch
+          p42Seam(m, b, X, s, 12.88, 13.46, 1.49, 3.23);
+        });
+        m.scope("lettering", () => {
+          if (l.lettering) p42Lettering(m, b, X, s, l.lettering.text, l.lettering.d, l.lettering.y, l.lettering.h, l.lettering.mat);
+          if (l.travelMark) p42TravelMark(m, b, X, s, l.travelMark, 4.85, 2.86);
+          for (const [t, d, y, h, mt] of l.marks ?? []) p42Lettering(m, b, X, s, t, d, y, h, mt);
+          p42Lettering(m, b, X, s, l.number, l.sideNumber[0], l.sideNumber[1], l.sideNumber[2], l.numberMat);
+        });
       });
   });
   m.scope("nose", () => {
-    m.scope("windscreen", () => {
-      for (const s of [1, -1]) {
-        crownPane(m, b, X, s, "rubber", [0.85, 1.6], [0.05, 1.12], 0.006);
-        crownPane(m, b, X, s, "cabGlass", [0.9, 1.55], [0.1, 1.07], 0.012);
-      }
+    for (const s of [1, -1])
+      m.scope(s > 0 ? "right half" : "left half", () => {
+        m.scope("windscreen", () => {
+          const pane: Pt[] = [[0.075, 3.53], [1.2, 3.53], [1.17, 3.97], [0.075, 3.97]];
+          p42FacePanel(m, X, s, "rubber", pane.map(([z, y]): Pt => [z + (z > 0.5 ? 0.03 : -0.03), y + (y > 3.8 ? 0.03 : -0.03)]), 0.0075, 0.03);
+          p42FacePanel(m, X, s, "cabGlass", pane, 0.011, 0.004);
+          // the wiper, parked up the outer edge
+          const [a, c] = [p42FaceAt(X, 0.88, 3.45, s, 0.02).p, p42FaceAt(X, 1.08, 3.92, s, 0.02).p];
+          m.rod("black", a, c, 0.012, 4);
+        });
+        m.scope("lamps", () => {
+          p42FacePanel(m, X, s, "black", [[0, 2.36], [0.27, 2.36], [0.31, 2.47], [0.27, 2.58], [0, 2.58]], 0.0075, 0.02);
+          p42FaceLamp(m, X, 0.155, 2.47, s, 0.095, "lampHead");
+          p42FaceLamp(m, X, 0.82, 2.47, s, 0.06, "lampRed", 10);
+          // the ditch light in its bezel and the lamp box under it, on the knee's V
+          const ditch = (r: number): Pt[] => Array.from({ length: 12 }, (_, i) => [0.88 + r * Math.cos((2 * Math.PI * i) / 12), 2.06 + r * Math.sin((2 * Math.PI * i) / 12)] as Pt);
+          p42FacePanel(m, X, s, "frameSilver", ditch(0.135), 0.0075, 0.02, true);
+          p42FacePanel(m, X, s, "ditch", ditch(0.1), 0.02, 0.01, true);
+          p42FacePanel(m, X, s, "black", [[0.68, 1.57], [1.07, 1.57], [1.07, 1.86], [0.68, 1.86]], 0.0075, 0.02, true);
+          for (const z of [0.78, 0.97]) p42FacePanel(m, X, s, "p42Lens", Array.from({ length: 8 }, (_, i) => [z + 0.055 * Math.cos((2 * Math.PI * i) / 8), 1.7 + 0.055 * Math.sin((2 * Math.PI * i) / 8)] as Pt), 0.016, 0.01, true);
+        });
+        m.scope("pilot", () => {
+          // the plow follows the face's V ahead of it, leaning back, cut away round the coupler
+          const pt = (z: number, y: number): Vec3 => [tip - p42Setback(z) + 0.27 - 0.15 * ((y - 0.22) / 0.8), y, s * z];
+          m.slab(l.pilot, [pt(0.38, 0.22), pt(P42_VW, 0.22), pt(P42_VW, 1.02), pt(0.38, 1.02)], [-0.07, 0, 0]);
+          m.slab(l.pilot, [pt(P42_VW, 0.22), pt(1.42, 0.22), pt(1.42, 1.02), pt(P42_VW, 1.02)], [-0.07, 0, 0]);
+          m.slab(l.pilot, [pt(0, 0.22), pt(0.4, 0.22), pt(0.4, 0.62), pt(0, 0.62)], [-0.07, 0, 0]);
+        });
+      });
+    m.scope("number board", () => {
+      // a flat box standing out of the V through its apex, the number on it
+      const n = norm([P42_RAKE, 1, 0]);
+      const at = (z: number, y: number, o: number): Vec3 => [X((y - P42_KNEE) / P42_RAKE) + n[0] * o, y + n[1] * o, z];
+      m.slab("black", [at(-0.37, 3.13, 0.01), at(0.37, 3.13, 0.01), at(0.37, 3.4, 0.01), at(-0.37, 3.4, 0.01)], mul3(n, -0.12));
+      const h = 0.16, w = h * 0.58, gap = h * 0.18;
+      const width = strokeWidth(l.number, w, gap);
+      m.facets("white", strokeText(l.number, -width / 2, 3.185, h, w, gap, false, h * 0.14).map(([u, v]) => at(-u, v, 0.014)), n);
     });
-    m.scope("headlights", () => noseLamps(m, b, X, 1, [[-0.32, 2.55, 0.1, "lampHead"], [0.32, 2.55, 0.1, "lampHead"], [-1.0, 1.25, 0.09, "ditch"], [1.0, 1.25, 0.09, "ditch"]]));
-    m.scope("pilot", () => pilotPlate(m, l.skirt, 1, tip - 0.02, 0.15, 1.05, 1.3, 0.3, 0.5));
-    m.scope("coupler", () => knuckleCoupler(m, 1, tip - 0.25, P42_LENGTH / 2, COUPLER_Y));
+    if (l.travelMark)
+      m.scope("face lettering", () => {
+        // the small white AMTRAK and travel mark under the number board, vertex by vertex on the V
+        const onV = (u: number, v: number): Vec3 => (u >= 0 ? p42FaceAt(X, u, v, -1, 0.012).p : p42FaceAt(X, -u, v, 1, 0.012).p);
+        const h = 0.075, w = h * 0.58, gap = h * 0.18;
+        const width = strokeWidth("AMTRAK", w, gap);
+        const pts = strokeText("AMTRAK", -width / 2, 2.98, h, w, gap, false, h * 0.16).map(([u, v]) => onV(u, v));
+        for (let i = 0; i < 3; i++) {
+          const y0 = 2.93 - i * 0.055;
+          const quad: Pt[] = [[-0.18 + i * 0.07, y0 - 0.035], [0.2, y0], [0.2, y0 + 0.02], [-0.2 + i * 0.07, y0 - 0.005]];
+          pts.push(...[quad[0]!, quad[1]!, quad[2]!, quad[0]!, quad[2]!, quad[3]!].map(([u, v]) => onV(u, v)));
+        }
+        m.facets("white", pts, [0.85, 0.52, 0]);
+      });
+    m.scope("coupler", () => {
+      block(m, "black", tip - 0.3, tip + 0.05, 0.74, 1.08, -0.36, 0.36);
+      knuckleCoupler(m, 1, tip - 0.25, P42_LENGTH / 2, COUPLER_Y);
+      for (const z of [-0.55, 0.55]) m.rod("hose", [tip + 0.02, 1.0, z], [tip + 0.18, 0.62, z * 1.1], 0.03, 6);
+    });
   });
   m.scope("rear end", () => {
-    const x = X(P42_BODY);
-    endDiaphragm(m, -1, x, 1.3, 3.8);
-    faceLamps(m, -1, -x, [[-1.1, 3.9, 0.08, "lampRed"], [1.1, 3.9, 0.08, "lampRed"], [0, 3.95, 0.1, "lampHead"]]);
-    m.scope("coupler", () => knuckleCoupler(m, -1, -x - 0.1, P42_LENGTH / 2, COUPLER_Y));
-    block(m, "truckBlack", x - 0.3, x + 0.02, 0.25, 1.02, -1.2, 1.2);
+    const x = X(L);
+    const face = -x;
+    const at = (z: number, y: number, o: number): Vec3 => [x - o, y, z];
+    const panel = (mat: string, z0: number, z1: number, y0: number, y1: number, o: number, depth = 0.02) =>
+      m.slab(mat, [at(z0, y0, o), at(z1, y0, o), at(z1, y1, o), at(z0, y1, o)], [depth, 0, 0]);
+    panel("rubber", -1.06, -0.46, 1.3, 3.32, 0.002);
+    panel(sideMat(2.5), -1.03, -0.49, 1.33, 3.29, 0.006);
+    panel("rubber", -0.94, -0.6, 2.55, 3.18, 0.009, 0.01);
+    panel("glass", -0.91, -0.63, 2.58, 3.15, 0.013, 0.004);
+    panel("black", -1.08, -0.45, 3.98, 4.2, 0.006);
+    panel("black", -1.08, -0.45, 3.42, 3.62, 0.006);
+    panel("black", 0.72, 1.0, 2.95, 3.35, 0.006);
+    faceLamps(m, -1, face, [[-0.88, 3.79, 0.075, "lampHead"], [-0.66, 3.79, 0.075, "lampHead"], [-1.22, 3.88, 0.06, "lampRed"], [0.75, 3.88, 0.06, "lampRed"]]);
+    const h = 0.22, w = h * 0.58, gap = h * 0.18;
+    const width = strokeWidth(l.number, w, gap);
+    const tris = strokeText(l.number, -width / 2, 3.42, h, w, gap, false, h * 0.13).map(([u, v]): Vec3 => [x - 0.008, v, 0.78 + u]);
+    m.facets(l.numberMat, tris, [-1, 0, 0]);
+    block(m, l.under, x - 0.06, x + 0.3, 0.8, P42_A + 0.004, -1.3, 1.3);
+    m.scope("coupler", () => knuckleCoupler(m, -1, face - 0.1, P42_LENGTH / 2, COUPLER_Y));
   });
   m.scope("roof", () => {
-    m.scope("fans", () => { for (const d of [15.4, 17.0, 18.6]) roofFan(m, X(d), 0, 4.37, 0.5); });
-    m.scope("exhaust", () => exhaust(m, X(11.0), 0, 4.35, 4.5, 0.4, 0.7));
-    m.scope("horn", () => horn(m, 1, X(3.0), 0.4, 4.5));
+    m.scope("cab", () => {
+      horn(m, 1, X(2.6), 0.35, 4.47);
+      for (const [d, z] of [[1.95, -0.45], [3.0, 0.1]] as const) block(m, "black", X(d) - 0.08, X(d) + 0.08, 4.3, 4.44, z - 0.05, z + 0.05);
+    });
+    m.scope("exhaust", () => exhaust(m, X(13.2), 0, 4.33, 4.47, 0.75, 0.45));
+    m.scope("radiator hatch", () => {
+      block(m, l.cab, X(20.0), X(15.7), 4.3, 4.43, -0.88, 0.88);
+      for (const d of [16.8, 18.9]) roofFan(m, X(d), 0, 4.43, 0.55);
+    });
   });
   m.scope("running gear", () => {
-    const spec = truckSpec([-ft(4, 6), ft(4, 6)], ft(0, 20), 2.0, 1.0);
-    m.scope("front truck", () => truck(m, P42_TRUCK, spec));
-    m.scope("rear truck", () => truck(m, -P42_TRUCK, spec));
-    m.scope("fuel tank", () => block(m, l.under, -3.6, 3.6, 0.42, 1.0, -1.3, 1.3));
-    m.scope("frame", () => block(m, l.under, X(P42_BODY) + 0.05, tip - 0.6, 0.98, P42_SPEC.A - 0.01, -1.3, 1.3));
+    m.scope("front truck", () => p42Truck(m, P42_TRUCK, l.truck));
+    m.scope("rear truck", () => p42Truck(m, -P42_TRUCK, l.truck));
+    m.scope("reservoirs", () => {
+      // the air reservoirs under the fairing's tail and the battery box behind it
+      for (const z of [-0.6, 0.6]) tankX(m, "tank", X(12.3), X(9.8), z, 0.47, 0.21);
+      block(m, l.under, X(14.1), X(13.2), 0.3, P42_A + 0.01, -1.2, 1.2);
+    });
+    m.scope("frame", () => block(m, l.under, X(L) + 0.3, tip - 0.3, 0.98, P42_A + 0.002, -1.3, 1.3));
   });
   return m;
 }
@@ -1666,9 +2209,36 @@ function f7Game(): GameProperties {
   return { weight: F7_WEIGHT.aUnit, power: F7_POWER_KW, maxspeed: 121, accel: null, variants };
 }
 
-export function geP42dc(params?: ParamValues): MeshBuilder { return buildP42(pick(P42_PARAMS, P42_LIVERIES, params)); }
+const pickP42Livery = (params?: ParamValues): P42Livery => P42_LIVERIES[resolveParams(P42_PARAMS, params).livery!]!;
+export function geP42dc(params?: ParamValues): MeshBuilder { return buildP42(pickP42Livery(params)); }
+/** The P42's distant model: its section with the leaning band, the raked V face, the skirt's fairing, the cab's paint and windows. */
 export function geP42dcLod(params?: ParamValues): MeshBuilder {
-  return locoCarbodyLod(P42_SPEC, pick(P42_PARAMS, P42_LIVERIES, params), P42_LENGTH / 2 - P42_REACH, [P42_TRUCK, -P42_TRUCK], 2.0);
+  const l = pickP42Livery(params);
+  const X = (d: number) => P42_TIP - d;
+  const top = P42_CROWN;
+  const cabY = p42Lerp(l.cabLine, 1.8);
+  const face = Math.min(l.face[0], l.face[1]);
+  const body: UnitBody = {
+    y0: P42_A,
+    hw: [[P42_A, P42_W], [P42_CREASE, P42_W], [P42_BAND, 1.33], [4.25, 1.13], [top, 0.75]],
+    side: [...lodBandsOf(l, P42_A, P42_CREASE), [P42_CREASE, P42_BAND, l.band], [P42_BAND, top, l.cab]],
+    roof: l.cab,
+    front: {
+      tip: [[P42_A, X(0)], [P42_KNEE, X(0)], [4.3, X((4.3 - P42_KNEE) / P42_RAKE)], [top, X(1.45)]],
+      setback: [[P42_A, 0.52], [P42_KNEE, 0.52], [top, 0.25]],
+      paint: [...lodBandsOf({ bands: l.faceBands ?? l.bands } as CarbodyLivery, P42_A, face), [face, top, l.cab]],
+      windows: [{ u: [-1.2, -0.075], y: [3.55, 4.03], mat: LOD_GLASS }, { u: [0.075, 1.2], y: [3.55, 4.03], mat: LOD_GLASS }],
+    },
+    rear: { tip: [[P42_A, X(P42_BODY)]] },
+    cabs: [{ x0: X(3.0), x1: X(0), side: [...lodBandsOf(l, P42_A, cabY), [cabY, top, l.cab]] }],
+    windows: [{ u: [X(2.6), X(1.5)], y: [3.43, 3.88], mat: LOD_GLASS }],
+  };
+  const skirt = (d0: number, d1: number): LodPart => ({ draw: (m) => m.scope("body", () => lodRoofBox(m, l.skirt, X(d1), X(d0), P42_W - 0.1, P42_W, P42_B, P42_A + 0.01)) });
+  const parts: LodPart[] = [
+    ...bogieParts([[P42_TRUCK, 2.0], [-P42_TRUCK, 2.0]], P42_A),
+    skirt(5.95, 13.55),
+  ];
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...l.palette }, bodies: [body], parts }, 100);
 }
 export function emdF40ph(params?: ParamValues): MeshBuilder { return buildF40(pick(F40_PARAMS, F40_LIVERIES, params)); }
 export function emdF40phLod(params?: ParamValues): MeshBuilder {

@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | `proc-vehicle-emd-f7` | EMD F7 | `livery`: `santaFe` (red warbonnet), `unionPacific`, `southernPacific` (Daylight); `unit`: `aUnit` (cab), `bUnit` (booster), `train` (`cars` 2 A-B, 3 A-B-A, 4 A-B-B-A) | 15.44 m A, 15.24 m B | about 11,000 - 13,000 a unit |
 | `proc-vehicle-emd-f40ph` | EMD F40PH (draft) | `livery`: `phaseIII`, `phaseII` | 17.12 m | about 11,000 |
-| `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 8,400 - 8,800 |
+| `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 12,400 - 13,600 |
 | `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 10,300 |
 | `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 13,300 - 14,400 |
 | `proc-vehicle-amtrak-superliner` | Amtrak Superliner | `unit`: `coach`, `sleeper` | 25.91 m | 8,500 - 8,700 |
@@ -80,8 +80,33 @@ nose along the surface's chord (`chordBox`).
   nose; on the roof the dynamic brake blister with its louvres and fan, the exhaust, two
   radiator fans under barred guards, a five-chime horn, the bell and an antenna; Phase II (as delivered) the same with narrower stripes set higher.
   A draft in the workshop.
-- **GE P42DC** - the Genesis's angular nose with its chamfered corners and long raked
-  windscreen, the side grilles, three roof fans, the skirt cut over the trucks.
+- **GE P42DC** - measured from photographs (assets/ge-p42dc/SOURCES.md: 167's near-orthographic
+  side at 51 px/m, 27 head-on at 136 px/m). Its own slice body (`p42Body`) on the slice kit with
+  the section's top drawn by `arcProfile`: the side vertical from the frame to the crease at
+  3.30 m, the upper band leaning in to 4.02 m (it holds the cab windows and the louvres), the
+  roof's rounded edge to the 4.37 m crown. The face: vertical up to the knee at 2.15 m, then
+  raked at 58.6 degrees (1.64 m up per metre back) to the roof 1.4 m behind the apex; in plan a
+  shallow V (the corners 0.27 m behind the apex at 1.27 m half width) with 45-degree corner
+  chamfers to the full width. On the face's planes: two windscreen panes (3.53 - 3.97 m, 1.13 m
+  wide) with wipers, the number board standing out of the V, the twin headlights in their
+  pocket, red markers; on the knee's V the ditch lights and the lamp boxes; the plow following
+  the V. The sides (the left and right differ in the louvres behind the cab: two framed filters
+  on the left, one fine grille on the right): the two-pane cab window with its mirror plate,
+  the narrow cab door up through the band with its window, step well, handrails and ladder, the
+  cabinet with its grille and the hatch by the nose, the engine room's louvres along the band
+  (4.15 - 8.79 m), its hatch, the band louvre at 14.15 m, the four radiator intakes over the
+  rear truck, the rear side door; the fairing between the trucks down to 0.72 m with the
+  reservoirs and battery box under its tail. The rear end: the door left of centre, twin
+  headlights above it, markers, the painted number. The roof: horn and antennas on the cab, the
+  exhaust, the radiator hatch with two fans. The GE (Krupp-design) trucks: fish-belly side
+  frames, coil springs either side of each axle box, dampers, traction rods. Liveries: **Phase V**
+  (unit 78) silver over a thin red stripe and grey skirt, the blue face above a V under the
+  headlights, the blue running down the cab side to the door and over the roof, the swoosh
+  coming down the rear band, the side's AMTRAK and travel mark; **Phase III** (the 2011 heritage
+  unit 145) the blue, white and red stripes round the face, the black cab, roof and underbody;
+  **VIA** (915) teal over the cab and roof and along the top, the yellow wedge from the nose
+  tapering back over the grey. Fields that cross the lofted facets are panes and decals laid on
+  the shell (`p42Strip`, `shapedCrownPane`, the face planes' panels).
 - **Siemens ALC-42** - the Charger's beaked nose, its windscreen, grilles and two radiator
   fans; Phase VII dark blue over a low red stripe.
 - **PRR GG1** - the welded streamlined body, the hoods falling from the centre cab to both
@@ -117,6 +142,8 @@ Running numbers are illustrative, but for the GG1's preserved 4935 and 4800.
 
 - The trucks are the diesel toolkit's generic cast truck (the Acela's and the Charger's are
   not modelled in detail); the Acela's tilt is not drawn.
+- The P42DC's front and rear offsets keep the model centred (the photo puts the trucks 0.17 m
+  further back); its VIA logo, flags and the heritage unit's dates are not drawn.
 - The P42DC's and ALC-42's interiors and the Acela's cabins are not drawn. The F7 set's units
   are hinged as one articulated vehicle, not coupled loose.
 - The GG1's quill drive and its frames are simplified; its wheels have six spokes.

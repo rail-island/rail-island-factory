@@ -34,6 +34,12 @@ export interface SliceBody {
   lean: number;
   /** Segments of the roof's quarter arc. */
   arc: number;
+  /**
+   * Optional: the outline between the shoulder and the crown as points [z, y]
+   * (the same count at every d), in place of the quarter arc's inner points; the
+   * crown (0, C) follows them. Default none: the quarter ellipse of `arc` segments.
+   */
+  arcProfile?: (d: number) => readonly Pt[];
   /** Where the slices stand, ascending from 0 to the length. */
   stations: number[];
 }
@@ -53,6 +59,10 @@ export function halfSlice(b: SliceBody, d: number): Pt[] {
   const [B, A, Y, S, C, w] = [b.B(d), b.A(d), b.Y(d), b.S(d), b.C(d), b.w(d)];
   const edges = b.edges(d).map((y) => Math.min(S, Math.max(Y, y)));
   const pts: Pt[] = [[0, B], [b.wl(d), B], [b.wa(d), A], [w, Y], ...edges.map((y): Pt => [sideZ(b, d, y), y]), [w * b.lean, S]];
+  if (b.arcProfile) {
+    pts.push(...b.arcProfile(d).map((p): Pt => [p[0], p[1]]), [0, C]);
+    return pts;
+  }
   for (let i = 1; i <= b.arc; i++) {
     const t = (i / b.arc) * (Math.PI / 2);
     pts.push(i === b.arc ? [0, C] : [w * b.lean * Math.cos(t), S + (C - S) * Math.sin(t)]);

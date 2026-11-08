@@ -72,6 +72,19 @@ describe("the US carbodies", () => {
     expect(glbStats(m.toGlb("gg1")).max[1]).toBeGreaterThan(5.8);
   });
 
+  it("draws the P42DC's raked V face, its leaning upper band and each livery's fields", () => {
+    const d = design("proc-vehicle-ge-p42dc");
+    for (const livery of ["phaseV", "phaseIII", "via"]) {
+      const nodes = leaves(d.build({ livery }).sourceTree("p42", d.title).root);
+      const ids = nodes.map((n) => n.id);
+      for (const scope of ["nose/right-half/windscreen/", "nose/number-board/", "body/left-side/cab-window/", "body/right-side/grilles/", "body/left-side/paint/", "rear-end/"])
+        expect(ids.some((i) => i.startsWith(scope)), `${livery} ${scope}`).toBe(true);
+      // the windscreen stands on the raked face: its foot ahead of its head by the rake
+      const ws = nodes.filter((n) => n.id.startsWith("nose/right-half/windscreen/"));
+      expect(Math.max(...ws.map((n) => n.max![0])) - Math.min(...ws.map((n) => n.min![0]))).toBeGreaterThan(0.25);
+    }
+  });
+
   it("gives the F7 and the Acela shaped windscreens and their own nose lamps", () => {
     const scopes = (id: string, params?: Record<string, string>) => leaves(design(id).build(params).sourceTree(id, design(id).title).root).map((n) => n.id);
     // the F7: rounded panes narrowing toward the roof, the headlight in its hood, number boards, class lights
