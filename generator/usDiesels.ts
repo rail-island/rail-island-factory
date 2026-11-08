@@ -11,6 +11,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { DIESEL_LOCO_CATALOG } from "./cd163.ts";
 import { paint } from "./dieselParts.ts";
 import { buildUsHood, usHoodLod, type Band, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
+import { ES44AC_LIVERIES, buildEs44ac, buildEs44acLod } from "./geEs44ac.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 
@@ -232,11 +233,14 @@ export function emdSd40(params?: ParamValues): MeshBuilder {
 export function emdSd40Lod(params?: ParamValues): MeshBuilder {
   return usHoodLod(SD40_SPEC, liveryOf(SD40_PARAMS, SD40_LIVERIES, params));
 }
+// The ES44AC is drawn in detail by its own module (geEs44ac.ts); ES44_SPEC stays the
+// kit's ES44 frame for the designs built on it (the HXN5, the WDG-4G).
+const es44Livery = (v?: ParamValues) => ES44AC_LIVERIES[resolveParams(ES44_PARAMS, v).livery!]!;
 export function geEs44ac(params?: ParamValues): MeshBuilder {
-  return buildUsHood(ES44_SPEC, liveryOf(ES44_PARAMS, ES44_LIVERIES, params));
+  return buildEs44ac(es44Livery(params));
 }
 export function geEs44acLod(params?: ParamValues): MeshBuilder {
-  return usHoodLod(ES44_SPEC, liveryOf(ES44_PARAMS, ES44_LIVERIES, params));
+  return buildEs44acLod(es44Livery(params));
 }
 export function emdSd70ace(params?: ParamValues): MeshBuilder {
   return buildUsHood(SD70_SPEC, liveryOf(SD70_PARAMS, SD70_LIVERIES, params));
