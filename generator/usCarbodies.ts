@@ -18,7 +18,6 @@ import { cross, unit as norm, type Pt } from "./sliceLoft.ts";
 import { crownPane, crownPoint, halfSlice, roundedPane, shapedCrownPane, sideDecal, sideLettering, sidePanel, sliceCabin, surfaceDisc, surfacePoint, type PaneOutline, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
 import { openable, plugMove } from "./doors.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
-import { bodyHalf as faceHalf, cabFaceLod, drawCabFace, type FacePaint, type SeriesCabFace } from "./seriesCab.ts";
 import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, pilotPlate, type CarbodySpec, type Painter } from "./carbodyKit.ts";
 import { knuckleCoupler } from "./usHoodKit.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
@@ -28,6 +27,7 @@ import { COACH_CATALOG } from "./csdCoaches.ts";
 import { articulate } from "./tramKit.ts";
 import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, pantographParts, roofPart, turnBody, type UnitBody } from "./lodUnits.ts";
+import { bodyHalf as faceHalf, cabFaceLod, drawCabFace, type FacePaint, type FaceRect, type SeriesCabFace } from "./seriesCab.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 const COUPLER_Y = 0.88;
@@ -140,10 +140,6 @@ function sideGrille(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: n
 function truck(m: MeshBuilder, x: number, spec: BogieSpec): void {
   bogie(m, x, spec);
 }
-
-/** The skirt's cut-outs over trucks at model x = +-centre, for a body whose +X tip is at `tip` (d = tip - x). */
-const truckCuts = (tip: number, centre: number, reach: number): Array<readonly [number, number]> =>
-  [tip - centre, tip + centre].map((d) => [d - reach, d + reach] as const);
 
 const truckSpec = (axles: number[], wheelR: number, frameHalf: number, bolster: number): BogieSpec => ({
   axles, wheelR, frameHalf, frameTop: wheelR + 0.48, frameBottom: wheelR + 0.1, frameZ: [0.92, 1.06], primary: "coil",
@@ -1499,98 +1495,472 @@ function bodyHalf(b: SliceBody, d: number): number {
 
 // ---------------------------------------------------------------------------
 // Siemens ALC-42 Charger
+//
+// Measured from photographs of 304 (a near-orthographic side from above, 59 px/m), 363 (side
+// three-quarter, 69 px/m at the cab), 315 and 331 (the face) and SC-44 4610 (Amtrak Midwest);
+// assets/siemens-alc42/SOURCES.md. d is metres back from the nose tip (the face's centre at the
+// ditch lights); the body behind the cab is the carbody kit's flat section, the whole cab - its
+// face, the raked windscreen, the pillars and the cab sides with their sweeps - one painted cab
+// face (seriesCab.ts) joined to that section ALC_JOIN behind the tip.
 
 const ALC_LENGTH = 21.79;
 const ALC_REACH = 0.4;
 const ALC_BODY = ALC_LENGTH - ALC_REACH - 0.35;
 const ALC_TRUCK = 12.436 / 2;
 const ALC_WHEEL = 0.6;
+const ALC_TIP = ALC_LENGTH / 2 - ALC_REACH;
+/** The cab face's surface reaches back to here (the cab, its door and its sweeps), then the body's own section. */
+const ALC_JOIN = 4.6;
+/** The side's top crease (the upper panel leans in from it to the roof) and the roof. */
+const ALC_RIB = 3.68;
+const ALC_ROOF = 4.39;
+/** The body's bottom edge (the side sheet's foot over the frame). */
+const ALC_FOOT = 1.17;
 
+/** The body behind the cab: upright sides to the crease, the upper panel and the roof as a three-facet arc. */
 const ALC_SPEC: CarbodySpec = {
-  length: ALC_BODY, W: 1.52, Y: 1.45, S: 4.02, C: 4.39, lean: 0.95, arc: 6, B: 1.05, wl: 1.42, A: 1.38, wa: 1.49,
-  front: {
-    len: 2.3, tip: 0.22, power: 2.4,
-    C: [[0, 2.05], [0.15, 2.55], [0.5, 2.95], [1.0, 3.22], [1.6, 3.48], [2.4, 4.2], [2.9, 4.39]],
-    S: [[0, 1.95], [0.15, 2.42], [0.5, 2.78], [1.0, 3.0], [1.6, 3.22], [2.4, 3.88], [2.9, 4.02]],
-    Y: [[0, 1.6], [0.4, 1.48], [0.8, 1.45]],
-    A: [[0, 1.5], [0.5, 1.38]],
-    B: [[0, 1.48], [0.25, 1.1], [0.5, 1.05]],
-  },
-  cuts: truckCuts(ALC_LENGTH / 2 - ALC_REACH, ALC_TRUCK, 2.1),
-  edges: [], step: 1.0, noseStep: 0.15,
+  length: ALC_BODY - ALC_JOIN, W: 1.52, Y: 1.21, S: ALC_RIB, C: ALC_ROOF, lean: 0.995, arc: 3, B: ALC_FOOT, wl: 1.5, A: 1.19, wa: 1.515,
+  edges: [], step: 1.0,
 };
 
 const ALC_PAL = {
-  midnight: paint("#1d2c52"), amRed: paint("#b8222a"), silverLight: paint("#d3d6d9", 0.35), amBlue: paint("#2a5aa8"), truckBlack: paint("#242527", 0.85),
+  midnight: paint("#1c2649"), amRed: paint("#c4202b"), silverLight: paint("#d3d6d9", 0.35), amBlue: paint("#234a96"), truckBlack: paint("#242527", 0.85),
+  alcRearBlue: paint("#22508f"), alcWhite: paint("#eef0ef"), alcGrey: paint("#3b3e44", 0.7), alcDots: paint("#24447e"),
 };
 const pickAlc = (...n: Array<keyof typeof ALC_PAL>) => Object.fromEntries(n.map((k) => [k, ALC_PAL[k]]));
 
-export const ALC_LIVERIES: Record<string, CarbodyLivery> = {
+/** A sweep over the cab as a painted region: from the tip back to `back` ([y, d] by height), from its first height up to `top`. */
+type AlcPaint = { mat: string; front?: Pt[]; back: Pt[]; top: number };
+
+/** A Charger livery: the carbody's, plus the cab face's paint and the body's own sweeps. */
+interface AlcLivery extends CarbodyLivery {
+  /** The face's paint under its fields (bottom up) and the roof's colour over the face from `roofFrom`. */
+  face: ReadonlyArray<readonly [number, number, string]>;
+  roofFrom: number;
+  /** The sweeps over the cab (face and cab sides), later over earlier. */
+  cab: readonly AlcPaint[];
+  /** Polygons on the face ([lat, y]) over the sweeps: the vee under the windscreen, the pillars. */
+  fields: ReadonlyArray<{ mat: string; pts: Pt[] }>;
+  /** The black surround of the windscreen and the headlight box. */
+  masks: readonly FaceRect[];
+  /** The lamps in black housings standing out of the face (Phase VII), else flat on it. */
+  housings?: boolean;
+  /** The headlights under the windscreen: lat, y, radius. */
+  headlights: ReadonlyArray<readonly [number, number, number]>;
+  /** The anticlimber's paint and the stripe across its face. */
+  climber: string;
+  climberStripe: string;
+  /** The running number on the cab side under its window ([d, foot, height]) and at the rear. */
+  numberAt: readonly [number, number, number];
+  rearNumber?: readonly [number, number, number];
+  /** The distant model's face bands and cab-side bands. */
+  lodFace: ReadonlyArray<readonly [number, number, string]>;
+  lodCab: ReadonlyArray<readonly [number, number, string]>;
+  /** The body's sweeps, logo and pattern behind the cab, each side. */
+  body: (m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number) => void;
+  /** Paint of the roof's upper facets (over the upper panel) behind d (from the tip). */
+  roofRear?: { d: number; mat: string };
+}
+
+/** d (from the tip) to the body's own d. */
+const alcB = (d: number) => d - ALC_JOIN;
+
+/** A band on the flat side between two edges given as d (from the tip) by height, over y0..y1: rows of quads. */
+function alcBand(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, front: (y: number) => number, back: (y: number) => number, y0: number, y1: number, proud: number, n = 10): void {
+  const tris: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const [ya, yb] = [y0 + ((y1 - y0) * i) / n, y0 + ((y1 - y0) * (i + 1)) / n];
+    const [a, c, e, f] = [[front(ya), ya], [back(ya), ya], [back(yb), yb], [front(yb), yb]].map(([d, y]): Pt => [alcB(d!), y!]);
+    tris.push(a!, c!, e!, a!, e!, f!);
+  }
+  sideDecal(m, b, X, s, mat, tris, proud);
+}
+
+/** Triangles in (d from the tip, y) laid on the upper panel's first facet (the crease to the next arc point), `proud` off it. */
+function alcUpperDecal(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, tris: Pt[], proud: number): void {
+  const h = halfSlice(b, 0);
+  const k = h.findIndex((p) => Math.abs(p[1] - ALC_RIB) < 1e-9);
+  const [p0, p1] = [h[k]!, h[k + 1]!];
+  const [dz, dy] = [p1[0] - p0[0], p1[1] - p0[1]];
+  const L = Math.hypot(dz, dy);
+  const n: Vec3 = [0, -dz / L, (s * dy) / L];
+  const pts = tris.map(([d, y]): Vec3 => {
+    const z = p0[0] + ((y - p0[1]) / dy) * dz;
+    return [X(alcB(d)) + n[0] * proud, y + n[1] * proud, s * z + n[2] * proud];
+  });
+  m.facets(mat, pts, n);
+}
+
+// --- Phase VII: midnight blue, the red cab top over a white sweep, the white swoosh and the lighter
+// blue rear, the red and white stripe along the foot (Amtrak 309 onward; 315, 331, 363)
+
+/** The swoosh's centre line and width (d from the tip by height): steep at the foot, leaning back to the roof. */
+const ALC_SWOOSH = (y: number): number => 9.4 + 1.7 * Math.pow(Math.max(0, (y - 1.38) / 2.3), 1.8);
+const ALC_SWOOSH_W = (y: number): number => Math.max(0.035, 0.42 - 0.165 * (y - 1.38));
+
+function alcPhaseVIIBody(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number): void {
+  const top = ALC_RIB, up = halfSlice(b, 0).find((p) => p[1] > ALC_RIB + 1e-9)![1];
+  m.scope("rear blue", () => {
+    alcBand(m, b, X, s, "alcRearBlue", ALC_SWOOSH, () => ALC_BODY - 0.002, 1.38, top, 0.004, 12);
+    const tris: Pt[] = [];
+    for (let i = 0; i < 3; i++) {
+      const [ya, yb] = [top + ((up - top) * i) / 3, top + ((up - top) * (i + 1)) / 3];
+      tris.push([ALC_SWOOSH(ya), ya], [ALC_BODY - 0.002, ya], [ALC_BODY - 0.002, yb], [ALC_SWOOSH(ya), ya], [ALC_BODY - 0.002, yb], [ALC_SWOOSH(yb), yb]);
+    }
+    alcUpperDecal(m, b, X, s, "alcRearBlue", tris, 0.004);
+  });
+  m.scope("swoosh", () => {
+    const f = (y: number) => ALC_SWOOSH(y) - ALC_SWOOSH_W(y) / 2, g = (y: number) => ALC_SWOOSH(y) + ALC_SWOOSH_W(y) / 2;
+    alcBand(m, b, X, s, "alcWhite", f, g, 1.38, top, 0.008, 12);
+    const tris: Pt[] = [];
+    for (let i = 0; i < 3; i++) {
+      const [ya, yb] = [top + ((up - top) * i) / 3, top + ((up - top) * (i + 1)) / 3];
+      tris.push([f(ya), ya], [g(ya), ya], [g(yb), yb], [f(ya), ya], [g(yb), yb], [f(yb), yb]);
+    }
+    alcUpperDecal(m, b, X, s, "alcWhite", tris, 0.008);
+  });
+  m.scope("logo", () => alcLogo(m, b, X, s, 3.65, 2.58, 1.0, "alcWhite"));
+}
+
+// --- Amtrak Midwest (the SC-44's): silver over a dark grey foot and a red stripe, the blue cab under a
+// white sweep, the black windscreen surround over the roof, the blue dots fading back from the cab
+
+/** The white lines over the silver: one along the crease from the cab, one rising from the stripe to meet it. */
+function alcMidwestBody(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number): void {
+  m.scope("lines", () => {
+    alcBand(m, b, X, s, "alcWhite", () => 3.0, () => ALC_BODY - 0.002, 3.55, 3.64, 0.003, 1);
+    // rising from the red stripe behind the dots to the crease line
+    const lo = (d: number) => 1.82 + 1.68 * Math.pow(Math.min(1, Math.max(0, (d - 6.0) / 6.5)), 0.75);
+    const tris: Pt[] = [];
+    for (let i = 0; i < 12; i++) {
+      const [a, c] = [6.0 + (6.5 * i) / 12, 6.0 + (6.5 * (i + 1)) / 12];
+      tris.push([alcB(a), lo(a)], [alcB(c), lo(c)], [alcB(c), lo(c) + 0.1], [alcB(a), lo(a)], [alcB(c), lo(c) + 0.1], [alcB(a), lo(a) + 0.1]);
+    }
+    sideDecal(m, b, X, s, "alcWhite", tris, 0.003);
+  });
+  m.scope("dots", () => {
+    // the dots in rows, shrinking back from the cab and under the white line
+    const tris: Pt[] = [];
+    for (let i = 0; i < 16; i++)
+      for (let j = 0; j < 9; j++) {
+        const d = 3.15 + i * 0.2 + (j % 2) * 0.1, y = 1.98 + j * 0.19;
+        const r = 0.085 * (1 - (d - 3.15) / 3.4) * (0.8 + 0.2 * (1 - j / 8));
+        if (r < 0.02) continue;
+        for (let k = 0; k < 6; k++) {
+          const [a0, a1] = [(k * Math.PI) / 3, ((k + 1) * Math.PI) / 3];
+          tris.push([alcB(d), y], [alcB(d + r * Math.cos(a0)), y + r * Math.sin(a0)], [alcB(d + r * Math.cos(a1)), y + r * Math.sin(a1)]);
+        }
+      }
+    sideDecal(m, b, X, s, "alcDots", tris, 0.005);
+  });
+  m.scope("logo", () => {
+    alcLogo(m, b, X, s, 9.4, 2.7, 0.95, "amBlue");
+    sideLettering(m, b, X, s, "MIDWEST", alcB(9.75), 2.48, 0.13, "amBlue", 0.006);
+  });
+}
+
+/** Amtrak's name over its travel mark (three stripes fanning down from a point, upper right as read), centred at d. */
+function alcLogo(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d: number, foot: number, w: number, mat: string): void {
+  const h = w * 0.17;
+  sideLettering(m, b, X, s, "AMTRAK", alcB(d), foot, h, mat, 0.008);
+  const tris: Pt[] = [];
+  // u to the reader's right, toward the front on the +Z side
+  const P = (u: number, v: number): Pt => [alcB(d - s * u * w), foot - 0.06 + v * w];
+  for (let i = 0; i < 3; i++) {
+    const [u0, v0] = [-0.62 + 0.1 * i, -0.24 - 0.21 * i];
+    const [u1, v1] = [0.58, -0.04 - 0.035 * i];
+    const n = 8;
+    for (let k = 0; k < n; k++) {
+      const [t0, t1] = [k / n, (k + 1) / n];
+      const c = (t: number): Pt => [u0 + (u1 - u0) * t, v0 + (v1 - v0) * Math.pow(t, 1.6)];
+      const wd = (t: number) => 0.075 * (1 - t) + 0.006;
+      const [a, e] = [c(t0), c(t1)];
+      tris.push(P(a[0], a[1] - wd(t0)), P(e[0], e[1] - wd(t1)), P(e[0], e[1] + wd(t1)), P(a[0], a[1] - wd(t0)), P(e[0], e[1] + wd(t1)), P(a[0], a[1] + wd(t0)));
+    }
+  }
+  sideDecal(m, b, X, s, mat, tris, 0.008);
+}
+
+/** The face's vee under the windscreen: [lat, y] of its lower edge at the centre and at the corners, its width. */
+const alcVee = (y0: number, rise: number, w: number, reach = 1.7): Pt[] => [[-reach, y0 + rise * reach + w], [0, y0 + w], [reach, y0 + rise * reach + w], [reach, y0 + rise * reach], [0, y0], [-reach, y0 + rise * reach]];
+const alcUnder = (y0: number, rise: number, bottom: number, reach = 1.7): Pt[] => [[-reach, bottom], [reach, bottom], [reach, y0 + rise * reach], [0, y0], [-reach, y0 + rise * reach]];
+
+
+/** Amtrak's travel mark on the face under its name, centred at lat, its top at y, w wide: three stripes, each as a few convex quads. */
+function alcNoseMark(lat: number, y: number, w: number): Array<{ mat: string; pts: Pt[]; fine: number }> {
+  const out: Array<{ mat: string; pts: Pt[]; fine: number }> = [];
+  for (let i = 0; i < 3; i++) {
+    const [u0, v0, u1, v1] = [-0.5 + 0.08 * i, -0.2 - 0.17 * i, 0.5, -0.02 - 0.03 * i];
+    const c = (t: number): Pt => [lat + w * (u0 + (u1 - u0) * t), y + w * (v0 + (v1 - v0) * Math.pow(t, 1.6))];
+    const h = (t: number) => w * (0.06 * (1 - t) + 0.008);
+    for (let k = 0; k < 3; k++) {
+      const [a, e] = [c(k / 3), c((k + 1) / 3)];
+      out.push({ mat: "alcWhite", pts: [[a[0], a[1] - h(k / 3)], [e[0], e[1] - h((k + 1) / 3)], [e[0], e[1] + h((k + 1) / 3)], [a[0], a[1] + h(k / 3)]], fine: 1 });
+    }
+  }
+  return out;
+}
+
+const ALC_WINDSCREEN: FaceRect[] = [{ lat: [-0.82, -0.05], y: [3.0, 3.84], r: 0.07 }, { lat: [0.05, 0.82], y: [3.0, 3.84], r: 0.07 }];
+
+export const ALC_LIVERIES: Record<string, AlcLivery> = {
   phaseVII: {
-    title: "Amtrak Phase VII", palette: pickAlc("midnight", "amRed", "silverLight", "truckBlack"),
-    bands: [[0, 1.5, "silverLight"], [1.5, 1.6, "amRed"], [1.6, 9, "midnight"]],
-    roof: "midnight", skirt: "silverLight", under: "truckBlack",
-    lettering: { text: "AMTRAK", d: 11.0, y: 2.6, h: 0.5, mat: "silverLight" },
-    number: "301", numberMat: "silverLight",
+    title: "Amtrak Phase VII", palette: pickAlc("midnight", "amRed", "silverLight", "truckBlack", "alcRearBlue", "alcWhite", "alcGrey"),
+    bands: [[0, 1.33, "amRed"], [1.33, 1.38, "alcWhite"], [1.38, 9, "midnight"]],
+    roof: "midnight", skirt: "amRed", under: "truckBlack",
+    number: "363", numberMat: "alcWhite", numberAt: [1.02, 2.47, 0.25], rearNumber: [19.9, 2.55, 0.3],
+    face: [[0, 9, "midnight"]], roofFrom: 4.36,
+    cab: [
+      // the white sweep: from the face's corner up past the cab window, over the door, to the roof edge and back along it
+      { mat: "alcWhite", back: [[2.55, 0.6], [2.9, 1.0], [3.35, 1.35], [3.6, 1.9], [3.95, 2.5], [4.2, 2.95], [4.4, 3.4]], top: 4.34 },
+      // the red over it: the pillars and the cab's top, its rear edge leaning forward to the roof
+      { mat: "amRed", back: [[2.75, 0.5], [3.1, 0.9], [3.45, 1.25], [3.75, 1.75], [4.1, 2.25], [4.4, 2.6]], top: 4.36 },
+    ],
+    fields: [
+      { mat: "midnight", pts: alcUnder(2.4, 0.15, 2.3) },
+      { mat: "alcWhite", pts: alcVee(2.4, 0.15, 0.1) },
+      { mat: "amRed", pts: [[-1.7, 2.755], [0, 2.5], [1.7, 2.755], [1.7, 2.99], [-1.7, 2.99]] },
+      // the roof's middle over the windscreen
+      { mat: "midnight", pts: [[-0.7, 4.18], [0.7, 4.18], [0.7, 4.4], [-0.7, 4.4]] },
+      // the windscreen's black surround reaches down to the vee
+      { mat: "black", pts: [[-0.9, 2.645], [0, 2.51], [0.9, 2.645], [0.9, 2.99], [-0.9, 2.99]] },
+    ],
+    masks: [{ lat: [-0.9, 0.9], y: [2.8, 4.2], r: 0.14, mat: "black" }], housings: true,
+    headlights: [[-0.16, 2.78, 0.09], [0.16, 2.78, 0.09]], climber: "black", climberStripe: "amRed",
+    lodFace: [[0, 2.55, "midnight"], [2.55, 2.65, "alcWhite"], [2.65, 4.36, "amRed"], [4.36, 9, "midnight"]],
+    lodCab: [[0, 1.33, "amRed"], [1.33, 1.38, "alcWhite"], [1.38, 3.55, "midnight"], [3.55, 3.8, "alcWhite"], [3.8, 9, "amRed"]],
+    body: alcPhaseVIIBody,
+    roofRear: { d: ALC_SWOOSH(4.035), mat: "alcRearBlue" },
   },
   midwest: {
-    title: "Amtrak Midwest", palette: pickAlc("silverLight", "amBlue", "midnight", "truckBlack"),
-    bands: [[0, 1.75, "amBlue"], [1.75, 2.35, "silverLight"], [2.35, 2.48, "amBlue"], [2.48, 9, "silverLight"]],
-    roof: "silverLight", skirt: "amBlue", under: "truckBlack", nose: { d: 2.0, mat: "amBlue", maxY: 3.4 },
-    lettering: { text: "AMTRAK", d: 11.0, y: 2.7, h: 0.5, mat: "amBlue" },
-    number: "4601", numberMat: "midnight",
+    title: "Amtrak Midwest", palette: pickAlc("silverLight", "amBlue", "midnight", "truckBlack", "amRed", "alcWhite", "alcGrey", "alcDots"),
+    bands: [[0, 1.68, "alcGrey"], [1.68, 1.78, "amRed"], [1.78, 9, "silverLight"]],
+    roof: "silverLight", skirt: "alcGrey", under: "truckBlack",
+    number: "4610", numberMat: "alcWhite", numberAt: [1.05, 1.98, 0.3],
+    face: [[0, 9, "amBlue"]], roofFrom: 4.38,
+    cab: [
+      // the blue cab back to behind the door, over the red stripe
+      { mat: "amBlue", front: [[1.78, 0], [4.4, 0]], back: [[1.78, 3.0], [4.4, 3.0]], top: 4.4 },
+      // the white sweep from the face's corners over the cab's shoulder to the crease behind the door
+      { mat: "alcWhite", back: [[2.4, 0.5], [3.0, 0.85], [3.45, 1.25], [3.65, 2.0], [3.68, 3.0], [4.4, 3.0]], top: 4.4 },
+      // the silver roof over it
+      { mat: "amBlue", back: [[2.7, 0.5], [3.3, 0.85], [3.75, 1.25], [3.95, 2.0], [4.1, 2.6], [4.4, 2.8]], top: 4.4 },
+    ],
+    fields: [
+      { mat: "amBlue", pts: [[-1.7, 1.0], [1.7, 1.0], [1.7, 4.4], [-1.7, 4.4]] },
+      // the white sweep's start on the face's corners
+      { mat: "alcWhite", pts: [[1.0, 2.42], [1.8, 2.42], [1.8, 4.4], [1.0, 4.4]] }, { mat: "alcWhite", pts: [[-1.8, 2.42], [-1.0, 2.42], [-1.0, 4.4], [-1.8, 4.4]] },
+    ],
+    // the windscreen's surround from the roof down round the headlights
+    masks: [{ lat: [-0.9, 0.9], y: [2.28, 4.42], r: 0.22, mat: "black" }],
+    headlights: [[-0.36, 2.55, 0.1], [0.36, 2.55, 0.1]], climber: "amBlue", climberStripe: "amRed",
+    lodFace: [[0, 2.42, "amBlue"], [2.42, 9, "black"]],
+    lodCab: [[0, 1.68, "alcGrey"], [1.68, 1.78, "amRed"], [1.78, 3.4, "amBlue"], [3.4, 3.8, "alcWhite"], [3.8, 9, "amBlue"]],
+    body: alcMidwestBody,
   },
 };
 
-export function buildAlc42(l: CarbodyLivery): MeshBuilder {
-  const m = new Builder({ ...CARBODY_PALETTE, ...l.palette });
-  const b = carbody({ ...ALC_SPEC, edges: edgesOf(l, ALC_SPEC.Y, ALC_SPEC.S) });
-  const tip = ALC_LENGTH / 2 - ALC_REACH;
-  const X = (d: number) => tip - d;
+/** The cab face of one livery (seriesCab.ts): profile and plan measured from 304, 315, 331 and 363. */
+function alcFace(l: AlcLivery): SeriesCabFace {
+  return {
+    dJoin: ALC_JOIN, dSide: 1.3, roofFrom: l.roofFrom, cols: [6, 3, 1, 1], tolerance: 0.03, reach: ALC_REACH,
+    // the lower face upright over the anticlimber, bowed forward at the ditch lights; leaning back a
+    // little round the headlight box, the windscreen raked back 38 degrees, the brow rounding into
+    // the cab roof
+    profile: [[ALC_FOOT, 0.12], [1.45, 0.05], [1.9, 0], [2.35, 0], [2.62, 0.05], [2.95, 0.2], [3.4, 0.55], [3.85, 0.9], [4.035, 1.05], [4.15, 1.16], [4.295, 1.38], [4.34, 1.55], [4.385, 1.8], [ALC_ROOF, ALC_JOIN]],
+    corner: [[ALC_FOOT, 0.3], [2.62, 0.32], [2.95, 0.42], [3.4, 0.45], [3.85, 0.45], [4.035, 0.42], [ALC_ROOF, 0.3]],
+    // the pillars lean in: the face narrower at the windscreen's head than at the lamps (331: about
+    // 0.35 m each side at the head, the cab side flaring back out to the body by dSide)
+    planInset: [[2.62, 0], [2.95, 0.06], [3.4, 0.2], [3.85, 0.34], [4.035, 0.38], [4.15, 0.36], [4.295, 0.12], [ALC_ROOF, 0]],
+    cornerDepth: [[ALC_FOOT, 0.3], [2.62, 0.28], [2.95, 0.26], [3.4, 0.25], [3.85, 0.28], [4.035, 0.26], [ALC_ROOF, 0.15]],
+    // the face's vee: its edges this far behind the centre line
+    bulge: [[ALC_FOOT, 0.1], [2.35, 0.16], [2.95, 0.15], [3.4, 0.15], [3.85, 0.15], [4.15, 0.14], [ALC_ROOF, 0.05]],
+    rows: [ALC_FOOT, 1.19, 1.21, 1.45, 1.9, 2.35, 2.62, 2.95, 3.4, 3.68, 3.85, 4.035, 4.15, 4.295, 4.335, 4.385, ALC_ROOF],
+    bands: () => l.face, lodBands: l.lodFace,
+    paint: [
+      ...l.cab.map((c) => ({ mat: c.mat, front: c.front ?? [[c.back[0]![0], 0], [c.back[c.back.length - 1]![0], 0]], back: c.back, top: c.top })),
+      // the cab's side window: raked like the pillar in front of it
+      { mat: "cabGlass", front: [[2.98, 0.98], [3.52, 1.3]], back: [[2.98, 1.28], [3.52, 1.6]], top: 3.53 },
+    ],
+    fields: [...l.fields],
+    masks: l.masks,
+    panes: ALC_WINDSCREEN,
+    lodGlass: { hw: 0.82, y: [3.0, 3.84] },
+    // Phase VII: the headlights in one black housing under the windscreen, each ditch light pair in an
+    // almond housing standing out of the face (the red lamp inward, the white outward)
+    ...(l.housings ? {
+      pods: [
+        { lat: 0, y: 2.8, w: 0.62, h: 0.24, r: 0.12, proud: 0.04, depth: 0.12, mat: "black", lamps: l.headlights.map(([lat, , r]): [number, number, string] => [lat, r, "lampHead"]) },
+        ...[-1, 1].map((sd) => ({ lat: sd * 0.95, y: 2.25, w: 0.64, h: 0.27, r: 0.135, proud: 0.05, depth: 0.14, mat: "black", lamps: [[-sd * 0.15, 0.065, "lampRed"], [sd * 0.14, 0.085, "ditch"]] as Array<[number, number, string]> })),
+      ],
+    } : {}),
+    lamps: l.housings ? [] : [
+      ...l.headlights.map(([lat, y, r]): readonly [number, number, number, string] => [lat, y, r, "lampHead"]),
+      // the ditch lights: the white outward, the red inward
+      ...[-1, 1].flatMap((sd): Array<readonly [number, number, number, string]> => [[sd * 1.1, 2.3, 0.085, "ditch"], [sd * 0.82, 2.22, 0.07, "lampRed"]]),
+    ],
+    texts: [{ text: "AMTRAK", lat: 0, y: 2.1, h: 0.065, mat: "alcWhite" }],
+    decals: alcNoseMark(0, 2.06, 0.42),
+    wipers: [[[-0.5, 3.04], [-0.82, 3.6]], [[0.4, 3.04], [0.08, 3.6]]],
+  };
+}
+
+const alcPaint = (l: AlcLivery): FacePaint => ({ sides: l.bands, face: l.face, roof: l.roof, skirt: l.skirt, S: ALC_RIB, A: ALC_FOOT, number: l.number });
+
+export function buildAlc42(l: AlcLivery): MeshBuilder {
+  const m = new Builder({ ...CARBODY_PALETTE, alcSocket: paint("#2f6fc4", 0.5), ...l.palette });
+  const swTop = l.roofRear ? alcB(l.roofRear.d) : Infinity;
+  const b = carbody({ ...ALC_SPEC, edges: edgesOf(l, ALC_SPEC.Y, ALC_SPEC.S), ...(l.roofRear ? { stations: [swTop] } : {}) });
+  const tip = ALC_TIP;
+  // the body's own d (from the join) to model x
+  const X = (d: number) => tip - ALC_JOIN - d;
+  const base = bandPainter(l.bands, l.roof, l.under, l.skirt);
+  const face = alcFace(l);
+  const half = faceHalf(b, 0);
+  const D = (d: number) => alcB(d);
   m.scope("body", () => {
-    m.scope("shell", () => carbodyShell(m, b, X, painter(l, ALC_BODY, false)));
+    m.scope("shell", () => carbodyShell(m, b, X, (d, y, r) => (l.roofRear && (r === "arc" || r === "cap") && d >= swTop - 1e-9 && (r === "cap" ? y >= 1.38 : y > ALC_RIB + 0.36) ? l.roofRear.mat : base(d, y, r))));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        m.scope("cab window", () => sideWindow(m, b, X, s, 2.75, 3.55, 3.15, 3.75));
-        m.scope("cab door", () => sidePanel(m, b, X, s, "black", 3.7, 4.3, 1.55, 3.7, 0.003, 0.004));
-        m.scope("grilles", () => {
-          for (const [a, c] of [[6.0, 9.0], [12.0, 15.5], [16.2, 19.6]] as const) sideGrille(m, b, X, s, a, c, 3.25, 3.85, true);
+        m.scope("cab window", () => {
+          // its frame round the glass the face paints
+          const rim: Pt[] = [];
+          const P = (t: number, u: number): Pt => [D(0.98 + 0.32 * u + 0.3 * t), 2.98 + 0.54 * u];
+          for (const [a, c] of [[[0, 0], [1, 0]], [[1, 0], [1, 1]], [[1, 1], [0, 1]], [[0, 1], [0, 0]]] as const) {
+            const [p, q] = [P(a[0], a[1]), P(c[0], c[1])];
+            const nx = q[1] - p[1], ny = -(q[0] - p[0]), k = 0.035 / Math.hypot(nx, ny);
+            rim.push(p, q, [q[0] + nx * k, q[1] + ny * k], p, [q[0] + nx * k, q[1] + ny * k], [p[0] + nx * k, p[1] + ny * k]);
+          }
+          sideDecal(m, b, X, s, "rubber", rim, 0.006);
         });
-        if (l.lettering) m.scope("lettering", () => sideLettering(m, b, X, s, l.lettering!.text, l.lettering!.d, l.lettering!.y, l.lettering!.h, l.lettering!.mat, 0.012));
-        m.scope("number", () => sideLettering(m, b, X, s, l.number, 4.8, 2.4, 0.28, l.numberMat, 0.012));
+        m.scope("cab door", () => {
+          for (const [a, z, y0, y1] of [[1.71, 1.735, 1.42, 3.48], [2.425, 2.45, 1.42, 3.48], [1.735, 2.425, 3.455, 3.48]] as const) sidePanel(m, b, X, s, "rubber", D(a), D(z), y0, y1, 0.006, 0.004);
+          sidePanel(m, b, X, s, "rubber", D(1.81), D(2.35), 2.8, 3.42, 0.006, 0.004);
+          sidePanel(m, b, X, s, "cabGlass", D(1.84), D(2.32), 2.83, 3.39, 0.01, 0.004);
+        });
+        m.scope("handrails", () => {
+          for (const a of [1.58, 2.56]) {
+            const q = X(D(a)), z = s * (ALC_SPEC.W * 0.995 + 0.06);
+            m.rod("handrail", [q, 1.62, z], [q, 3.25, z], 0.016, 6);
+            for (const y of [1.62, 3.25]) m.rod("handrail", [q, y, s * (ALC_SPEC.W - 0.01)], [q, y, z], 0.014, 6);
+          }
+        });
+        m.scope("mirror", () => block(m, "black", ...((): [number, number] => { const q = X(D(1.62)); return [q - 0.05, q + 0.05]; })(), 3.0, 3.35, ...side(s, ALC_SPEC.W - 0.01, ALC_SPEC.W + 0.07)));
+        m.scope("grilles", () => {
+          // the small intake behind the cab both sides; the left (-Z) side's tall louvred radiator intake
+          sidePanel(m, b, X, s, "grille", D(4.82), D(5.43), 2.86, 3.52, 0.006, 0.02);
+          if (s < 0) {
+            sidePanel(m, b, X, s, "grille", D(6.14), D(7.36), 2.02, 3.23, 0.006, 0.02);
+            for (let d = 6.22; d < 7.3; d += 0.135) sidePanel(m, b, X, s, "louvre", D(d), D(d + 0.05), 2.08, 3.17, 0.012, 0.004);
+          }
+          // the cooling intake: its frame, a louvred panel ahead of the X on the left, the mesh crossed by the X
+          sidePanel(m, b, X, s, "rubber", D(11.75), D(15.15), 1.72, 3.4, 0.005, 0.02);
+          const [m0, m1] = s < 0 ? [12.75, 15.08] : [11.82, 14.75];
+          sidePanel(m, b, X, s, "grille", D(m0), D(m1), 1.78, 3.34, 0.008, 0.004);
+          if (s < 0) sidePanel(m, b, X, s, "louvre", D(11.82), D(12.68), 1.78, 3.34, 0.008, 0.004);
+          else sidePanel(m, b, X, s, "grille", D(14.82), D(15.08), 2.85, 3.3, 0.008, 0.004);
+          const bar = (d0: number, y0: number, d1: number, y1: number) => {
+            const tris: Pt[] = [];
+            const w = 0.11;
+            tris.push([D(d0 - w), y0], [D(d0 + w), y0], [D(d1 + w), y1], [D(d0 - w), y0], [D(d1 + w), y1], [D(d1 - w), y1]);
+            return tris;
+          };
+          const bars = [...bar(m0 + 0.05, 1.8, m1 - 0.05, 3.32), ...bar(m1 - 0.05, 1.8, m0 + 0.05, 3.32)];
+          sideDecal(m, b, X, s, l.roofRear ? "alcRearBlue" : l.bands[l.bands.length - 1]![2], bars, 0.012);
+          if (s < 0) {
+            // the eight-pane filter panel and the small window behind it
+            sidePanel(m, b, X, s, "rubber", D(15.6), D(17.0), 2.5, 3.35, 0.005, 0.02);
+            for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) sidePanel(m, b, X, s, "grille", D(15.65 + i * 0.34), D(15.95 + i * 0.34), 2.55 + j * 0.4, 2.9 + j * 0.4, 0.008, 0.004);
+            sidePanel(m, b, X, s, "black", D(17.2), D(17.7), 2.75, 3.35, 0.006, 0.004);
+          }
+        });
+        m.scope("livery", () => l.body(m, b, X, s));
+        m.scope("number", () => {
+          const [d, y, h] = l.numberAt;
+          sideLettering(m, b, X, s, l.number, D(d), y, h, l.numberMat, 0.008);
+          if (l.rearNumber) sideLettering(m, b, X, s, l.number, D(l.rearNumber[0]), l.rearNumber[1], l.rearNumber[2], l.numberMat, 0.008);
+        });
+        // the steps under the cab door and at the rear corner
+        m.scope("steps", () => {
+          for (const [d0, d1] of [[1.75, 2.42], [20.3, 20.95]] as const) {
+            const [x0, x1] = [X(D(d1)), X(D(d0))];
+            block(m, "truckBlack", x0, x0 + 0.04, 0.5, ALC_FOOT, ...side(s, 1.3, 1.46));
+            block(m, "truckBlack", x1 - 0.04, x1, 0.5, ALC_FOOT, ...side(s, 1.3, 1.46));
+            for (const y of [0.55, 0.85]) block(m, "walk", x0 + 0.04, x1 - 0.04, y, y + 0.04, ...side(s, 1.25, 1.44));
+          }
+        });
       });
   });
-  m.scope("nose", () => {
-    m.scope("windscreen", () => {
-      for (const s of [1, -1]) {
-        crownPane(m, b, X, s, "rubber", [1.68, 2.62], [0.03, 1.15], 0.006);
-        crownPane(m, b, X, s, "cabGlass", [1.73, 2.57], [0.07, 1.1], 0.012);
-      }
+  m.scope("cab", () => {
+    m.scope("cab face", () => drawCabFace(m, face, 1, tip, half, alcPaint(l)));
+    // the anticlimber over the pilot with its stripe, the MU sockets either side of it, the pilot and coupler
+    m.scope("anticlimber", () => {
+      block(m, l.climber, tip - 0.3, tip + 0.13, 1.2, 1.42, -1.22, 1.22);
+      block(m, l.climberStripe, tip + 0.13, tip + 0.135, 1.26, 1.35, -0.58, 0.58);
     });
-    m.scope("headlights", () => noseLamps(m, b, X, 1, [[-0.55, 2.0, 0.09, "lampHead"], [0.55, 2.0, 0.09, "lampHead"], [-1.0, 1.25, 0.08, "ditch"], [1.0, 1.25, 0.08, "ditch"]]));
-    m.scope("pilot", () => pilotPlate(m, l.skirt, 1, tip - 0.02, 0.15, 1.1, 1.3, 0.3, 0.5));
+    // the MU sockets over the anticlimber (blue inside, red outside), their hoses hanging in front of the pocket
+    m.scope("sockets", () => {
+      for (const z of [-1.02, -0.72, 0.72, 1.02]) m.sweep(Math.abs(z) > 0.9 ? "lampRed" : "alcSocket", "x", ngon(8, 0.065, 0, z, 1.53), tip - 0.05, ngon(8, 0.065, 0, z, 1.53), tip + 0.12);
+      for (const z of [-0.85, -0.6, 0.6, 0.85]) m.rod("black", [tip + 0.1, 1.2, z], [tip + 0.2, 0.82, z * 0.9], 0.025, 6);
+    });
+    // the end sill either side of the coupler pocket, and the plough low down
+    m.scope("pilot", () => {
+      for (const sd of [-1, 1]) block(m, "truckBlack", tip - 0.3, tip + 0.06, 0.78, 1.2, ...side(sd, 0.62, 1.18));
+      block(m, "black", tip - 0.4, tip - 0.12, 0.72, 1.2, -0.62, 0.62);
+      pilotPlate(m, "black", 1, tip + 0.1, 0.22, 0.78, 1.16, 0.22, 0.5);
+    });
     m.scope("coupler", () => knuckleCoupler(m, 1, tip - 0.25, ALC_LENGTH / 2, COUPLER_Y));
   });
   m.scope("rear end", () => {
-    const x = X(ALC_BODY);
-    endDiaphragm(m, -1, x, 1.35, 3.85);
-    faceLamps(m, -1, -x, [[-1.1, 3.95, 0.08, "lampRed"], [1.1, 3.95, 0.08, "lampRed"]]);
+    const x = X(b.length);
+    faceLamps(m, -1, -x, [[-1.12, 3.42, 0.07, "lampRed"], [1.12, 3.42, 0.07, "lampRed"], [-0.92, 3.42, 0.07, "lampHead"], [0.92, 3.42, 0.07, "lampHead"]]);
+    m.scope("anticlimber", () => block(m, "black", x - 0.12, x + 0.3, 1.16, 1.43, -1.25, 1.25));
+    m.scope("pilot", () => pilotPlate(m, "black", -1, -(x - 0.08), 0.25, 1.16, 1.2, 0.2, 0.4));
     m.scope("coupler", () => knuckleCoupler(m, -1, -x - 0.1, ALC_LENGTH / 2, COUPLER_Y));
-    block(m, "truckBlack", x - 0.3, x + 0.02, 0.25, 1.07, -1.2, 1.2);
+    m.scope("handrails", () => { for (const z of [-0.6, 0.6]) m.rod("handrail", [x - 0.06, 1.7, z], [x - 0.06, 3.0, z], 0.016, 6); });
   });
   m.scope("roof", () => {
-    m.scope("fans", () => { for (const d of [16.4, 18.2]) roofFan(m, X(d), 0, 4.39, 0.55); });
-    m.scope("exhaust", () => exhaust(m, X(10.5), 0, 4.37, 4.52, 0.4, 0.7));
-    m.scope("horn", () => horn(m, 1, X(3.6), 0.35, 4.5));
+    const R = ALC_ROOF;
+    m.scope("cab hatch", () => block(m, l.roof, X(D(3.25)), X(D(2.25)), R - 0.06, R + 0.05, -0.5, 0.5));
+    m.scope("antennas", () => { for (const [d, z] of [[3.5, -0.3], [3.8, 0.3]] as const) m.rod("black", [X(D(d)), R - 0.02, z], [X(D(d)), R + 0.18, z], 0.02, 6); });
+    m.scope("horns", () => { horn(m, 1, X(D(5.15)), 0.22, R + 0.1); horn(m, -1, X(D(5.45)), -0.22, R + 0.1); });
+    m.scope("hatches", () => {
+      for (const [d0, d1] of [[5.9, 7.3], [9.0, 11.6], [17.3, 18.5], [19.8, 20.7]] as const) block(m, l.roof, X(D(d1)), X(D(d0)), R - 0.07, R + 0.04, -0.6, 0.6);
+    });
+    m.scope("exhaust", () => exhaust(m, X(D(8.15)), 0, R - 0.04, R + 0.08, 1.0, 0.5));
+    m.scope("radiator", () => {
+      block(m, "grille", X(D(15.2)), X(D(11.8)), R - 0.08, R + 0.03, -0.85, 0.85);
+      for (const d of [12.65, 14.3]) roofFan(m, X(D(d)), 0, R + 0.06, 0.62);
+    });
   });
   m.scope("running gear", () => {
     const spec = truckSpec([-1.5, 1.5], ALC_WHEEL, 2.15, 1.05);
     m.scope("front truck", () => truck(m, ALC_TRUCK, spec));
     m.scope("rear truck", () => truck(m, -ALC_TRUCK, spec));
-    m.scope("fuel tank", () => block(m, l.under, -3.5, 3.5, 0.42, 1.05, -1.3, 1.3));
-    m.scope("frame", () => block(m, l.under, X(ALC_BODY) + 0.05, tip - 0.6, 1.05, ALC_SPEC.A - 0.01, -1.3, 1.3));
+    m.scope("fuel tank", () => block(m, l.under, -3.9, 3.9, 0.42, 1.0, -1.3, 1.3));
+    m.scope("reservoirs", () => { for (const z of [-1.18, 1.18]) tankX(m, "alcGrey", -3.85, 3.85, z, 1.02, 0.12, 8); });
+    m.scope("frame", () => block(m, l.under, X(b.length) + 0.05, tip - 0.35, 1.0, ALC_FOOT + 0.01, -1.42, 1.42));
   });
   return m;
+}
+
+/** The distant model: the body's section, the cab face's profile and plan, the cab's and the rear's paint. */
+function alcLod(l: AlcLivery): MeshBuilder {
+  const b = carbody({ ...ALC_SPEC, edges: [] });
+  const face = alcFace(l), fp = alcPaint(l), half = faceHalf(b, 0);
+  const X = (d: number) => ALC_TIP - d;
+  const side: LodBand[] = [...l.bands.map(([a, e, mt]): LodBand => [Math.max(a, ALC_FOOT), Math.min(e, ALC_RIB), mt]).filter(([a, e]) => e > a), [ALC_RIB, ALC_ROOF, l.roof]];
+  const rear = l.roofRear ? [{ x0: X(ALC_BODY), x1: X(ALC_SWOOSH(2.5)), side: side.map(([a, e, mt]): LodBand => [a, e, a >= 1.38 - 1e-9 ? l.roofRear!.mat : mt]) }] : [];
+  const body: UnitBody = {
+    y0: ALC_FOOT, hw: [[ALC_FOOT, 1.5], [1.21, 1.52], [ALC_RIB, 1.512], [4.035, 1.316], [4.295, 0.756], [ALC_ROOF, 0.4]],
+    side, roof: l.roof,
+    front: cabFaceLod(face, 1, ALC_TIP, half, fp, ALC_ROOF),
+    rear: { tip: [[ALC_FOOT, X(ALC_BODY)]] },
+    cabs: [{ x0: X(3.0), x1: X(0.4), side: l.lodCab }, ...rear],
+    windows: [{ u: [X(1.4), X(0.93)], y: [2.98, 3.52], mat: LOD_GLASS }],
+  };
+  const parts = [...bogieParts([ALC_TRUCK, -ALC_TRUCK].map((x) => [x, 2.15] as const), ALC_FOOT), roofPart("grille", X(15.2), X(11.8), 0.85, 0.85, ALC_ROOF - 0.08, ALC_ROOF + 0.06)];
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...l.palette }, bodies: [body], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------
@@ -2354,10 +2724,9 @@ export function emdF40ph(params?: ParamValues): MeshBuilder { return buildF40(pi
 export function emdF40phLod(params?: ParamValues): MeshBuilder {
   return locoCarbodyLod(F40_SPEC, pick(F40_PARAMS, F40_LIVERIES, params), F40_LENGTH / 2 - F40_REACH, [F40_TRUCK, -F40_TRUCK], 2.0);
 }
-export function siemensAlc42(params?: ParamValues): MeshBuilder { return buildAlc42(pick(ALC_PARAMS, ALC_LIVERIES, params)); }
-export function siemensAlc42Lod(params?: ParamValues): MeshBuilder {
-  return locoCarbodyLod(ALC_SPEC, pick(ALC_PARAMS, ALC_LIVERIES, params), ALC_LENGTH / 2 - ALC_REACH, [ALC_TRUCK, -ALC_TRUCK], 2.15);
-}
+const pickAlcLivery = (v?: ParamValues): AlcLivery => ALC_LIVERIES[resolveParams(ALC_PARAMS, v).livery!]!;
+export function siemensAlc42(params?: ParamValues): MeshBuilder { return buildAlc42(pickAlcLivery(params)); }
+export function siemensAlc42Lod(params?: ParamValues): MeshBuilder { return alcLod(pickAlcLivery(params)); }
 export function prrGg1(params?: ParamValues): MeshBuilder { return buildGg1(pick(GG1_PARAMS, GG1_LIVERIES, params)); }
 export function prrGg1Lod(params?: ParamValues): MeshBuilder {
   const tip = GG1_LENGTH / 2 - GG1_REACH;
