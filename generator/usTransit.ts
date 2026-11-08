@@ -45,7 +45,7 @@ export interface CarDef {
   strips?: ReadonlyArray<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }>;
   /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square). */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number }>;
-  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds a pair of narrow leaf windows (`glassW`, `glassPair`) and sets them in a rubber surround (default square, no surround). */
+  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds a pair of narrow leaf windows (`glassW`, `glassPair`) and sets them in a rubber surround with a bright rim (default square, no surround). */
   doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
@@ -124,7 +124,8 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
         const gr = c.doors.glassCornerR;
         if (w && pair && gr) for (const k of [-1, 1]) {
           const [g0, g1] = c.doors.glass, gm = dm + (k * pair) / 2;
-          roundedSidePanel(mm, b, X, s, "rubber", gm - w / 2 - 0.04, gm + w / 2 + 0.04, g0 - 0.04, g1 + 0.04, gr + 0.04, 0.01, 0);
+          roundedSidePanel(mm, b, X, s, "rubber", gm - w / 2 - 0.035, gm + w / 2 + 0.035, g0 - 0.035, g1 + 0.035, gr + 0.035, 0.009, 0);
+          roundedSidePanel(mm, b, X, s, "frameSilver", gm - w / 2 - 0.02, gm + w / 2 + 0.02, g0 - 0.02, g1 + 0.02, gr + 0.02, 0.0105, 0);
           roundedSidePanel(mm, b, X, s, "glass", gm - w / 2, gm + w / 2, g0, g1, gr, 0.012, 0);
         }
         else if (w && pair) for (const k of [-1, 1]) sidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
@@ -682,9 +683,11 @@ const R160_CAB = {
   lamps: [[0.75, 0.085, "lampHead"], [-0.75, 0.085, "lampHead"], [1.12, 0.075, "r160Marker"], [-1.12, 0.075, "r160Marker"]] as const,
   sign: [-0.33, 0.17, 3.28, 3.63] as const,
 };
+/** The cab's side window on the right: d from the cab end, sill and head. */
+const R160_CAB_SIDE = { d: [0.3, 0.95] as const, y: [1.95, 2.92] as const };
 const R160_PAL = {
   ss: paint("#c3c7ca", 0.3), ssDark: paint("#9a9ea1", 0.4), ssBright: paint("#dfe2e4", 0.2), mask: paint("#1c1d1f", 0.4), under: paint("#2a2c2f", 0.85),
-  doorFrame: paint("#77716a", 0.4), anticlimber: paint("#3a3c3f", 0.7), barrier: paint("#9b8a70", 0.7), shoeBeam: paint("#3f3428", 0.85), fuse: paint("#b8322b", 0.6),
+  doorFrame: paint("#857f77", 0.4), anticlimber: paint("#3a3c3f", 0.7), barrier: paint("#9b8a70", 0.7), shoeBeam: paint("#3f3428", 0.85), fuse: paint("#b8322b", 0.6),
   led: paint("#ffa62b", 0.3), display: paint("#262628", 0.5), routeRed: paint("#e8303c", 0.3), flagRed: paint("#b22234", 0.5), flagBlue: paint("#3c3b6e", 0.5),
   logoWhite: paint("#eef0f2", 0.4), mtaBlue: paint("#0039a6", 0.4), numberWhite: paint("#f4f4f2", 0.4),
   // the marker lamps' clear lenses, lit red at the rear
@@ -697,8 +700,12 @@ function r160Def(u: MetroCar): CarDef {
   return {
     spec: { length: L, W: 1.524, Y: 1.15, S: 3.28, C: 3.65, lean: 0.985, arc: 6, B: 0.92, wl: 1.48, A: 1.0, wa: 1.51, front: r160End, rear: r160End, edges: [], step: 1.0, noseStep: 0.12 },
     bands: [[0, 9, "ss"]], roof: "ss", skirt: "ssDark", under: "under",
-    windows: [{ y: R160_WIN.y, spans: R160_WIN.c.map((c): [number, number] => [L / 2 + c - R160_WIN.w / 2, L / 2 + c + R160_WIN.w / 2]), frame: "frameSilver", cornerR: R160_WIN.r }],
-    doors: { spans: doors, y: R160_DOOR.y, glass: R160_DOOR.glass, glassW: 0.36, glassPair: 0.635, glassCornerR: 0.13 },
+    windows: [
+      { y: R160_WIN.y, spans: R160_WIN.c.map((c): [number, number] => [L / 2 + c - R160_WIN.w / 2, L / 2 + c + R160_WIN.w / 2]), frame: "frameSilver", cornerR: R160_WIN.r },
+      // the cab's side window on the operator's (right) side, in the end panel before the first door (the 21 St photograph)
+      ...(cab ? [{ y: R160_CAB_SIDE.y, spans: [R160_CAB_SIDE.d], frame: "frameSilver", onSide: 1, cornerR: 0.06 }] : []),
+    ],
+    doors: { spans: doors, y: R160_DOOR.y, glass: R160_DOOR.glass, glassW: 0.27, glassPair: 0.635, glassCornerR: 0.12 },
     cabEnds: [], diaphragm: null,
     // the trucks are drawn with the extras (r160Truck)
     trucks: [], truck: truckSpec(R160_WB, R160_WHEEL, 0.92),
@@ -707,7 +714,7 @@ function r160Def(u: MetroCar): CarDef {
     repaint: (base) => (d, y, r) => (cab && d < 0.3 && (r === "arc" || (r === "cap" && y > 3.25)) ? "mask" : base(d, y, r)),
     extras: (m, b, X) => {
       m.scope("door frames", () => { for (const s of [1, -1]) doors.forEach(([a, e]) => r160DoorFrame(m, b, X, s, a, e)); });
-      m.scope("side details", () => { for (const s of [1, -1]) r160Side(m, b, X, s, doors, cab ? "8713" : "8714"); });
+      m.scope("side details", () => { for (const s of [1, -1]) r160Side(m, b, X, s, doors, cab ? "8713" : "8714", cab && s > 0); });
       m.scope("roof", () => r160Roof(m, b, X));
       m.scope("underfloor", () => r160Underfloor(m, X));
       m.scope("running gear", () => R160_TRUCK_D.forEach((d, i) => m.scope(`truck ${i + 1}`, () => m.bogie(() => r160Truck(m, X(d))))));
@@ -749,9 +756,9 @@ function r160DoorFrame(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s
 /**
  * Side s's fittings: the rain strip under the roof, the belt seam, the round plate under each window,
  * the windows' transoms (the LED destination sign in the front window), the flag decal, and at each
- * end the car number on its black plate and the MTA logo.
+ * end the car number on its black plate and the MTA logo (`cabSide`: not at the front, where the cab's side window is).
  */
-function r160Side(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, doors: ReadonlyArray<readonly [number, number]>, number: string): void {
+function r160Side(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, doors: ReadonlyArray<readonly [number, number]>, number: string, cabSide: boolean): void {
   const L = b.length, f = R160_DOOR.frame;
   // runs from 0.13 to L - 0.13 broken over the door frames
   const runs: Array<[number, number]> = [];
@@ -764,8 +771,8 @@ function r160Side(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: num
     const dc = L / 2 + c, [a, e] = [dc - R160_WIN.w / 2 + 0.04, dc + R160_WIN.w / 2 - 0.04];
     m.scope(`window ${i + 1} transom`, () => sidePanel(m, b, X, s, "frameSilver", a, e, R160_WIN.bar[0], R160_WIN.bar[1], 0.016, 0.006));
     m.scope("plate", () => {
-      surfaceDisc(m, b, X, dc, 1.48, s, "doorFrame", 0.065, 0.004, 0.01, 12);
-      surfaceDisc(m, b, X, dc, 1.48, s, "ssBright", 0.04, 0.009, 0.004, 10);
+      surfaceDisc(m, b, X, dc, 1.48, s, "anticlimber", 0.075, 0.004, 0.01, 14);
+      surfaceDisc(m, b, X, dc, 1.48, s, "ssDark", 0.05, 0.009, 0.004, 12);
     });
     // the destination sign behind the upper light of the front window (the E-train photograph)
     if (i === 0)
@@ -781,7 +788,8 @@ function r160Side(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: num
     // the canton toward the front, as the flag flies when the car runs forward
     sidePanel(m, b, X, s, "flagBlue", d0, d0 + 0.22, y0 + 6 * h, y1, 0.009, 0.001);
   });
-  for (const dc of [0.48, L - 0.48])
+  // (the cab's side window takes the front end panel on the cab side)
+  for (const dc of cabSide ? [L - 0.48] : [0.48, L - 0.48])
     m.scope("number and logo", () => {
       sidePanel(m, b, X, s, "mask", dc - 0.29, dc + 0.29, 2.8, 3.04, 0.006, 0.004);
       sideLettering(m, b, X, s, number, dc, 2.84, 0.16, "numberWhite", 0.009);

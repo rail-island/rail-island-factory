@@ -113,6 +113,54 @@ describe("the US passenger cars, urban rail and freight cars", () => {
     }
   });
 
+  it("lays out each R160 side by the photographs: four double doors, a window between each pair, the cab's side window on its right", () => {
+    const tris = Object.fromEntries(["cabCar", "trailer"].map((unit) => [unit, readTriangles(designGlb("proc-vehicle-nyc-r160", { unit }))]));
+    // spans of x of the glass on side s between two heights, merged where they touch
+    const spans = (unit: string, mat: string, s: number, y0: number, y1: number) => {
+      const out: Array<[number, number]> = [];
+      for (const t of tris[unit]!.filter((t) => t.material === mat && t.p.every((p) => s * p[2] > 1.3 && p[1] > y0 && p[1] < y1))) {
+        const [a, b] = [Math.min(...t.p.map((p) => p[0])), Math.max(...t.p.map((p) => p[0]))];
+        const hit = out.find((q) => a < q[1] + 0.01 && b > q[0] - 0.01);
+        if (hit) { hit[0] = Math.min(hit[0], a); hit[1] = Math.max(hit[1], b); } else out.push([a, b]);
+      }
+      return out.sort((p, q) => p[0] - q[0]);
+    };
+    for (const unit of ["cabCar", "trailer"])
+      for (const s of [1, -1]) {
+        // the three side windows, 1.25 m of glass, centred 4.68 m apart
+        const wins = spans(unit, "glass", s, 2.05, 3.1).filter(([a, b]) => b - a > 1.0);
+        expect(wins.map(([a, b]) => Math.round((a + b) * 50) / 100), `${unit} ${s}`).toEqual([-4.68, 0, 4.68]);
+        // two narrow windows in each of the four doors' leaves
+        expect(spans(unit, "glass", s, 2.05, 3.1).filter(([a, b]) => b - a < 0.4), `${unit} ${s}`).toHaveLength(8);
+        // the cab car's side window on the cab's (right) side only, in the end panel before the first door
+        const cabWin = spans(unit, "glass", s, 1.95, 2.95).filter(([a, b]) => b - a > 0.4 && b - a < 1.0);
+        expect(cabWin.length, `${unit} ${s}`).toBe(unit === "cabCar" && s > 0 ? 1 : 0);
+      }
+  });
+
+  it("gives the R160 cab car a black cab end with its lamps and route sign, and every other end a plain door without a diaphragm", () => {
+    for (const unit of ["cabCar", "trailer"]) {
+      const tris = readTriangles(designGlb("proc-vehicle-nyc-r160", { unit }));
+      const face = Math.max(...tris.filter((t) => t.material === "ss").flatMap((t) => t.p.map((p) => p[0])));
+      // on the end, inside the side walls
+      const at = (mat: string, e: number) => tris.filter((t) => t.material === mat && t.p.every((p) => e * p[0] > face - 0.3 && Math.abs(p[2]) < 1.42));
+      expect(tris.some((t) => t.material === "diaphragm")).toBe(false);
+      for (const e of [1, -1]) {
+        const cab = unit === "cabCar" && e > 0;
+        // the head lamps either side of the door, low on the end
+        const heads = at("lampHead", e).map((t) => t.p[0]);
+        expect(heads.some((p) => p[2] > 0.5) && heads.some((p) => p[2] < -0.5), `${unit} ${e}`).toBe(cab);
+        if (cab) expect(heads.every((p) => p[1] > 1.45 && p[1] < 1.75)).toBe(true);
+        // the black fields and the route sign's red ring over the door
+        expect(at("mask", e).length > 0, `${unit} ${e}`).toBe(cab);
+        expect(at("routeRed", e).some((t) => t.p.every((p) => p[1] > 3.25)), `${unit} ${e}`).toBe(cab);
+        // an inner end's barriers either side of its door
+        const bars = at("barrier", e).flatMap((t) => t.p);
+        expect(bars.some((p) => p[2] > 0.5) && bars.some((p) => p[2] < -0.5), `${unit} ${e}`).toBe(!cab);
+      }
+    }
+  });
+
   it("stacks the well car's containers to the double-stack gauge, single by default", () => {
     expect(US_FREIGHT.find((d) => d.id === "proc-vehicle-us-well-car")!.params![0]!.default).toBe("single");
     const h = (cargo: string) => glbStats(wellCar({ cargo }).toGlb("w")).max[1];
