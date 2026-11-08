@@ -8,7 +8,7 @@
 
 | id | title | arrangement | drivers | parameters | triangles (loco / tender) |
 |---|---|---|---|---|---|
-| `proc-vehicle-up-big-boy` | UP Big Boy | 4-8-8-4, two engines | 68 in | `unit` | 15,500 / 4,500 |
+| `proc-vehicle-up-big-boy` | UP Big Boy | 4-8-8-4, two engines | 68 in | `unit` | 15,900 / 4,500 |
 | `proc-vehicle-prr-k4s` | PRR K4s | 4-6-2, Belpaire firebox | 80 in | `unit` | 10,700 / 3,700 |
 | `proc-vehicle-nyc-hudson` | NYC J-3a Hudson | 4-6-4, Dreyfuss streamlining | 79 in | `unit` | about 9,000 / 3,800 |
 | `proc-vehicle-american-440` | Golden Spike 4-4-0 | 4-4-0 American | 60 in | `unit`, `livery` (`jupiter`, `no119`) | 6,200 / 2,600 |
@@ -61,26 +61,28 @@ published 132 ft 9.25 in over both, its last axle 117 ft 7 in behind the engine'
   draws all three domes (`BB_DOMES`) and gets 200 triangles (`lodTriangles`) for the deck shield and
   the stack casing.
 - **Front** - the slotted pilot with its corners cut back, the pilot beam and the deck on it; on the
-  deck the louvred shield over the air pumps, the headlight on it, the number box beside it, the Union
-  Pacific shield, the grab rails up to the smokebox and the steps up to the running board; on the
+  deck the louvred shield over the air pumps, the headlight on it on the centre line, the number box on
+  its right side, the Union Pacific shield below and left of it (seen from ahead: right); the smokebox door's lighter ring and dogs, the grab rails up to the smokebox and the steps up to the running board; on the
   smokebox's front ring the two number boards turned outward either side of the bell, and the marker
   lamps.
 - **Sides** - the running board at 3.15 m along the boiler's widest part, the boiler's lower half and
   the pipes under it: on the right the front engine's flexible pipe down and forward to its cylinders
   under a long pipe, on the left the rear engine's steam pipe down from the smokebox and back to its
-  cylinders under a reservoir drum, the main reservoirs over the rear engine; the firebox's sides
+  cylinders under a reservoir drum, the front engine's steam pipe and the feedwater pump, the main
+  reservoirs over the rear engine, all in a glossy pipe black that reads against the boiler; the firebox's sides
   down to the trailing truck.
 - **Cab** - its crown level with the boiler's top (4.6 m), a small window ahead of the big one, 4014
   under it, the ladder at its rear corners.
 - **Tender** - flat sides with the top edge rounded and the lower edge tucked in behind a full-depth
   front, the coal space's raised sides with railings, the water hatch, the rear ladders.
+- **Drivers** - dark grey discs with six dark Boxpok openings each (the kit's `discOpenings`).
 - **Triangles** - the sixteen 68 in disc drivers use the kit's `leanWheels` (their rims, hidden in
   the tyres, left out; 8-sided hubs and crank bosses), about 1,500 triangles spent on the above.
 
 ## Deviations
 
-- Wheels are the kit's spoked or disc wheels; the Big Boy's and Hudson's Boxpok and
-  Scullin drivers are drawn as discs. Air pumps, feedwater heaters and pipework are reduced to
+- Wheels are the kit's spoked or disc wheels; the Big Boy's Boxpok drivers are discs with
+  openings drawn on them, the Hudson's Scullin drivers plain discs. Air pumps, feedwater heaters and pipework are reduced to
   a few cylinders (the Big Boy's air pumps stand behind their shield, its feedwater heater inside the
   stack casing, its pipes are a few 8-sided rods); the K4s's keystone number plate is a plain plate.
 - The Big Boy keeps the kit's smokebox door with its hinge straps and its cylinders' bright covers; it

@@ -201,9 +201,9 @@ function bigBoyFront(t: Steam): void {
     bbLegend(m, "4014", [t.X(1.12), 2.94, 0.52], [0, 0, -1], [0, 1, 0], [1, 0, 0], 0.13);
   });
   m.scope("shield", () => {
-    // the Union Pacific shield standing on the shield's top edge, white rim round a black field
+    // the Union Pacific shield on the shield's top edge, below and right of the headlight seen from ahead: white rim round a black field
     const shape: Array<[number, number]> = [[0, -0.2], [0.17, -0.1], [0.19, 0.14], [0.1, 0.19], [0, 0.16], [-0.1, 0.19], [-0.19, 0.14], [-0.17, -0.1]];
-    const at = (k: number, dx: number): Vec3[] => shape.map(([z, y]): Vec3 => [t.X(0.45) + dx, 2.64 + y * k, -0.62 + z * k]);
+    const at = (k: number, dx: number): Vec3[] => shape.map(([z, y]): Vec3 => [t.X(0.45) + dx, 2.6 + y * k, -0.42 + z * k]);
     m.slab("white", at(1, 0.014), [-0.012, 0, 0]);
     m.slab("black", at(0.86, 0.019), [-0.004, 0, 0]);
   });
@@ -251,17 +251,20 @@ function bigBoyPipework(t: Steam): void {
   const m = t.m;
   const P = (x: number, y: number, z: number): Vec3 => [t.X(x), y, z];
   m.scope("steam pipes", () => {
-    const pipe = (r: number, pts: Vec3[]) => { for (let i = 0; i + 1 < pts.length; i++) m.rod("black", pts[i]!, pts[i + 1]!, r, 8); };
+    const pipe = (r: number, pts: Vec3[]) => { for (let i = 0; i + 1 < pts.length; i++) m.rod("pipe", pts[i]!, pts[i + 1]!, r, 8); };
     // the right side: the front engine's flexible pipe down from the boiler and forward to its
     // cylinders' chest, under the long pipe along the boiler
     pipe(0.17, [P(12.3, 2.62, 1.36), P(10.6, 2.1, 1.36), P(4.9, 2.1, 1.36), P(4.45, 1.8, 1.27)]);
-    t.cylX("black", 6.9, 13.0, 1.3, 2.62, 0.13, 8);
+    t.cylX("pipe", 6.9, 13.0, 1.3, 2.62, 0.13, 8);
     // the left side: the rear engine's steam pipe down from the smokebox and back to its
     // cylinders' chest, under the reservoir drum
     pipe(0.17, [P(6.9, 2.62, -1.36), P(9.4, 2.1, -1.36), P(12.4, 2.1, -1.36), P(12.75, 1.8, -1.27)]);
-    t.cylX("black", 10.2, 12.8, -1.3, 2.62, 0.24, 10);
+    t.cylX("pipe", 10.2, 12.8, -1.3, 2.62, 0.24, 10);
     // the main reservoir drums over the rear engine
-    for (const s of [-1, 1]) t.cylX("black", 13.6, 16.4, s * 1.3, 2.5, 0.22, 10);
+    for (const s of [-1, 1]) t.cylX("pipe", 13.6, 16.4, s * 1.3, 2.5, 0.22, 10);
+    // the left side: the front engine's steam pipe down from the smokebox, the feedwater pump ahead of the rear engine
+    pipe(0.17, [P(6.6, 2.5, -1.3), P(4.75, 1.85, -1.27)]);
+    t.cylY("pipe", 11.55, -1.3, 1.75, 2.55, 0.17, 10);
   });
   m.scope("safety valves", () => {
     for (const dz of [-0.14, 0.14]) t.cylY("steel", 17.8, dz, 4.42, 4.66, 0.07, 8);
@@ -298,10 +301,14 @@ function bigBoySpec(): LocoSpec {
     title: "UP Big Boy",
     palette: {
       ...US_STEAM_PALETTE,
-      paint: { color: "#1d1e20", roughness: 0.6 }, wheel: { color: "#1d1e20", roughness: 0.6 }, frame: { color: "#1d1e20", roughness: 0.65 },
+      paint: { color: "#1d1e20", roughness: 0.6 }, wheel: { color: "#34363a", roughness: 0.5 }, frame: { color: "#1d1e20", roughness: 0.65 },
       lining: { color: "#c4c8cc", roughness: 0.4 }, plate: { color: "#1d1e20", roughness: 0.6 }, plateText: { color: "#d9d9d4", roughness: 0.5 },
       // 4014's graphite smokebox and stack casing
-      smokebox: { color: "#404347", roughness: 0.5, metallic: 0.3 },
+      smokebox: { color: "#4c5054", roughness: 0.45, metallic: 0.35 },
+      // the smokebox door's ring and dogs, worn lighter
+      smokeboxRim: { color: "#6c7075", roughness: 0.4, metallic: 0.4 },
+      // the pipes and drums under the running board, glossy black that reads against the boiler
+      pipe: { color: "#2e3134", roughness: 0.35, metallic: 0.35 },
     },
     heads: [0, 26.0],
     beams: { front: false, rear: false },
@@ -346,6 +353,8 @@ function bigBoySpec(): LocoSpec {
       cylinderZ: 1.2, reference: 4, wheelMaterial: "wheel",
       // sixteen 68 in drivers: their hidden disc rims left out for the detail above
       leanWheels: true,
+      // their Boxpok centres: six openings round the hub
+      discOpenings: 6,
     },
     extras: (t) => {
       const m = t.m;
@@ -359,6 +368,16 @@ function bigBoySpec(): LocoSpec {
       for (const d of [BB_DOMES[0]!, BB_DOMES[2]!]) bbSandDome(t, d.x, d.len!, d.r, d.top);
       // the smokebox saddle's foot under the smokebox, black like the frames
       m.scope("saddle", () => t.box("black", BB_SMOKEBOX + 0.1, BB_CONE[0] - 0.05, 1.6, 2.0, -0.92, 0.92));
+      m.scope("smokebox door ring", () => {
+        // the door's rim and four of its dogs on the smokebox front
+        const X = t.X(BB_SMOKEBOX);
+        m.tube("smokeboxRim", "x", 0, BB_Y, BB_R0 * 0.82 + 0.06, BB_R0 * 0.82 - 0.03, X + 0.01, X + 0.05, 12, Math.PI / 12);
+        for (let k = 0; k < 4; k++) {
+          const a = Math.PI / 4 + (k * Math.PI) / 2;
+          const [z, y] = [Math.cos(a) * (BB_R0 * 0.82 + 0.12), BB_Y + Math.sin(a) * (BB_R0 * 0.82 + 0.12)];
+          t.box("smokeboxRim", BB_SMOKEBOX - 0.04, BB_SMOKEBOX + 0.01, y - 0.04, y + 0.04, z - 0.04, z + 0.04);
+        }
+      });
       bigBoyPilot(t);
       bigBoyFront(t);
       bigBoyPipework(t);

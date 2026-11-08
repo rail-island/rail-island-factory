@@ -146,7 +146,9 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   waisted at mid radius, the openings between them ovals, on a tyre of four facets
   per spoke; `couplingMat` on the gear paints the coupling rods (C62 2's red ones) and `mainMat` the main rods (D51 51's, red too).
   `leanWheels` on the gear (the Big Boy's sixteen drivers) draws a disc wheel's centre as its two faces only,
-  its rim hidden inside the tyre, and hubs and crank pin bosses with 8 sides; off by default.
+  its rim hidden inside the tyre, and hubs and crank pin bosses with 8 sides; off by default. `discOpenings`
+  (the Big Boy's 6) draws that many dark lozenges round the hub on each coupled disc wheel's face, a Boxpok
+  centre read from afar, 2 triangles each; none by default.
 - **Per engine side** (`-right`, `-left`, plus `-front`/`-rear` on the Mallet):
   `coupling-rod` (translated round the crank circle), `crosshead` (sliding),
   `main-rod`, and with valve gear `eccentric-rod`, `expansion-link` (turning on

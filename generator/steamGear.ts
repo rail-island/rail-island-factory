@@ -129,6 +129,11 @@ export interface RunningGearSpec {
    * tyre), hubs and crank pin bosses with 8 sides. Off by default.
    */
   leanWheels?: boolean;
+  /**
+   * Openings drawn on the outer face of every coupled disc wheel: `n` dark lozenges
+   * round the hub (a Boxpok centre read from afar), 2 triangles each. None by default.
+   */
+  discOpenings?: number;
 }
 
 /**
@@ -735,6 +740,24 @@ export class RunningGear {
       });
     }
     if (phi === null) return;
+    const holes = this.spec.discOpenings ?? 0;
+    if (w.spokes === 0 && holes > 0) {
+      m.scope("openings", () => {
+        // on the disc's outer face, 3 mm proud: radial lozenges between hub and rim
+        const z = s * (Z.spoke1 - 0.02 + 0.003);
+        const [r0, r1] = [hubR + 0.04, ri - 0.04];
+        const rm = (r0 + r1) / 2;
+        const half = Math.min(0.42, (Math.PI / holes) * 0.62);
+        const pts: Vec3[] = [];
+        for (let k = 0; k < holes; k++) {
+          const a = phi + Math.PI / holes + (k / holes) * Math.PI * 2;
+          const at = (r: number, da: number): Vec3 => { const p = add([X, ay], polar(r, a + da)); return [p[0], p[1], z]; };
+          const q = [at(r0, 0), at(rm, -half), at(r1, 0), at(rm, half)];
+          pts.push(q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!);
+        }
+        m.facets("coal", pts, [0, 0, s]);
+      });
+    }
     const rc = main ? main.e.crank : this.spec.engines.find((e) => e.coupled.some((i) => this.spec.wheels[i] === w))?.crank ?? 0.3;
     const crank = add([X, ay], polar(rc, phi));
     m.scope("counterweight", () => {
