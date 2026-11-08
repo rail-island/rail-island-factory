@@ -62,6 +62,8 @@ part of the native mapping.
   their arm lengths in either pose; the single arm's knee is found by
   intersecting circles about the hinge and the head and points away from the
   hinge (the hinge toward the middle of the roof on two-pantograph locomotives).
+  `armMat` paints the single arm's arms in another colour (default the base's
+  `pantograph`; the Acela's red).
   Two collectors: the rear (-X) raised to the game's contact wire (5.88 m,
   [animation.md](animation.md)), the front folded, as on the
   CD 230 and 163. The 110 has one, raised.
