@@ -35,7 +35,7 @@ describe("the rail vehicles' classification", () => {
   it("gives every locomotive, unit and tram a traction, every animal-drawn vehicle `animal`, and nothing else one", () => {
     for (const d of ALL_VEHICLES) {
       const f = d.catalog ?? VEHICLE_CATALOG;
-      const expected = isAnimalDrawn(d)
+      const expected: readonly (string | undefined)[] = isAnimalDrawn(d)
         ? ["animal"]
         : f.group === "loco" || f.group === "unit"
           ? ["electric", "diesel", "steam"]
