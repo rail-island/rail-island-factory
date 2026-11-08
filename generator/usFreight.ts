@@ -558,72 +558,441 @@ export function wellCarLod(params?: ParamValues): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// San Francisco cable car (the Powell Street type): an open grip section and a closed cabin
+// San Francisco cable car: the single-ended Powell Street car (an open grip section ahead of
+// the closed saloon, an open rear platform behind it; turned on turntables) and the longer,
+// double-ended California Street car (open grip sections at both ends of the saloon).
+// Measured from the photographs in assets/sf-cable-car/SOURCES.md; +X is the Powell car's grip end.
+
+import { letters, wordWidth } from "./letters.ts";
+import type { Table } from "./lodKit.ts";
 
 export const CABLE_CAR_PARAMS: readonly ParamSpec[] = [{
   name: "livery", title: "Livery", default: "powell",
   values: [{ value: "powell", title: "Powell Street" }, { value: "california", title: "California St" }],
 }];
-const CABLE_LIVERIES: Record<string, Record<string, MaterialSpec>> = {
-  powell: { ccBody: paint("#6e1f24"), ccPanel: paint("#e6dcc1"), ccTrim: paint("#2b4a7a"), ccRoof: paint("#e9e4d7") },
-  california: { ccBody: paint("#a3201f"), ccPanel: paint("#e6dcc1"), ccTrim: paint("#1f2022"), ccRoof: paint("#e9e4d7") },
+
+/** One line's car: its length over the fenders, its saloon, its trucks and its paint. */
+interface CableLine {
+  length: number;
+  /** The closed saloon's ends (model x). */
+  saloon: readonly [number, number];
+  /** The -X end: false for the Powell car's open rear platform, true for the California car's second grip section. */
+  doubleEnded: boolean;
+  /** The trucks' centres (model x). */
+  trucks: readonly [number, number];
+  number: string;
+  /** The dash panels' colour. */
+  dash: string;
+  palette: Record<string, MaterialSpec>;
+}
+
+const CABLE_COMMON: Record<string, MaterialSpec> = {
+  ccTrim: paint("#a5cad0"), ccFrame: paint("#c08b3c", 0.45), ccWood: paint("#94612f", 0.6), ccDeck: paint("#4e3d2e", 0.85),
+  ccRoof: paint("#a08259", 0.8), ccCeiling: paint("#b98a4b", 0.6), ccPanel: paint("#ebe4cf"), ccGold: { color: "#c9a14a", metallic: 0.4, roughness: 0.4 },
+  ccPole: paint("#f1efe7", 0.35), ccStep: paint("#b9c2c4", 0.8), ccFender: paint("#e3ddcc", 0.6), ccAd: paint("#c9dde1", 0.5),
+  ccClere: { color: "#8a6a3a", metallic: 0, roughness: 0.15, glass: true },
+  brass: { color: "#b8913a", metallic: 0.45, roughness: 0.35 },
 };
-export const CABLE_CAR_LENGTH = ft(27, 6);
-const CC = { half: ft(4), floor: 0.85, roof: ft(10, 3) - 0.15, cabin: 1.9, end: CABLE_CAR_LENGTH / 2 - 0.06, centre: 2.0 };
+const CABLE_LINES: Record<string, CableLine> = {
+  // Powell car 5 side-on (50.6 px/m over 27 ft 6 in): the grip section 3.0 m from the front, the saloon 4.17 m, the rear platform 1.2 m
+  powell: { length: ft(27, 6), saloon: [-3.0, 1.17], doubleEnded: false, trucks: [2.2, -2.25], number: "24", dash: "ccDash", palette: { ccBody: paint("#6a1b23"), ccDash: paint("#ece8dc", 0.45) } },
+  // a California car (30 ft 3 in): two grip sections of 2.6 m round a 3.9 m saloon
+  california: { length: ft(30, 3), saloon: [-1.95, 1.95], doubleEnded: true, trucks: [2.55, -2.55], number: "55", dash: "ccBody", palette: { ccBody: paint("#7a1c25"), ccDash: paint("#7a1c25") } },
+};
+/** The Powell car's length; the California car's is in CABLE_CAR_LENGTHS. */
+export const CABLE_CAR_LENGTH = CABLE_LINES.powell!.length;
+export const CABLE_CAR_LENGTHS: Record<string, number> = { powell: CABLE_LINES.powell!.length, california: CABLE_LINES.california!.length };
+
+/** Heights over the rail and the half width (8 ft over the body). */
+const CH = {
+  half: ft(4), sill: 0.3, band: 0.42, floor: 0.655, belt: 1.32, head: 2.36, eave: 2.47, dash0: 0.55, dash1: 1.38, cap: 1.43,
+  roofHalf: 1.3, deck: 2.65, clereHalf: 0.72, clere: 2.97, top: 3.11, step: 0.36,
+};
+
+/** Text `h` high on a vertical plane: u along `along` from `at` (centred), v up; the ampersand is drawn here. */
+function cableText(m: MeshBuilder, mat: string, text: string, at: Vec3, along: Vec3, normal: Vec3, y0: number, h: number): void {
+  const style = { width: 0.62, weight: 0.15, gap: 0.14 };
+  const amp = h * 0.62 * 0.8;
+  const runs = text.split("&");
+  const width = runs.reduce((t, r) => t + (r ? wordWidth(r, h, style) : 0), 0) + (runs.length - 1) * (amp + 2 * style.gap * h);
+  let u = -width / 2;
+  const put = (uv: Array<[number, number]>) => m.facets(mat, uv.map(([a, v]): Vec3 => [at[0] + along[0] * a, v, at[2] + along[2] * a]), normal);
+  runs.forEach((r, i) => {
+    if (i > 0) {
+      u += style.gap * h;
+      // the ampersand: a loop over a diagonal tail
+      const pts: Array<[number, number]> = [[0.95, 0], [0.3, 0.62], [0.22, 0.8], [0.32, 1], [0.6, 1], [0.7, 0.85], [0.6, 0.66], [0.12, 0.34], [0.08, 0.14], [0.25, 0], [0.55, 0], [0.95, 0.38]];
+      const t = style.weight * h;
+      const tris: Array<[number, number]> = [];
+      for (let k = 0; k + 1 < pts.length; k++) {
+        const a: [number, number] = [u + pts[k]![0] * amp, y0 + pts[k]![1] * h], b: [number, number] = [u + pts[k + 1]![0] * amp, y0 + pts[k + 1]![1] * h];
+        const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+        const nx = (-(b[1] - a[1]) / len) * (t / 2), ny = ((b[0] - a[0]) / len) * (t / 2);
+        tris.push([a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] + nx, a[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]);
+      }
+      put(tris);
+      u += amp + style.gap * h;
+    }
+    if (r) {
+      put(letters(r, u, y0, h, false, style));
+      u += wordWidth(r, h, style);
+    }
+  });
+}
+/** Text on the side z = s * z, reading left to right from outside. */
+const cableSideText = (m: MeshBuilder, mat: string, text: string, s: number, z: number, xc: number, y0: number, h: number) => cableText(m, mat, text, [xc, 0, s * z], [s, 0, 0], [0, 0, s], y0, h);
+/** Text on the +X end face x = x, reading left to right from outside (toward -z). */
+const cableEndText = (m: MeshBuilder, mat: string, text: string, x: number, zc: number, y0: number, h: number) => cableText(m, mat, text, [x, 0, zc], [0, 0, -1], [1, 0, 0], y0, h);
+
+/** A rectangle's outline of strips `w` wide on the +X face x = x (lining). */
+function liningX(m: MeshBuilder, mat: string, x: number, z0: number, z1: number, y0: number, y1: number, w: number): void {
+  decalX(m, mat, x, 1, z0, z1, y0, y0 + w);
+  decalX(m, mat, x, 1, z0, z1, y1 - w, y1);
+  decalX(m, mat, x, 1, z0, z0 + w, y0 + w, y1 - w);
+  decalX(m, mat, x, 1, z1 - w, z1, y0 + w, y1 - w);
+}
+/** The same on the side z = z facing s. */
+function liningZ(m: MeshBuilder, mat: string, z: number, s: number, x0: number, x1: number, y0: number, y1: number, w: number): void {
+  decalZ(m, mat, z, s, x0, x1, y0, y0 + w);
+  decalZ(m, mat, z, s, x0, x1, y1 - w, y1);
+  decalZ(m, mat, z, s, x0, x0 + w, y0 + w, y1 - w);
+  decalZ(m, mat, z, s, x1 - w, x1, y0 + w, y1 - w);
+}
+
+/** A window with a segmental arched head on the side z = s * z: glass from y0 to y1, the arch rising `rise`. */
+function archZ(m: MeshBuilder, mat: string, z: number, s: number, x0: number, x1: number, y0: number, y1: number, rise: number): void {
+  const pts: Array<[number, number]> = [[x0, y0], [x1, y0]];
+  const n = 6, xm = (x0 + x1) / 2, hw = (x1 - x0) / 2;
+  for (let i = 0; i <= n; i++) {
+    const t = 1 - (2 * i) / n;
+    pts.push([xm + t * hw, y1 - rise + rise * (1 - t * t)]);
+  }
+  const tris: Vec3[] = [];
+  for (let i = 1; i + 1 < pts.length; i++) for (const p of [pts[0]!, pts[i]!, pts[i + 1]!]) tris.push([p[0], p[1], s * z]);
+  m.facets(mat, tris, [0, 0, s]);
+}
+
+/** A white grab pole standing off a post at x on side s, with brass brackets. */
+function grabPole(m: MeshBuilder, x: number, s: number, y0: number, y1: number): void {
+  const z = s * (CH.half + 0.05);
+  m.rod("ccPole", [x, y0, z], [x, y1, z], 0.019, 6);
+  for (const y of [y0 + 0.05, y1 - 0.05]) m.rod("brass", [x, y, z], [x, y, s * (CH.half - 0.01)], 0.012, 4);
+}
+
+/** A small four-wheel truck: wheelsets, side frames with axle boxes and springs, the pine track brakes. */
+function cableTruck(m: MeshBuilder, xc: number): void {
+  const r = 0.27, N = 16;
+  const ay = r * Math.cos(Math.PI / N);
+  for (const dx of [-0.62, 0.62])
+    m.scope("wheelset", () => {
+      const x = xc + dx;
+      const axle = ngon(8, 0.06, 0, x, ay);
+      m.sweep("steel", "z", axle, -0.86, axle, 0.86);
+      for (const s of [-1, 1]) {
+        const tread = ngon(N, r, Math.PI / N, x, ay), disc = ngon(12, r * 0.8, 0, x, ay);
+        const [t0, t1] = side(s, 0.665, 0.77), [d0, d1] = side(s, 0.77, 0.79);
+        m.sweep("steel", "z", tread, t0, tread, t1);
+        m.sweep("wheel", "z", disc, d0, disc, d1);
+      }
+    });
+  m.scope("frame", () => {
+    for (const s of [-1, 1]) {
+      // the side frame: a bar over the axle boxes, the boxes and their springs
+      block(m, "bogie", xc - 0.9, xc + 0.9, ay + 0.14, ay + 0.24, ...side(s, 0.84, 0.92));
+      for (const dx of [-0.62, 0.62]) {
+        block(m, "bogie", xc + dx - 0.13, xc + dx + 0.13, ay - 0.1, ay + 0.1, ...side(s, 0.81, 0.95));
+        block(m, "spring", xc + dx - 0.07, xc + dx + 0.07, ay + 0.1, ay + 0.14, ...side(s, 0.85, 0.91));
+      }
+    }
+    for (const dx of [-0.3, 0.3]) block(m, "bogie", xc + dx - 0.06, xc + dx + 0.06, ay + 0.12, ay + 0.22, -0.84, 0.84);
+    block(m, "bogie", xc - 0.2, xc + 0.2, ay + 0.22, CH.floor - 0.1, -0.5, 0.5);
+  });
+  m.scope("track brakes", () => {
+    // the pine blocks pressed on the rails between the wheels
+    for (const s of [-1, 1]) {
+      block(m, "ccWood", xc - 0.24, xc + 0.24, 0.025, 0.13, ...side(s, 0.64, 0.79));
+      block(m, "steel", xc - 0.2, xc + 0.2, 0.13, ay + 0.14, ...side(s, 0.69, 0.74));
+    }
+  });
+}
+
+/** An open grip section on the +X side from the saloon end xa to the end wall xb: the outward-facing benches, posts, poles and brackets. */
+function gripSection(m: MeshBuilder, xa: number, xb: number, posts: readonly number[]): void {
+  const W = CH.half;
+  for (const s of [-1, 1])
+    m.scope(s > 0 ? "right bench" : "left bench", () => {
+      // the bench: its panelled front facing out, the seat, the slatted back along the middle
+      block(m, "ccWood", xa + 0.06, xb - 0.06, CH.floor - 0.005, 1.08, ...side(s, W - 0.44, W - 0.04));
+      for (let x = xa + 0.1; x + 0.5 < xb - 0.1; x += 0.62) decalZ(m, "ccFrame", s * (W - 0.04 + 0.004), s, x + 0.04, x + 0.5, CH.floor + 0.08, 1.0);
+      block(m, "ccWood", xa + 0.05, xb - 0.05, 1.07, 1.12, ...side(s, W - 0.5, W - 0.01));
+      block(m, "ccWood", xa + 0.08, xb - 0.08, 1.12, 1.66, ...side(s, W - 0.56, W - 0.5));
+      for (const y of [1.24, 1.38, 1.52]) decalZ(m, "ccDeck", s * (W - 0.5 + 0.004), s, xa + 0.1, xb - 0.1, y, y + 0.025);
+      // the posts holding the roof, the white grab poles and the iron brackets under the eave
+      for (const x of posts) {
+        block(m, "ccFrame", x - 0.04, x + 0.04, CH.floor, CH.head + 0.02, ...side(s, W - 0.07, W));
+        grabPole(m, x + 0.09, s, 0.8, 2.16);
+        for (const d of [-1, 1]) if (x + d * 0.24 > xa && x + d * 0.24 < xb) m.rod("black", [x + d * 0.03, 2.2, s * (W - 0.035)], [x + d * 0.24, CH.head + 0.01, s * (W - 0.035)], 0.012, 4);
+      }
+      // the eave rail along the open side
+      block(m, "ccBody", xa, xb, CH.head + 0.02, CH.eave + 0.005, ...side(s, W - 0.06, W));
+    });
+}
+
+/** The +X end of the car, its dash's face at x = xe: the dash, the glazed end (or the corner posts), the bumper, the fender and the lamp. */
+function cableEnd(m: MeshBuilder, l: CableLine, line: string, xe: number, half: number, glazed: boolean, lamp: string): void {
+  const W = CH.half;
+  m.scope("dash", () => {
+    block(m, l.dash, xe - 0.06, xe, CH.dash0, CH.dash1, -W, W);
+    block(m, "ccFrame", xe - 0.09, xe + 0.015, CH.dash1, CH.cap, -W - 0.015, W + 0.015);
+    const f = xe + 0.004, f2 = xe + 0.008;
+    liningX(m, line === "powell" ? "ccBody" : "ccGold", f, -W + 0.05, W - 0.05, CH.dash0 + 0.05, CH.dash1 - 0.05, 0.018);
+    if (line === "powell") {
+      // the destination sign (left), the number over the lamp, an advertisement (right)
+      decalX(m, "ccBody", f, 1, 0.42, 1.08, 0.66, 1.27);
+      cableEndText(m, "ccGold", "POWELL", f2, 0.75, 1.14, 0.08);
+      cableEndText(m, "ccGold", "AND", f2, 0.75, 1.03, 0.06);
+      cableEndText(m, "ccGold", "MARKET", f2, 0.75, 0.92, 0.08);
+      cableEndText(m, "ccGold", "BAY & TAYLOR", f2, 0.75, 0.77, 0.055);
+      decalX(m, "black", f, 1, -1.08, -0.42, 0.66, 1.27);
+      decalX(m, "ccAd", f2, 1, -1.05, -0.45, 0.69, 1.24);
+      cableEndText(m, "ccGold", l.number, f, 0.0, 1.17, 0.13);
+    } else {
+      // the cream scrolls: VAN NESS AVE. CALIFORNIA over the lamp, & MARKET and STREETS beside it
+      decalX(m, "ccPanel", f, 1, -1.05, 1.05, 1.08, 1.27);
+      cableEndText(m, "ccBody", "VAN NESS AVE. CALIFORNIA", f2, 0, 1.13, 0.085);
+      decalX(m, "ccPanel", f, 1, 0.24, 1.05, 0.72, 0.9);
+      cableEndText(m, "ccBody", "& MARKET", f2, 0.64, 0.77, 0.085);
+      decalX(m, "ccPanel", f, 1, -1.05, -0.24, 0.72, 0.9);
+      cableEndText(m, "ccBody", "STREETS", f2, -0.64, 0.77, 0.085);
+      cableEndText(m, "ccGold", l.number, f, 0.68, 0.96, 0.09);
+    }
+    m.scope(lamp === "lampHead" ? "headlamp" : "tail lamp", () => {
+      m.sweep("brass", "x", ngon(12, 0.12, 0, 0, 0.98), xe, ngon(12, 0.12, 0, 0, 0.98), xe + 0.05);
+      m.sweep(lamp, "x", ngon(12, 0.085, 0, 0, 0.98), xe + 0.05, ngon(12, 0.085, 0, 0, 0.98), xe + 0.065);
+    });
+  });
+  m.scope("bumper", () => {
+    block(m, "black", xe - 0.05, half - (glazed ? 0.05 : 0), 0.36, CH.dash0, -W + 0.04, W - 0.04);
+    if (glazed) {
+      const pan: Array<[number, number]> = [[xe - 0.3, 0.1], [half - 0.03, 0.1], [half, 0.15], [half, 0.33], [xe - 0.3, 0.33]];
+      m.scope("fender", () => m.sweep("ccFender", "z", pan, -0.78, pan, 0.78));
+    }
+  });
+  if (glazed)
+    m.scope("end windows", () => {
+      // three windows over the dash between maroon posts, framed in varnished wood, seen from both sides
+      block(m, "ccBody", xe - 0.07, xe - 0.02, CH.cap, CH.eave + 0.01, -W, W);
+      for (const zc of [-0.77, 0, 0.77])
+        for (const e of [1, -1]) {
+          const x = e > 0 ? xe - 0.02 : xe - 0.07;
+          decalX(m, "ccFrame", x + e * 0.004, e, zc - 0.36, zc + 0.36, CH.cap + 0.04, CH.head - 0.02);
+          decalX(m, "glass", x + e * 0.008, e, zc - 0.31, zc + 0.31, CH.cap + 0.09, CH.head - 0.07);
+        }
+    });
+  else
+    m.scope("corner posts", () => {
+      for (const s of [-1, 1]) {
+        block(m, "ccBody", xe - 0.09, xe - 0.01, CH.cap, CH.eave + 0.01, ...side(s, W - 0.08, W));
+        grabPole(m, xe - 0.05, s, 0.8, 2.16);
+      }
+      block(m, "ccBody", xe - 0.07, xe - 0.02, CH.head + 0.02, CH.eave + 0.005, -W, W);
+    });
+}
+
+/** The roof over the whole car: the lower roof with its rounded ends, the clerestory with its small windows and its hooded ends. */
+function cableRoof(m: MeshBuilder, half: number): void {
+  const R = CH.roofHalf, xr = half - 0.02, xc = half - 0.75;
+  // the lower roof's camber: the thin maroon fascia, then rising to the clerestory's foot
+  const lower = (hw: number): Array<[number, number]> => [[-hw, CH.eave], [hw, CH.eave], [hw, CH.eave + 0.04], [hw - 0.12, CH.eave + 0.11], [hw - 0.4, CH.deck], [-(hw - 0.4), CH.deck], [-(hw - 0.12), CH.eave + 0.11], [-hw, CH.eave + 0.04]];
+  m.scope("lower roof", () => {
+    paintedSweep(m, "x", lower(R), -xr + 0.3, xr - 0.3, { bands: [[0, CH.eave + 0.045, "ccBody"]], roofFrom: CH.eave + 0.045, roof: "ccRoof" }, []);
+    for (const e of [1, -1]) {
+      // the ends round off in plan
+      const [a, b] = e > 0 ? [xr - 0.3, xr] : [-xr, -xr + 0.3];
+      m.sweep("ccRoof", "x", lower(e > 0 ? R : R - 0.06), a, lower(e > 0 ? R - 0.06 : R), b);
+    }
+    const y = CH.eave - 0.002;
+    m.facets("ccCeiling", [[-xr, y, -R], [xr, y, R], [xr, y, -R], [-xr, y, -R], [-xr, y, R], [xr, y, R]], [0, -1, 0]);
+  });
+  m.scope("clerestory", () => {
+    block(m, "ccFrame", -xc, xc, CH.deck - 0.06, CH.clere, -CH.clereHalf, CH.clereHalf);
+    const n = Math.round((2 * xc) / 0.42);
+    const p = (2 * xc) / n;
+    for (const s of [-1, 1])
+      for (let i = 0; i < n; i++) decalZ(m, "ccClere", s * (CH.clereHalf + 0.004), s, -xc + i * p + 0.06, -xc + (i + 1) * p - 0.06, CH.deck + 0.05, CH.clere - 0.06);
+    // the window across each end of the clerestory, under its hood
+    for (const e of [1, -1]) decalX(m, "ccClere", e * (xc + 0.004), e, -0.52, 0.52, CH.deck + 0.06, CH.clere - 0.06);
+    const top: Array<[number, number]> = [[-0.8, CH.clere], [0.8, CH.clere], [0.8, CH.clere + 0.04], [0.62, CH.top], [-0.62, CH.top], [-0.8, CH.clere + 0.04]];
+    m.sweep("ccRoof", "x", top, -xc, top, xc);
+    // the hoods: the clerestory's roof running on over each end and curving down
+    const yb = CH.clere - 0.01;
+    const crown = (hw: number, t: number): Array<[number, number]> => [[-hw, yb], [hw, yb], [hw, Math.max(yb + 0.03, t - 0.07)], [hw - 0.18, t], [-(hw - 0.18), t], [-hw, Math.max(yb + 0.03, t - 0.07)]];
+    const stations: Array<[number, number, number]> = [[0, 0.8, CH.top], [0.16, 0.8, CH.top - 0.025], [0.3, 0.79, CH.top - 0.075], [0.4, 0.77, yb + 0.06]];
+    for (const e of [1, -1])
+      for (let i = 0; i + 1 < stations.length; i++) {
+        const [d0, h0, t0] = stations[i]!, [d1, h1, t1] = stations[i + 1]!;
+        m.sweep("ccRoof", "x", crown(h0, t0), e * (xc + d0), crown(h1, t1), e * (xc + d1));
+      }
+  });
+}
+
+/** The saloon: its sides by height, four arched windows a side, the end bulkheads with their doors. */
+function saloon(m: MeshBuilder, l: CableLine): void {
+  const W = CH.half;
+  const [x0, x1] = l.saloon;
+  paintedSweep(m, "x", [[-W, CH.band], [W, CH.band], [W, CH.eave + 0.02], [-W, CH.eave + 0.02]], x0, x1, { bands: [[0, 0.64, "ccTrim"], [0.64, CH.belt, "ccBody"], [CH.belt, CH.head, "ccFrame"], [CH.head, 9, "ccBody"]], roofFrom: 9, roof: "ccBody" });
+  const len = x1 - x0, n = 4, p = (len - 0.36) / n;
+  for (const s of [-1, 1])
+    m.scope(s > 0 ? "right side" : "left side", () => {
+      const z = W + 0.004, z2 = W + 0.008;
+      for (let i = 0; i < n; i++) {
+        const a = x0 + 0.18 + i * p;
+        archZ(m, "glass", z2, s, a + 0.07, a + p - 0.07, CH.belt + 0.07, CH.head - 0.05, 0.12);
+      }
+      // cream pilasters between the windows and a cream strip over them
+      for (let i = 0; i <= n; i++) decalZ(m, "ccPanel", s * z, s, x0 + 0.18 + i * p - 0.035, x0 + 0.18 + i * p + 0.035, CH.belt + 0.02, CH.head - 0.03);
+      decalZ(m, "ccPanel", s * z, s, x0 + 0.18 - 0.035, x1 - 0.18 + 0.035, CH.head - 0.03, CH.head + 0.03);
+      // the lower panel: gold lining, the car number toward the grip end, an advertisement frame
+      liningZ(m, "ccGold", s * z, s, x0 + 0.1, x1 - 0.1, 0.7, CH.belt - 0.06, 0.016);
+      const ad0 = l.doubleEnded ? x0 + 0.6 : x0 + 0.35, ad1 = l.doubleEnded ? x1 - 0.6 : x1 - 1.25;
+      decalZ(m, "ccPanel", s * z, s, ad0, ad1, 0.8, 1.2);
+      decalZ(m, "ccAd", s * z2, s, ad0 + 0.04, ad1 - 0.04, 0.84, 1.16);
+      const nx = l.doubleEnded ? s * (x1 - 0.32) : x1 - 0.6;
+      cableSideText(m, "ccGold", l.number, s, z2, nx, 0.92, 0.16);
+      // the railway's name on a cream label along the blue band
+      decalZ(m, "ccPanel", s * z, s, x0 + 0.25, x1 - 0.25, 0.465, 0.6);
+      cableSideText(m, "black", "SAN FRANCISCO MUNICIPAL RAILWAY", s, z2, (x0 + x1) / 2, 0.495, 0.075);
+    });
+  for (const e of [1, -1])
+    m.scope(e > 0 ? "front bulkhead" : "rear bulkhead", () => {
+      // the end wall's door and two windows, seen from the open section
+      const x = (e > 0 ? x1 : x0) + e * 0.004, x2 = x + e * 0.004;
+      decalX(m, "ccFrame", x, e, -0.38, 0.38, CH.floor + 0.02, CH.head - 0.04);
+      decalX(m, "glass", x2, e, -0.3, 0.3, CH.belt, CH.head - 0.1);
+      for (const zc of [-0.82, 0.82]) {
+        decalX(m, "ccFrame", x, e, zc - 0.3, zc + 0.3, CH.belt - 0.04, CH.head - 0.04);
+        decalX(m, "glass", x2, e, zc - 0.25, zc + 0.25, CH.belt + 0.02, CH.head - 0.1);
+      }
+    });
+}
 
 export function cableCar(params?: ParamValues): MeshBuilder {
-  const livery = resolveParams(CABLE_CAR_PARAMS, params).livery!;
-  const pal = CABLE_LIVERIES[livery]!;
-  const m = new MeshBuilder({ ...US_PALETTE, ...pal, wood: paint("#8a5a33", 0.8), brass: { color: "#b8913a", metallic: 0.45, roughness: 0.35 } });
-  m.scope("floor", () => {
-    block(m, "black", -CC.end, CC.end, CC.floor - 0.15, CC.floor, -CC.half, CC.half);
-    // the running boards along the open sections, the wooden step
-    for (const s of [-1, 1]) for (const [a, b] of [[-CC.end, -CC.cabin], [CC.cabin, CC.end]] as const) block(m, "wood", a, b, CC.floor - 0.3, CC.floor - 0.24, ...side(s, CC.half, CC.half + 0.25));
-  });
-  m.scope("cabin", () => {
-    paintedSweep(m, "x", box(CC.half, CC.floor, CC.roof - 0.1, 0.05), -CC.cabin, CC.cabin, { bands: [[0, 1.55, "ccBody"], [1.55, 2.4, "ccPanel"], [2.4, 9, "ccBody"]], roofFrom: CC.roof, roof: "ccBody" });
-    for (const s of [-1, 1]) for (let i = 0; i < 4; i++) {
-      const x = -CC.cabin + 0.25 + i * 0.9;
-      decalZ(m, "rubber", s * (CC.half + 0.004), s, x, x + 0.7, 1.62, 2.32);
-      decalZ(m, "glass", s * (CC.half + 0.008), s, x + 0.05, x + 0.65, 1.67, 2.27);
-    }
-  });
-  m.scope("open sections", () => {
-    for (const e of [1, -1]) {
-      const [a, b] = e > 0 ? [CC.cabin, CC.end] : [-CC.end, -CC.cabin];
-      // the outward-facing benches, the dash panel at the end, the brass poles
+  const line = resolveParams(CABLE_CAR_PARAMS, params).livery!;
+  const l = CABLE_LINES[line]!;
+  const half = l.length / 2, xe = half - 0.14, W = CH.half;
+  const [x0, x1] = l.saloon;
+  const m = new MeshBuilder({ ...US_PALETTE, ...CABLE_COMMON, ...l.palette });
+  m.scope("underframe", () => {
+    // the deck, the side sills, the blue risers under the open sections, the running boards on their brackets
+    block(m, "ccDeck", -xe + 0.02, xe - 0.02, CH.floor - 0.1, CH.floor, -W + 0.07, W - 0.07);
+    for (const s of [-1, 1]) block(m, "black", -xe, xe, CH.sill, CH.band, ...side(s, W - 0.12, W));
+    const open: Array<[number, number]> = [[x1, xe], [-xe, x0]];
+    for (const [a, b] of open)
       for (const s of [-1, 1]) {
-        block(m, "wood", a + 0.1, b - 0.3, CC.floor + 0.45, CC.floor + 0.5, ...side(s, CC.half - 0.55, CC.half - 0.05));
-        block(m, "ccBody", a + 0.1, b - 0.3, CC.floor, CC.floor + 0.45, ...side(s, CC.half - 0.5, CC.half - 0.45));
-        for (let x = a + 0.2; x < b - 0.2; x += 0.75) m.prism("brass", ngon(6, 0.025, 0, x, s * (CC.half - 0.02)), CC.floor, CC.roof - 0.1);
+        block(m, "ccTrim", a === -xe ? a + 0.06 : a, b === xe ? b - 0.06 : b, CH.band, CH.floor + 0.005, ...side(s, W - 0.06, W));
+        block(m, "ccStep", a + 0.05, b - 0.05, CH.step - 0.05, CH.step, ...side(s, W - 0.03, W + 0.3));
+        decalZ(m, "ccPanel", s * (W + 0.004), s, a + 0.4, b - 0.4, CH.band + 0.09, CH.band + 0.13);
+        for (const x of [a + 0.3, (a + b) / 2, b - 0.3]) block(m, "black", x - 0.03, x + 0.03, CH.step - 0.12, CH.step - 0.05, ...side(s, W - 0.02, W + 0.22));
+        const y = CH.step + 0.003;
+        m.facets("black", [[a + 0.05, y, s * (W + 0.12)], [b - 0.05, y, s * (W + 0.12)], [b - 0.05, y, s * (W + 0.2)], [a + 0.05, y, s * (W + 0.12)], [b - 0.05, y, s * (W + 0.2)], [a + 0.05, y, s * (W + 0.2)]], [0, 1, 0]);
       }
-      block(m, "ccBody", e > 0 ? b - 0.12 : a, e > 0 ? b : a + 0.12, CC.floor, CC.floor + 1.1, -CC.half, CC.half);
-      decalX(m, "ccPanel", e * (CC.end + 0.004), e, -0.7, 0.7, CC.floor + 0.6, CC.floor + 1.0);
-      m.sweep("lampHead", "x", ngon(10, 0.1, 0, 0, CC.floor + 0.85), Math.min(e * CC.end, e * (CC.end + 0.06)), ngon(10, 0.1, 0, 0, CC.floor + 0.85), Math.max(e * CC.end, e * (CC.end + 0.06)));
-    }
   });
+  m.scope("saloon", () => saloon(m, l));
+  // the posts as car 5 shows them: 0.65, 1.4 and 2.2 m behind the Powell car's front and one at the saloon
+  const posts = (xa: number): number[] => [xa + 0.08, ...[0.27, 0.54, 0.8].map((t) => xa + (xe - xa) * t)];
+  m.scope("front grip section", () => gripSection(m, x1, xe - 0.07, posts(x1)));
+  m.scope("front end", () => cableEnd(m, l, line, xe, half, true, "lampHead"));
+  if (l.doubleEnded) {
+    m.scope("rear grip section", () => m.turned(0, () => gripSection(m, -x0, xe - 0.07, posts(-x0))));
+    m.scope("rear end", () => m.turned(0, () => cableEnd(m, l, line, xe, half, true, "lampHead")));
+  } else {
+    m.scope("rear platform", () => {
+      // the conductor's open platform: posts at the saloon, the brake wheel, the folding gate on the left
+      for (const s of [-1, 1]) {
+        block(m, "ccBody", x0 - 0.1, x0, CH.floor, CH.eave + 0.01, ...side(s, W - 0.08, W));
+        grabPole(m, x0 - 0.15, s, 0.8, 2.16);
+        block(m, "ccBody", -xe, x0, CH.head + 0.02, CH.eave + 0.005, ...side(s, W - 0.06, W));
+      }
+      const bx = -xe + 0.3, bz = 0.55;
+      m.rod("steel", [bx, CH.floor, bz], [bx, 1.12, bz], 0.03, 6);
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2, b = ((i + 1) / 8) * Math.PI * 2;
+        m.rod("black", [bx + 0.17 * Math.cos(a), 1.14, bz + 0.17 * Math.sin(a)], [bx + 0.17 * Math.cos(b), 1.14, bz + 0.17 * Math.sin(b)], 0.014, 4);
+      }
+      m.rod("black", [bx - 0.17, 1.14, bz], [bx + 0.17, 1.14, bz], 0.012, 4);
+      const gz = -(W + 0.03), g0 = -xe + 0.12, g1 = x0 - 0.12;
+      for (const y of [0.78, 1.85]) m.rod("black", [g0, y, gz], [g1, y, gz], 0.015, 4);
+      const k = 4, d = (g1 - g0) / k;
+      for (let i = 0; i < k; i++) {
+        m.rod("black", [g0 + i * d, 0.78, gz], [g0 + (i + 1) * d, 1.85, gz], 0.01, 4);
+        m.rod("black", [g0 + (i + 1) * d, 0.78, gz], [g0 + i * d, 1.85, gz], 0.01, 4);
+      }
+    });
+    m.scope("rear end", () => m.turned(0, () => cableEnd(m, l, line, xe, half, false, "lampRed")));
+  }
   m.scope("roof", () => {
-    paintedSweep(m, "x", [[-CC.half - 0.12, CC.roof - 0.1], [CC.half + 0.12, CC.roof - 0.1], [CC.half - 0.2, CC.roof + 0.05], [-(CC.half - 0.2), CC.roof + 0.05]], -CC.end - 0.04, CC.end + 0.04, { bands: [[0, 9, "ccTrim"]], roofFrom: CC.roof + 0.04, roof: "ccRoof" });
-    paintedSweep(m, "x", box(0.7, CC.roof + 0.05, CC.roof + 0.3, 0.04), -CC.end + 0.8, CC.end - 0.8, { bands: [[0, 9, "ccPanel"]], roofFrom: CC.roof + 0.28, roof: "ccRoof" });
-    for (const s of [-1, 1]) sideText(m, "ccPanel", livery === "powell" ? "POWELL AND MASON" : "CALIFORNIA ST", s, CC.half + 0.124, 0, CC.roof - 0.07, 0.1);
+    cableRoof(m, half);
+    m.scope("roof lamp", () => {
+      for (const e of l.doubleEnded ? [1, -1] : [1]) {
+        const x = e * (half - 0.5);
+        m.prism("black", ngon(8, 0.04, 0, x, 0), CH.top - 0.12, CH.top - 0.02);
+        m.loft("black", ngon(10, 0.12, 0, x, 0), CH.top - 0.02, ngon(10, 0.04, 0, x, 0), CH.top + 0.07);
+      }
+    });
+    if (line === "powell")
+      m.scope("route boards", () => {
+        // the board standing on the roof's edge over the grip section and the saloon's front: POWELL & MASON STS.
+        for (const s of [-1, 1]) {
+          block(m, "ccPanel", -1.4, 2.35, CH.eave + 0.1, CH.eave + 0.4, ...side(s, 1.04, 1.075));
+          liningZ(m, "ccFrame", s * (1.075 + 0.004), s, -1.4, 2.35, CH.eave + 0.1, CH.eave + 0.4, 0.02);
+          cableSideText(m, "black", "POWELL & MASON STS.", s, 1.075 + 0.008, 0.475, CH.eave + 0.18, 0.15);
+        }
+      });
+    else
+      m.scope("letterboards", () => {
+        // the eave boards: VAN NESS AVENUE, CALIFORNIA STREET, MARKET STREET in gold
+        for (const s of [-1, 1]) {
+          block(m, "ccBody", -half + 0.45, half - 0.45, CH.eave - 0.12, CH.eave + 0.05, ...side(s, CH.roofHalf - 0.02, CH.roofHalf + 0.01));
+          ["VAN NESS AVENUE", "CALIFORNIA STREET", "MARKET STREET"].forEach((t, i) => cableSideText(m, "ccGold", t, s, CH.roofHalf + 0.014, s * (i - 1) * 2.9, CH.eave - 0.09, 0.11));
+        }
+      });
   });
   m.scope("grip", () => {
-    m.rod("steel", [CC.cabin + 0.6, CC.floor, 0], [CC.cabin + 0.75, CC.floor + 1.3, 0], 0.03, 6);
-    m.prism("black", ngon(8, 0.08, 0, CC.cabin + 0.6, 0), 0.25, CC.floor - 0.15);
+    // the grip lever in the middle of the front grip section, the wheel and track brake levers beside it, the grip's shank through the slot
+    const gx = (x1 + xe) / 2 - 0.15;
+    block(m, "steel", gx - 0.28, gx + 0.28, CH.floor, CH.floor + 0.14, -0.05, 0.05);
+    m.rod("steel", [gx, CH.floor + 0.1, 0], [gx + 0.12, 1.95, 0], 0.025, 6);
+    m.rod("black", [gx + 0.12, 1.95, -0.07], [gx + 0.12, 1.95, 0.07], 0.022, 6);
+    for (const z of [0.22, -0.22]) m.rod("steel", [gx + 0.38, CH.floor, z], [gx + 0.3, z > 0 ? 1.62 : 1.5, z], 0.02, 6);
+    block(m, "black", gx - 0.06, gx + 0.06, 0.1, CH.floor - 0.1, -0.03, 0.03);
+    // the California car's second set of brake levers at the other end
+    if (l.doubleEnded) for (const z of [0.22, -0.22]) m.rod("steel", [-gx - 0.38, CH.floor, z], [-gx - 0.3, z > 0 ? 1.62 : 1.5, z], 0.02, 6);
   });
   m.scope("trucks", () => {
-    const t: BogieSpec = freightTruck(0.3, 1.5, CC.floor - 0.15);
-    m.scope("front truck", () => m.bogie(() => bogieGeometry(m, CC.centre + 0.4, t)));
-    m.scope("rear truck", () => m.bogie(() => bogieGeometry(m, -CC.centre - 0.4, t)));
+    m.scope("front truck", () => m.bogie(() => cableTruck(m, l.trucks[0])));
+    m.scope("rear truck", () => m.bogie(() => cableTruck(m, l.trucks[1])));
   });
   return m;
 }
 
 export function cableCarLod(params?: ParamValues): MeshBuilder {
-  const pal = CABLE_LIVERIES[resolveParams(CABLE_CAR_PARAMS, params).livery!]!;
-  const t: BogieSpec = freightTruck(0.3, 1.5, CC.floor - 0.15);
-  return boxLod({ ...US_PALETTE, ...pal }, -CC.end, CC.end, CC.floor - 0.15, CC.roof + 0.05, CC.half, [[CC.floor - 0.15, 1.55, "ccBody"], [1.55, 2.4, "ccPanel"], [2.4, CC.roof + 0.05, "ccBody"]], "ccRoof", CC.centre + 0.4, t,
-    [{ u: [-CC.cabin + 0.25, CC.cabin - 0.25], y: [1.62, 2.32], mat: LOD_GLASS }]);
+  const l = CABLE_LINES[resolveParams(CABLE_CAR_PARAMS, params).livery!]!;
+  const half = l.length / 2, W = CH.half, xe = half - 0.14;
+  const [x0, x1] = l.saloon;
+  // one body: the open sections' benches under a dark opening, the saloon's maroon panel and varnished window band,
+  // the lower roof and the clerestory
+  const top: LodBand[] = [[CH.head, CH.eave, "ccBody"], [CH.eave, CH.top, "ccRoof"]];
+  const side: LodBand[] = [[CH.sill, 0.64, "ccTrim"], [0.64, 1.12, "ccWood"], [1.12, CH.head, LOD_GLASS], ...top];
+  const saloon: LodBand[] = [[CH.sill, 0.64, "ccTrim"], [0.64, CH.belt, "ccBody"], [CH.belt, CH.head, "ccFrame"], ...top];
+  const endPaint: LodBand[] = [[CH.sill, CH.dash1, l.dash], [CH.dash1, CH.head, LOD_GLASS], ...top];
+  const tip = (e: number): Table => [[CH.sill, e * xe], [CH.eave, e * xe], [CH.eave + 0.01, e * (half - 0.02)], [CH.deck, e * (half - 0.02)], [CH.deck + 0.01, e * (half - 0.75)], [CH.top, e * (half - 0.75)]];
+  const body: UnitBody = {
+    y0: CH.sill, hw: [[CH.sill, W], [CH.eave, W], [CH.eave + 0.01, CH.roofHalf], [CH.deck, CH.roofHalf - 0.4], [CH.deck + 0.01, CH.clereHalf], [CH.top, 0.62]], side, roof: "ccRoof",
+    front: { tip: tip(1), paint: endPaint }, rear: { tip: tip(-1), paint: l.doubleEnded ? endPaint : [[CH.sill, CH.dash1, l.dash], ...side.slice(2)] },
+    cabs: [{ x0, x1, side: saloon }],
+  };
+  const parts: LodPart[] = bogieParts([[l.trucks[0], 0.9], [l.trucks[1], 0.9]], CH.sill);
+  return fitUnit({ palette: { ...US_PALETTE, ...CABLE_COMMON, ...l.palette }, bodies: [body], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------
@@ -634,5 +1003,5 @@ export const US_FREIGHT: ProceduralDesign[] = [
   { id: "proc-vehicle-us-caboose", title: "Cupola caboose", build: caboose, buildLod: cabooseLod, params: CABOOSE_PARAMS, finishParams: ["livery"], game: wagonGame(22), catalog: WAGON_CATALOG, loadingGauge: "us", references: "us-caboose" },
   { id: "proc-vehicle-us-boxcar", title: "50 ft boxcar", build: boxcar, buildLod: boxcarLod, params: BOXCAR_PARAMS, finishParams: ["livery"], game: wagonGame(30), catalog: WAGON_CATALOG, loadingGauge: "us", references: "us-boxcar" },
   { id: "proc-vehicle-us-well-car", title: "Double-stack well car", build: wellCar, buildLod: wellCarLod, params: WELL_PARAMS, game: wagonGame(32, [{ params: { cargo: "empty" }, weight: 22 }, { params: { cargo: "double" }, weight: 42 }]), catalog: WAGON_CATALOG, loadingGauge: "usDoubleStack", references: "us-well-car" },
-  { id: "proc-vehicle-sf-cable-car", title: "San Francisco cable car", build: cableCar, buildLod: cableCarLod, params: CABLE_CAR_PARAMS, finishParams: ["livery"], game: { weight: 7, power: 40, maxspeed: 15, accel: null }, catalog: TRAM_CATALOG, loadingGauge: "us", references: "sf-cable-car" },
+  { id: "proc-vehicle-sf-cable-car", title: "San Francisco cable car", build: cableCar, buildLod: cableCarLod, params: CABLE_CAR_PARAMS, game: { weight: 7, power: 40, maxspeed: 15, accel: null }, catalog: TRAM_CATALOG, loadingGauge: "us", references: "sf-cable-car" },
 ];
