@@ -843,7 +843,7 @@ function csx(number: string): Es44Livery {
         sideStripe(m, "csxYellow", s, H + 0.008, 6.0, 2.62, 7.1, 2.7, 0.07, 0.25);
       }
       // the rear face: CSX in blue over the number
-      endWords(m, "csxBlue", "CSX", -1, -HOOD_REAR + 0.005, 0, D + 1.0, 0.55, 0.42, 0.12);
+      endWords(m, "csxBlue", "CSX", -1, -HOOD_REAR + 0.005, 0, D + 0.75, 0.55, 0.42, 0.12);
       // the nose face: CSX in blue
       endWords(m, "csxBlue", "CSX", 1, NOSE_X + 0.004, 0, D + 0.85, 0.42, 0.32, 0.1);
     },
