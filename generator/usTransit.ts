@@ -44,8 +44,8 @@ export interface CarDef {
   strips?: ReadonlyArray<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }>;
   /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square). */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number }>;
-  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both). */
-  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[] };
+  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds the leaf windows' corners (default square). */
+  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
@@ -120,7 +120,9 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
         // a narrow window centred on the leaf, or the leaf's full width
         const w = c.doors.glassW, dm = (d0 + d1) / 2, pair = c.doors.glassPair;
         // a double leaf: two narrow windows `glassPair` apart, the leaves' seam between them
-        if (w && pair) for (const k of [-1, 1]) sidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
+        const gr = c.doors.glassCornerR;
+        if (w && pair && gr) for (const k of [-1, 1]) roundedSidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], gr, 0.012, 0.004);
+        else if (w && pair) for (const k of [-1, 1]) sidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
         else sidePanel(mm, b, X, s, "glass", w ? dm - w / 2 : d0 + 0.12, w ? dm + w / 2 : d1 - 0.12, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
         if (w && pair) sidePanel(mm, b, X, s, "rubber", dm - 0.012, dm + 0.012, y0 + 0.04, y1 - 0.04, 0.011, 0.004);
       });
@@ -668,23 +670,299 @@ function r160Def(u: MetroCar): CarDef {
   };
 }
 
+import { surfaceDisc } from "./sliceBody.ts";
+import { endText } from "./usHoodKit.ts";
+
+// The Chicago 'L' 5000-series (Bombardier, 2009 - 2015): a married-pair car with its
+// cab behind a fibreglass bonnet at the #1 (+X) end and a plain end with the end door at
+// the #2 end, where it couples to its mate. Measured on the photographs in assets/cta-5000/
+// (SOURCES.md): the face on the Grand photograph (211 px/m), the side on the Fullerton and
+// Randolph photographs (a projective fit over the doors and the car's ends). Its two sides
+// differ: the left one has a wide window behind the cab window, the right one a narrow dark
+// window; each side carries its number and door lamps by the other pair of doors.
+
+const CTA_BODY = CTA_LENGTH - 0.5;
+/** The doors' centres from the car's middle, their half width (two leaves). */
+const CTA_DOOR = { off: 3.15, half: 0.635 };
+/** The window rows: sill and head, the transom over the main windows. */
+const CTA_WIN = { y: [1.95, 3.0] as const, transom: 2.78 };
+/** The cab's side window (taller, a drop sash) and the face's openings (z0, z1, sill, head). */
+const CTA_CAB_WIN = { d: [0.24, 0.86] as const, y: [1.9, 3.08] as const };
+const CTA_SCREENS = [[0.57, 1.19, 2.0, 3.12], [-1.19, -0.45, 2.0, 3.12]] as const;
+const CTA_END_DOOR = { z: 0.34, y: [1.12, 3.2] as const, glass: [-0.19, 0.19, 2.25, 3.0] as const };
+/** The plain end door's taller window. */
+const CTA_PLAIN_GLASS = [-0.23, 0.23, 1.95, 3.02] as const;
+/** Truck centres (33 ft 6 in, the Fullerton photograph), the wheelbase and wheel radius (28 in wheels). */
+const CTA_TRUCKS = ft(33, 6);
+const CTA_WB = ft(7);
+const CTA_WHEEL_R = ft(0, 14);
+const CTA_PAL = {
+  ctaBonnet: paint("#d4d7d8", 0.45),
+  ctaFrame: { color: "#dfe2e4", metallic: 0.4, roughness: 0.25 },
+  ctaFlute: paint("#909497", 0.45),
+  ctaLogo: paint("#1d5fae", 0.4),
+  ctaSign: { color: "#ff6a26", metallic: 0, roughness: 0.3 },
+  ctaAmber: paint("#eba01e", 0.3),
+  ctaMarkerBlue: paint("#2c62c4", 0.3),
+};
+
+/** The face's plan and crown: the bonnet a little narrower than the body, its top rolling back into the roof. */
+const ctaCabEnd = { len: 0.2, tip: 0.9, power: 2.5, C: [[0, 3.6], [0.06, 3.64], [0.2, 3.66]] as Pt[], S: [[0, 3.4], [0.1, 3.3], [0.2, 3.2]] as Pt[] };
+const ctaPlainEnd = { len: 0.2, tip: 0.92, power: 2.5, C: [[0, 3.6], [0.08, 3.65], [0.2, 3.66]] as Pt[], S: [[0, 3.36], [0.1, 3.28], [0.2, 3.2]] as Pt[] };
+
 function ctaDef(): CarDef {
-  const L = CTA_LENGTH - 0.5;
-  const doors: Array<[number, number]> = [L / 2 - 3.6, L / 2 + 3.6].map((d) => [d - 0.635, d + 0.635]);
-  const windows = [...row(1.0, doors[0]![0] - 0.25, 2, 1.0), ...row(doors[0]![1] + 0.25, doors[1]![0] - 0.25, 3, 1.2), ...row(doors[1]![1] + 0.25, L - 1.0, 2, 1.0)];
-  const trucks = [L / 2 - ft(32, 6) / 2, L / 2 + ft(32, 6) / 2];
+  const L = CTA_BODY, mid = L / 2;
+  const doors: Array<[number, number]> = [mid - CTA_DOOR.off, mid + CTA_DOOR.off].map((d) => [d - CTA_DOOR.half, d + CTA_DOOR.half]);
+  // three windows between the doors, 1.04 m frames at 1.18 m
+  const middle: Array<[number, number]> = [-1.18, 0, 1.18].map((o) => [mid + o - 0.52, mid + o + 0.52]);
   return {
-    spec: { length: L, W: 1.42, Y: 1.15, S: 3.25, C: 3.62, lean: 0.985, arc: 5, B: 0.9, wl: 1.38, A: 1.0, wa: 1.41, edges: [], step: 1.0 },
-    bands: [[0, 1.62, "ss"], [1.62, 1.7, "ctaBlue"], [1.7, 1.76, "ss"], [1.76, 1.84, "ctaRed"], [1.84, 9, "ss"]], roof: "ss", skirt: "ssDark", under: "under",
-    windows: [{ y: [1.95, 2.8], spans: windows, frame: "mask" }],
-    doors: { spans: doors, y: [1.1, 3.05], glass: [1.95, 2.75] },
-    cab: { mask: [1.0, 3.35, "mask"], panes: [[0.45, 1.25, 1.95, 2.9], [-0.3, 0.3, 1.9, 2.95], [-1.25, -0.45, 1.95, 2.9]], lamps: [[-0.9, 1.4, 0.08, "lampHead"], [0.9, 1.4, 0.08, "lampHead"], [-1.15, 1.4, 0.05, "lampRed"], [1.15, 1.4, 0.05, "lampRed"]] },
-    cabEnds: [1], diaphragm: [1.2, 3.0],
-    trucks, truck: truckSpec(ft(7), ft(0, 14), 0.9),
+    spec: { length: L, W: 1.42, Y: 1.15, S: 3.2, C: 3.66, lean: 0.985, arc: 6, B: 0.85, wl: 1.4, A: 0.95, wa: 1.415, front: ctaCabEnd, rear: ctaPlainEnd, edges: [], step: 1.0 },
+    bands: [[0, 9, "ss"]], roof: "ss", skirt: "ss", under: "under",
+    windows: [
+      { y: CTA_WIN.y, spans: [...middle, [L - 2.6, L - 1.62]], frame: "ctaFrame", cornerR: 0.06 },
+      { y: CTA_CAB_WIN.y, spans: [[...CTA_CAB_WIN.d]], frame: "ctaFrame", cornerR: 0.06 },
+      { y: CTA_WIN.y, spans: [[1.26, 2.36]], frame: "ctaFrame", onSide: -1, cornerR: 0.06 },
+      { y: CTA_WIN.y, spans: [[1.25, 1.92]], frame: "rubber", onSide: 1, cornerR: 0.1 },
+      { y: CTA_WIN.y, spans: [[L - 1.29, L - 0.68]], frame: "rubber", cornerR: 0.1 },
+    ],
+    doors: { spans: doors, y: [1.1, 3.05], glass: [1.98, 2.93], glassW: 0.42, glassPair: 0.635, glassCornerR: 0.1 },
+    cabEnds: [1], diaphragm: null,
+    trucks: [], truck: truckSpec(CTA_WB, CTA_WHEEL_R, 0.9),
     coupler: "centre", couplerY: 0.8, gap: [0.25, 0.25],
-    lettering: [{ text: "5001", d: L / 2, y: 2.95, h: 0.14, mat: "mask" }],
-    extras: (m, _b, X) => m.scope("underfloor", () => block(m, "under", X(L / 2 + 2.6), X(L / 2 - 2.6), 0.45, 0.91, -1.0, 1.0)),
+    // the bonnet over the cab end; the ends' walls dark under the anticlimber
+    repaint: (base) => (d, y, r) => {
+      if (r === "cap") return y < 0.99 ? "under" : d < L / 2 ? "ctaBonnet" : "ss";
+      return d < ctaCabEnd.len - 1e-6 && r !== "bottom" ? "ctaBonnet" : base(d, y, r);
+    },
+    extras: (m, b, X) => {
+      for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => ctaSide(m, b, X, s, doors, middle));
+      m.scope("roof", () => ctaRoof(m, b, X));
+      m.scope("underfloor", () => ctaUnderfloor(m, X));
+      m.scope("running gear", () => [mid - CTA_TRUCKS / 2, mid + CTA_TRUCKS / 2].forEach((d, i) => m.scope(`truck ${i + 1}`, () => m.bogie(() => ctaTruck(m, X(d), i === 0 ? 1 : -1)))));
+      m.scope("front end", () => ctaCabFace(m, Math.abs(X(0))));
+      m.scope("rear end", () => ctaPlainFace(m, Math.abs(X(L))));
+    },
   };
+}
+
+/** One side's fittings: the fluted panels, the transoms and the side sign, the cab's sash, the logo, the number, the door lamps and the gutter. */
+function ctaSide(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, doors: ReadonlyArray<readonly [number, number]>, middle: ReadonlyArray<readonly [number, number]>): void {
+  const L = b.length;
+  const [dB, dA] = [doors[0]!, doors[1]!];
+  // the fluted panels under the windows: plain at the ends and beside the doors
+  m.scope("fluting", () => {
+    const runs: Array<[number, number]> = [[0.95, dB[0] - 0.12], [dB[1] + 0.12, dA[0] - 0.12], [dA[1] + 0.12, L - 1.32]];
+    const dark: Pt[] = [], light: Pt[] = [];
+    for (let y = 1.08; y + 0.04 < 1.88; y += 0.058)
+      for (const [p, q] of runs) {
+        dark.push([p, y], [q, y], [q, y + 0.022], [p, y], [q, y + 0.022], [p, y + 0.022]);
+        light.push([p, y + 0.022], [q, y + 0.022], [q, y + 0.036], [p, y + 0.022], [q, y + 0.036], [p, y + 0.036]);
+      }
+    sideDecal(m, b, X, s, "ctaFlute", dark, 0.003);
+    sideDecal(m, b, X, s, "ctaFrame", light, 0.003);
+  });
+  // the transom bar over each framed window; the middle window's upper light is the side sign
+  m.scope("transoms", () => {
+    const framed = [...middle, [L - 2.6, L - 1.62] as const, ...(s < 0 ? [[1.26, 2.36] as const] : [])];
+    for (const [a, e] of framed) sidePanel(m, b, X, s, "ctaFrame", a + 0.04, e - 0.04, CTA_WIN.transom, CTA_WIN.transom + 0.035, 0.016, 0.006);
+    const [a, e] = middle[1]!;
+    sidePanel(m, b, X, s, "ctaSign", a + 0.12, e - 0.12, CTA_WIN.transom + 0.06, CTA_WIN.y[1] - 0.07, 0.015, 0.002);
+  });
+  // the cab window's sliding sash: its frame's upright over the glass
+  m.scope("cab sash", () => sidePanel(m, b, X, s, "ctaFrame", 0.6, 0.635, CTA_CAB_WIN.y[0] + 0.04, CTA_CAB_WIN.y[1] - 0.04, 0.016, 0.006));
+  // the right side's narrow slot behind its dark window
+  if (s > 0) m.scope("slot", () => sidePanel(m, b, X, s, "rubber", 2.15, 2.27, 2.35, 2.95, 0.006, 0.02));
+  // the CTA roundel under the cab window
+  m.scope("logo", () => {
+    surfaceDisc(m, b, X, 0.55, 1.45, s, "white", 0.225, 0.003, 0.001, 20);
+    surfaceDisc(m, b, X, 0.55, 1.45, s, "ctaLogo", 0.2, 0.005, 0.001, 20);
+    sideLettering(m, b, X, s, "CTA", 0.55, 1.4, 0.1, "white", 0.007);
+  });
+  // the number and the door lamps by the forward side of each door on the left side, by the rear side on the right
+  m.scope("number", () => sideLettering(m, b, X, s, CTA_NUMBER, s < 0 ? 2.85 : L - 2.85, 3.04, 0.11, "black", 0.004));
+  m.scope("door lamps", () => {
+    for (const [a, e] of [dB, dA]) {
+      const d = s < 0 ? a - 0.16 : e + 0.08;
+      sidePanel(m, b, X, s, "black", d - 0.02, d + 0.1, 2.68, 2.96, 0.006, 0.02);
+      sidePanel(m, b, X, s, "ctaAmber", d, d + 0.08, 2.72, 2.92, 0.014, 0.004);
+    }
+  });
+  m.scope("gutter", () => sidePanel(m, b, X, s, "ctaFrame", 0.3, L - 0.3, 3.15, 3.19, 0.025, 0.03));
+}
+
+/** The car number (5636, the Fullerton photograph). */
+const CTA_NUMBER = "5636";
+
+/** The roof's ribs along its arc on both sides. */
+function ctaRoof(m: MeshBuilder, b: SliceBody, X: (d: number) => number): void {
+  const L = b.length, h = halfSlice(b, L / 2), pts = h.slice(4 + b.edges(L / 2).length);
+  // ribs evenly over each facet of the arc, about 0.1 m apart
+  const ribs: Array<[Pt, Pt, Pt]> = [];
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const [a, c] = [pts[i]!, pts[i + 1]!], l = Math.hypot(c[0] - a[0], c[1] - a[1]), k = Math.max(1, Math.round(l / 0.1));
+    const at = (t: number): Pt => [a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t];
+    for (let j = 0; j < k; j++) {
+      const t = (j + 0.5) / k, dt = 0.015 / l;
+      ribs.push([at(t - dt), at(t + dt), [(c[1] - a[1]) / l, -(c[0] - a[0]) / l]]);
+    }
+  }
+  for (const [p, q, n] of ribs)
+    for (const s of [1, -1]) {
+      const P = (d: number, r: Pt): Vec3 => [X(d), r[1] + n[1] * 0.004, s * (r[0] + n[0] * 0.004)];
+      m.facets("ssDark", [P(0.45, p), P(L - 0.4, p), P(L - 0.4, q), P(0.45, p), P(L - 0.4, q), P(0.45, q)], [0, n[1], s * n[0]]);
+    }
+}
+
+/** Under the floor between the trucks: the propulsion inverter, the braking resistor's grille box, the auxiliary inverter, batteries, the compressor and air reservoirs. */
+function ctaUnderfloor(m: MeshBuilder, X: (d: number) => number): void {
+  const L = CTA_BODY, mid = L / 2;
+  const bx = (mat: string, d0: number, d1: number, y0: number, y1: number, z0: number, z1: number) => rdcBlock(m, X, mat, d0, d1, y0, y1, z0, z1);
+  m.scope("propulsion", () => { bx("under", mid - 2.0, mid + 0.4, 0.36, 0.8, -1.15, -0.05); bx("black", mid - 1.9, mid + 0.3, 0.33, 0.36, -1.05, -0.15); });
+  m.scope("braking resistor", () => {
+    bx("under", mid - 2.95, mid - 2.2, 0.4, 0.8, -1.2, -0.45);
+    for (let y = 0.45; y < 0.76; y += 0.06) bx("grille", mid - 2.9, mid - 2.25, y, y + 0.03, -1.22, -1.2);
+  });
+  m.scope("auxiliary", () => bx("under", mid - 1.6, mid + 0.9, 0.4, 0.8, 0.1, 1.18));
+  m.scope("batteries", () => bx("under", mid + 1.2, mid + 2.4, 0.45, 0.8, 0.3, 1.2));
+  m.scope("compressor", () => { bx("under", mid + 0.8, mid + 1.9, 0.42, 0.8, -1.1, -0.35); bx("grille", mid + 0.85, mid + 1.85, 0.48, 0.74, -1.12, -1.1); });
+  m.scope("air reservoirs", () => { for (const z of [-0.85, -0.45]) m.sweep("under", "x", ngon(10, 0.15, 0, z, 0.6), X(mid + 2.2), ngon(10, 0.15, 0, z, 0.6), X(mid + 3.2)); });
+  m.scope("cables", () => { for (const s of [1, -1]) bx("black", mid - 3.4, mid + 3.4, 0.74, 0.8, s * 1.25, s * 1.3); });
+}
+
+/** A truck at model x xc: wheelsets, an outside frame over chevron springs, the traction motors, disc brakes, and the third-rail shoe beam with its collector shoe on each side. */
+function ctaTruck(m: MeshBuilder, xc: number, out: number): void {
+  const R = CTA_WHEEL_R, ay = R * Math.cos(Math.PI / 20), a2 = CTA_WB / 2;
+  for (const dx of [-a2, a2])
+    m.scope("wheelset", () => {
+      const x = xc + dx;
+      const axle = ngon(8, 0.075, 0, x, ay);
+      m.sweep("steel", "z", axle, -0.9, axle, 0.9);
+      for (const s of [-1, 1]) {
+        extrude(m, "steel", "z", ngon(20, R, Math.PI / 20, x, ay), side(s, 0.665, 0.79));
+        extrude(m, "wheel", "z", ngon(14, R * 0.8, 0, x, ay), side(s, 0.79, 0.81));
+        m.scope("axle box", () => extrude(m, "bogie", "z", ngon(10, 0.12, 0, x, ay), side(s, 0.81, 0.98)));
+        m.scope("brake disc", () => extrude(m, "steel", "z", ngon(14, 0.24, 0, x, ay), side(s, 0.36, 0.41)));
+      }
+      // the traction motor and its gear case, inboard of the axle
+      m.scope("motor", () => {
+        const mx = x - Math.sign(dx) * 0.5;
+        m.sweep("bogie", "z", ngon(12, 0.24, 0, mx, 0.48), -0.5, ngon(12, 0.24, 0, mx, 0.48), 0.42);
+        block(m, "bogie", Math.min(x, mx), Math.max(x, mx), ay - 0.12, ay + 0.14, 0.42, 0.56);
+      });
+    });
+  m.scope("frame", () => {
+    for (const s of [-1, 1]) {
+      const sf = (pts: Pt[], z0 = 0.84, z1 = 0.98) => extrude(m, "bogie", "z", pts.map(([u, v]): [number, number] => [xc + u, v]), side(s, z0, z1));
+      // the side frame: over the boxes at each end, dropping between them to the bolster
+      sf([[-1.42, 0.56], [1.42, 0.56], [1.48, 0.62], [1.42, 0.7], [-1.42, 0.7], [-1.48, 0.62]]);
+      sf([[-0.62, 0.56], [-0.42, 0.42], [0.42, 0.42], [0.62, 0.56]]);
+      // the chevron springs between each box and the frame
+      for (const k of [-1, 1]) {
+        sf([[k * a2 - 0.16, ay + 0.1], [k * a2 + 0.16, ay + 0.1], [k * a2 + 0.16, 0.56], [k * a2 - 0.16, 0.56]], 0.85, 0.97);
+        for (const v of [0.48, 0.52]) block(m, "black", xc + k * a2 - 0.18, xc + k * a2 + 0.18, v, v + 0.02, ...side(s, 0.83, 0.99));
+      }
+      // the shoe beam on the axle boxes, its collector shoe out over the third rail beyond the outer axle
+      m.scope("shoe beam", () => {
+        const sx = xc + out * (a2 + 0.36);
+        block(m, "black", Math.min(xc - out * (a2 + 0.12), sx + out * 0.1), Math.max(xc - out * (a2 + 0.12), sx + out * 0.1), 0.26, 0.34, ...side(s, 0.99, 1.07));
+        block(m, "black", sx - 0.1, sx + 0.1, 0.2, 0.32, ...side(s, 1.07, 1.3));
+        block(m, "steel", sx - 0.16, sx + 0.16, 0.17, 0.2, ...side(s, 1.22, 1.42));
+        m.rod("black", [sx, 0.32, s * 1.18], [sx - out * 0.3, 0.76, s * 1.22], 0.02, 6);
+      });
+    }
+    // the transoms and the bolster
+    for (const u of [-0.32, 0.32]) block(m, "bogie", xc + u - 0.1, xc + u + 0.1, 0.42, 0.6, -0.86, 0.86);
+    block(m, "bogie", xc - 0.24, xc + 0.24, 0.62, 0.76, -0.95, 0.95);
+  });
+}
+
+/** A lamp on a face at |x| = face facing e: a black housing and its lens. */
+function ctaLamp(m: MeshBuilder, e: number, face: number, z: number, y: number, r: number, lens: string, n = 12, rim = 0.025): void {
+  const ring = ngon(n, r + rim, 0, z, y), glass = ngon(n, r, 0, z, y);
+  m.sweep("black", "x", ring, e * (face - 0.01), ring, e * (face + 0.03));
+  m.sweep(lens, "x", glass, e * (face + 0.03), glass, e * (face + 0.045));
+}
+
+/** A rounded flat panel on the face at |x| = face + off, facing e. */
+function ctaFlat(m: MeshBuilder, e: number, face: number, off: number, mat: string, z0: number, z1: number, y0: number, y1: number, r: number): void {
+  const p = roundedOutline(z0, z1, y0, y1, Math.min(r, (z1 - z0) / 2, (y1 - y0) / 2)).map(([z, y]): Vec3 => [e * (face + off), y, z]);
+  m.facets(mat, p.slice(1, -1).flatMap((q, i) => [p[0]!, q, p[i + 2]!]), [e, 0, 0]);
+}
+
+/** The end door on a face: its seams, its window in a broad black frame, the grab irons either side and the anticlimber under it. */
+function ctaEndDoor(m: MeshBuilder, e: number, face: number, glass: readonly [number, number, number, number] = CTA_END_DOOR.glass): void {
+  const { z, y: [y0, y1] } = CTA_END_DOOR, [g0, g1, h0, h1] = glass;
+  m.scope("end door", () => {
+    const on = e * (face + 0.004);
+    decalX(m, "rubber", on, e, -z, -z + 0.025, y0, y1);
+    decalX(m, "rubber", on, e, z - 0.025, z, y0, y1);
+    decalX(m, "rubber", on, e, -z + 0.025, z - 0.025, y1 - 0.025, y1);
+    // the window in its raised stainless frame and broad black rubber
+    ctaFlat(m, e, face, 0.006, "ctaFrame", g0 - 0.04, g1 + 0.04, h0 - 0.04, h1 + 0.04, 0.15);
+    ctaFlat(m, e, face, 0.009, "black", g0, g1, h0, h1, 0.12);
+    ctaFlat(m, e, face, 0.013, "cabGlass", g0 + 0.05, g1 - 0.05, h0 + 0.05, h1 - 0.05, 0.08);
+    for (const s of [-1, 1]) {
+      m.rod("handrail", [e * (face + 0.07), 1.25, s * (z + 0.08)], [e * (face + 0.07), 2.7, s * (z + 0.08)], 0.016, 6);
+      // the safety chains slung from the posts to the door's middle
+      for (const y of [2.45, 1.95]) {
+        m.rod("steel", [e * (face + 0.09), y, s * (z + 0.08)], [e * (face + 0.1), y - 0.3, s * 0.18], 0.009, 4);
+        m.rod("steel", [e * (face + 0.1), y - 0.3, s * 0.18], [e * (face + 0.1), y - 0.36, 0], 0.009, 4);
+      }
+    }
+  });
+  m.scope("anticlimber", () => {
+    const ax = (a: number, c: number): [number, number] => (e > 0 ? [face + a, face + c] : [-face - c, -face - a]);
+    block(m, "ss", ...ax(-0.02, 0.09), 0.99, 1.11, -1.18, 1.18);
+    for (const y of [1.02, 1.06]) block(m, "ssDark", ...ax(0.09, 0.11), y, y + 0.02, -1.15, 1.15);
+  });
+}
+
+/** The cab face at |x| = face (+X): two big windscreens, the end door with its window, the LED sign, four marker lamps a side, head and tail lamps, wipers and the anticlimber. */
+function ctaCabFace(m: MeshBuilder, face: number): void {
+  const e = 1;
+  m.scope("windscreens", () => {
+    for (const [z0, z1, y0, y1] of CTA_SCREENS) {
+      ctaFlat(m, e, face, 0.006, "rubber", z0, z1, y0, y1, 0.14);
+      ctaFlat(m, e, face, 0.01, "cabGlass", z0 + 0.06, z1 - 0.06, y0 + 0.06, y1 - 0.06, 0.09);
+      // the slot under the screen with its bar, the parked wiper
+      const zm = (z0 + z1) / 2;
+      decalX(m, "black", face + 0.004, e, zm - 0.24, zm + 0.24, y0 - 0.12, y0 - 0.07);
+      m.rod("handrail", [face + 0.03, y0 - 0.095, zm - 0.22], [face + 0.03, y0 - 0.095, zm + 0.22], 0.012, 6);
+      m.rod("black", [face + 0.022, y0 + 0.1, zm + 0.05], [face + 0.022, y0 + 0.75, zm + 0.12], 0.01, 4);
+    }
+  });
+  ctaEndDoor(m, e, face);
+  m.scope("sign", () => {
+    // the LED destination sign: its black panel and the line's terminal in orange
+    ctaFlat(m, e, face, 0.006, "black", -0.33, 0.33, 3.26, 3.53, 0.03);
+    endText(m, "ctaSign", "HOWARD", e, face + 0.01, 0, 3.34, 0.11);
+  });
+  m.scope("marker lamps", () => {
+    const lens = ["lampHead", "ctaMarkerBlue", "ctaAmber", "lampRed"];
+    [0.64, 0.8, 0.95, 1.09].forEach((z, i) => { for (const s of [-1, 1]) ctaLamp(m, e, face, s * z, 3.36, 0.058, lens[i]!, 10, 0.014); });
+  });
+  m.scope("lamps", () => {
+    for (const s of [-1, 1]) {
+      ctaLamp(m, e, face, s * 0.72, 1.68, 0.09, "lampHead", 14, 0.03);
+      ctaLamp(m, e, face, s * 1.0, 1.68, 0.08, "lampRed", 14, 0.03);
+    }
+  });
+  m.scope("number", () => endText(m, "black", CTA_NUMBER, e, face + 0.006, 0, 1.6, 0.12));
+}
+
+/** The plain #2 end at |x| = face (-X): the end door with its window and grab irons, the anticlimber. */
+function ctaPlainFace(m: MeshBuilder, face: number): void {
+  const e = -1;
+  ctaEndDoor(m, e, face, CTA_PLAIN_GLASS);
+  // the curved grab handles by each corner
+  m.scope("grab handles", () => {
+    for (const s of [-1, 1]) for (const y of [1.75, 2.2, 2.65]) {
+      const P = (z: number, o: number): Vec3 => [e * (face + o), y, s * z];
+      m.rod("handrail", P(0.92, 0.0), P(0.95, 0.07), 0.014, 6);
+      m.rod("handrail", P(0.95, 0.07), P(1.12, 0.07), 0.014, 6);
+      m.rod("handrail", P(1.12, 0.07), P(1.15, 0.0), 0.014, 6);
+    }
+  });
 }
 
 export function nycR160(params?: ParamValues): MeshBuilder {
@@ -697,13 +975,18 @@ export function nycR160Lod(params?: ParamValues): MeshBuilder {
   const u = resolveParams(R160_PARAMS, params).unit as MetroCar;
   return carLod(r160Def(u), (d) => R160_LENGTH / 2 - 0.25 - d, { ...CARBODY_PALETTE, ...METRO_PAL });
 }
+const ctaX = (d: number) => CTA_LENGTH / 2 - 0.25 - d;
 export function cta5000(): MeshBuilder {
-  const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...METRO_PAL });
-  drawCar(m, ctaDef(), (d) => CTA_LENGTH / 2 - 0.25 - d);
+  const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...METRO_PAL, ...CTA_PAL });
+  drawCar(m, ctaDef(), ctaX);
   return m;
 }
 export function cta5000Lod(): MeshBuilder {
-  return carLod(ctaDef(), (d) => CTA_LENGTH / 2 - 0.25 - d, { ...CARBODY_PALETTE, ...METRO_PAL });
+  const c = ctaDef(), mid = CTA_BODY / 2;
+  // one glass band from the cab window to the plain end's narrow window
+  const body: UnitBody = { ...carLodBody({ ...c, spec: { ...c.spec, front: undefined, rear: undefined } }, ctaX), windows: [{ u: [ctaX(CTA_BODY - 0.68), ctaX(CTA_CAB_WIN.d[0])], y: [CTA_WIN.y[0], CTA_WIN.y[1]], mat: LOD_GLASS }] };
+  const parts = bogieParts([mid - CTA_TRUCKS / 2, mid + CTA_TRUCKS / 2].map((d) => [ctaX(d), 1.48] as const), c.spec.B);
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...METRO_PAL, ...CTA_PAL }, bodies: [body], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------
