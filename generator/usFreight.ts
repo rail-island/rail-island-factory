@@ -7,9 +7,9 @@
 import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
-import { bogieGeometry, exhaust, paint, type BogieSpec } from "./dieselParts.ts";
+import { bogieGeometry, paint, type BogieSpec } from "./dieselParts.ts";
 import { block, side } from "./vehicleParts.ts";
-import { decalX, decalZ, knuckleCoupler, paintedSweep, sideText, US_PALETTE, type Band } from "./usHoodKit.ts";
+import { decalX, decalZ, endText, knuckleCoupler, paintedSweep, sideText, US_PALETTE } from "./usHoodKit.ts";
 import { WAGON_CATALOG } from "./wagons.ts";
 import { coil, extrude } from "./dieselParts.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
@@ -48,72 +48,324 @@ function boxLod(palette: Record<string, MaterialSpec>, x0: number, x1: number, y
 }
 
 // ---------------------------------------------------------------------------
-// Cupola caboose
+// Cupola caboose: two steel cupola cabooses measured from photographs
+// (assets/us-caboose/SOURCES.md). The livery chooses the car as photographed, at
+// one length over the couplers. Along a side, u runs from the viewer's left.
+//
+// santaFe - Santa Fe Ce-3 999457, side-on at 104 px/m (33 in wheels, the 5 ft 6 in
+//   truck wheelbase): the cupola offset toward the -x end, two windows a side, the
+//   yellow stripe, the roof walk, the roof carried out over both platforms. The
+//   cross herald is left out; "ATSF" and the number in white, the end grab irons
+//   painted white. The other side is drawn alike (mirrored across the car).
+// unionPacific - UP 25687, side-on at 49.8 px/m (its roof's length taken as the
+//   Santa Fe car's): the cupola centred, three windows a side (the other side the
+//   same turned end for end), no roof walk, the roof, railings and ladders red.
 
 export const CABOOSE_PARAMS: readonly ParamSpec[] = [{
   name: "livery", title: "Livery", default: "santaFe",
   values: [{ value: "santaFe", title: "Santa Fe" }, { value: "unionPacific", title: "Union Pacific" }],
 }];
-const CABOOSE_LIVERIES: Record<string, { body: string; trim: string; text: string; palette: Record<string, MaterialSpec> }> = {
-  santaFe: { body: "cabRed", trim: "cabWhite", text: "SANTA FE", palette: { cabRed: paint("#9e2a23"), cabWhite: paint("#ecebe6") } },
-  unionPacific: { body: "upYellow", trim: "upRed", text: "UNION PACIFIC", palette: { upYellow: paint("#f4b92a"), upRed: paint("#b5202b") } },
+
+/** A side window: centre u, width, sill and head. */
+interface CbWindow { u: number; w: number; y0: number; y1: number }
+interface CabooseCar {
+  /** |x| of the end walls, the side's eave and the roof's crown. */
+  body: number; eave: number; crown: number;
+  /** The truck centres at +-centre. */
+  centre: number;
+  cupola: { x0: number; x1: number; half: number; top: number; window: CbWindow; endWindow: number };
+  /** The right side's windows; the left side has them turned end for end (`turned`) or mirrored across. */
+  windows: readonly CbWindow[];
+  turned: boolean;
+  walk: boolean;
+  /** The stove pipe: x, z, top. */
+  stack: readonly [number, number, number];
+  /** The end door's centre (times the end's sign) and the end window beside it, if any. */
+  door: number;
+  endWindow?: number;
+  /** The ladder's corner (times the end's sign). */
+  ladder: number;
+}
+interface CbLine { text: string; u: number; y: number; h: number; width: number }
+interface CabooseLivery {
+  car: CabooseCar;
+  body: string; roof: string; rail: string; ladder: string; text: string; frame: string;
+  /** The platforms' deck. */
+  deck: string;
+  palette: Record<string, MaterialSpec>;
+  stripe?: readonly [number, number, string];
+  lines: readonly CbLine[];
+  endNumber?: string;
+  cupolaNumber?: string;
+}
+
+export const CABOOSE_LENGTH = ft(36, 5);
+/** The end sills (the platforms' outer edge), the platform deck, the body's bottom, its half width. */
+const CB = { sill: Math.round((CABOOSE_LENGTH / 2 - 0.485) * 1000) / 1000, deck: 1.12, bottom: 0.9, half: 1.45 };
+
+const SANTA_FE_CE3: CabooseCar = {
+  body: 4.34, eave: 3.07, crown: 3.22, centre: 2.84,
+  cupola: { x0: -3.48, x1: -1.74, half: 1.22, top: 4.35, window: { u: -2.7, w: 0.92, y0: 3.53, y1: 4.01 }, endWindow: 0.7 },
+  windows: [{ u: -1.45, w: 0.48, y0: 1.97, y1: 2.63 }, { u: 1.57, w: 0.48, y0: 1.97, y1: 2.63 }],
+  turned: false, walk: true, stack: [-0.34, -0.5, 4.38], door: 0.35, ladder: 1.18,
 };
-export const CABOOSE_LENGTH = ft(36);
-const CB = { sill: 5.0, body: 4.0, half: 1.5, deck: 1.15, top: 3.85, cupola: { x0: -1.2, x1: 1.2, half: 1.15, top: 4.6 }, centre: 3.0 };
+const UNION_PACIFIC_CA: CabooseCar = {
+  body: 4.06, eave: 3.09, crown: 3.22, centre: 2.9,
+  cupola: { x0: -1.24, x1: 1.24, half: 1.25, top: 4.24, window: { u: 0.34, w: 1.08, y0: 3.31, y1: 3.96 }, endWindow: 1.2 },
+  windows: [{ u: -2.46, w: 0.48, y0: 1.85, y1: 2.49 }, { u: -0.98, w: 0.38, y0: 1.82, y1: 2.24 }, { u: 2.86, w: 0.4, y0: 1.75, y1: 2.35 }],
+  turned: true, walk: false, stack: [1.91, -0.35, 4.46], door: -0.3, endWindow: 0.65, ladder: 1.18,
+};
+
+const CABOOSE_LIVERIES: Record<string, CabooseLivery> = {
+  santaFe: {
+    car: SANTA_FE_CE3, body: "cabRed", roof: "cabRed", rail: "cabWhite", ladder: "cabRed", text: "cabWhite", frame: "black", deck: "cabRed",
+    palette: { cabRed: paint("#9e2a23"), cabWhite: paint("#ecebe6"), cabYellow: paint("#e3b025") },
+    stripe: [1.8, 1.85, "cabYellow"],
+    lines: [{ text: "ATSF", u: 0, y: 1.51, h: 0.22, width: 1.18 }, { text: "999457", u: 0, y: 1.15, h: 0.23, width: 1.35 }],
+    endNumber: "999457", cupolaNumber: "457",
+  },
+  unionPacific: {
+    car: UNION_PACIFIC_CA, body: "upYellow", roof: "upRed", rail: "upRed", ladder: "upRed", text: "upRed", frame: "black", deck: "walk",
+    palette: { upYellow: paint("#f4b92a"), upRed: paint("#b5202b") },
+    lines: [{ text: "UNION PACIFIC", u: 0.29, y: 2.39, h: 0.56, width: 3.92 }, { text: "UP 25687", u: 0.27, y: 1.14, h: 0.42, width: 2.35 }],
+  },
+};
+
+/** A rounded rectangle (u, v) as a convex ring, its corners `seg` facets each. */
+function cbRound(u0: number, u1: number, v0: number, v1: number, r: number, seg = 3): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  const corners: Array<[number, number, number]> = [[u1 - r, v0 + r, -Math.PI / 2], [u1 - r, v1 - r, 0], [u0 + r, v1 - r, Math.PI / 2], [u0 + r, v0 + r, Math.PI]];
+  for (const [cu, cv, a0] of corners) for (let i = 0; i <= seg; i++) { const a = a0 + (i / seg) * (Math.PI / 2); out.push([cu + r * Math.cos(a), cv + r * Math.sin(a)]); }
+  return out;
+}
+
+/** A flat convex ring (x, y) laid on the side z facing s. */
+function cbSidePane(m: MeshBuilder, mat: string, ring: ReadonlyArray<readonly [number, number]>, z: number, s: number): void {
+  const pts: Vec3[] = [];
+  for (let i = 1; i + 1 < ring.length; i++) pts.push([ring[0]![0], ring[0]![1], z], [ring[i]![0], ring[i]![1], z], [ring[i + 1]![0], ring[i + 1]![1], z]);
+  m.facets(mat, pts, [0, 0, s]);
+}
+
+/** A window on the side z = s * zw centred at x: its frame, the glass, `panes` panes split by a mullion. */
+function cbWindow(m: MeshBuilder, frame: string, x: number, w: CbWindow, s: number, zw: number, panes = 1, r = 0.06): void {
+  cbSidePane(m, frame, cbRound(x - w.w / 2 - 0.04, x + w.w / 2 + 0.04, w.y0 - 0.04, w.y1 + 0.04, r + 0.03), s * (zw + 0.004), s);
+  const pw = (w.w - (panes - 1) * 0.05) / panes;
+  for (let k = 0; k < panes; k++) {
+    const a = x - w.w / 2 + k * (pw + 0.05);
+    cbSidePane(m, "glass", cbRound(a, a + pw, w.y0, w.y1, panes > 1 ? 0.02 : r), s * (zw + 0.008), s);
+  }
+}
+
+/** Text of `width` metres centred at u on side s (x = u on the right side, -u on the left when the layout turns). */
+const cbFit = (text: string, width: number): [number, number] => {
+  const n = [...text].length, w = width / (n + 0.3 * (n - 1));
+  return [w, 0.3 * w];
+};
 
 export function caboose(params?: ParamValues): MeshBuilder {
   const l = CABOOSE_LIVERIES[resolveParams(CABOOSE_PARAMS, params).livery!]!;
+  const c = l.car, H = CB.half, cu = c.cupola;
   const m = new MeshBuilder({ ...US_PALETTE, ...l.palette });
-  const paintOf = { bands: [[0, 9, l.body]] as readonly Band[], roofFrom: CB.top - 0.04, roof: l.body };
-  m.scope("frame", () => {
-    block(m, "black", -CB.sill, CB.sill, 0.95, CB.deck, -1.5, 1.5);
-    block(m, "walk", -CB.sill, CB.sill, CB.deck, CB.deck + 0.04, -1.45, 1.45);
+  const xOf = (u: number, s: number): number => (c.turned ? s * u : u);
+  m.scope("underframe", () => {
+    block(m, l.frame, -CB.sill + 0.02, CB.sill - 0.02, 0.6, CB.bottom + 0.02, -0.22, 0.22);
+    // the side sills under the body's sheets
+    for (const s of [-1, 1]) block(m, l.frame, -c.body + 0.02, c.body - 0.02, 0.72, CB.bottom + 0.02, ...side(s, H - 0.12, H - 0.04));
+    for (const e of [1, -1]) block(m, l.frame, e * c.centre - 0.2, e * c.centre + 0.2, 0.7, CB.bottom + 0.02, -1.25, 1.25);
+    m.scope("brake gear", () => {
+      // the reservoir and brake cylinder under the left side, the AB valve, the rod to the hand brake
+      m.sweep(l.frame, "x", ngon(10, 0.2, 0, -0.75, 0.6), 0.45, ngon(10, 0.2, 0, -0.75, 0.6), 1.6);
+      block(m, l.frame, -0.8, -0.45, 0.45, CB.bottom, -1.0, -0.62);
+      m.sweep(l.frame, "x", ngon(8, 0.14, 0, -0.5, 0.62), -1.7, ngon(8, 0.14, 0, -0.5, 0.62), -1.15);
+      m.rod("steel", [-1.7, 0.62, -0.5], [-CB.sill + 0.3, 0.7, -0.3], 0.02, 4);
+    });
+    // the tool box hung under the right side
+    m.scope("tool box", () => block(m, l.body, -0.67, 0.31, 0.27, CB.bottom, 0.85, 1.32));
+  });
+  m.scope("platforms", () => {
+    for (const e of [1, -1]) {
+      const ax = (a: number, b: number): [number, number] => [Math.min(e * a, e * b), Math.max(e * a, e * b)];
+      block(m, l.deck, ...ax(c.body, CB.sill - 0.01), CB.deck - 0.06, CB.deck, -1.42, 1.42);
+      block(m, l.body, ...ax(CB.sill - 0.18, CB.sill), 0.74, CB.deck - 0.06, -1.4, 1.4);
+      block(m, l.frame, ...ax(c.body - 0.02, CB.sill - 0.18), 0.8, CB.deck - 0.06, -1.1, 1.1);
+      // the steps at the four corners: two hangers and three treads
+      for (const s of [-1, 1])
+        m.scope("steps", () => {
+          const z = side(s, 1.12, 1.42), [a, b] = ax(c.body + 0.04, CB.sill - 0.03);
+          block(m, l.body, a, a + 0.03, 0.2, CB.deck - 0.06, ...z);
+          block(m, l.body, b - 0.03, b, 0.2, CB.deck - 0.06, ...z);
+          // the risers behind the treads
+          block(m, l.body, a + 0.03, b - 0.03, 0.2, CB.deck - 0.06, ...side(s, 1.12, 1.14));
+          for (const t of [0.88, 0.59, 0.3]) {
+            block(m, l.body, a + 0.03, b - 0.03, t - 0.035, t, ...side(s, 1.13, 1.38));
+            block(m, l.rail, a + 0.03, b - 0.03, t - 0.035, t, ...side(s, 1.38, 1.41));
+          }
+        });
+    }
   });
   m.scope("body", () => {
-    paintedSweep(m, "x", box(CB.half, CB.deck + 0.04, CB.top, 0.12), -CB.body, CB.body, paintOf);
-    m.scope("cupola", () => paintedSweep(m, "x", box(CB.cupola.half, CB.top - 0.05, CB.cupola.top, 0.08), CB.cupola.x0, CB.cupola.x1, { ...paintOf, roofFrom: CB.cupola.top - 0.04 }));
-    m.scope("roof walk", () => block(m, "walk", -CB.body - 0.1, CB.body + 0.1, CB.top, CB.top + 0.05, -0.3, 0.3));
+    paintedSweep(m, "x", [[-H, CB.bottom], [H, CB.bottom], [H, c.eave - 0.03], [-H, c.eave - 0.03]], -c.body, c.body, { bands: [[0, 9, l.body]], roofFrom: 99, roof: l.body });
+    m.scope("roof", () => {
+      const rh = H + 0.05;
+      const sec: Array<[number, number]> = [[-rh, c.eave - 0.06], [rh, c.eave - 0.06], [rh, c.eave], [0.75, c.crown - 0.04], [0, c.crown], [-0.75, c.crown - 0.04], [-rh, c.eave]];
+      m.sweep(l.roof, "x", sec, -CB.sill, sec, CB.sill);
+      // the overhang's fascia over each platform
+      for (const e of [1, -1]) {
+        const [a, b] = e > 0 ? [c.body + 0.01, CB.sill - 0.001] : [-CB.sill + 0.001, -c.body - 0.01];
+        block(m, l.roof, ...(e > 0 ? [CB.sill - 0.06, CB.sill - 0.001] : [-CB.sill + 0.001, -CB.sill + 0.06]) as [number, number], c.eave - 0.2, c.eave - 0.06, -rh, rh);
+        // the Santa Fe's hooded overhang: its sides dropped like the end
+        if (c.walk) for (const s of [-1, 1]) block(m, l.roof, a, b, c.eave - 0.2, c.eave - 0.06, ...side(s, rh - 0.04, rh - 0.001));
+      }
+      if (c.walk)
+        m.scope("roof walk", () => {
+          const y = c.crown + 0.03;
+          block(m, "walk", -CB.sill + 0.05, CB.sill - 0.05, y, y + 0.04, -0.28, 0.28);
+          for (let x = -CB.sill + 0.3; x < CB.sill; x += 0.95) if (x < cu.x0 - 0.1 || x > cu.x1 + 0.1) block(m, "walk", x - 0.04, x + 0.04, c.crown - 0.04, y, -0.24, 0.24);
+          // the cross boards at each end out to the ladders
+          for (const e of [1, -1]) {
+            const [a, b] = e > 0 ? [CB.sill - 0.55, CB.sill - 0.08] : [-CB.sill + 0.08, -CB.sill + 0.55];
+            block(m, "walk", a, b, y + 0.001, y + 0.041, -1.3, -0.28);
+            block(m, "walk", a, b, y + 0.001, y + 0.041, 0.28, 1.3);
+            for (const z of [-1.0, 1.0]) block(m, "walk", a + 0.1, b - 0.1, c.eave + 0.02, y, z - 0.04, z + 0.04);
+          }
+        });
+    });
+    m.scope("cupola", () => {
+      paintedSweep(m, "x", [[-cu.half, c.eave - 0.03], [cu.half, c.eave - 0.03], [cu.half, cu.top - 0.07], [-cu.half, cu.top - 0.07]], cu.x0, cu.x1, { bands: [[0, 9, l.body]], roofFrom: 99, roof: l.body });
+      block(m, l.roof, cu.x0 - 0.06, cu.x1 + 0.06, cu.top - 0.07, cu.top, -cu.half - 0.06, cu.half + 0.06);
+      for (const s of [-1, 1]) {
+        cbWindow(m, "steel", xOf(cu.window.u, s), cu.window, s, cu.half, 2, 0.03);
+        // the grab rail along the roof's edge
+        const z = s * (cu.half - 0.08), y = cu.top + 0.12;
+        m.rod(l.rail, [cu.x0 + 0.08, y, z], [cu.x1 - 0.08, y, z], 0.016, 6);
+        for (const x of [cu.x0 + 0.08, cu.x1 - 0.08]) m.rod(l.rail, [x, cu.top, z], [x, y, z], 0.014, 4, false);
+      }
+      for (const e of [1, -1]) {
+        const xf = e > 0 ? cu.x1 : cu.x0, w = cu.endWindow;
+        const outer = l.cupolaNumber && e < 0;
+        if (outer) {
+          // the outer end: the car number and a louvred vent
+          endText(m, l.text, l.cupolaNumber!, e, -xf + 0.004, -0.42, cu.window.y0 - 0.02, 0.32, 0.17, 0.05);
+          decalX(m, "louvre", xf - 0.004, e, 0.25, 0.85, cu.window.y0 - 0.1, cu.window.y1);
+        } else {
+          decalX(m, "rubber", xf + e * 0.004, e, -w / 2 - 0.04, w / 2 + 0.04, cu.window.y0 - 0.04, cu.window.y1 + 0.04);
+          for (const k of [-1, 1]) decalX(m, "glass", xf + e * 0.008, e, Math.min(k * 0.025, k * w / 2), Math.max(k * 0.025, k * w / 2), cu.window.y0, cu.window.y1);
+        }
+      }
+      if (!c.walk)
+        m.scope("signal lamps", () => {
+          // the two-lamp rear signal on each side of the cupola
+          for (const s of [-1, 1]) {
+            const x = xOf(-0.75, s);
+            block(m, "black", x - 0.1, x + 0.1, cu.window.y0 + 0.02, cu.window.y1 - 0.02, ...side(s, cu.half, cu.half + 0.1));
+            for (const y of [cu.window.y0 + 0.17, cu.window.y1 - 0.17]) m.sweep("lampRed", "z", ngon(8, 0.065, 0, x, y), s * (cu.half + 0.1), ngon(8, 0.065, 0, x, y), s * (cu.half + 0.12));
+          }
+        });
+    });
     for (const s of [-1, 1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        for (const x of [-2.6, 2.6]) {
-          decalZ(m, "rubber", s * (CB.half + 0.004), s, x - 0.4, x + 0.4, 2.3, 3.0);
-          decalZ(m, "glass", s * (CB.half + 0.008), s, x - 0.35, x + 0.35, 2.35, 2.95);
+        for (const w of c.windows) cbWindow(m, "steel", xOf(w.u, s), w, s, H);
+        if (l.stripe) decalZ(m, l.stripe[2], s * (H + 0.003), s, -c.body + 0.01, c.body - 0.01, l.stripe[0], l.stripe[1]);
+        for (const t of l.lines) {
+          const [w, gap] = cbFit(t.text, t.width);
+          // drawn twice, a stroke's width apart, for the letters' weight
+          for (const d of [0, 0.02]) sideText(m, l.text, t.text, s, H + 0.006, xOf(t.u, s) + d, t.y, t.h, w, gap);
         }
-        for (const x of [-0.6, 0.6]) {
-          decalZ(m, "rubber", s * (CB.cupola.half + 0.004), s, x - 0.35, x + 0.35, 4.0, 4.4);
-          decalZ(m, "glass", s * (CB.cupola.half + 0.008), s, x - 0.3, x + 0.3, 4.04, 4.36);
+        // the grab irons curving down each corner to the steps
+        for (const e of [1, -1]) {
+          const z = s * (H + 0.06);
+          const pts: Vec3[] = [[e * (c.body - 0.05), 1.82, z], [e * (c.body - 0.09), 1.5, z], [e * (c.body - 0.2), 1.2, z], [e * (c.body - 0.34), 1.0, z]];
+          for (let i = 0; i + 1 < pts.length; i++) m.rod(l.rail, pts[i]!, pts[i + 1]!, 0.017, 6, false);
+          for (const p of [pts[0]!, pts[3]!]) m.rod(l.rail, [p[0], p[1], s * H], p, 0.014, 4, false);
         }
-        sideText(m, l.trim, l.text, s, CB.half + 0.008, 0, 1.6, 0.3);
-        decalZ(m, l.trim, s * (CB.half + 0.004), s, -CB.body, CB.body, 1.2, 1.26);
       });
     for (const e of [1, -1])
       m.scope(e > 0 ? "front end" : "rear end", () => {
-        const x = e * CB.body;
-        decalX(m, "rubber", x + e * 0.004, e, -0.4, 0.4, 1.3, 3.2);
-        decalX(m, "glass", x + e * 0.008, e, -0.25, 0.25, 2.4, 3.0);
-        // the platform railing and the ladder to the roof
-        const xr = e * (CB.sill - 0.08);
-        for (const sd of [-1, 1]) {
-          m.prism("handrail", ngon(6, 0.025, 0, xr, sd * 1.35), CB.deck, CB.deck + 1.0);
-          m.rod("handrail", [xr, CB.deck + 1.0, sd * 1.35], [xr, CB.deck + 1.0, sd * 0.45], 0.022, 6);
-          m.rod("handrail", [xr, CB.deck + 1.0, sd * 1.35], [e * CB.body, CB.deck + 1.0, sd * 1.35], 0.022, 6);
+        const x = e * c.body;
+        const ax = (a: number, b: number): [number, number] => [Math.min(x + e * a, x + e * b), Math.max(x + e * a, x + e * b)];
+        const zd = e * c.door;
+        // the end door, its window and handle; the window beside it
+        const dt = CB.deck + 1.65;
+        block(m, l.body, ...ax(-0.01, 0.03), CB.deck, dt, zd - 0.37, zd + 0.37);
+        // the door's frame line
+        for (const [z0, z1, y0, y1] of [[zd - 0.4, zd - 0.37, CB.deck, dt + 0.03], [zd + 0.37, zd + 0.4, CB.deck, dt + 0.03], [zd - 0.37, zd + 0.37, dt, dt + 0.03]] as const)
+          decalX(m, "rubber", x + e * 0.004, e, z0, z1, y0, y1);
+        decalX(m, "rubber", x + e * 0.034, e, zd - 0.19, zd + 0.19, dt - 0.82, dt - 0.1);
+        decalX(m, "glass", x + e * 0.038, e, zd - 0.15, zd + 0.15, dt - 0.78, dt - 0.14);
+        m.rod("steel", [x + e * 0.03, CB.deck + 1.0, zd + 0.27], [x + e * 0.1, CB.deck + 1.0, zd + 0.27], 0.02, 4, false);
+        if (c.endWindow !== undefined) {
+          const zw = -e * c.endWindow;
+          decalX(m, "rubber", x + e * 0.004, e, zw - 0.26, zw + 0.26, 1.81, 2.49);
+          decalX(m, "glass", x + e * 0.008, e, zw - 0.22, zw + 0.22, 1.85, 2.45);
         }
-        for (const z of [-0.95, -0.65]) m.rod("handrail", [x + e * 0.12, CB.deck, z], [x + e * 0.12, CB.top + 0.1, z], 0.02, 6);
-        for (let y = CB.deck + 0.3; y < CB.top; y += 0.35) m.rod("handrail", [x + e * 0.12, y, -0.95], [x + e * 0.12, y, -0.65], 0.016, 6);
-        // marker lamps at the corners
-        for (const sd of [-1, 1]) m.sweep(e > 0 ? "lampHead" : "lampRed", "x", ngon(8, 0.07, 0, sd * 1.3, 3.5), Math.min(x, x + e * 0.12), ngon(8, 0.07, 0, sd * 1.3, 3.5), Math.max(x, x + e * 0.12));
-        for (const sd of [-1, 1]) for (const y of [0.55, 0.85]) block(m, "steel", ...(e > 0 ? [CB.sill - 0.6, CB.sill - 0.1] : [-CB.sill + 0.1, -CB.sill + 0.6]) as [number, number], y, y + 0.03, ...side(sd, 1.0, 1.45));
+        if (l.endNumber) endText(m, l.text, l.endNumber, e, c.body + 0.004, zd, dt + 0.05, 0.11, 0.07, 0.02);
+        // the ladder at one corner, through the roof's overhang to the roof, its rails bent over as grab hoops
+        m.scope("ladder", () => {
+          const zl = e * c.ladder, xl = x + e * 0.14;
+          for (const k of [-1, 1]) {
+            const z = zl + k * 0.2;
+            m.rod(l.ladder, [xl, CB.deck, z], [xl, c.crown + 0.42, z], 0.022, 6, false);
+            m.rod(l.ladder, [xl, c.crown + 0.42, z], [xl - e * 0.22, c.crown + 0.42, z], 0.022, 6, false);
+            m.rod(l.ladder, [xl - e * 0.22, c.crown + 0.42, z], [xl - e * 0.3, c.eave + 0.06, z], 0.022, 6, false);
+          }
+          for (let y = CB.deck + 0.3; y < c.eave - 0.1; y += 0.33) m.rod(l.ladder, [xl, y, zl - 0.2], [xl, y, zl + 0.2], 0.016, 4, false);
+          for (const y of [CB.deck + 0.6, c.eave - 0.4]) m.rod(l.ladder, [xl, y, zl], [x, y, zl], 0.015, 4, false);
+        });
+        // the end railing with its gate posts, the corner posts down to the steps
+        m.scope("railing", () => {
+          const xr = e * (CB.sill - 0.06);
+          for (const sd of [-1, 1]) {
+            for (const y of [CB.deck + 0.5, CB.deck + 0.95]) m.rod(l.rail, [xr, y, sd * 1.4], [xr, y, sd * 0.45], 0.02, 6);
+            m.rod(l.rail, [xr, 0.3, sd * 1.4], [xr, CB.deck + 0.95, sd * 1.4], 0.022, 6);
+            m.rod(l.rail, [xr, CB.deck, sd * 0.45], [xr, CB.deck + 0.95, sd * 0.45], 0.02, 6, false);
+          }
+        });
+        // the marker lamps at the end's upper corners: white ahead, red behind
+        for (const sd of [-1, 1]) {
+          const z = sd * (H - 0.18);
+          block(m, "black", ...ax(0, 0.16), c.eave - 0.58, c.eave - 0.32, z - 0.1, z + 0.1);
+          decalX(m, e > 0 ? "lampHead" : "lampRed", x + e * 0.165, e, z - 0.06, z + 0.06, c.eave - 0.51, c.eave - 0.39);
+        }
+        if (e < 0)
+          m.scope("hand brake", () => {
+            // the brake wheel on its staff at the end railing
+            const zb = e * 0.85, yb = CB.deck + 0.9, xb = e * (CB.sill - 0.14);
+            m.rod("black", [xb, 0.75, zb], [xb, yb, zb], 0.025, 6);
+            m.tube(l.rail, "x", zb, yb, 0.24, 0.21, xb - 0.015, xb + 0.015, 12);
+            for (let t = 0; t < 3; t++) {
+              const a = Math.PI / 2 + (t * 2 * Math.PI) / 3;
+              m.rod(l.rail, [xb, yb, zb], [xb, yb + Math.sin(a) * 0.215, zb + Math.cos(a) * 0.215], 0.014, 4, false);
+            }
+          });
       });
-    m.scope("stove pipe", () => exhaust(m, 2.0, -0.6, CB.top - 0.05, CB.top + 0.45, 0.14, 0.14));
+    m.scope("stove pipe", () => {
+      const [sx, sz, top] = c.stack;
+      m.emit("smoke", [sx, top, sz], 0.1);
+      m.prism("exhaust", ngon(8, 0.1, 0, sx, sz), c.crown - 0.1, top - 0.08);
+      m.prism("exhaust", ngon(8, 0.14, 0, sx, sz), top - 0.08, top);
+    });
   });
-  runningGear(m, CB.centre, CB.sill, CABOOSE_LENGTH, freightTruck());
+  m.scope("trucks", () => {
+    m.scope("front truck", () => m.bogie(() => bxTruck(m, c.centre)));
+    m.scope("rear truck", () => m.bogie(() => bxTruck(m, -c.centre)));
+  });
+  for (const e of [1, -1]) m.scope(e > 0 ? "front coupler" : "rear coupler", () => knuckleCoupler(m, e, CB.sill, CABOOSE_LENGTH / 2, COUPLER_Y));
   return m;
 }
 
 export function cabooseLod(params?: ParamValues): MeshBuilder {
   const l = CABOOSE_LIVERIES[resolveParams(CABOOSE_PARAMS, params).livery!]!;
-  return boxLod({ ...US_PALETTE, ...l.palette }, -CB.sill, CB.sill, 0.95, CB.top, CB.half, [[0.95, CB.deck, "black"], [CB.deck, CB.top, l.body]], l.body, CB.centre, freightTruck(),
-    [{ u: [-3.0, -2.2], y: [2.3, 3.0], mat: LOD_GLASS, optional: 2 }, { u: [2.2, 3.0], y: [2.3, 3.0], mat: LOD_GLASS, optional: 2 }]);
+  const c = l.car, cu = c.cupola;
+  const side: LodBand[] = l.stripe ? [[CB.bottom, l.stripe[0], l.body], [l.stripe[0], l.stripe[1], l.stripe[2]], [l.stripe[1], c.crown, l.body]] : [[CB.bottom, c.crown, l.body]];
+  // the end walls at +-body, the roof carried out to the sills over the platforms
+  const tip = (e: number): Array<readonly [number, number]> => [[CB.bottom, e * c.body], [c.eave - 0.07, e * c.body], [c.eave - 0.06, e * CB.sill], [c.crown, e * CB.sill]];
+  const body: UnitBody = {
+    y0: CB.bottom, hw: [[CB.bottom, CB.half], [c.eave, CB.half + 0.05], [c.crown, 0.7]], side, roof: l.roof, front: { tip: tip(1) }, rear: { tip: tip(-1) },
+    windows: c.windows.map((w) => ({ u: [w.u - w.w / 2, w.u + w.w / 2] as const, y: [w.y0, w.y1] as const, mat: LOD_GLASS, optional: 2 })),
+  };
+  const cupola: UnitBody = { y0: c.eave - 0.1, hw: [[c.eave - 0.1, cu.half], [cu.top, cu.half]], side: [[c.eave - 0.1, cu.top, l.body]], roof: l.roof, front: { tip: [[c.eave - 0.1, cu.x1]] }, rear: { tip: [[c.eave - 0.1, cu.x0]] } };
+  const parts: LodPart[] = bogieParts([[c.centre, 1.3], [-c.centre, 1.3]], CB.bottom);
+  return fitUnit({ palette: { ...US_PALETTE, ...l.palette }, bodies: [body, cupola], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------

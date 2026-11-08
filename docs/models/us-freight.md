@@ -8,7 +8,7 @@
 
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
-| `proc-vehicle-us-caboose` | Cupola caboose | `livery`: `santaFe` (red), `unionPacific` (yellow) | 10.97 m | about 4,600 |
+| `proc-vehicle-us-caboose` | Cupola caboose | `livery`: `santaFe` (red), `unionPacific` (yellow) | 11.10 m | 6,700 / 6,800 |
 | `proc-vehicle-us-boxcar` | 50 ft boxcar | `livery`: `boxcarRed`, `railbox` | 16.87 m | 9,300 / 8,200 |
 | `proc-vehicle-us-well-car` | Double-stack well car | `cargo`: `single` (default), `empty`, `double` | 19.35 m | 3,700 - 4,000 |
 | `proc-vehicle-sf-cable-car` | San Francisco cable car | `livery`: `powell`, `california` | 8.38 m | about 4,200 |
@@ -17,9 +17,23 @@ The freight cars are wagons (`WAGON_CATALOG`) on two freight trucks with knuckle
 liveries are `finishParams` and change no extent (the boxcar's also pick its doors and post pitch). The cable car is a tram (`TRAM_CATALOG`) with no
 doors: its grip sections are open (`NO_DOORS` in test/doors.test.ts).
 
-- **Caboose** - the body with its cupola and windows, the roof walk, end platforms with their
-  railings and door, ladders to the roof, marker lamps (white ahead, red behind) and the stove
-  pipe (a smoke emitter); the railroad's name along the sides.
+- **Caboose** - two steel cupola cabooses measured from photographs (assets/us-caboose/SOURCES.md);
+  the livery chooses the car as photographed, both 11.1 m over the couplers with the end sills and
+  the roof's overhang at +-5.07 m, the side sheets from 0.90 m, on the boxcar's three-piece trucks.
+  `santaFe` is Santa Fe Ce-3 999457 (104 px/m): an 8.68 m body to a 3.07 m eave, the cupola offset
+  toward the -x end (1.74 m long, 4.35 m high, a two-pane window a side; on its outer end the
+  number "457" and a vent), two windows a side, the yellow stripe at 1.8 m, "ATSF" and the number
+  in white (the cross herald left out), the roof walk with its cross boards, the roof's overhang
+  hooded over the platforms, the end grab irons painted white. `unionPacific` is UP 25687
+  (49.8 px/m): an 8.12 m body, the cupola centred (2.48 m long, 4.24 m high, a two-lamp signal on
+  each side), three windows a side (the other side the same turned end for end), "UNION PACIFIC"
+  and "UP 25687" in red (the shield left out), no roof walk, the roof, railings and ladders red.
+  Both: end platforms with three-tread steps at each corner, the end railing with its gate, a door
+  with its window in each end wall (UP: a window beside it) and the number over it (Santa Fe),
+  a ladder at one corner of each end (the corners turned end for end) rising through the overhang
+  with its rails bent over as grab hoops, the brake wheel on the -x end's railing, marker lamps at
+  the end walls' upper corners (white ahead, red behind), the round stove pipe (a smoke emitter),
+  the side sills, centre sill, reservoir, brake cylinder and a tool box under the right side.
 - **Boxcar** - a 1970s 70-ton Plate C car measured from photographs (assets/us-boxcar/SOURCES.md):
   the body 15.7 m long, its eave at 4.42 m and the shallow roof ridge at 15 ft 1 in; seven exterior
   hat-section posts (11 cm out, sloping flanks) each side of the door and the side sill; the diagonal-panel roof (ten panels, seam caps
@@ -47,8 +61,9 @@ doors: its grip sections are open (`NO_DOORS` in test/doors.test.ts).
 
 ## Deviations
 
-- The caboose's and well car's freight trucks' wheelbase is 1.45 m (a 70-ton truck's 5 ft 8 in is 1.73 m), so the
+- The well car's freight trucks' wheelbase is 1.45 m (a 70-ton truck's 5 ft 8 in is 1.73 m), so the
   shared truck geometry keeps its brake cylinders clear of the transoms.
+- The caboose rides on the boxcar's 70-ton trucks (5 ft 8 in wheelbase; the photographed caboose trucks measure 5 ft 6 in).
 - The cable car's grip into the slot and its track brakes are a lever and a shank.
 
 ## Checking
