@@ -11,7 +11,7 @@
 | `proc-vehicle-up-big-boy` | UP Big Boy | 4-8-8-4, two engines | 68 in | `unit` | 15,900 / 4,500 |
 | `proc-vehicle-prr-k4s` | PRR K4s | 4-6-2, Belpaire firebox | 80 in | `unit` | 10,700 / 3,700 |
 | `proc-vehicle-nyc-hudson` | NYC J-3a Hudson | 4-6-4, Dreyfuss streamlining | 79 in | `unit` | about 9,000 / 3,800 |
-| `proc-vehicle-american-440` | Golden Spike 4-4-0 | 4-4-0 American | 60 in | `unit`, `livery` (`jupiter`, `no119`) | 6,200 / 2,600 |
+| `proc-vehicle-american-440` | Golden Spike 4-4-0 | 4-4-0 American | 60 in | `unit`, `livery` (`jupiter`, `no119`) | 9,400 / 4,000 |
 
 Each is a `LocoSpec` drawn by `buildLoco` (steamLoco.ts) in source x from the front coupler
 face, the locomotive and its tender as the `unit` parameter (`UNIT_PARAM`), animated by the
@@ -43,9 +43,14 @@ box), the bell, the railroad's name on the tender sides.
 - **K4s** - Brunswick green, gold lining and "PENNSYLVANIA"; number 1361.
 - **J-3a Hudson** - Dreyfuss's light grey with the dark grey band along the running board
   and the tender, the bullet nose with its fin, disc drivers; number 5450.
-- **4-4-0** - `jupiter`: Central Pacific's royal blue jacket, maroon cab and tender, red wheels,
-  brass, the balloon stack and a wood load (number 60); `no119`: Union Pacific No. 119's black
-  jacket, maroon cab, the straight stack and coal.
+- **4-4-0** - both replicas have a dark Russian iron (blue-grey) boiler jacket with brass bands, a
+  black smokebox and stack, brass-cased cylinders and steam chests, a brass steam dome and red drivers.
+  `jupiter`: blue cab, sand dome (with 60), headlamp box, bracket, cowcatcher and tender, with red
+  window frames, roof, panels and coping and gold leaf; the JUPITER name board on the cab, C.P.R.R. on
+  the coping and JUPITER on the tender's red panel; dark tyres; the balloon (funnel) stack; cordwood.
+  `no119`: a varnished wooden cab with arched windows and a deep cornice, maroon headlamp, sand dome
+  (red scaled top), bell yoke and cowcatcher (red lines), white tyres, a red tender lined in gold with
+  UNION PACIFIC R.R. on its wooden coping and 119 in an oval and on the rear; the straight stack; coal.
 
 ## The Big Boy's shape
 
@@ -79,6 +84,32 @@ published 132 ft 9.25 in over both, its last axle 117 ft 7 in behind the engine'
 - **Triangles** - the sixteen 68 in disc drivers use the kit's `leanWheels` (their rims, hidden in
   the tyres, left out; 8-sided hubs and crank bosses), about 1,500 triangles spent on the above.
 
+## The 4-4-0's shape
+
+Measured on the replicas at Promontory Summit, scaled by the 60 in drivers (`assets/american-440/SOURCES.md`,
+"Measurements"): a low boiler (centre 2.0 m, r 0.58) with the running board and cab floor at 1.78 m, the
+cab roof at 3.2 m, Jupiter's funnel to 4.7 m and No. 119's stack to 4.25 m; the leading truck's axles at
+2.0 and 3.9 m with the cylinders (2.5 - 3.5 m, axis 0.88 m) between its wheels, the drivers at 6.6 and
+8.75 m, the cab 8.0 - 10.25 m.
+
+- **Front** - the cowcatcher: a beam 2.5 m wide over slats raked down to a vee whose prow nearly meets the
+  rail, the coupler's head on a bar over the prow; braces up to the smokebox; the headlamp box (lens in a
+  brass ring, painted side panels, Jupiter's chimney or No. 119's hood and finials) on its bracket ahead
+  of the stack; the round number plate on the smokebox door; flag staffs (Jupiter's on the bracket, No.
+  119's on the beam).
+- **Top** - the bell on its yoke behind the stack, the sand dome mid-boiler (Jupiter) or just ahead of
+  the steam dome (No. 119), the brass steam dome and whistle ahead of the cab, brass handrails on
+  stanchions, the brass-edged running board.
+- **Cab** - a doorway-like opening ahead and the window behind (Jupiter: one red-framed window, the name
+  board under it; No. 119: two narrow arched windows, an arched opening, the number plate and a red
+  oval), the overhanging roof, the steps behind the rear driver.
+- **Cylinders** - brass lagging and front covers and the steam chests (Jupiter's with a blue band) are
+  drawn through the gear kit's `cylinderDressing`, so they turn with the engine unit.
+- **Tender** - the tank with its coping (the road's name on it), a lower front well with the wood or
+  coal, the tank's black top and hatch, the trucks' journal boxes in the trucks' paint.
+- **Distant model** - 200 triangles (`lodTriangles`): the kit's model with both domes, the funnel, the
+  headlamp box, the cowcatcher and brass cylinders.
+
 ## Deviations
 
 - Wheels are the kit's spoked or disc wheels; the Big Boy's Boxpok drivers are discs with
@@ -89,7 +120,9 @@ published 132 ft 9.25 in over both, its last axle 117 ft 7 in behind the engine'
   has no smoke deflectors (4014 has none); its trailing truck is the kit's truck frame, not the cast
   Delta truck.
 - The tenders' lengths are their published lengths over the drawbar end and rear coupler;
-  the 4-4-0's tender carries no water hatch or tool boxes.
+  the 4-4-0's tender carries no tool boxes. The 4-4-0's ornate scrollwork, painted vignettes and the
+  bell's cast scroll yoke are reduced to gold ovals and plain rods; its Stephenson gear is inside and
+  not drawn.
 
 ## Checking
 

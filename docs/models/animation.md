@@ -148,7 +148,9 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   `leanWheels` on the gear (the Big Boy's sixteen drivers) draws a disc wheel's centre as its two faces only,
   its rim hidden inside the tyre, and hubs and crank pin bosses with 8 sides; off by default. `discOpenings`
   (the Big Boy's 6) draws that many dark lozenges round the hub on each coupled disc wheel's face, a Boxpok
-  centre read from afar, 2 triangles each; none by default.
+  centre read from afar, 2 triangles each; none by default. `cylinderDressing` (the 4-4-0's brass
+  cylinders and steam chests) draws more parts in each horizontal cylinder's scope, so they ride its
+  turning unit; none by default.
 - **Per engine side** (`-right`, `-left`, plus `-front`/`-rear` on the Mallet):
   `coupling-rod` (translated round the crank circle), `crosshead` (sliding),
   `main-rod`, and with valve gear `eccentric-rod`, `expansion-link` (turning on
