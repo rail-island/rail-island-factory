@@ -145,6 +145,8 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   A wheel with `box` (the JNR C62's Boxpok drivers) draws its spokes broad and
   waisted at mid radius, the openings between them ovals, on a tyre of four facets
   per spoke; `couplingMat` on the gear paints the coupling rods (C62 2's red ones) and `mainMat` the main rods (D51 51's, red too).
+  `leanWheels` on the gear (the Big Boy's sixteen drivers) draws a disc wheel's centre as its two faces only,
+  its rim hidden inside the tyre, and hubs and crank pin bosses with 8 sides; off by default.
 - **Per engine side** (`-right`, `-left`, plus `-front`/`-rear` on the Mallet):
   `coupling-rod` (translated round the crank circle), `crosshead` (sliding),
   `main-rod`, and with valve gear `eccentric-rod`, `expansion-link` (turning on

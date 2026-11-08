@@ -265,8 +265,15 @@ function bigBoyPipework(t: Steam): void {
   });
   m.scope("safety valves", () => {
     for (const dz of [-0.14, 0.14]) t.cylY("steel", 17.8, dz, 4.42, 4.66, 0.07, 8);
-    t.cylY("steel", 18.4, 0, 4.42, 4.68, 0.05, 8);
-    t.cylY("steel", 18.4, 0, 4.68, 4.76, 0.09, 8);
+  });
+  m.scope("steam turret", () => {
+    // the turret across the boiler ahead of the cab, the whistle behind it under its angled shield
+    t.cylY("black", 18.9, 0, 4.4, 4.56, 0.12, 8);
+    t.cylZ("black", 18.9, 4.62, -0.42, 0.42, 0.12, 8);
+    t.cylY("steel", 19.35, 0, 4.42, 4.72, 0.06, 8);
+    const n: Vec3 = [0.55, 0.83, 0];
+    m.slab("black", [[t.X(19.12), 4.62, -0.28], [t.X(19.12), 4.62, 0.28], [t.X(19.5), 4.86, 0.28], [t.X(19.5), 4.86, -0.28]], [-n[0] * 0.02, -n[1] * 0.02, 0]);
+    t.box("black", 19.42, 19.48, 4.5, 4.84, -0.03, 0.03);
   });
   m.scope("handrails", () => {
     const y = 4.05;
@@ -294,7 +301,7 @@ function bigBoySpec(): LocoSpec {
       paint: { color: "#1d1e20", roughness: 0.6 }, wheel: { color: "#1d1e20", roughness: 0.6 }, frame: { color: "#1d1e20", roughness: 0.65 },
       lining: { color: "#c4c8cc", roughness: 0.4 }, plate: { color: "#1d1e20", roughness: 0.6 }, plateText: { color: "#d9d9d4", roughness: 0.5 },
       // 4014's graphite smokebox and stack casing
-      smokebox: { color: "#4b4e52", roughness: 0.5, metallic: 0.3 },
+      smokebox: { color: "#404347", roughness: 0.5, metallic: 0.3 },
     },
     heads: [0, 26.0],
     beams: { front: false, rear: false },
@@ -356,6 +363,13 @@ function bigBoySpec(): LocoSpec {
       bigBoyFront(t);
       bigBoyPipework(t);
       m.scope("numbers", () => { for (const s of [-1, 1]) t.sidePlate(s, 23.25, 2.61, "4014", 1.63, 0.26); });
+      m.scope("cab steps", () => {
+        // the ladder up to the cab at its rear corners
+        for (const s of [-1, 1]) {
+          for (const x of [24.0, 24.5]) t.sideBox("black", s, x - 0.03, x + 0.03, 1.05, 1.96, 1.42, 1.6);
+          for (const y of [1.1, 1.45]) t.sideBox("black", s, 24.03, 24.47, y - 0.03, y, 1.42, 1.6);
+        }
+      });
       t.m.scope("drawbar", () => t.box("black", 24.6, 26.0, 0.8, 1.0, -0.15, 0.15));
     },
   };
@@ -389,6 +403,14 @@ function bigBoyTenderSpec(): LocoSpec {
           const u0 = t.X(7.3) + (s > 0 ? -width / 2 : width / 2);
           t.m.facets("plateText", strokeText("UNION PACIFIC", u0, 2.39, h, w, gap, s < 0, h * 0.14).map(([u, v]): Vec3 => [u, v, s * 1.604]), [0, 0, s]);
         }
+      });
+      t.m.scope("top fittings", () => {
+        // the railings along the coal space's sides, the water hatch behind it
+        for (const s of [-1, 1]) {
+          t.cylX("steel", 0.7, 6.0, s * 1.3, 4.9, 0.02, 6);
+          for (const x of [0.8, 2.5, 4.2, 5.9]) t.sideBox("steel", s, x - 0.02, x + 0.02, 4.58, 4.9, 1.28, 1.32);
+        }
+        t.cylY("black", 9.6, 0, 4.36, 4.52, 0.38, 12);
       });
       // the full-depth front of the tank's sides, ahead of the tucked-in lower edge
       t.m.scope("front skirt", () => { for (const s of [-1, 1]) t.sideBox("paint", s, 0.3, 1.9, 1.35, 2.25, 1.44, 1.6); });
