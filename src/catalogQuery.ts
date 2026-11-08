@@ -172,6 +172,7 @@ export const GROUPS: readonly Group[] = [
   { id: "building", label: "Buildings" },
   { id: "tree", label: "Trees" },
   { id: "woods", label: "Woods" },
+  { id: "rock", label: "Rocks" },
   { id: "structure", label: "Structures" },
   { id: "way", label: "Rails and roads" },
   { id: "block", label: "City blocks" },
@@ -196,6 +197,8 @@ const VEHICLE_CATEGORIES: ReadonlyMap<string, string> = new Map([
   ["Trees", "tree"],
   // the woods types as grove models, browsed with their parameters (generator/woodsModels.ts)
   ["Woods", "woods"],
+  // the rock species: boulders, towers, pinnacles, crags (generator/rocks.ts)
+  ["Rocks", "rock"],
   // the props the game places on its structures, and the parts a set module draws (generator/props/, previews/props.ts)
   ["Props", "prop"],
   // the characters the game's walk mode moves (generator/characters.ts)

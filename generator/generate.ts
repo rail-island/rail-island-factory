@@ -155,6 +155,7 @@ import { unknownTableIds } from "./soundMapping.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import { PANEL_HOUSES } from "./panelHouses.ts";
 import { TREES } from "./trees.ts";
+import { ROCKS } from "./rocks.ts";
 import { WOODS_MODELS } from "./woodsModels.ts";
 import { generateWoods } from "./woodsExport.ts";
 import { PORT_PROPS } from "./props/portProps.ts";
@@ -219,7 +220,7 @@ export const THUMB_VERSION = "2";
  * functions (the JS bundle's entry) and the meta file it is listed in: the
  * buildings', the village houses' own, or the vehicles'.
  */
-const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" | "woods" | "props" | "characters" | "animals" | "previews" }> = [
+const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source: string; meta: "buildings" | "village" | "vehicles" | "trees" | "rocks" | "woods" | "props" | "characters" | "animals" | "previews" }> = [
   { designs: SKYSCRAPERS, source: "skyscrapers.ts", meta: "buildings" },
   { designs: COMMERCIAL, source: "commercialStreets.ts", meta: "buildings" },
   { designs: COMMERCIAL_BUILDINGS, source: "commercial.ts", meta: "buildings" },
@@ -324,6 +325,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: GERMAN_COACHES, source: "germanCoaches.ts", meta: "vehicles" },
   // the tree species: listed in woods.meta.json, not in a building or vehicle meta
   { designs: TREES, source: "trees.ts", meta: "trees" },
+  // the rock species: listed in woods.meta.json with the trees (docs/models/rocks.md)
+  { designs: ROCKS, source: "rocks.ts", meta: "rocks" },
   // the woods types as groves, for the site to browse: in no game meta
   { designs: WOODS_MODELS, source: "woodsModels.ts", meta: "woods" },
   // the fixed props the game places on its structures: listed in props.meta.json
@@ -359,6 +362,9 @@ export const ALL_VEHICLES: readonly ProceduralDesign[] = FAMILIES.filter((f) => 
 /** Every tree species (trees.ts, listed in woods.meta.json). */
 export const TREE_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "trees").flatMap((f) => f.designs);
 
+/** Every rock species (rocks.ts, listed in woods.meta.json). */
+export const ROCK_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "rocks").flatMap((f) => f.designs);
+
 /** Every woods type as a grove model (woodsModels.ts), for the site. */
 export const WOODS_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "woods").flatMap((f) => f.designs);
 
@@ -374,8 +380,8 @@ export const ANIMAL_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) =
 export const PREVIEW_DESIGNS: readonly ProceduralDesign[] = FAMILIES.filter((f) => f.meta === "previews").flatMap((f) => f.designs);
 
 /** Every design, by id: the buildings, the village houses (village.meta.json), the vehicles, the trees, the woods groves, the props, the set previews, then the characters (last, so the
- * test shards, which split this order, keep every older design where it was). */
-export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS, ...WOODS_DESIGNS, ...PROP_DESIGNS, ...PREVIEW_DESIGNS, ...CHARACTER_DESIGNS, ...ANIMAL_DESIGNS].map((d) => [d.id, d]));
+ * test shards, which split this order, keep every older design where it was), the rocks after them. */
+export const DESIGNS: ReadonlyMap<string, ProceduralDesign> = new Map([...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...TREE_DESIGNS, ...WOODS_DESIGNS, ...PROP_DESIGNS, ...PREVIEW_DESIGNS, ...CHARACTER_DESIGNS, ...ANIMAL_DESIGNS, ...ROCK_DESIGNS].map((d) => [d.id, d]));
 
 const VEHICLE_IDS = new Set(ALL_VEHICLES.map((d) => d.id));
 

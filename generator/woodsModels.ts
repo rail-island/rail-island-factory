@@ -16,6 +16,7 @@ import type { TreeDetail } from "./trees.ts";
 import type { WoodsDesign } from "./woodsApi.ts";
 import {
   pineForest, oakWoods, mixedWoods, scrub, palms, tropicalForest, highMountainForest, park, scotsPineWoodland, larchWoodland, hazelWoodlandEdge, villageOrchard,
+  rockCity, boulderField, crags, stoneForest,
 } from "./woods.ts";
 
 // strict, like every design's build (an unknown name or value throws); the woods
@@ -50,6 +51,14 @@ export const groveHazelWoodlandEdge = (p?: ParamValues) => grove(hazelWoodlandEd
 export const groveHazelWoodlandEdgeLod = (p?: ParamValues) => grove(hazelWoodlandEdge, p, "coarse");
 export const groveVillageOrchard = (p?: ParamValues) => grove(villageOrchard, p, "low");
 export const groveVillageOrchardLod = (p?: ParamValues) => grove(villageOrchard, p, "coarse");
+export const groveRockCity = (p?: ParamValues) => grove(rockCity, p, "low");
+export const groveRockCityLod = (p?: ParamValues) => grove(rockCity, p, "coarse");
+export const groveBoulderField = (p?: ParamValues) => grove(boulderField, p, "low");
+export const groveBoulderFieldLod = (p?: ParamValues) => grove(boulderField, p, "coarse");
+export const groveCrags = (p?: ParamValues) => grove(crags, p, "low");
+export const groveCragsLod = (p?: ParamValues) => grove(crags, p, "coarse");
+export const groveStoneForest = (p?: ParamValues) => grove(stoneForest, p, "low");
+export const groveStoneForestLod = (p?: ParamValues) => grove(stoneForest, p, "coarse");
 
 /** The catalog fields every woods model shares. */
 export const WOODS_CATALOG: CatalogFields = {
@@ -83,6 +92,10 @@ const TABLE: ReadonlyArray<[WoodsDesign, (p?: ParamValues) => ReturnType<typeof 
   [larchWoodland, groveLarchWoodland, groveLarchWoodlandLod],
   [hazelWoodlandEdge, groveHazelWoodlandEdge, groveHazelWoodlandEdgeLod],
   [villageOrchard, groveVillageOrchard, groveVillageOrchardLod],
+  [rockCity, groveRockCity, groveRockCityLod],
+  [boulderField, groveBoulderField, groveBoulderFieldLod],
+  [crags, groveCrags, groveCragsLod],
+  [stoneForest, groveStoneForest, groveStoneForestLod],
 ];
 
 /** One design per woods type, its parameters the woods type's own (density first). */

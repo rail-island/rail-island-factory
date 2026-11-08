@@ -31,6 +31,7 @@ import { BUILDINGS, VILLAGE_DESIGNS, ALL_VEHICLES, CHARACTER_DESIGNS } from "./g
 import { BLOCK_PARAM_TEXT, SETS } from "./sets/registry.ts";
 import { WOODS } from "./woods.ts";
 import { SPECIES } from "./trees.ts";
+import { ROCK_SPECIES, type RockSpecies } from "./rocks.ts";
 import { writeIfChanged } from "./jsModel.ts";
 import type { ProceduralDesign } from "./design.ts";
 
@@ -65,6 +66,14 @@ export const SPECIES_LABELS: Readonly<Record<(typeof SPECIES)[number], string>> 
   autumnlarch: "Autumn larch",
   hazel: "Hazel",
   orchard: "Orchard tree",
+};
+
+/** Rock species display names: the woods board lists a boulder, the game's rock picker every species (docs/models/rocks.md). */
+export const ROCK_SPECIES_LABELS: Readonly<Record<RockSpecies, string>> = {
+  "granite-boulder": "Granite boulder",
+  "sandstone-tower": "Sandstone tower",
+  "limestone-pinnacle": "Limestone pinnacle",
+  crag: "Crag",
 };
 
 /**
@@ -136,6 +145,7 @@ export function exportedText(): Map<string, string> {
   }
   for (const [key, label] of Object.entries(NAMED_WOODS_VARIANTS)) out.set(`woods.variant.${key}`, label);
   for (const s of SPECIES) out.set(`species.${s}`, SPECIES_LABELS[s]);
+  for (const s of ROCK_SPECIES) out.set(`species.${s}`, ROCK_SPECIES_LABELS[s]);
   for (const [c, label] of Object.entries(CATEGORY_LABELS)) out.set(`category.${c}`, label);
   for (const [c, label] of Object.entries(TRACTION_LABELS)) out.set(`traction.${c}`, label);
   return out;

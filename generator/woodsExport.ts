@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { WOODS } from "./woods.ts";
 import { SPECIES, treeModelOf } from "./trees.ts";
+import { ROCK_SEEDS, ROCK_SPECIES, rockId, rockInfo, type RockInfo } from "./rocks.ts";
 import { MAX_TREES_PER_CELL, TREE_SEEDS, type WoodsParam } from "./woodsApi.ts";
 import { leanMeshBuilder, writeIfChanged } from "./jsModel.ts";
 
@@ -38,6 +39,15 @@ export interface TreeMetaEntry {
   params: Record<string, string>;
 }
 
+/** One rock species as woods.meta.json lists it (docs/models/rocks.md). */
+export interface RockMetaEntry {
+  species: string;
+  /** The model id of the catalog design that draws it. */
+  id: string;
+  /** Every shape (seed 1..ROCK_SEEDS, in order): its height, footprint and top spots at scale 1. */
+  seeds: RockInfo[];
+}
+
 export interface WoodsMeta {
   note: string;
   /** The hard limit every distribute() keeps (woodsApi.ts). */
@@ -47,7 +57,18 @@ export interface WoodsMeta {
   /** The module with every woods type and tree species: WOODS_FILE. */
   module: string;
   trees: TreeMetaEntry[];
+  /** The rock species: a woods slot may plant a boulder, and the game's stored rocks are drawn from these. */
+  rocks: RockMetaEntry[];
   woods: WoodsMetaEntry[];
+}
+
+/** Every rock species with every shape measured. */
+export function rocksMeta(): RockMetaEntry[] {
+  return [...ROCK_SPECIES].sort().map((species) => ({
+    species,
+    id: rockId(species),
+    seeds: Array.from({ length: ROCK_SEEDS }, (_, i) => rockInfo(species, i + 1)),
+  }));
 }
 
 /** The woods meta: every species, then every woods type, each sorted by key. */
@@ -58,6 +79,7 @@ export function woodsMeta(): WoodsMeta {
     treeSeeds: TREE_SEEDS,
     module: WOODS_FILE,
     trees: [...SPECIES].sort().map((species) => ({ species, ...treeModelOf(species) })),
+    rocks: rocksMeta(),
     woods: [...WOODS].map((w) => w.design).sort((a, b) => a.name.localeCompare(b.name)).map((d) => ({
       name: d.name,
       label: d.label,
@@ -79,12 +101,18 @@ export function woodsMeta(): WoodsMeta {
  *   MAX_TREES_PER_CELL, MASK_RADIUS       the distribution contract (woodsApi.ts)
  *   TREE_SEEDS                            how many shapes every species has: a slot's
  *                                         `seed` is 1..TREE_SEEDS
- *   SPECIES                               every tree species key
+ *   SPECIES                               every tree species key, then every rock species key
+ *   ROCK_SPECIES, ROCKS                   the rock species, and each one's shapes measured
+ *                                         (woods.meta.json `rocks`: height, footprint, tops)
+ *   ROCK_GRID                             the squares a cell is cut into for CellContext.rocks
  *   buildTree(THREE, species, detail, values?)
  *                                         a Group named proc-tree-<species> with the meshes `trunk`
  *                                         and `foliage`; detail is "high" | "low" | "coarse" | "max";
  *                                         values picks the species design's parameters: a
- *                                         slot's tree is { seed: String(slot.seed) }
+ *                                         slot's tree is { seed: String(slot.seed) }; a rock
+ *                                         species builds the rock (meshes `trunk`, the stone,
+ *                                         and `foliage`, its top faces; both name a surface
+ *                                         in userData.surfaces and carry UVs)
  *
  * The trees are the catalog designs' triangles exactly: the same functions run.
  */
@@ -93,13 +121,16 @@ export async function bundleGame(): Promise<string> {
     stdin: {
       contents: [
         `import { buildTree as tree, treeOptions, SPECIES as species } from "./trees.ts";`,
+        `import { buildRock, ROCK_SPECIES as rocks } from "./rocks.ts";`,
         `import { WOODS as all } from "./woods.ts";`,
-        `export { MAX_TREES_PER_CELL, MASK_RADIUS, TREE_SEEDS } from "./woodsApi.ts";`,
-        `export const SPECIES = [...species];`,
+        `export { MAX_TREES_PER_CELL, MASK_RADIUS, TREE_SEEDS, ROCK_GRID, rockCellContext } from "./woodsApi.ts";`,
+        `export const SPECIES = [...species, ...rocks];`,
+        `export const ROCK_SPECIES = [...rocks];`,
+        `export const ROCKS = ${JSON.stringify(rocksMeta())};`,
         `export function buildTree(THREE, s, detail = "high", values) {`,
-        `  if (!species.includes(s)) throw new Error("unknown tree species " + s);`,
+        `  if (!species.includes(s) && !rocks.includes(s)) throw new Error("unknown tree species " + s);`,
         `  if (detail !== "high" && detail !== "low" && detail !== "coarse" && detail !== "max") throw new Error("unknown tree detail " + detail);`,
-        `  const group = tree(s, detail, values ? treeOptions(s, values) : undefined).toGroup(THREE, "proc-tree-" + s);`,
+        `  const group = rocks.includes(s) ? buildRock(s, detail, values).toGroup(THREE, "proc-rock-" + s) : tree(s, detail, values ? treeOptions(s, values) : undefined).toGroup(THREE, "proc-tree-" + s);`,
         `  group.userData.lod = detail;`,
         `  return group;`,
         `}`,

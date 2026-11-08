@@ -7,7 +7,7 @@ slots, the four-tree limit, the hash), the forest rule they are written in, thei
 single game module `woods.js` (with the trees), `woods.meta.json`, the grove previews and the tests.
 **Code** - `generator/woods.ts`, `generator/woodsApi.ts`, `generator/woodsExport.ts`,
 `generator/woodsGrove.ts`, `generator/woodsModels.ts`, `test/woods.test.ts`
-**See also** - [trees.md](trees.md), [export.md](export.md),
+**See also** - [trees.md](trees.md), [rocks.md](rocks.md), [export.md](export.md),
 [../site/catalog-site.md](../site/catalog-site.md), the game's
 `docs/rendering/woods.md` and `docs/tooling/factory-import.md`, [parameters.md](parameters.md)
 
@@ -25,11 +25,14 @@ sample(u: number, v: number, out: TreeSlot): void     // one tree for a row alon
 `CellContext` is the cell (`gx`, `gz`), the map's `seed`, a 25-bit **mask** of which
 cells of its 5x5 neighbourhood carry the same woods type (bit `(dz + 2) * 5 + dx + 2`,
 read with `same`), the terrain's `slope` in degrees and its `height` in studs above
-the water. A `TreeSlot` is a species key, an offset from the cell's centre in cell
+the water, and - where the game's stored rocks stand - `rocks`, a 4 x 4 occupancy mask of
+the cell, and `tops`, the spots on a rock where a tree may stand ([rocks.md](rocks.md)). A `TreeSlot` is a species key, an offset from the cell's centre in cell
 widths (-0.5..0.5), a rotation in degrees, a height in studs, and the tree's look:
 `width` (crown stretch), `lean` (radians), `shade` (brightness), `hue` (-1 cool ..
 1 warm) and `seed`, which of the species' **five shapes** it is (an integer
-1..`TREE_SEEDS`, the species design's `Tree seed` parameter; [trees.md](trees.md)). The slots are the caller's and reused, so a function allocates nothing per
+1..`TREE_SEEDS`, the species design's `Tree seed` parameter; [trees.md](trees.md)), and
+`lift`, how far over the ground it stands (0, except on a rock's top). A slot's species may be
+a rock: a granite boulder ([rocks.md](rocks.md)). The slots are the caller's and reused, so a function allocates nothing per
 cell; the game calls it tens of thousands of times a tile.
 
 **Four trees a cell is a hard limit** (`MAX_TREES_PER_CELL`): the tests fail any woods
@@ -75,7 +78,8 @@ classic heights: the specs are written about 15% taller and drawn at `HEIGHT`
 The twelve types are the ones the game shipped -- `pine-forest`, `oak-woods`,
 `mixed-woods`, `scrub`, `palms`, `tropical-forest`, `high-mountain-forest`, `park`,
 `scots-pine-woodland`, `larch-woodland`, `hazel-woodland-edge`, `village-orchard`
--- rewritten with relations: young pines and bushes at a pine forest's edge, a park
+-- rewritten with relations, and four that grow round rocks: `rock-city`, `boulder-field`,
+`crags` and `stone-forest` ([rocks.md](rocks.md)). Young pines and bushes at a pine forest's edge, a park
 thin so the lawn shows, the mountain forest shrinking with height. The game's
 thirteenth, `autumn-larch-woodland`, is merged into `larch-woodland` as its
 `season`: the game reads the old name as `larch-woodland` at peak autumn without
@@ -115,18 +119,25 @@ Each type adds one parameter of its own (the larch woodland two):
 
 | Woods type | Parameter | Values (default in bold) |
 |---|---|---|
-| `pine-forest` | `age` | `young` (more, shorter pines), **`mature`**, `old` (fewer, taller, more glades and undergrowth) |
+| `pine-forest` | `age`, `boulders` | `young` (more, shorter pines), **`mature`**, `old` (fewer, taller, more glades and undergrowth); **`none`**, `few`, `many` |
 | `oak-woods` | `undergrowth` | `none`, **`some`**, `thick` |
-| `mixed-woods` | `mix` | `broadleaf`, **`balanced`**, `conifer` |
+| `mixed-woods` | `mix`, `boulders` | `broadleaf`, **`balanced`**, `conifer`; **`none`**, `few`, `many` |
 | `scrub` | `trees` | `none` (bushes only), **`few`**, `many` |
 | `palms` | `undergrowth` | `none`, **`some`**, `thick` |
 | `tropical-forest` | `palms` | `few`, **`some`**, `many` |
-| `high-mountain-forest` | `conifer` | `pine`, **`mixed`**, `spruce` |
+| `high-mountain-forest` | `conifer`, `boulders` | `pine`, **`mixed`**, `spruce`; **`none`**, `few`, `many` |
 | `park` | `planting` | **`mixed`**, `birch` (birch and aspen), `oak`, `conifer` (spruce and Scots pine) |
-| `scots-pine-woodland` | `birch` | `none`, **`some`**, `many` |
+| `scots-pine-woodland` | `birch`, `boulders` | `none`, **`some`**, `many`; **`none`**, `few`, `many` |
 | `larch-woodland` | `season`, `spruce` | **`summer`**, `early` (autumn, mostly green), `peak`, `late` (all golden); `none`, **`some`**, `many` |
 | `hazel-woodland-edge` | `oaks` | `none`, **`few`**, `many` |
 | `village-orchard` | `layout` | **`rows`**, `scattered` (an old meadow orchard) |
+| `rock-city` | `trees` | `pine`, **`mixed`**, `birch` |
+| `boulder-field` | `trees` | `none`, **`few`**, `many` |
+| `crags` | `scrub` | `few`, **`some`**, `thick` |
+| `stone-forest` | `shrubs` | `few`, **`some`**, `many` |
+
+The `boulders` parameter ([rocks.md](rocks.md)) defaults to `none`, so a map painted before it
+grows exactly the trees it grew.
 
 The game stores a woods type with its non-default values in a map's table (its
 `docs/rendering/woods.md`), so **a parameter name and a value token are as stable as
@@ -140,14 +151,16 @@ a woods name**: never rename or remove a shipped one. Titles are display text.
   type and every tree species -- the game plants its forests from it alone:
   `WOODS` (each type's name, label, swatch, floor and params), `woodsType(name)`
   returning `variant(values)` and the defaults' `distribute` and `sample`,
-  `MAX_TREES_PER_CELL`, `MASK_RADIUS`, `TREE_SEEDS`, `SPECIES`, and
+  `MAX_TREES_PER_CELL`, `MASK_RADIUS`, `TREE_SEEDS`, `SPECIES` (the trees, then the rocks),
+  `ROCK_SPECIES`, `ROCKS` (each rock shape measured), `ROCK_GRID`, `rockCellContext`, and
   `buildTree(THREE, species, detail, values?)` (detail `high`, `low`, `coarse` or
   `max`; `values` picks the species design's parameters -- a slot's tree is
   `{ seed: String(slot.seed) }`; [trees.md](trees.md)). There are
   no separate tree or per-type modules; a build removes the `woods/` folder and
   `trees.js` earlier exports wrote;
 - `woods.meta.json`: `maxTreesPerCell`, `treeSeeds` (5), `module` (`woods.js`), every tree species
-  (`species`, `id`, `params`) and every woods type (`name`, `label`, `swatch`,
+  (`species`, `id`, `params`), every rock species (`rocks`: `species`, `id`, and its five shapes'
+  `height`, `footprint` and `tops`; [rocks.md](rocks.md)) and every woods type (`name`, `label`, `swatch`,
   `floor`, `params`), each list sorted by key, no numeric ids -- the game maps names
   to the ids its maps store;
 

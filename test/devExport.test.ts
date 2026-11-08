@@ -3,6 +3,7 @@
 // how the site measures a record from its JS model (src/devMeasure.ts),
 // against what the build writes.
 
+import { ROCKS } from "../generator/rocks";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -43,9 +44,9 @@ describe("the dev catalog", () => {
     }
   });
 
-  it("advertises Max detail only for the trees, all of them", () => {
+  it("advertises Max detail only for the trees and the rocks, all of them", () => {
     expect(catalog.records.filter((r) => r.maxDetail).map((r) => r.id).sort()).toEqual(
-      TREES.map((d) => d.id).sort());
+      [...TREES, ...ROCKS].map((d) => d.id).sort());
   });
 
   it("serves the JS model and the source tree the build writes, and the source images from assets/", async () => {

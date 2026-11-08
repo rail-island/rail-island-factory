@@ -4,7 +4,7 @@
 // in woods.meta.json. No `node:` imports.
 
 import {
-  DENSITY_PARAM, MAX_TREES_PER_CELL, cellSeed, draw, edgeness, field, put, resolveWoodsParams, treeSeedOf,
+  DENSITY_PARAM, MAX_TREES_PER_CELL, cellSeed, draw, edgeness, field, onRock, put, resolveWoodsParams, treeSeedOf,
   type CellContext, type TreeSlot, type WoodsDesign, type WoodsParam, type WoodsParamValues, type WoodsPlanter,
 } from "./woodsApi.ts";
 import type { Species } from "./trees.ts";
@@ -73,6 +73,19 @@ interface ForestSpec {
   rows?: boolean;
   /** The ground under the trees, when it is not leaf litter (a park's or an orchard's mown grass). */
   floor?: Rgb;
+  /**
+   * Granite boulders (rocks.ts) among the trees: expected per cell inside the wood
+   * and at its edge (defaults to `boulders`), and their height range in studs. They
+   * take the slots the trees leave and stand clear of the trees.
+   */
+  boulders?: number;
+  edgeBoulders?: number;
+  boulderHeight?: [number, number];
+  /**
+   * The chance a top spot of a stored rock (CellContext.tops) grows a tree: a canopy
+   * tree, shorter, standing on the rock (default 0.7).
+   */
+  topTrees?: number;
 }
 
 // The quarters of a cell, in an order that spreads the first two apart.
@@ -90,6 +103,13 @@ function weighted(mix: readonly MixEntry[], u: number): MixEntry {
  * trees are drawn at the classic sizes again (what the game's master grew).
  */
 const HEIGHT = 1 / 1.15;
+
+/** The boulder species the woods plant (rocks.ts); the towers, pinnacles and crags are the game's stored rocks. */
+const BOULDER = "granite-boulder";
+/** A boulder's buried share (rocks.ts BOULDER_SINK): its slot's lift is minus this much of its height. */
+const BOULDER_SINK = 0.25;
+/** How close, in cell widths, a boulder may stand to a tree's trunk. */
+const BOULDER_CLEAR = 0.28;
 
 function forest(spec: ForestSpec): WoodsPlanter {
   const edgeTrees = spec.edgeTrees ?? spec.trees * 0.6;
@@ -120,42 +140,100 @@ function forest(spec: ForestSpec): WoodsPlanter {
       // which of the species' five shapes: every one of them grows in every wood
       treeSeedOf(draw(seed, 120 + k)));
   };
+  const boulders = spec.boulders ?? 0;
+  const edgeBoulders = spec.edgeBoulders ?? boulders;
+  const [boulderMin, boulderMax] = spec.boulderHeight ?? [1.2, 2.6];
+  const topTrees = spec.topTrees ?? 0.7;
+  /** Trees on the tops of stored rocks: a canopy tree, shorter, lifted onto the rock. Returns the slots used. */
+  const plantTops = (ctx: CellContext, out: TreeSlot[], seed: number, tone: number): number => {
+    let w = 0;
+    const tops = ctx.tops ?? [];
+    for (let i = 0; i < tops.length && w < MAX_TREES_PER_CELL; i++) {
+      const top = tops[i]!;
+      if (draw(seed, 180 + i) >= topTrees) continue;
+      const m = weighted(canopy, draw(seed, 190 + i));
+      // a crown's soil is thin: a tree up there is smaller, and no taller than its room allows
+      const cap = Math.max(0.35, Math.min(0.7, top.r / 3));
+      plant(out[w]!, m, Math.max(-0.5, Math.min(0.5, top.x)), Math.max(-0.5, Math.min(0.5, top.z)), seed, 8 + i, cap, tone);
+      out[w]!.lift = top.lift;
+      w++;
+    }
+    return w;
+  };
+  /** Boulders in the slots the trees left, clear of the trees and off the stored rocks. Returns the slots used in all. */
+  const plantBoulders = (ctx: CellContext, out: TreeSlot[], seed: number, edge: number, w: number): number => {
+    if (boulders <= 0 && edgeBoulders <= 0) return w;
+    const expected = boulders + (edgeBoulders - boulders) * edge;
+    const whole = Math.floor(expected);
+    const count = whole + (draw(seed, 140) < expected - whole ? 1 : 0);
+    const trees = w;
+    for (let b = 0; b < count && w < MAX_TREES_PER_CELL; b++) {
+      const x = (draw(seed, 150 + b * 2) - 0.5) * 0.9;
+      const z = (draw(seed, 151 + b * 2) - 0.5) * 0.9;
+      if (onRock(ctx.rocks, x, z)) continue;
+      let clear = true;
+      for (let t = 0; t < w && clear; t++) if (Math.hypot(out[t]!.x - x, out[t]!.z - z) < (t < trees ? BOULDER_CLEAR : BOULDER_CLEAR * 0.8)) clear = false;
+      if (!clear) continue;
+      const h = boulderMin + draw(seed, 165 + b) * (boulderMax - boulderMin);
+      // `h` is the boulder's full height; its foot is sunk into the ground (a negative lift)
+      put(out[w]!, BOULDER, x, z, draw(seed, 160 + b) * 360, h,
+        0.85 + 0.5 * draw(seed, 170 + b), 0, 0.88 + 0.22 * draw(seed, 175 + b), 0, treeSeedOf(draw(seed, 178 + b)), -BOULDER_SINK * h);
+      w++;
+    }
+    return w;
+  };
   return {
     distribute(ctx: CellContext, out: TreeSlot[]): number {
       const seed = cellSeed(ctx.gx, ctx.gz, ctx.seed);
       const edge = edgeness(ctx.mask);
       const tone = field(ctx.gx, ctx.gz, 6, ctx.seed, 3) - 0.5;
       const size = (1 - (1 - edgeShrink) * edge) * (1 - altitude * Math.max(0, ctx.height) / 100);
+      // trees on a stored rock's top come first: there are few, and they are the rock city's crowns
+      const lifted = ctx.tops?.length ? plantTops(ctx, out, seed, tone) : 0;
       if (spec.rows) {
         // an orchard: one tree a cell on its centre, the odd gap where one died
-        if (draw(seed, 0) >= spec.trees) return 0;
-        plant(out[0]!, weighted(canopy, draw(seed, 5)), (draw(seed, 1) - 0.5) * 0.08, (draw(seed, 2) - 0.5) * 0.08, seed, 0, Math.max(0.4, size), tone);
-        return 1;
+        if (draw(seed, 0) >= spec.trees || lifted >= MAX_TREES_PER_CELL) return lifted;
+        const x = (draw(seed, 1) - 0.5) * 0.08, z = (draw(seed, 2) - 0.5) * 0.08;
+        if (onRock(ctx.rocks, x, z)) return lifted;
+        plant(out[lifted]!, weighted(canopy, draw(seed, 5)), x, z, seed, 0, Math.max(0.4, size), tone);
+        return lifted + 1;
       }
       let expected = spec.trees + (edgeTrees - spec.trees) * edge;
       if (glades > 0) expected *= 1 - glades * smoothstep(0.5, 0.8, field(ctx.gx, ctx.gz, 9, ctx.seed, 1));
       expected *= 1 - slopeThin * Math.min(1, Math.max(0, ctx.slope) / 45);
       const whole = Math.floor(expected);
-      let n = Math.min(MAX_TREES_PER_CELL, whole + (draw(seed, 0) < expected - whole ? 1 : 0));
-      if (n <= 0) return 0;
+      const n = Math.min(MAX_TREES_PER_CELL - lifted, whole + (draw(seed, 0) < expected - whole ? 1 : 0));
+      if (n <= 0) return plantBoulders(ctx, out, seed, edge, lifted);
       const share = underShare + (edgeUnder - underShare) * edge;
       const groveField = field(ctx.gx, ctx.gz, 7, ctx.seed, 2);
       const start = Math.floor(draw(seed, 1) * 4);
       let canopyTrees = 0;
+      let w = lifted;
+      // which quarters a tree stands in: one that lands on a stored rock moves to a free quarter
+      const taken = [false, false, false, false];
       for (let k = 0; k < n; k++) {
         const isUnder = under.length > 0 && (k > 0 || n === 1) && draw(seed, 80 + k) < share && !(k === 0 && edge < 0.3);
         const m = isUnder
           ? weighted(under, draw(seed, 90 + k))
           : groves > 0 && draw(seed, 100 + k) < groves ? grovePick(groveField) : weighted(canopy, draw(seed, 110 + k));
-        if (!isUnder) canopyTrees++;
-        const [qx, qz] = n === 1 ? [0, 0] : QUARTERS[(start + k) % 4]!;
+        const q = (start + k) % 4;
+        const [qx, qz] = n === 1 ? [0, 0] : QUARTERS[q]!;
         const jitter = n === 1 ? 0.6 : 0.36;
-        const x = qx + (draw(seed, 2 + k * 2) - 0.5) * jitter;
-        const z = qz + (draw(seed, 3 + k * 2) - 0.5) * jitter;
-        plant(out[k]!, m, Math.max(-0.5, Math.min(0.5, x)), Math.max(-0.5, Math.min(0.5, z)), seed, k, isUnder ? 1 : size, tone);
+        let x = Math.max(-0.5, Math.min(0.5, qx + (draw(seed, 2 + k * 2) - 0.5) * jitter));
+        let z = Math.max(-0.5, Math.min(0.5, qz + (draw(seed, 3 + k * 2) - 0.5) * jitter));
+        if (onRock(ctx.rocks, x, z)) {
+          const free = [0, 1, 2, 3].map((i) => (q + i) % 4).find((i) => !taken[i] && !onRock(ctx.rocks, QUARTERS[i]![0], QUARTERS[i]![1]));
+          if (free === undefined) continue;
+          taken[free] = true;
+          [x, z] = QUARTERS[free]!;
+        } else if (n > 1) taken[q] = true;
+        if (!isUnder) canopyTrees++;
+        plant(out[w]!, m, x, z, seed, k, isUnder ? 1 : size, tone);
+        w++;
       }
-      if (canopyTrees === 0 && n > 1) n = 1; // shrubs only stand beside a tree, not instead of the stand
-      return n;
+      // shrubs only stand beside a tree, not instead of the stand
+      if (canopyTrees === 0 && w - lifted > 1) w = lifted + 1;
+      return plantBoulders(ctx, out, seed, edge, w);
     },
     sample(u: number, v: number, out: TreeSlot): void {
       const m = weighted(canopy, u);
@@ -183,6 +261,15 @@ const DENSITY_FACTOR: Record<string, number> = { sparse: 0.5, normal: 1, dense: 
 function param(name: string, title: string, values: Array<[string, string]>, def: string): WoodsParam {
   return { name, title, values: values.map(([value, t]) => ({ value, title: t })), default: def };
 }
+
+/**
+ * The forests that can grow boulders (docs/models/rocks.md): `none` by default, so
+ * a map painted before the parameter grows exactly the trees it grew.
+ */
+const BOULDERS_PARAM = (): WoodsParam => param("boulders", "Boulders", [["none", "None"], ["few", "A few"], ["many", "Many"]], "none");
+/** Boulders a cell, inside and at the edge, for a `boulders` value. */
+const bouldersOf = (value: string | undefined): { boulders?: number; edgeBoulders?: number } =>
+  value === "many" ? { boulders: 0.5, edgeBoulders: 0.6 } : value === "few" ? { boulders: 0.16, edgeBoulders: 0.22 } : {};
 
 /** Scales a mix entry's weight (0 drops it). */
 const weigh = (m: MixEntry, k: number): MixEntry => ({ ...m, ratio: m.ratio * k });
@@ -215,8 +302,15 @@ function woodsType(
     const key = params.map((p) => v[p.name]).join("|");
     let planter = planters.get(key);
     if (!planter) {
-      const spec = specFor(v);
-      const k = (DENSITY_FACTOR[v.density!] ?? 1) * scale;
+      const raw = specFor(v);
+      const grade = DENSITY_FACTOR[v.density!] ?? 1;
+      const k = grade * scale;
+      // boulders follow the density grade, not the type's tree scale: a `few` is a few boulders in every wood
+      const spec = raw.boulders === undefined ? raw : {
+        ...raw,
+        boulders: Math.min(MAX_TREES_PER_CELL, raw.boulders * grade),
+        edgeBoulders: Math.min(MAX_TREES_PER_CELL, (raw.edgeBoulders ?? raw.boulders) * grade),
+      };
       planter = forest(spec.rows
         ? { ...spec, trees: Math.min(1, spec.trees * k) }
         : { ...spec, trees: Math.min(MAX_TREES_PER_CELL, spec.trees * k), edgeTrees: Math.min(MAX_TREES_PER_CELL, (spec.edgeTrees ?? spec.trees * 0.6) * k) });
@@ -247,10 +341,12 @@ function woodsType(
 const PINE = { name: "pine-forest", label: "Pine Forest", swatch: { r: 40, g: 92, b: 60 } };
 export const pineForest = /* @__PURE__ */ woodsType(PINE, [
   param("age", "Age", [["young", "Young"], ["mature", "Mature"], ["old", "Old growth"]], "mature"),
+  BOULDERS_PARAM(),
 ], 0.268 /* classic 40% */, (v) => {
   const k = v.age === "young" ? 0.6 : v.age === "old" ? 1.2 : 1;
   return {
     ...PINE,
+    ...bouldersOf(v.boulders),
     trees: v.age === "young" ? 2.2 : v.age === "old" ? 1.3 : 1.7, edgeTrees: 0.9, glades: v.age === "old" ? 0.65 : 0.5, edgeShrink: 0.72,
     canopy: [grow({ species: "pine", minHeight: 10, maxHeight: 16.5, ratio: 1 }, k)],
     under: [{ species: "pine", minHeight: 4, maxHeight: 7, ratio: 3 }, { species: "bush", minHeight: 2, maxHeight: 3.2, ratio: 2 }],
@@ -272,11 +368,13 @@ export const oakWoods = /* @__PURE__ */ woodsType(OAK, [
 const MIXED = { name: "mixed-woods", label: "Mixed Woods", swatch: { r: 58, g: 106, b: 58 } };
 export const mixedWoods = /* @__PURE__ */ woodsType(MIXED, [
   param("mix", "Mix", [["broadleaf", "Mostly broadleaf"], ["balanced", "Balanced"], ["conifer", "Mostly conifer"]], "balanced"),
+  BOULDERS_PARAM(),
 ], 0.326 /* classic 50% */, (v) => {
   const broad = v.mix === "broadleaf" ? 2.2 : v.mix === "conifer" ? 0.35 : 1;
   const conifer = v.mix === "conifer" ? 2.2 : v.mix === "broadleaf" ? 0.3 : 1;
   return {
     ...MIXED,
+    ...bouldersOf(v.boulders),
     trees: 1.7, edgeTrees: 0.9, glades: 0.4, groves: 0.75, edgeShrink: 0.75,
     canopy: [
       weigh({ species: "oak", minHeight: 8, maxHeight: 11.5, ratio: 8 }, broad),
@@ -331,8 +429,10 @@ export const tropicalForest = /* @__PURE__ */ woodsType(TROPICAL, [
 const MOUNTAIN = { name: "high-mountain-forest", label: "High Mountain Forest", swatch: { r: 56, g: 96, b: 74 } };
 export const highMountainForest = /* @__PURE__ */ woodsType(MOUNTAIN, [
   param("conifer", "Conifer", [["pine", "Mostly pine"], ["mixed", "Pine and spruce"], ["spruce", "Mostly spruce"]], "mixed"),
+  BOULDERS_PARAM(),
 ], 0.394 /* classic 34% */, (v) => ({
   ...MOUNTAIN,
+  ...bouldersOf(v.boulders),
   trees: 1.0, edgeTrees: 0.55, glades: 0.55, groves: 0.5, edgeShrink: 0.75, altitude: 0.12, slopeThin: 0.45,
   canopy: [
     { species: "pine", minHeight: 4.5, maxHeight: 7.5, ratio: v.conifer === "spruce" ? 1 : v.conifer === "pine" ? 14 : 8 },
@@ -363,8 +463,10 @@ export const park = /* @__PURE__ */ woodsType(PARK, [
 const SCOTS = { name: "scots-pine-woodland", label: "Scots Pine Woodland", swatch: { r: 74, g: 108, b: 72 } };
 export const scotsPineWoodland = /* @__PURE__ */ woodsType(SCOTS, [
   param("birch", "Birch", [["none", "None"], ["some", "Some"], ["many", "Many"]], "some"),
+  BOULDERS_PARAM(),
 ], 0.319 /* classic 28% */, (v) => ({
   ...SCOTS,
+  ...bouldersOf(v.boulders),
   trees: 1.0, edgeTrees: 0.6, glades: 0.5, edgeShrink: 0.85,
   canopy: kept([
     { species: "scotspine", minHeight: 11.5, maxHeight: 17, ratio: 1 },
@@ -443,6 +545,72 @@ export const villageOrchard = /* @__PURE__ */ woodsType(ORCHARD, [
       canopy: [{ species: "orchard", minHeight: 4, maxHeight: 6.2, ratio: 1 }],
     });
 
+// ---- the rock woods types (docs/models/rocks.md) ---------------------------------
+// What grows among rocks. The towers, pinnacles and crags themselves are the
+// game's stored rocks, which hand each cell where they stand (CellContext.rocks)
+// and where their tops are (CellContext.tops): these plant the trees in the lanes
+// between them and on their crowns, and the boulders at their feet. Each can be
+// painted on open ground too -- a boulder field needs no stored rock at all.
+
+// A rock city: sandstone towers in clusters, pines and birches in the lanes and on
+// the crowns (Adrspach, Prachov), and fallen blocks.
+const ROCK_CITY = { name: "rock-city", label: "Rock City", swatch: { r: 112, g: 118, b: 82 }, floor: { r: 120, g: 108, b: 80 } };
+export const rockCity = /* @__PURE__ */ woodsType(ROCK_CITY, [
+  param("trees", "Trees", [["pine", "Mostly pine"], ["mixed", "Pine and birch"], ["birch", "Mostly birch"]], "mixed"),
+], 0.27 /* 36% */, (v) => ({
+  ...ROCK_CITY,
+  trees: 1.5, edgeTrees: 0.9, glades: 0.3, groves: 0.5, edgeShrink: 0.8, slopeThin: 0.15,
+  canopy: kept([
+    { species: "pine", minHeight: 9, maxHeight: 15, ratio: v.trees === "birch" ? 1 : v.trees === "pine" ? 8 : 4 },
+    { species: "scotspine", minHeight: 9, maxHeight: 14, ratio: v.trees === "birch" ? 0 : 2 },
+    { species: "birch", minHeight: 7, maxHeight: 11, ratio: v.trees === "birch" ? 8 : v.trees === "pine" ? 0.5 : 3 },
+  ]),
+  under: [{ species: "bush", minHeight: 1.6, maxHeight: 2.8, ratio: 2 }, { species: "pine", minHeight: 3, maxHeight: 5, ratio: 1 }],
+  underShare: 0.25, edgeUnder: 0.5,
+  boulders: 0.18, edgeBoulders: 0.25, boulderHeight: [1.2, 3.2], topTrees: 0.85,
+}));
+
+// A boulder field: granite boulders strewn over the ground, a few pines and
+// bushes between them.
+const BOULDER_FIELD = { name: "boulder-field", label: "Boulder Field", swatch: { r: 128, g: 128, b: 112 }, floor: { r: 118, g: 116, b: 98 } };
+export const boulderField = /* @__PURE__ */ woodsType(BOULDER_FIELD, [
+  param("trees", "Trees", [["none", "None"], ["few", "A few"], ["many", "Many"]], "few"),
+], 0.6 /* trees, besides the boulders */, (v) => ({
+  ...BOULDER_FIELD,
+  trees: v.trees === "none" ? 0 : v.trees === "many" ? 0.8 : 0.3, edgeTrees: v.trees === "none" ? 0 : v.trees === "many" ? 0.5 : 0.2,
+  glades: 0.4, edgeShrink: 0.75,
+  canopy: [{ species: "pine", minHeight: 6, maxHeight: 11, ratio: 3 }, { species: "birch", minHeight: 5, maxHeight: 9, ratio: 1 }],
+  under: [{ species: "bush", minHeight: 1.4, maxHeight: 2.6, ratio: 1 }],
+  underShare: 0.4, edgeUnder: 0.6,
+  boulders: 1.3, edgeBoulders: 0.8, boulderHeight: [1, 3.4],
+}));
+
+// Crags: scrub and stunted pines between rock outcrops, on slopes and along the
+// tops of escarpments.
+const CRAGS = { name: "crags", label: "Crags", swatch: { r: 110, g: 116, b: 88 }, floor: { r: 112, g: 106, b: 84 } };
+export const crags = /* @__PURE__ */ woodsType(CRAGS, [
+  param("scrub", "Scrub", [["few", "A little"], ["some", "Some"], ["thick", "Thick"]], "some"),
+], 0.4 /* 30% */, (v) => ({
+  ...CRAGS,
+  trees: 1.0, edgeTrees: 0.6, glades: 0.5, groves: 0.3, edgeShrink: 0.8, altitude: 0.1, slopeThin: 0.1,
+  canopy: [{ species: "pine", minHeight: 4, maxHeight: 8, ratio: 3 }, { species: "spruce", minHeight: 4, maxHeight: 7, ratio: 1 }],
+  under: [{ species: "bush", minHeight: 1.4, maxHeight: 2.6, ratio: 1 }],
+  underShare: v.scrub === "thick" ? 0.7 : v.scrub === "few" ? 0.2 : 0.45, edgeUnder: v.scrub === "thick" ? 0.85 : 0.6,
+  boulders: 0.35, edgeBoulders: 0.45, boulderHeight: [1, 2.6], topTrees: 0.6,
+}));
+
+// A stone forest: limestone pinnacles packed close, shrubs and the odd small tree
+// in the gaps (Shilin, the tsingy).
+const STONE_FOREST = { name: "stone-forest", label: "Stone Forest", swatch: { r: 150, g: 148, b: 126 }, floor: { r: 138, g: 132, b: 110 } };
+export const stoneForest = /* @__PURE__ */ woodsType(STONE_FOREST, [
+  param("shrubs", "Shrubs", [["few", "Few"], ["some", "Some"], ["many", "Many"]], "some"),
+], 0.3 /* 20% */, (v) => ({
+  ...STONE_FOREST,
+  trees: v.shrubs === "many" ? 1.3 : v.shrubs === "few" ? 0.5 : 0.85, edgeTrees: 0.5, glades: 0.3, edgeShrink: 0.9, slopeThin: 0.1,
+  canopy: [{ species: "bush", minHeight: 1.8, maxHeight: 3.4, ratio: 5 }, { species: "oak", minHeight: 4, maxHeight: 6.5, ratio: 1 }],
+  boulders: 0.08, boulderHeight: [0.8, 1.8], topTrees: 0.3,
+}));
+
 /**
  * Every woods type with the name of its exported constant (the woods module's
  * bundle entry, generate.ts). Names are stored in the game's maps: never rename
@@ -461,4 +629,8 @@ export const WOODS: ReadonlyArray<{ design: WoodsDesign; source: string }> = [
   { design: larchWoodland, source: "larchWoodland" },
   { design: hazelWoodlandEdge, source: "hazelWoodlandEdge" },
   { design: villageOrchard, source: "villageOrchard" },
+  { design: rockCity, source: "rockCity" },
+  { design: boulderField, source: "boulderField" },
+  { design: crags, source: "crags" },
+  { design: stoneForest, source: "stoneForest" },
 ];

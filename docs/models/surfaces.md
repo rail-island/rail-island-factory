@@ -1,7 +1,7 @@
 # Surfaces
 
 **Covers** - the texture library (the photo sets in `assets/textures/`, their sources and
-licence, the 16-set cap, the fetch script), the named surfaces (a photo, its tile and the tint
+licence, the 18-set cap, the fetch script), the named surfaces (a photo, its tile and the tint
 rule), how a design opts a material into one, the UVs the JS model then carries, the export
 (`export/textures/`, `surfaces.meta.json`) and how the game and the site preview bind the photos.
 **Code** - `generator/surfaces.ts`, `generator/surfacesExport.ts`, `generator/fetchTextures.ts`,
@@ -11,11 +11,14 @@ rule), how a design opts a material into one, the UVs the JS model then carries,
 
 ## The library
 
-`assets/textures/<name>_{albedo,normal,rough}.jpg`: 15 photo sets from Poly Haven (CC0), every
+`assets/textures/<name>_{albedo,normal,rough}.jpg`: 18 photo sets from Poly Haven (CC0), every
 map 512 x 512, listed with slug, licence and use in `assets/textures/SOURCES.md`. They are the
 only photos the game draws with - terrain, track, roads, structures and any factory design that
-names a surface. `MAX_TEXTURES` caps the library at 16 sets: there is no texture compression and
+names a surface. `MAX_TEXTURES` caps the library at 18 sets: there is no texture compression and
 every set costs about 4 MiB of GPU memory with mips, so a new look reuses a photo where it can.
+The cap was 16 until the rocks ([rocks.md](rocks.md)) added granite (`boulder`), `sandstone` and
+`limestone`: each reads as its own stone and no photo in the library stood in for them. The
+`rock-granite`, `rock-sandstone` and `rock-limestone` surfaces draw them, in studs.
 `TEXTURE_AVERAGE` pins each albedo's mean colour; the test measures the files against it.
 
 `pnpm exec tsx generator/fetchTextures.ts [name...]` refetches sets at 1k and resizes them with

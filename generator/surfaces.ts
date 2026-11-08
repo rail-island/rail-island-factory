@@ -23,15 +23,18 @@
 export const TEXTURE_SLUGS = {
   asphalt: "aerial_asphalt_01",
   bigstone: "rocks_ground_06",
+  boulder: "rock_boulder_dry",
   cobblestone: "cobblestone_floor_04",
   concrete: "concrete_floor_worn_001",
   grass: "aerial_grass_rock",
+  limestone: "marble_cliff_01",
   gravel: "gravel_embedded_concrete",
   ground: "aerial_ground_rock",
   mud: "aerial_mud_1",
   pavement: "floor_tiles_02",
   rock: "rock_ground",
   sand: "coast_sand_01",
+  sandstone: "rock_face_03",
   slate: "dark_rock",
   snow: "snow_field_aerial",
   wall: "red_brick_03",
@@ -47,9 +50,11 @@ export const TEXTURE_SIZE = 512;
 /**
  * The most photo sets the library may hold (test/surfaces.test.ts): every set is
  * about 4 MiB on the GPU with mips and there is no texture compression, so a new
- * look reuses a photo where it can.
+ * look reuses a photo where it can. Raised from 16 to 18 for the rocks
+ * (docs/models/rocks.md): granite, sandstone and limestone each read as their own
+ * stone, and no photo in the library stands in for them.
  */
-export const MAX_TEXTURES = 16;
+export const MAX_TEXTURES = 18;
 /**
  * The mean albedo of each photo, sRGB hex: what a surface's honest flat colour is
  * held near (test/surfaces.test.ts measures the files against it).
@@ -57,15 +62,18 @@ export const MAX_TEXTURES = 16;
 export const TEXTURE_AVERAGE: Readonly<Record<TextureName, string>> = {
   asphalt: "#676268",
   bigstone: "#928373",
+  boulder: "#a89b8c",
   cobblestone: "#8a7d62",
   concrete: "#565754",
   grass: "#726125",
+  limestone: "#ac8f75",
   gravel: "#958e84",
   ground: "#80695a",
   mud: "#3e3835",
   pavement: "#9f907f",
   rock: "#726960",
   sand: "#82735c",
+  sandstone: "#836950",
   slate: "#211c18",
   snow: "#878694",
   wall: "#6b534c",
@@ -132,19 +140,28 @@ export const SURFACES = {
   "model-stone": { texture: "cobblestone", tile: 2.5, tintLift: 0.85, fill: 0.2 },
   "model-concrete": { texture: "concrete", tile: 3, tintLift: 0.92, gain: 1.4, fill: 0.15 },
   "model-timber": { texture: "wood", tile: 2, tintLift: 0.85, fill: 0.15 },
+  // the rocks (docs/models/rocks.md): rock species materials in studs, a repeat
+  // about a man's height so a tower's face reads as stone at railway scale. The
+  // colour lifts half way: a species' rock and top materials tint the same photo.
+  "rock-granite": { texture: "boulder", tile: 3, tintLift: 0.5, normalScale: 0.9, fill: 0.12 },
+  "rock-sandstone": { texture: "sandstone", tile: 7, tintLift: 0.5, normalScale: 0.9, fill: 0.12 },
+  "rock-limestone": { texture: "limestone", tile: 6, tintLift: 0.5, normalScale: 0.9, fill: 0.12 },
   // the site's texture pages (proc-preview-texture-*): each photo as it is, untinted;
   // nothing in the game binds these
   "swatch-asphalt": { texture: "asphalt", tile: 4, tintLift: 1 },
   "swatch-bigstone": { texture: "bigstone", tile: 4, tintLift: 1 },
+  "swatch-boulder": { texture: "boulder", tile: 4, tintLift: 1 },
   "swatch-cobblestone": { texture: "cobblestone", tile: 4, tintLift: 1 },
   "swatch-concrete": { texture: "concrete", tile: 4, tintLift: 1 },
   "swatch-grass": { texture: "grass", tile: 4, tintLift: 1 },
+  "swatch-limestone": { texture: "limestone", tile: 4, tintLift: 1 },
   "swatch-gravel": { texture: "gravel", tile: 4, tintLift: 1 },
   "swatch-ground": { texture: "ground", tile: 4, tintLift: 1 },
   "swatch-mud": { texture: "mud", tile: 4, tintLift: 1 },
   "swatch-pavement": { texture: "pavement", tile: 4, tintLift: 1 },
   "swatch-rock": { texture: "rock", tile: 4, tintLift: 1 },
   "swatch-sand": { texture: "sand", tile: 4, tintLift: 1 },
+  "swatch-sandstone": { texture: "sandstone", tile: 4, tintLift: 1 },
   "swatch-slate": { texture: "slate", tile: 4, tintLift: 1 },
   "swatch-snow": { texture: "snow", tile: 4, tintLift: 1 },
   "swatch-wall": { texture: "wall", tile: 4, tintLift: 1 },

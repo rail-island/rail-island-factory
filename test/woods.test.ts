@@ -5,7 +5,10 @@
 import { describe, expect, it } from "vitest";
 import { WOODS } from "../generator/woods";
 import { MAX_TREES_PER_CELL, TREE_SEEDS, cellSeed, draw, newSlot, same, type CellContext, type TreeSlot } from "../generator/woodsApi";
-import { SPECIES } from "../generator/trees";
+import { SPECIES as TREE_SPECIES } from "../generator/trees";
+import { ROCK_SPECIES } from "../generator/rocks";
+/** What a slot may plant: a tree, or a boulder (docs/models/rocks.md). */
+const SPECIES: readonly string[] = [...TREE_SPECIES, ...ROCK_SPECIES];
 import { bundleGame, woodsMeta } from "../generator/woodsExport";
 import { WOODS_MODELS, woodsModelId } from "../generator/woodsModels";
 import { groveTrees } from "../generator/woodsGrove";
@@ -15,6 +18,7 @@ import { glbStats } from "../generator/glbStats";
 const SHIPPED = [
   "pine-forest", "oak-woods", "mixed-woods", "scrub", "palms", "tropical-forest", "high-mountain-forest",
   "park", "scots-pine-woodland", "larch-woodland", "hazel-woodland-edge", "village-orchard",
+  "rock-city", "boulder-field", "crags", "stone-forest",
 ];
 /** Shipped names merged into another type: the game reads them as that type's variant. */
 const MERGED: Record<string, string> = { "autumn-larch-woodland": "larch-woodland" };
@@ -23,6 +27,9 @@ const CLASSIC: Record<string, number> = {
   "pine-forest": 40, "oak-woods": 30, "mixed-woods": 50, "scrub": 22, "palms": 40, "tropical-forest": 100,
   "high-mountain-forest": 34, "park": 18, "scots-pine-woodland": 28, "larch-woodland": 30,
   "hazel-woodland-edge": 24, "village-orchard": 24,
+  // the rock woods types (docs/models/rocks.md): no classic figure, the slots they
+  // plant per cell, boulders included, as designed
+  "rock-city": 54, "boulder-field": 136, "crags": 67, "stone-forest": 31,
 };
 
 const slots = (): TreeSlot[] => Array.from({ length: MAX_TREES_PER_CELL }, newSlot);
@@ -313,7 +320,8 @@ describe("the woods export", () => {
     expect(meta.treeSeeds).toBe(5);
     expect(meta.woods.map((w) => w.name)).toEqual([...meta.woods.map((w) => w.name)].sort());
     expect(meta.module).toBe("woods.js");
-    expect(meta.trees.map((t) => t.species).sort()).toEqual([...SPECIES].sort());
+    expect(meta.trees.map((t) => t.species).sort()).toEqual([...TREE_SPECIES].sort());
+    expect(meta.rocks.map((r) => r.species)).toEqual([...ROCK_SPECIES].sort());
     expect(JSON.stringify(meta)).not.toMatch(/"id":\s*\d/);
     for (const w of meta.woods) expect(w.params[0]!.name, w.name).toBe("density");
   });
@@ -328,7 +336,7 @@ describe("the woods export", () => {
     expect(all.MAX_TREES_PER_CELL).toBe(4);
     expect(all.TREE_SEEDS).toBe(5);
     expect([...all.SPECIES].sort()).toEqual([...SPECIES].sort());
-    expect(all.WOODS.find((w: { name: string }) => w.name === "mixed-woods").params.map((p: { name: string }) => p.name)).toEqual(["density", "mix"]);
+    expect(all.WOODS.find((w: { name: string }) => w.name === "mixed-woods").params.map((p: { name: string }) => p.name)).toEqual(["density", "mix", "boulders"]);
     expect(() => all.woodsType("no-such-woods")).toThrow();
     const mod = all.woodsType("mixed-woods");
     const dense = mod.variant({ density: "dense", mix: "conifer" });

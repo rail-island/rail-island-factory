@@ -9,12 +9,19 @@
 // against the species' own height at that level, stretched by `width`, tilted by
 // `lean` toward the tree's rotation, and coloured by `shade` and `hue` the way the
 // game's instance colour does. Each tree is the shape its slot's `seed` picks.
+//
+// A rock woods type's grove also stands a few of the game's stored rocks in the
+// wood (GROVE_ROCKS: a rock city's sandstone towers, a stone forest's pinnacles,
+// crags), handing every cell what it sees of them (woodsApi.ts rockCellContext),
+// so the preview shows the trees in the lanes and on the crowns as the game grows
+// them. A slot may be a boulder (rocks.ts), baked like a tree.
 // No `node:` imports.
 
 import { MeshBuilder } from "./meshBuilder.ts";
 import { boxOf, type Geo, type P3 } from "./treeGeo.ts";
 import { TREE_COLORS, treeOptions, treeParts, type Species, type TreeDetail } from "./trees.ts";
-import { MAX_TREES_PER_CELL, newSlot, type CellContext, type TreeSlot, type WoodsDesign } from "./woodsApi.ts";
+import { ROCK_SPECIES, rockColors, rockInfo, rockParts, type RockSpecies } from "./rocks.ts";
+import { MAX_TREES_PER_CELL, newSlot, rockCellContext, type CellContext, type PlacedRock, type TreeSlot, type WoodsDesign } from "./woodsApi.ts";
 
 /** One cell's width in studs (the game's MapSizes.RESOLUTION). */
 export const CELL_STUDS = 4;
@@ -25,14 +32,64 @@ export function instanceTint(shade: number, hue: number): P3 {
   return [shade * (1 + 0.1 * hue), shade * (1 + 0.04 * hue), shade * (1 - 0.14 * hue)];
 }
 
-/** One shape of a species at one level: the tree its design builds for that seed. */
-export function seededParts(species: Species, detail: TreeDetail, seed = 1): ReturnType<typeof treeParts> {
+const isRock = (s: string): s is RockSpecies => (ROCK_SPECIES as readonly string[]).includes(s);
+
+/** One shape of a species at one level: the tree (or the boulder) its design builds for that seed. */
+export function seededParts(species: Species | RockSpecies, detail: TreeDetail, seed = 1): ReturnType<typeof treeParts> {
+  if (isRock(species)) return rockParts(species, detail, seed);
   return treeParts(species, detail, treeOptions(species, { seed: String(seed) }));
+}
+
+/** A species' two material colours: a tree's trunk and foliage, a rock's stone and top. */
+function colorsOf(species: Species | RockSpecies): { trunk: string; foliage: string } {
+  return isRock(species) ? rockColors(species) : TREE_COLORS[species];
+}
+
+/**
+ * The stored rocks a rock woods type's grove stands in its wood: the species, and
+ * where each stands as a fraction of the wood's radius from the patch's centre.
+ */
+const GROVE_ROCKS: Readonly<Record<string, { species: RockSpecies; at: ReadonlyArray<[number, number, number]> }>> = {
+  "rock-city": { species: "sandstone-tower", at: [[0, 0, 1], [0.62, 0.3, 0.85], [-0.55, 0.5, 0.95], [0.1, -0.68, 0.8], [-0.62, -0.4, 0.9]] },
+  "stone-forest": { species: "limestone-pinnacle", at: [[0, 0, 0.9], [0.55, 0.35, 0.7], [-0.5, 0.45, 0.8], [0.2, -0.6, 0.75], [-0.6, -0.3, 0.65], [0.65, -0.35, 0.6]] },
+  crags: { species: "crag", at: [[0.2, 0.15, 1], [-0.5, -0.4, 0.9], [0.45, -0.55, 0.8]] },
+};
+
+/** A stored rock in a grove: species, shape, place (patch studs), turn and scale. */
+export interface GroveRock {
+  species: RockSpecies;
+  seed: number;
+  x: number;
+  z: number;
+  rot: number;
+  scale: number;
+}
+
+/** The stored rocks a woods type's grove stands (none for a forest). */
+export function groveRocks(woods: WoodsDesign, opts: GroveOptions = {}): GroveRock[] {
+  const spec = GROVE_ROCKS[woods.name];
+  if (!spec) return [];
+  const cells = opts.cells ?? 14;
+  const radius = opts.radius ?? cells * 0.36;
+  const c = (cells / 2) * CELL_STUDS, r = radius * CELL_STUDS;
+  return spec.at.map(([fx, fz, scale], i) => ({
+    species: spec.species, seed: (i % 5) + 1, x: c + fx * r, z: c + fz * r, rot: i * 1.3, scale,
+  }));
+}
+
+/** A grove rock as cells see it (woodsApi.ts PlacedRock): its footprint and tops, turned and scaled. */
+function placed(r: GroveRock): PlacedRock {
+  const info = rockInfo(r.species, r.seed);
+  const c = Math.cos(r.rot), s = Math.sin(r.rot);
+  return {
+    x: r.x, z: r.z, footprint: info.footprint * r.scale,
+    tops: info.tops.map((t) => ({ x: r.x + (c * t.x + s * t.z) * r.scale, z: r.z + (-s * t.x + c * t.z) * r.scale, y: t.y * r.scale, r: t.r * r.scale })),
+  };
 }
 
 const heightCache = new Map<string, number>();
 /** A species' height at one level and seed, at scale 1 (the game's speciesBaseHeight). */
-export function speciesHeight(species: Species, detail: TreeDetail, seed = 1): number {
+export function speciesHeight(species: Species | RockSpecies, detail: TreeDetail, seed = 1): number {
   const key = `${species}:${detail}:${seed}`;
   let h = heightCache.get(key);
   if (h === undefined) {
@@ -81,6 +138,7 @@ export function groveTrees(woods: WoodsDesign, opts: GroveOptions = {}): Array<T
   const seed = opts.seed ?? 20261019;
   const out: TreeSlot[] = Array.from({ length: MAX_TREES_PER_CELL }, newSlot);
   const trees: Array<TreeSlot & { cx: number; cz: number }> = [];
+  const rocks = groveRocks(woods, opts).map(placed);
   for (let gz = 0; gz < cells; gz++) {
     for (let gx = 0; gx < cells; gx++) {
       if (!wooded(gx, gz, cells, radius)) continue;
@@ -91,6 +149,7 @@ export function groveTrees(woods: WoodsDesign, opts: GroveOptions = {}): Array<T
         }
       }
       const ctx: CellContext = { gx, gz, seed, mask, slope: 0, height: 20 };
+      if (rocks.length) Object.assign(ctx, rockCellContext(rocks, (gx + 0.5) * CELL_STUDS, (gz + 0.5) * CELL_STUDS, CELL_STUDS, () => 0));
       const n = Math.min(planter.distribute(ctx, out), MAX_TREES_PER_CELL);
       for (let i = 0; i < n; i++) {
         const t = out[i]!;
@@ -118,15 +177,16 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
   // one set of parts per species and seed; the materials are per species
   const parts = new Map<string, ReturnType<typeof treeParts>>();
   const trees = groveTrees(woods, opts);
-  for (const t of trees) {
-    const s = t.species as Species;
-    const key = `${s}:${t.seed}`;
-    if (!parts.has(key)) {
-      parts.set(key, seededParts(s, detail, t.seed));
-      palette[`${s}-trunk`] = { color: TREE_COLORS[s].trunk, roughness: 1 };
-      palette[`${s}-foliage`] = { color: TREE_COLORS[s].foliage, roughness: 0.9, ...(parts.get(key)!.ribbons ? { doubleSided: true } : {}) };
-    }
-  }
+  const rocks = groveRocks(woods, opts);
+  const need = (s: Species | RockSpecies, seed: number): void => {
+    const key = `${s}:${seed}`;
+    if (parts.has(key)) return;
+    parts.set(key, seededParts(s, detail, seed));
+    palette[`${s}-trunk`] = { color: colorsOf(s).trunk, roughness: 1 };
+    palette[`${s}-foliage`] = { color: colorsOf(s).foliage, roughness: 0.9, ...(parts.get(key)!.ribbons ? { doubleSided: true } : {}) };
+  };
+  for (const t of trees) need(t.species as Species | RockSpecies, t.seed);
+  for (const r of rocks) need(r.species, r.seed);
   const m = new MeshBuilder(palette);
   if (opts.ground !== false) {
     const S = CELL_STUDS;
@@ -140,13 +200,35 @@ export function buildGrove(woods: WoodsDesign, opts: GroveOptions = {}): MeshBui
     });
   }
   m.scope("trees", () => plant(m, trees, parts, detail));
+  if (rocks.length) m.scope("rocks", () => standRocks(m, rocks, parts));
   return m;
+}
+
+/** Bakes the grove's stored rocks: each its shape at the grove's level, turned, scaled and placed. */
+function standRocks(m: MeshBuilder, rocks: readonly GroveRock[], parts: Map<string, ReturnType<typeof treeParts>>): void {
+  for (const r of rocks) {
+    const p = parts.get(`${r.species}:${r.seed}`)!;
+    const c = Math.cos(r.rot), s = Math.sin(r.rot);
+    const sink = rockInfo(r.species, r.seed).sink;
+    // sunk by its foot, which is then flattened onto the ground: a preview has no ground under its ground
+    const place = (x: number, y: number, z: number): P3 => [r.x + (c * x + s * z) * r.scale, Math.max(0, (y - sink) * r.scale), r.z + (-s * x + c * z) * r.scale];
+    const emit = (mat: string, list: Geo[]) => {
+      for (const g of list) {
+        const col = (j: number): P3 => (g.col ? [g.col[j * 3]!, g.col[j * 3 + 1]!, g.col[j * 3 + 2]!] : [1, 1, 1]);
+        for (let i = 0; i < g.count; i += 3) {
+          m.triShaded(mat, place(g.x(i), g.y(i), g.z(i)), place(g.x(i + 1), g.y(i + 1), g.z(i + 1)), place(g.x(i + 2), g.y(i + 2), g.z(i + 2)), [col(i), col(i + 1), col(i + 2)]);
+        }
+      }
+    };
+    emit(`${r.species}-trunk`, p.trunk);
+    emit(`${r.species}-foliage`, p.foliage);
+  }
 }
 
 /** Bakes every tree of the grove into `m`, placed and coloured the way the game does. */
 function plant(m: MeshBuilder, trees: Array<TreeSlot & { cx: number; cz: number }>, parts: Map<string, ReturnType<typeof treeParts>>, detail: TreeDetail): void {
   for (const t of trees) {
-    const s = t.species as Species;
+    const s = t.species as Species | RockSpecies;
     const p = parts.get(`${s}:${t.seed}`)!;
     const k = t.height / speciesHeight(s, detail, t.seed);
     const rot = (t.rot * Math.PI) / 180;
@@ -158,12 +240,16 @@ function plant(m: MeshBuilder, trees: Array<TreeSlot & { cx: number; cz: number 
     for (const g of [...p.trunk, ...p.foliage]) {
       for (let i = 0; i < g.count; i++) dip = Math.min(dip, g.y(i) * k * cl - g.z(i) * k * t.width * sl);
     }
-    const lift = 0.02 - dip;
+    // ...and onto the rock it stands on (a slot's lift: a tree on a tower's crown)
+    // (a boulder keeps its buried foot: it is meant to sink into the ground)
+    const lift = (isRock(s) ? 0 : 0.02 - dip) + t.lift;
     // scale, lean about the tree's local X, turn about Y, move to the cell
     const place = (x: number, y: number, z: number): P3 => {
       const sx = x * k * t.width, sy = y * k, sz = z * k * t.width;
       const ly = sy * cl - sz * sl, lz = sy * sl + sz * cl;
-      return [cr * sx + sr * lz + t.cx, ly + lift, -sr * sx + cr * lz + t.cz];
+      const py = ly + lift;
+      // a boulder's buried foot is flattened onto the ground, as a stored rock's is
+      return [cr * sx + sr * lz + t.cx, isRock(s) ? Math.max(0, py) : py, -sr * sx + cr * lz + t.cz];
     };
     const emit = (mat: string, list: Geo[]) => {
       for (const g of list) {

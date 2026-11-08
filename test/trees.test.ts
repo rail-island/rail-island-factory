@@ -2,6 +2,7 @@
 // can afford, and the envelope rules that make a level change invisible in outline.
 // Docs: docs/models/trees.md.
 
+import { ROCK_SPECIES } from "../generator/rocks";
 import { describe, expect, it } from "vitest";
 import { SPECIES, TREES, treeModelOf, treeParts, type Species, type TreeDetail } from "../generator/trees";
 import type { MeshBuilder } from "../generator/meshBuilder";
@@ -164,7 +165,8 @@ describe("the game module's trees", () => {
     expect(text.replace(/^\/\/.*\n/, "")).not.toMatch(/\bimport\s*[\w{*"'(]/);
     expect(await bundleGame()).toBe(text);
     const mod = await import(`data:text/javascript;base64,${Buffer.from(text).toString("base64")}`);
-    expect([...mod.SPECIES].sort()).toEqual([...SPECIES].sort());
+    // the module carries the rocks with the trees (docs/models/rocks.md): their own tests build them
+    expect([...mod.SPECIES].sort()).toEqual([...SPECIES, ...ROCK_SPECIES].sort());
     for (const species of SPECIES) {
       for (const detail of LEVELS) {
         const group = mod.buildTree(THREE, species, detail);

@@ -47,11 +47,89 @@ export interface CellContext {
   slope: number;
   /** The terrain's height at the cell, in studs above the water plane. */
   height: number;
+  /**
+   * Where the game's stored rocks stand on the cell (docs/models/rocks.md): the cell
+   * cut into ROCK_GRID x ROCK_GRID squares, bit `sz * ROCK_GRID + sx` set where a
+   * rock's footprint covers the square's centre (sx, sz count from the cell's -x,
+   * -z corner). No tree is planted on a set square. Absent or 0: no rock.
+   */
+  rocks?: number;
+  /** Where a tree may stand ON a stored rock reaching this cell (a tower's crown, a crag's top). */
+  tops?: readonly CellTop[];
+}
+
+/** A spot on top of a stored rock where a tree may stand, as the game hands it to a cell. */
+export interface CellTop {
+  /** Offset from the cell's centre, in cell widths (-0.5 .. 0.5). */
+  x: number;
+  z: number;
+  /** How far the spot stands over the ground under it, studs: the tree's `lift`. */
+  lift: number;
+  /** The room the spot has, studs (a radius): how big a tree it takes. */
+  r: number;
+}
+
+/**
+ * A stored rock as a cell sees it, in world studs: where it stands, the radius it
+ * covers, and its top spots (world x, z and the height of the spot's surface).
+ * The game builds these from its stored rocks (a rock species' footprint and tops
+ * from ROCKS, turned and scaled by the stored rock); the grove previews from the
+ * rocks they place.
+ */
+export interface PlacedRock {
+  x: number;
+  z: number;
+  footprint: number;
+  tops: ReadonlyArray<{ x: number; z: number; y: number; r: number }>;
+}
+
+/**
+ * What a cell sees of the rocks round it: the occupancy mask (CellContext.rocks)
+ * and the top spots inside the cell (CellContext.tops), each top's `lift` measured
+ * from the ground under it (`groundAt`, world studs). The cell is the square of
+ * side `cellStuds` centred on (cx, cz). One rule for the game and the previews.
+ */
+export function rockCellContext(
+  rocks: readonly PlacedRock[],
+  cx: number,
+  cz: number,
+  cellStuds: number,
+  groundAt: (x: number, z: number) => number,
+): { rocks: number; tops: CellTop[] } {
+  let mask = 0;
+  const tops: CellTop[] = [];
+  const half = cellStuds / 2;
+  for (const r of rocks) {
+    if (Math.abs(r.x - cx) > half + r.footprint || Math.abs(r.z - cz) > half + r.footprint) continue;
+    for (let sz = 0; sz < ROCK_GRID; sz++) {
+      for (let sx = 0; sx < ROCK_GRID; sx++) {
+        const px = cx - half + ((sx + 0.5) / ROCK_GRID) * cellStuds;
+        const pz = cz - half + ((sz + 0.5) / ROCK_GRID) * cellStuds;
+        if (Math.hypot(px - r.x, pz - r.z) <= r.footprint) mask |= 1 << (sz * ROCK_GRID + sx);
+      }
+    }
+    for (const t of r.tops) {
+      if (Math.abs(t.x - cx) > half || Math.abs(t.z - cz) > half) continue;
+      tops.push({ x: (t.x - cx) / cellStuds, z: (t.z - cz) / cellStuds, lift: Math.max(0, t.y - groundAt(t.x, t.z)), r: t.r });
+    }
+  }
+  return { rocks: mask, tops };
+}
+
+/** The squares a cell is cut into, each way, for the rock occupancy mask (CellContext.rocks). */
+export const ROCK_GRID = 4;
+
+/** Whether the point at offset (x, z) of a cell, in cell widths, stands on a rock (CellContext.rocks). */
+export function onRock(rocks: number | undefined, x: number, z: number): boolean {
+  if (!rocks) return false;
+  const sx = Math.min(ROCK_GRID - 1, Math.max(0, Math.floor((x + 0.5) * ROCK_GRID)));
+  const sz = Math.min(ROCK_GRID - 1, Math.max(0, Math.floor((z + 0.5) * ROCK_GRID)));
+  return ((rocks >>> (sz * ROCK_GRID + sx)) & 1) === 1;
 }
 
 /** One tree a cell grows, written into a slot the caller owns. */
 export interface TreeSlot {
-  /** The species key (trees.ts SPECIES). */
+  /** The species key: a tree (trees.ts SPECIES) or a rock (rocks.ts ROCK_SPECIES, a boulder). */
   species: string;
   /** Offset from the cell's centre, in cell widths: -0.5 .. 0.5 keeps it inside the cell. */
   x: number;
@@ -73,6 +151,11 @@ export interface TreeSlot {
    * integer 1..TREE_SEEDS (the game builds `buildTree(THREE, species, detail, { seed: String(seed) })`).
    */
   seed: number;
+  /**
+   * How far over the ground the tree stands, studs: 0, except for a tree planted on
+   * top of a stored rock (CellContext.tops), which stands on the rock.
+   */
+  lift: number;
 }
 
 /** What plants a cell: one woods type at one choice of its parameters. */
@@ -178,13 +261,13 @@ export function same(mask: number, dx: number, dz: number): boolean {
 
 /** A fresh output slot (the caller keeps MAX_TREES_PER_CELL of them). */
 export function newSlot(): TreeSlot {
-  return { species: "", x: 0, z: 0, rot: 0, height: 0, width: 1, lean: 0, shade: 1, hue: 0, seed: 1 };
+  return { species: "", x: 0, z: 0, rot: 0, height: 0, width: 1, lean: 0, shade: 1, hue: 0, seed: 1, lift: 0 };
 }
 
 /** Writes one tree into a slot. */
 export function put(
   out: TreeSlot, species: string, x: number, z: number, rot: number, height: number,
-  width = 1, lean = 0, shade = 1, hue = 0, seed = 1,
+  width = 1, lean = 0, shade = 1, hue = 0, seed = 1, lift = 0,
 ): void {
   out.species = species;
   out.x = x;
@@ -196,6 +279,7 @@ export function put(
   out.shade = shade;
   out.hue = hue;
   out.seed = seed;
+  out.lift = lift;
 }
 
 /** A tree seed (1..TREE_SEEDS) from a uniform number in [0, 1). */
