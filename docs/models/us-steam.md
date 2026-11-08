@@ -9,7 +9,7 @@
 | id | title | arrangement | drivers | parameters | triangles (loco / tender) |
 |---|---|---|---|---|---|
 | `proc-vehicle-up-big-boy` | UP Big Boy | 4-8-8-4, two engines | 68 in | `unit` | 15,900 / 4,500 |
-| `proc-vehicle-prr-k4s` | PRR K4s | 4-6-2, Belpaire firebox | 80 in | `unit` | 10,700 / 3,700 |
+| `proc-vehicle-prr-k4s` | PRR K4s | 4-6-2, Belpaire firebox | 80 in | `unit` | 12,400 / 3,900 |
 | `proc-vehicle-nyc-hudson` | NYC J-3a Hudson | 4-6-4, Dreyfuss streamlining | 79 in | `unit` | about 9,000 / 3,800 |
 | `proc-vehicle-american-440` | Golden Spike 4-4-0 | 4-4-0 American | 60 in | `unit`, `livery` (`jupiter`, `no119`) | 6,200 / 2,600 |
 
@@ -40,7 +40,9 @@ box), the bell, the railroad's name on the tender sides.
 
 - **Big Boy** - black, 4014's graphite smokebox and stack casing, the running board's silver edge, "UNION PACIFIC"
   widely spaced on the tender; 4014 on the cab sides and the number box, X4014 on the number boards.
-- **K4s** - Brunswick green, gold lining and "PENNSYLVANIA"; number 1361.
+- **K4s** - 1361 as preserved: Brunswick green, the smokebox, its door and the stack graphite, the
+  red keystone with its gold rim and number on the door, 1361 on the headlight's number boards and on
+  the gold-rimmed cab plates, "PENNSYLVANIA" in gold on the tender.
 - **J-3a Hudson** - Dreyfuss's light grey with the dark grey band along the running board
   and the tender, the bullet nose with its fin, disc drivers; number 5450.
 - **4-4-0** - `jupiter`: Central Pacific's royal blue jacket, maroon cab and tender, red wheels,
@@ -79,12 +81,43 @@ published 132 ft 9.25 in over both, its last axle 117 ft 7 in behind the engine'
 - **Triangles** - the sixteen 68 in disc drivers use the kit's `leanWheels` (their rims, hidden in
   the tyres, left out; 8-sided hubs and crank bosses), about 1,500 triangles spent on the above.
 
+## The K4s's shape
+
+Measured on the dimensioned 1914 general arrangement and Baldwin's 1927 broadside of 5400, the front
+end, cab and tender as on the preserved 1361 and 3750 (`assets/prr-k4s/SOURCES.md`, "Measurements");
+source x from the coupler face, 0.17 m ahead of the pilot.
+
+- **Running gear** - the published wheelbase: lead truck 6 ft 10 in, drivers 6 ft 11 in apart, the
+  trailing axle 10 ft 6 in behind them (axles at 1.27 - 12.29 m), 48 ft 2 5/8 in to the drawbar
+  (14.86 m); 27 by 28 in cylinders, Walschaerts gear, spoked drivers as on 1361 and 3750.
+- **Boiler** - centre 2.99 m; the graphite smokebox 1.02 m in radius from 1.43 to 3.09 m, the conical
+  course rising to the rear rings' 1.1 m at 7.4 m (top 4.0 to 4.17 m), drawn over the kit's barrel;
+  the Belpaire firebox from 9.17 m to the cab, flat-sided and flat-topped with square shoulders
+  standing out beyond the round barrel. Stack 4.57 m, bell, sand dome and steam dome where the
+  drawing puts them; the safety valves and whistle on the firebox's front.
+- **Front** - the narrow cast steel pilot under a thin deck plate, leaning back to the rail; black cylinders and covers (the kit's `cylinderMat`, `cylinderCoverMat`);
+  the steps; the platform ahead of the smokebox at the running board's height (2.15 m,
+  clear of the drivers); the door's rim and dogs, its plain face over the kit's hinge straps, the
+  keystone; the electric headlight on top with its number boards, the turbo-generator behind it, the
+  marker lamps and the grab rail; the outside steam pipes down to the steam chests. Behind the rear
+  driver the frame is thin bars over the trailing truck and the ash pan, open as on 5400; the
+  running board has a thin valance.
+- **Sides** - handrails off the smokebox, the cone and the firebox's flat sides; the sand pipes down
+  from the sand dome; on the left the air pump on the running board with its pipe forward and the
+  reach rod, on the right the pumps hung under the running board ahead of the drivers and the box
+  on it.
+- **Cab** - 1.63 m long with its two-pane window and the number plate under it; its roof runs from
+  a rounded hood over the firebox's back (11.8 m) to 0.65 m behind the cab, the ventilator on top.
+- **Tender** - the 130-P-75 (13,475 gallons, 22 tons): flat sides tucked in at the foot, the coal
+  space's raised sides sloping down to the tank top, the water hatch, the ladders, "PENNSYLVANIA".
+  Its length is the model's earlier 13.4 m: no dimensioned source was found.
+
 ## Deviations
 
 - Wheels are the kit's spoked or disc wheels; the Big Boy's Boxpok drivers are discs with
   openings drawn on them, the Hudson's Scullin drivers plain discs. Air pumps, feedwater heaters and pipework are reduced to
   a few cylinders (the Big Boy's air pumps stand behind their shield, its feedwater heater inside the
-  stack casing, its pipes are a few 8-sided rods); the K4s's keystone number plate is a plain plate.
+  stack casing, its pipes are a few 8-sided rods); the K4s's air pumps are plain drums and its keystone has no lettering but the number.
 - The Big Boy keeps the kit's smokebox door with its hinge straps and its cylinders' bright covers; it
   has no smoke deflectors (4014 has none); its trailing truck is the kit's truck frame, not the cast
   Delta truck.
