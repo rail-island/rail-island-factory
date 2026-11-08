@@ -15,7 +15,7 @@ import { buildLoco, type LocoSpec } from "./steamLoco.ts";
 import { STEAM_PALETTE, halfAt, mirrored, type Steam } from "./steamParts.ts";
 import { STEAM_CATALOG, UNIT_PARAM } from "./steamLocos.ts";
 import { boxShell, halfTable, sidePlates, steamLocoLod, steamLodSpec, wheelBlocks, octagon, hexagon } from "./lodSteam.ts";
-import { fitLod, lodSideBox, lodWheel, simplifyTable, windowBands, type LodBand, type LodPart, type LodShell, lodPolygon, lodShell } from "./lodKit.ts";
+import { LOD_GLASS, fitLod, lodSideBox, lodWheel, simplifyTable, windowBands, type LodBand, type LodPart, type LodShell, lodPolygon, lodShell } from "./lodKit.ts";
 import { knuckleCoupler } from "./usHoodKit.ts";
 import { block, side } from "./vehicleParts.ts";
 import type { Pt } from "./sliceLoft.ts";
@@ -1774,8 +1774,8 @@ export function american440Lod(params?: ParamValues): MeshBuilder {
     const [x0, x1] = AM.lampX;
     const [ly0, ly1] = AM.lampY;
     s.parts.push({ draw: (m) => m.scope("headlamp", () => {
-      lodSideBox(m, "lampBox", [[X(x1), ly0], [X(x0), ly0], [X(x0), ly1], [X(x1), ly1]], -0.3, 0.3);
-      lodPolygon(m, "lampHead", [[X(x0) + 0.01, ly0 + 0.18, -0.2], [X(x0) + 0.01, ly0 + 0.18, 0.2], [X(x0) + 0.01, ly1 - 0.18, 0.2], [X(x0) + 0.01, ly1 - 0.18, -0.2]], [1, 0, 0]);
+      lodSideBox(m, "pilot", [[X(x1), ly0], [X(x0), ly0], [X(x0), ly1], [X(x1), ly1]], -0.3, 0.3);
+      lodPolygon(m, LOD_GLASS, [[X(x0) + 0.01, ly0 + 0.18, -0.2], [X(x0) + 0.01, ly0 + 0.18, 0.2], [X(x0) + 0.01, ly1 - 0.18, 0.2], [X(x0) + 0.01, ly1 - 0.18, -0.2]], [1, 0, 0]);
     }) });
     s.parts.push({ draw: (m) => m.scope("pilot", () => {
       const tip: Vec3 = [X(0.22), 0.09, 0];

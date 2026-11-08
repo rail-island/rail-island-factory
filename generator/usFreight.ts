@@ -1189,7 +1189,7 @@ function cableTruck(m: MeshBuilder, xc: number): void {
       m.sweep("steel", "z", axle, -0.86, axle, 0.86);
       for (const s of [-1, 1]) {
         const tread = ngon(N, r, Math.PI / N, x, ay), disc = ngon(12, r * 0.8, 0, x, ay);
-        const [t0, t1] = side(s, 0.665, 0.77), [d0, d1] = side(s, 0.77, 0.79);
+        const [t0, t1] = side(s, 0.665, 0.8), [d0, d1] = side(s, 0.8, 0.82);
         m.sweep("steel", "z", tread, t0, tread, t1);
         m.sweep("wheel", "z", disc, d0, disc, d1);
       }
