@@ -10,17 +10,17 @@
 |---|---|---|---|---|
 | `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 13,350 - 13,850 |
 | `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 6,900 - 7,300 |
-| `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 6,900 |
+| `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 9,300 |
 
 All on the US loading gauge ([loading-gauge.md](loading-gauge.md)): the RDC is a
 diesel unit (group `unit`), the subway cars electric metro cars (`METRO_CATALOG`), the R160's
-third-rail current collection not drawn.
+third-rail current collection not drawn (the 5000-series draws its shoes).
 
 ## The car builder (`drawCar`)
 
 A `CarDef` is a carbody spec ([us-carbodies.md](us-carbodies.md), `carbodyKit.ts`) and its
 fittings: side paint bands, window rows (sill, head, spans; `onSide` a row on one side only, `cornerR` rounded corners), passenger doors (spans, sill,
-head, the leaf's window; `spanSides` a span on one side only) - plug doors that open onto the car's generic cabin (`openable`,
+head, the leaf's window; `spanSides` a span on one side only, `glassCornerR` the leaf windows' rounded corners) - plug doors that open onto the car's generic cabin (`openable`,
 `plugMove`, `sliceCabin`; doors.md, interiors.md) - stainless fluting (one band or several) broken over windows and
 doors, painted `strips` over the bands (d spans between two heights, down over the skirt: a
 double-deck coach's door strips), a flat cab end's windscreen panes, front mask and lamps, both ends painted
@@ -61,16 +61,40 @@ trucks a Jacobs bogie replaces.
   car's nose is a hull of its own; the coach and the observation car are `CarDef`s drawn here.
 - **R160** - four doors a side, window pairs between them, fluting, the black front mask with
   three panes and its lamps on the cab car; the trailer has diaphragms at both ends.
-- **5000-series** - two doors a side, the blue and red stripes, the cab end's mask.
+- **5000-series** - a married-pair car measured on the photographs in `assets/cta-5000/` (SOURCES.md:
+  the face at 211 px/m, the sides by projective fits over the doors and the car's ends). Bare stainless,
+  no stripes: fluted panels under the windows (1.08 - 1.88 m, plain beside the doors and at the ends), a
+  ribbed roof, a gutter at the eave. The cab (+X) end is the fibreglass bonnet, painted lighter, a little
+  narrower than the body (`ctaCabEnd`: its corners swept 0.2 m back, its top rolling into the roof):
+  two big rounded windscreens (the operator's wider) with a slot and bar under each and a parked wiper,
+  the end door with its window in a raised frame, grab posts and the safety chains, the LED destination
+  sign over it, four marker lamps a side in the roof line (white, blue, amber, red outward), head and
+  tail lamps, the number on the door, the anticlimber, the crew's stirrup steps under the corners. The other end is the plain end the car couples
+  to its mate with: the end door with a tall window, grab posts, chains and curved grab handles by the
+  corners. The two sides differ: behind the cab window (a tall framed window with its sash) the left
+  side has a wide framed window, the right side a narrow dark one and a slot; each side then has two
+  double doors 3.15 m either side of the middle (leaf windows with rounded corners), three framed
+  windows between them (transom bars, the side sign in the middle one's upper light) and a framed and
+  a narrow dark window at the plain end. The CTA roundel under the cab window, the number (5636) and
+  the amber door lamps by the doors at the forward side on the left, the rear side on the right. The
+  trucks (`ctaTruck`, 33 ft 6 in centres, 7 ft wheelbase, 28 in wheels): an outside frame over
+  chevron springs, the traction motors, disc brakes, and on each side the shoe beam with its
+  third-rail collector shoe beyond the outer axle; under the floor the propulsion and auxiliary
+  inverters, the braking resistor's grille box, batteries, compressor and air reservoirs. The distant
+  model is a flat-ended box with one glass band.
 
 ## Deviations
 
-- Trucks are the diesel toolkit's generic two-axle truck; the subway cars' third-rail shoes,
-  the R160's destination signs and the cars' interiors beyond the generic cabin are not drawn.
+- The R160's trucks are the diesel toolkit's generic two-axle truck; its third-rail shoes,
+  its destination signs and the cars' interiors beyond the generic cabin are not drawn.
+- 5000-series: the truck centres are estimated from one photograph (33 ft 6 in); the roof's
+  equipment is not drawn (none shows on the photographs, taken from platforms); the destination
+  texts are fixed (HOWARD on the face, a plain lit panel on the sides).
 
 ## Checking
 
 `pnpm exec vitest run test/usTransit.test.ts` (ids, groups, references, value titles; every
 combination inside its gauge and the budget, without coplanar faces, at its length on two
 supports; the distant models; the Zephyr's three sections on four supports with the two
-Jacobs bogies, which the same test file checks with the other US cars). The doors, cabins and rail supports are also checked by the generic suites.
+Jacobs bogies, which the same test file checks with the other US cars; the 5000-series' plain
+stainless sides, its face's sign and the two sides' own windows behind the cab). The doors, cabins and rail supports are also checked by the generic suites.

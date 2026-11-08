@@ -113,6 +113,21 @@ describe("the US passenger cars, urban rail and freight cars", () => {
     }
   });
 
+  it("gives the CTA 5000 plain stainless sides, its cab face's sign and the two sides' own windows behind the cab", () => {
+    const tris = readTriangles(designGlb("proc-vehicle-cta-5000"));
+    // no painted stripes on the stainless
+    expect(tris.some((t) => t.material === "ctaRed" || t.material === "ctaBlue")).toBe(false);
+    // the LED destination sign over the end door, out on the cab face
+    const face = Math.max(...tris.filter((t) => t.material === "cabGlass").flatMap((t) => t.p.map((p) => p[0])));
+    expect(tris.some((t) => t.material === "ctaSign" && t.p.every((p) => p[0] > face - 0.02 && p[1] > 3.3))).toBe(true);
+    // behind the cab window a wide stainless-framed window on the left side, a narrow rubber-framed one on the right
+    const [x0, x1] = [CTA_LENGTH / 2 - 0.25 - 2.4, CTA_LENGTH / 2 - 0.25 - 1.2];
+    const frame = (mat: string, s: number) => tris.some((t) => t.material === mat && t.p.every((p) => p[0] > x0 && p[0] < x1 && s * p[2] > 1.38 && p[1] > 1.9 && p[1] < 3.05));
+    expect(frame("ctaFrame", -1)).toBe(true);
+    expect(frame("rubber", 1)).toBe(true);
+    expect(frame("ctaFrame", 1)).toBe(false);
+  });
+
   it("stacks the well car's containers to the double-stack gauge, single by default", () => {
     expect(US_FREIGHT.find((d) => d.id === "proc-vehicle-us-well-car")!.params![0]!.default).toBe("single");
     const h = (cargo: string) => glbStats(wellCar({ cargo }).toGlb("w")).max[1];
