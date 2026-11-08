@@ -11,6 +11,8 @@ import { bogieGeometry, exhaust, paint, type BogieSpec } from "./dieselParts.ts"
 import { block, side } from "./vehicleParts.ts";
 import { decalX, decalZ, knuckleCoupler, paintedSweep, sideText, US_PALETTE, type Band } from "./usHoodKit.ts";
 import { WAGON_CATALOG } from "./wagons.ts";
+import { coil, extrude } from "./dieselParts.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { TRAM_CATALOG } from "./trams.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
 import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
@@ -115,52 +117,355 @@ export function cabooseLod(params?: ParamValues): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// 50 ft boxcar
+// 50 ft boxcar: a 1970s 70-ton Plate C car with exterior posts, a diagonal-panel
+// roof and improved Dreadnaught ends, measured from assets/us-boxcar/ (Railbox
+// 33646 side-on at 57.3 px/m, SP 245516 at 63 px/m). The livery chooses the
+// car's doors: Southern Pacific's Hydra-Cushion car has a 16 ft double door,
+// Railbox's car a 10 ft single door, painted black. Along a side, u runs from the
+// viewer's left to right (x = s * u), so both sides read alike.
 
 export const BOXCAR_PARAMS: readonly ParamSpec[] = [{
   name: "livery", title: "Livery", default: "boxcarRed",
   values: [{ value: "boxcarRed", title: "Boxcar red" }, { value: "railbox", title: "Railbox" }],
 }];
-const BOXCAR_LIVERIES: Record<string, { body: string; text: string; ink: string; palette: Record<string, MaterialSpec> }> = {
-  boxcarRed: { body: "bxRed", text: "SOUTHERN PACIFIC", ink: "bxWhite", palette: { bxRed: paint("#7b2b22", 0.7), bxWhite: paint("#e8e6df") } },
-  railbox: { body: "bxYellow", text: "RAILBOX", ink: "bxBlack", palette: { bxYellow: paint("#f1c21c", 0.6), bxBlack: paint("#1f2022") } },
-};
+type BxUV = [number, number];
+/** One painted mark on the sides: triangles in (u, v), a material, and a layer (0.003 m apart). */
+interface BxMark { mat: string; tris: BxUV[]; layer?: number; /** Off the sheathing by this much instead (the side sill), not repeated on the posts. */ z?: number }
+interface BoxcarLivery {
+  body: string; door: string;
+  palette: Record<string, MaterialSpec>;
+  /** Door leaves [u0, u1], the door track's reach, the edge the lock bars stand at (per leaf). */
+  leaves: ReadonlyArray<readonly [number, number]>; track: readonly [number, number]; locks: readonly number[];
+  /** The exterior posts' |u| from the door outward (the first is the door post); the door's ribs. */
+  posts: readonly number[]; ribs: number;
+  marks: () => BxMark[];
+}
 export const BOXCAR_LENGTH = ft(55, 4);
-const BX = { sill: 7.95, body: 7.85, half: 1.52, floor: 1.1, top: ft(15, 1), centre: ft(40, 6) / 2 };
+const BX = { sill: 7.95, body: 7.85, half: 1.49, bottom: 0.86, sheet: 1.02, eave: 4.42, ridge: ft(15, 1), centre: ft(40, 6) / 2, post: 0.07, doorIn: 0.075, doorOut: 0.1, doorTop: 4.3, doorFoot: 0.98 };
+const bxPosts = (first: number, pitch: number, n: number): number[] => Array.from({ length: n }, (_, i) => Math.round((first + i * pitch) * 1000) / 1000);
+
+/** Bars along polylines in (u, v), `stroke` wide, as triangles (strokeText's construction). */
+function bxBars(lines: ReadonlyArray<ReadonlyArray<BxUV>>, stroke: number): BxUV[] {
+  const out: BxUV[] = [];
+  for (const line of lines)
+    for (let j = 1; j < line.length; j++) {
+      const [[x0, y0], [x1, y1]] = [line[j - 1]!, line[j]!];
+      const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+      const [dx, dy] = [((x1 - x0) / len) * (stroke / 2), ((y1 - y0) / len) * (stroke / 2)];
+      const q: BxUV[] = [[x0 - dx - dy, y0 - dy + dx], [x0 - dx + dy, y0 - dy - dx], [x1 + dx + dy, y1 + dy - dx], [x1 + dx - dy, y1 + dy + dx]];
+      for (const k of [0, 1, 2, 0, 2, 3]) out.push(q[k]!);
+    }
+  return out;
+}
+
+/** Railbox's lower-case letters: centre lines in a unit cell (x-height 0 .. 1, ascenders to 1.5). */
+const BX_GLYPHS: Record<string, BxUV[][]> = {
+  r: [[[0.15, 0.15], [0.15, 0.85], [0.88, 0.85]]],
+  a: [[[0.15, 0.85], [0.85, 0.85], [0.85, 0.15], [0.15, 0.15], [0.15, 0.5], [0.85, 0.5]]],
+  i: [[[0.5, 0.15], [0.5, 0.85]], [[0.5, 1.15], [0.5, 1.3]]],
+  l: [[[0.5, 0.15], [0.5, 1.4]]],
+  b: [[[0.15, 1.5], [0.15, 0.15], [0.85, 0.15], [0.85, 0.85], [0.15, 0.85]]],
+  o: [[[0.15, 0.15], [0.85, 0.15], [0.85, 0.85], [0.15, 0.85], [0.15, 0.15]]],
+  x: [[[0.12, 0.15], [0.88, 0.85]], [[0.12, 0.85], [0.88, 0.15]]],
+  n: [[[0.15, 0.15], [0.15, 0.85], [0.85, 0.85], [0.85, 0.15]]],
+  e: [[[0.85, 0.15], [0.15, 0.15], [0.15, 0.85], [0.85, 0.85], [0.85, 0.5], [0.15, 0.5]]],
+  t: [[[0.4, 1.3], [0.4, 0.15], [0.8, 0.15]], [[0.1, 0.85], [0.8, 0.85]]],
+  d: [[[0.85, 1.5], [0.85, 0.15], [0.15, 0.15], [0.15, 0.85], [0.85, 0.85]]],
+  y: [[[0.15, 0.85], [0.15, 0.15], [0.85, 0.15]], [[0.85, 0.85], [0.85, -0.5], [0.15, -0.5]]],
+};
+/** One glyph in the box u0 .. u1, x-height xh from v0, leaning `slant` (u per v). */
+const bxGlyph = (ch: string, u0: number, u1: number, v0: number, xh: number, stroke: number, slant = 0.22): BxUV[] =>
+  bxBars(BX_GLYPHS[ch]!.map((l) => l.map(([a, b]): BxUV => [u0 + a * (u1 - u0) + b * xh * slant, v0 + b * xh])), stroke);
+/** A lower-case word centred at uc. */
+const bxWord = (word: string, uc: number, v0: number, xh: number, w: number, gap: number, stroke: number): BxUV[] => {
+  const u0 = uc - (word.length * w + (word.length - 1) * gap) / 2;
+  return [...word].flatMap((ch, i) => bxGlyph(ch, u0 + i * (w + gap), u0 + i * (w + gap) + w, v0, xh, stroke));
+};
+/** Upper-case text (the stroke font) centred at uc. */
+const bxText = (text: string, uc: number, v0: number, h: number, w: number, gap: number, stroke = h * 0.15): BxUV[] =>
+  strokeText(text, uc - strokeWidth(text, w, gap) / 2, v0, h, w, gap, false, stroke);
+const bxRect = (u0: number, u1: number, v0: number, v1: number): BxUV[] => [[u0, v0], [u1, v0], [u1, v1], [u0, v0], [u1, v1], [u0, v1]];
+
+/** Southern Pacific's Hydra-Cushion car (SP 245516): white road name right of the door, yellow cushion slogan left. */
+function spMarks(): BxMark[] {
+  return [
+    { mat: "bxWhite", tris: [...bxText("SOUTHERN", 5.15, 3.22, 0.58, 0.36, 0.11, 0.1), ...bxText("PACIFIC", 5.15, 2.48, 0.55, 0.3, 0.1, 0.1)] },
+    { mat: "safety", tris: bxText("HYDRA-CUSHION", -5.37, 3.37, 0.52, 0.27, 0.08, 0.09) },
+    { mat: "bxWhite", tris: [...bxText("S P", -6.42, 2.62, 0.2, 0.25, 0.14), ...bxText("245516", -6.13, 2.15, 0.22, 0.21, 0.09)] },
+    // the data panel and the conspicuity reflectors on the sill
+    { mat: "bxWhite", tris: [...bxText("LD LMT", -3.9, 1.55, 0.07, 0.05, 0.02, 0.012), ...bxText("LT WT", -3.95, 1.43, 0.07, 0.05, 0.02, 0.012)] },
+    { mat: "safety", tris: [...bxRect(-4.25, -3.75, 0.9, 0.97), ...bxRect(2.55, 3.05, 0.9, 0.97)], z: 0.028 },
+    { mat: "safety", tris: [...bxRect(-7.38, -7.32, 1.25, 1.65), ...bxRect(7.5, 7.56, 1.25, 1.65)] },
+  ];
+}
+
+/** Railbox (RBOX 33646): the "rail box" lettering and its outline logo, "next load", the X, "any road". */
+function railboxMarks(): BxMark[] {
+  const row1: Array<[string, number, number]> = [["r", -6.75, -6.28], ["a", -5.89, -5.45], ["i", -4.95, -4.67], ["l", -4.06, -3.78]];
+  const row2: Array<[string, number, number]> = [["b", -4.15, -3.66], ["o", -3.28, -2.79], ["x", -2.44, -1.92]];
+  // the outline logo under "rai", traced from the photograph
+  const logo: BxUV[] = [[-6.33, 3.53], [-4.67, 3.53], [-4.8, 3.17], [-5.48, 3.17], [-5.4, 3.39], [-5.78, 3.39], [-5.94, 2.89], [-6.57, 2.89], [-6.33, 3.53]];
+  // the X: two blue strokes crossing, a red chevron inside each side
+  const [xc, yc] = [4.92, 3.57];
+  return [
+    {
+      mat: "bxBlack", tris: [
+        ...row1.flatMap(([c, a, b]) => bxGlyph(c, a, b, 3.63, 0.23, 0.1)),
+        ...row2.flatMap(([c, a, b]) => bxGlyph(c, a, b, 3.25, 0.19, 0.095)),
+        ...bxBars([logo], 0.04),
+        ...bxText("RB OX", -5.24, 2.43, 0.3, 0.2, 0.08, 0.04), ...bxText("33 646", -5.24, 2.09, 0.25, 0.16, 0.06, 0.035),
+        ...bxWord("next", 4.04, 3.6, 0.1, 0.09, 0.04, 0.03), ...bxWord("load", 4.04, 3.44, 0.1, 0.09, 0.04, 0.03),
+        ...bxWord("any", 5.78, 3.6, 0.1, 0.09, 0.04, 0.03), ...bxWord("road", 5.78, 3.44, 0.1, 0.09, 0.04, 0.03),
+        ...bxText("LD LMT", -6.1, 1.62, 0.07, 0.05, 0.02, 0.012), ...bxText("LT WT", -6.15, 1.5, 0.07, 0.05, 0.02, 0.012),
+      ],
+    },
+    { mat: "rbBlue", layer: 2, tris: bxBars([[[xc - 0.27, yc + 0.21], [xc + 0.27, yc - 0.21]], [[xc - 0.27, yc - 0.21], [xc + 0.27, yc + 0.21]]], 0.075) },
+    { mat: "rbRed", layer: 1, tris: bxBars([[[xc - 0.29, yc + 0.11], [xc - 0.05, yc], [xc - 0.29, yc - 0.11]], [[xc + 0.29, yc + 0.11], [xc + 0.05, yc], [xc + 0.29, yc - 0.11]]], 0.05) },
+    // the white consolidated stencil and the ACI label near the right end
+    { mat: "bxWhite", tris: [...bxRect(5.6, 6.02, 1.45, 1.74), ...bxRect(5.7, 5.92, 1.2, 1.36)] },
+  ];
+}
+
+const BOXCAR_LIVERIES: Record<string, BoxcarLivery> = {
+  boxcarRed: {
+    body: "bxRed", door: "bxRed", palette: { bxRed: paint("#7b2b22", 0.7), bxWhite: paint("#e8e6df") },
+    leaves: [[-2.58, 0], [0, 2.58]], track: [-5.2, 5.2], locks: [-0.1, 0.1], posts: bxPosts(2.66, 0.775, 7), ribs: 22, marks: spMarks,
+  },
+  railbox: {
+    body: "bxYellow", door: "rbDoor", palette: { bxYellow: paint("#e9b92a", 0.6), bxBlack: paint("#1f2022"), rbDoor: paint("#2c2e31", 0.8), bxWhite: paint("#e8e6df"), rbRed: paint("#c0322c"), rbBlue: paint("#2c4f9c") },
+    leaves: [[-1.615, 1.615]], track: [-1.615, 4.88], locks: [-1.5], posts: bxPosts(1.81, 0.87, 7), ribs: 16, marks: railboxMarks,
+  },
+};
+
+/** The part of triangle soup `tris` between u = a and u = b, as triangles. */
+function bxClipU(tris: readonly BxUV[], a: number, b: number): BxUV[] {
+  const out: BxUV[] = [];
+  const cut = (poly: BxUV[], keep: (u: number) => boolean, at: number): BxUV[] => {
+    const r: BxUV[] = [];
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i]!, q = poly[(i + 1) % poly.length]!;
+      if (keep(p[0])) r.push(p);
+      if (keep(p[0]) !== keep(q[0])) {
+        const t = (at - p[0]) / (q[0] - p[0]);
+        r.push([at, p[1] + (q[1] - p[1]) * t]);
+      }
+    }
+    return r;
+  };
+  for (let i = 0; i + 2 < tris.length; i += 3) {
+    const us = [tris[i]![0], tris[i + 1]![0], tris[i + 2]![0]];
+    if (Math.max(...us) <= a || Math.min(...us) >= b) continue;
+    const poly = cut(cut([tris[i]!, tris[i + 1]!, tris[i + 2]!], (u) => u >= a, a), (u) => u <= b, b);
+    for (let j = 1; j + 1 < poly.length; j++) out.push(poly[0]!, poly[j]!, poly[j + 1]!);
+  }
+  return out;
+}
+
+/** A point on the roof: along x, t from the eave (0) to the ridge (1) on side s, lifted off the sheet. */
+function bxRoof(x: number, t: number, s: number, lift = 0): Vec3 {
+  const d = BX.ridge - BX.eave, l = Math.hypot(d, BX.half);
+  return [x, BX.eave + d * t + lift * (BX.half / l), s * (BX.half * (1 - t) + lift * (d / l))];
+}
+
+/** A 70-ton three-piece freight truck at xc (33 in wheels, 5 ft 8 in wheelbase): cast side frames with their spring nests, roller bearings, the bolster. */
+function bxTruck(m: MeshBuilder, xc: number): void {
+  const N = 20, r = ft(0, 16.5), a = ft(5, 8) / 2;
+  const ay = r * Math.cos(Math.PI / N);
+  for (const dx of [-a, a])
+    m.scope("wheelset", () => {
+      const x = xc + dx;
+      const axle = ngon(8, 0.08, 0, x, ay);
+      m.sweep("steel", "z", axle, -0.95, axle, 0.95);
+      for (const s of [-1, 1]) {
+        extrude(m, "steel", "z", ngon(N, r, Math.PI / N, x, ay), side(s, 0.665, 0.8));
+        extrude(m, "wheel", "z", ngon(16, r * 0.8, 0, x, ay), side(s, 0.8, 0.815));
+        m.scope("roller bearing", () => {
+          extrude(m, "spring", "z", ngon(10, 0.11, 0, x, ay), side(s, 0.95, 1.12));
+          extrude(m, "bogie", "z", ngon(10, 0.075, 0, x, ay), side(s, 1.12, 1.15));
+          block(m, "bogie", x - 0.13, x + 0.13, ay + 0.1, ay + 0.15, ...side(s, 0.94, 1.08));
+        });
+      }
+    });
+  m.scope("side frames", () => {
+    for (const s of [-1, 1]) {
+      const z = side(s, 0.95, 1.07);
+      for (const k of [-1, 1]) {
+        const X = (u: number): number => xc + k * u;
+        const piece = (pts: BxUV[]): void => extrude(m, "bogie", "z", (k > 0 ? pts : [...pts].reverse()).map(([u, y]): [number, number] => [X(u), y]), z);
+        // the pedestal over the bearing, the top chord rising to the column, the tension member under it
+        piece([[a - 0.2, ay + 0.15], [a + 0.17, ay + 0.15], [a + 0.24, ay + 0.2], [a + 0.24, ay + 0.27], [a - 0.2, ay + 0.3]]);
+        piece([[0.4, 0.62], [a - 0.2, ay + 0.15], [a - 0.2, ay + 0.3], [0.4, 0.79]]);
+        piece([[0.4, 0.2], [a - 0.18, ay + 0.02], [a - 0.18, ay + 0.15], [0.4, 0.33]]);
+        piece([[0.28, 0.2], [0.4, 0.2], [0.4, 0.79], [0.28, 0.79]]);
+        // the pedestal jaws round the bearing adapter
+        for (const j of [-1, 1]) block(m, "bogie", Math.min(X(a + j * 0.14), X(a + j * 0.19)), Math.max(X(a + j * 0.14), X(a + j * 0.19)), ay + 0.04, ay + 0.15, ...z);
+      }
+      block(m, "bogie", xc - 0.28, xc + 0.28, 0.2, 0.32, ...z);
+      block(m, "bogie", xc - 0.28, xc + 0.28, 0.72, 0.79, ...z);
+      // the spring nest in the window
+      m.scope("springs", () => { for (const d of [-0.17, 0, 0.17]) coil(m, "spring", xc + d, s * 1.01, 0.32, 0.5, 0.075, 2, 6); });
+    }
+  });
+  m.scope("bolster", () => {
+    block(m, "bogie", xc - 0.24, xc + 0.24, 0.5, 0.7, -1.09, 1.09);
+    // the friction wedges beside it in each window
+    for (const s of [-1, 1]) for (const d of [-1, 1]) block(m, "spring", Math.min(xc + d * 0.24, xc + d * 0.28), Math.max(xc + d * 0.24, xc + d * 0.28), 0.54, 0.7, ...side(s, 0.96, 1.08));
+  });
+  m.scope("brake beams", () => { for (const d of [-1, 1]) block(m, "bogie", xc + d * 0.43 - 0.04, xc + d * 0.43 + 0.04, 0.36, 0.46, -0.86, 0.86); });
+}
+
+/** A grab iron: a bar from p to q standing `off` out along n, with its two legs. */
+function bxGrab(m: MeshBuilder, p: Vec3, q: Vec3, n: Vec3, off: number): void {
+  const o = (v: Vec3): Vec3 => [v[0] + n[0] * off, v[1] + n[1] * off, v[2] + n[2] * off];
+  m.rod("handrail", o(p), o(q), 0.016, 6);
+  for (const v of [p, q]) m.rod("handrail", v, o(v), 0.014, 4, false);
+}
 
 export function boxcar(params?: ParamValues): MeshBuilder {
   const l = BOXCAR_LIVERIES[resolveParams(BOXCAR_PARAMS, params).livery!]!;
   const m = new MeshBuilder({ ...US_PALETTE, ...l.palette });
-  m.scope("underframe", () => block(m, "black", -BX.sill, BX.sill, 0.85, BX.floor, -1.45, 1.45));
+  const H = BX.half;
+  const posts = [...l.posts.map((p) => -p), ...l.posts].sort((a, b) => a - b);
+  m.scope("underframe", () => {
+    block(m, "black", -BX.body, BX.body, BX.bottom - 0.06, BX.bottom, -1.45, 1.45);
+    block(m, "black", -BX.sill, BX.sill, 0.6, BX.bottom - 0.06, -0.3, 0.3);
+    for (const e of [1, -1]) block(m, "black", e * BX.centre - 0.22, e * BX.centre + 0.22, 0.7, BX.bottom - 0.06, -1.3, 1.3);
+    for (const x of [-3.6, -1.2, 1.2, 3.6]) block(m, "black", x - 0.08, x + 0.08, 0.66, BX.bottom - 0.06, -1.35, 1.35);
+    m.scope("brake gear", () => {
+      // the reservoir, the AB valve and the brake cylinder hung under one side
+      m.sweep("black", "x", ngon(10, 0.17, 0, 0.75, 0.56), -2.7, ngon(10, 0.17, 0, 0.75, 0.56), -1.5);
+      block(m, "black", -1.25, -0.9, 0.42, 0.74, 0.5, 0.85);
+      m.sweep("black", "x", ngon(10, 0.14, 0, -0.75, 0.6), 0.4, ngon(10, 0.14, 0, -0.75, 0.6), 1.05);
+      m.rod("steel", [1.05, 0.6, -0.75], [5.4, 0.62, -0.4], 0.02, 4);
+    });
+  });
   m.scope("body", () => {
-    paintedSweep(m, "x", box(BX.half, BX.floor, BX.top, 0.1), -BX.body, BX.body, { bands: [[0, 9, l.body]], roofFrom: BX.top - 0.04, roof: l.body });
+    const sec: Array<[number, number]> = [[-H, BX.bottom], [H, BX.bottom], [H, BX.eave], [0, BX.ridge], [-H, BX.eave]];
+    paintedSweep(m, "x", sec, -BX.body, BX.body, { bands: [[0, 9, l.body]], roofFrom: BX.eave + 0.01, roof: l.body });
+    m.scope("roof", () => {
+      // the diagonal-panel roof: seam caps across, a raised diagonal in each panel, chevrons seen from above
+      const n = 10, pitch = (2 * BX.body) / n;
+      for (const s of [-1, 1])
+        for (let i = 0; i < n; i++) {
+          const x0 = -BX.body + i * pitch, x1 = x0 + pitch;
+          const dep = (v: Vec3, w: Vec3): Vec3 => [w[0] - v[0], w[1] - v[1], w[2] - v[2]];
+          if (i > 0) m.slab(l.body, [bxRoof(x0 - 0.045, 0, s, 0.035), bxRoof(x0 + 0.045, 0, s, 0.035), bxRoof(x0 + 0.045, 1, s, 0.035), bxRoof(x0 - 0.045, 1, s, 0.035)], dep(bxRoof(0, 0, s, 0.035), bxRoof(0, 0, s, -0.01)));
+          m.slab(l.body, [bxRoof(x0 + 0.14, 0.08, s, 0.025), bxRoof(x0 + 0.42, 0.08, s, 0.025), bxRoof(x1 - 0.14, 0.92, s, 0.025), bxRoof(x1 - 0.42, 0.92, s, 0.025)], dep(bxRoof(0, 0, s, 0.025), bxRoof(0, 0, s, -0.01)));
+        }
+      for (const s of [-1, 1]) block(m, l.body, -BX.body - 0.03, BX.body + 0.03, BX.eave - 0.07, BX.eave + 0.02, ...side(s, H - 0.02, H + 0.03));
+    });
     for (const s of [-1, 1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        // the exterior posts, the sliding door on its track
-        for (let x = -BX.body + 0.4; x <= BX.body - 0.35; x += 0.62) if (Math.abs(x) > 1.75) block(m, l.body, x - 0.04, x + 0.04, BX.floor + 0.05, BX.top - 0.12, ...side(s, BX.half, BX.half + 0.05));
-        m.scope("door", () => {
-          block(m, l.body, -1.55, 1.55, BX.floor + 0.02, BX.top - 0.2, ...side(s, BX.half + 0.02, BX.half + 0.08));
-          for (const x of [-0.8, 0, 0.8]) block(m, "black", x - 0.03, x + 0.03, BX.floor + 0.1, BX.top - 0.3, ...side(s, BX.half + 0.08, BX.half + 0.1));
-          block(m, "steel", -3.2, 3.2, BX.top - 0.2, BX.top - 0.14, ...side(s, BX.half + 0.006, BX.half + 0.1));
+        const X = (u: number): number => s * u;
+        const span = (u0: number, u1: number): [number, number] => [Math.min(X(u0), X(u1)), Math.max(X(u0), X(u1))];
+        block(m, l.body, -BX.body, BX.body, BX.bottom, BX.sheet, ...side(s, H, H + 0.025));
+        m.scope("posts", () => {
+          for (const u of posts) {
+            const door = Math.abs(Math.abs(u) - l.posts[0]!) < 1e-6;
+            const w = door ? 0.07 : 0.045;
+            block(m, l.body, ...span(u - w, u + w), BX.sheet, BX.eave - 0.07, ...side(s, H - 0.01, H + BX.post + (door ? 0.01 : 0)));
+          }
+          // the corner posts
+          for (const e of [-1, 1]) block(m, l.body, ...span(e * (BX.body - 0.08), e * (BX.body + 0.04)), BX.bottom, BX.eave - 0.07, ...side(s, H - 0.08, H + 0.035));
         });
-        sideText(m, l.ink, l.text, s, BX.half + 0.056, -4.8, 3.4, 0.32);
-        sideText(m, l.ink, "BOXCAR", s, BX.half + 0.056, 4.8, 1.4, 0.2);
+        m.scope("door", () => {
+          for (const [u0, u1] of l.leaves) {
+            block(m, l.door, ...span(u0, u1), BX.doorFoot, BX.doorTop, ...side(s, H + BX.doorIn, H + BX.doorOut));
+            // the leaf's frame and its horizontal corrugations
+            for (const [a, b] of [[u0, u0 + 0.07], [u1 - 0.07, u1]] as const) block(m, l.door, ...span(a, b), BX.doorFoot, BX.doorTop, ...side(s, H + BX.doorOut, H + BX.doorOut + 0.025));
+            block(m, l.door, ...span(u0 + 0.07, u1 - 0.07), BX.doorTop - 0.12, BX.doorTop, ...side(s, H + BX.doorOut, H + BX.doorOut + 0.025));
+            block(m, l.door, ...span(u0 + 0.07, u1 - 0.07), BX.doorFoot, BX.doorFoot + 0.12, ...side(s, H + BX.doorOut, H + BX.doorOut + 0.025));
+            const y0 = BX.doorFoot + 0.2, step = (BX.doorTop - 0.2 - y0) / l.ribs;
+            for (let i = 0; i < l.ribs; i++) block(m, l.door, ...span(u0 + 0.07, u1 - 0.07), y0 + i * step + step * 0.3, y0 + i * step + step * 0.7, ...side(s, H + BX.doorOut, H + BX.doorOut + 0.018));
+          }
+          // the lock bars with their handles, the top track and the bottom track the door rolls on, the door stops
+          for (const u of l.locks) {
+            m.rod("steel", [X(u), BX.doorFoot + 0.15, s * (H + 0.135)], [X(u), BX.doorTop - 0.15, s * (H + 0.135)], 0.016, 6);
+            for (const y of [BX.doorFoot + 0.15, BX.doorTop - 0.15]) m.rod("steel", [X(u), y, s * (H + BX.doorOut + 0.02)], [X(u), y, s * (H + 0.135)], 0.018, 4, false);
+            m.rod("steel", [X(u), 1.7, s * (H + 0.135)], [X(u + Math.sign(u) * 0.25), 1.55, s * (H + 0.135)], 0.018, 4);
+          }
+          block(m, "steel", ...span(l.track[0] - 0.05, l.track[1] + 0.05), BX.doorTop, BX.eave - 0.075, ...side(s, H, H + 0.12));
+          block(m, l.body, ...span(l.track[0] - 0.05, l.track[1] + 0.05), BX.doorFoot - 0.06, BX.doorFoot, ...side(s, H + 0.025, H + 0.1));
+          for (const u of l.track) block(m, "black", ...span(u - 0.05, u + 0.05), BX.doorFoot - 0.02, BX.doorFoot + 0.12, ...side(s, H + 0.03, H + BX.doorIn));
+        });
+        m.scope("lettering", () => {
+          for (const k of l.marks()) {
+            const lay = 0.003 * (1 + (k.layer ?? 0));
+            const put = (tris: readonly BxUV[], z: number): void => m.facets(k.mat, tris.map(([u, v]): Vec3 => [X(u), v, s * z]), [0, 0, s]);
+            if (k.z !== undefined) { put(k.tris, H + k.z); continue; }
+            put(k.tris, H + lay);
+            // the same marks on the posts' faces they cross
+            for (const u of posts) {
+              const door = Math.abs(Math.abs(u) - l.posts[0]!) < 1e-6;
+              const w = door ? 0.07 : 0.045;
+              const on = bxClipU(k.tris, u - w, u + w);
+              if (on.length) put(on, H + BX.post + (door ? 0.01 : 0) + lay);
+            }
+          }
+        });
+        m.scope("ladders", () => {
+          // short side ladders at both ends, the sill steps under them
+          for (const e of [-1, 1]) {
+            const [ua, ub] = [e * (BX.body - 0.12), e * Math.max(l.posts[l.posts.length - 1]! + 0.1, BX.body - 0.74)];
+            for (const y of [1.12, 1.6, 2.08, 2.56]) bxGrab(m, [X(ua), y, s * H], [X(ub), y, s * H], [0, 0, s], 0.1);
+            const st = [X(e * (BX.body - 0.15)), X(e * (BX.body - 0.5))];
+            for (const x of st) m.rod("handrail", [x, BX.bottom, s * (H + 0.04)], [x, 0.45, s * (H + 0.06)], 0.018, 4, false);
+            m.rod("handrail", [st[0]!, 0.45, s * (H + 0.06)], [st[1]!, 0.45, s * (H + 0.06)], 0.02, 4);
+          }
+        });
       });
     for (const e of [1, -1])
       m.scope(e > 0 ? "front end" : "rear end", () => {
         const x = e * BX.body;
-        for (let y = BX.floor + 0.5; y < BX.top - 0.2; y += 0.55) block(m, l.body, Math.min(x, x + e * 0.05), Math.max(x, x + e * 0.05), y, y + 0.08, -1.4, 1.4);
-        for (const z of [1.1, 1.4]) m.rod("handrail", [x + e * 0.1, 1.2, z], [x + e * 0.1, BX.top - 0.2, z], 0.02, 6);
-        for (let y = 1.5; y < BX.top - 0.2; y += 0.4) m.rod("handrail", [x + e * 0.1, y, 1.1], [x + e * 0.1, y, 1.4], 0.016, 6);
+        const ax = (a: number, b: number): [number, number] => [Math.min(x + e * a, x + e * b), Math.max(x + e * a, x + e * b)];
+        // the improved Dreadnaught end: six broad ribs, the end sill and the striker
+        m.scope("corrugations", () => {
+          const pitch = (BX.eave - 0.1 - (BX.sheet + 0.04)) / 6;
+          for (let i = 0; i < 6; i++) {
+            const y0 = BX.sheet + 0.04 + i * pitch, y1 = y0 + pitch * 0.8;
+            const ring: Array<[number, number]> = [[x - e * 0.01, y0], [x + e * 0.04, y0], [x + e * 0.1, y0 + 0.06], [x + e * 0.13, y0 + 0.14], [x + e * 0.13, y1 - 0.14], [x + e * 0.1, y1 - 0.06], [x + e * 0.04, y1], [x - e * 0.01, y1]];
+            extrude(m, l.body, "z", e > 0 ? ring : [...ring].reverse(), [-1.36, 1.36]);
+          }
+        });
+        block(m, l.body, ...ax(0, 0.12), 0.64, BX.sheet, -1.42, 1.42);
+        block(m, "knuckle", ...ax(0.12, 0.18), 0.66, 1.06, -0.26, 0.26);
+        // the end ladder at the right-hand corner seen from the end
+        const zl = -e * 1.18;
+        for (const y of [1.12, 1.6, 2.08, 2.56, 3.04]) bxGrab(m, [x + e * 0.13, y, zl - 0.2], [x + e * 0.13, y, zl + 0.2], [e, 0, 0], 0.1);
+        if (e < 0)
+          m.scope("hand brake", () => {
+            // the B end: the vertical brake wheel, its housing, the brake step under it and the chain down to the gear
+            const zb = 0.5, yb = 3.1;
+            block(m, "black", ...ax(0.13, 0.28), yb - 0.48, yb - 0.1, zb - 0.16, zb + 0.16);
+            m.tube("black", "x", zb, yb, 0.28, 0.25, ...ax(0.34, 0.37), 12);
+            for (const t of [0, 1, 2]) {
+              const ang = Math.PI / 2 + (t * 2 * Math.PI) / 3;
+              m.rod("black", [x + e * 0.355, yb, zb], [x + e * 0.355, yb + Math.sin(ang) * 0.255, zb + Math.cos(ang) * 0.255], 0.015, 4, false);
+            }
+            m.rod("black", [x + e * 0.28, yb, zb], [x + e * 0.37, yb, zb], 0.04, 6);
+            block(m, "steel", ...ax(0.13, 0.44), 2.02, 2.06, zb - 0.45, zb + 0.45);
+            for (const z of [zb - 0.4, zb + 0.4]) m.rod("steel", [x + e * 0.13, 1.8, z], [x + e * 0.42, 2.02, z], 0.015, 4, false);
+            m.rod("steel", [x + e * 0.2, yb - 0.48, zb], [x + e * 0.2, 1.02, zb], 0.015, 4, false);
+          });
       });
   });
-  runningGear(m, BX.centre, BX.sill, BOXCAR_LENGTH, freightTruck());
+  m.scope("trucks", () => {
+    m.scope("front truck", () => m.bogie(() => bxTruck(m, BX.centre)));
+    m.scope("rear truck", () => m.bogie(() => bxTruck(m, -BX.centre)));
+  });
+  for (const e of [1, -1]) m.scope(e > 0 ? "front coupler" : "rear coupler", () => knuckleCoupler(m, e, BX.sill, BOXCAR_LENGTH / 2, COUPLER_Y));
   return m;
 }
 
 export function boxcarLod(params?: ParamValues): MeshBuilder {
   const l = BOXCAR_LIVERIES[resolveParams(BOXCAR_PARAMS, params).livery!]!;
-  return boxLod({ ...US_PALETTE, ...l.palette }, -BX.sill, BX.sill, 0.85, BX.top, BX.half, [[0.85, BX.floor, "black"], [BX.floor, BX.top, l.body]], l.body, BX.centre, freightTruck());
+  const body: UnitBody = {
+    y0: BX.bottom, hw: [[BX.bottom, BX.half + 0.03], [BX.eave, BX.half + 0.03], [BX.ridge, 0.3]], side: [[BX.bottom, BX.ridge, l.body]], roof: l.body,
+    front: { tip: [[BX.bottom, BX.body + 0.08]] }, rear: { tip: [[BX.bottom, -BX.body - 0.08]] },
+    windows: l.door === l.body ? [] : l.leaves.map(([u0, u1]) => ({ u: [u0, u1] as const, y: [BX.doorFoot, BX.doorTop] as const, mat: l.door })),
+  };
+  const parts: LodPart[] = bogieParts([[BX.centre, 1.3], [-BX.centre, 1.3]], BX.bottom);
+  return fitUnit({ palette: { ...US_PALETTE, ...l.palette }, bodies: [body], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------
