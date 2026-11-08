@@ -144,6 +144,11 @@ document that owns it in the same change.** Conventions:
   scale, front, plan, windows and doors on every car, paint, roof, running gear) before reporting. When
   several vehicles are requested, one subagent per vehicle, each reviewed by the master against the photos,
   then merged with a byte-hash check and built and tested once.
+- **`animal`** (`.agents/skills/animal/`) - use it whenever a draft animal (horse, donkey,
+  mule, cow, camel, elephant: the animals of the animal-drawn vehicles and the Animals catalog)
+  or its team drawing is added or changed: the 5,000-triangle budget (a team's animals 10,000
+  together), a knee or hock and a fetlock on every leg, visible eyes and a recognizable face,
+  the gait and headless checks. Not for the walk mode's character animals.
 - **`vlakosimdb-transfer`** (`.agents/skills/vlakosimdb-transfer/`) - use it when
   reconstructing or correcting a vehicle from vlakosimdb: XML shapes, original
   BMP measurements, comparison-table optimization and presentation to the user.

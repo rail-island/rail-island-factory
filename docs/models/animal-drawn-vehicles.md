@@ -41,7 +41,11 @@ weight and own top speed, the hitch, where the driver holds the reins, the body 
 coach's fore-carriage and king bolt), its rolling wheels, its distant model and its references -
 and exports `buildAnimalVehicle(spec, p)` and `buildAnimalVehicleLod(spec, p)` under its own names
 (the JS model imports build functions by name). `animalVehicleDesign` gives the design its
-parameters and its game figures (`teamGame`).
+parameters and its game figures (`teamGame`). Every design's catalog fields carry
+`traction: "animal"` (`HORSECAR_CATALOG`, `ANIMAL_COACH_CATALOG` and its wagon group,
+`ANIMAL_BUS_CATALOG`), which files it under the Animal chip of the site's Trains, Trams and
+Road vehicles rows and the game's Animal picker pill ([export.md](export.md),
+[../site/catalog-site.md](../site/catalog-site.md)).
 
 ### Rail and tram: the team a section ahead
 
@@ -63,9 +67,10 @@ a semi-trailer. The rig's `team` is `{ section: 0, rehitchable: false }`.
 
 ## Budget
 
-At most **10,000 triangles and 1,000 more for every animal after the first**, at the default team
-and at each species' biggest (`test/animalDrawn.test.ts`): the body keeps to about 6,000, the
-animals are drawn lighter in a team of four or six (`detailFor`). The distant model is the body's
+At most **10,000 triangles for the vehicle and its team's budget on top** - 5,000 an animal alone or
+in a pair, a bigger team's animals 10,000 together (`animalBudget`; at most 20,000 in all) - at
+every species and team (`test/animalDrawn.test.ts`): the body keeps to about 6,000, the animals
+are drawn lighter in a team of three to six (`detailFor`; [draft-animals.md](draft-animals.md)). The distant model is the body's
 boxes and the team's (`teamLod`), at most 500.
 
 ## Game figures, sounds and OpenTTD

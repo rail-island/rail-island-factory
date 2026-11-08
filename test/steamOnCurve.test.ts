@@ -15,7 +15,9 @@ const RADIUS = 40;
 /** The most a wheelset may stand off the track centre line there, studs (the gauge is about 2.15). */
 const ON_RAILS = 0.35;
 
-const STEAM = ALL_VEHICLES.filter((d) => d.catalog?.traction === "steam");
+// The steam locomotives, tenders and railcars the game places as trains; a steam tram
+// rides the tram track (worldTramsWorld.ts) and is not one of them.
+const STEAM = ALL_VEHICLES.filter((d) => d.catalog?.traction === "steam" && d.catalog.group !== "tram");
 const BUILDS = STEAM.flatMap((d) => {
   const unit = d.params?.find((p) => p.name === "unit");
   return (unit ? unit.values.map((v) => v.value) : [undefined]).map((u) => ({ label: u ? `${d.id} ${u}` : d.id, d, params: (u ? { unit: u } : {}) as Record<string, string> }));

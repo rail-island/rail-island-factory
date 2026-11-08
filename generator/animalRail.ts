@@ -38,8 +38,10 @@ import { lodBlock, lodSideBox, lodWheel } from "./lodKit.ts";
 import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import { animalVehicleDesign, buildAnimalVehicle, buildAnimalVehicleLod, type AnimalVehicleSpec } from "./animalVehicleKit.ts";
 
+/** The horse railway's coach: a coach drawn by its team (the Animal chip and pill). */
+const ANIMAL_COACH_CATALOG: CatalogFields = { ...COACH_CATALOG, traction: "animal" };
 /** Goods and works vehicles: the coaches' fields in the wagon group. */
-const WAGON_CATALOG: CatalogFields = { ...COACH_CATALOG, group: "wagon" };
+const WAGON_CATALOG: CatalogFields = { ...ANIMAL_COACH_CATALOG, group: "wagon" };
 
 // ---------------------------------------------------------------------------
 // the palette
@@ -354,7 +356,7 @@ const BUDWEIS_COACH: AnimalVehicleSpec = {
   id: "veh-animal-rail-budweis-coach",
   title: "Budweis-Linz Coach",
   kind: "rail",
-  catalog: { ...COACH_CATALOG },
+  catalog: ANIMAL_COACH_CATALOG,
   palette: PALETTE,
   weight: 1.8,
   maxspeed: 15,

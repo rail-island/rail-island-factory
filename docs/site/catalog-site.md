@@ -219,12 +219,14 @@ props, [../models/previews.md](../models/previews.md)) - offered only when it ha
 except a `tram` group, which is Trams; `Road vehicles` is Road vehicles; `Cable
 car` is Cable cars; any category that is not a vehicle one is a building's).
 Under a pick, a second row splits it by the vehicle's `group` (Locomotive, Unit,
-Coach, Wagon, Metro, Bus, Truck), the building's category, a structure's or a way's set
+Coach, Wagon, Metro, Bus, Truck) - except an animal-drawn train or road vehicle
+(`traction: "animal"`), which leaves its group for an **Animal** chip of its own -,
+a tram's `traction` (Electric, Steam, Cable, Animal), the building's category, a structure's or a way's set
 (Bridges, Railway stations, Dams, Rail types, ...), a city block's district or an aircraft's
 `airframe` - what drives it: Helicopter, Jet, Propeller or Airship (`generator/airframeKinds.ts`:
 a helicopter by its game kind, the rest by the list the design is in, the hand-built aircraft by
-a table); Ships, Cable cars, Trams, Trees, Woods, Props and Textures have no second row. A third row splits a Locomotive or a
-Unit by its `traction` (Electric, Diesel, Steam); buildings have no city-pool
+a table); Ships, Cable cars, Trees, Woods, Props and Textures have no second row. A third row splits a Locomotive or a
+Unit by its `traction` (Electric, Diesel, Steam), never an Animal pick; buildings have no city-pool
 row. A lower row appears only when it offers a choice,
 leads with its own All, and is cleared when the row above changes; picking the
 picked chip clears it. The chips are derived from every model, not the searched
