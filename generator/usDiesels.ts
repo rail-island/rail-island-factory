@@ -12,6 +12,7 @@ import { DIESEL_LOCO_CATALOG } from "./cd163.ts";
 import { paint } from "./dieselParts.ts";
 import { buildUsHood, usHoodLod, type Band, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
 import { GP9_PAINT, buildGp9, gp9Lod, type Gp9Livery } from "./usGp9.ts";
+import { SD40_2_PAINT, buildSd40_2, sd40_2Lod } from "./usSd40.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 
@@ -207,11 +208,12 @@ export function emdGp9(params?: ParamValues): MeshBuilder {
 export function emdGp9Lod(params?: ParamValues): MeshBuilder {
   return gp9Lod(GP9_LIVERIES[resolveParams(GP9_PARAMS, params).livery!]!);
 }
+// The SD40-2 is drawn by its own module from photographs (usSd40.ts); SD40_SPEC stays for the WDM-2's trucks.
 export function emdSd40(params?: ParamValues): MeshBuilder {
-  return buildUsHood(SD40_SPEC, liveryOf(SD40_PARAMS, SD40_LIVERIES, params));
+  return buildSd40_2(SD40_2_PAINT[resolveParams(SD40_PARAMS, params).livery!]!);
 }
 export function emdSd40Lod(params?: ParamValues): MeshBuilder {
-  return usHoodLod(SD40_SPEC, liveryOf(SD40_PARAMS, SD40_LIVERIES, params));
+  return sd40_2Lod(SD40_2_PAINT[resolveParams(SD40_PARAMS, params).livery!]!);
 }
 export function geEs44ac(params?: ParamValues): MeshBuilder {
   return buildUsHood(ES44_SPEC, liveryOf(ES44_PARAMS, ES44_LIVERIES, params));
