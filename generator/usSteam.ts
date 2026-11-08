@@ -12,9 +12,10 @@ import type { Vec3 } from "./meshCore.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { buildLoco, type LocoSpec } from "./steamLoco.ts";
-import type { Steam } from "./steamParts.ts";
+import { STEAM_PALETTE, halfAt, mirrored, type Steam } from "./steamParts.ts";
 import { STEAM_CATALOG, UNIT_PARAM } from "./steamLocos.ts";
-import { steamLocoLod } from "./lodSteam.ts";
+import { boxShell, halfTable, sidePlates, steamLocoLod, steamLodSpec, wheelBlocks } from "./lodSteam.ts";
+import { fitLod, lodSideBox, lodWheel, simplifyTable, windowBands, type LodBand, type LodPart, type LodShell } from "./lodKit.ts";
 import { knuckleCoupler } from "./usHoodKit.ts";
 import type { Pt } from "./sliceLoft.ts";
 
@@ -511,78 +512,406 @@ function k4sTenderSpec(): LocoSpec {
 
 // ---------------------------------------------------------------------------
 // NYC J-3a Hudson 4-6-4 in Henry Dreyfuss's streamlining (the 20th Century Limited)
+//
+// Measured from the photographs in assets/nyc-hudson/ (SOURCES.md, "Measurements"): the
+// side views of 5450-series units scaled by the 79 in drivers, the World's Fair and test-run
+// three-quarter views for the nose. The published figures fix the axles: 79 in drivers 14 ft
+// apart, 36 in lead and 36/51 in trailing wheels, 40 ft 4 in over the engine's axles, 83 ft
+// 7.5 in over all, 97 ft 2 in over the couplers, 15 ft 1 in high. Source x from the front
+// coupler face.
+
+const HU_DRIVER = ft(0, 79);
+/** The axles: lead truck, the drivers 14 ft apart, the trailing truck (36 and 51 in wheels). */
+const HU_LEAD = [2.5, 4.85];
+const HU_DRIVERS = [6.8, 8.934, 11.068];
+const HU_TRAILING: Array<[number, number]> = [[13.07, ft(0, 36)], [14.79, ft(0, 51)]];
+/** The bullet nose: half an ellipsoid about the boiler's axis (height y, radius r), its tip at source x `tip`, its equator at `x`, the casing's front. */
+const HU_DOME = { y: 3.2, r: 1.12, tip: 0.75, x: 2.0 };
+/** The casing over the boiler, the right half of its section bottom to top (its bottom is cut by HU_CASING_BOTTOM). */
+const HU_CASING: Pt[] = [[1.45, 1.2], [1.45, 3.35], [1.41, 3.72], [1.3, 4.02], [1.1, 4.28], [0.75, 4.47], [0.3, 4.55]];
+const HU_TOP = 4.55;
+/** The casing's lower edge: the shelf over the drivers, then the skirt arching down behind the last driver over the trailing truck. */
+const HU_SHELF = 2.45;
+const HU_CASING_BOTTOM: Pt[] = [[2.0, HU_SHELF], [11.95, HU_SHELF], [12.12, 2.4], [12.24, 2.26], [12.31, 2.0], [12.34, 1.42], [13.0, 1.42]];
+/** The cab, its section (the casing's sides, a taller crown) and its windows. */
+const HU_CAB: [number, number] = [13.0, 15.9];
+const HU_CAB_HALF: Pt[] = [[1.45, 1.42], [1.45, 4.0], [1.35, 4.25], [1.0, 4.4], [0.5, 4.47], [0, 4.5]];
+/**
+ * The pilot's plan at each height, [y, front tip, half width, depth to full width]: the
+ * plate front leaning back from its rolled foot, then above the deck's edge (HU_DECK) the
+ * cradle sweeping back and up under the nose to its top (HU_CRADLE).
+ */
+const HU_DECK = 2.06;
+const HU_CRADLE = 2.55;
+const HU_PILOT: Array<[number, number, number, number]> = [[0.15, 0.1, 1.28, 1.1], [0.32, 0.02, 1.36, 1.15], [0.55, 0.06, 1.36, 1.15], [1.2, 0.2, 1.36, 1.15], [1.9, 0.38, 1.36, 1.15], [HU_DECK, 0.5, 1.33, 1.1], [2.3, 0.76, 1.3, 1.0], [HU_CRADLE, 1.02, 1.25, 0.85]];
+const HU_PILOT_REAR = 2.0;
+/** The dark band along the cab's rear half and the tender, between two aluminium stripes. */
+const HU_BAND: [number, number] = [2.15, 2.75];
+const HU_STRIPES: Array<[number, number]> = [[2.19, 2.22], [2.68, 2.71]];
+
+const HU_PALETTE: Record<string, MaterialSpec> = {
+  ...US_STEAM_PALETTE,
+  // the casing's grey, the aluminium pilot, drivers and stripes, the dark band
+  paint: { color: "#8d9296", roughness: 0.45 },
+  pilot: { color: "#c5c9cd", roughness: 0.35, metallic: 0.3 },
+  driver: { color: "#c9cdd1", roughness: 0.4, metallic: 0.3 },
+  lining: { color: "#363b41", roughness: 0.5 },
+  roof: { color: "#7c8186", roughness: 0.5 },
+  herald: { color: "#1f2a3c", roughness: 0.45 },
+  wheel: { color: "#1c1d1f", roughness: 0.6 },
+  frame: { color: "#1c1d1f", roughness: 0.65 },
+  plate: { color: "#363b41", roughness: 0.5 },
+  plateText: { color: "#e8e6df", roughness: 0.5 },
+};
+
+/** Source (x, y, z) to the model's point. */
+const huP = (t: Steam, x: number, y: number, z: number): Vec3 => [t.X(x), y, z];
+/** A source direction to the model's. */
+const huD = (dx: number, dy: number, dz: number): Vec3 => [-dx, dy, dz];
+
+/** A quad (a, b, c, d in order round it) facing `out`. */
+function huQuad(t: Steam, mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3, out: Vec3): void {
+  t.m.facets(mat, [a, b, c, a, c, d], out);
+}
+
+/** The pilot's plan point at angle phi (-pi/2 the left cheek, 0 the nose, pi/2 the right) at height y: a superellipse face, [x, z]. */
+function huPilotAt(phi: number, y: number): [number, number] {
+  const at = (l: [number, number, number, number]): [number, number] => {
+    const [, xf, w, d] = l;
+    const s = Math.sin(phi), c = Math.cos(phi);
+    return [xf + d * (1 - Math.pow(Math.abs(c), 0.9)), w * Math.sign(s) * Math.pow(Math.abs(s), 0.9)];
+  };
+  let i = 0;
+  while (i + 2 < HU_PILOT.length && y > HU_PILOT[i + 1]![0]) i++;
+  const [a, b] = [HU_PILOT[i]!, HU_PILOT[i + 1]!];
+  const k = Math.min(1, Math.max(0, (y - a[0]) / (b[0] - a[0])));
+  const [p, q] = [at(a), at(b)];
+  return [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k];
+}
+
+/** The pilot's surface frame at (phi, y): the point, the unit tangents across (u, toward +z at the nose) and up (v), and the outward normal, all in source axes. */
+function huPilotFrame(phi: number, y: number): { p: Vec3; u: Vec3; v: Vec3; n: Vec3 } {
+  const e = 1e-3;
+  const pt = (f: number, h: number): Vec3 => { const [x, z] = huPilotAt(f, h); return [x, h, z]; };
+  const p = pt(phi, y);
+  const norm = (a: Vec3): Vec3 => { const l = Math.hypot(a[0], a[1], a[2]); return [a[0] / l, a[1] / l, a[2] / l]; };
+  const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const u = norm(sub(pt(phi + e, y), pt(phi - e, y)));
+  const v0 = norm(sub(pt(phi, y + e), pt(phi, y - e)));
+  // n across u and v, pointing forward and out (negative source x)
+  let n = norm([u[1] * v0[2] - u[2] * v0[1], u[2] * v0[0] - u[0] * v0[2], u[0] * v0[1] - u[1] * v0[0]]);
+  if (n[0] > 0) n = [-n[0], -n[1], -n[2]];
+  // v made square to u and n
+  const v = norm([n[1] * u[2] - n[2] * u[1], n[2] * u[0] - n[0] * u[2], n[0] * u[1] - n[1] * u[0]]);
+  return { p, u, n, v: v[1] < 0 ? [-v[0], -v[1], -v[2]] : v };
+}
+
+/** A flat slab on the pilot at (phi, y): `w` across, `h` up, its face `proud` off the skin (an n-gon ellipse when `round`). */
+function huPilotPanel(t: Steam, mat: string, phi: number, y: number, w: number, h: number, proud: number, round = 0): void {
+  const f = huPilotFrame(phi, y);
+  const at = (a: number, b: number): Vec3 => huP(t, f.p[0] + f.u[0] * a + f.v[0] * b + f.n[0] * proud, f.p[1] + f.u[1] * a + f.v[1] * b + f.n[1] * proud, f.p[2] + f.u[2] * a + f.v[2] * b + f.n[2] * proud);
+  const pts: Vec3[] = round
+    ? Array.from({ length: round }, (_, k) => { const a = (k / round) * Math.PI * 2; return at((w / 2) * Math.cos(a), (h / 2) * Math.sin(a)); })
+    : [at(-w / 2, -h / 2), at(w / 2, -h / 2), at(w / 2, h / 2), at(-w / 2, h / 2)];
+  const d = huD(-f.n[0] * 0.04, -f.n[1] * 0.04, -f.n[2] * 0.04);
+  t.m.slab(mat, pts, d);
+}
+
+/** Text in the plane of the pilot's face at (phi = 0, y): `h` high, reading across the face as seen from ahead. */
+function huPilotText(t: Steam, mat: string, text: string, y: number, h: number, proud: number): void {
+  const f = huPilotFrame(0, y);
+  const w = h * 0.62, gap = h * 0.2;
+  const width = strokeWidth(text, w, gap);
+  // seen from ahead the text runs toward -z
+  const pts = strokeText(text, -width / 2, -h / 2, h, w, gap).map(([a, b]): Vec3 => huP(t, f.p[0] + f.v[0] * b + f.n[0] * proud, f.p[1] + f.v[1] * b + f.n[1] * proud, f.p[2] - a + f.n[2] * proud));
+  t.m.facets(mat, pts, huD(f.n[0], f.n[1], f.n[2]));
+}
+
+/** The pilot: a rounded plate front from the rail to the deck, its cheeks, the herald, the slots, the coupler's opening. */
+function hudsonPilot(t: Steam): void {
+  const m = t.m;
+  m.scope("front pilot", () => {
+    const N = 16;
+    const ring = (l: [number, number, number, number]): Vec3[] => {
+      const pts: Vec3[] = [];
+      for (let k = 0; k <= N; k++) {
+        const [x, z] = huPilotAt(-Math.PI / 2 + (k / N) * Math.PI, l[0]);
+        pts.push(huP(t, x, l[0], z));
+      }
+      pts.push(huP(t, HU_PILOT_REAR, l[0], l[2]), huP(t, HU_PILOT_REAR, l[0], -l[2]));
+      return pts;
+    };
+    const rings = HU_PILOT.map(ring);
+    const centre = huP(t, 1.2, 0, 0);
+    for (let i = 0; i + 1 < rings.length; i++) {
+      const [a, b] = [rings[i]!, rings[i + 1]!];
+      for (let k = 0; k < a.length; k++) {
+        const j = (k + 1) % a.length;
+        const mid = [(a[k]![0] + a[j]![0]) / 2, 0, (a[k]![2] + a[j]![2]) / 2];
+        huQuad(t, "pilot", a[k]!, a[j]!, b[j]!, b[k]!, [mid[0]! - centre[0], 0, mid[2]! - centre[2]]);
+      }
+    }
+    const fan = (r: Vec3[]): Vec3[] => r.slice(1, -1).flatMap((p, k) => [r[0]!, p, r[k + 2]!]);
+    m.facets("pilot", fan(rings[0]!), [0, -1, 0]);
+    m.scope("deck", () => m.facets("pilot", fan(rings[rings.length - 1]!), [0, 1, 0]));
+    // the herald: NEW YORK CENTRAL SYSTEM in an aluminium-edged dark oval, on the nose
+    m.scope("herald", () => {
+      huPilotPanel(t, "pilot", 0, 1.66, 0.92, 0.54, 0.02, 20);
+      huPilotPanel(t, "herald", 0, 1.66, 0.83, 0.45, 0.026, 20);
+      huPilotText(t, "pilot", "CENTRAL", 1.66, 0.11, 0.03);
+      huPilotText(t, "pilot", "NEW YORK", 1.79, 0.045, 0.03);
+      huPilotText(t, "pilot", "SYSTEM", 1.53, 0.045, 0.03);
+    });
+    // three slots up each cheek, and the coupler's opening in the nose
+    m.scope("slots", () => { for (const s of [-1, 1]) for (const y of [0.42, 0.83, 1.32]) huPilotPanel(t, "black", s * 0.92, y, 0.34, 0.09, 0.012); });
+    m.scope("coupler opening", () => huPilotPanel(t, "black", 0, 0.88, 0.48, 0.38, 0.012));
+    knuckleCoupler(m, 1, t.X(0) - 0.6, t.X(0), COUPLER_Y);
+  });
+  // the aluminium sheets continuing the pilot's sides back to the shelf, their rear edge
+  // slanting up from the foot past the lead truck to the cylinders, the steps behind that
+  // edge, and the cowl's lower half beside the nose, aluminium to the nose's middle
+  m.scope("apron", () => {
+    const [b0, b1]: [Pt, Pt] = [[2.05, 0.25], [3.15, HU_SHELF]];
+    const out: Pt[] = [[1.9, 0.25], b0, b1, [2.0, HU_SHELF], [1.55, HU_DECK]];
+    for (const s of [-1, 1]) m.slab("pilot", out.map(([x, y]) => huP(t, x, y, s * 1.355)), [0, 0, -s * 0.03]);
+    for (const s of [-1, 1]) for (const f of [0.3, 0.55, 0.8]) {
+      const [x, y] = [b0[0] + (b1[0] - b0[0]) * f, b0[1] + (b1[1] - b0[1]) * f];
+      t.sideBox("black", s, x - 0.05, x + 0.2, y - 0.03, y, 1.1, 1.32);
+    }
+    // its inner edge a chord inside the nose's equator, so the nose hides it
+    const cowl: Pt[] = [[0.8, 2.5], [1.45, 2.5], [1.45, 3.15], [1.118, 3.15]];
+    for (const s of [-1, 1]) m.slab("pilot", cowl.map(([z, y]) => huP(t, HU_DOME.x - 0.015, y, s * z)), [-0.015, 0, 0]);
+  });
+}
+
+/** The point of the nose's meridian at polar angle th (0 the tip, pi/2 the top) and its outward normal, in source (x, y). */
+function huMeridian(th: number): { p: Pt; n: Pt } {
+  const a = HU_DOME.x - HU_DOME.tip, b = HU_DOME.r;
+  const p: Pt = [HU_DOME.x - a * Math.cos(th), HU_DOME.y + b * Math.sin(th)];
+  const g: Pt = [-Math.cos(th) / a, Math.sin(th) / b];
+  const l = Math.hypot(g[0], g[1]);
+  return { p, n: [g[0] / l, g[1] / l] };
+}
+
+/** A blade along the nose's meridian from angle th0 to th1: `w(f)` half wide and `h(f)` high off the skin at fraction f, on stations of `n`. */
+function huBlade(t: Steam, mat: string, th0: number, th1: number, n: number, w: (f: number) => number, h: (f: number) => number): void {
+  const secs: Vec3[][] = [];
+  const bases: Vec3[] = [];
+  for (let i = 0; i <= n; i++) {
+    const f = i / n;
+    const { p, n: nn } = huMeridian(th0 + (th1 - th0) * f);
+    const [ww, hh] = [w(f), h(f)];
+    const at = (u: number, v: number): Vec3 => huP(t, p[0] + nn[0] * v, p[1] + nn[1] * v, u);
+    secs.push([at(-ww, -0.05), at(ww, -0.05), at(ww, 0.55 * hh), at(0.55 * ww, hh), at(-0.55 * ww, hh), at(-ww, 0.55 * hh)]);
+    bases.push(huP(t, p[0], p[1], 0));
+  }
+  for (let i = 0; i < n; i++) {
+    const [a, b] = [secs[i]!, secs[i + 1]!];
+    const c = bases[i]!;
+    for (let k = 0; k < a.length; k++) {
+      const j = (k + 1) % a.length;
+      const mid: Vec3 = [(a[k]![0] + a[j]![0]) / 2 - c[0], (a[k]![1] + a[j]![1]) / 2 - c[1], (a[k]![2] + a[j]![2]) / 2 - c[2]];
+      huQuad(t, mat, a[k]!, a[j]!, b[j]!, b[k]!, mid);
+    }
+  }
+  // the end at th1 closed (th0 lies inside the casing or the nose)
+  const last = secs[n]!, prev = bases[n - 1]!, end = bases[n]!;
+  t.m.facets(mat, last.slice(1, -1).flatMap((q, k) => [last[0]!, q, last[k + 2]!]), [end[0] - prev[0], end[1] - prev[1], end[2] - prev[2]]);
+}
+
+/** The bullet nose over the smokebox front, its crest down to the headlight and the blade under it. */
+function hudsonNose(t: Steam): void {
+  const m = t.m;
+  const { y: yc, r, tip, x: xe } = HU_DOME;
+  const a = xe - tip;
+  m.scope("nose", () => {
+    const n = 22, K = 8;
+    const rings: Vec3[][] = [];
+    for (let k = 1; k <= K; k++) {
+      const th = (k / K) * (Math.PI / 2);
+      const [x, rr] = [xe - a * Math.cos(th), r * Math.sin(th)];
+      rings.push(Array.from({ length: n }, (_, i) => { const q = (i / n) * Math.PI * 2; return huP(t, x, yc + rr * Math.sin(q), rr * Math.cos(q)); }));
+    }
+    const c = huP(t, xe, yc, 0);
+    const out = (p: Vec3): Vec3 => [p[0] - c[0], p[1] - c[1], p[2] - c[2]];
+    const apex = huP(t, tip, yc, 0);
+    const first = rings[0]!;
+    for (let i = 0; i < n; i++) m.facets("paint", [apex, first[i]!, first[(i + 1) % n]!], out(first[i]!));
+    for (let k = 0; k + 1 < rings.length; k++) {
+      const [p, q] = [rings[k]!, rings[k + 1]!];
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        huQuad(t, "paint", p[i]!, p[j]!, q[j]!, q[i]!, out(q[i]!));
+      }
+    }
+  });
+  // the crest: the casing's top run forward over the nose and down its face to the headlight
+  const lip = HU_TOP - (yc + r);
+  m.scope("crest", () => huBlade(t, "paint", Math.PI / 2, 0.33, 9, (f) => (f < 0.6 ? 0.32 - 0.17 * f : 0.218 - 0.2 * (f - 0.6)), (f) => (f < 0.55 ? lip : lip - (lip - 0.07) * ((f - 0.55) / 0.45))));
+  m.scope("blade", () => huBlade(t, "paint", -0.22, -0.95, 4, (f) => 0.035 - 0.015 * f, (f) => 0.12 - 0.08 * f));
+  m.scope("headlight", () => {
+    t.cylX("black", 1.1, 0.52, 0, yc, 0.31, 18);
+    t.cylX("silver", 0.52, 0.47, 0, yc, 0.31, 18);
+    t.cylX("lampHead", 0.49, 0.465, 0, yc, 0.23, 18);
+  });
+}
+
+/** The casing's fittings: the louvred vent and the stack's opening on top, the shelf's edge, the handrails, the pipes under the shelf. */
+function hudsonCasingDetails(t: Steam): void {
+  const m = t.m;
+  m.emit("smoke", [t.X(3.2), HU_TOP + 0.01, 0], 0.3);
+  m.scope("vent", () => {
+    t.box("black", 2.08, 2.62, HU_TOP, HU_TOP + 0.015, -0.24, 0.24);
+    for (let k = 0; k < 5; k++) { const x = 2.13 + k * 0.1; t.box("silver", x, x + 0.03, HU_TOP + 0.015, HU_TOP + 0.03, -0.24, 0.24); }
+    t.box("black", 2.85, 3.55, HU_TOP, HU_TOP + 0.012, -0.2, 0.2);
+  });
+  m.scope("shelf edge", () => { for (const s of [-1, 1]) t.sideBox("pilot", s, 3.2, 11.95, 2.4, 2.46, 1.45, 1.475); });
+  const sec = mirrored(HU_CASING);
+  m.scope("handrails", () => {
+    t.handrail(2.4, 12.8, 3.62, halfAt(sec, 3.62) + 0.07, halfAt(sec, 3.62), 6);
+    // the grab rail from the pilot's deck up round the nose to the side handrail
+    const pts: Vec3[] = [[1.35, HU_CRADLE + 0.02, 1.2], [1.7, 3.2, 1.4], [2.15, 3.52, 1.47], [2.4, 3.62, halfAt(sec, 3.62) + 0.07]];
+    for (const s of [-1, 1]) for (let i = 0; i + 1 < pts.length; i++) {
+      const [p, q] = [pts[i]!, pts[i + 1]!];
+      m.rod("silver", huP(t, p[0], p[1], s * p[2]), huP(t, q[0], q[1], s * q[2]), 0.022, 6);
+    }
+  });
+  m.scope("access handles", () => { for (const s of [-1, 1]) for (let x = 3.6; x < 12.5; x += 1.15) t.sidePanel(sec, "black", s, x, x + 0.1, 3.95, 4.08); });
+  m.scope("pipes", () => { for (const s of [-1, 1]) t.cylX("black", 4.4, 12.0, s * 1.22, 2.25, 0.06, 8); });
+}
+
+/** Light text on side s of a vertical face at |z| = face, centred at source x, its foot at y (no plate behind it). */
+function huSideText(t: Steam, mat: string, s: number, x: number, y: number, text: string, face: number, h: number, spacing = 0.22): void {
+  const w = h * 0.62, gap = h * spacing;
+  const width = strokeWidth(text, w, gap);
+  const u0 = t.X(x) + (s > 0 ? -width / 2 : width / 2);
+  t.m.facets(mat, strokeText(text, u0, y, h, w, gap, s < 0).map(([u, v]): Vec3 => [u, v, s * face]), [0, 0, s]);
+}
 
 function hudsonSpec(): LocoSpec {
-  const grey = "paint", dark = "lining";
+  const cabSec = mirrored(HU_CAB_HALF);
   return {
     title: "NYC J-3a Hudson",
-    palette: { ...US_STEAM_PALETTE, paint: { color: "#a9adb0", roughness: 0.45 }, lining: { color: "#3b4046", roughness: 0.5 }, wheel: { color: "#1c1d1f", roughness: 0.6 }, frame: { color: "#1c1d1f", roughness: 0.65 }, plate: { color: "#3b4046", roughness: 0.5 }, plateText: { color: "#e8e6df", roughness: 0.5 } },
-    heads: [0, 17.6],
+    palette: HU_PALETTE,
+    heads: [0, 16.3],
     beams: { front: false, rear: false },
-    boiler: { x0: 2.3, x1: 12.4, y: 3.1, r: 0.98, smokebox: 0.6, bands: [] },
-    chimney: { x: 3.0, top: 4.35, r: 0.28 },
-    domes: [{ x: 6.0, top: 4.32, r: 0.38, len: 3.2 }],
-    runningBoard: { profile: [[0.9, 1.45], [2.3, 1.45], [2.75, 2.05], [13.0, 2.05]], half: 1.5, valance: 0.32, mat: dark, valanceMat: grey },
-    frame: { x0: 0.8, x1: 16.2, top: 2.0 },
+    frame: { x0: 1.9, x1: HU_CAB[1], top: 2.0 },
     cab: {
-      x0: 13.0, x1: 16.2, half: [[1.55, 1.85], [1.55, 4.0], [1.35, 4.3], [0.8, 4.52], [0, 4.6]], roofY: 4.3, mat: grey,
-      windows: [{ x0: 13.4, x1: 14.3, y0: 3.15, y1: 3.85 }, { x0: 14.5, x1: 15.4, y0: 3.15, y1: 3.85 }],
-      front: [{ z0: 0.85, z1: 1.3, y0: 3.45, y1: 3.9 }, { z0: -1.3, z1: -0.85, y0: 3.45, y1: 3.9 }],
+      x0: HU_CAB[0], x1: HU_CAB[1], half: HU_CAB_HALF, roofY: 4.36, mat: "paint",
+      windows: [{ x0: 13.55, x1: 14.35, y0: 3.2, y1: 4.0 }, { x0: 14.55, x1: 15.6, y0: 3.2, y1: 4.0 }],
+      front: [{ z0: 0.95, z1: 1.38, y0: 3.9, y1: 4.25 }, { z0: -1.38, z1: -0.95, y0: 3.9, y1: 4.25 }],
     },
-    prisms: [{ name: "firebox", x0: 10.6, x1: 13.0, half: [[1.15, 2.3], [1.15, 3.65], [0.95, 4.05], [0.55, 4.25], [0, 4.3]], mat: grey }],
-    // the bullet nose over the smokebox: round, its fin along the top
     volumes: [{
-      name: "nose casing",
-      sec: Array.from({ length: 16 }, (_, i): Pt => { const a = (i / 16) * Math.PI * 2; return [1.0 * Math.cos(a), 3.1 + 1.0 * Math.sin(a)]; }),
-      plan: [[0.85, 0.35], [1.1, 0.62], [1.5, 0.85], [2.0, 0.97], [2.6, 1.0]],
-      top: [[0.85, 3.45], [1.1, 3.72], [1.5, 3.93], [2.0, 4.04], [2.6, 4.1]],
-      bottom: [[0.85, 2.75], [1.1, 2.48], [1.5, 2.27], [2.0, 2.16], [2.6, 2.1]],
-      bands: [[0, 2.95, grey], [2.95, 3.25, dark], [3.25, 9, grey]],
+      name: "casing",
+      sec: mirrored(HU_CASING),
+      plan: [[HU_DOME.x, 1.45], [HU_CAB[0], 1.45]],
+      top: [[HU_DOME.x, HU_TOP], [12.4, HU_TOP], [HU_CAB[0], 4.4]],
+      bottom: HU_CASING_BOTTOM,
+      bands: [[0, 9, "paint"]],
     }],
-    bogies: [{ x0: 1.5, x1: 4.3, y: 0.6 }, { x0: 13.3, x1: 15.9, y: 0.66 }],
+    bogies: [{ x0: 1.98, x1: 5.35, y: 0.6 }, { x0: 12.6, x1: 15.3, y: 0.7 }],
     gear: {
       wheels: [
-        { x: 2.2, d: ft(0, 36), spokes: 0, outsideBoxes: true },
-        { x: 3.7, d: ft(0, 36), spokes: 0, outsideBoxes: true },
-        { x: 5.75, d: ft(0, 79), spokes: 0 },
-        { x: 7.9, d: ft(0, 79), spokes: 0 },
-        { x: 10.05, d: ft(0, 79), spokes: 0 },
-        { x: 13.9, d: ft(0, 45), spokes: 0, outsideBoxes: true },
-        { x: 15.3, d: ft(0, 45), spokes: 0, outsideBoxes: true },
+        ...HU_LEAD.map((x) => ({ x, d: ft(0, 36), spokes: 0, outsideBoxes: true })),
+        ...HU_DRIVERS.map((x) => ({ x, d: HU_DRIVER, spokes: 0 })),
+        ...HU_TRAILING.map(([x, d]) => ({ x, d, spokes: 0, outsideBoxes: true })),
       ],
-      engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 2.5, x1: 3.6, y: 1.08, r: 0.36 }, crank: 0.37, phase: 0.6, valveGear: true }],
-      cylinderZ: 1.15, reference: 3, wheelMaterial: "wheel",
+      engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 3.1, x1: 4.3, y: 1.08, r: 0.36 }, crank: 0.37, phase: 0.6, valveGear: true }],
+      cylinderZ: 1.15, reference: 3, wheelMaterial: "wheel", driverMaterial: "driver", discOpenings: 6, discOpeningSides: 8,
     },
-    number: { text: "5450", side: [14.9, 2.6, 1.55] },
     extras: (t) => {
-      t.m.scope("fin", () => t.box(grey, 0.9, 2.6, 3.95, 4.32, -0.05, 0.05));
-      headlight(t, 0.75, 3.25, 0.16);
-      pilot(t, 1, 0, 1.4, 1.4, dark, false, 0.8);
-      t.m.scope("drawbar", () => t.box("black", 16.2, 17.6, 0.8, 1.0, -0.15, 0.15));
+      hudsonPilot(t);
+      hudsonNose(t);
+      hudsonCasingDetails(t);
+      // the band and its stripes along the cab's rear half, the number over it
+      t.m.scope("band", () => {
+        for (const s of [-1, 1]) {
+          t.sidePanel(cabSec, "lining", s, 14.4, HU_CAB[1] - 0.02, HU_BAND[0], HU_BAND[1]);
+          for (const [y0, y1] of HU_STRIPES) t.sidePanel(cabSec, "pilot", s, 14.4, HU_CAB[1] - 0.02, y0, y1, 0.012);
+        }
+      });
+      t.m.scope("numbers", () => { for (const s of [-1, 1]) huSideText(t, "pilot", s, 15.1, 2.84, "5453", 1.454, 0.17); });
+      t.m.scope("diaphragm", () => t.box("black", HU_CAB[1], 16.25, 1.5, 3.9, -0.75, 0.75));
+      t.m.scope("drawbar", () => t.box("black", HU_CAB[1], 16.3, 0.8, 1.0, -0.15, 0.15));
     },
   };
 }
 
+/** The Dreyfuss tender: the cab's section continued, the band with NEW YORK CENTRAL between its stripes, on two six-wheel trucks. */
 function hudsonTenderSpec(): LocoSpec {
   return {
     title: "NYC J-3a Hudson tender",
-    palette: hudsonSpec().palette,
-    heads: [0, 15.4],
+    palette: HU_PALETTE,
+    heads: [0, 13.24],
     beams: { front: false, rear: false },
-    frame: { x0: 0.3, x1: 14.9, top: 1.3 },
-    prisms: [
-      { name: "tank", x0: 0.3, x1: 14.8, half: [[1.55, 1.3], [1.55, 3.85], [1.4, 4.1], [1.1, 4.25]] },
-      { name: "skirt", x0: 0.3, x1: 14.8, half: [[1.56, 1.0], [1.56, 1.29]], mat: "lining" },
-    ],
-    bogies: [{ x0: 1.0, x1: 5.4, y: 0.6 }, { x0: 9.4, x1: 13.8, y: 0.6 }],
-    gear: { wheels: [1.5, 3.2, 4.9, 9.9, 11.6, 13.3].map((x) => ({ x, d: ft(0, 36), spokes: 0 })), engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel" },
-    lamps: { front: [], rear: [[14.82, 3.4, 0]] },
+    frame: { x0: 0.3, x1: 12.6, top: 1.3 },
+    prisms: [{ name: "tank", x0: 0.3, x1: 12.7, half: [[1.55, 1.0], [1.55, 3.95], [1.45, 4.15], [1.2, 4.27], [0.8, 4.3]] }],
+    bogies: [{ x0: 1.45, x1: 5.85, y: 0.6 }, { x0: 7.8, x1: 12.2, y: 0.6 }],
+    gear: { wheels: [1.94, 3.64, 5.34, 8.29, 9.99, 11.69].map((x) => ({ x, d: ft(0, 36), spokes: 0 })), engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel" },
+    lamps: { front: [], rear: [[12.9, 3.4, 0]] },
     extras: (t) => {
-      t.m.scope("lettering", () => { for (const s of [-1, 1]) t.sidePlate(s, 7.6, 2.6, "NEW YORK CENTRAL", 1.55, 0.28); });
-      t.m.scope("stripe", () => { for (const s of [-1, 1]) t.sideBox("lining", s, 0.3, 14.8, 2.95, 3.25, 1.55, 1.556); });
-      pilot(t, -1, 15.4, 1.3, 1.2, "lining");
+      t.m.scope("band", () => {
+        for (const s of [-1, 1]) {
+          t.sideBox("lining", s, 0.3, 12.7, HU_BAND[0], HU_BAND[1], 1.55, 1.556);
+          for (const [y0, y1] of HU_STRIPES) t.sideBox("pilot", s, 0.3, 12.7, y0, y1, 1.556, 1.56);
+        }
+      });
+      t.m.scope("lettering", () => { for (const s of [-1, 1]) huSideText(t, "pilot", s, 6.5, 2.29, "NEW YORK CENTRAL", 1.559, 0.32, 0.6); });
+      pilot(t, -1, 13.24, 1.3, 1.2, "lining");
     },
   };
+}
+
+/**
+ * The Dreyfuss Hudson from afar (docs/models/lod.md): its own LodSpec, since the steam
+ * adapter would draw the casing's skirt down over the drivers along the whole engine --
+ * the casing over the shelf, the skirt and the cab behind the drivers (the cab with its
+ * band and windows), the pilot's rounded front and the nose as shells; the apron's sides,
+ * the frames, the cylinders and the wheels (the drivers in their aluminium) as parts.
+ */
+function hudsonLocoLod(spec: LocoSpec, budget: number): MeshBuilder {
+  const xc = (spec.heads[0] + spec.heads[1]) / 2;
+  const X = (x: number) => xc - x;
+  const casing = halfTable(HU_CASING.filter(([, y]) => y > HU_SHELF)).map(([y, w]) => [y, w] as const);
+  const cabBands: LodBand[] = [[HU_CAB_HALF[0]![1], HU_BAND[0], "paint"], [HU_BAND[0], HU_BAND[1], "lining"], [HU_BAND[1], 4.5, "paint"]];
+  const c = spec.cab!;
+  const windows = windowBands(c.windows.map((w) => ({ u: [X(w.x1), X(w.x0)] as const, y: [w.y0, w.y1] as const })), 0.6);
+  // the nose's front at each height: the half ellipsoid's
+  const noseYs = [2.12, 2.6, 3.2, 3.8, 4.28];
+  // the pilot at its foot, its lip, its face, the deck's edge and the cradle's top
+  const pilot = HU_PILOT.filter(([y]) => [0.15, 0.32, 1.2, HU_DECK, HU_CRADLE].includes(y));
+  const noseFront = (y: number) => HU_DOME.x - (HU_DOME.x - HU_DOME.tip) * Math.sqrt(Math.max(0, 1 - ((y - HU_DOME.y) / HU_DOME.r) ** 2));
+  const noseHw = (y: number) => Math.max(0.25, Math.sqrt(Math.max(0, HU_DOME.r ** 2 - (y - HU_DOME.y) ** 2)));
+  const shells: LodShell[] = [
+    { ...boxShell(X(HU_CAB[0]), X(HU_DOME.x), [[HU_SHELF, 1.45], ...casing, [HU_TOP, 0.3]], [[HU_SHELF, HU_TOP, "paint"]]), ends: [1] },
+    { ...boxShell(X(HU_CAB[0]), X(12.3), [[HU_CAB_HALF[0]![1], 1.45], [HU_SHELF, 1.45]], [[HU_CAB_HALF[0]![1], HU_SHELF, "paint"]]), ends: [1] },
+    { ...boxShell(X(c.x1), X(c.x0), simplifyTable(halfTable(c.half), 0.2), [[HU_CAB_HALF[0]![1], 4.5, "paint"]], { roof: "roof", sideWindows: windows }), cabs: [{ x0: X(c.x1), x1: X(14.4), side: cabBands }] },
+    {
+      y0: 0.15, hw: pilot.map(([y, , w]) => [y, w] as const), side: [[0.15, HU_CRADLE, "pilot"]], roof: "pilot", ends: [1],
+      front: { tip: pilot.map(([y, xf]) => [y, X(xf)] as const), setback: pilot.map(([y, , , d]) => [y, d * 0.75] as const) },
+      rear: { tip: [[0.15, X(HU_PILOT_REAR)], [HU_CRADLE, X(HU_PILOT_REAR)]] },
+    },
+    {
+      y0: noseYs[0]!, hw: noseYs.map((y) => [y, noseHw(y)] as const), side: [[noseYs[0]!, HU_TOP, "paint"]], roof: "paint", ends: [1],
+      front: { tip: noseYs.map((y) => [y, X(noseFront(y))] as const), setback: noseYs.map((y) => [y, (HU_DOME.x - noseFront(y)) * 0.55] as const) },
+      rear: { tip: [[noseYs[0]!, X(HU_DOME.x)], [noseYs[noseYs.length - 1]!, X(HU_DOME.x)]] },
+    },
+  ];
+  const g = spec.gear;
+  const coupled = new Set(g.engines.flatMap((e) => e.coupled));
+  const wheels = (drivers: boolean) => g.wheels.filter((_, i) => coupled.has(i) === drivers).map((w) => ({ X: X(w.x), d: w.d }));
+  const cy = g.engines[0]!.cylinder;
+  const parts: LodPart[] = [
+    // the carrying wheels as dark blocks, each aluminium driver its own disc
+    { draw: (m) => m.scope("running gear", () => {
+      wheelBlocks(m, g.wheelMaterial, wheels(false), 0.84);
+      for (const w of wheels(true)) for (const s of [-1, 1]) lodWheel(m, g.driverMaterial ?? g.wheelMaterial, w.X, w.d / 2, s * 0.7, s * 0.84, 6, "none");
+    }) },
+    { draw: (m) => m.scope("frames", () => lodSideBox(m, "frame", [[X(HU_CAB[1]), 0.45], [X(1.9), 0.45], [X(1.9), 2.0], [X(HU_CAB[1]), 2.0]], -0.6, 0.6, false)) },
+    { optional: 30, draw: (m) => m.scope("apron", () => sidePlates(m, "pilot", [[X(2.0), 0.25], [X(2.05), 0.25], [X(3.15), HU_SHELF], [X(2.0), HU_SHELF]], 1.36)) },
+    { optional: 20, draw: (m) => m.scope("cylinders", () => lodSideBox(m, "paint", [[X(cy.x1), cy.y - cy.r], [X(cy.x0), cy.y - cy.r], [X(cy.x0), cy.y + cy.r], [X(cy.x1), cy.y + cy.r]], -(g.cylinderZ + cy.r), g.cylinderZ + cy.r)) },
+  ];
+  return fitLod({ palette: { ...STEAM_PALETTE, ...spec.palette }, shells, parts }, budget);
 }
 
 // ---------------------------------------------------------------------------
@@ -697,7 +1026,15 @@ export function upBigBoyLod(params?: ParamValues): MeshBuilder {
 export function prrK4s(params?: ParamValues): MeshBuilder { return buildLoco(k4s(params)); }
 export function prrK4sLod(params?: ParamValues): MeshBuilder { return steamLocoLod(k4s(params)); }
 export function nycHudson(params?: ParamValues): MeshBuilder { return buildLoco(hudson(params)); }
-export function nycHudsonLod(params?: ParamValues): MeshBuilder { return steamLocoLod(hudson(params), 200); }
+export function nycHudsonLod(params?: ParamValues): MeshBuilder {
+  const spec = hudson(params);
+  if (spec.cab) return hudsonLocoLod(spec, 200);
+  // the tender: the steam adapter's, with the band along its sides
+  const X = (x: number) => (spec.heads[0] + spec.heads[1]) / 2 - x;
+  const lod = steamLodSpec(spec);
+  lod.parts.push({ optional: 60, draw: (m) => m.scope("band", () => sidePlates(m, "lining", [[X(12.7), HU_BAND[0]], [X(0.3), HU_BAND[0]], [X(0.3), HU_BAND[1]], [X(12.7), HU_BAND[1]]], 1.556)) });
+  return fitLod(lod, 200);
+}
 export function american440(params?: ParamValues): MeshBuilder { return buildLoco(american(params)); }
 export function american440Lod(params?: ParamValues): MeshBuilder { return steamLocoLod(american(params)); }
 
