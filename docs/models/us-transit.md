@@ -8,7 +8,7 @@
 
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
-| `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 13,000 - 13,300 |
+| `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 13,350 - 13,850 |
 | `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 6,900 - 7,300 |
 | `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 6,900 |
 
@@ -48,7 +48,7 @@ trucks a Jacobs bogie replaces.
   near each end and two horns behind each dome. Under the floor an engine with its louvred
   casing and torque converter by each truck, its cardan shaft to the inner axle, the fuel
   tank, batteries and air reservoirs; step wells with two treads under each side door and
-  grab irons beside it. The Budd trucks (`rdcTruck`, drawn with the extras): an outside frame
+  grab irons beside it. The Budd trucks (`rdcTruck`, drawn with the extras): a deep cast outside frame (0.74 - 0.91 m top member, legs to 0.22 m)
   with rounded ends over SKF roller-bearing boxes, a drop equalizer sagging between the axles
   with its springs, swing hangers, bolster springs and disc brakes on the axles. Each cab end
   (`rdcEndFace`) carries the end door's seams down to the floor with grab irons both sides,

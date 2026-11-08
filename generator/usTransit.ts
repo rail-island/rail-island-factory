@@ -592,24 +592,32 @@ function rdcTruck(m: MeshBuilder, xc: number): void {
     });
   m.scope("frame", () => {
     for (const s of [-1, 1]) {
-      // the side frame: a bar with rounded ends over the boxes, pedestal jaws round each box
-      const bar: Pt[] = [[-1.78, 0.72], [-1.7, 0.66], [1.7, 0.66], [1.78, 0.72], [1.78, 0.83], [1.7, 0.89], [-1.7, 0.89], [-1.78, 0.83]];
-      extrude(m, "bogie", "z", bar.map(([u, v]): [number, number] => [xc + u, v]), side(s, 0.9, 1.0));
-      for (const a of [-a2, a2]) for (const j of [-1, 1]) block(m, "bogie", xc + a + j * 0.16 - 0.035, xc + a + j * 0.16 + 0.035, ay + 0.02, 0.67, ...side(s, 0.9, 1.0));
-      // the drop equalizer from box to box, sagging between the axles, its springs up to the frame
-      const eq = (pts: Pt[]) => extrude(m, "bogie", "z", pts.map(([u, v]): [number, number] => [xc + u, v]), side(s, 0.93, 0.99));
-      eq([[-a2, ay + 0.13], [-0.95, 0.3], [-0.95, 0.4], [-a2, ay + 0.2]]);
-      eq([[-0.95, 0.3], [0.95, 0.3], [0.95, 0.4], [-0.95, 0.4]]);
-      eq([[0.95, 0.3], [a2, ay + 0.13], [a2, ay + 0.2], [0.95, 0.4]]);
-      for (const u of [-0.8, 0.8]) coil(m, "spring", xc + u, s * 0.965, 0.4, 0.66, 0.06, 3, 6);
-      // the swing hangers carrying the spring plank, the bolster springs on it
-      for (const u of [-0.36, 0.36]) block(m, "bogie", xc + u - 0.03, xc + u + 0.03, 0.47, 0.88, ...side(s, 1.005, 1.045));
+      // the deep cast side frame (the CB drawing at 48.9 px/m): its top member from 0.74 to 0.91 m,
+      // 3.4 m long with sloping ends, legs either side of each axle box down to 0.24 m with a tie
+      // under the box, and the box's saddle up to the top member
+      const sf = (pts: Pt[], z0 = 0.9, z1 = 1.04) => extrude(m, "bogie", "z", pts.map(([u, v]): [number, number] => [xc + u, v]), side(s, z0, z1));
+      sf([[-1.6, 0.74], [1.6, 0.74], [1.72, 0.8], [1.66, 0.91], [-1.66, 0.91], [-1.72, 0.8]]);
+      for (const k of [-1, 1]) {
+        const a = k * a2;
+        // the outer leg slopes out to the frame's end, the inner one stands by the springs
+        sf(k > 0 ? [[a + 0.17, 0.22], [a + 0.3, 0.22], [a + 0.42, 0.76], [a + 0.17, 0.76]] : [[a - 0.3, 0.22], [a - 0.17, 0.22], [a - 0.17, 0.76], [a - 0.42, 0.76]]);
+        const [i0, i1] = k > 0 ? [a - 0.3, a - 0.17] : [a + 0.17, a + 0.3];
+        sf([[i0, 0.22], [i1, 0.22], [i1, 0.76], [i0, 0.76]]);
+        sf([[a - 0.36, 0.19], [a + 0.36, 0.19], [a + 0.36, 0.24], [a - 0.36, 0.24]]);
+        sf([[a - 0.11, ay + 0.13], [a + 0.11, ay + 0.13], [a + 0.11, 0.76], [a - 0.11, 0.76]], 0.9, 1.0);
+      }
+      // the drop equalizer under the frame, sagging between the axles, its coil springs up to the top member
+      const eq = (pts: Pt[]) => extrude(m, "bogie", "z", pts.map(([u, v]): [number, number] => [xc + u, v]), side(s, 0.93, 1.0));
+      eq([[-0.95, 0.22], [-0.72, 0.16], [-0.72, 0.24], [-0.95, 0.3]]);
+      eq([[-0.72, 0.16], [0.72, 0.16], [0.72, 0.24], [-0.72, 0.24]]);
+      eq([[0.72, 0.16], [0.95, 0.22], [0.95, 0.3], [0.72, 0.24]]);
+      for (const u of [-0.6, 0.6]) coil(m, "spring", xc + u, s * 0.97, 0.24, 0.74, 0.1, 4, 8);
       for (const u of [-0.16, 0.16]) coil(m, "spring", xc + u, s * 0.78, 0.52, 0.8, 0.09, 3, 6);
     }
     // the spring plank, the bolster, the transoms
-    block(m, "bogie", xc - 0.4, xc + 0.4, 0.46, 0.52, -1.04, 1.04);
+    block(m, "bogie", xc - 0.4, xc + 0.4, 0.46, 0.52, -0.88, 0.88);
     block(m, "bogie", xc - 0.26, xc + 0.26, 0.8, 0.95, -0.88, 0.88);
-    for (const u of [-0.62, 0.62]) block(m, "bogie", xc + u - 0.08, xc + u + 0.08, 0.7, 0.84, -0.9, 0.9);
+    for (const u of [-0.95, 0.95]) block(m, "bogie", xc + u - 0.08, xc + u + 0.08, 0.76, 0.88, -0.9, 0.9);
   });
 }
 
