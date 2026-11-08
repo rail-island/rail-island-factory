@@ -14,7 +14,7 @@
 | `proc-vehicle-sf-cable-car` | San Francisco cable car | `livery`: `powell`, `california` | 8.38 m | about 4,200 |
 
 The freight cars are wagons (`WAGON_CATALOG`) on two freight trucks with knuckle couplers; the
-liveries only recolour (`finishParams`). The cable car is a tram (`TRAM_CATALOG`) with no
+liveries are `finishParams` and change no extent (the boxcar's also pick its doors and post pitch). The cable car is a tram (`TRAM_CATALOG`) with no
 doors: its grip sections are open (`NO_DOORS` in test/doors.test.ts).
 
 - **Caboose** - the body with its cupola and windows, the roof walk, end platforms with their
@@ -47,7 +47,7 @@ doors: its grip sections are open (`NO_DOORS` in test/doors.test.ts).
 
 ## Deviations
 
-- The freight trucks' wheelbase is 1.45 m (a 70-ton truck's 5 ft 8 in is 1.73 m), so the
+- The caboose's and well car's freight trucks' wheelbase is 1.45 m (a 70-ton truck's 5 ft 8 in is 1.73 m), so the
   shared truck geometry keeps its brake cylinders clear of the transoms.
 - The cable car's grip into the slot and its track brakes are a lever and a shank.
 
