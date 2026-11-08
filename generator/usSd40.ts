@@ -14,7 +14,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { tubeX, type Band } from "./cd163.ts";
-import { block, bogieGeometry, exhaust, extrude, horn, paint, side, tankX, type BogieSpec } from "./dieselParts.ts";
+import { block, bogieGeometry, exhaust, extrude, horn, paint, plate, side, tankX, type BogieSpec } from "./dieselParts.ts";
 import { US_PALETTE, decalX, decalZ, knuckleCoupler, paintedSweep, sideText, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
@@ -285,6 +285,14 @@ export function buildSd40_2(p: Sd40Paint): MeshBuilder {
       m.scope(e > 0 ? "front truck" : "rear truck", () => m.bogie(() => {
         const xc = e * SD40_2_TRUCK_CENTRE;
         bogieGeometry(m, xc, HTC);
+        // the HT-C's deep cast side frame outside the toolkit's: low bellies between the axles, jaws over the axle boxes
+        m.scope("side frames", () => {
+          const xs = [-2.75, -2.45, -2.39, -1.75, -1.45, -0.62, -0.32, 0.32, 0.62, 1.45, 1.75, 2.39, 2.45, 2.75];
+          const bot = [0.8, 0.74, 0.7, 0.7, 0.5, 0.5, 0.7, 0.7, 0.5, 0.5, 0.7, 0.7, 0.74, 0.8];
+          const top = xs.map((x): [number, number] => [xc + x, Math.abs(x) > 2.4 ? 0.9 : 1.02]);
+          const bottom = xs.map((x, i): [number, number] => [xc + x, bot[i]!]);
+          for (const sd of sides) plate(m, p.trucks, top, bottom, ...side(sd, 1.065, 1.11));
+        });
         // the HT-C's hydraulic dampers on the outer axle boxes, leaning in toward the bolster
         m.scope("dampers", () => {
           const ay = HTC.wheelR;
