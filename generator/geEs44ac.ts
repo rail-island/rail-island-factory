@@ -100,6 +100,8 @@ export interface Es44Livery extends UsLivery {
   wingBands?: readonly Band[];
   /** The headlight pair's position across the nose face (default the centre). */
   headZ?: number;
+  /** A strip painted on the nose's hips along the windscreens' foot. */
+  glareStrip?: string;
 }
 
 const P = {
@@ -556,6 +558,15 @@ function nose(m: MeshBuilder, l: Es44Livery): void {
         const tri = [A, ring[i]!, ring[i + 1]!];
         polygon(m, l.noseTop, tri, outward(tri, [0, 1, s * 0.5]));
       }
+      // a glare strip along the windscreens' foot (BNSF): deepest at the corners, thinning to the ridge
+      if (l.glareStrip) {
+        const toward = (p: Vec3, t: number): Vec3 => [p[0] + (A[0] - p[0]) * t, p[1] + (A[1] - p[1]) * t, p[2] + (A[2] - p[2]) * t];
+        const [G, F, Dd] = [ring[2]!, ring[3]!, ring[4]!];
+        for (const q of [[G, F, toward(F, 0.2), toward(G, 0.22)], [F, Dd, toward(Dd, 0.04), toward(F, 0.2)]]) {
+          const n = outward([A, q[0]!, q[1]!], [0, 1, s * 0.5]);
+          polygon(m, l.glareStrip, q.map((p): Vec3 => [p[0] + n[0] * 0.004, p[1] + n[1] * 0.004, p[2] + n[2] * 0.004]), n);
+        }
+      }
     }
   });
   // the headlight pair, one over the other in a recessed housing at the top of the face
@@ -825,7 +836,7 @@ function bnsf(number: string): Es44Livery {
     title: "BNSF", railroad: "BNSF", letterH: 0.78, letterY: 0.92, letterX: -2.2, letterW: 1.2, letterGap: 0.22, letterSlant: 0.25, number,
     palette: pick("bnsfOrange", "bnsfBlack", "bnsfYellow", "truckGrime", "boardBlack", "tankGrey", "reservoir"),
     body, cab: [[0, 9, "bnsfOrange"]], ends: [[0, 9, "bnsfOrange"]], rear: [[0, 3.6, "bnsfOrange"], [3.6, 9, "bnsfBlack"]],
-    roof: "bnsfBlack", cabRoof: "bnsfOrange", noseTop: "bnsfBlack", wing: "bnsfBlack", slope: "bnsfBlack", frameMat: "bnsfBlack",
+    roof: "bnsfBlack", cabRoof: "bnsfOrange", noseTop: "bnsfOrange", glareStrip: "bnsfBlack", wing: "bnsfBlack", slope: "bnsfBlack", frameMat: "bnsfBlack",
     frame: "bnsfBlack", sillStripe: [0, 0.12, "bnsfYellow"], trucks: "truckGrime", pilot: "bnsfBlack", tank: "tankGrey", anticlimber: "bnsfYellow", headZ: -0.1,
     letter: "bnsfBlack", numberMat: "bnsfBlack", rails: "bnsfBlack", frontRails: "bnsfYellow", board: "boardBlack", boardText: "white",
     marks: (m) => {

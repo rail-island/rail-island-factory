@@ -95,7 +95,7 @@ published figures):
   Heritage III - orange, the hood's upper part black over a yellow stripe
   (3.38 - 3.60 m), black dynamic brake box and wings, italic BNSF on the hood and
   nose with the black swoosh under it, a black foot band with a yellow stripe along
-  the nose and cab, the nose's hip planes black, the headlights 0.1 m off the
+  the nose and cab, the nose's hip planes orange with a black strip along the windscreens' foot, deepest at the corners, the headlights 0.1 m off the
   centre line beside the nose door's round window, a yellow anticlimber, grey fuel
   tank, grimy tan-grey trucks as photographed. Union Pacific - armour yellow including the cab sides, harbour mist grey
   roofs, the cab front above the windscreens' foot, the dynamic brake box and the
