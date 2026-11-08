@@ -109,6 +109,8 @@ Details in [docs/models/lod.md](docs/models/lod.md) and the skills in
 | Row houses and ordinary buildings | 10,000 | 100 | - | - |
 | Skyscrapers and towers | 10,000 | 500 | - | - |
 | Historical landmarks | 20,000-30,000 | 500 | - | - |
+| Animal-drawn vehicles | 10,000 and the team's animals on top (at most 20,000) | 500 | - | - |
+| Draft animals (horse, donkey, mule, cow, camel, elephant) | 5,000 an animal alone or in a pair; a team of three or more 10,000 together | 100 an animal | - | - |
 | Trees | 2,000 (new species) | 300 | 20 | 10,000 (optional) |
 | Woods (a grove of trees) | - | 12,000 | - | - |
 

@@ -11,9 +11,10 @@ import { collectTriangles, parseGlb, type Tri } from "../generator/glbTriangles"
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { paramCombinations, resolveParams, type ParamValues, type ProceduralDesign } from "../generator/design";
 import {
-  ANIMAL_PARAM, GAIT_CLIP, NO_TEAM, SPECIES, SPECIES_SPECS, TEAM_PARAM, gaitPose, gradeSpeed, placeTeam, rowsOf, teamFigures, teamGame, teamOf,
-  teamParams, teamSelections,
+  ANIMAL_PARAM, GAIT_CLIP, NO_TEAM, SPECIES, SPECIES_SPECS, TEAM_PARAM, animalBudget, animalNodes, animalPalette, detailFor, drawAnimal, gaitPose,
+  gradeSpeed, legChain, earRoot, smooth, stationAt, axisAt, FULL, LIGHT, LIGHTEST, placeTeam, rowsOf, teamFigures, teamGame, teamOf, teamParams, teamSelections,
 } from "../generator/draftAnimals";
+import { MeshBuilder } from "../generator/meshBuilder";
 import { ANIMAL_TRAMS } from "../generator/animalTrams";
 import { ANIMAL_RAIL } from "../generator/animalRail";
 import { ANIMAL_BUSES } from "../generator/animalBuses";
@@ -34,8 +35,8 @@ const span = (ts: readonly Tri[], axis: number): [number, number] => {
   return [lo, hi];
 };
 
-/** The budget of an animal-drawn vehicle: a rigid vehicle's 10,000, and 1,000 for every animal after the first. */
-const budget = (count: number): number => 10_000 + 1_000 * Math.max(0, count - 1);
+/** The budget of an animal-drawn vehicle: a rigid vehicle's 10,000 and its team's (5,000 an animal alone or in a pair, at most 10,000 a team). */
+const budget = (count: number): number => 10_000 + count * animalBudget(count);
 
 /** The selections a vehicle is checked at: the default, the biggest team of each species, a single elephant, the trailer. */
 function checked(d: ProceduralDesign): ParamValues[] {
@@ -60,10 +61,11 @@ describe("the draft animals", () => {
     }
   });
 
-  it.each(SPECIES.map((s) => [s] as const))("%s: stands on the ground in its harness, walks a closed gait, in a light budget", (species) => {
+  it.each(SPECIES.map((s) => [s] as const))("%s: stands on the ground in its harness, walks a closed gait, in its 5,000-triangle budget", (species) => {
     const d = DRAFT_ANIMALS.find((x) => x.id === `proc-animal-${species}`)!;
     const m = d.build();
-    expect(m.triangleCount()).toBeLessThanOrEqual(2_500);
+    expect(animalBudget(1)).toBe(5_000);
+    expect(m.triangleCount()).toBeLessThanOrEqual(animalBudget(1));
     const { json, bin } = parseGlb(m.toGlb(d.id));
     const ts = collectTriangles(json, bin);
     expect(span(ts, 1)[0]).toBeCloseTo(0, 2);
@@ -71,6 +73,85 @@ describe("the draft animals", () => {
     expect(clip.drive).toEqual({ drive: "distance", speed: 5 });
     for (const t of clip.tracks) expect(t.values.slice(-t.values.length / clip.times.length)).toEqual(t.values.slice(0, t.values.length / clip.times.length));
     expect(d.buildLod().triangleCount()).toBeLessThanOrEqual(100);
+  });
+
+  it("draws every animal of every team within its share of the budget, a team never over 10,000", () => {
+    for (const s of SPECIES) for (const n of SPECIES_SPECS[s].counts) {
+      const m = new MeshBuilder(animalPalette([s]));
+      drawAnimal(m, s, "animal-1", 0, 0, detailFor(n));
+      expect(m.triangleCount(), `${s} in a team of ${n}`).toBeLessThanOrEqual(animalBudget(n));
+      expect(n * animalBudget(n)).toBeLessThanOrEqual(10_000);
+    }
+  });
+
+  it("have a face at every detail: two eyes with lids, nostrils or a trunk's tip, the mouth", () => {
+    for (const s of SPECIES) for (const n of SPECIES_SPECS[s].counts) {
+      const m = new MeshBuilder(animalPalette([s]));
+      drawAnimal(m, s, "animal-1", 0, 0, detailFor(n));
+      const { json, bin } = parseGlb(m.toGlb("t"));
+      const mats = new Set(collectTriangles(json, bin).map((t) => t.material));
+      for (const k of ["eye", "nostril", `${s}Lid`]) expect(mats.has(k), `${s} x${n}: ${k}`).toBe(true);
+      // the eyes stand on both sides of the head, at its height
+      const eyes = collectTriangles(json, bin).filter((t) => t.material === "eye");
+      const zs = eyes.flatMap((t) => t.p.map((p) => p[2]));
+      expect(Math.min(...zs)).toBeLessThan(0);
+      expect(Math.max(...zs)).toBeGreaterThan(0);
+      expect(Math.min(...eyes.flatMap((t) => t.p.map((p) => p[1])))).toBeGreaterThan(SPECIES_SPECS[s].legs.top);
+    }
+  });
+
+  it("join the head to the neck and the ears to the head with no gap between them", () => {
+    for (const s of SPECIES) {
+      const sp = SPECIES_SPECS[s];
+      // the neck's last ring (square to its axis) reaches up into the head's first ring
+      const n = sp.neck;
+      const [a, b] = [n[n.length - 2]!, n[n.length - 1]!];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const upY = (b[0] - a[0]) / len;
+      const h0 = sp.head[0]!;
+      expect(b[1] + b[3] * Math.abs(upY), `${s}: neck to head`).toBeGreaterThanOrEqual(h0[1] - h0[3]);
+      expect(b[0], `${s}: neck ends behind the head's back`).toBeGreaterThanOrEqual(h0[0]);
+      if (sp.feature === "trunk") continue;
+      // each ear's root ring lies inside the head's section there
+      for (const d of [FULL, LIGHT, LIGHTEST]) for (const sd of [-1, 1]) {
+        const { root } = earRoot(sp, d, sd);
+        const st = smooth(sp.head, d.sub);
+        const [x, y, w, h] = stationAt(st, 0.07);
+        const { up } = axisAt(st, 0.07);
+        const rel = [root[0] - x, root[1] - y];
+        const v = rel[0]! * up[0] + rel[1]! * up[1];
+        // ahead of the head's flat back (the poll's cap), not behind it
+        const back = st[0]!;
+        const a0 = axisAt(st, 0).d;
+        expect((root[0] - back[0]) * a0[0] + (root[1] - back[1]) * a0[1], `${s}: ear root ahead of the poll`).toBeGreaterThan(0);
+        expect((root[2] / w) ** 2 + (v / h) ** 2, `${s}: ear root inside the head`).toBeLessThan(1);
+      }
+    }
+  });
+
+  it("bend every leg at a knee (or hock) and a fetlock, each a joint of its own that folds in the stride", () => {
+    for (const s of SPECIES) {
+      const d = DRAFT_ANIMALS.find((x) => x.id === `proc-animal-${s}`)!;
+      const m = d.build();
+      const { json } = parseGlb(m.toGlb(d.id));
+      const names = new Set((json.nodes ?? []).map((n) => (n as { name?: string }).name));
+      for (const node of animalNodes("animal-1")) expect(names.has(node), node).toBe(true);
+      for (const l of ["front", "hind"] as const) {
+        const c = legChain(SPECIES_SPECS[s], l);
+        // root over joint over fetlock over sole
+        expect(c.root[1]).toBeGreaterThan(c.joint[1]);
+        expect(c.joint[1]).toBeGreaterThan(c.fet[1]);
+        expect(c.fet[1]).toBeGreaterThan(c.sole[1]);
+      }
+      // the knee folds in the swing on every leg; the hooves' and the camel's fetlock too
+      const poses = Array.from({ length: 24 }, (_, k) => gaitPose(s, k / 24));
+      for (const l of ["front-left", "front-right", "hind-left", "hind-right"] as const) {
+        expect(Math.max(...poses.map((p) => Math.abs(p.legs[l].knee))), `${s} ${l} knee`).toBeGreaterThan(0.3);
+        expect(Math.max(...poses.map((p) => Math.abs(p.legs[l].fet))), `${s} ${l} fetlock`).toBeGreaterThan(0.05);
+      }
+      const clip = m.animations().find((c) => c.name === GAIT_CLIP)!;
+      expect(clip.tracks.filter((t) => /-(shin|foot)-/.test(t.node))).toHaveLength(8);
+    }
   });
 
   it("keeps a planted foot on the ground through the stride", () => {
