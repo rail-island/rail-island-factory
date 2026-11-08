@@ -35,7 +35,7 @@ export const GP9_BODY: UsHoodSpec = {
   exhaustX: -1.1,
   trucks: {
     centre: ft(31) / 2, sideFrame: "blomberg",
-    spec: { axles: [-ft(4, 6), ft(4, 6)], wheelR: ft(0, 20), frameHalf: 1.72, frameTop: 0.98, frameBottom: 0.36, frameZ: [0.92, 1.06], primary: "coil", secondary: [], secondaryZ: 1.0, bolster: 1.15 },
+    spec: { axles: [-ft(4, 6), ft(4, 6)], wheelR: ft(0, 20), frameHalf: 1.72, frameTop: 1.04, frameBottom: 0.36, frameZ: [0.92, 1.06], primary: "coil", secondary: [], secondaryZ: 1.0, bolster: 1.15 },
   },
   tank: { x0: -0.7, x1: 2.75, y0: 0.5, half: 1.2 },
   ditchLights: false,
@@ -43,6 +43,8 @@ export const GP9_BODY: UsHoodSpec = {
 
 /** The generator's two louvre columns behind the cab (UP 211). */
 const GP9_GEN_LOUVRES: ReadonlyArray<readonly [number, number]> = [[0.97, 1.42], [1.47, 1.92]];
+/** The battery box vent near the long hood's rear corner: x and y spans (UP 211). */
+const GP9_VENT = [-6.59, -6.18, 2.71, 3.18] as const;
 
 /** The step wells cut into the side sills at each corner: length from the end sill, inner wall's |z|. */
 const GP9_WELL = { len: 0.72, z: 0.94 };
@@ -69,6 +71,8 @@ export interface Gp9Livery extends UsLivery {
   endRails: string;
   /** A small running number on the long hood's rear corner: x centre, base above the deck, height. */
   hoodNumber?: readonly [number, number, number];
+  /** A V snowplow ahead of each pilot (PRR 7048). */
+  plow?: boolean;
 }
 
 const C = {
@@ -88,7 +92,7 @@ function unionPacific(): Gp9Livery {
     body: bands, cab: bands, ends: bands, roof: "upGrey",
     frame: "upGrey", sillStripe: [0.03, 0.16, "upRed"], trucks: "upTruck", pilot: "upGrey",
     letter: "upRed", numberMat: "upRed", rails: "upYellow",
-    dynamicBrake: false, letterX: -3.62, letterW: 0.2, letterGap: 0.19, cabNumber: [0.1, 0.27],
+    dynamicBrake: false, letterX: -3.55, letterW: 0.2, letterGap: 0.158, cabNumber: [0.1, 0.27],
     board: "numberBoard", boardText: "black", endRails: "upYellow", hoodNumber: [-6.85, 0.69, 0.28],
   };
 }
@@ -101,7 +105,7 @@ function pennsylvania(): Gp9Livery {
     body: [[0, 9, "prrGreen"]], roof: "prrGreen", frame: "prrGreen",
     trucks: "truckBlack", pilot: "prrGreen", letter: "prrBuff", numberMat: "prrBuff", rails: "prrGreen",
     dynamicBrake: true, letterX: -1.62, letterW: 0.19, letterGap: 0.31, cabNumber: [0.9, 0.31],
-    board: "boardDark", boardText: "white", endRails: "prrSafety",
+    board: "boardDark", boardText: "white", endRails: "prrSafety", plow: true,
   };
 }
 
@@ -114,7 +118,7 @@ function santaFe(): Gp9Livery {
     body: bands, cab: bands, ends: [[0, 9, "atsfYellow"]], roof: "atsfBlue",
     frame: "truckBlack", sillStripe: [0, 0.43, "atsfYellow"], trucks: "truckBlack", pilot: "truckBlack",
     letter: "atsfYellow", numberMat: "atsfYellow", rails: "atsfYellow",
-    dynamicBrake: true, letterX: -3.75, letterW: 0.46, letterGap: 0.2, cabNumber: [1.18, 0.3],
+    dynamicBrake: true, letterX: -2.4, letterW: 0.46, letterGap: 0.2, cabNumber: [1.18, 0.3],
     board: "boardDark", boardText: "white", endRails: "atsfYellow",
   };
 }
@@ -136,6 +140,78 @@ function matAt(bands: readonly Band[], y: number): string {
 /** The section of a hood: a box with chamfered roof corners, `half` wide, `top` high, from the deck. */
 function hoodSection(deck: number, half: number, top: number, r: number): Array<[number, number]> {
   return [[-half, deck], [half, deck], [half, top - r], [half - r, top], [-(half - r), top], [-half, top - r]];
+}
+
+/** The plan radius of a hood end's vertical corners (ATSF 2879, PRR 7000). */
+const GP9_END_R = 0.15;
+
+/**
+ * A hood's end whose vertical corners round off in plan: the section (z, y)
+ * narrowed by the corner's inset over three slices from x = xa (full width) to
+ * the end face at e * |x| (e = +1 toward +X), every face painted by its height
+ * as paintedSweep does, the face closed with the end paint.
+ */
+function roundedEnd(m: MeshBuilder, section: ReadonlyArray<readonly [number, number]>, xa: number, e: number, rc: number, p: Paint): void {
+  const half = Math.max(...section.map((q) => q[0]));
+  const steps = [0, Math.PI / 6, Math.PI / 3, Math.PI / 2];
+  const at = steps.map((t) => ({ x: xa + e * rc * Math.sin(t), k: (half - rc * (1 - Math.cos(t))) / half }));
+  const cuts = [...new Set([...p.bands.flatMap((b) => [b[0], b[1]]), ...(p.ends ?? []).flatMap((b) => [b[0], b[1]]), p.roofFrom])].sort((a, b) => a - b);
+  const paintOf = (bands: readonly Band[], y: number) => (y >= p.roofFrom - 1e-6 ? p.roof : matAt(bands, y));
+  const minY = Math.min(...section.map((q) => q[1]));
+  for (let i = 0; i < section.length; i++) {
+    const a = section[i]!, b = section[(i + 1) % section.length]!;
+    if (Math.abs(a[1] - minY) < 1e-9 && Math.abs(b[1] - minY) < 1e-9) continue;
+    const ts = [0, 1];
+    for (const c of cuts) if ((c - a[1]) * (c - b[1]) < 0) ts.push((c - a[1]) / (b[1] - a[1]));
+    ts.sort((u, v) => u - v);
+    for (let k = 0; k + 1 < ts.length; k++) {
+      const s0 = ts[k]!, s1 = ts[k + 1]!;
+      if (s1 - s0 < 1e-9) continue;
+      const pa = [a[0] + (b[0] - a[0]) * s0, a[1] + (b[1] - a[1]) * s0] as const;
+      const pb = [a[0] + (b[0] - a[0]) * s1, a[1] + (b[1] - a[1]) * s1] as const;
+      const mat = paintOf(p.bands, (pa[1] + pb[1]) / 2);
+      for (let j = 0; j + 1 < at.length; j++) {
+        const u = at[j]!, v = at[j + 1]!;
+        const q: Vec3[] = [[u.x, pa[1], pa[0] * u.k], [u.x, pb[1], pb[0] * u.k], [v.x, pb[1], pb[0] * v.k], [v.x, pa[1], pa[0] * v.k]];
+        // outward: away from the hood's axis and toward the end
+        const mid: Vec3 = [(u.x + v.x) / 2, (pa[1] + pb[1]) / 2, ((pa[0] + pb[0]) / 2) * (u.k + v.k) / 2];
+        const d1 = [q[1]![0] - q[0]![0], q[1]![1] - q[0]![1], q[1]![2] - q[0]![2]];
+        const d2 = [q[3]![0] - q[0]![0], q[3]![1] - q[0]![1], q[3]![2] - q[0]![2]];
+        let n: Vec3 = [d1[1]! * d2[2]! - d1[2]! * d2[1]!, d1[2]! * d2[0]! - d1[0]! * d2[2]!, d1[0]! * d2[1]! - d1[1]! * d2[0]!];
+        const cy = (Math.max(...section.map((r) => r[1])) + minY) / 2;
+        const out: Vec3 = [e * 0.3, mid[1] - cy, mid[2]];
+        if (n[0] * out[0] + n[1] * out[1] + n[2] * out[2] < 0) n = [-n[0], -n[1], -n[2]];
+        m.facets(mat, [q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!], n);
+      }
+    }
+  }
+  // the end face: the narrowest section, cut into its paint's height bands
+  const last = at[at.length - 1]!;
+  const levels = [-Infinity, ...cuts, Infinity];
+  for (let k = 0; k + 1 < levels.length; k++) {
+    const lo = levels[k]!, hi = levels[k + 1]!;
+    const poly: Array<[number, number]> = [];
+    const cut = (pts: Array<[number, number]>, keep: (y: number) => boolean, lim: number) => {
+      const res: Array<[number, number]> = [];
+      for (let i = 0; i < pts.length; i++) {
+        const P = pts[i]!, Q = pts[(i + 1) % pts.length]!;
+        if (keep(P[1])) res.push(P);
+        if (keep(P[1]) !== keep(Q[1])) {
+          const t = (lim - P[1]) / (Q[1] - P[1]);
+          res.push([P[0] + (Q[0] - P[0]) * t, lim]);
+        }
+      }
+      return res;
+    };
+    poly.push(...cut(cut(section.map((q) => [q[0] * last.k, q[1]] as [number, number]), (y) => y >= lo, lo), (y) => y <= hi, hi));
+    if (poly.length < 3) continue;
+    const ys = poly.map((q) => q[1]);
+    if (Math.max(...ys) - Math.min(...ys) < 1e-6) continue;
+    const mat = paintOf(p.ends ?? p.bands, (Math.max(...ys) + Math.min(...ys)) / 2);
+    const pts: Vec3[] = [];
+    for (let j = 1; j + 1 < poly.length; j++) pts.push([last.x, poly[0]![1], poly[0]![0]], [last.x, poly[j]![1], poly[j]![0]], [last.x, poly[j + 1]![1], poly[j + 1]![0]]);
+    m.facets(mat, pts, [e, 0, 0]);
+  }
 }
 
 /** Louvres on the side wall z = s * zw: a dark recess with body-painted slats across it. */
@@ -177,7 +253,7 @@ export function gp9Lod(l: Gp9Livery): MeshBuilder {
 function frame(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery): void {
   const L = s.endSill;
   m.scope("deck", () => {
-    block(m, "walk", -L, L, s.deck - 0.04, s.deck, -s.deckHalf, s.deckHalf);
+    block(m, l.frame, -L, L, s.deck - 0.04, s.deck, -s.deckHalf, s.deckHalf);
     // the centre sill full length; the side sills stop at the step wells cut into each corner
     const core: Ring = [[-GP9_WELL.z, s.sillBottom], [GP9_WELL.z, s.sillBottom], [GP9_WELL.z, s.deck - 0.04], [-GP9_WELL.z, s.deck - 0.04]];
     m.sweep(l.frame, "x", core, -L, core, L);
@@ -212,6 +288,15 @@ function frame(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery): void {
           : [[-L + 0.32, foot], [-L + 0.32, top], [-L, top], [-L + 0.1, foot]];
         m.sweep(l.pilot, "z", sec, -0.9, sec, 0.9);
       });
+      if (l.plow)
+        m.scope("plow", () => {
+          // two blades meeting in a vee 0.28 m ahead of the end sill, from the rail clearance to under the coupler
+          for (const sd of [-1, 1]) {
+            const tip: Vec3 = [e * (L + 0.28), 0, 0], wing: Vec3 = [e * (L - 0.04), 0, sd * 0.98];
+            const q: Vec3[] = [[tip[0], 0.12, 0], [wing[0], 0.12, wing[2]], [wing[0], 0.62, wing[2]], [tip[0], 0.62, 0]];
+            m.slab(l.pilot, q, [-e * 0.04, 0, 0]);
+          }
+        });
       m.scope("coupler", () => knuckleCoupler(m, e, L, s.length / 2, 0.88));
       m.scope("hoses", () => {
         for (const z of [-0.42, 0.42]) {
@@ -250,10 +335,10 @@ function hoodEnd(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery, e: number, xf: num
   m.scope("number boards", () => {
     const y0 = top - 0.56, y1 = top - 0.3;
     for (const sd of [-1, 1]) {
-      const [z0, z1] = side(sd, 0.2, 0.92);
+      const [z0, z1] = side(sd, 0.2, 0.88);
       block(m, "black", ...out(0.035), y0 - 0.025, y1 + 0.025, z0 - 0.025, z1 + 0.025);
       decalX(m, l.board, e * (xf + 0.038), e, z0, z1, y0, y1);
-      endText(m, l.boardText, l.number, e, xf + 0.042, sd * 0.56, y0 + 0.06, 0.15, 0.085, 0.03);
+      endText(m, l.boardText, l.number, e, xf + 0.042, sd * 0.54, y0 + 0.06, 0.15, 0.085, 0.03);
     }
   });
   m.scope("class lights", () => {
@@ -271,7 +356,11 @@ function hoodEnd(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery, e: number, xf: num
 function longHood(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery): void {
   const h = s.hood, r = s.radiator, top = h.top;
   const p: Paint = { bands: l.body, ends: l.ends, roofFrom: top - h.r * 0.5, roof: l.roof };
-  m.scope("hood", () => paintedSweep(m, "x", hoodSection(s.deck, h.half, top, h.r), h.x0, h.x1, p, [-1]));
+  m.scope("hood", () => {
+    const sec = hoodSection(s.deck, h.half, top, h.r);
+    paintedSweep(m, "x", sec, h.x0 + GP9_END_R, h.x1, p, []);
+    roundedEnd(m, sec, h.x0 + GP9_END_R, -1, GP9_END_R, p);
+  });
   m.scope("radiator grilles", () => {
     // three square grilles high on each side at the rear, under the two fans
     const w = (r.x1 - r.x0 - 0.16) / 3;
@@ -287,7 +376,7 @@ function longHood(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery): void {
     for (const sd of [-1, 1]) {
       const zw = h.half;
       // the battery box vent at the rear corner
-      louvres(m, l.body, sd, zw, -6.42, -6.01, 2.71, 3.18);
+      louvres(m, l.body, sd, zw, GP9_VENT[0], GP9_VENT[1], GP9_VENT[2], GP9_VENT[3]);
       // the engine room's louvred doors: three columns of two panels
       for (let i = 0; i < 3; i++) {
         const x0 = -1.17 + i * 0.587;
@@ -327,12 +416,16 @@ function longHood(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery): void {
     for (let k = -10; k <= 6; k++) edges.push(-1.17 + k * 0.587);
     for (const sd of [-1, 1]) {
       const zz = sd * (h.half + 0.004);
+      // a seam stops short of the louvres a door edge would cross
+      const gaps: Array<readonly [number, number, number, number]> = [...GP9_GEN_LOUVRES.map(([a, b]) => [a, b, 2.06, 2.96] as const), GP9_VENT];
       for (const x of edges) {
-        const gen = GP9_GEN_LOUVRES.some(([a, b]) => x > a - 0.02 && x < b + 0.02);
-        if (gen) {
-          decalZ(m, "black", zz, sd, x - 0.01, x + 0.01, s.deck + 0.1, 2.0);
-          decalZ(m, "black", zz, sd, x - 0.01, x + 0.01, 3.02, 3.52);
-        } else decalZ(m, "black", zz, sd, x - 0.01, x + 0.01, s.deck + 0.1, 3.52);
+        let y = s.deck + 0.1;
+        for (const [a, b, y0, y1] of [...gaps].sort((p, q) => p[2] - q[2])) {
+          if (x <= a - 0.02 || x >= b + 0.02) continue;
+          decalZ(m, "black", zz, sd, x - 0.01, x + 0.01, y, y0 - 0.06);
+          y = y1 + 0.06;
+        }
+        decalZ(m, "black", zz, sd, x - 0.01, x + 0.01, y, 3.52);
       }
       for (let i = 0; i + 1 < edges.length; i++) {
         const xc = (edges[i]! + edges[i + 1]!) / 2;
@@ -351,7 +444,12 @@ function longHood(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery): void {
 function shortHood(m: MeshBuilder, s: UsHoodSpec, l: Gp9Livery): void {
   const f = s.front as { x0: number; x1: number };
   const h = s.hood, top = h.top;
-  m.scope("short hood", () => paintedSweep(m, "x", hoodSection(s.deck, h.half, top, h.r), f.x0, f.x1, { bands: l.body, ends: l.ends, roofFrom: top - h.r * 0.5, roof: l.roof }, [1]));
+  m.scope("short hood", () => {
+    const sec = hoodSection(s.deck, h.half, top, h.r);
+    const p: Paint = { bands: l.body, ends: l.ends, roofFrom: top - h.r * 0.5, roof: l.roof };
+    paintedSweep(m, "x", sec, f.x0, f.x1 - GP9_END_R, p, []);
+    roundedEnd(m, sec, f.x1 - GP9_END_R, 1, GP9_END_R, p);
+  });
   m.scope("doors", () => {
     for (const sd of [-1, 1]) {
       const zz = sd * (h.half + 0.004);
@@ -477,27 +575,27 @@ function blomberg(m: MeshBuilder, xc: number, l: Gp9Livery): void {
       m.scope(sd > 0 ? "right frame" : "left frame", () => {
         const z = side(sd, fz0, fz1);
         // the top member, stepping down over the journal boxes at the ends
-        const topO: Ring = [[-b.frameHalf, 0.86], [-1.15, 0.86], [-0.95, b.frameTop], [0.95, b.frameTop], [1.15, 0.86], [b.frameHalf, 0.86]];
-        const topI: Ring = [[-b.frameHalf, 0.72], [-1.15, 0.72], [-0.95, 0.8], [0.95, 0.8], [1.15, 0.72], [b.frameHalf, 0.72]];
+        const topO: Ring = [[-b.frameHalf, 0.92], [-1.15, 0.92], [-0.95, b.frameTop], [0.95, b.frameTop], [1.15, 0.92], [b.frameHalf, 0.92]];
+        const topI: Ring = [[-b.frameHalf, 0.74], [-1.15, 0.74], [-0.95, 0.84], [0.95, 0.84], [1.15, 0.74], [b.frameHalf, 0.74]];
         plate(m, mat, topO.map(([x, y]) => [xc + x, y] as [number, number]), topI.map(([x, y]) => [xc + x, y] as [number, number]), ...z);
         // the arch under the bolster window, from the inner pedestals down to the spring plank
         const archO: Ring = [[-1.12, ay - 0.06], [-0.62, b.frameBottom], [0.62, b.frameBottom], [1.12, ay - 0.06]];
         const archI: Ring = [[-0.98, ay + 0.06], [-0.55, b.frameBottom + 0.1], [0.55, b.frameBottom + 0.1], [0.98, ay + 0.06]];
         plate(m, mat, archO.map(([x, y]) => [xc + x, y] as [number, number]), archI.map(([x, y]) => [xc + x, y] as [number, number]), ...z);
         // the window's columns
-        for (const d of [-1, 1]) block(m, mat, xc + d * 0.62 - 0.06, xc + d * 0.62 + 0.06, b.frameBottom + 0.1, 0.8, ...z);
+        for (const d of [-1, 1]) block(m, mat, xc + d * 0.62 - 0.06, xc + d * 0.62 + 0.06, b.frameBottom + 0.1, 0.84, ...z);
         for (const dx of b.axles) {
           const x = xc + dx;
           // the pedestal jaws each side of the journal box and the box with its lid
-          for (const d of [-1, 1]) block(m, mat, x + d * 0.2 - 0.035, x + d * 0.2 + 0.035, ay - 0.22, 0.72, ...z);
+          for (const d of [-1, 1]) block(m, mat, x + d * 0.2 - 0.035, x + d * 0.2 + 0.035, ay - 0.22, 0.74, ...z);
           block(m, "bogie", x - 0.16, x + 0.16, ay - 0.2, ay + 0.2, ...side(sd, 0.82, fz1 + 0.03));
           extrude(m, "spring", "z", ngon(8, 0.11, Math.PI / 8, x, ay), side(sd, fz1 + 0.03, fz1 + 0.06));
           // the equaliser under the box and the coils standing on it each side
           block(m, mat, x - 0.4, x + 0.4, ay - 0.27, ay - 0.21, ...side(sd, fz0 + 0.02, fz1 - 0.02));
-          for (const d of [-1, 1]) coil(m, "spring", x + d * 0.3, sd * ((fz0 + fz1) / 2), ay - 0.21, 0.72, 0.065, 2, 6);
+          for (const d of [-1, 1]) coil(m, "spring", x + d * 0.3, sd * ((fz0 + fz1) / 2), ay - 0.21, 0.74, 0.07, 3, 6);
           // the brake cylinder on the frame's outer face between box and window
           const bx = x - Math.sign(dx) * 0.5;
-          extrude(m, "spring", "z", ngon(8, 0.08, Math.PI / 8, bx, 0.9), side(sd, fz1, fz1 + 0.12));
+          extrude(m, "spring", "z", ngon(8, 0.09, Math.PI / 8, bx, 0.95), side(sd, fz1, fz1 + 0.12));
         }
         // the elliptic springs in the window, leaves stacked under the bolster
         const leaves = [0.32, 0.44, 0.54, 0.54, 0.44, 0.32];
