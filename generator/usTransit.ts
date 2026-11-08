@@ -999,8 +999,8 @@ function r160InnerEnd(m: MeshBuilder, e: number, face: number): void {
   m.scope("end door", () => {
     const [z0, z1, y0, y1] = [-0.46, 0.46, 1.16, 3.12];
     for (const [a, c, p, q] of [[z0 - 0.025, z0, y0, y1], [z1, z1 + 0.025, y0, y1], [z0 - 0.025, z1 + 0.025, y1, y1 + 0.025]] as const) F("rubber", 0.004, [[a, p], [c, p], [c, q], [a, q]]);
-    F("frameSilver", 0.006, roundedOutline(-0.3, 0.3, 2.15, 3.04, 0.1));
-    F("glass", 0.008, roundedOutline(-0.27, 0.27, 2.18, 3.01, 0.07));
+    F("frameSilver", 0.006, roundedOutline(-0.33, 0.33, 2.05, 3.06, 0.1));
+    F("glass", 0.008, roundedOutline(-0.3, 0.3, 2.08, 3.03, 0.07));
     m.rod("handrail", [x(0.03), 1.95, 0.32], [x(0.03), 1.95, 0.42], 0.012, 5);
   });
   m.scope("barriers", () => {
