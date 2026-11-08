@@ -9,7 +9,7 @@
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
 | `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 13,350 - 13,850 |
-| `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 6,900 - 7,300 |
+| `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 10,200 - 10,700 |
 | `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 6,900 |
 
 All on the US loading gauge ([loading-gauge.md](loading-gauge.md)): the RDC is a
@@ -20,7 +20,7 @@ third-rail current collection not drawn.
 
 A `CarDef` is a carbody spec ([us-carbodies.md](us-carbodies.md), `carbodyKit.ts`) and its
 fittings: side paint bands, window rows (sill, head, spans; `onSide` a row on one side only, `cornerR` rounded corners), passenger doors (spans, sill,
-head, the leaf's window; `spanSides` a span on one side only) - plug doors that open onto the car's generic cabin (`openable`,
+head, the leaf's window; `spanSides` a span on one side only, `glassCornerR` a pair of narrow leaf windows rounded in a rubber surround with a bright rim) - plug doors that open onto the car's generic cabin (`openable`,
 `plugMove`, `sliceCabin`; doors.md, interiors.md) - stainless fluting (one band or several) broken over windows and
 doors, painted `strips` over the bands (d spans between two heights, down over the skirt: a
 double-deck coach's door strips), a flat cab end's windscreen panes, front mask and lamps, both ends painted
@@ -59,18 +59,51 @@ trucks a Jacobs bogie replaces.
   and step plate over it, MU sockets, air hoses and corner steps.
 - **Pioneer Zephyr** - its own module ([pioneer-zephyr.md](pioneer-zephyr.md)): the power
   car's nose is a hull of its own; the coach and the observation car are `CarDef`s drawn here.
-- **R160** - four doors a side, window pairs between them, fluting, the black front mask with
-  three panes and its lamps on the cab car; the trailer has diaphragms at both ends.
+- **R160** - measured on the photographs in `assets/nyc-r160/` (SOURCES.md): the 9184 side by a
+  1-D projective fit over its door edges, the F-train cab end nearly head-on (133 px/m on the
+  10 ft width), the 8539 delivery for the trucks. Plain stainless sides (no fluting), the end
+  corners rounded 0.12 m back in plan and the roof rolling down into each end wall (about 0.35 m
+  radius); side 1.15 - 3.28 m, roof 3.65 m. Four 1.27 m double doors a side, centred 2.34 m and
+  7.01 m either side of the middle, in a dark door pocket frame 0.14 m wide to 3.22 m, each leaf
+  with a narrow rounded window in a rubber surround and bright rim (2.1 - 3.05 m); one 1.33 m
+  window with rounded corners centred between each pair of doors (2.1 - 3.08 m), its upper light
+  over a transom, the front one carrying the amber LED destination sign; a round plate under
+  each window, the belt seam at 1.93 m and the rain strip under the roof. The end panels carry
+  the car number on a black plate (8713, the trailer 8714) and the MTA logo, the first window's
+  pier the flag (canton forward); the cab car's right side has the cab's side window in the front
+  end panel instead. On the roof the fluting and an air-conditioning shroud at each end (0.42 -
+  5.3 m from the end, flat top 3.70 m) with two condenser grilles; under the floor the auxiliary
+  inverter, the propulsion box with its louvres, the battery box (yellow front), the braking
+  resistor grids, the air reservoir and the compressor, turned end for end on the other side.
+  The trucks (`r160Truck`) at 1.675 m from each body end, 2.0 m wheelbase, 28 in wheels:
+  outside axle boxes under chevron springs, an H frame dropped between the axles, air springs,
+  traction motors, and on each side the third-rail shoe beam with its shoe paddle and red fuse
+  box. The cab end (`r160CabEnd`, cab car's front only): bare stainless with black fields either
+  side of the stainless door (offset 0.08 m to the left) and over it, the black crown over the
+  roof's roll; the windscreen on the right with its wiper and the grab handle under it; the
+  door's rounded window and the safety chains strung across it in three vees; on each side a
+  head lamp (0.75 m out) and a clear marker lamp (lit red, 1.12 m out) in bright bezels at
+  1.6 m, inside the fields' rounded lower corners; the route sign's housing in the crown with a
+  red F in its ring; the flag, the MTA logo and grab irons on the left field. Every other end
+  (`r160InnerEnd`) has the stainless door with its window and, either side, three sagging
+  safety barriers between the corner post and the door post; no diaphragm. Every end has the
+  ribbed anticlimber at the floor and the boxes beside the centre coupler. The distant model
+  keeps the cab end's black field over 1.3 m and its windscreen, the three windows, the roof
+  shrouds, the trucks and the underfloor block.
 - **5000-series** - two doors a side, the blue and red stripes, the cab end's mask.
 
 ## Deviations
 
-- Trucks are the diesel toolkit's generic two-axle truck; the subway cars' third-rail shoes,
-  the R160's destination signs and the cars' interiors beyond the generic cabin are not drawn.
+- The CTA cars' trucks are the diesel toolkit's generic two-axle truck and their third-rail
+  shoes are not drawn; the cars' interiors beyond the generic cabin are not drawn. The R160's
+  truck centres (14.5 m) and wheelbase are measured on the delivery photograph, not published
+  figures; its marker lamps' colour when lit is the game's tail-lamp red.
 
 ## Checking
 
 `pnpm exec vitest run test/usTransit.test.ts` (ids, groups, references, value titles; every
 combination inside its gauge and the budget, without coplanar faces, at its length on two
 supports; the distant models; the Zephyr's three sections on four supports with the two
-Jacobs bogies, which the same test file checks with the other US cars). The doors, cabins and rail supports are also checked by the generic suites.
+Jacobs bogies, which the same test file checks with the other US cars; the R160's door and
+window layout, its cab side window, the cab end's lamps, fields and route sign and the
+inner ends' barriers). The doors, cabins and rail supports are also checked by the generic suites.
