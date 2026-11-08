@@ -6,7 +6,8 @@
 
 ## The designs
 
-All at their real size, in the `tram` group (`TRAM_CATALOG`, category `Rail vehicles`; an
+All at their real size, in the `tram` group (`TRAM_CATALOG`, category `Rail vehicles`, traction
+`electric` unless the `WorldTram` states `steam` or `cable`; an
 OpenTTD road vehicle on tram track), modelled on the photographs in `assets/<references>/`
 (the folder named like the id without `veh-`), whose `SOURCES.md` gives the published figures
 and marks the estimates. **The ids are stored in saved maps: never rename one.** Sizes are

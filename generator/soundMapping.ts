@@ -256,13 +256,15 @@ export interface SoundSource {
  * locomotive its exhaust beat, a diesel its engine (a railcar's, a shunter's or a
  * mainline one) and an electric its motors (a resistor locomotive's, a unit's
  * converters, a high-speed train's); a bus or a truck its diesel engine; a ship
- * its horn. Aircraft and cable cars get none: no designs fit them yet.
+ * its horn. Aircraft and cable cars get none: no designs fit them yet. A tram's
+ * traction (electric, cable) sounds no engine: only its bell.
  */
 export function derivedSounds(src: SoundSource, weight: number | null | undefined, maxspeed?: number | null): SoundMapping {
   if (src.category === "Rail vehicles") {
     if (weight == null) return {};
     const steam = src.traction === "steam";
-    const out: SoundMapping = { horn: src.group === "tram" ? tramBell() : railHorn(steam, weight) };
+    if (src.group === "tram") return { horn: tramBell() };
+    const out: SoundMapping = { horn: railHorn(steam, weight) };
     if (steam) out.engine = { id: "steam-chuff" };
     else if (src.traction === "diesel") out.engine = dieselEngine(weight, src.group);
     else if (src.traction === "electric") out.engine = electricEngine(src.group, maxspeed);

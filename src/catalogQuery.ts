@@ -154,8 +154,8 @@ export function countryChips(rows: readonly CatalogRecord[], path: ChipPath, pic
  * The filter chips, as the webapp Creator draws them (without its origin switch:
  * everything here is the factory's own). The first row is one chip per fleet plus
  * one for every building; under a pick, a second row splits it by type (a
- * vehicle's group, a building's category) and a third, under a locomotive or a
- * unit, by traction. The first row's order and labels are the Creator's.
+ * vehicle's group - or Animal for an animal-drawn one -, a tram's traction, a
+ * building's category) and a third, under a locomotive or a unit, by traction. The first row's order and labels are the Creator's.
  */
 export interface Group {
   id: string;
@@ -216,22 +216,31 @@ export function groupOf(r: CatalogRecord): string {
 }
 
 /** The fleets whose models are all one kind, so a second row would only split near-synonyms (ship / ships). */
-const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "cablecar", "tram", "tree", "woods", "prop", "character", "animal", "texture"]);
+const NO_LEVEL2: ReadonlySet<string> = new Set(["ship", "cablecar", "tree", "woods", "prop", "character", "animal", "texture"]);
+
+/** The traction of an animal-drawn vehicle: its own second-row chip under Trains and Road vehicles. */
+export const ANIMAL_TRACTION = "animal";
 
 /** The chip a model lands on when it has no value for a level, so every model is reachable through the chips. */
 export const OTHER_CHIP = "other";
 
-/** The second chip level: a vehicle's group (loco, unit, coach, truck, ...), an aircraft's kind, a building's category. */
+/**
+ * The second chip level: a vehicle's group (loco, unit, coach, truck, ...), Animal for an
+ * animal-drawn train or road vehicle, a tram's traction (electric, cable, animal), an
+ * aircraft's kind, a building's category.
+ */
 export function level2Of(r: CatalogRecord): string {
   const g = groupOf(r);
   if (NO_LEVEL2.has(g)) return OTHER_CHIP;
+  if (g === "tram") return r.traction || OTHER_CHIP;
+  if ((g === "train" || g === "moto") && r.traction === ANIMAL_TRACTION) return ANIMAL_TRACTION;
   if (g === "aircraft") return r.airframe ?? OTHER_CHIP;
   return (g === "building" ? r.category : r.group) || OTHER_CHIP;
 }
 
 /** The third chip level: a locomotive's or a unit's traction. Nothing else has a finer split. */
 export function level3Of(r: CatalogRecord): string {
-  return (groupOf(r) === "train" ? r.traction : "") || OTHER_CHIP;
+  return (groupOf(r) === "train" && r.traction !== ANIMAL_TRACTION ? r.traction : "") || OTHER_CHIP;
 }
 
 /** What the three chip rows have picked: one value per row at most, null for All. */
@@ -297,6 +306,8 @@ const CHIP_LABELS: Readonly<Record<string, string>> = {
   diesel: "Diesel",
   electric: "Electric",
   steam: "Steam",
+  cable: "Cable",
+  animal: "Animal",
   coach: "Coach",
   dmu: "DMU",
   emu: "EMU",

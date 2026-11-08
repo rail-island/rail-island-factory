@@ -209,7 +209,12 @@ describe("a design's exported sounds", () => {
     expect(engineOf("proc-vehicle-cd-169")).toBe("electric-engine-converter");
     expect(engineOf("proc-vehicle-ice-1")).toBe("electric-engine-converter");
     expect(engineOf("proc-vehicle-cd-451")).toBe("electric-engine-resistor");
-    for (const v of vehicles.filter((x) => x.traction === "electric")) {
+    // an electric or cable tram sounds no engine of its own: it keeps the derived bell alone
+    for (const v of vehicles.filter((x) => x.group === "tram" && (x.traction === "electric" || x.traction === "cable") && !SOUND_TABLE[x.id])) {
+      expect(v.game!.sounds!.engine, v.id).toBeUndefined();
+      expect(v.game!.sounds!.horn!.id, v.id).toBe("tram-bell");
+    }
+    for (const v of vehicles.filter((x) => x.traction === "electric" && x.group !== "tram")) {
       expect(v.game!.sounds!.engine, v.id).toBeDefined();
       if (!SOUND_TABLE[v.id]?.sounds?.engine) expect(v.game!.sounds!.engine, v.id).toEqual(electricEngine(v.group, v.game!.maxspeed));
     }

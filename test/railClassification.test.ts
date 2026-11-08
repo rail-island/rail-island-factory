@@ -1,10 +1,12 @@
 // How the rail vehicles are filed (catalog group + traction), which the site's
 // filter chips read: a locomotive hauls a train, a unit has power and carries
-// passengers, and both name their traction.
+// passengers, and both name their traction; so does every tram (electric, steam,
+// cable), and every animal-drawn vehicle names `animal`.
 
 import { describe, expect, it } from "vitest";
 import { ALL_VEHICLES } from "../generator/generate.ts";
 import { VEHICLE_CATALOG } from "../generator/vehicles.ts";
+import { isAnimalDrawn } from "../generator/soundMapping.ts";
 
 const fields = (id: string) => {
   const d = ALL_VEHICLES.find((v) => v.id === id);
@@ -30,11 +32,25 @@ describe("the rail vehicles' classification", () => {
     expect(fields("proc-vehicle-csd-433-0")).toMatchObject({ group: "loco", traction: "steam" });
   });
 
-  it("gives every locomotive and unit a traction, and nothing else one", () => {
+  it("gives every locomotive, unit and tram a traction, every animal-drawn vehicle `animal`, and nothing else one", () => {
     for (const d of ALL_VEHICLES) {
       const f = d.catalog ?? VEHICLE_CATALOG;
-      const powered = f.group === "loco" || f.group === "unit";
-      expect([d.id, !!f.traction]).toEqual([d.id, powered]);
+      const expected = isAnimalDrawn(d)
+        ? ["animal"]
+        : f.group === "loco" || f.group === "unit"
+          ? ["electric", "diesel", "steam"]
+          : f.group === "tram"
+            ? ["electric", "steam", "cable"]
+            : [undefined];
+      expect([d.id, expected.includes(f.traction)]).toEqual([d.id, true]);
     }
+  });
+
+  it("files the trams by what drives them", () => {
+    expect(fields("proc-vehicle-tatra-t3")).toMatchObject({ group: "tram", traction: "electric" });
+    expect(fields("proc-vehicle-sf-cable-car")).toMatchObject({ group: "tram", traction: "cable" });
+    expect(fields("proc-vehicle-animal-tram-closed")).toMatchObject({ group: "tram", traction: "animal" });
+    expect(fields("proc-vehicle-animal-rail-budweis-coach")).toMatchObject({ group: "coach", traction: "animal" });
+    expect(fields("proc-vehicle-animal-bus-knifeboard-omnibus")).toMatchObject({ group: "bus", traction: "animal" });
   });
 });

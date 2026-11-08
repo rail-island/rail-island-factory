@@ -34,8 +34,11 @@ import { TRAM_CATALOG } from "./trams.ts";
 import { block, side } from "./vehicleParts.ts";
 import { TAU } from "./characterKit.ts";
 import { lodBlock, lodPolygon, lodRoofBox, lodSideBox } from "./lodKit.ts";
-import type { ParamValues, ProceduralDesign } from "./design.ts";
+import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import { animalVehicleDesign, buildAnimalVehicle, buildAnimalVehicleLod, type AnimalVehicleSpec } from "./animalVehicleKit.ts";
+
+/** The horsecars: trams drawn by their team (the Animal chip and pill). */
+const HORSECAR_CATALOG: CatalogFields = { ...TRAM_CATALOG, traction: "animal" };
 
 // ---------------------------------------------------------------------------
 // the palette
@@ -479,7 +482,7 @@ const DOUBLE_DECK: AnimalVehicleSpec = {
   id: "veh-animal-tram-double-deck",
   title: "Double-Deck Horsecar",
   kind: "tram",
-  catalog: TRAM_CATALOG,
+  catalog: HORSECAR_CATALOG,
   palette: PALETTE,
   weight: 2.0,
   maxspeed: 15,
@@ -836,7 +839,7 @@ const CLOSED: AnimalVehicleSpec = {
   id: "veh-animal-tram-closed",
   title: "Closed Horsecar",
   kind: "tram",
-  catalog: TRAM_CATALOG,
+  catalog: HORSECAR_CATALOG,
   palette: PALETTE_CLOSED,
   weight: 2.6,
   maxspeed: 15,
@@ -1022,7 +1025,7 @@ const TOASTRACK: AnimalVehicleSpec = {
   id: "veh-animal-tram-toastrack",
   title: "Toastrack Horsecar",
   kind: "tram",
-  catalog: TRAM_CATALOG,
+  catalog: HORSECAR_CATALOG,
   palette: PALETTE_TOASTRACK,
   weight: 2.2,
   maxspeed: 15,
@@ -1247,7 +1250,7 @@ const BOBTAIL: AnimalVehicleSpec = {
   id: "veh-animal-tram-bobtail",
   title: "Bobtail Horsecar",
   kind: "tram",
-  catalog: TRAM_CATALOG,
+  catalog: HORSECAR_CATALOG,
   palette: PALETTE_BOBTAIL,
   weight: 1.6,
   maxspeed: 12,

@@ -157,7 +157,12 @@ A **locomotive** (group `loco`) or a **unit** (group `unit`: powered and carryin
 passengers - the electric and diesel multiple units, the railcars, the ICE 1 and
 TGV sets) also carries `traction`: `electric`, `diesel` or `steam`. Its catalog
 fields set it (`ELECTRIC_LOCO_CATALOG`, `DIESEL_LOCO_CATALOG`, `STEAM_CATALOG`,
-`EMU_CATALOG`, `DMU_CATALOG`, `STEAM_RAILCAR_CATALOG`); no other entry has the key.
+`EMU_CATALOG`, `DMU_CATALOG`, `STEAM_RAILCAR_CATALOG`). A **tram** carries one
+too: `electric` (`TRAM_CATALOG`), `steam` (the steam tram) or `cable` (the San
+Francisco and Dunedin cable cars). Every **animal-drawn** vehicle - a horsecar, a
+horse railway's coach or wagon, a road coach - carries `animal`
+([animal-drawn-vehicles.md](animal-drawn-vehicles.md)); the game and the site file
+them under an Animal pill and chip by it. No other entry has the key.
 
 A **parametric** model's entry also carries `params`: its enum parameters as
 `{ name, title, values: [{ value, title }], default }`. Its thumbnail and

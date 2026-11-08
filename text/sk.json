@@ -278,6 +278,7 @@
   "CSD M 112.0 Steam Railcar": "Parný motorový vozeň CSD M 112.0",
   "Cab car": "Vozeň so stanovišťom",
   "Cab car A": "Riadiaci voz A",
+  "Cable": "Lanová",
   "Cable Layer": "Káblová loď",
   "Cable reels": "Káblové bubny",
   "Cable-stayed Bridge": "Zavesený most",
@@ -1254,6 +1255,7 @@
   "model.proc-building-castle.param.towers": "Veže",
   "model.proc-char-avatar.param.body": "Postava",
   "model.proc-char-avatar.param.body.standard": "Bežná",
-  "model.proc-char-avatar.param.hair.short": "Krátke"
+  "model.proc-char-avatar.param.hair.short": "Krátke",
+  "traction.animal": "Zvieracia"
  }
 }

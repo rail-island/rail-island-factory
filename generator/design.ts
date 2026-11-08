@@ -12,8 +12,11 @@ import type { LoadingGauge } from "./loadingGauge.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { CityUse } from "./cityVariants.ts";
 
-/** What drives a powered rail vehicle. */
-export type Traction = "electric" | "diesel" | "steam";
+/**
+ * What drives a vehicle: a locomotive's or a unit's engine, a tram's (electric, or a
+ * cable car's rope), or the team of an animal-drawn vehicle (rail, tram or road).
+ */
+export type Traction = "electric" | "diesel" | "steam" | "cable" | "animal";
 
 /** One value of an enum parameter. */
 export interface ParamValue {
@@ -700,7 +703,10 @@ export interface CatalogFields {
   yaw?: number;
   category: string;
   group: string;
-  /** A powered rail vehicle's traction (a locomotive's, a unit's); absent for anything else. */
+  /**
+   * What drives the vehicle: a locomotive's, a unit's or a tram's traction, or `animal`
+   * for every animal-drawn design (rail, tram or road); absent for anything else.
+   */
   traction?: Traction;
   /** A site preview's set type id (docs/models/previews.md): the id a saved game stores, shown in place of the model id. */
   gameId?: string;
