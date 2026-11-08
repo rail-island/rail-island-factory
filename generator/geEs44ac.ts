@@ -753,11 +753,18 @@ function bnsf(number: string): Es44Livery {
     title: "BNSF", railroad: "BNSF", letterH: 0.78, letterY: 0.92, letterX: -2.2, letterW: 1.2, letterGap: 0.22, letterSlant: 0.25, number,
     palette: pick("bnsfOrange", "bnsfBlack", "bnsfYellow", "truckBlack", "boardBlack", "tankGrey"),
     body, cab: [[0, 9, "bnsfOrange"]], ends: [[0, 9, "bnsfOrange"]], rear: [[0, 3.6, "bnsfOrange"], [3.6, 9, "bnsfBlack"]],
-    roof: "bnsfBlack", cabRoof: "bnsfOrange", noseTop: "bnsfBlack", wing: "bnsfBlack", slope: "bnsfBlack", frameMat: "bnsfBlack",
+    roof: "bnsfBlack", cabRoof: "bnsfOrange", noseTop: "bnsfOrange", wing: "bnsfBlack", slope: "bnsfBlack", frameMat: "bnsfBlack",
     frame: "bnsfBlack", sillStripe: [0, 0.12, "bnsfYellow"], trucks: "truckBlack", pilot: "bnsfBlack", tank: "tankGrey", anticlimber: "bnsfYellow",
     letter: "bnsfBlack", numberMat: "bnsfBlack", rails: "bnsfBlack", frontRails: "bnsfYellow", board: "boardBlack", boardText: "white",
     marks: (m) => {
       const H = CAB_HALF;
+      // the black glare shield on the nose top in front of the windscreens, its edge a shallow V
+      const front = CAB_FRONT[0]!;
+      const yTop = (x: number) => front[0] + ((NOSE_TOP - front[0]) * (x - front[1])) / (9.55 - front[1]) + 0.004;
+      const shield: Array<[number, number]> = [[front[1], -TOP_HALF], [front[1], TOP_HALF], [8.72, TOP_HALF], [9.0, 0], [8.72, -TOP_HALF]];
+      polygon(m, "bnsfBlack", shield.map(([x, z]): Vec3 => [x, yTop(x), z]), outward(shield.map(([x, z]): Vec3 => [x, yTop(x), z]), [0, 1, 0]));
+      // the nose door's round window beside the headlights
+      extrude(m, "glass", "x", ngon(10, 0.1, 0, -0.45, 3.2), [NOSE_X - 0.002, NOSE_X + 0.01]);
       // the nose face: BNSF in italic black letters, the swoosh under them, the black foot with its yellow stripe
       const fx = NOSE_X + 0.004;
       endWords(m, "bnsfBlack", "BNSF", 1, fx, 0.05, D + 0.97, 0.38, 0.66, 0.1, 0.3);
