@@ -149,6 +149,13 @@ export interface RunningGearSpec {
    * (a Scullin disc's lightening holes) instead of a radial lozenge. Lozenges by default.
    */
   discOpeningSides?: number;
+  /**
+   * More parts drawn with each horizontal cylinder, in its scope and so on its
+   * turning unit (a casing, a steam chest of another shape, the saddle reaching it):
+   * on side s, the cylinder's axis at model height y and z (the side's sign
+   * included), its model X from x0 to x1 (x0 < x1), radius r. None by default.
+   */
+  cylinderDressing?: (m: MeshBuilder, s: number, c: { x0: number; x1: number; y: number; z: number; r: number }) => void;
 }
 
 /**
@@ -479,6 +486,7 @@ export class RunningGear {
           const gx = near - es.d * 0.05;
           block(m, "steel", Math.min(gx, near), Math.max(gx, near) + 0.001, es.valveY - 0.06, es.valveY + 0.06, ...side(s, z - 0.06, z + 0.06));
         }
+        this.spec.cylinderDressing?.(m, s, { x0, x1, y, z: zc, r });
       });
     }
     this.spec.wheels.forEach((w, i) => {

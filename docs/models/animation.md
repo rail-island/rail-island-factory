@@ -154,7 +154,9 @@ revolution of the reference wheel (the main driver; a tender's first axle) in
   draws each opening as a round hole of that many sides at mid radius instead (a Scullin disc's lightening
   holes). `driverMaterial` paints the coupled wheels' centres, counterweights and crank bosses apart from
   the carrying wheels' `wheelMaterial` (the Hudson's aluminium drivers behind black truck wheels); the
-  steam distant model then draws the drivers' blocks in it too. Both unset by default.
+  steam distant model then draws the drivers' blocks in it too. Both unset by default. `cylinderDressing` (the 4-4-0's brass
+  cylinders and steam chests) draws more parts in each horizontal cylinder's scope, so they ride its
+  turning unit; none by default.
 - **Per engine side** (`-right`, `-left`, plus `-front`/`-rear` on the Mallet):
   `coupling-rod` (translated round the crank circle), `crosshead` (sliding),
   `main-rod`, and with valve gear `eccentric-rod`, `expansion-link` (turning on
