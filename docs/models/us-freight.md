@@ -9,7 +9,7 @@
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
 | `proc-vehicle-us-caboose` | Cupola caboose | `livery`: `santaFe` (red), `unionPacific` (yellow) | 10.97 m | about 4,600 |
-| `proc-vehicle-us-boxcar` | 50 ft boxcar | `livery`: `boxcarRed`, `railbox` | 16.87 m | 9,100 / 7,900 |
+| `proc-vehicle-us-boxcar` | 50 ft boxcar | `livery`: `boxcarRed`, `railbox` | 16.87 m | 9,300 / 8,200 |
 | `proc-vehicle-us-well-car` | Double-stack well car | `cargo`: `single` (default), `empty`, `double` | 19.35 m | 3,700 - 4,000 |
 | `proc-vehicle-sf-cable-car` | San Francisco cable car | `livery`: `powell`, `california` | 8.38 m | about 4,200 |
 
@@ -22,7 +22,7 @@ doors: its grip sections are open (`NO_DOORS` in test/doors.test.ts).
   pipe (a smoke emitter); the railroad's name along the sides.
 - **Boxcar** - a 1970s 70-ton Plate C car measured from photographs (assets/us-boxcar/SOURCES.md):
   the body 15.7 m long, its eave at 4.42 m and the shallow roof ridge at 15 ft 1 in; seven exterior
-  posts each side of the door and the side sill; the diagonal-panel roof (ten panels, seam caps
+  hat-section posts (11 cm out, sloping flanks) each side of the door and the side sill; the diagonal-panel roof (ten panels, seam caps
   across and a raised diagonal in each, chevrons seen from above); improved Dreadnaught ends with six
   broad ribs, the end sill and striker; short side and end ladders at the corners with the sill
   steps; on the B end (-x) the vertical brake wheel, its housing, the brake step and the chain; the
