@@ -1,7 +1,7 @@
 # North American diesel locomotives
 
 **Covers** - the four North American hood units (`proc-vehicle-emd-gp9`, `proc-vehicle-emd-sd40-2`, `proc-vehicle-ge-es44ac`, `proc-vehicle-emd-sd70ace`): their measures, liveries, the shared hood unit kit, the distant model, deviations and the tests.
-**Code** - `generator/usDiesels.ts` (`US_DIESELS`), `generator/usGp9.ts`, `generator/usSd40.ts`, `generator/usHoodKit.ts`, `generator/loadingGauge.ts`, `test/usDiesels.test.ts`, `assets/emd-gp9/`, `assets/emd-sd40-2/`, `assets/ge-es44ac/`, `assets/emd-sd70ace/`
+**Code** - `generator/usDiesels.ts` (`US_DIESELS`), `generator/usGp9.ts`, `generator/usSd40.ts`, `generator/geEs44ac.ts`, `generator/usHoodKit.ts`, `generator/loadingGauge.ts`, `test/usDiesels.test.ts`, `assets/emd-gp9/`, `assets/emd-sd40-2/`, `assets/ge-es44ac/`, `assets/emd-sd70ace/`
 **See also** - [loading-gauge.md](loading-gauge.md), [diesel-locos.md](diesel-locos.md), [vehicles.md](vehicles.md), [openttd-figures.md](openttd-figures.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md)
 
 ## The designs
@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | `proc-vehicle-emd-gp9` | EMD GP9 | `unionPacific`, `pennsylvania`, `santaFe` | 17.12 m | 9.45 m (B-B) | about 8,700 - 8,900 |
 | `proc-vehicle-emd-sd40-2` | EMD SD40-2 | `burlingtonNorthern`, `conrail`, `unionPacific` | 20.98 m | 13.26 m (C-C) | about 14,350 - 14,650 |
-| `proc-vehicle-ge-es44ac` | GE ES44AC | `bnsf`, `unionPacific`, `csx` | 22.30 m | 16.15 m (C-C) | about 9,000 |
+| `proc-vehicle-ge-es44ac` | GE ES44AC | `bnsf`, `unionPacific`, `csx` | 22.30 m | 15.34 m (C-C) | about 13,800 - 14,100 |
 | `proc-vehicle-emd-sd70ace` | EMD SD70ACe | `unionPacific`, `norfolkSouthern`, `bnsf` | 22.63 m | 14.58 m (C-C) | about 9,100 |
 
 All are rigid diesel locomotives (`DIESEL_LOCO_CATALOG`, group `loco`), registered
@@ -99,11 +99,66 @@ corner step wells at all four corners, a snowplow at the front; HT-C trucks at
 air reservoirs over it (its lower edges rounded). Running numbers are the photographed units (BN 7812,
 CR 6469, UP 3741).
 
+## The ES44AC in detail (`geEs44ac.ts`)
+
+The ES44AC is drawn by its own module on the kit's helpers (`paintedSweep`,
+`decalX`/`decalZ`, `knuckleCoupler`, `US_PALETTE`) and the diesel toolkit's
+truck; `usDiesels.ts` keeps `ES44_SPEC` as the kit's ES44 frame for the designs
+built on it (the HXN5, the WDG-4G), which are unchanged. Faces are planar
+polygons, ear-clipped and split exactly at the paint bands' heights
+(`paintedPolygon`), so the nose and cab carry the schemes' boundaries without
+hidden faces. Measures (photographs in `assets/ge-es44ac/`, scaled from the
+published figures):
+
+- **Wide nose and safety cab**: a hipped nose (UP 2539 head-on, BNSF 6156 and
+  5824): the face 3.12 m wide, a pentagon 3.22 m high at its corners rising to a
+  ridge at 3.56 m on the centre line; two large planes fall from the ridge and the
+  windscreens' foot (3.70 m) down to the side walls, whose top edge climbs from the
+  face's corner back to 3.45 m at the cab. The two panes raked back 0.2 m to
+  4.26 m across almost the whole width with a narrow post between, the number boards on the band above, the roof at 15 ft 5 in
+  (4.70 m) with a chamfered edge. Cab 5.40 - 8.30 m along, nose face at 9.75 m;
+  three side windows (front fixed pane, sliding pair under a visor, rear pane),
+  the running number under them; a five-chime horn, air conditioner and antennas
+  on the roof; the headlight pair one over the other at the top of the face, the
+  ditch lights on the platform's front edge, the corner handrails.
+- **Long hood**: the dynamic brake box (1.90 - 5.40 m, 2.76 m wide, top 4.60 m)
+  overhanging the inverter cabinet behind the cab, two screened grid intakes on
+  each side and a roof grille; the engine hood (top 4.45 m) with seven doors a
+  side, the engine air intake's screens high on the sides with a roof hatch, the
+  exhaust; the radiator (-10.05 to -5.20 m) whose wings flare from the hood side at
+  3.35 m out to 3.0 m wide (top 4.62 m) over screened, braced intakes and reach
+  0.35 m back over the rear face; two fans; louvred doors under the wings; the
+  rear face's headlights under the overhang. The hand brake wheel on the left side
+  ahead of the radiator and a ladder up the inverter cabinet on the left.
+- **Frame and running gear**: deep sill, pilots with forward-facing corner stairs,
+  the GE trucks at 50 ft 4 in centres with a 13 ft 2 in wheelbase and 42 in wheels:
+  GE's Hi-Ad side frame cast outside the toolkit's (`hiAdCasting`: a top chord at
+  0.95 m humped over the axles, an opening round each axle box with a spring each
+  side, deep bellies between the axles, a sand box, dampers to the frame, the
+  motors and bolster dark in the gap under the sill); the 9.5 m fuel tank with
+  rounded lower edges and sloped ends, its upper part set in behind the two long
+  silver main reservoirs each side.
+- **Paint** (measured on BNSF 5824/6156/5871, UP 2539/5304 and CSX 761): BNSF
+  Heritage III - orange, the hood's upper part black over a yellow stripe
+  (3.38 - 3.60 m), black dynamic brake box and wings, italic BNSF on the hood and
+  nose with the black swoosh under it, a black foot band with a yellow stripe along
+  the nose and cab, the nose's hip planes orange with a black strip along the windscreens' foot, deepest at the corners, the headlights 0.1 m off the
+  centre line beside the nose door's round window, a yellow anticlimber, grey fuel
+  tank, grimy tan-grey trucks as photographed. Union Pacific - armour yellow including the cab sides, harbour mist grey
+  roofs, the cab front above the windscreens' foot, the dynamic brake box and the
+  wings, each above a red stripe; the winged shield on the nose and the flag on
+  the hood behind the cab. CSX YN3 - dark blue, the nose face and the cab front
+  to the number boards in yellow, the rear face yellow with blue CSX and number,
+  the number's yellow flash on the cab side, a yellow sill stripe.
+- **Distant model** (`buildEs44acLod`): the narrow hood, the radiator as wide as
+  its wings, the dynamic brake box, the cab with its windscreens and side windows,
+  the nose, frame, tank, pilots and both trucks, 100 triangles.
+
 ## Liveries
 
 Simplified railroad schemes: colour fields, stripes and the railroad's name in
-plain stroke letters; no nose "wings" are drawn, and heralds only on the SD40-2
-(simplified BN herald, Conrail wheel, Union Pacific shield). Running
+plain stroke letters; no nose "wings" are drawn on the hood units, and heralds only on the SD40-2
+(simplified BN herald, Conrail wheel, Union Pacific shield); the ES44AC's schemes add their emblems in simple shapes (the UP wings and flag, the BNSF swoosh, the CSX flash). Running
 numbers are illustrative numbers in each railroad's series for the class.
 
 | scheme | used on | paint |
@@ -113,14 +168,14 @@ numbers are illustrative numbers in each railroad's series for the class.
 | Santa Fe | GP9 | blue, yellow hood end faces, a yellow stripe along the hoods and cab, yellow sill, yellow lettering (ATSF 2879) |
 | BN Cascade | SD40-2 | Cascade green, the hood top black 1 m deep over the grilles, black cab roof, frame and pilot, the white BN herald and name on the cab, the number on the long hood |
 | Conrail | SD40-2 | all blue with black trucks and tank, the white wheel-and-rails emblem on the long hood, CONRAIL on the hood and the nose, the number on the cab |
-| BNSF | ES44AC, SD70ACe | orange, a yellow pinstripe under the black hood top, black frame, yellow sill stripe |
-| CSX | ES44AC | dark blue hood, yellow cab and nose, grey frame |
+| BNSF | SD70ACe (the ES44AC's Heritage III above) | orange, a yellow pinstripe under the black hood top, black frame, yellow sill stripe |
+| CSX | ES44AC | YN3: see the ES44AC above |
 | Norfolk Southern | SD70ACe | black with white lettering and sill stripe |
 
 ## Deviations
 
 - Truck side frames are the diesel toolkit's generic cast frame, not the
-  HiAd or HTCR castings (the GP9 draws its Blomberg B, the SD40-2 its HT-C casting); steerable trucks are not modelled.
+  HTCR castings (the GP9 draws its Blomberg B, the SD40-2 its HT-C casting, the ES44AC GE's Hi-Ad casting); steerable trucks are not modelled.
 - The GP9 schemes leave out the heralds (UP shield, Santa Fe cross) and UP 211's later
   winterization hatch; the long hood's louvre layout is UP 211's on every scheme, and both
   sides are drawn alike.
@@ -128,6 +183,10 @@ numbers are illustrative numbers in each railroad's series for the class.
   photographs; hood doors are drawn as seams and latches.
 - The SD40-2's truck centres are 43 ft 6 in between the bolsters (Wikipedia, the
   Conrail Historical Society); The Diesel Shop's 40 ft does not fit the photographs.
+- The ES44AC's trucks are at the 50 ft 4 in bolster centres of GE's AC4400CW
+  sheet (the same frame and length; The Diesel Shop's 53 ft would put the leading
+  wheels under the pilot steps). Photographs suggest the leading axle somewhat
+  further back; the published figure wins.
 - The GP9's truck centres are the published 31 ft (The Diesel Shop's data sheet
   gives 40 ft, which would put the trucks at the pilots).
 

@@ -18,7 +18,7 @@ const ft = (feet: number, inches = 0) => feet * 0.3048 + inches * 0.0254;
 const FIGURES: Record<string, { length: number; centres: number; axles: number; wheel: number; liveries: string[] }> = {
   "proc-vehicle-emd-gp9": { length: ft(56, 2), centres: ft(31), axles: 2, wheel: ft(0, 40), liveries: ["unionPacific", "pennsylvania", "santaFe"] },
   "proc-vehicle-emd-sd40-2": { length: ft(68, 10), centres: ft(43, 6), axles: 3, wheel: ft(0, 40), liveries: ["burlingtonNorthern", "conrail", "unionPacific"] },
-  "proc-vehicle-ge-es44ac": { length: ft(73, 2), centres: ft(53), axles: 3, wheel: ft(0, 42), liveries: ["bnsf", "unionPacific", "csx"] },
+  "proc-vehicle-ge-es44ac": { length: ft(73, 2), centres: ft(50, 4), axles: 3, wheel: ft(0, 42), liveries: ["bnsf", "unionPacific", "csx"] },
   "proc-vehicle-emd-sd70ace": { length: ft(74, 3), centres: ft(47, 10), axles: 3, wheel: ft(0, 42), liveries: ["unionPacific", "norfolkSouthern", "bnsf"] },
 };
 
