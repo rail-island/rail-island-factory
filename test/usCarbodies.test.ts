@@ -84,9 +84,11 @@ describe("the US carbodies", () => {
     expect(f7.some((n) => n.startsWith("nose/headlights/hood/"))).toBe(true);
     expect(f7.filter((n) => n.startsWith("nose/class-lights/")).length).toBe(4);
     expect(f7.filter((n) => n.startsWith("nose/number-boards/")).length).toBe(6);
-    // the Acela: the mask, the teardrop side windows and four headlights in the blue band
+    // the Acela: the windscreen, the cab side windows in the mask over the blue line, and four headlights in the blue band
     const ac = scopes("proc-vehicle-amtrak-acela");
-    expect(ac.filter((n) => n.startsWith("nose/windscreen/side-window")).length).toBe(4);
+    expect(ac.filter((n) => n.startsWith("nose/windscreen/")).length).toBeGreaterThan(0);
+    for (const side of ["right", "left"])
+      for (const part of ["side-window", "cab/mask", "cab/blue-line"]) expect(ac.filter((n) => n.startsWith(`body/${side}-side/${part}/`)).length).toBeGreaterThan(0);
     expect(ac.filter((n) => n.startsWith("nose/headlight-band/")).length).toBeGreaterThan(0);
     expect(ac.filter((n) => n.startsWith("nose/headlights/")).length).toBe(8);
   });

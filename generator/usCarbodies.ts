@@ -14,7 +14,7 @@ import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, t
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { bogie, exhaust, extrude, horn, paint, roofFan, tankX, type BogieSpec } from "./dieselParts.ts";
 import { block, side } from "./vehicleParts.ts";
-import { cross, unit as norm, type Pt } from "./sliceLoft.ts";
+import { cross, lerp, unit as norm, type Pt } from "./sliceLoft.ts";
 import { crownPane, crownPoint, halfSlice, roundedPane, shapedCrownPane, sideDecal, sideLettering, sidePanel, sliceCabin, surfaceDisc, surfacePoint, type PaneOutline, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
 import { openable, plugMove } from "./doors.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
@@ -1230,43 +1230,75 @@ const isPower = (c: AcelaCar) => c === "powerCar";
 export const acelaLength = (c: AcelaCar) => (isPower(c) ? ACELA_LENGTH.powerCar : ACELA_LENGTH.coach);
 
 const ACELA_PAL = {
-  acSilver: paint("#c7cbce", 0.35), acMask: paint("#15181c", 0.25), acDark: paint("#3a4049", 0.5), acBlue: paint("#1f3d6b"), acTeal: paint("#3f8f9c"), truckBlack: paint("#2a2c2f", 0.85),
+  acSilver: paint("#c7cbce", 0.35), acMask: paint("#2a3850", 0.3), acDark: paint("#2e3238", 0.6), acBlue: paint("#1f4c9a"), acRed: paint("#c0222c"),
+  acCap: paint("#dde0e2", 0.3), truckBlack: paint("#2a2c2f", 0.85),
 };
 
-const ACELA_BANDS: ReadonlyArray<readonly [number, number, string]> = [[0, 1.45, "acDark"], [1.45, 2.12, "acSilver"], [2.12, 2.18, "acTeal"], [2.18, 2.28, "acSilver"], [2.28, 3.02, "acDark"], [3.02, 9, "acSilver"]];
-const acelaPaint = bandPainter(ACELA_BANDS, "acSilver", "truckBlack", "acDark");
-/** The power car's paint: silver sides (the coaches' dark window band left out), the dark skirt and the teal line kept. */
+/**
+ * The paint by height (photographs 2031, 2037, Rahway): the dark skirt, the thin red line along
+ * the foot of the body (the lower body between the skirt's top and the belly), the stainless
+ * silver above; the coaches' windows are framed one by one in the silver, with no dark band.
+ */
+const ACELA_BANDS: ReadonlyArray<readonly [number, number, string]> = [[0, 1.18, "acDark"], [1.18, 1.24, "acRed"], [1.24, 9, "acSilver"]];
+const acelaBands = bandPainter(ACELA_BANDS, "acSilver", "truckBlack", "acDark");
+/** The red line runs along the lower body everywhere, the nose's too (where the belly dips under 1.18 m). */
+const acelaPaint: Painter = (d, y, region) => (region === "lower" ? "acRed" : acelaBands(d, y, region));
+
+/** The power car's blue line along the top of the side (the cant), from the cab back to its rear end. */
+const ACELA_CANT = 3.6;
+/** The cab: the dark mask over its roof and upper sides ends where the blue line reaches the cant. */
+const ACELA_CAB_END = 6.4;
+/** The windscreen's foot: the blue band's top edge, the mask's front edge. */
+const ACELA_SCREEN_FOOT = 2.74;
+/** The power car's paint: the mask over the cab roof, the blue cant line behind it; the rest as the coaches. */
 const acelaPowerPaint: Painter = (d, y, region) => {
-  const mat = acelaPaint(d, y, region);
-  return mat === "acDark" && y > 2.2 ? "acSilver" : mat;
+  if (region === "arc" && d > 2.6 && d < ACELA_CAB_END - 0.1) return "acMask";
+  if (region === "side" && y > ACELA_CANT && d > ACELA_CAB_END) return "acBlue";
+  return acelaPaint(d, y, region);
 };
 
 const ACELA_POWER_BODY = ACELA_LENGTH.powerCar - ACELA_GAP - 0.4;
 const ACELA_POWER: CarbodySpec = {
-  length: ACELA_POWER_BODY, W: 1.58, Y: 1.4, S: 3.95, C: 4.32, lean: 0.95, arc: 6, B: 0.85, wl: 1.48, A: 1.2, wa: 1.56,
+  length: ACELA_POWER_BODY, W: 1.58, Y: 1.24, S: 3.95, C: 4.32, lean: 0.95, arc: 6, B: 0.72, wl: 1.45, A: 1.18, wa: 1.56,
   front: {
-    len: 3.4, tip: 0.2, power: 2.2,
+    len: 3.4, tip: 0.42, power: 2.4,
     C: [[0, 1.78], [0.12, 2.06], [0.45, 2.36], [1.5, 2.74], [3.0, 3.36], [4.0, 3.9], [4.6, 4.2], [5.2, 4.32]],
     S: [[0, 1.72], [0.12, 1.98], [0.45, 2.24], [1.5, 2.52], [3.0, 3.02], [4.2, 3.62], [5.2, 3.95]],
-    Y: [[0, 1.35], [1.0, 1.4]],
-    A: [[0, 1.3], [0.8, 1.2]],
-    B: [[0, 1.12], [0.25, 0.6], [1.2, 0.5], [1.8, 0.85]],
+    // the silver nose cap reaches down to the red line, the dark air dam set under it
+    Y: [[0, 1.12], [0.5, 1.2], [1.0, 1.24]],
+    A: [[0, 1.06], [0.5, 1.14], [1.0, 1.18]],
+    B: [[0, 1.0], [0.35, 0.72], [1.4, 0.64], [2.0, 0.72]],
   },
-  edges: [], step: 1.0, noseStep: 0.2,
+  // the flat rear end: its roof and corners rounded into the end wall (photograph Union Station 1)
+  rear: { len: 0.45, tip: 0.9, power: 2, C: [[0, 4.02], [0.5, 4.26], [1.0, 4.32]], S: [[0, 3.86], [0.5, 3.95]] },
+  edges: [], step: 1.0, noseStep: 0.15, stations: [ACELA_CAB_END],
 };
-/** The power car's windscreen mask, its glass and the blue headlight band under it (d, half width on the crown). */
-const ACELA_MASK: PaneOutline = { ...roundedPane([2.72, 4.62], 0, [1.6, 1.6], 0.3, 0, 0.5), z0: () => 0 };
-const ACELA_SCREEN = roundedPane([2.82, 4.38], 0.05, [1.05, 0.88], 0.14, 0.03, 0.22);
+/** The windscreen's glass and the blue headlight band under it (d, half width on the crown). */
+const ACELA_SCREEN = roundedPane([2.82, 4.38], 0.05, [1.15, 0.98], 0.14, 0.03, 0.22);
+/** The windscreen's black rubber surround and centre post. */
+const ACELA_SCREEN_FRAME = roundedPane([2.76, 4.45], 0, [1.21, 1.04], 0.18, 0, 0.26);
 const ACELA_BAND: PaneOutline = {
-  d: [1.45, 2.74], z0: () => 0,
-  // its lower edge a smile: narrow at the front, the full width at the windscreen
-  z1: (d) => 0.5 + 1.1 * Math.sqrt(Math.min(1, Math.max(0, (d - 1.45) / 1.1))), rows: [1.48, 1.55, 1.65, 1.8, 2.0, 2.25, 2.5],
+  d: [0.95, ACELA_SCREEN_FOOT], z0: () => 0,
+  // its lower edge a smile: low and narrow at the centre, the full width from the lamps' ends back
+  z1: (d) => 0.6 + 1.0 * Math.sqrt(Math.min(1, Math.max(0, (d - 0.95) / 1.35))), rows: [0.98, 1.03, 1.1, 1.2, 1.35, 1.55, 1.8, 2.05, 2.3],
 };
-/** The side window's sill: a teardrop's lower edge, pointed toward the nose. */
-const acelaSideLo = (d: number) => 3.0 + 0.62 * Math.max(0, (5.05 - d) / 0.63) ** 1.6;
+/** The mask's lower edge on the cab's side (the blue line's top): low under the side window, rising steeply to the cant behind it. */
+const ACELA_MASK_LO: Pt[] = [[ACELA_SCREEN_FOOT, 2.85], [5.75, 3.25], [ACELA_CAB_END, 3.95]];
+/** The blue line's width under it: wide where it leaves the band, narrowing, the cant line's width at the cab's end. */
+const ACELA_STRIPE_W: Pt[] = [[ACELA_SCREEN_FOOT, 0.34], [5.75, 0.28], [ACELA_CAB_END, 3.95 - ACELA_CANT]];
+/** The cab side window (d): its front edge raked, inside the mask. */
+const ACELA_SIDE_WIN: [number, number] = [4.4, 5.75];
+/** The cab door behind the nose, the long louvred grille along the machine room, the lower panels' seams. */
+const ACELA_CAB_DOOR: [number, number] = [6.55, 7.35];
+const ACELA_LOUVRE: [number, number, number, number] = [7.6, 15.6, 2.05, 3.45];
+const ACELA_SEAMS = [10.6, 13.3];
+/** The pantographs over the rear of the roof, the trailing one raised (photographs 2004, overhead, TTCI). */
+const ACELA_PANTOS: ReadonlyArray<readonly [number, boolean]> = [[15.3, false], [17.9, true]];
+
 const ACELA_COACH_BODY = ACELA_LENGTH.coach - 2 * ACELA_GAP;
+/** The tilting coach: upright foot, the sides leaning in from the red line to the roof (the tilt profile, photograph OSCT head-on). */
 const ACELA_COACH: CarbodySpec = {
-  length: ACELA_COACH_BODY, W: 1.57, Y: 1.4, S: 3.7, C: 4.23, lean: 0.93, arc: 6, B: 0.85, wl: 1.48, A: 1.2, wa: 1.55,
+  length: ACELA_COACH_BODY, W: 1.58, Y: 1.24, S: 3.72, C: 4.23, lean: 0.87, arc: 6, B: 0.9, wl: 1.45, A: 1.18, wa: 1.56,
   edges: [], step: 1.0,
 };
 
@@ -1282,26 +1314,24 @@ function acelaTrucks(c: AcelaCar): [number, number] {
 function acelaSpec(c: AcelaCar): CarbodySpec {
   const base = isPower(c) ? ACELA_POWER : ACELA_COACH;
   const reach = isPower(c) ? 1.6 : 1.55;
-  return { ...base, cuts: acelaTrucks(c).map((d) => [d - reach, d + reach] as const), edges: edgesOf({ bands: ACELA_BANDS } as CarbodyLivery, base.Y, base.S) };
+  return { ...base, cuts: acelaTrucks(c).map((d) => [d - reach, d + reach] as const), edges: isPower(c) ? [ACELA_CANT] : [] };
 }
 
-/** A coach's doors (d spans) at both ends, on both sides; the doorway's sill and head. */
-const ACELA_DOORS: ReadonlyArray<readonly [number, number]> = [[0.5, 1.5], [ACELA_COACH_BODY - 1.5, ACELA_COACH_BODY - 0.5]];
+/** A coach's door (d span) at its vestibule end, on both sides (one vestibule a car, photographs TTCI and Rahway); the doorway's sill and head. */
+const ACELA_DOORS: ReadonlyArray<readonly [number, number]> = [[0.6, 1.55]];
 const ACELA_DOOR_Y: [number, number] = [1.3, 3.15];
-const ACELA_WIN: [number, number] = [2.33, 2.97];
+const ACELA_WIN: [number, number] = [2.0, 3.0];
 const LEAF_INSET = 0.02;
 
-/** A coach's side windows (d spans). */
+/** A coach's side windows (d spans): two narrow ones by the vestibule, then the seating's row (the cafe's split by the counter). */
 function acelaWindows(c: AcelaCar): Array<[number, number]> {
-  const first = c === "firstClass";
-  const n = first ? 11 : c === "cafe" ? 8 : 13;
-  const pitch = first ? 1.85 : 1.6;
-  const w = first ? 1.35 : 1.15;
-  const mid = ACELA_COACH_BODY / 2;
-  return Array.from({ length: n }, (_, i): [number, number] => {
-    const d = mid + (i - (n - 1) / 2) * pitch;
-    return [d - w / 2, d + w / 2];
-  });
+  const row = (from: number, n: number, pitch: number, w: number) =>
+    Array.from({ length: n }, (_, i): [number, number] => { const d = from + (i + 0.5) * pitch; return [d - w / 2, d + w / 2]; });
+  const lobby: Array<[number, number]> = [[2.0, 2.45], [2.75, 3.2]];
+  const [a, e] = [3.8, ACELA_COACH_BODY - 0.8];
+  if (c === "firstClass") return [...lobby, ...row(a, 11, (e - a) / 11, 1.45)];
+  if (c === "cafe") return [...lobby, ...row(a, 4, 1.65, 1.25), ...row(e - 4 * 1.65, 4, 1.65, 1.25)];
+  return [...lobby, ...row(a, 13, (e - a) / 13, 1.25)];
 }
 
 /** The doors' leaf boxes on both sides: the doorways into the coach's cabin (doors.ts). */
@@ -1333,7 +1363,79 @@ function plugDoor(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: num
 }
 
 function acelaDoor(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number): void {
-  plugDoor(m, b, X, s, d0, d1, ACELA_BANDS, ACELA_DOOR_Y, [2.4, 2.95], "truckBlack");
+  // the leaf's narrow window high in the door
+  plugDoor(m, b, X, s, d0, d1, ACELA_BANDS, ACELA_DOOR_Y, [2.35, 2.95], "truckBlack");
+}
+
+/** A strip on the side from d0 to d1 between lo(d) and hi(d), its points on the shell's own stations (so it never sinks between them). */
+function acelaStrip(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, d0: number, d1: number, lo: (d: number) => number, hi: (d: number) => number, proud: number): void {
+  const ds = [d0, ...b.stations.filter((d) => d > d0 + 0.02 && d < d1 - 0.02), d1];
+  for (let i = ds.length - 1; i > 0; i--) if (ds[i]! - ds[i - 1]! > 0.25) ds.splice(i, 0, (ds[i]! + ds[i - 1]!) / 2), i++;
+  const tris: Pt[] = [];
+  for (let i = 0; i + 1 < ds.length; i++) {
+    const [a, c] = [ds[i]!, ds[i + 1]!];
+    if (hi(a) - lo(a) < 1e-4 && hi(c) - lo(c) < 1e-4) continue;
+    tris.push([a, lo(a)], [c, lo(c)], [c, hi(c)], [a, lo(a)], [c, hi(c)], [a, hi(a)]);
+  }
+  if (tris.length) sideDecal(m, b, X, s, mat, tris, proud);
+}
+
+/** The power car's side: the blue line rising from the headlight band to the cant, the mask over it with the cab side window, the cab door, the louvres, seams, lamp and lettering. */
+function acelaPowerSide(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number): void {
+  const L = b.length;
+  const maskLo = (d: number) => lerp(ACELA_MASK_LO, d);
+  const top = (d: number) => b.S(d) - 0.002;
+  const stripeLo = (d: number) => d < ACELA_SCREEN_FOOT
+    ? top(2.3) + ((maskLo(ACELA_SCREEN_FOOT) - lerp(ACELA_STRIPE_W, ACELA_SCREEN_FOOT) - top(2.3)) * (d - 2.3)) / (ACELA_SCREEN_FOOT - 2.3)
+    : maskLo(d) - lerp(ACELA_STRIPE_W, d);
+  m.scope("cab", () => {
+    m.scope("blue line", () => {
+      acelaStrip(m, b, X, s, "acBlue", 2.3, ACELA_SCREEN_FOOT, stripeLo, top, 0.004);
+      acelaStrip(m, b, X, s, "acBlue", ACELA_SCREEN_FOOT, ACELA_CAB_END, stripeLo, (d) => Math.min(top(d), maskLo(d)), 0.004);
+    });
+    m.scope("mask", () => acelaStrip(m, b, X, s, "acMask", ACELA_SCREEN_FOOT, ACELA_CAB_END, (d) => Math.min(top(d), maskLo(d)), top, 0.004));
+  });
+  const [w0, w1] = ACELA_SIDE_WIN;
+  const wLo = (d: number) => maskLo(d) + 0.08;
+  const wHi = (d: number) => wLo(d) + (b.S(d) - 0.1 - wLo(d)) * Math.min(1, (d - w0) / 0.45);
+  m.scope("side window", () => {
+    acelaStrip(m, b, X, s, "rubber", w0 - 0.04, w1 + 0.04, (d) => wLo(d) - 0.035, (d) => wHi(Math.max(w0, Math.min(w1, d))) + 0.035, 0.0065);
+    acelaStrip(m, b, X, s, "cabGlass", w0, w1, wLo, wHi, 0.009);
+  });
+  m.scope("cab door", () => {
+    const [a, e] = ACELA_CAB_DOOR;
+    const [y0, y1] = [1.32, 3.35];
+    for (const [p, q, r, t] of [[a, a + 0.02, y0, y1], [e - 0.02, e, y0, y1], [a + 0.02, e - 0.02, y1 - 0.02, y1]] as const) sidePanel(m, b, X, s, "rubber", p, q, r, t, 0.003, 0.01);
+    sidePanel(m, b, X, s, "cabGlass", a + 0.27, e - 0.27, 2.55, 3.15, 0.006, 0.01);
+    for (const d of [a - 0.09, e + 0.05]) sidePanel(m, b, X, s, "frameSilver", d, d + 0.04, 1.55, 2.95, 0.05, 0.07);
+    const [x0, x1] = [Math.min(X(a), X(e)), Math.max(X(a), X(e))];
+    block(m, "truckBlack", x0 + 0.05, x1 - 0.05, 0.88, 1.2, ...side(s, 1.36, 1.52));
+  });
+  m.scope("grilles", () => sideGrille(m, b, X, s, ACELA_LOUVRE[0], ACELA_LOUVRE[1], ACELA_LOUVRE[2], ACELA_LOUVRE[3], true));
+  m.scope("seams", () => {
+    for (const d of ACELA_SEAMS) sidePanel(m, b, X, s, "rubber", d, d + 0.015, 1.3, ACELA_LOUVRE[2], 0.003, 0.01);
+    sidePanel(m, b, X, s, "rubber", ACELA_LOUVRE[1] + 0.25, ACELA_LOUVRE[1] + 0.265, 1.3, ACELA_CANT - 0.02, 0.003, 0.01);
+    // the nose's access hatch under the side window
+    for (const [p, q, r, t] of [[3.55, 3.565, 1.45, 2.3], [4.385, 4.4, 1.45, 2.3], [3.565, 4.385, 1.45, 1.465], [3.565, 4.385, 2.285, 2.3]] as const) sidePanel(m, b, X, s, "rubber", p, q, r, t, 0.003, 0.01);
+  });
+  // the blue widening down the rear end's top corner
+  m.scope("rear blue", () => acelaStrip(m, b, X, s, "acBlue", L - 2.4, L - 0.05, (d) => ACELA_CANT - (0.5 * (d - (L - 2.4))) / 2.35, () => ACELA_CANT, 0.004));
+  m.scope("marker lamp", () => surfaceDisc(m, b, X, 2.25, 1.5, s, "lampHead", 0.06, 0.012, 0.03, 10));
+  m.scope("lettering", () => {
+    sideLettering(m, b, X, s, "AMTRAK", 11.9, 1.55, 0.16, "acBlue");
+    sideLettering(m, b, X, s, "2004", 14.3, 1.48, 0.3, "acMask");
+  });
+}
+
+/** A coach's roof fairing over its air conditioning at one end (d0 the end, d1 inward; photographs TTCI, Rahway). */
+function acelaFairing(m: MeshBuilder, X: (d: number) => number, d0: number, d1: number): void {
+  const big: Array<[number, number]> = [[-0.95, 4.05], [0.95, 4.05], [0.78, 4.36], [-0.78, 4.36]];
+  const small: Array<[number, number]> = [[-0.85, 4.05], [0.85, 4.05], [0.7, 4.12], [-0.7, 4.12]];
+  const dir = Math.sign(d1 - d0);
+  const [a, b2, c] = [d0, d0 + dir * 0.6, d1 - dir * 0.5];
+  m.sweep("acCap", "x", small, X(a), big, X(b2), false);
+  m.sweep("acCap", "x", big, X(b2), big, X(c), false);
+  m.sweep("acCap", "x", big, X(c), small, X(d1), false);
 }
 
 /** A car facing +X drawn into m with X(d) the map from d to model x. */
@@ -1346,14 +1448,12 @@ function drawAcelaCar(m: MeshBuilder, c: AcelaCar, X: (d: number) => number, end
     m.scope("shell", () => carbodyShell(m, b, X, power ? acelaPowerPaint : acelaPaint, cut));
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
-        if (power) {
-          m.scope("grilles", () => { for (const [a, e] of [[7.0, 10.5], [11.2, 14.7]] as const) sideGrille(m, b, X, s, a, e, 2.4, 3.4, true); });
-          m.scope("lettering", () => sideLettering(m, b, X, s, "AMTRAK", 16.0, 2.45, 0.34, "acDark"));
-        } else {
+        if (power) acelaPowerSide(m, b, X, s);
+        else {
           const mid = ACELA_COACH_BODY / 2;
-          m.scope("windows", () => acelaWindows(c).forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => sideWindow(m, b, X, s, a, e, ACELA_WIN[0], ACELA_WIN[1], "acDark", "glass"))));
+          m.scope("windows", () => acelaWindows(c).forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => sideWindow(m, b, X, s, a, e, ACELA_WIN[0], ACELA_WIN[1], "acMask", "glass"))));
           m.scope("doors", () => ACELA_DOORS.forEach(([a, e], i) => m.scope(`door ${i + 1}`, () => acelaDoor(m, b, X, s, a, e))));
-          m.scope("lettering", () => sideLettering(m, b, X, s, c === "firstClass" ? "FIRST" : c === "cafe" ? "CAFE" : "BUSINESS", mid, 1.7, 0.2, "acDark", 0.012));
+          m.scope("lettering", () => sideLettering(m, b, X, s, c === "firstClass" ? "FIRST" : c === "cafe" ? "CAFE" : "BUSINESS", mid, 1.6, 0.18, "acBlue", 0.012));
         }
       });
     if (!power) {
@@ -1364,22 +1464,17 @@ function drawAcelaCar(m: MeshBuilder, c: AcelaCar, X: (d: number) => number, end
   const L = b.length;
   if (power)
     m.scope("nose", () => {
-      // the black mask: one sweep of glass across the nose, wrapping over the
-      // shoulders, split by the centre post; behind it a teardrop side window
+      // the two-pane windscreen in the dark mask (the shell's paint over the cab roof); the cab side windows (acelaPowerSide)
       m.scope("windscreen", () => {
         for (const s of [1, -1]) {
-          outlinePane(m, b, X, s, "acMask", ACELA_MASK, 0.006);
+          outlinePane(m, b, X, s, "rubber", ACELA_SCREEN_FRAME, 0.008);
           outlinePane(m, b, X, s, "cabGlass", ACELA_SCREEN, 0.012);
-          m.scope("side window", () => {
-            stripDecal(m, b, X, s, "acMask", 4.42, 5.75, acelaSideLo, (d) => Math.max(acelaSideLo(d), b.S(d) - 0.08), 0.004, 14);
-            stripDecal(m, b, X, s, "cabGlass", 4.56, 5.68, (d) => acelaSideLo(d) + 0.04, (d) => Math.max(acelaSideLo(d) + 0.04, b.S(d) - 0.12), 0.008, 12);
-          });
         }
       });
       // the blue band under the windscreen with its four round headlights
       m.scope("headlight band", () => { for (const s of [1, -1]) outlinePane(m, b, X, s, "acBlue", ACELA_BAND, 0.004); });
       m.scope("headlights", () => {
-        for (const z of [-0.66, -0.23, 0.23, 0.66]) crownLamp(m, b, X, z, 2.86 - 0.1 * Math.abs(z), 0.1, "lampHead");
+        for (const z of [-0.71, -0.25, 0.25, 0.71]) crownLamp(m, b, X, z, 2.9, 0.1, "lampHead");
       });
       m.scope("coupler", () => knuckleCoupler(m, 1, X(0) - 0.2, X(0) + 0.4, COUPLER_Y));
     });
@@ -1394,8 +1489,17 @@ function drawAcelaCar(m: MeshBuilder, c: AcelaCar, X: (d: number) => number, end
   });
   if (power)
     m.scope("roof", () => {
-      m.scope("pantograph", () => singleArm(m, { xc: X(15.5), roofY: 4.31, baseY: 4.55, h: 1, raised: true }));
-      m.scope("equipment", () => { block(m, "acDark", X(12.5), X(9.0), 4.3, 4.42, -0.7, 0.7); });
+      for (const [d, raised] of ACELA_PANTOS) m.scope(raised ? "pantograph" : "front pantograph", () => singleArm(m, { xc: X(d), roofY: 4.31, baseY: 4.55, h: 1, raised }));
+      m.scope("equipment", () => {
+        // the long roof hatch over the machine room, the radiator grille at its rear on one side
+        block(m, "frameSilver", X(13.6), X(7.2), 4.22, 4.4, -0.85, 0.85);
+        block(m, "grille", X(13.45), X(11.9), 4.4, 4.43, 0.05, 0.8);
+      });
+    });
+  else
+    m.scope("roof", () => {
+      acelaFairing(m, X, 0.25, 3.4);
+      acelaFairing(m, X, L - 0.25, L - 3.4);
     });
   m.scope("running gear", () => {
     const [t1, t2] = acelaTrucks(c);
@@ -1689,14 +1793,25 @@ export function prrGg1Lod(params?: ParamValues): MeshBuilder {
 const acelaLodCar = (c: AcelaCar, X: (d: number) => number, cx: number, turned: boolean, section?: number): { body: UnitBody; parts: LodPart[] } => {
   const spec = acelaSpec(c);
   const b = carbody({ ...spec, edges: [] });
-  const bands: LodBand[] = [...lodBandsOf({ bands: ACELA_BANDS } as CarbodyLivery, spec.B, spec.S), [spec.S, spec.C, "acSilver"]];
-  const glass = isPower(c) ? [] : [[2.0, ACELA_COACH_BODY - 2.0, 2.33, 2.97] as const];
+  // the power car's blue cant line; the coaches' windows as one glass strip
+  const sideBands: ReadonlyArray<readonly [number, number, string]> = isPower(c) ? [[0, 1.18, "acDark"], [1.18, 1.24, "acRed"], [1.24, ACELA_CANT, "acSilver"], [ACELA_CANT, 9, "acBlue"]] : ACELA_BANDS;
+  const bands: LodBand[] = [...lodBandsOf({ bands: sideBands } as CarbodyLivery, spec.B, spec.S), [spec.S, spec.C, "acSilver"]];
+  const glass = isPower(c) ? [] : [[2.0, ACELA_COACH_BODY - 0.8, ACELA_WIN[0], ACELA_WIN[1]] as const];
   let body = carbodyLodBody(b, X, bands, "acSilver", isPower(c), false, glass, section);
+  if (isPower(c)) {
+    // the cab: the blue band and the dark mask over the nose, the mask on the cab's sides, the windscreen
+    const low: LodBand[] = [[spec.B, 1.18, "acDark"], [1.18, 1.24, "acRed"]];
+    body = {
+      ...body,
+      front: { ...body.front, paint: [...low, [1.24, 2.5, "acSilver"], [2.5, 3.25, "acBlue"], [3.25, spec.C, "acMask"]], windows: [{ u: [-1.1, 1.1], y: [3.3, 3.95], mat: LOD_GLASS }] },
+      cabs: [{ x0: Math.min(X(0), X(ACELA_CAB_END)), x1: Math.max(X(0), X(ACELA_CAB_END)), side: [...low, [1.24, 2.95, "acSilver"], [2.95, 3.3, "acBlue"], [3.3, spec.C, "acMask"]] }],
+    };
+  }
   if (turned) body = turnBody(body, cx);
   const T = (x: number) => (turned ? 2 * cx - x : x);
   const parts: LodPart[] = [
     ...bogieParts(acelaTrucks(c).map((d) => [T(X(d)), 2.0, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, spec.B),
-    ...(isPower(c) ? [{ ...roofPart("pantograph", T(X(15.5)) - 0.8, T(X(15.5)) + 0.8, 0.45, 0.45, spec.C, 5.88, section), optional: 8 }] : []),
+    ...(isPower(c) ? [{ ...roofPart("pantograph", T(X(17.9)) - 0.8, T(X(17.9)) + 0.8, 0.45, 0.45, spec.C, 5.88, section), optional: 8 }] : []),
   ];
   return { body, parts };
 };
