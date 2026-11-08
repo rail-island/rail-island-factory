@@ -11,7 +11,7 @@
 | `proc-vehicle-emd-gp9` | EMD GP9 | `unionPacific`, `pennsylvania`, `santaFe` | 17.12 m | 9.45 m (B-B) | about 6,900 |
 | `proc-vehicle-emd-sd40-2` | EMD SD40-2 | `burlingtonNorthern`, `conrail`, `unionPacific` | 20.98 m | 12.19 m (C-C) | about 8,900 |
 | `proc-vehicle-ge-es44ac` | GE ES44AC | `bnsf`, `unionPacific`, `csx` | 22.30 m | 16.15 m (C-C) | about 9,000 |
-| `proc-vehicle-emd-sd70ace` | EMD SD70ACe | `unionPacific`, `norfolkSouthern`, `bnsf` | 22.63 m | 14.58 m (C-C) | about 10,800 |
+| `proc-vehicle-emd-sd70ace` | EMD SD70ACe | `unionPacific`, `norfolkSouthern`, `bnsf` | 22.63 m | 14.58 m (C-C) | about 12,600 |
 
 All are rigid diesel locomotives (`DIESEL_LOCO_CATALOG`, group `loco`), registered
 as their own family in `generate.ts`; a design's JS model imports its builder by
@@ -65,8 +65,8 @@ wheelbase, wheels, height and cab width:
 
 | part | x (m, +X the cab end) | heights (m) |
 |---|---|---|
-| front platform, pilot | 9.95 - 10.78 | deck 1.72, sill 1.42 |
-| wide nose: vertical front and sides, a bevel over the front, chamfered top edges | 8.85 - 9.95 | front edge 3.42, top 3.78 |
+| front platform; snowplough pilot with ribs, cut-outs and the coupler pocket, air hoses and MU jumpers, step wells | 9.95 - 10.78 | deck 1.72, sill 1.42 |
+| wide nose: a flat front panel 1.5 m wide, angled facets either side setting back 0.35 m to the 2.76 m wide sides, a bevel over the front, chamfered top edges | 8.85 - 9.95 | front edge 3.42, top 3.78 |
 | isolated cab: raked windscreens, chamfered corners, brow with number boards | 6.45 - 8.85 | windscreens 3.92 - 4.50, roof 4.80 |
 | inertial filter cabinet (louvred intakes) | 2.85 - 6.45 | 4.58 |
 | dynamic brake box (grid hatch, side grilles) | 1.0 - 2.85 | 4.78 |
@@ -76,7 +76,10 @@ wheelbase, wheels, height and cab width:
 | fuel tank (bevelled), main reservoirs over it | -4.1 - 4.35 | 0.34 - 1.04 |
 
 The nose and the cab's front are convex hulls of a few corner points (`hullSolid`), every
-face cut at the livery's band heights. Each cab side has the three-pane sash group under an
+face cut at the livery's band heights; paint on the nose's front (`nosePoly`, `noseText`) folds
+over the panel and its facets. The HTSC trucks are drawn here (`htscTruck`): a deep cast side
+frame hiding the wheels' upper halves, spring pockets over the axle boxes, end dampers, sand
+boxes with pipes to the rail, tread brake units, secondary springs and traction motors. Each cab side has the three-pane sash group under an
 awning right behind the windscreen; the left side also a small pane behind it; doors in
 the cab's rear wall open onto the side walkways. The headlights are in the brow between
 the number boards (UP, NS) or on the nose (BNSF); ditch lights low on the nose's corners.
@@ -104,7 +107,7 @@ numbers are illustrative numbers in each railroad's series for the class.
 
 - The SD70ACe's truck centres are the published 47 ft 10 in; a photograph fitted with
   both end sills suggests about 13.3 m, which is not used.
-- Truck side frames are the diesel toolkit's generic cast frame, not the
+- Truck side frames (except the SD70ACe's) are the diesel toolkit's generic cast frame, not the
   Blomberg, HT-C, HiAd or HTCR castings; steerable trucks are not modelled.
 - Radiator fans, dynamic brake housings and the exhaust are placed from
   photographs; hood doors are drawn as seams and latches.
