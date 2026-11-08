@@ -62,7 +62,7 @@ published 132 ft 9.25 in over both, its last axle 117 ft 7 in behind the engine'
   the stack casing.
 - **Front** - the slotted pilot with its corners cut back, the pilot beam and the deck on it; on the
   deck the louvred shield over the air pumps, the headlight on it on the centre line, the number box on
-  its right side, the Union Pacific shield below and left of it (seen from ahead: right); the smokebox door's lighter ring and dogs, the grab rails up to the smokebox and the steps up to the running board; on the
+  the engine's right of it and the Union Pacific shield below it on the left (seen from ahead: box left, shield right); the smokebox door's lighter ring and dogs, the grab rails up to the smokebox and the steps up to the running board; on the
   smokebox's front ring the two number boards turned outward either side of the bell, and the marker
   lamps.
 - **Sides** - the running board at 3.15 m along the boiler's widest part, the boiler's lower half and
