@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { CTA_LENGTH, R160_LENGTH, RDC_LENGTH, US_TRANSIT } from "../generator/usTransit";
 import { PIONEER_ZEPHYR, ZEPHYR_LENGTH, pioneerZephyr, zephyrTrain } from "../generator/pioneerZephyr";
-import { BOXCAR_LENGTH, CABLE_CAR_LENGTH, CABOOSE_LENGTH, US_FREIGHT, WELL_LENGTH, wellCar } from "../generator/usFreight";
+import { BOXCAR_LENGTH, CABLE_CAR_LENGTH, CABLE_CAR_LENGTHS, CABOOSE_LENGTH, cableCar, US_FREIGHT, WELL_LENGTH, wellCar } from "../generator/usFreight";
 import { LOADING_GAUGES, loadingGaugeOf } from "../generator/loadingGauge";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -50,7 +50,8 @@ describe("the US passenger cars, urban rail and freight cars", () => {
         expect(s.max[1]).toBeLessThanOrEqual(g.height);
         expect(findCoplanarOverlaps(glb)).toEqual([]);
         if (v.unit !== "train") {
-          expect(s.max[0] - s.min[0], JSON.stringify(v)).toBeCloseTo(v.unit && d.id.includes("zephyr") ? ZEPHYR_LENGTH[v.unit as keyof typeof ZEPHYR_LENGTH] : LENGTH[d.id]!, 1);
+          const length = v.unit && d.id.includes("zephyr") ? ZEPHYR_LENGTH[v.unit as keyof typeof ZEPHYR_LENGTH] : d.id.includes("cable-car") ? CABLE_CAR_LENGTHS[v.livery!]! : LENGTH[d.id]!;
+          expect(s.max[0] - s.min[0], JSON.stringify(v)).toBeCloseTo(length, 1);
           expect(m.rig!.supports).toHaveLength(2);
         }
         expect(buildLodModel(d, v).triangleCount()).toBeLessThanOrEqual(lodBudget(d));
@@ -182,5 +183,19 @@ describe("the US passenger cars, urban rail and freight cars", () => {
     expect(h("single")).toBeLessThanOrEqual(LOADING_GAUGES.us.height);
     expect(h("double")).toBeGreaterThan(LOADING_GAUGES.us.height);
     expect(h("double")).toBeLessThanOrEqual(LOADING_GAUGES.usDoubleStack.height);
+  });
+
+  it("draws the single-ended Powell car and the longer, double-ended California car", () => {
+    const xs = (livery: string, mat: string) => readTriangles(designGlb("proc-vehicle-sf-cable-car", { livery })).filter((t) => t.material === mat && t.p.every((p) => p[1] > 0.6)).flatMap((t) => t.p.map((p) => p[0]));
+    // Powell: the headlamp at the grip end, a tail lamp on the rear platform, benches (over the floor) in the front grip section only
+    expect(Math.min(...xs("powell", "lampHead"))).toBeGreaterThan(3.5);
+    expect(Math.max(...xs("powell", "lampRed"))).toBeLessThan(-3.5);
+    expect(Math.min(...xs("powell", "ccWood").filter((x) => Math.abs(x) < 3.9))).toBeGreaterThan(0);
+    // California: headlamps and grip sections at both ends, 30 ft 3 in against the Powell car's 27 ft 6 in
+    expect(Math.min(...xs("california", "lampHead"))).toBeLessThan(-4);
+    expect(Math.max(...xs("california", "lampHead"))).toBeGreaterThan(4);
+    expect(Math.min(...xs("california", "ccWood").filter((x) => Math.abs(x) < 4.4))).toBeLessThan(-2);
+    expect(CABLE_CAR_LENGTHS.california! - CABLE_CAR_LENGTHS.powell!).toBeCloseTo(0.838, 2);
+    expect(glbStats(cableCar({ livery: "california" }).toGlb("c")).max[0]).toBeCloseTo(CABLE_CAR_LENGTHS.california! / 2, 2);
   });
 });
