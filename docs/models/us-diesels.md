@@ -1,14 +1,14 @@
 # North American diesel locomotives
 
 **Covers** - the four North American hood units (`proc-vehicle-emd-gp9`, `proc-vehicle-emd-sd40-2`, `proc-vehicle-ge-es44ac`, `proc-vehicle-emd-sd70ace`): their measures, liveries, the shared hood unit kit, the distant model, deviations and the tests.
-**Code** - `generator/usDiesels.ts` (`US_DIESELS`), `generator/usHoodKit.ts`, `generator/loadingGauge.ts`, `test/usDiesels.test.ts`, `assets/emd-gp9/`, `assets/emd-sd40-2/`, `assets/ge-es44ac/`, `assets/emd-sd70ace/`
+**Code** - `generator/usDiesels.ts` (`US_DIESELS`), `generator/usGp9.ts`, `generator/usHoodKit.ts`, `generator/loadingGauge.ts`, `test/usDiesels.test.ts`, `assets/emd-gp9/`, `assets/emd-sd40-2/`, `assets/ge-es44ac/`, `assets/emd-sd70ace/`
 **See also** - [loading-gauge.md](loading-gauge.md), [diesel-locos.md](diesel-locos.md), [vehicles.md](vehicles.md), [openttd-figures.md](openttd-figures.md), [the railroad-vehicle skill](../../.agents/skills/railroad-vehicle/SKILL.md)
 
 ## The designs
 
 | id | title | `livery` values (default first) | over couplers | truck centres | triangles |
 |---|---|---|---|---|---|
-| `proc-vehicle-emd-gp9` | EMD GP9 | `unionPacific`, `pennsylvania`, `santaFe` | 17.12 m | 9.45 m (B-B) | about 6,900 |
+| `proc-vehicle-emd-gp9` | EMD GP9 | `unionPacific`, `pennsylvania`, `santaFe` | 17.12 m | 9.45 m (B-B) | about 8,700 - 8,900 |
 | `proc-vehicle-emd-sd40-2` | EMD SD40-2 | `burlingtonNorthern`, `conrail`, `unionPacific` | 20.98 m | 12.19 m (C-C) | about 8,900 |
 | `proc-vehicle-ge-es44ac` | GE ES44AC | `bnsf`, `unionPacific`, `csx` | 22.30 m | 16.15 m (C-C) | about 9,000 |
 | `proc-vehicle-emd-sd70ace` | EMD SD70ACe | `unionPacific`, `norfolkSouthern`, `bnsf` | 22.63 m | 14.58 m (C-C) | about 9,100 |
@@ -25,9 +25,36 @@ radiator. Measures and sources are in each `assets/<name>/SOURCES.md`; the
 |---|---|---|---|---|
 | front | high short hood | low nose | wide nose, safety cab | wide nose, safety cab |
 | radiator | side grilles, two fans | side grilles, three fans | flared wings, two fans | flared, two fans |
-| dynamic brakes | - | housing behind the cab | box behind the cab | hatch mid-hood |
+| dynamic brakes | blister over the engine (PRR, Santa Fe) | housing behind the cab | box behind the cab | hatch mid-hood |
 | wheels | 40 in | 40 in | 42 in | 42 in |
 | game | 113 t, 1,305 kW, 105 km/h | 167 t, 2,237 kW, 105 km/h | 196 t, 3,281 kW, 121 km/h | 185 t, 3,207 kW, 113 km/h |
+
+## The GP9 (`usGp9.ts`)
+
+The GP9 is drawn by its own module from photographs (`assets/emd-gp9/SOURCES.md`): the
+measures along the body come from a near side-on photograph of UP 211 scaled by the
+published truck centres, so `GP9_BODY` differs from `GP9_SPEC` in `usDiesels.ts`, which
+keeps the first kit-drawn measures the WDM-2 (`inLocos.ts`) is built on. It reuses the
+kit's painted sweeps, decals, lettering, coupler and distant model, and adds:
+
+- **Hoods** with a 0.08 m roof edge and **rounded vertical end corners** (0.15 m, `roundedEnd`);
+  each end face carries twin sealed-beam headlights on the centre line between two flush number
+  boards, two class lights over the boards' outer ends and a ladder of five grab irons.
+- **Long hood**: the three radiator grilles high at the rear under the two roof fans, the
+  battery vent, three columns of louvred doors over the engine, the generator's two louvre
+  columns behind the cab with the air intake grille above them, a door seam every 0.587 m with
+  its latch, and the exhaust; a **dynamic brake blister** (-3.36 .. 0.70 m, 0.45 m high, side
+  intakes and fan, the exhaust through its top) on the schemes whose units had one.
+- **Cab** 2.96 - 4.82 m with an arched roof and drip rails, tall windscreens either side of
+  the short hood, rear windows either side of the long hood, one two-pane sliding side window
+  under a sun visor, the running number placed as each railroad did, corner grab irons.
+- **Frame**: the side sills cut away by a 0.72 m step well at each corner (three treads
+  between two stringers, grab irons each side), dropping 0.22 m between the trucks; pilots
+  between the wells, an optional V snowplow, MU hoses; single-rail walkways on stanchions every
+  1.25 m, end railings open over the coupler; horn and bell on the short hood.
+- **Blomberg B trucks**: side frames stepped down over the journal-box pedestals, the arch under
+  the bolster window holding the elliptic leaf springs, a coil each side of every journal box on
+  its equaliser, brake cylinders on the frames' faces.
 
 ## The hood unit kit (`usHoodKit.ts`)
 
@@ -60,9 +87,9 @@ numbers are illustrative numbers in each railroad's series for the class.
 
 | scheme | used on | paint |
 |---|---|---|
-| Union Pacific | GP9, SD40-2, ES44AC, SD70ACe | armour yellow, a red pinstripe under the grey hood top and cab roof, grey frame and trucks, red sill stripe and lettering |
-| Pennsylvania | GP9 | Brunswick green, buff sill stripe and lettering |
-| Santa Fe | GP9 | blue hood and cab, yellow ends, yellow lettering |
+| Union Pacific | GP9, SD40-2, ES44AC, SD70ACe | armour yellow, a red pinstripe under the grey hood top and cab roof, grey frame and trucks, red sill stripe and lettering (the GP9's own: the stripe 1.9 m over the deck with 0.7 m of grey above, as on UP 211) |
+| Pennsylvania | GP9 | Brunswick green all over, buff lettering spaced wide, safety-yellow end rails, no sill stripe (PRR 7048, 7000) |
+| Santa Fe | GP9 | blue, yellow hood end faces, a yellow stripe along the hoods and cab, yellow sill, yellow lettering (ATSF 2879) |
 | BN Cascade | SD40-2 | Cascade green with a black roof and frame, white lettering |
 | Conrail | SD40-2 | blue with a white sill stripe and lettering |
 | BNSF | ES44AC, SD70ACe | orange, a yellow pinstripe under the black hood top, black frame, yellow sill stripe |
@@ -72,7 +99,10 @@ numbers are illustrative numbers in each railroad's series for the class.
 ## Deviations
 
 - Truck side frames are the diesel toolkit's generic cast frame, not the
-  Blomberg, HT-C, HiAd or HTCR castings; steerable trucks are not modelled.
+  HT-C, HiAd or HTCR castings (the GP9 draws its Blomberg B); steerable trucks are not modelled.
+- The GP9 schemes leave out the heralds (UP shield, Santa Fe cross) and UP 211's later
+  winterization hatch; the long hood's louvre layout is UP 211's on every scheme, and both
+  sides are drawn alike.
 - Radiator fans, dynamic brake housings and the exhaust are placed from
   photographs; hood doors are drawn as seams and latches.
 - The GP9's truck centres are the published 31 ft (The Diesel Shop's data sheet
