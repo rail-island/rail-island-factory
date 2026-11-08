@@ -127,12 +127,12 @@ function unionPacific(): Sd70Paint {
     decals: (m, part) => {
       if (part === "ends") m.scope("wings", () => {
         // the shield: white, red and white stripes below a blue chief
-        const sy0 = 2.78, sy1 = 3.38, sw = 0.26;
+        const sy0 = 2.72, sy1 = 3.44, sw = 0.27;
         polyX(m, "upWhite", noseFaceX, 1, [[-sw, sy1], [-sw, sy0 + 0.14], [0, sy0], [sw, sy0 + 0.14], [sw, sy1]]);
         polyX(m, "upBlue", noseFaceX + 0.003, 1, [[-sw + 0.03, sy1 - 0.03], [-sw + 0.03, sy1 - 0.18], [sw - 0.03, sy1 - 0.18], [sw - 0.03, sy1 - 0.03]]);
         for (const z of [-0.12, 0, 0.12]) polyX(m, "upRed", noseFaceX + 0.003, 1, [[z - 0.035, sy1 - 0.22], [z - 0.035, sy0 + 0.12 - Math.abs(z) * 0.5], [z + 0.035, sy0 + 0.12 - Math.abs(z) * 0.5], [z + 0.035, sy1 - 0.22]]);
         // three blue feathers a side, swept up at the tips, shorter downward
-        const feathers: Array<[number, number, number]> = [[3.16, 3.32, 1.44], [2.96, 3.1, 1.3], [2.78, 2.9, 1.05]];
+        const feathers: Array<[number, number, number]> = [[3.3, 3.4, 1.45], [3.16, 3.25, 1.38], [3.02, 3.11, 1.2], [2.89, 2.97, 0.96]];
         for (const sd of [-1, 1])
           for (const [y0, y1, reach] of feathers) {
             const za = sd * 0.27, zb = sd * reach;
@@ -222,12 +222,15 @@ function bnsf(): Sd70Paint {
       });
       if (part === "ends") m.scope("nose lettering", () => {
         // BNSF across the nose, over the black swoosh line and its yellow edge
-        endText(m, "bnsfBlack", "BNSF", 1, noseFaceX, 0, 2.36, 0.4, 0.42, 0.1);
-        decalX(m, "bnsfBlack", noseFaceX, 1, -N.half + 0.02, N.half - 0.02, 2.2, 2.3);
-        decalX(m, "bnsfYellow", noseFaceX, 1, -N.half + 0.02, N.half - 0.02, 2.13, 2.17);
+        endText(m, "bnsfBlack", "BNSF", 1, noseFaceX, 0, 2.62, 0.32, 0.4, 0.1);
+        decalX(m, "bnsfBlack", noseFaceX, 1, -N.half + 0.02, N.half - 0.02, 2.48, 2.56);
+        decalX(m, "bnsfYellow", noseFaceX, 1, -N.half + 0.02, N.half - 0.02, 2.42, 2.45);
+        // the deck-level swoosh carried across the front
+        for (const [a, b, mat] of [[0.06, 0.12, "bnsfYellow"], [0.12, 0.16, "bnsfBlack"], [0.16, 0.22, "bnsfYellow"]] as const)
+          decalX(m, mat, noseFaceX, 1, -N.half + 0.02, N.half - 0.02, S.deck + a, S.deck + b);
         for (const sd of [-1, 1]) {
-          decalZ(m, "bnsfBlack", sd * (N.half + 0.004), sd, N.x0 + 0.004, N.x1 - 0.004, 2.2, 2.3);
-          decalZ(m, "bnsfYellow", sd * (N.half + 0.004), sd, N.x0 + 0.004, N.x1 - 0.004, 2.13, 2.17);
+          decalZ(m, "bnsfBlack", sd * (N.half + 0.004), sd, N.x0 + 0.004, N.x1 - 0.004, 2.48, 2.56);
+          decalZ(m, "bnsfYellow", sd * (N.half + 0.004), sd, N.x0 + 0.004, N.x1 - 0.004, 2.42, 2.45);
         }
       });
       if (part === "hood") m.scope("lettering", () => {
@@ -564,8 +567,8 @@ function nose(m: MeshBuilder, p: Sd70Paint): void {
   m.scope("headlights", () => {
     if (p.headlight === "nose") {
       const x = n.x1;
-      block(m, "black", x - 0.002, x + 0.06, n.front - 0.62, n.front - 0.06, -0.15, 0.15);
-      for (const y of [n.front - 0.2, n.front - 0.47]) extrude(m, "lampHead", "x", ngon(10, 0.1, 0, 0, y), [x + 0.06, x + 0.08]);
+      block(m, "black", x - 0.002, x + 0.06, n.front - 0.46, n.front - 0.02, -0.14, 0.14);
+      for (const y of [n.front - 0.14, n.front - 0.34]) extrude(m, "lampHead", "x", ngon(10, 0.1, 0, 0, y), [x + 0.06, x + 0.08]);
     }
     // the ditch lights low on the front corners
     for (const z of [-0.85, 0.85]) {
@@ -611,14 +614,14 @@ function cab(m: MeshBuilder, p: Sd70Paint): void {
     }, cuts, (nv) => nv[1] < -0.999));
   // the brow over the windscreens: the number boards' housing and, on UP and NS, the headlights
   m.scope("brow", () => {
-    const x0 = c.roofX - 0.3, x1 = c.head + 0.2, y0 = s1 + 0.02, y1 = c.top + 0.05, hw = 0.95;
+    const x0 = c.roofX - 0.3, x1 = c.head + 0.2, y0 = s1 + 0.02, y1 = c.top + 0.05, hw = 1.3;
     const bp: Vec3[] = [];
     for (const sd of [-1, 1]) bp.push([x0, y0, sd * hw], [x0, y1, sd * hw], [x1, y0 + 0.04, sd * (hw - 0.08)], [x1 - 0.06, y1, sd * (hw - 0.08)], [x1, y0 + 0.04, sd * hw * 0.5]);
     hullSolid(m, bp, () => p.brow, [], (nv) => nv[1] < -0.9);
     const fx = x1 + 0.002;
     for (const sd of [-1, 1]) {
-      block(m, "numberBoard", fx - 0.004, fx + 0.03, s1 + 0.1, s1 + 0.28, ...side(sd, 0.3, 0.78));
-      endText(m, "black", p.number, 1, fx + 0.032, sd * 0.54, s1 + 0.135, 0.11, 0.065, 0.025);
+      block(m, "numberBoard", fx - 0.004, fx + 0.03, s1 + 0.1, s1 + 0.28, ...side(sd, 0.32, 0.86));
+      endText(m, "black", p.number, 1, fx + 0.032, sd * 0.59, s1 + 0.135, 0.11, 0.065, 0.025);
     }
     if (p.headlight === "brow") {
       block(m, "black", fx - 0.004, fx + 0.05, s1 + 0.08, s1 + 0.3, -0.24, 0.24);
