@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | `proc-vehicle-emd-gp9` | EMD GP9 | `unionPacific`, `pennsylvania`, `santaFe` | 17.12 m | 9.45 m (B-B) | about 6,900 |
 | `proc-vehicle-emd-sd40-2` | EMD SD40-2 | `burlingtonNorthern`, `conrail`, `unionPacific` | 20.98 m | 12.19 m (C-C) | about 8,900 |
-| `proc-vehicle-ge-es44ac` | GE ES44AC | `bnsf`, `unionPacific`, `csx` | 22.30 m | 15.34 m (C-C) | about 11,600 - 11,900 |
+| `proc-vehicle-ge-es44ac` | GE ES44AC | `bnsf`, `unionPacific`, `csx` | 22.30 m | 15.34 m (C-C) | about 13,800 - 14,100 |
 | `proc-vehicle-emd-sd70ace` | EMD SD70ACe | `unionPacific`, `norfolkSouthern`, `bnsf` | 22.63 m | 14.58 m (C-C) | about 9,100 |
 
 All are rigid diesel locomotives (`DIESEL_LOCO_CATALOG`, group `loco`), registered
@@ -63,11 +63,12 @@ polygons, ear-clipped and split exactly at the paint bands' heights
 hidden faces. Measures (photographs in `assets/ge-es44ac/`, scaled from the
 published figures):
 
-- **Wide nose and safety cab**: the face 3.12 m wide to 3.40 m, its upper corners
-  cut back, a chamfer to the top (3.58 - 3.62 m) that is 2.8 m wide with long
-  edge chamfers; behind it a short slope to the windscreens' foot (3.72 m), the
-  two panes raked back 0.2 m to 4.22 m across almost the whole width with a narrow
-  post between, the number boards on the band above, the roof at 15 ft 5 in
+- **Wide nose and safety cab**: a hipped nose (UP 2539 head-on, BNSF 6156 and
+  5824): the face 3.12 m wide, a pentagon 3.22 m high at its corners rising to a
+  ridge at 3.56 m on the centre line; two large planes fall from the ridge and the
+  windscreens' foot (3.70 m) down to the side walls, whose top edge climbs from the
+  face's corner back to 3.45 m at the cab. The two panes raked back 0.2 m to
+  4.26 m across almost the whole width with a narrow post between, the number boards on the band above, the roof at 15 ft 5 in
   (4.70 m) with a chamfered edge. Cab 5.40 - 8.30 m along, nose face at 9.75 m;
   three side windows (front fixed pane, sliding pair under a visor, rear pane),
   the running number under them; a five-chime horn, air conditioner and antennas
@@ -83,15 +84,20 @@ published figures):
   rear face's headlights under the overhang. The hand brake wheel on the left side
   ahead of the radiator and a ladder up the inverter cabinet on the left.
 - **Frame and running gear**: deep sill, pilots with forward-facing corner stairs,
-  the GE trucks at 50 ft 4 in centres with a 13 ft 2 in wheelbase and 42 in wheels
-  (sand boxes and shock absorbers drawn over the toolkit's frame), the 9.5 m fuel
-  tank with sloped ends and two main reservoirs each side.
+  the GE trucks at 50 ft 4 in centres with a 13 ft 2 in wheelbase and 42 in wheels:
+  GE's Hi-Ad side frame cast outside the toolkit's (`hiAdCasting`: a top chord at
+  0.95 m humped over the axles, an opening round each axle box with a spring each
+  side, deep bellies between the axles, a sand box, dampers to the frame, the
+  motors and bolster dark in the gap under the sill); the 9.5 m fuel tank with
+  rounded lower edges and sloped ends, its upper part set in behind the two long
+  silver main reservoirs each side.
 - **Paint** (measured on BNSF 5824/6156/5871, UP 2539/5304 and CSX 761): BNSF
   Heritage III - orange, the hood's upper part black over a yellow stripe
   (3.38 - 3.60 m), black dynamic brake box and wings, italic BNSF on the hood and
   nose with the black swoosh under it, a black foot band with a yellow stripe along
-  the nose and cab, black under the windscreens, a yellow anticlimber, grey fuel
-  tank. Union Pacific - armour yellow including the cab sides, harbour mist grey
+  the nose and cab, the nose's hip planes black, the headlights 0.1 m off the
+  centre line beside the nose door's round window, a yellow anticlimber, grey fuel
+  tank, grimy tan-grey trucks as photographed. Union Pacific - armour yellow including the cab sides, harbour mist grey
   roofs, the cab front above the windscreens' foot, the dynamic brake box and the
   wings, each above a red stripe; the winged shield on the nose and the flag on
   the hood behind the cab. CSX YN3 - dark blue, the nose face and the cab front
@@ -121,7 +127,8 @@ numbers are illustrative numbers in each railroad's series for the class.
 ## Deviations
 
 - Truck side frames are the diesel toolkit's generic cast frame, not the
-  Blomberg, HT-C, HiAd or HTCR castings; steerable trucks are not modelled.
+  Blomberg, HT-C or HTCR castings (the ES44AC draws GE's Hi-Ad casting over it);
+  steerable trucks are not modelled.
 - Radiator fans, dynamic brake housings and the exhaust are placed from
   photographs; hood doors are drawn as seams and latches.
 - The ES44AC's trucks are at the 50 ft 4 in bolster centres of GE's AC4400CW

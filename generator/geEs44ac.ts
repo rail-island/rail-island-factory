@@ -12,7 +12,7 @@ import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { tubeX } from "./cd163.ts";
-import { block, bogie, exhaust, extrude, paint, side, tankX, type BogieSpec } from "./dieselParts.ts";
+import { block, bogieGeometry, coil, exhaust, extrude, paint, plate, side, tankX, type BogieSpec } from "./dieselParts.ts";
 import { US_PALETTE, decalX, decalZ, knuckleCoupler, paintedSweep, type Band, type Paint, type UsLivery } from "./usHoodKit.ts";
 import { LOD_GLASS, lodBands, type LodBand, type LodShell } from "./lodKit.ts";
 import { locoLod, sideWindows, type LocoBox } from "./lodLocos.ts";
@@ -34,13 +34,18 @@ const CAB_HALF = 1.56;
 const CAB_TOP = 4.7;
 const CAB_X0 = 5.4;
 const NOSE_X = 9.75;
-/** The nose: its face's top edge and the top behind the chamfer; the top's half width. */
-const NOSE_FACE_TOP = 3.4;
-const NOSE_TOP = 3.58;
-const NOSE_TOP_REAR = 3.62;
+/**
+ * The nose's hipped top (UP 2539 head-on at 94 px/m, BNSF 6156 at 144 px/m, BNSF 5824 side): the face is a
+ * pentagon, 3.22 m high at its corners rising to a ridge at 3.56 m on the centre line; two large planes
+ * fall from the ridge and the windscreens' foot (3.70 m) down to the side walls, whose top edge climbs from
+ * the face's corner back to 3.45 m at the cab. The windscreen plane's half width.
+ */
+const FACE_CORNER = 3.22;
+const RIDGE = 3.56;
+const SIDE_REAR = 3.45;
 const TOP_HALF = 1.4;
 /** The cab front by height: [y, x of the front plane]: the slope under the windscreen, the windscreen, the board band, the roof edge. */
-const CAB_FRONT: ReadonlyArray<readonly [number, number]> = [[NOSE_TOP_REAR, 8.45], [3.72, 8.3], [4.22, 8.1], [4.6, 8.0]];
+const CAB_FRONT: ReadonlyArray<readonly [number, number]> = [[3.7, 8.3], [3.78, 8.27], [4.26, 8.08], [4.6, 8.0]];
 const CORNER = 0.14;
 /** The long hood: half width, the engine hood's roof and its chamfer, the rear face. */
 const HOOD_HALF = 1.1;
@@ -53,8 +58,8 @@ const DB = { x0: 1.9, x1: CAB_X0, foot: 3.75, half: 1.38, side0: 3.97, side1: 4.
 const RAD = { x0: HOOD_REAR, x1: -5.2, foot: 3.35, half: 1.5, side0: 3.95, side1: 4.55, top: 4.62, overhang: -10.4 };
 const TRUCK_CENTRE = ft(50, 4) / 2;
 const TRUCK: BogieSpec = {
-  axles: [-ft(6, 7), 0, ft(6, 7)], wheelR: ft(0, 21), frameHalf: 2.75, frameTop: 1.08, frameBottom: 0.64,
-  frameZ: [0.92, 1.06], primary: "coil", secondary: [-0.95, 0.95], secondaryZ: 1.12, bolster: SILL_BOTTOM,
+  axles: [-ft(6, 7), 0, ft(6, 7)], wheelR: ft(0, 21), frameHalf: 2.75, frameTop: 0.95, frameBottom: 0.64,
+  frameZ: [0.92, 1.06], primary: "leaf", secondary: [], secondaryZ: 1.12, bolster: SILL_BOTTOM,
 };
 /** The engine air intake's screens high on the hood sides: x span and foot. */
 const INTAKE = [-0.3, 1.65, 3.55] as const;
@@ -93,13 +98,15 @@ export interface Es44Livery extends UsLivery {
   /** The dynamic brake box's and the radiator wings' paint by height (default the hood's; the wing's colour). */
   dbBands?: readonly Band[];
   wingBands?: readonly Band[];
+  /** The headlight pair's position across the nose face (default the centre). */
+  headZ?: number;
 }
 
 const P = {
   upYellow: paint("#f4b92a"), upGrey: paint("#9fa2a3"), upRed: paint("#b5202b"), upBlue: paint("#1f3f8f"), upWhite: paint("#f1f1ec"),
   bnsfOrange: paint("#ec6a1f"), bnsfBlack: paint("#1f2022"), bnsfYellow: paint("#f2c31a"),
   csxBlue: paint("#1e2b4f"), csxYellow: paint("#f3bf1e"), csxGrey: paint("#3c4048"),
-  truckGrey: paint("#4c4e50", 0.8), tankGrey: paint("#8d8e8a", 0.7), truckBlack: paint("#242527", 0.85), boardBlack: paint("#151517", 0.4),
+  truckGrey: paint("#4c4e50", 0.8), truckGrime: paint("#776f63", 0.9), tankGrey: paint("#8d8e8a", 0.7), reservoir: paint("#c3c6c6", 0.35), truckBlack: paint("#242527", 0.85), boardBlack: paint("#151517", 0.4),
 };
 const pick = (...names: Array<keyof typeof P>): Record<string, MaterialSpec> => Object.fromEntries(names.map((n) => [n, P[n]]));
 
@@ -258,10 +265,13 @@ export function buildEs44ac(l: Es44Livery): MeshBuilder {
   m.scope("cab", () => cab(m, l));
   m.scope("walkways", () => walkways(m, l));
   m.scope("trucks", () => {
-    m.scope("front truck", () => bogie(m, TRUCK_CENTRE, TRUCK));
-    m.scope("rear truck", () => bogie(m, -TRUCK_CENTRE, TRUCK));
+    for (const e of [1, -1])
+      m.scope(e > 0 ? "front truck" : "rear truck", () => m.bogie(() => {
+        const xc = e * TRUCK_CENTRE;
+        bogieGeometry(m, xc, TRUCK);
+        m.scope("hi-ad", () => hiAdCasting(m, l, xc));
+      }));
   });
-  m.scope("truck details", () => truckDetails(m, l));
   m.scope("underframe", () => underframe(m, l));
   m.scope("markings", () => l.marks(m));
   return m;
@@ -284,10 +294,10 @@ export function buildEs44acLod(l: Es44Livery, budget = 100): MeshBuilder {
   const hood = shell(RAD.x1, CAB_X0, HOOD_HALF, HOOD_TOP, top(l.body, D, HOOD_TOP, l.roof), top(l.body, D, HOOD_TOP, l.roof), l.roof, { ends: [] });
   const radiator = shell(RAD.overhang, RAD.x1, RAD.half, RAD.top, top(radSide, D, RAD.top, l.wing), top(l.rear, D, RAD.top, l.wing), l.wing, { ends: [-1, 1] });
   const cab = shell(CAB_X0, 8.2, CAB_HALF, CAB_TOP, top(cabBands(l), D, CAB_TOP, cabRoof), top(ends, D, CAB_TOP, cabRoof), cabRoof, {
-    endWindows: [-1, 1].map((sd) => ({ u: sd > 0 ? [0.08, TOP_HALF] as const : [-TOP_HALF, -0.08] as const, y: [3.72, 4.22] as const, mat: LOD_GLASS, ends: [1], optional: 0.3 })),
+    endWindows: [-1, 1].map((sd) => ({ u: sd > 0 ? [0.08, TOP_HALF] as const : [-TOP_HALF, -0.08] as const, y: [3.78, 4.26] as const, mat: LOD_GLASS, ends: [1], optional: 0.3 })),
     sideWindows: sideWindows([{ u: [5.55, 7.5], y: [3.82, 4.46] }]),
   });
-  const front = shell(8.2, NOSE_X, CAB_HALF, NOSE_TOP, lodBands(l.noseSides ?? cabBands(l), D, NOSE_TOP), lodBands(ends, D, NOSE_TOP), l.noseTop, { ends: [1] });
+  const front = shell(8.2, NOSE_X, CAB_HALF, SIDE_REAR, lodBands(l.noseSides ?? cabBands(l), D, SIDE_REAR), lodBands(ends, D, SIDE_REAR), l.noseTop, { ends: [1] });
   const dbBox: LocoBox = { name: "dynamic brake", mat: bandAt(l.dbBands ?? l.body, 4.2), x: [DB.x0, DB.x1], y: [DB.side0, DB.top], w: DB.half, optional: 40 };
   const boxes: LocoBox[] = [
     { name: "frame", mat: l.frame, x: [-SILL, SILL], y: [SILL_BOTTOM, D], w: DECK_HALF },
@@ -528,34 +538,32 @@ function longHood(m: MeshBuilder, l: Es44Livery): void {
 
 function nose(m: MeshBuilder, l: Es44Livery): void {
   const H = CAB_HALF, ends = endBands(l), sides = cabBands(l), noseSides = l.noseSides ?? sides;
-  const fx = NOSE_X, ft0 = NOSE_FACE_TOP, cx = 9.55;
+  const fx = NOSE_X;
   m.scope("nose", () => {
-    // the face: full width, its upper corners cut back
-    const face: Vec3[] = [[fx, D, -H], [fx, D, H], [fx, ft0 - 0.25, H], [fx, ft0, TOP_HALF - 0.12], [fx, ft0, -(TOP_HALF - 0.12)], [fx, ft0 - 0.25, -H]];
+    // the face: full width at the walkway, its top a shallow gable up to the ridge
+    const face: Vec3[] = [[fx, D, -H], [fx, D, H], [fx, FACE_CORNER, H], [fx, RIDGE, 0], [fx, FACE_CORNER, -H]];
     paintedPolygon(m, ends, face, [1, 0, 0]);
-    // the chamfer over the face and the top
-    const front = CAB_FRONT[0]!;
-    const chamfer: Vec3[] = [[fx, ft0, -(TOP_HALF - 0.12)], [fx, ft0, TOP_HALF - 0.12], [cx, NOSE_TOP, TOP_HALF], [cx, NOSE_TOP, -TOP_HALF]];
-    paintedPolygon(m, ends, chamfer, outward(chamfer, [1, 1, 0]));
-    const top: Vec3[] = [[cx, NOSE_TOP, -TOP_HALF], [cx, NOSE_TOP, TOP_HALF], [front[1], front[0], TOP_HALF], [front[1], front[0], -TOP_HALF]];
-    polygon(m, l.noseTop, top, outward(top, [0, 1, 0]));
+    const [yw, xw] = CAB_FRONT[0]!;
+    const xc0 = xw - CORNER;
     for (const s of [-1, 1]) {
-      // the side wall up to the top edge, the long chamfer to the top, the corner piece
-      const cabWall: Vec3[] = [[CAB_X0, D, H], [front[1], D, H], [front[1], ft0 - 0.05, H], [CAB_X0, ft0 - 0.05, H]].map((p) => mz(p as Vec3, s));
-      paintedPolygon(m, sides, cabWall, [0, 0, s]);
-      const noseWall: Vec3[] = [[front[1], D, H], [fx, D, H], [fx, ft0 - 0.25, H], [fx - 0.12, ft0 - 0.05, H], [front[1], ft0 - 0.05, H]].map((p) => mz(p as Vec3, s));
-      paintedPolygon(m, noseSides, noseWall, [0, 0, s]);
-      const edge: Vec3[] = [[fx - 0.12, ft0 - 0.05, H], [front[1], ft0 - 0.05, H], [front[1], front[0], TOP_HALF], [cx, NOSE_TOP, TOP_HALF]].map((p) => mz(p as Vec3, s));
-      paintedPolygon(m, noseSides, edge, outward(edge, [0, 1, s]));
-      const corner: Vec3[] = [[fx, ft0 - 0.25, H], [fx, ft0, TOP_HALF - 0.12], [cx, NOSE_TOP, TOP_HALF], [fx - 0.12, ft0 - 0.05, H]].map((p) => mz(p as Vec3, s));
-      paintedPolygon(m, ends, corner, outward(corner, [1, 0.5, s]));
+      // the side wall under the hip's edge
+      const wall: Vec3[] = ([[xc0, D, H], [fx, D, H], [fx, FACE_CORNER, H], [xc0, SIDE_REAR, H]] as Vec3[]).map((p) => mz(p, s));
+      paintedPolygon(m, noseSides, wall, [0, 0, s]);
+      // the hip plane from the ridge and the windscreens' foot down to the side wall, as a fan from the ridge's front
+      const A: Vec3 = [fx, RIDGE, 0];
+      const ring: Vec3[] = ([[fx, FACE_CORNER, H], [xc0, SIDE_REAR, H], [xc0, yw, H], [xw, yw, TOP_HALF], [xw, yw, 0]] as Vec3[]).map((p) => mz(p, s));
+      for (let i = 0; i + 1 < ring.length; i++) {
+        const tri = [A, ring[i]!, ring[i + 1]!];
+        polygon(m, l.noseTop, tri, outward(tri, [0, 1, s * 0.5]));
+      }
     }
   });
   // the headlight pair, one over the other in a recessed housing at the top of the face
   m.scope("headlights", () => {
-    block(m, "black", fx - 0.002, fx + 0.03, 2.99, 3.38, -0.16, 0.16);
+    const hz = l.headZ ?? 0;
+    block(m, "black", fx - 0.002, fx + 0.03, 2.99, 3.38, hz - 0.16, hz + 0.16);
     for (const y of [3.09, 3.28]) {
-      extrude(m, "lampHead", "x", ngon(12, 0.085, 0, 0, y), [fx + 0.03, fx + 0.045]);
+      extrude(m, "lampHead", "x", ngon(12, 0.085, 0, hz, y), [fx + 0.03, fx + 0.045]);
     }
     for (const z of [-1.2, 1.2]) extrude(m, "lampRed", "x", ngon(8, 0.055, 0, z, D + 0.55), [fx - 0.002, fx + 0.03]);
   });
@@ -581,16 +589,12 @@ function nose(m: MeshBuilder, l: Es44Livery): void {
 
 function cab(m: MeshBuilder, l: Es44Livery): void {
   const H = CAB_HALF, ends = endBands(l), sides = cabBands(l), roof = l.cabRoof ?? l.roof;
-  const yBase = NOSE_FACE_TOP - 0.05;
   const lv = CAB_FRONT;
   m.scope("shell", () => {
     for (const s of [-1, 1]) {
-      // the side wall above the nose's top edge: forward to the front corner's edge at each height
-      const pts: Vec3[] = ([[CAB_X0, yBase, H], [lv[0]![1], yBase, H], ...lv.map(([y, x]): Vec3 => [x - CORNER, y, H]), [CAB_X0, lv[lv.length - 1]![0], H]] as Vec3[]).map((p) => mz(p, s));
+      // the side wall from the walkway, forward to the front corner's edge at each height
+      const pts: Vec3[] = ([[CAB_X0, D, H], [lv[0]![1] - CORNER, D, H], ...lv.map(([y, x]): Vec3 => [x - CORNER, y, H]), [CAB_X0, lv[lv.length - 1]![0], H]] as Vec3[]).map((p) => mz(p, s));
       paintedPolygon(m, sides, pts, [0, 0, s]);
-      // the triangle where the nose's edge chamfer meets the cab's corner
-      const tri: Vec3[] = ([[lv[0]![1], yBase, H], [lv[0]![1], lv[0]![0], TOP_HALF], [lv[0]![1] - CORNER, lv[0]![0], H]] as Vec3[]).map((p) => mz(p, s));
-      paintedPolygon(m, ends, tri, outward(tri, [1, 0.3, s]));
     }
     // the front: the slope under the windscreens, the windscreen plane, the board band, each with its corners
     for (let i = 0; i + 1 < lv.length; i++) {
@@ -700,35 +704,103 @@ function walkways(m: MeshBuilder, l: Es44Livery): void {
   });
 }
 
-/** The GE truck's details over the kit's frame: sand boxes at the ends, the motors' shock absorbers. */
-function truckDetails(m: MeshBuilder, l: Es44Livery): void {
-  for (const e of [1, -1])
-    for (const sd of [-1, 1]) {
-      const xc = e * TRUCK_CENTRE;
-      for (const dx of [-TRUCK.frameHalf + 0.2, TRUCK.frameHalf - 0.2]) block(m, l.trucks, xc + dx - 0.18, xc + dx + 0.18, 0.75, 1.08, ...side(sd, 1.07, 1.2));
-      // the vertical shock absorbers at the outer axles
-      for (const ax of [TRUCK.axles[0]!, TRUCK.axles[2]!]) {
-        const x = xc + ax + Math.sign(ax) * 0.3;
-        m.rod("spring", [x, 0.68, sd * 1.12], [x, 1.05, sd * 1.12], 0.035, 6);
-      }
+/**
+ * GE's Hi-Ad truck side frame outside the toolkit's, from BNSF 5824 and CSX 761: a straight top chord
+ * dropping at the tapered ends, a deep cast web whose belly hangs low between the axles and hides the
+ * wheels' upper halves, jaws either side of each axle box, a pair of springs in the window over every box,
+ * the sand boxes at the ends and the vertical dampers at the outer axles.
+ */
+function hiAdCasting(m: MeshBuilder, l: Es44Livery, xc: number): void {
+  // the casting sits low: its top chord at 0.95 m, well under the sill, the motors and bolster dark in the gap
+  const zi = 1.08, zo = 1.2, top = 0.95, win = 0.84, jawFoot = 0.3, belly = 0.36;
+  const ay = TRUCK.wheelR;
+  const axles = TRUCK.axles;
+  const bot: Array<[number, number]> = [[-2.85, 0.66], [-2.5, 0.5]];
+  for (let i = 0; i < axles.length; i++) {
+    const a = axles[i]!;
+    // an opening around each axle: the box in the middle, a spring each side of it
+    bot.push([a - 0.5, jawFoot], [a - 0.46, jawFoot], [a - 0.459, win], [a + 0.459, win], [a + 0.46, jawFoot], [a + 0.5, jawFoot]);
+    if (i + 1 < axles.length) {
+      const b = axles[i + 1]!;
+      bot.push([a + 0.501, 0.42], [a + 0.7, belly], [b - 0.7, belly], [b - 0.501, 0.42]);
     }
+  }
+  bot.push([2.5, 0.5], [2.85, 0.66]);
+  // the chord humps over the springs and dips between them
+  const topAt = (x: number): number => {
+    if (Math.abs(x) > 2.5) return top - ((Math.abs(x) - 2.5) / 0.35) * 0.12;
+    const near = Math.min(...axles.map((a) => Math.abs(x - a)));
+    return near < 0.55 ? top : top - 0.06;
+  };
+  const topLine = bot.map(([x]): [number, number] => [xc + x, topAt(x)]);
+  const bottom = bot.map(([x, y]): [number, number] => [xc + x, y]);
+  m.scope("side frames", () => {
+    for (const sd of [-1, 1]) plate(m, l.trucks, topLine, bottom, ...side(sd, zi, zo));
+  });
+  m.scope("axle boxes", () => {
+    for (const a of axles)
+      for (const sd of [-1, 1]) {
+        block(m, l.trucks, xc + a - 0.19, xc + a + 0.19, ay - 0.17, ay + 0.17, ...side(sd, zi, zo + 0.03));
+        // the box's wings carrying the springs
+        block(m, l.trucks, xc + a - 0.44, xc + a + 0.44, ay - 0.24, ay - 0.17, ...side(sd, zi, zo));
+        extrude(m, "spring", "z", ngon(8, 0.1, Math.PI / 8, xc + a, ay), side(sd, zo + 0.03, zo + 0.06));
+      }
+  });
+  m.scope("spring nests", () => {
+    for (const a of axles) for (const sd of [-1, 1]) for (const d of [-0.33, 0.33]) coil(m, "spring", xc + a + d, sd * (zo - 0.04), ay - 0.17, win, 0.085, 3, 6);
+  });
+  m.scope("sand boxes", () => {
+    // at the truck's inner end (the outer end lies under the pilot's stairs)
+    const x = -Math.sign(xc) * 2.6;
+    for (const sd of [-1, 1]) block(m, l.trucks, xc + x - 0.18, xc + x + 0.18, 0.6, top + 0.12, ...side(sd, zo, zo + 0.06));
+  });
+  m.scope("dampers", () => {
+    for (const a of [axles[0]!, axles[2]!])
+      for (const sd of [-1, 1]) {
+        const x = xc + a + Math.sign(a) * 0.62, z = sd * (zo + 0.06);
+        m.rod("bogie", [x, ay - 0.1, z], [x + Math.sign(a) * 0.12, SILL_BOTTOM - 0.04, z], 0.045, 6);
+      }
+  });
+  m.scope("motors", () => {
+    // the traction motors and the bolster, dark in the gap between the casting and the sill
+    for (const a of axles) block(m, "underframe", xc + a - 0.42, xc + a + 0.42, ay + 0.05, SILL_BOTTOM - 0.02, -0.62, 0.62);
+    block(m, "underframe", xc - 0.45, xc + 0.45, top - 0.1, SILL_BOTTOM - 0.01, -1.03, 1.03);
+  });
 }
 
 function underframe(m: MeshBuilder, l: Es44Livery): void {
   const t = TANK;
   m.scope("fuel tank", () => {
-    const top = SILL_BOTTOM;
-    const sec: Array<[number, number]> = [[-t.half, top], [t.half, top], [t.half, t.y0 + 0.3], [t.half - 0.3, t.y0], [-(t.half - 0.3), t.y0], [-t.half, t.y0 + 0.3]];
-    const end: Array<[number, number]> = [[-t.half, top], [t.half, top], [t.half, t.y0 + 0.4], [t.half - 0.3, t.y0 + 0.12], [-(t.half - 0.3), t.y0 + 0.12], [-t.half, t.y0 + 0.4]];
-    m.sweep(l.tank, "x", sec, t.x0 + 0.35, sec, t.x1 - 0.35);
+    const top = SILL_BOTTOM, shoulder = top - 0.5, r = 0.36, inset = 0.3;
+    // the body: straight sides from the shoulder down, the lower edges rounded; the sloped ends lift its foot
+    const body = (lift: number): Array<[number, number]> => {
+      const out: Array<[number, number]> = [[-t.half, shoulder], [t.half, shoulder]];
+      const y0 = t.y0 + lift;
+      for (let k = 0; k <= 3; k++) {
+        const a = (k / 3) * (Math.PI / 2);
+        out.push([t.half - r + r * Math.cos(a), y0 + r - r * Math.sin(a)]);
+      }
+      for (let k = 0; k <= 3; k++) {
+        const a = (k / 3) * (Math.PI / 2);
+        out.push([-(t.half - r) - r * Math.sin(a), y0 + r - r * Math.cos(a)]);
+      }
+      return out;
+    };
+    const sec = body(0), end = body(0.14);
     m.sweep(l.tank, "x", end, t.x0, sec, t.x0 + 0.35);
+    m.sweep(l.tank, "x", sec, t.x0 + 0.35, sec, t.x1 - 0.35);
     m.sweep(l.tank, "x", sec, t.x1 - 0.35, end, t.x1);
+    // the upper part, set in behind the main reservoirs
+    block(m, l.tank, t.x0 + 0.1, t.x1 - 0.1, shoulder - 0.05, top, -(t.half - inset), t.half - inset);
     for (const sd of [-1, 1]) {
       // the fillers and gauges at each end, the capacity stencil
-      for (const x of [t.x0 + 0.6, t.x1 - 0.75]) block(m, "steel", x, x + 0.16, top - 0.32, top - 0.12, ...side(sd, t.half, t.half + 0.05));
-      decalZ(m, "white", sd * (t.half + 0.004), sd, -0.4, 0.4, t.y0 + 0.45, t.y0 + 0.55);
-      // the main reservoirs along the tank's upper side
-      for (const [a, b] of [[-3.3, -0.85], [-0.6, 1.85]] as const) tankX(m, l.tank, a, b, sd * (t.half - 0.08), top - 0.24, 0.24, 12);
+      for (const x of [t.x0 + 0.6, t.x1 - 0.75]) block(m, "steel", x, x + 0.16, shoulder - 0.3, shoulder - 0.1, ...side(sd, t.half, t.half + 0.05));
+      decalZ(m, "white", sd * (t.half + 0.004), sd, -0.4, 0.4, t.y0 + 0.5, t.y0 + 0.6);
+      // the two long main reservoirs lying along the tank's top, silver
+      for (const [a, b] of [[-3.55, -0.8], [-0.6, 2.15]] as const) {
+        tankX(m, "reservoir", a, b, sd * (t.half - 0.24), shoulder + 0.25, 0.25, 12);
+        for (const x of [a + 0.4, b - 0.4]) block(m, "black", x - 0.04, x + 0.04, shoulder + 0.18, top, ...side(sd, t.half - 0.3, t.half - inset + 0.001));
+      }
     }
   });
   m.scope("air reservoirs", () => {
@@ -751,20 +823,15 @@ function bnsf(number: string): Es44Livery {
   const body: Band[] = [[0, 3.38, "bnsfOrange"], [3.38, 3.6, "bnsfYellow"], [3.6, 9, "bnsfBlack"]];
   return {
     title: "BNSF", railroad: "BNSF", letterH: 0.78, letterY: 0.92, letterX: -2.2, letterW: 1.2, letterGap: 0.22, letterSlant: 0.25, number,
-    palette: pick("bnsfOrange", "bnsfBlack", "bnsfYellow", "truckBlack", "boardBlack", "tankGrey"),
+    palette: pick("bnsfOrange", "bnsfBlack", "bnsfYellow", "truckGrime", "boardBlack", "tankGrey", "reservoir"),
     body, cab: [[0, 9, "bnsfOrange"]], ends: [[0, 9, "bnsfOrange"]], rear: [[0, 3.6, "bnsfOrange"], [3.6, 9, "bnsfBlack"]],
-    roof: "bnsfBlack", cabRoof: "bnsfOrange", noseTop: "bnsfOrange", wing: "bnsfBlack", slope: "bnsfBlack", frameMat: "bnsfBlack",
-    frame: "bnsfBlack", sillStripe: [0, 0.12, "bnsfYellow"], trucks: "truckBlack", pilot: "bnsfBlack", tank: "tankGrey", anticlimber: "bnsfYellow",
+    roof: "bnsfBlack", cabRoof: "bnsfOrange", noseTop: "bnsfBlack", wing: "bnsfBlack", slope: "bnsfBlack", frameMat: "bnsfBlack",
+    frame: "bnsfBlack", sillStripe: [0, 0.12, "bnsfYellow"], trucks: "truckGrime", pilot: "bnsfBlack", tank: "tankGrey", anticlimber: "bnsfYellow", headZ: -0.1,
     letter: "bnsfBlack", numberMat: "bnsfBlack", rails: "bnsfBlack", frontRails: "bnsfYellow", board: "boardBlack", boardText: "white",
     marks: (m) => {
       const H = CAB_HALF;
-      // the black glare shield on the nose top in front of the windscreens, its edge a shallow V
-      const front = CAB_FRONT[0]!;
-      const yTop = (x: number) => front[0] + ((NOSE_TOP - front[0]) * (x - front[1])) / (9.55 - front[1]) + 0.004;
-      const shield: Array<[number, number]> = [[front[1], -TOP_HALF], [front[1], TOP_HALF], [8.72, TOP_HALF], [9.0, 0], [8.72, -TOP_HALF]];
-      polygon(m, "bnsfBlack", shield.map(([x, z]): Vec3 => [x, yTop(x), z]), outward(shield.map(([x, z]): Vec3 => [x, yTop(x), z]), [0, 1, 0]));
       // the nose door's round window beside the headlights
-      extrude(m, "glass", "x", ngon(10, 0.1, 0, -0.45, 3.2), [NOSE_X - 0.002, NOSE_X + 0.01]);
+      extrude(m, "glass", "x", ngon(10, 0.1, 0, -0.5, 3.2), [NOSE_X - 0.002, NOSE_X + 0.01]);
       // the nose face: BNSF in italic black letters, the swoosh under them, the black foot with its yellow stripe
       const fx = NOSE_X + 0.004;
       endWords(m, "bnsfBlack", "BNSF", 1, fx, 0.05, D + 0.97, 0.38, 0.66, 0.1, 0.3);
@@ -792,8 +859,8 @@ function unionPacific(number: string): Es44Livery {
   const body: Band[] = [[0, 4.2, "upYellow"], [4.2, 4.26, "upRed"], [4.26, 9, "upGrey"]];
   return {
     title: "Union Pacific", railroad: "UNION PACIFIC", letterH: 0.42, letterY: 1.25, letterX: -2.0, number,
-    palette: pick("upYellow", "upGrey", "upRed", "upBlue", "upWhite", "truckGrey", "boardBlack"),
-    body, cab: [[0, 9, "upYellow"]], ends: [[0, 3.66, "upYellow"], [3.66, 3.72, "upRed"], [3.72, 9, "upGrey"]], rear: body,
+    palette: pick("upYellow", "upGrey", "upRed", "upBlue", "upWhite", "truckGrey", "boardBlack", "reservoir"),
+    body, cab: [[0, 9, "upYellow"]], ends: [[0, 3.7, "upYellow"], [3.7, 3.78, "upRed"], [3.78, 9, "upGrey"]], rear: body,
     dbBands: [[0, 3.9, "upYellow"], [3.9, 3.97, "upRed"], [3.97, 9, "upGrey"]], wingBands: [[RAD.foot, RAD.side0 + 0.06, "upRed"], [RAD.side0 + 0.06, 9, "upGrey"]],
     roof: "upGrey", cabRoof: "upGrey", noseTop: "upYellow", wing: "upGrey", frameMat: "black",
     frame: "upGrey", trucks: "truckGrey", pilot: "upGrey", tank: "upGrey",
@@ -831,10 +898,10 @@ function unionPacific(number: string): Es44Livery {
 function csx(number: string): Es44Livery {
   return {
     title: "CSX", railroad: "CSX", letterH: 1.05, letterY: 0.4, letterX: -2.2, letterW: 0.75, letterGap: 0.25, number,
-    palette: pick("csxBlue", "csxYellow", "csxGrey", "truckBlack", "boardBlack"),
+    palette: pick("csxBlue", "csxYellow", "csxGrey", "truckGrey", "boardBlack", "reservoir"),
     body: [[0, 9, "csxBlue"]], cab: [[0, 9, "csxBlue"]], ends: [[0, 4.32, "csxYellow"], [4.32, 9, "csxBlue"]], rear: [[0, RAD.side0, "csxYellow"], [RAD.side0, 9, "csxBlue"]],
     roof: "csxBlue", cabRoof: "csxBlue", noseTop: "csxYellow", wing: "csxBlue", slope: "csxYellow", frameMat: "black",
-    frame: "csxGrey", sillStripe: [0.02, 0.14, "csxYellow"], trucks: "truckBlack", pilot: "csxGrey", tank: "csxGrey",
+    frame: "csxGrey", sillStripe: [0.02, 0.14, "csxYellow"], trucks: "truckGrey", pilot: "csxGrey", tank: "csxGrey",
     letter: "csxYellow", numberMat: "csxYellow", rearText: "csxBlue", rails: "csxYellow", frontRails: "csxYellow", board: "boardBlack", boardText: "white",
     marks: (m) => {
       const H = CAB_HALF;
