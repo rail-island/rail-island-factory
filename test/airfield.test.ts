@@ -126,12 +126,74 @@ describe("airfield", () => {
     for (const size of AIRFIELD_SIZES) {
       for (const t of RUNWAY_TYPES) {
         const layout = airfieldFixture(t, size);
-        const boxes = airport.airfield(layout, t).boxes;
+        const { boxes, bridges } = airport.airfield(layout, t);
         expect(boxes.filter((b) => b.label), `${t}/${size}`).toHaveLength(1);
-        const bridges = boxes.filter((b) => b.material === "steel" && b.lod === "shell" && b.cy > 4 && b.sz < 6 && b.sx > 10);
-        expect(bridges.length, `${t}/${size}`).toBe(t === "international" ? layout.stands.length : 0);
+        expect(bridges.map((b) => b.stand), `${t}/${size}`).toEqual(t === "international" ? layout.stands.map((st) => st.id) : []);
+        // the rotunda is drawn with the field, the tunnel is not
+        const rotundas = boxes.filter((b) => b.shape === "cylinder" && b.material === "steel" && b.color[0] === 200);
+        expect(rotundas.length, `${t}/${size}`).toBe(bridges.length);
       }
     }
+  });
+
+  describe("jet bridges", () => {
+    const hubs = AIRFIELD_SIZES.map((size) => ({ size, layout: airfieldFixture("international", size) }));
+
+    it("stand each rotunda to the parked aircraft's left (-Z), short of the terminal, its parts in their own frames", () => {
+      for (const { size, layout } of hubs) {
+        const { bridges } = airport.airfield(layout, "international");
+        const front = layout.building.cx - layout.building.w / 2;
+        for (const br of bridges) {
+          const st = layout.stands.find((s) => s.id === br.stand)!;
+          expect(br.pivot.z, size).toBeLessThan(st.z - 4);
+          expect(br.pivot.x, size).toBeLessThan(front);
+          expect(br.reach[0], size).toBeLessThan(br.reach[1]);
+          expect(br.lift[0], size).toBeLessThan(br.lift[1]);
+          expect(br.parts.leg.every((b) => b.sy === 1 && b.cy === 0.5), size).toBe(true);
+          for (const part of Object.values(br.parts)) for (const b of part) {
+            expect(b.rotY ?? b.rotZ ?? b.rotX, `${size}: a part box turns itself`).toBeUndefined();
+            expect(MATERIALS.has(b.material)).toBe(true);
+          }
+        }
+      }
+    });
+
+    it("rest short and straight back from the rotunda, clear of every stand's fuselage and of the terminal", () => {
+      for (const { size, layout } of hubs) {
+        const { bridges } = airport.airfield(layout, "international");
+        const front = layout.building.cx - layout.building.w / 2;
+        for (const br of bridges) {
+          expect(br.rest.length).toBe(br.reach[0]);
+          expect(br.rest.lift).toBe(br.floor);
+          for (const b of airport.jetBridgeBoxes(br, br.rest)) {
+            const r = planOf(b);
+            expect(r.x1, `${size}: into the terminal`).toBeLessThanOrEqual(front + 1e-6);
+            for (const st of layout.stands) {
+              // a fuselage on its centreline, nose-in from the stand toward the terminal
+              const fuselage = { x0: st.x, x1: front, z0: st.z - 4, z1: st.z + 4 };
+              expect(overlapIn(r, fuselage), `${size}: stand ${st.id} under bridge ${br.stand}`).toBe(false);
+            }
+          }
+        }
+      }
+    });
+
+    it("pose a tunnel that ends where the pose says and a leg that reaches it", () => {
+      const br = airport.airfield(hubs[2]!.layout, "international").bridges[0]!;
+      const pose = { yaw: -Math.PI * 0.4, length: br.reach[1] - 1, lift: br.floor - 1.5, cabYaw: -Math.PI / 2 };
+      const boxes = airport.jetBridgeBoxes(br, pose);
+      // the cab's body: its rear on the tunnel's end, its floor at the lift
+      const cab = boxes.find((b) => b.color[0] === 38)!;
+      const ex = br.pivot.x + pose.length * Math.cos(pose.yaw), ez = br.pivot.z - pose.length * Math.sin(pose.yaw);
+      expect(cab.cx).toBeCloseTo(ex + (br.cabDepth / 2) * Math.cos(pose.cabYaw), 6);
+      expect(cab.cz).toBeCloseTo(ez - (br.cabDepth / 2) * Math.sin(pose.cabYaw), 6);
+      const [cmin] = boundsOf(cab);
+      expect(cmin[1]!).toBeLessThan(pose.lift);
+      // the leg from the wheels to the tunnel's underside over them
+      const leg = boxes.find((b) => b.material === "column")!;
+      const under = br.floor + (pose.lift - br.floor) * (pose.length - br.bogieBack) / pose.length - br.legTop;
+      expect(leg.cy + leg.sy / 2).toBeCloseTo(under, 6);
+    });
   });
 
   it("draws the type's helipads where the layout put them, and a heliport with no runway", () => {
@@ -317,10 +379,11 @@ describe("airfield", () => {
     for (const [name, layout] of Object.entries(AIRFIELD_FIXTURES)) {
       const type = name.split(".")[0]!;
       const size = name.split(".")[1]!;
-      const { boxes, details } = airport.airfield(layout, type, 20);
+      const { boxes, details, bridges } = airport.airfield(layout, type, 20);
       const meta = airport.TYPE_META[type]!;
       const tower = meta.tower ? towerBoxes(TOWER_HEIGHTS[meta.tower.values.kind as keyof typeof TOWER_HEIGHTS]) : [];
-      const tris = triangles(boxes) + triangles(details) + tower.reduce((n, b) => n + (b.profile === "gable" ? 8 : 12), 0);
+      const moving = bridges.flatMap((b) => airport.jetBridgeBoxes(b, b.rest));
+      const tris = triangles(boxes) + triangles(details) + triangles(moving) + tower.reduce((n, b) => n + (b.profile === "gable" ? 8 : 12), 0);
       const limit = BUDGET[type]!;
       const cap = typeof limit === "number" ? limit : limit[size] ?? limit.big!;
       expect(tris, name).toBeLessThanOrEqual(cap);

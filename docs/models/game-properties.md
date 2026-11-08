@@ -57,7 +57,9 @@ The fields below are set only where they apply:
 
 A vehicle's **rider seat** - where the game's avatar sits riding it - is not a
 declared property: the build measures it on the model and exports it as `rider`
-([rider-seat.md](rider-seat.md)).
+([rider-seat.md](rider-seat.md)). Nor is an aeroplane's **boarding door**, where the
+game's jet bridge docks: measured too, exported as `door`
+([boarding-door.md](boarding-door.md)).
 
 `variants` lists the parameter variants whose figures differ from the design's:
 
