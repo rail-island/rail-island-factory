@@ -2476,6 +2476,13 @@ export function acela(params?: ParamValues): MeshBuilder {
 
 // ---------------------------------------------------------------------------
 // Amtrak Superliner: the bi-level long-distance car (1979), coach and sleeper
+//
+// Measured on photographs (assets/amtrak-superliner/SOURCES.md): coach 34515
+// side-on (a projective fit over its body ends and truck centres), the sleeper
+// in photo-superliner-48142611.jpg, the end of coach 34122 and the ends of
+// sleepers 32112 and 32038. Places along the car are given as u, metres from
+// the car's middle toward its +X end (the end with the big air-conditioning
+// grille on the right side); heights over the rail.
 
 export type SuperlinerUnit = "coach" | "sleeper";
 export const SUPERLINER_PARAMS: readonly ParamSpec[] = [enumParam("unit", "Car", { coach: "Coach", sleeper: "Sleeper" })];
@@ -2483,65 +2490,351 @@ export const SUPERLINER_LENGTH = ft(85);
 const SL_GAP = 0.35;
 const SL_BODY = SUPERLINER_LENGTH - 2 * SL_GAP;
 const SL_TRUCKS = ft(59, 6);
-const SL_PAL = { slSilver: paint("#c3c7cb", 0.3), slRed: paint("#c0222c"), slBlue: paint("#24407a"), slDark: paint("#2a2c2f", 0.85) };
-/** Phase IV: fluted stainless steel, a red line low, two red lines over the blue band under the upper windows. */
+/** d (metres back from the body's +X end) of a place u from the car's middle. */
+const slD = (u: number) => SL_BODY / 2 - u;
+const SL_PAL = {
+  slSilver: paint("#c3c7cb", 0.3), slRed: paint("#c0222c"), slBlue: paint("#24407a"), slDark: paint("#2a2c2f", 0.85),
+  slFlute: paint("#7b8086", 0.4), slWhite: paint("#f4f4f2", 0.5), slMarker: paint("#b3121c", 0.3), slEnd: paint("#a9adb1", 0.4),
+};
+/**
+ * Phase IVb: stainless steel, the red line under the lower deck's windows, and
+ * under the upper deck's windows two red pinstripes over the blue band.
+ */
 const SL_BANDS: ReadonlyArray<readonly [number, number, string]> = [
-  [0, 1.1, "slSilver"], [1.1, 1.15, "slRed"], [1.15, 2.6, "slSilver"], [2.6, 2.64, "slRed"], [2.64, 2.68, "slSilver"],
-  [2.68, 2.72, "slRed"], [2.72, 2.76, "slSilver"], [2.76, 2.9, "slBlue"], [2.9, 9, "slSilver"],
+  [0, 0.96, "slSilver"], [0.96, 1.0, "slRed"], [1.0, 2.4, "slSilver"], [2.4, 2.6, "slBlue"], [2.6, 2.64, "slSilver"],
+  [2.64, 2.675, "slRed"], [2.675, 2.71, "slSilver"], [2.71, 2.745, "slRed"], [2.745, 9, "slSilver"],
 ];
-const SL_DOOR_Y: [number, number] = [0.72, 2.75];
-const SL_DOOR: [number, number] = [SL_BODY / 2 - 0.55, SL_BODY / 2 + 0.55];
-const SL_UPPER: [number, number] = [3.05, 3.8];
-const SL_LOWER: [number, number] = [1.4, 1.95];
+/** The two decks' window sills and heads; the plug door's sill and head and its narrow window. */
+const SL_UPPER: [number, number] = [3.36, 4.13];
+const SL_LOWER: [number, number] = [1.08, 1.8];
+const SL_DOOR_Y: [number, number] = [0.3, 2.26];
+/** The low floor between the trucks: its side reaches down to 0.25 m from u -7.8 to 6.6; over the trucks the body ends at 0.88 m. */
+const SL_DROP: [number, number] = [-7.8, 6.6];
+const SL_FLOOR = 0.88;
+const SL_END: NonNullable<CarbodySpec["front"]> = { len: 0.15, tip: 0.9, power: 2, C: [], S: [] };
 const SL_SPEC: CarbodySpec = {
-  length: SL_BODY, W: 1.55, Y: 1.0, S: 4.35, C: 4.9, lean: 0.97, arc: 6, B: 0.6, wl: 1.45, A: 0.7, wa: 1.53,
-  cuts: [SL_BODY / 2 - SL_TRUCKS / 2, SL_BODY / 2 + SL_TRUCKS / 2].map((d) => [d - 1.6, d + 1.6] as const),
-  edges: [], step: 1.0,
+  length: SL_BODY, W: 1.55, Y: 0.92, S: 4.25, C: 4.93, lean: 0.97, arc: 8, roofPower: 3.2, B: 0.25, wl: 1.546, A: SL_FLOOR, wa: 1.548,
+  front: SL_END, rear: SL_END, noseStep: 0.05,
+  cuts: [[0, slD(SL_DROP[1])], [slD(SL_DROP[0]), SL_BODY]], cutRadius: 0.15,
+  edges: [], step: 2.0,
 };
 
-/** The windows (d spans) of each deck on a side. */
-function superlinerWindows(u: SuperlinerUnit): { upper: Array<[number, number]>; lower: Array<[number, number]> } {
-  const row = (from: number, to: number, n: number, w: number) =>
-    Array.from({ length: n }, (_, i): [number, number] => { const d = from + ((to - from) * (i + 0.5)) / n; return [d - w / 2, d + w / 2]; });
-  if (u === "coach") return { upper: row(1.2, SL_BODY - 1.2, 12, 1.55), lower: [...row(1.4, SL_DOOR[0] - 4.2, 2, 1.1), ...row(SL_DOOR[1] + 4.2, SL_BODY - 1.4, 2, 1.1)] };
-  return { upper: row(1.2, SL_BODY - 1.2, 14, 1.05), lower: [...row(1.4, SL_DOOR[0] - 4.2, 3, 0.85), ...row(SL_DOOR[1] + 4.2, SL_BODY - 1.4, 3, 0.85)] };
+type Span = [number, number];
+/** A row of n windows w wide at the given pitch, centred at u = c (spans of u, ascending). */
+const slRow = (c: number, n: number, w: number, pitch: number): Span[] =>
+  Array.from({ length: n }, (_, i): Span => { const m = c + (i - (n - 1) / 2) * pitch; return [m - w / 2, m + w / 2]; });
+
+interface SlSide {
+  /** Upper and lower windows (u spans) and whether each has a centre mullion. */
+  upper: Array<{ u: Span; mullion: boolean }>;
+  lower: Array<{ u: Span; mullion: boolean }>;
+  /** The big air-conditioning grille, a narrow vertical louvre, equipment lockers (u spans). */
+  grille?: Span;
+  louvre?: Span;
+  lockers: Span[];
+}
+interface SlLayout { door: Span; sides: Record<1 | -1, SlSide> }
+
+const pane = (u: Span, minMullion = 1.2) => ({ u, mullion: u[1] - u[0] >= minMullion });
+
+/**
+ * The window, door and grille layout of each car and side. The right side (+Z)
+ * is the photographed one; the left side's upper and lower windows stand at the
+ * same places (seats or rooms on both sides of the aisle), its end carries the
+ * narrow louvre and lockers instead of the big grille.
+ */
+function superlinerLayout(u: SuperlinerUnit): SlLayout {
+  if (u === "coach") {
+    // coach 34515: 11 paired windows upstairs, 1.62 m wide at a 1.97 m pitch; downstairs
+    // a narrow window and two pairs under the 3rd to 5th, the door 2.1 m on
+    const upper = slRow(0.24, 11, 1.62, 1.97);
+    const lower: Span[] = [[upper[2]![1] - 0.75, upper[2]![1]], upper[3]!, upper[4]!];
+    const door: Span = [upper[4]![1] + 2.1, upper[4]![1] + 3.3];
+    // six narrow locker doors over the -X truck (34515)
+    const lockers: Span[] = Array.from({ length: 6 }, (_, i): Span => [-12.35 + i * 0.69, -11.71 + i * 0.69]);
+    const side = (right: boolean): SlSide => ({
+      upper: upper.map((s) => pane(s)), lower: lower.map((s) => pane(s)),
+      ...(right ? { grille: [9.8, 11.5] as Span } : { louvre: [10.75, 11.1] as Span }),
+      lockers: right ? lockers : [...lockers, [11.2, 12.3] as Span],
+    });
+    return { door, sides: { 1: side(true), [-1]: side(false) } as Record<1 | -1, SlSide> };
+  }
+  // the sleeper: five roomettes toward -X (1.42 m windows, 1.8 m pitch), the
+  // stairwell's narrow window, five bedrooms toward +X (1.66 m, 2.22 m pitch);
+  // on the left side the corridor along the bedrooms has narrower windows
+  const roomettes = slRow(-6.9, 5, 1.42, 1.8);
+  const bedrooms = slRow(5.19, 5, 1.66, 2.22);
+  const stair: Span = [-1.25, -0.5];
+  const corridor = bedrooms.map(([a, b]): Span => [(a + b) / 2 - 0.5, (a + b) / 2 + 0.5]);
+  const lower: Span[] = [[roomettes[2]![1] - 0.62, roomettes[2]![1]], roomettes[3]!, roomettes[4]!];
+  const lockers: Span[] = [[-12.35, -11.0], [-10.95, -9.6]];
+  return {
+    door: [-0.15, 0.95],
+    sides: {
+      1: { upper: [...roomettes, stair, ...bedrooms].map((s) => pane(s)), lower: [...lower, [4.17, 4.94] as Span].map((s) => pane(s)), grille: [9.6, 11.35], lockers },
+      [-1]: { upper: [...roomettes, stair, ...corridor].map((s) => pane(s)), lower: lower.map((s) => pane(s)), louvre: [10.75, 11.1], lockers: [...lockers, [11.2, 12.3]] },
+    } as Record<1 | -1, SlSide>,
+  };
 }
 
-const slPaint = bandPainter(SL_BANDS, "slSilver", "slDark", "slDark");
+/** The half width of the slice at d at height y (its outline's widest crossing). */
+function slHalf(b: SliceBody, d: number, y: number): number {
+  const h = halfSlice(b, d);
+  let best = 0;
+  for (let i = 0; i + 1 < h.length; i++) {
+    const [[za, ya], [zb, yb]] = [h[i]!, h[i + 1]!];
+    if (y < Math.min(ya, yb) - 1e-9 || y > Math.max(ya, yb) + 1e-9) continue;
+    best = Math.max(best, Math.abs(yb - ya) < 1e-12 ? Math.max(za, zb) : za + ((zb - za) * (y - ya)) / (yb - ya));
+  }
+  return best;
+}
+
+/** A flat strip on the side's skin (the side, the lower body or the low floor's skirt) over u0..u1 and y0..y1. */
+function slStrip(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, u0: number, u1: number, y0: number, y1: number, proud = 0.004): void {
+  const dm = slD((u0 + u1) / 2);
+  const [z0, z1] = [slHalf(b, dm, y0) + proud, slHalf(b, dm, y1) + proud];
+  const [xa, xb] = [X(slD(u0)), X(slD(u1))];
+  m.facets(mat, [[xa, y0, s * z0], [xb, y0, s * z0], [xb, y1, s * z1], [xa, y0, s * z0], [xb, y1, s * z1], [xa, y1, s * z1]], [0, 0, s]);
+}
+
+/** A rounded rectangle in (u, y), corner radius r, three points a corner; clockwise from the lower left as seen in (u, y). */
+function slRounded(u0: number, u1: number, y0: number, y1: number, r: number): Pt[] {
+  const out: Pt[] = [];
+  const corners: Array<[number, number, number]> = [[u0 + r, y0 + r, Math.PI], [u1 - r, y0 + r, 1.5 * Math.PI], [u1 - r, y1 - r, 0], [u0 + r, y1 - r, 0.5 * Math.PI]];
+  for (const [cu, cy, a0] of corners)
+    for (let k = 0; k <= 2; k++) {
+      const a = a0 + (k / 2) * (Math.PI / 2);
+      out.push([cu + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+  return out;
+}
+
+/** The side at height y of the slice at d on side s: its z and outward normal (sliceBody.ts sideAt). */
+function slSideAt(b: SliceBody, d: number, y: number, s: number): { z: number; n: Vec3 } {
+  const [Y, S, w] = [b.Y(d), b.S(d), b.w(d)];
+  const lean = (w * (1 - b.lean)) / (S - Y);
+  return { z: s * w * (1 - ((1 - b.lean) * (y - Y)) / (S - Y)), n: norm([0, lean, s]) };
+}
+const slMul = (v: Vec3, k: number): Vec3 => [v[0] * k, v[1] * k, v[2] * k];
+
+/** Points (u, y) on the side at d's slice, proud off it. */
+const slOnSide = (b: SliceBody, X: (d: number) => number, s: number, pts: Pt[], proud: number): Vec3[] =>
+  pts.map(([u, y]): Vec3 => {
+    const q = slSideAt(b, slD(u), y, s);
+    return [X(slD(u)) + q.n[0] * proud, y + q.n[1] * proud, q.z + q.n[2] * proud];
+  });
+
+/** A window with rounded corners: its dark frame sunk into the side, the glass and, on a wide one, the centre mullion. */
+function slWindow(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, [u0, u1]: Span, [y0, y1]: [number, number], mullion: boolean): void {
+  const n = slSideAt(b, slD((u0 + u1) / 2), (y0 + y1) / 2, s).n;
+  m.slab("slDark", slOnSide(b, X, s, slRounded(u0, u1, y0, y1, 0.1), 0.006), slMul(n, -0.03));
+  const glass = slOnSide(b, X, s, slRounded(u0 + 0.045, u1 - 0.045, y0 + 0.045, y1 - 0.045, 0.07), 0.01);
+  const tris: Vec3[] = [];
+  for (let i = 1; i + 1 < glass.length; i++) tris.push(glass[0]!, glass[i]!, glass[i + 1]!);
+  m.facets("glass", tris, n);
+  if (mullion) {
+    const c = (u0 + u1) / 2;
+    const q = slOnSide(b, X, s, [[c - 0.025, y0 + 0.04], [c + 0.025, y0 + 0.04], [c + 0.025, y1 - 0.04], [c - 0.025, y1 - 0.04]], 0.013);
+    m.facets("slDark", [q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!], n);
+  }
+}
+
+/** A panel's outline as four thin strips (a locker door, a hatch). */
+function slOutline(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, [u0, u1]: Span, y0: number, y1: number, t = 0.018): void {
+  slStrip(m, b, X, s, "slFlute", u0, u1, y0, y0 + t);
+  slStrip(m, b, X, s, "slFlute", u0, u1, y1 - t, y1);
+  slStrip(m, b, X, s, "slFlute", u0, u0 + t, y0 + t, y1 - t);
+  slStrip(m, b, X, s, "slFlute", u1 - t, u1, y0 + t, y1 - t);
+}
+
+/**
+ * The lower deck's plug door: the frame round the doorway, the plain stainless
+ * leaf sliding toward the car's middle, its narrow window with rounded corners
+ * in a rubber gasket; the step under the sill.
+ */
+function slDoor(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, [u0, u1]: Span): void {
+  const [y0, y1] = SL_DOOR_Y;
+  const [d0, d1] = [slD(u1), slD(u0)];
+  const k = LEAF_INSET;
+  m.scope("outline", () => {
+    sidePanel(m, b, X, s, "rubber", d0, d0 + k, y0, y1, 0.004, 0.03);
+    sidePanel(m, b, X, s, "rubber", d1 - k, d1, y0, y1, 0.004, 0.03);
+    sidePanel(m, b, X, s, "rubber", d0 + k, d1 - k, y1 - k, y1, 0.004, 0.03);
+  });
+  const slide = (d0 + d1) / 2 < b.length / 2 ? 1 : -1;
+  const dx = X(d0 + slide * (d1 - d0)) - X(d0);
+  const c = (u0 + u1) / 2;
+  const n = slSideAt(b, (d0 + d1) / 2, 1.6, s).n;
+  openable(m, (mm, o) =>
+    mm.moved(plugMove(o, s, dx), () => {
+      mm.scope("leaf", () => sidePanel(mm, b, X, s, "slSilver", d0 + 0.02, d1 - 0.02, y0 + 0.02, y1 - 0.02, 0.008, 0.003));
+      mm.scope("glass", () => {
+        mm.slab("rubber", slOnSide(b, X, s, slRounded(c - 0.17, c + 0.17, 1.22, 2.12, 0.11), 0.012), slMul(n, -0.004));
+        const g = slOnSide(b, X, s, slRounded(c - 0.13, c + 0.13, 1.26, 2.08, 0.08), 0.0165);
+        const tris: Vec3[] = [];
+        for (let i = 1; i + 1 < g.length; i++) tris.push(g[0]!, g[i]!, g[i + 1]!);
+        mm.facets("glass", tris, n);
+      });
+      mm.scope("handle", () => sidePanel(mm, b, X, s, "handrail", slD(c - 0.32), slD(c - 0.36), 0.95, 1.25, 0.03, 0.02));
+    }),
+  );
+  m.scope("step", () => sidePanel(m, b, X, s, "slDark", d0, d1, y0 - 0.06, y0, 0.004, 0.2));
+}
+
+/** Flutes of the stainless body: thin dark lines from y0 up to y1, every `pitch`, over the u spans `runs`, broken by `gaps`. */
+function slFlutes(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, y0: number, y1: number, pitch: number, runs: readonly Span[], gaps: readonly Span[]): void {
+  for (let y = y0; y <= y1 + 1e-9; y += pitch)
+    for (const [a, e] of runs) {
+      let from = a;
+      for (const [p, q] of [...gaps].sort((x, z) => x[0] - z[0])) {
+        if (q <= from || p >= e) continue;
+        if (p - 0.04 > from) slStrip(m, b, X, s, "slFlute", from, p - 0.04, y, y + 0.02);
+        from = Math.max(from, q + 0.04);
+      }
+      if (e > from + 0.05) slStrip(m, b, X, s, "slFlute", from, e, y, y + 0.02);
+    }
+}
+
+/** The roof's flutes: dark lines along the arc's facets, two a facet, over the whole straight body. */
+function slRoofFlutes(m: MeshBuilder, b: SliceBody, X: (d: number) => number): void {
+  const [da, db] = [0.2, b.length - 0.2];
+  const h = halfSlice(b, b.length / 2);
+  const k0 = 4 + b.edges(b.length / 2).length;
+  for (const s of [1, -1])
+    for (let k = k0; k + 1 < h.length; k++) {
+      const [[za, ya], [zb, yb]] = [h[k]!, h[k + 1]!];
+      const len = Math.hypot(zb - za, yb - ya);
+      const nz = (yb - ya) / len, ny = -(zb - za) / len;
+      for (const t of [0.3, 0.75]) {
+        const p = (tt: number): [number, number] => [za + (zb - za) * tt + nz * 0.004, ya + (yb - ya) * tt + ny * 0.004];
+        const w = 0.012 / len;
+        const [[z0, y0], [z1, y1]] = [p(t - w), p(t + w)];
+        const [xa, xb] = [X(da), X(db)];
+        m.facets("slFlute", [[xa, y0, s * z0], [xb, y0, s * z0], [xb, y1, s * z1], [xa, y0, s * z0], [xb, y1, s * z1], [xa, y1, s * z1]], [0, ny, s * nz]);
+      }
+    }
+}
+
+/** The Amtrak travel mark: the small wordmark over three sweeping stripes, centred at u, its foot at y. */
+function slTravelMark(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, u: number, y: number): void {
+  sideLettering(m, b, X, s, "AMTRAK", slD(u), y + 0.3, 0.075, "slBlue", 0.006);
+  // three stripes fanning from the left, each curving down to its point on the
+  // right as seen from outside (+X is to the right on the right side, to the left on the left)
+  for (let k = 0; k < 3; k++) {
+    const [t0, t1] = [-0.3 + 0.05 * k, 0.1 + 0.1 * k];
+    const t = (uu: number) => Math.min(1, Math.max(0, (s * (uu - u) - t0) / (t1 - t0)));
+    const mid = (uu: number) => y + (0.24 - 0.075 * k) * (1 - t(uu) ** 1.7);
+    const half = (uu: number) => 0.024 * (1 - 0.85 * t(uu));
+    const [a, e] = s > 0 ? [u + t0, u + t1] : [u - t1, u - t0];
+    stripDecalU(m, b, X, s, "slBlue", a, e, (uu) => mid(uu) - half(uu), (uu) => mid(uu) + half(uu), 0.006, 6);
+  }
+}
+
+/** stripDecal over u (ascending), its foot and head functions of u. */
+function stripDecalU(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, mat: string, u0: number, u1: number, lo: (u: number) => number, hi: (u: number) => number, proud: number, n: number): void {
+  stripDecal(m, b, X, s, mat, slD(u1), slD(u0), (d) => lo(slD(d)), (d) => hi(slD(d)), proud, n);
+}
+
+/** One end at x (e +1 the +X end): the diaphragm's face plate at the upper deck with the end door's window, the collision posts, red markers, the end sill and the corner steps. */
+function slEnd(m: MeshBuilder, e: number, x: number): void {
+  const out = (a: number, c: number): [number, number] => (e > 0 ? [x + a, x + c] : [x - c, x - a]);
+  m.scope("diaphragm", () => {
+    const ring: Pt[] = slRounded(-0.68, 0.68, 2.45, 4.82, 0.22).map(([z, y]) => [z, y]);
+    m.sweep("diaphragm", "x", ring, out(-0.02, 0.3)[0], ring, out(-0.02, 0.3)[1]);
+    const fx = e * (Math.abs(x) + 0.305);
+    m.facets("glass", [[fx, 4.0, -0.22], [fx, 4.0, 0.22], [fx, 4.52, 0.22], [fx, 4.0, -0.22], [fx, 4.52, 0.22], [fx, 4.52, -0.22]], [e, 0, 0]);
+    // the face plate's rubbing strips
+    for (const z of [-0.5, 0.5]) block(m, "slEnd", ...out(0.295, 0.315), 2.6, 4.6, z - 0.03, z + 0.03);
+  });
+  m.scope("collision posts", () => { for (const sd of [-1, 1]) block(m, "slEnd", ...out(-0.02, 0.07), 1.06, 4.78, ...side(sd, 0.7, 0.84)); });
+  // the grab iron on the end beside the diaphragm, toward the car's left as seen from the end
+  m.scope("end grab iron", () => {
+    const fx = e * (Math.abs(x) + 0.08);
+    m.rod("handrail", [fx, 2.45, -e * 0.95], [fx, 3.2, -e * 0.95], 0.016, 6);
+    for (const y of [2.45, 3.2]) m.rod("handrail", [e * (Math.abs(x) - 0.01), y, -e * 0.95], [fx, y, -e * 0.95], 0.012, 6, false);
+  });
+  m.scope("markers", () => faceLamps(m, e, Math.abs(x) + 0.01, [[-1.18, 3.4, 0.065, "slMarker"], [1.18, 3.4, 0.065, "slMarker"]]));
+  m.scope("end sill", () => {
+    block(m, "slEnd", ...out(-0.02, 0.12), 2.22, 2.43, -0.68, 0.68);
+    block(m, "slDark", ...out(-0.02, 0.1), 0.72, 1.05, -1.25, 1.25);
+    for (const z of [-0.35, 0.35]) block(m, "black", ...out(0.1, 0.16), 1.2, 1.36, z - 0.08, z + 0.08);
+  });
+  // the corner steps: the side carried down at each corner, the treads in a dark well
+  m.scope("corner steps", () => {
+    for (const sd of [-1, 1]) {
+      const zo = 1.53;
+      block(m, "slSilver", ...out(-0.62, -0.02), 0.34, SL_FLOOR + 0.02, ...side(sd, 1.12, zo));
+      block(m, "slDark", ...out(-0.5, -0.12), 0.38, 0.84, ...side(sd, zo - 0.002, zo + 0.004));
+      for (const y of [0.42, 0.58, 0.74]) block(m, "handrail", ...out(-0.5, -0.12), y, y + 0.025, ...side(sd, zo, zo + 0.012));
+    }
+  });
+}
 
 function drawSuperliner(m: MeshBuilder, u: SuperlinerUnit, X: (d: number) => number): void {
   const b = carbody({ ...SL_SPEC, edges: edgesOf({ bands: SL_BANDS } as CarbodyLivery, SL_SPEC.Y, SL_SPEC.S) });
-  const leaves: SliceDoorway[] = [1, -1].map((s) => ({ s, d0: SL_DOOR[0] + LEAF_INSET, d1: SL_DOOR[1] - LEAF_INSET, y0: SL_DOOR_Y[0] + LEAF_INSET, y1: SL_DOOR_Y[1] - LEAF_INSET }));
+  const lay = superlinerLayout(u);
+  const [dd0, dd1] = [slD(lay.door[1]), slD(lay.door[0])];
+  const leaves: SliceDoorway[] = [1, -1].map((s) => ({ s, d0: dd0 + LEAF_INSET, d1: dd1 - LEAF_INSET, y0: SL_DOOR_Y[0] + LEAF_INSET, y1: SL_DOOR_Y[1] - LEAF_INSET }));
   const cut = leaves.map((o) => ({ ...o, d0: o.d0 - 0.002, d1: o.d1 + 0.002, y0: o.y0 - 0.002, y1: o.y1 + 0.002 }));
-  const win = superlinerWindows(u);
+  const number = u === "coach" ? "34515" : "32038";
   m.scope("body", () => {
     m.scope("shell", () => carbodyShell(m, b, X, slPaint, cut));
-    for (const s of [1, -1])
+    m.scope("roof flutes", () => slRoofFlutes(m, b, X));
+    for (const s of [1, -1] as const)
       m.scope(s > 0 ? "right side" : "left side", () => {
-        m.scope("upper windows", () => win.upper.forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => sideWindow(m, b, X, s, a, e, SL_UPPER[0], SL_UPPER[1], "slDark", "glass"))));
-        m.scope("lower windows", () => win.lower.forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => sideWindow(m, b, X, s, a, e, SL_LOWER[0], SL_LOWER[1], "slDark", "glass"))));
-        m.scope("door", () => plugDoor(m, b, X, s, SL_DOOR[0], SL_DOOR[1], SL_BANDS, SL_DOOR_Y, [1.75, 2.3], "slDark"));
-        // the fluting of the lower body, broken by the door
-        m.scope("fluting", () => {
-          for (let y = 1.2; y < 2.55; y += 0.09)
-            for (const [a, e] of [[0.3, SL_DOOR[0] - 0.08], [SL_DOOR[1] + 0.08, SL_BODY - 0.3]] as const) {
-              const clear = win.lower.filter(([p, q]) => q > a && p < e && y > SL_LOWER[0] - 0.06 && y < SL_LOWER[1] + 0.06);
-              const spans: Array<[number, number]> = [];
-              let from = a;
-              for (const [p, q] of clear.sort((x, z) => x[0] - z[0])) { if (p - 0.05 > from) spans.push([from, p - 0.05]); from = q + 0.05; }
-              if (e > from) spans.push([from, e]);
-              for (const [p, q] of spans) stripDecal(m, b, X, s, "slDark", p, q, () => y, () => y + 0.018, 0.003, 1);
-            }
+        const sd = lay.sides[s];
+        m.scope("upper windows", () => sd.upper.forEach((w, i) => m.scope(`window ${i + 1}`, () => slWindow(m, b, X, s, w.u, SL_UPPER, w.mullion))));
+        m.scope("lower windows", () => sd.lower.forEach((w, i) => m.scope(`window ${i + 1}`, () => slWindow(m, b, X, s, w.u, SL_LOWER, w.mullion))));
+        m.scope("door", () => slDoor(m, b, X, s, lay.door));
+        // grab irons: beside the doorway and at each corner of the lower deck
+        m.scope("grab irons", () => {
+          const iron = (uu: number, y0: number, y1: number) => {
+            const d = slD(uu);
+            const z = (y: number) => s * (slHalf(b, d, y) + 0.06);
+            m.rod("handrail", [X(d), y0, z(y0)], [X(d), y1, z(y1)], 0.016, 6);
+            for (const y of [y0, y1]) m.rod("handrail", [X(d), y, s * (slHalf(b, d, y) - 0.01)], [X(d), y, z(y)], 0.012, 6, false);
+          };
+          iron(lay.door[0] - 0.09, 0.55, 2.0);
+          iron(lay.door[1] + 0.09, 0.55, 2.0);
+          for (const uu of [-12.42, 12.42]) iron(uu, 1.15, 2.25);
         });
-        m.scope("lettering", () => sideLettering(m, b, X, s, "AMTRAK", SL_DOOR[1] + 2.2, 2.25, 0.22, "slBlue", 0.012));
+        m.scope("ends", () => {
+          if (sd.grille) sideGrille(m, b, X, s, slD(sd.grille[1]), slD(sd.grille[0]), 1.1, 2.33);
+          if (sd.louvre) {
+            sidePanel(m, b, X, s, "grille", slD(sd.louvre[1]), slD(sd.louvre[0]), 1.1, 2.33, 0.006, 0.02);
+            for (let y = 1.16; y < 2.28; y += 0.075) sidePanel(m, b, X, s, "louvre", slD(sd.louvre[1] - 0.05), slD(sd.louvre[0] + 0.05), y, y + 0.03, 0.01, 0.004);
+          }
+          sd.lockers.forEach((l, i) => m.scope(`locker ${i + 1}`, () => {
+            slOutline(m, b, X, s, l, 1.08, 2.33);
+            sidePanel(m, b, X, s, "handrail", slD((l[0] + l[1]) / 2 + 0.25), slD((l[0] + l[1]) / 2 - 0.25), 2.0, 2.025, 0.03, 0.02);
+          }));
+        });
+        // the fluting: under the blue band along the lower deck, and the low floor's skirt under the red line
+        m.scope("fluting", () => {
+          const ends = [sd.grille, sd.louvre, ...sd.lockers].filter((g): g is Span => !!g);
+          const door: Span = [lay.door[0] - 0.02, lay.door[1] + 0.02];
+          slFlutes(m, b, X, s, 1.88, 2.34, 0.066, [[-12.45, 12.45]], [...ends, door]);
+          slFlutes(m, b, X, s, 0.33, 0.9, 0.066, [[SL_DROP[0] + 0.08, SL_DROP[1] - 0.08]], [door]);
+        });
+        m.scope("lettering", () => {
+          // the number over the stripes and the white "Superliner" in the blue band toward the right-hand end as seen
+          const r = s > 0 ? 1 : -1;
+          sideLettering(m, b, X, s, number, slD(r * 11.65), 2.86, 0.2, "slDark", 0.006);
+          sideLettering(m, b, X, s, "SUPERLINER", slD(r * 11.3), 2.45, 0.1, "slWhite", 0.006);
+          slTravelMark(m, b, X, s, lay.door[1] + 1.0, 1.32);
+        });
       });
-    const panes = [1, -1].flatMap((s) => [...win.upper.map(([a, e]) => ({ s, d0: a + 0.04, d1: e - 0.04, y0: SL_UPPER[0] + 0.04, y1: SL_UPPER[1] - 0.04 })), ...win.lower.map(([a, e]) => ({ s, d0: a + 0.04, d1: e - 0.04, y0: SL_LOWER[0] + 0.04, y1: SL_LOWER[1] - 0.04 }))]);
-    sliceCabin(m, b, X, 0, b.length, leaves, panes);
+    // the cabin behind the door: the lower deck over the low floor, with its windows
+    const [c0, c1] = [slD(SL_DROP[1]) + 0.2, slD(SL_DROP[0]) - 0.2];
+    const panes = [1, -1].flatMap((s) => lay.sides[s as 1 | -1].lower
+      .map(({ u: [a, e] }) => ({ s, d0: slD(e) + 0.05, d1: slD(a) - 0.05, y0: SL_LOWER[0] + 0.05, y1: SL_LOWER[1] - 0.05 }))
+      .filter((w) => w.d0 > c0 && w.d1 < c1));
+    sliceCabin(m, b, X, c0, c1, leaves, panes);
   });
   for (const e of [1, -1])
     m.scope(e > 0 ? "front end" : "rear end", () => {
       const x = X(e > 0 ? 0 : b.length);
-      endDiaphragm(m, e, x, 2.3, 4.3, 0.5);
+      slEnd(m, e, x);
       m.scope("coupler", () => knuckleCoupler(m, e, e * x - 0.3, e * x + SL_GAP, COUPLER_Y));
     });
   m.scope("running gear", () => {
@@ -2552,6 +2845,10 @@ function drawSuperliner(m: MeshBuilder, u: SuperlinerUnit, X: (d: number) => num
   });
 }
 
+const slBands = bandPainter(SL_BANDS, "slSilver", "slDark", "slSilver");
+/** The stripes stop at the corners: the end walls are plain stainless. */
+const slPaint: Painter = (d, y, region) => (region === "cap" ? (y < SL_FLOOR - 1e-6 ? "slDark" : "slSilver") : slBands(d, y, region));
+
 export function amtrakSuperliner(params?: ParamValues): MeshBuilder {
   const u = resolveParams(SUPERLINER_PARAMS, params).unit as SuperlinerUnit;
   const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...SL_PAL });
@@ -2561,14 +2858,21 @@ export function amtrakSuperliner(params?: ParamValues): MeshBuilder {
 
 export function amtrakSuperlinerLod(params?: ParamValues): MeshBuilder {
   const u = resolveParams(SUPERLINER_PARAMS, params).unit as SuperlinerUnit;
-  const b = carbody({ ...SL_SPEC, edges: [] });
+  // the body over the trucks' floor; the low floor's skirt between them a box of its own
+  const b = carbody({ ...SL_SPEC, B: SL_FLOOR, cuts: [], cutRadius: 0, edges: [] });
   const X = (d: number) => SUPERLINER_LENGTH / 2 - SL_GAP - d;
-  const bands: LodBand[] = [...lodBandsOf({ bands: SL_BANDS } as CarbodyLivery, SL_SPEC.B, SL_SPEC.S), [SL_SPEC.S, SL_SPEC.C, "slSilver"]];
-  const win = superlinerWindows(u);
-  const glass = [[win.upper[0]![0], win.upper[win.upper.length - 1]![1], SL_UPPER[0], SL_UPPER[1]] as const];
+  const bands: LodBand[] = [...lodBandsOf({ bands: SL_BANDS } as CarbodyLivery, SL_FLOOR, SL_SPEC.S), [SL_SPEC.S, SL_SPEC.C, "slSilver"]];
+  const lay = superlinerLayout(u);
+  const right = lay.sides[1].upper;
+  const glass = [[slD(right[right.length - 1]!.u[1]), slD(right[0]!.u[0]), SL_UPPER[0], SL_UPPER[1]] as const];
   const body = carbodyLodBody(b, X, bands, "slSilver", false, false, glass);
-  const parts = bogieParts([X(SL_BODY / 2 - SL_TRUCKS / 2), X(SL_BODY / 2 + SL_TRUCKS / 2)].map((x) => [x, 1.9] as const), SL_SPEC.B);
-  return fitUnit({ palette: { ...CARBODY_PALETTE, ...SL_PAL }, bodies: [body], parts }, 100);
+  const mid = b.length / 2;
+  // the flat roof: its corners rounded, the crown wide
+  const flat: UnitBody = { ...body, hw: [[SL_FLOOR, b.wa(mid)], [SL_SPEC.Y, b.w(mid)], [SL_SPEC.S, b.w(mid) * b.lean], [SL_SPEC.C - 0.12, 1.15], [SL_SPEC.C, 0.6]] };
+  const [x0, x1] = [X(slD(SL_DROP[1])), X(slD(SL_DROP[0]))];
+  const drop: LodPart = { draw: (mm) => mm.scope("low floor", () => block(mm, "slSilver", Math.min(x0, x1), Math.max(x0, x1), SL_SPEC.B, SL_FLOOR + 0.04, -SL_SPEC.wl, SL_SPEC.wl)) };
+  const parts = [...bogieParts([X(SL_BODY / 2 - SL_TRUCKS / 2), X(SL_BODY / 2 + SL_TRUCKS / 2)].map((x) => [x, 1.9] as const), SL_FLOOR), drop];
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...SL_PAL }, bodies: [flat], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------

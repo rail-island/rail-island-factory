@@ -40,6 +40,11 @@ export interface SliceBody {
    * crown (0, C) follows them. Default none: the quarter ellipse of `arc` segments.
    */
   arcProfile?: (d: number) => readonly Pt[];
+  /**
+   * The roof arc's superellipse exponent: 2 (the default) a quarter ellipse,
+   * larger a flatter roof with tighter corners (the Superliner's).
+   */
+  arcPower?: number;
   /** Where the slices stand, ascending from 0 to the length. */
   stations: number[];
 }
@@ -63,9 +68,12 @@ export function halfSlice(b: SliceBody, d: number): Pt[] {
     pts.push(...b.arcProfile(d).map((p): Pt => [p[0], p[1]]), [0, C]);
     return pts;
   }
+  const q = b.arcPower === undefined ? 0 : 2 / b.arcPower;
   for (let i = 1; i <= b.arc; i++) {
     const t = (i / b.arc) * (Math.PI / 2);
-    pts.push(i === b.arc ? [0, C] : [w * b.lean * Math.cos(t), S + (C - S) * Math.sin(t)]);
+    if (i === b.arc) pts.push([0, C]);
+    else if (q) pts.push([w * b.lean * Math.cos(t) ** q, S + (C - S) * Math.sin(t) ** q]);
+    else pts.push([w * b.lean * Math.cos(t), S + (C - S) * Math.sin(t)]);
   }
   return pts;
 }

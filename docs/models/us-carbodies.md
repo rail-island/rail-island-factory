@@ -13,7 +13,7 @@
 | `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 12,400 - 13,600 |
 | `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 13,800 |
 | `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 13,300 - 14,400 |
-| `proc-vehicle-amtrak-superliner` | Amtrak Superliner | `unit`: `coach`, `sleeper` | 25.91 m | 8,500 - 8,700 |
+| `proc-vehicle-amtrak-superliner` | Amtrak Superliner | `unit`: `coach`, `sleeper` | 25.91 m | 11,500 - 11,600 |
 | `proc-vehicle-amtrak-acela` | Acela Express | `unit`: `powerCar`, `businessClass`, `firstClass`, `cafe`, `train` (`cars` 3 - 8, default 4) | 21.22 m power car, 26.64 m coach | about 15,300 the power car, 6,800 - 7,200 a coach |
 
 All are drawn at their real size to the US loading gauge ([loading-gauge.md](loading-gauge.md)),
@@ -25,7 +25,8 @@ the GG1 an electric locomotive (`ELECTRIC_LOCO_CATALOG`), the Superliner a coach
 ## The carbody kit (`carbodyKit.ts`)
 
 A body is a `CarbodySpec`: the flat body's section (belly, shoulder, crown, the skirt and the
-lower body's foot, the side's lean) and, at either end, a `NoseShape`: a plan that rounds from
+lower body's foot, the side's lean; with `roofPower` the roof arc is a superellipse, flatter with
+tighter corners, instead of a quarter ellipse) and, at either end, a `NoseShape`: a plan that rounds from
 a blunt tip to the full width over `len` (a superellipse of `power`), and tables over d (metres
 from the tip) of the crown, shoulder, belly, skirt top and skirt bottom; past a table's last row
 the body's own value holds. A double-ended body (the GG1) has a nose at both ends; a flat end
@@ -132,13 +133,26 @@ nose along the surface's chord (`chordBox`).
   game's wire, the front one folded), and the running gear: on each half three 57 in drivers
   and the two-axle guiding truck under one frame, a bogie node each. The five gold
   pinstripes gather into the "cat whiskers" at both noses.
-- **Amtrak Superliner** - the bi-level long-distance car (built from the user's reference and
-  photographs): 85 ft long and 16 ft 2 in high, its fluted lower body (thin dark lines on the
-  stainless steel, broken by the door and the lower windows), the Phase IV stripes - a red
-  line low, two red lines over the blue band under the upper deck's windows - and the low centre
-  door on each side, a plug door opening onto the car's cabin (`plugDoor`, shared with the
-  Acela's coaches). The coach has 12 large upper windows a side and four on the lower deck,
-  the sleeper 14 smaller upper and six lower ones. Diaphragms at the upper deck's height.
+- **Amtrak Superliner** - the bi-level long-distance car, measured on photographs of coach 34515 and
+  a sleeper side-on, the end of coach 34122 and the ends of sleepers 32112 and 32038
+  (assets/amtrak-superliner/SOURCES.md has the measurements): 85 ft long and 16 ft 2 in high, the
+  nearly flat roof with rounded corners (`roofPower` 3.2) and its flutes, the slightly leaning sides,
+  the body ending 0.88 m over the trucks and its side carried down to 0.25 m over the low floor
+  between them (u -7.8 to 6.6 m from the middle, the drop-centre underframe), the corner steps at
+  the ends. Phase IVb paint: the red line under the lower windows, two red pinstripes over the blue
+  band (2.40 - 2.60 m) under the upper windows, "SUPERLINER" in the band and the number over it near
+  the right-hand end, the travel mark beside the door; the stainless end walls plain. The lower deck
+  fluted under the blue band and on the low floor's skirt. Windows with rounded corners, the wide
+  ones split by a mullion. The coach: 11 upper windows (1.62 m, 1.97 m pitch); below, a narrow
+  window and two pairs under the 3rd to 5th, the plug door 2.1 m on (its narrow window), the big
+  air-conditioning grille over the +X truck and six locker doors over the other. The sleeper: five
+  roomette windows, the stairwell's narrow window and five bedroom windows upstairs; downstairs
+  a narrow window and two pairs, the door, a small window and the grille. The left sides carry the
+  windows at the same places (the sleeper's corridor beside the bedrooms narrower windows, assumed)
+  and a narrow louvre with lockers at the end instead of the grille. The ends: the diaphragm's
+  black face plate over the upper deck with the end door's window, collision posts, red markers,
+  a grab iron, the end sill; grab irons beside the door and at the corners. The door opens onto
+  the lower deck's cabin over the low floor (`slDoor`).
 - **Acela Express** - matched against twelve photographs (assets/amtrak-acela/SOURCES.md). The
   power car's nose is a cab face (`ACELA_FACE`, seriesCab.ts) from the tip to the cab door (6.4 m),
   where the lofted body takes over: one convex curve from the cab roof - the long windscreen raked
@@ -175,12 +189,14 @@ Running numbers are illustrative, but for the GG1's preserved 4935 and 4800.
 
 ## Deviations
 
-- The trucks are the diesel toolkit's generic cast truck (the Acela's and the Charger's are
-  not modelled in detail); the Acela's tilt is not drawn. The pantographs' base and head are the
+- The trucks are the diesel toolkit's generic cast truck (the Acela's, the Charger's and the
+  Superliner's are not modelled in detail); the Acela's tilt is not drawn. The pantographs' base and head are the
   kit's grey (only the arms red); the acela logos and the cab roof's number are left out; the cafe car's window layout
   is not confirmed by a photograph.
 - The P42DC's front and rear offsets keep the model centred (the photo puts the trucks 0.17 m
   further back); its VIA logo, flags and the heritage unit's dates are not drawn.
+- The Superliner's left sides were not photographed side-on: their layout follows the right sides
+  and the sleeper's corridor windows are assumed. Places along the car are good to about 0.3 m.
 - The P42DC's and ALC-42's interiors and the Acela's cabins are not drawn. The F7 set's units
   are hinged as one articulated vehicle, not coupled loose.
 - The GG1's quill drive and its frames are simplified; its wheels have six spokes.
