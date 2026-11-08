@@ -32,7 +32,7 @@ All of it is a pure function of the design's code and data, so it is kept.
 
 | Path | What |
 |---|---|
-| `build-cache/facts/<id>.json` | a design's facts under its key, a file per design: triangles, `glbStats`, rig, side-view frame, rider seat, the JS bundle's switches (`BundleFlags`: rigged, surfaces, passenger hints, interior) and the extents measured for the legacy table and the OpenTTD formations, by parameter values |
+| `build-cache/facts/<id>.json` | a design's facts under its key, a file per design: triangles, `glbStats`, rig, side-view frame, rider seat, an aeroplane's boarding door, the JS bundle's switches (`BundleFlags`: rigged, surfaces, passenger hints, interior) and the extents measured for the legacy table and the OpenTTD formations, by parameter values |
 | `build-cache/thumbs/<id>.png` | a confirmed model's thumbnail (no draft's: the site draws those in the browser, [../site/workshop.md](../site/workshop.md)) |
 
 A design's facts are written only once it passed the checks, so a cached design
@@ -53,6 +53,9 @@ committed: they are rewritten from a build or kept in the export (below).
   thumbnail renderer, the JS bundler and its lean builder;
 - the design's own data - every field, a function by its name - which takes in
   what `generate.ts` puts on it (its procedural id, its OpenTTD block);
+- for an aeroplane, the text of `boardingDoor.ts`, the boarding door's measurement
+  ([../models/boarding-door.md](../models/boarding-door.md)) - an aeroplane's key only,
+  so changing it rebuilds no other design;
 - the settings the build reads beside it: its catalog fields, whether it is a
   vehicle and takes the side view, `THUMB_VERSION` and the thumbnail size, the
   coarse and Max detail caps, the esbuild version and `CACHE_VERSION`.

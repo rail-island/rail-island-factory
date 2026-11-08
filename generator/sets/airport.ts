@@ -3,8 +3,9 @@
 // helipads, the footprint -- and saves it in the map as positions that never move,
 // since aircraft are routed over them. This module owns what is DRAWN on such a saved
 // layout: the whole airfield (`airfield(layout, type, heading)`: the paved deck, the
-// runway paint and numbers, edge lights, taxiway lines, stop bars, jet bridges, the
-// helipads, the terminal, the name board and the perimeter fence), its far level
+// runway paint and numbers, edge lights, taxiway lines, stop bars, the helipads, the
+// terminal, the name board and the perimeter fence) with the jet bridges as parts the
+// game poses (`JetBridge`, `jetBridgeBoxes`), its far level
 // (`airfieldLowDetail`), and the heights a vehicle stands at on it (`APRON_SURFACE`,
 // `PAD_SURFACE`). A type decides the terminal on its pad (`terminal`), the props round
 // it -- the control tower and the windsock (generator/props/airportProps.ts), placed
@@ -340,8 +341,71 @@ export interface AirfieldLayout {
   footprint: AirfieldRect;
 }
 
-/** The airfield's boxes, and the perimeter fittings the far level never sees. */
-export interface Airfield { boxes: AirfieldBox[]; details: AirfieldBox[] }
+/**
+ * The airfield's boxes, the perimeter fittings the far level never sees, and the jet
+ * bridges the game poses (one per stand at an international hub; none elsewhere).
+ */
+export interface Airfield { boxes: AirfieldBox[]; details: AirfieldBox[]; bridges: JetBridge[] }
+
+/**
+ * Where a jet bridge stands (docs/models/airfield.md, "Jet bridges"): a pose of its
+ * moving parts. Angles are radians in the three.js sense about +Y (a yaw of 0 points
+ * along +X, PI/2 along -Z).
+ */
+export interface JetBridgePose {
+  /** The tunnel's heading, from the rotunda out. */
+  yaw: number;
+  /** In plan, from the rotunda's axis to the tunnel's end (the cab's rear), studs. */
+  length: number;
+  /** The cab floor's height over the airport origin, studs: the tunnel slopes to it. */
+  lift: number;
+  /** The cab's heading: the way its door face looks. It turns about the tunnel's end. */
+  cabYaw: number;
+}
+
+/**
+ * One stand's jet bridge, as the game poses it. The fixed link, the rotunda and its
+ * column are drawn in the field's `boxes`; the moving parts are here, each in its own
+ * frame (studs, Y up):
+ *
+ * - `outer`: the tunnel frame -- origin on the rotunda's axis at `floor`, +X along the
+ *   tunnel (pitched to the cab), the section from `radius` to `radius + BRIDGE_OUTER`.
+ * - `inner`: origin at the tunnel's end, the section reaching back along -X.
+ * - `cab`: origin at the tunnel's end at the cab floor, kept level, +X its door face.
+ * - `bogie`: origin on the apron under the tunnel, `bogieBack` short of its end, +X
+ *   along the tunnel in plan: the wheels.
+ * - `leg`: the bogie's column, ONE stud tall from y 0: the game stretches it from the
+ *   wheels (at `legBase`) up to the tunnel's underside.
+ *
+ * `rest` is the pose clear of every stand's traffic; `reach`, `lift` and `maxSlope`
+ * bound any other. A box's `lod: "shell"` is kept by the far level, which draws the
+ * bridge at rest.
+ */
+export interface JetBridge {
+  /** The stand it serves (AirfieldStand.id). */
+  stand: number;
+  /** The rotunda's axis, airport-local studs. */
+  pivot: { x: number; z: number };
+  /** The tunnel floor's height at the rotunda. */
+  floor: number;
+  /** The rotunda's radius: where the outer section starts. */
+  radius: number;
+  /** The shortest and longest `length`. */
+  reach: [number, number];
+  /** The lowest and highest cab floor. */
+  lift: [number, number];
+  /** The steepest slope of the tunnel, rise over run. */
+  maxSlope: number;
+  /** The cab's depth, rear to door face. */
+  cabDepth: number;
+  /** How far short of the tunnel's end the bogie stands, in plan. */
+  bogieBack: number;
+  /** Where the leg starts over the bogie frame's origin, and how far under the tunnel floor it ends. */
+  legBase: number;
+  legTop: number;
+  rest: JetBridgePose;
+  parts: { outer: AirfieldBox[]; inner: AirfieldBox[]; cab: AirfieldBox[]; bogie: AirfieldBox[]; leg: AirfieldBox[] };
+}
 
 // --- heights (studs, relative to the airport origin, which sits at apron level) ---
 // There is ONE deck. Runway, taxiways and stands are a single surface at a single
@@ -383,11 +447,33 @@ const TAXI_LINE_WIDTH = 2;
 const EDGE_LIGHT_SPACING = 40;
 const EDGE_LIGHT_SIZE = 1.2;
 const EDGE_LIGHT_HEIGHT = 1.4;
-// Enclosed passenger bridges at international gates.
-const BRIDGE_LENGTH = 28;
+// Enclosed passenger bridges at international gates (studs at furniture scale 1).
+/** The tunnel's cross-section: the outer section's; the inner one is a tenth smaller. */
 const BRIDGE_WIDTH = 4.5;
 const BRIDGE_HEIGHT = 4;
-const BRIDGE_LIFT = 6.5;
+/** The tunnel floor's height at the rotunda. */
+const BRIDGE_FLOOR = 5;
+/** The fixed link out of the glazing to the rotunda, and the rotunda's radius. */
+const BRIDGE_LINK = 5;
+const BRIDGE_ROTUNDA = 2.8;
+/**
+ * How far to the parked aircraft's left (-Z) of the stand's centreline the rotunda
+ * stands; never nearer than BRIDGE_OFFSET_MIN, so a small hub's bridge at rest still
+ * clears a fuselage (aircraft are not drawn at furniture scale).
+ */
+const BRIDGE_OFFSET = 10;
+const BRIDGE_OFFSET_MIN = 6.5;
+/** The two telescoping sections, and how much of the inner stays in the outer at full stretch. */
+const BRIDGE_OUTER = 11;
+const BRIDGE_INNER = 12;
+const BRIDGE_OVERLAP = 1;
+/** The cab, from its rear (where the tunnel ends) to its door face; the bogie behind the tunnel's end. */
+const BRIDGE_CAB = 3;
+const BRIDGE_BOGIE = 2.5;
+/** How low and how high the cab floor goes (absolute studs: aircraft are not drawn at furniture scale). */
+const BRIDGE_LIFT_RANGE: [number, number] = [2, 9];
+/** The steepest the tunnel may slope, rise over run. */
+const BRIDGE_MAX_SLOPE = 0.15;
 // Name board on the terminal frontage.
 const BOARD_WIDTH = 34;
 const BOARD_HEIGHT = 4.5;
@@ -626,6 +712,7 @@ export function airfield(layout: AirfieldLayout, type: string, heading: number =
   const paveColor = grass ? GRASS_STRIP : type === "regional" ? ASPHALT : CONCRETE;
   const paveMaterial: TerminalMaterial = grass ? "wood" : "platform";
   const scale = furnitureScale(layout);
+  const bridges: JetBridge[] = [];
 
   // --- the deck ---
   const standGap = minStandGap(layout);
@@ -768,7 +855,7 @@ export function airfield(layout: AirfieldLayout, type: string, heading: number =
       // the stop bar an aircraft noses up to, across the stand
       boxes.push(box(st.x + standPad / 2 - 3, paintY(), st.z, 1.4, PAINT_THICKNESS, standPad - 6, PAINT_YELLOW, "sign", { depthLayer: LAYER_PAINT }));
     }
-    if (type === "international") pushJetBridge(boxes, layout.building, st, scale);
+    if (type === "international") bridges.push(jetBridge(boxes, layout.building, st, scale));
   }
 
   // --- the service road's paint, floodlights and ground equipment ---
@@ -789,14 +876,54 @@ export function airfield(layout: AirfieldLayout, type: string, heading: number =
   if (!grass) pushHoldSigns(boxes, ground, layout, nodes);
   pushServiceArea(boxes, ground, layout, type, scale);
 
-  return { boxes, details: perimeter(layout, type, paved) };
+  return { boxes, details: perimeter(layout, type, paved), bridges };
 }
 
-/** The far level of an airfield's boxes: the deck's rectangles and the shell masses, glass made opaque. */
-export function airfieldLowDetail(boxes: readonly AirfieldBox[]): AirfieldBox[] {
+/**
+ * The far level of an airfield's boxes: the deck's rectangles and the shell masses,
+ * glass made opaque, and the jet bridges' shells at rest.
+ */
+export function airfieldLowDetail(boxes: readonly AirfieldBox[], bridges: readonly JetBridge[] = []): AirfieldBox[] {
   // the deck's rectangles, not its rounded corners: the far level stays as cheap as it was
-  return boxes.filter((b) => (b.depthLayer === 1 && !b.shape) || b.lod === "shell")
+  return [...boxes, ...bridges.flatMap((b) => jetBridgeBoxes(b, b.rest))]
+    .filter((b) => (b.depthLayer === 1 && !b.shape) || b.lod === "shell")
     .map((b) => b.material === "glass" ? { ...b, material: "roof", color: [132, 191, 211] } : b);
+}
+
+/**
+ * A jet bridge's moving parts drawn at `pose`, in airport-local studs: what the game's
+ * own transforms of the parts come to, for the far level and the site's previews.
+ */
+export function jetBridgeBoxes(bridge: JetBridge, pose: JetBridgePose): AirfieldBox[] {
+  const rise = pose.lift - bridge.floor;
+  const pitch = Math.atan2(rise, pose.length);
+  const slope = Math.hypot(pose.length, rise);
+  const cy = Math.cos(pose.yaw), sy = Math.sin(pose.yaw);
+  /** A point of a frame at (ox, oy, oz) turned `yaw` about Y and pitched `p` about its Z, into the airport. */
+  const place = (b: AirfieldBox, ox: number, oy: number, oz: number, yaw: number, p: number, stretch = 1): AirfieldBox => {
+    const lx = b.cx, ly = b.cy * stretch, lz = b.cz;
+    // pitch about Z (three.js sense: +X turns toward +Y), then yaw about Y
+    const px = lx * Math.cos(p) - ly * Math.sin(p);
+    const py = lx * Math.sin(p) + ly * Math.cos(p);
+    const c = Math.cos(yaw), s = Math.sin(yaw);
+    return {
+      ...b, cx: ox + px * c + lz * s, cy: oy + py, cz: oz - px * s + lz * c, sy: b.sy * stretch,
+      ...(p !== 0 ? { rotZ: p } : {}), ...(yaw !== 0 ? { rotY: yaw } : {}),
+    };
+  };
+  const { x: px, z: pz } = bridge.pivot;
+  const ex = px + pose.length * cy, ez = pz - pose.length * sy;
+  const bx = ex - bridge.bogieBack * cy, bz = ez + bridge.bogieBack * sy;
+  // the tunnel's underside over the bogie, and the leg stretched to it
+  const under = bridge.floor + rise * (pose.length - bridge.bogieBack) / pose.length - bridge.legTop;
+  const leg = Math.max(0.1, under - bridge.legBase);
+  return [
+    ...bridge.parts.outer.map((b) => place(b, px, bridge.floor, pz, pose.yaw, pitch)),
+    ...bridge.parts.inner.map((b) => place({ ...b, cx: b.cx + slope }, px, bridge.floor, pz, pose.yaw, pitch)),
+    ...bridge.parts.cab.map((b) => place(b, ex, pose.lift, ez, pose.cabYaw, 0)),
+    ...bridge.parts.bogie.map((b) => place(b, bx, 0, bz, pose.yaw, 0)),
+    ...bridge.parts.leg.map((b) => place({ ...b, cy: b.cy }, bx, bridge.legBase, bz, pose.yaw, 0, leg)),
+  ];
 }
 
 // A compact stencil vocabulary of flat paint rectangles, so the runway numbers stay
@@ -1101,51 +1228,77 @@ function pushPapi(boxes: TerminalBox[], ground: Ground, rw: AirfieldRunway): voi
 }
 
 /**
- * A jet bridge at an international stand: a fixed link out of the terminal's glazing
- * to a rotunda on its column, the telescoping tunnel swung toward the aircraft's front
- * left door (it parks nose-in, heading +X, so its left is -Z), and the cab on its
- * wheeled bogie.
+ * A jet bridge at an international stand (docs/models/airfield.md, "Jet bridges"): a
+ * fixed link out of the terminal's glazing to a rotunda on its column, drawn into
+ * `boxes`, and the parts the game poses -- the two telescoping tunnel sections, the cab
+ * and the bogie -- returned with their limits and the pose at rest. The rotunda stands
+ * to the parked aircraft's left (it parks nose-in, heading +X, so its left is -Z), so
+ * the tunnel reaches the forward left door from the side, never across the fuselage;
+ * at rest it lies short and straight back from the rotunda, clear of every airframe.
  */
-function pushJetBridge(boxes: TerminalBox[], b: TerminalPad, st: AirfieldStand, s: number): void {
+function jetBridge(boxes: TerminalBox[], b: TerminalPad, st: AirfieldStand, s: number): JetBridge {
   const front = b.cx - b.w / 2;
-  const y = (BRIDGE_LIFT + BRIDGE_HEIGHT / 2) * s;
+  const floor = BRIDGE_FLOOR * s;
   const height = BRIDGE_HEIGHT * s, width = BRIDGE_WIDTH * s;
-  const link = 7 * s;
-  boxes.push(box(front - link / 2 + 0.1, y, st.z, link + 0.2, height * 0.9, width * 0.9, STEEL_GREY, "roof"));
-  const rx = front - link - 2 * s;
-  boxes.push({ cx: rx, cy: y, cz: st.z, sx: 5.6 * s, sy: height * 1.15, sz: 5.6 * s, color: [200, 204, 206], material: "steel", shape: "cylinder", sides: 10 });
-  boxes.push(standing(rx, 0, st.z, 1.4 * s, y - height * 0.55, 1.4 * s, STEEL_GREY, "column"));
-  // the tunnel, from the rotunda to the cab
-  const ex = front - BRIDGE_LENGTH * s, ez = st.z - 3.5 * s;
-  const dx = ex - rx, dz = ez - st.z;
-  const len = Math.hypot(dx, dz);
-  const rotY = Math.atan2(dz, -dx);
-  const mx = (rx + ex) / 2, mz = (st.z + ez) / 2;
-  /** A point `along` from the tunnel's middle toward the rotunda and `across` to its left (-Z side when straight). */
-  const off = (along: number, across: number): [number, number] => [
-    mx + along * Math.cos(rotY) + across * Math.sin(rotY),
-    mz - along * Math.sin(rotY) + across * Math.cos(rotY),
-  ];
-  boxes.push(box(mx, y, mz, len, height, width, STEEL_GREY, "steel", { lod: "shell", rotY }));
-  const [gx, gz] = off(0, -width / 2 - 0.05);
-  boxes.push(box(gx, y + 0.3 * s, gz, len * 0.9, 1.8 * s, 0.2 * s, [132, 191, 211], "glass", { rotY }));
-  boxes.push(box(mx, y + height / 2 + 0.3 * s, mz, len + s, 0.7 * s, width + 0.5 * s, [236, 231, 214], "roof", { rotY }));
-  // the cab at the door, with its bellows
-  const [cx, cz] = off(-len / 2, 0);
-  boxes.push(box(cx, y - 0.1 * s, cz, 3 * s, height * 1.2, width * 1.2, [38, 49, 57], "roof", { lod: "shell", rotY }));
-  // the bogie a little behind the cab
-  const [bx, bz] = off(-len / 2 + 2.5 * s, 0);
-  boxes.push(standing(bx, 0, bz, 1.2 * s, y - height / 2 + 0.2, 3.6 * s, STEEL_GREY, "column", { lod: "shell", rotY }));
-  for (const side of [-1, 1]) {
-    const [wx, wz] = off(-len / 2 + 2.5 * s, side * 2 * s);
-    boxes.push(box(wx, 1.1 * s, wz, 2.1 * s, 1.7 * s, 0.9 * s, TYRE, "roof", { rotY }));
-  }
+  const radius = BRIDGE_ROTUNDA * s;
+  const link = BRIDGE_LINK * s;
+  const px = front - link - radius, pz = st.z - Math.max(BRIDGE_OFFSET_MIN, BRIDGE_OFFSET * s);
+  const mid = floor + height / 2;
+  // the fixed link, the rotunda and its column: static, merged with the field
+  boxes.push(box(front - (link + radius * 0.5) / 2 + 0.1, mid, pz, link + radius * 0.5 + 0.2, height * 0.9, width * 0.9, STEEL_GREY, "roof"));
+  boxes.push({ cx: px, cy: mid, cz: pz, sx: 2 * radius, sy: height * 1.15, sz: 2 * radius, color: [200, 204, 206], material: "steel", shape: "cylinder", sides: 10 });
+  boxes.push(standing(px, 0, pz, 1.4 * s, mid - height * 0.55, 1.4 * s, STEEL_GREY, "column"));
+
+  /**
+   * A tunnel section from x0 to x1 in its frame: the body, its glazing on the -Z side,
+   * its roof. The far level keeps the outer body only: at rest the inner one is inside it.
+   */
+  const section = (x0: number, x1: number, k: number): TerminalBox[] => {
+    const len = x1 - x0, cx = (x0 + x1) / 2, h = height * k, w = width * k;
+    return [
+      box(cx, h / 2, 0, len, h, w, STEEL_GREY, "steel", k === 1 ? { lod: "shell" } : {}),
+      box(cx, h / 2 + 0.3 * s, -w / 2 - 0.05, len * 0.9, 1.8 * s * k, 0.2 * s, [132, 191, 211], "glass"),
+      box(cx, h + 0.3 * s, 0, len + 0.5 * s, 0.6 * s, w + 0.5 * s, [236, 231, 214], "roof"),
+    ];
+  };
+  const outerLen = BRIDGE_OUTER * s, innerLen = BRIDGE_INNER * s, cab = BRIDGE_CAB * s;
+  const legTop = 0.2 * s, legBase = PAVE_TOP + 1.6 * s;
+  return {
+    stand: st.id,
+    pivot: { x: px, z: pz },
+    floor,
+    radius,
+    reach: [radius + outerLen, radius + outerLen + innerLen - BRIDGE_OVERLAP * s],
+    lift: [...BRIDGE_LIFT_RANGE],
+    maxSlope: BRIDGE_MAX_SLOPE,
+    cabDepth: cab,
+    bogieBack: BRIDGE_BOGIE * s,
+    legBase,
+    legTop,
+    // short and straight back from the rotunda, level, the cab looking along it
+    rest: { yaw: Math.PI, length: radius + outerLen, lift: floor, cabYaw: Math.PI },
+    parts: {
+      outer: section(radius, radius + outerLen, 1),
+      inner: section(-innerLen, 0, 0.9),
+      // the cab, a little bigger than the tunnel, and its bellows round the door face
+      cab: [
+        box(cab / 2, height * 0.6 - 0.3 * s, 0, cab, height * 1.2, width * 1.2, [38, 49, 57], "roof", { lod: "shell" }),
+        box(cab + 0.25 * s, height * 0.55 - 0.3 * s, 0, 0.5 * s, height * 1.05, width * 1.05, [70, 76, 80], "roof"),
+      ],
+      // two wheels either side of the bogie's beam, on the apron
+      bogie: [
+        box(0, PAVE_TOP + 1.3 * s, 0, 1.2 * s, 0.6 * s, 4.6 * s, STEEL_GREY, "steel"),
+        ...[-1, 1].map((side) => box(0, PAVE_TOP + 0.85 * s - SEAT / 2, side * 2 * s, 2.1 * s, 1.7 * s + SEAT, 0.9 * s, TYRE, "roof")),
+      ],
+      leg: [box(0, 0.5, 0, 1.2 * s, 1, 1.2 * s, STEEL_GREY, "column", { lod: "shell" })],
+    },
+  };
 }
 
 /**
  * The service road's paint (an edge line on the stands' side, a dashed centre line),
- * floodlight masts between the stands near the terminal and a parked ground vehicle in
- * each of those gaps on the stands' side: a baggage train, a fuel bowser or a belt loader.
+ * floodlight masts between the stands near the terminal and, in turn, a baggage train,
+ * nothing (only the mast) or a belt loader parked in those gaps on the stands' side.
  */
 function pushApronService(boxes: TerminalBox[], layout: AirfieldLayout, strip: DeckRect, s: number, type: string): void {
   const width = strip.x1 - strip.x0;
@@ -1175,16 +1328,17 @@ function pushApronService(boxes: TerminalBox[], layout: AirfieldLayout, strip: D
     boxes.push({ cx: mx, cy: top + 0.3 + mast / 2, cz: gz, sx: 0.7 * s, sy: mast, sz: 0.7 * s, color: STEEL_GREY, material: "steel", shape: "cylinder", sides: 8 });
     boxes.push(box(mx, top + mast + 0.4 * s, gz, 1.1 * s, 1.2 * s, 4 * s, STEEL_GREY, "steel"));
     for (const dz of [-1.3, 0, 1.3]) boxes.push(box(mx - 0.6 * s, top + mast + 0.4 * s, gz + dz * s, 0.2, 0.8 * s, 1.1 * s, LAMP_GLOW, "sign"));
-    // a ground vehicle on the stands' side of the road
-    if (width >= 9) pushGroundVehicle(boxes, strip.x0 + 2 + 1.3 * s, top, gz, s, kind++ % 3);
+    // a ground vehicle on the stands' side of the road, every third gap left to its mast
+    const slot = kind++ % 3;
+    if (width >= 9 && slot !== 1) pushGroundVehicle(boxes, strip.x0 + 2 + 1.3 * s, top, gz, s, slot === 0 ? "baggage" : "loader");
   }
 }
 
-/** One parked ground vehicle, its length along Z, standing on `top`: 0 a baggage train, 1 a fuel bowser, 2 a belt loader. */
-function pushGroundVehicle(boxes: TerminalBox[], x: number, top: number, z: number, s: number, kind: number): void {
+/** One parked ground vehicle, its length along Z, standing on `top`: a baggage train or a belt loader. */
+function pushGroundVehicle(boxes: TerminalBox[], x: number, top: number, z: number, s: number, kind: "baggage" | "loader"): void {
   const k = Math.max(0.7, s);
   const axle = (az: number, w: number): void => { boxes.push(box(x, top + 0.4 * k, az, w + 0.3 * k, 0.9 * k, 0.9 * k, TYRE, "roof")); };
-  if (kind === 0) {
+  if (kind === "baggage") {
     // the tractor and two baggage carts behind it
     const tz = z - 4.6 * k;
     boxes.push(standing(x, top + 0.5 * k, tz, 1.7 * k, 0.9 * k, 2.6 * k, GSE_YELLOW, "steel"));
@@ -1197,15 +1351,6 @@ function pushGroundVehicle(boxes: TerminalBox[], x: number, top: number, z: numb
       boxes.push(box(x, top + 2.35 * k, cz, 1.9 * k, 0.12 * k, 2.7 * k, GSE_WHITE, "roof"));
       axle(cz, 1.8 * k);
     }
-    return;
-  }
-  if (kind === 1) {
-    // a fuel bowser: cab, chassis and a round tank along it
-    boxes.push(standing(x, top + 0.6 * k, z - 3.4 * k, 2.2 * k, 2 * k, 1.8 * k, GSE_WHITE, "steel"));
-    boxes.push(box(x, top + 1.9 * k, z - 4.33 * k, 1.9 * k, 0.8 * k, 0.1 * k, [132, 191, 211], "glass"));
-    boxes.push(box(x, top + 0.9 * k, z + 0.8 * k, 2 * k, 0.4 * k, 6.6 * k, [70, 76, 80], "steel"));
-    boxes.push({ cx: x, cy: top + 2.1 * k, cz: z + 0.9 * k, sx: 2.2 * k, sy: 6 * k, sz: 2 * k, color: [205, 208, 204], material: "steel", shape: "cylinder", sides: 10, rotX: Math.PI / 2 });
-    for (const az of [z - 3.4 * k, z + 1.2 * k, z + 3.2 * k]) axle(az, 2 * k);
     return;
   }
   // a belt loader: low chassis, a cab at the side and its conveyor raised toward the hold

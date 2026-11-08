@@ -52,6 +52,7 @@ import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
 import { glbSideFrame, readTriangles, renderGlbSideThumb, renderGlbThumb, type SideFrame } from "./renderGlbThumb.ts";
 import { gameYaw, riderSeat } from "./riderSeat.ts";
+import { boardingDoor } from "./boardingDoor.ts";
 import type { Vec3 } from "./glbTriangles.ts";
 import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLES, VEHICLE_CATALOG } from "./vehicles.ts";
@@ -180,7 +181,7 @@ import { OPENTTD_TABLE } from "./openttdTable.ts";
 import { isDraft, unknownCatalogIds } from "./workshop.ts";
 import { linkTableProblems } from "./linkTable.ts";
 import { JS_DIR, bundleDesign, bundleFlags, gzipSize, writeIfChanged, type BundleFlags } from "./jsModel.ts";
-import { BUILD_CACHE_DIR, BuildCache, SourceGraph, designKey, readExportKeys, writeExportKeys } from "./buildCache.ts";
+import { BOARDING_DOOR_SOURCE, BUILD_CACHE_DIR, BuildCache, SourceGraph, designKey, readExportKeys, writeExportKeys } from "./buildCache.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
   CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta,
@@ -455,6 +456,17 @@ export function vehicleSeat(design: ProceduralDesign, bytes: Uint8Array): Vec3 {
   return riderSeat(readTriangles(bytes), gameYaw(fields.category, fields.yaw));
 }
 
+/** Whether the build measures a design's boarding door: an aircraft that is not a helicopter (docs/models/boarding-door.md). */
+export function measuresDoor(design: ProceduralDesign): boolean {
+  return catalogFields(design).category === "Aircraft" && design.game?.aircraftKind !== "helicopter";
+}
+
+/** An aeroplane's boarding door, measured on its built model (boardingDoor.ts) in the yaw the game turns it by. */
+export function aircraftDoor(design: ProceduralDesign, bytes: Uint8Array): Vec3 | null {
+  const fields = catalogFields(design);
+  return boardingDoor(readTriangles(bytes), gameYaw(fields.category, fields.yaw));
+}
+
 /** Whether the build draws a design's thumbnail in the side view (a road or rail vehicle). */
 export function designUsesSideView(id: string): boolean {
   const design = DESIGNS.get(id);
@@ -571,6 +583,8 @@ export interface GeneratedModel {
   side: SideFrame | null;
   /** A vehicle's rider seat (riderSeat.ts) in the model's frame, metres; null for anything else. */
   seat: Vec3 | null;
+  /** An aeroplane's boarding door (boardingDoor.ts) in the model's frame, metres; null for anything else or a model without one. */
+  door: Vec3 | null;
   /** What the JS bundle needs of the built models (jsModel.ts). */
   bundle: BundleFlags;
   /** True when the design was built and checked afresh: its inputs changed (or its cache entry is missing). */
@@ -583,9 +597,11 @@ export function cacheDirFor(dir: string): string {
 }
 
 /** Everything besides its source files the build of a design reads: part of its cache key. */
-function keySettings(design: ProceduralDesign): unknown {
+function keySettings(design: ProceduralDesign, graph: SourceGraph): unknown {
   const fields = catalogFields(design);
   return {
+    // an aeroplane's facts carry its boarding door, so its key reads the measurement too
+    ...(measuresDoor(design) ? { door: graph.hash([BOARDING_DOOR_SOURCE]) } : {}),
     fields,
     vehicle: VEHICLE_IDS.has(design.id),
     side: isSideViewCategory(fields.category),
@@ -596,7 +612,7 @@ function keySettings(design: ProceduralDesign): unknown {
 
 /** Every design's build-cache key, by id (null for one with no source module). */
 export function designKeys(designs: readonly ProceduralDesign[], graph = new SourceGraph()): Map<string, string | null> {
-  return new Map(designs.map((d) => [d.id, designKey(graph, d, DESIGN_SOURCE.get(d.id), keySettings(d))] as const));
+  return new Map(designs.map((d) => [d.id, designKey(graph, d, DESIGN_SOURCE.get(d.id), keySettings(d, graph))] as const));
 }
 
 /** Copies `from` to `to` unless `to` already holds the same bytes. */
@@ -660,6 +676,7 @@ export function generateModels(
         rig: b!.rig,
         side: sideView ? glbSideFrame(b!.bytes) : null,
         seat: VEHICLE_IDS.has(design.id) ? vehicleSeat(design, b!.bytes) : null,
+        door: measuresDoor(design) ? aircraftDoor(design, b!.bytes) : null,
         bundle: bundleFlags(design, posable(b!.rig)),
         extents: {},
       };
@@ -681,7 +698,7 @@ export function generateModels(
       if (text !== undefined) writeIfChanged(tree, text);
       if (key !== null) treeKeys.set(design.id, key);
     }
-    out.push({ id: design.id, key, thumb, tree, triangles: facts.triangles, stats: facts.stats, rig: facts.rig, side: facts.side, seat: facts.seat, bundle: facts.bundle, changed });
+    out.push({ id: design.id, key, thumb, tree, triangles: facts.triangles, stats: facts.stats, rig: facts.rig, side: facts.side, seat: facts.seat, door: facts.door ?? null, bundle: facts.bundle, changed });
   }
   writeExportKeys(dir, "tree", treeKeys);
   cache.save(new Set(designs.map((d) => d.id)), withThumb);
@@ -829,7 +846,8 @@ export async function buildExport(
   const rigs = new Map(models.flatMap((m) => (m.rig ? [[m.id, m.rig] as const] : [])));
   const sides = new Map(models.flatMap((m) => (m.side ? [[m.id, m.side] as const] : [])));
   const seats = new Map(models.flatMap((m) => (m.seat ? [[m.id, m.seat] as const] : [])));
-  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides, seats), null, 2)}\n`);
+  const doors = new Map(models.flatMap((m) => (m.door ? [[m.id, m.door] as const] : [])));
+  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides, seats, doors), null, 2)}\n`);
   const bounds = new Map(models.map((m) => [m.id, { min: m.stats.min, max: m.stats.max }] as const));
   fs.writeFileSync(path.join(dir, PROPS_META_FILE), `${JSON.stringify(exportPropMeta(chosen(PROP_DESIGNS), bounds, FAR_PROPS), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, CHARACTERS_META_FILE), `${JSON.stringify(exportCharacterMeta(chosen(CHARACTER_DESIGNS), bounds), null, 2)}\n`);
@@ -865,7 +883,7 @@ export async function buildExport(
     records: designs.map((design) => {
       const built = models.find((m) => m.id === design.id)!;
       const jsText = js.get(design.id)!;
-      const record = catalogRecord(listedEntry(metaEntry(design, catalogFields(design), built.rig, built.side, built.seat), design, BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design)), {
+      const record = catalogRecord(listedEntry(metaEntry(design, catalogFields(design), built.rig, built.side, built.seat, built.door), design, BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design)), {
         ...built.stats,
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),

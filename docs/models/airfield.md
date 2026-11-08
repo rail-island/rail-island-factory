@@ -10,7 +10,7 @@ pins draw on, and what stays in the game.
 `deckFillets`, `runwayNumber`, `APRON_SURFACE`, `PAD_SURFACE`, `TYPE_META`, `terminal`,
 `furniture`, `helipad`), `generator/sets/airfieldFixtures.ts`, `generator/previews/structures.ts`
 (`airportSketch`), `generator/sets/pinCases.ts`, `test/airfield.test.ts`, `.agents/skills/airport/`
-**See also** - [sets.md](sets.md), [previews.md](previews.md), [props.md](props.md) (the
+**See also** - [sets.md](sets.md), [previews.md](previews.md), [boarding-door.md](boarding-door.md) (where a bridge docks), [props.md](props.md) (the
 tower and windsock props), [surfaces.md](surfaces.md) (the `airport-*` pavements), the
 game's `docs/gameplay/aircraft.md`, the spec `../specs/2026-11-06-airfield-drawn-by-factory.md`
 
@@ -24,7 +24,7 @@ between the two repositories, and it does not change under the module's feet.
 
 | The module draws (this repository) | The game keeps |
 |---|---|
-| the paved deck with its rounded inside corners and the apron's service road, the runway paint and stencilled numbers, a grass strip's mown edges, the runway edge lights, the taxiway guide lines and their turns, holding points with their signs, the PAPIs, stop bars, the international type's jet bridges, floodlight masts and parked ground vehicles, the helipads, the terminal, the name board, the service area (hangar, fire station, fuel farm), the perimeter fence and its service gate, a grass field's markers, tufts and crates; the far level; the heights a vehicle stands at; each type's pavement surface | the layout solver, the taxi graph and the aircraft and helicopter sims; saving, validating and version-checking a layout (a layout from a newer build is drawn as a grass field); the world poses; binding the surface photos and tints; flashing the edge lights; the radar's turn and the windsock's swing; painting the airport's name on the `label` box; placing the tower and windsock props; the structure LOD layer |
+| the paved deck with its rounded inside corners and the apron's service road, the runway paint and stencilled numbers, a grass strip's mown edges, the runway edge lights, the taxiway guide lines and their turns, holding points with their signs, the PAPIs, stop bars, the international type's jet bridges (their parts, limits and rest pose), floodlight masts and parked ground vehicles, the helipads, the terminal, the name board, the service area (hangar, fire station, fuel farm), the perimeter fence and its service gate, a grass field's markers, tufts and crates; the far level; the heights a vehicle stands at; each type's pavement surface | the layout solver, the taxi graph and the aircraft and helicopter sims; saving, validating and version-checking a layout (a layout from a newer build is drawn as a grass field); the world poses; binding the surface photos and tints; flashing the edge lights; the radar's turn and the windsock's swing; posing the jet bridges to a parked aircraft's door; painting the airport's name on the `label` box; placing the tower and windsock props; the structure LOD layer |
 
 ## `airfield(layout, type, heading)`
 
@@ -36,10 +36,12 @@ which the game's typecheck proves on every import through `airport.d.ts`. `type`
 known type id (the game resolves a stored one first). `heading` is the airport's rotation
 in degrees, which is literally its runway heading; only the runway numbers read it.
 
-It returns `{ boxes, details }`:
+It returns `{ boxes, details, bridges }`:
 
 - `boxes` - the field: the game builds them into its merged meshes and its far level.
 - `details` - the perimeter fittings, never part of the far level.
+- `bridges` - the jet bridges' moving parts, which the game poses (below); none but at an
+  international hub.
 
 Every shape a saved map holds must draw: several runways (a layout from when several were
 buildable), no `pads` (from before helipads), no runways at all (a heliport). Every edge
@@ -90,10 +92,40 @@ are `sign` in a lamp colour: only `light` flashes.
 At each gap between the stands (and beyond the outer two) the service road carries a
 **floodlight mast** (a round pole on a plinth, a head of three lamps) by the terminal and a
 parked **ground vehicle** on the stands' side, in turn a baggage train (a tractor and two
-carts), a fuel bowser and a belt loader. An international stand's **jet bridge** runs a
-fixed link out of the glazing to a round rotunda on its column, then a telescoping tunnel
-turned in plan (`rotY`) toward the parked aircraft's front left door, to the cab on its
-wheeled bogie; the tunnel and the cab are the shell the far level keeps.
+carts), nothing (the gap keeps only its mast) and a belt loader. There is no fuel bowser
+on the apron; the fuel farm stands in the service area.
+
+### Jet bridges
+
+Every stand of an international hub has a **jet bridge** the game docks to the parked
+aircraft's forward left door ([boarding-door.md](boarding-door.md)) and pulls back before it
+leaves. The drawing is split by what moves:
+
+- in `boxes`, static: the **fixed link** out of the terminal's glazing and the **rotunda**
+  on its column. The rotunda stands short of the frontage and to the parked aircraft's
+  left (it parks nose-in heading +X, so its left is -Z): 10 studs at furniture scale 1,
+  never nearer than 6.5, so the tunnel reaches the door from the side and never crosses
+  the fuselage.
+- in `bridges` (`JetBridge`), per stand: the moving parts, each in its own frame - the
+  **outer** tunnel section (the tunnel frame: the rotunda's axis at the tunnel `floor`,
+  +X out along the tunnel, pitched to the cab), the narrower **inner** section that
+  telescopes out of it (origin at the tunnel's end), the level **cab** with its bellows
+  (origin at the tunnel's end, +X its door face; it turns about there), the **bogie**'s
+  wheels on the apron under the tunnel `bogieBack` short of its end, and its **leg**, one
+  stud tall, which the game stretches from the wheels (`legBase`) to the tunnel's underside
+  (`legTop` under the floor). With them, the limits a pose keeps to: `reach` (the tunnel's
+  length in plan, rotunda axis to the cab's rear: the outer section alone to both sections
+  less a stud of overlap), `lift` (the cab floor, 2 to 9 studs whatever the furniture
+  scale, since aircraft are not drawn at it), `maxSlope` (0.15), and the pose at **rest**.
+
+A pose (`JetBridgePose`) is the tunnel's `yaw` (radians about +Y, three.js sense), its
+`length`, the cab floor's `lift` and the cab's `cabYaw`. At **rest** the tunnel lies short
+(the outer section only), level and straight back from the rotunda (`yaw` PI), the cab
+looking along it: clear of every stand's fuselage and of the terminal
+(`test/airfield.test.ts`). `jetBridgeBoxes(bridge, pose)` draws the parts at a pose in
+airport-local boxes, as the game's own transforms place them: the site's previews draw
+the bridges at rest with it, and so does the far level, whose shell is the outer
+tunnel section, the cab and the leg, as before the bridges moved. The tunnel's glazing is unchanged.
 
 The **service area** stands on the open grass (`Ground`: inside the fence's reach, 10 studs
 off the pavement, 20 off a runway, off the terminal, the pads, the service gate's approach
@@ -159,15 +191,15 @@ bounds it from outside.
 
 ## The far level
 
-`airfieldLowDetail(boxes)` keeps the deck's rectangles (not its rounded corners) and the
-`shell` boxes and makes glass opaque. The site's low-detail preview uses it, so it shows
+`airfieldLowDetail(boxes, bridges)` keeps the deck's rectangles (not its rounded corners)
+and the `shell` boxes - the jet bridges' at rest among them - and makes glass opaque. The site's low-detail preview uses it, so it shows
 what the game draws at distance. New detail stays near-only, so a distant airport costs
 what it did.
 
 ## Triangle budgets
 
-The whole airport as the game draws it - the field, the perimeter details and the control
-tower prop - counted with `stationTriangles` (`test/airfield.test.ts`):
+The whole airport as the game draws it - the field, the perimeter details, the jet bridges
+at rest and the control tower prop - counted with `stationTriangles` (`test/airfield.test.ts`):
 
 | Type | small | medium | big |
 |---|---:|---:|---:|
@@ -207,7 +239,9 @@ drawing moved here, so the move was proven 1:1.
 taxiway and stand paved, `pavementDeck` tiling a union exactly, the fillets (off the
 pavement, at a corner, never overlapping), the corner turns and the holding points with
 their signs, paint and lights on the paved types only, the runway numbers and their
-reciprocals, one name board, a jet bridge per stand at an international hub only, the
+reciprocals, one name board, a jet bridge per stand at an international hub only (its
+rotunda to the aircraft's left, its parts in their own frames, at rest clear of every
+fuselage and the terminal, a pose ending where it says with its leg reaching the tunnel), the
 helipads where the layout put them, the service area clear of the pavement, the fence
 (one pane per run, the barbed wire, the barrier; timber on grass) on the footprint, the
 far level, no shared visible plane (helipads included), the triangle budgets, and

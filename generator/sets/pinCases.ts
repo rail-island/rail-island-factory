@@ -166,7 +166,7 @@ export function setPinCases(): Record<string, PinCase[]> {
         build: () => {
           const type = name.split(".")[0]!;
           const field = airport.airfield(layout, type, 20);
-          return { ...field, low: airport.airfieldLowDetail(field.boxes) };
+          return { ...field, low: airport.airfieldLowDetail(field.boxes, field.bridges) };
         },
       })),
     ],
