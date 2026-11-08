@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 13,350 - 13,850 |
 | `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 6,900 - 7,300 |
-| `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 9,200 |
+| `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 9,300 |
 
 All on the US loading gauge ([loading-gauge.md](loading-gauge.md)): the RDC is a
 diesel unit (group `unit`), the subway cars electric metro cars (`METRO_CATALOG`), the R160's
@@ -69,7 +69,7 @@ trucks a Jacobs bogie replaces.
   two big rounded windscreens (the operator's wider) with a slot and bar under each and a parked wiper,
   the end door with its window in a raised frame, grab posts and the safety chains, the LED destination
   sign over it, four marker lamps a side in the roof line (white, blue, amber, red outward), head and
-  tail lamps, the number on the door, the anticlimber. The other end is the plain end the car couples
+  tail lamps, the number on the door, the anticlimber, the crew's stirrup steps under the corners. The other end is the plain end the car couples
   to its mate with: the end door with a tall window, grab posts, chains and curved grab handles by the
   corners. The two sides differ: behind the cab window (a tall framed window with its sash) the left
   side has a wide framed window, the right side a narrow dark one and a slot; each side then has two

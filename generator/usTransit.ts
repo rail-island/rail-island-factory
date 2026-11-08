@@ -838,8 +838,8 @@ function ctaTruck(m: MeshBuilder, xc: number, out: number): void {
       const axle = ngon(8, 0.075, 0, x, ay);
       m.sweep("steel", "z", axle, -0.9, axle, 0.9);
       for (const s of [-1, 1]) {
-        extrude(m, "steel", "z", ngon(20, R, Math.PI / 20, x, ay), side(s, 0.665, 0.79));
-        extrude(m, "wheel", "z", ngon(14, R * 0.8, 0, x, ay), side(s, 0.79, 0.81));
+        extrude(m, "wheel", "z", ngon(20, R, Math.PI / 20, x, ay), side(s, 0.665, 0.79));
+        extrude(m, "bogie", "z", ngon(14, R * 0.8, 0, x, ay), side(s, 0.79, 0.81));
         m.scope("axle box", () => extrude(m, "bogie", "z", ngon(10, 0.12, 0, x, ay), side(s, 0.81, 0.98)));
         m.scope("brake disc", () => extrude(m, "steel", "z", ngon(14, 0.24, 0, x, ay), side(s, 0.36, 0.41)));
       }
@@ -948,6 +948,15 @@ function ctaCabFace(m: MeshBuilder, face: number): void {
     }
   });
   m.scope("number", () => endText(m, "black", CTA_NUMBER, e, face + 0.006, 0, 1.6, 0.12));
+  // the crew's stirrup steps under the side sills by the corners (Fullerton)
+  m.scope("corner steps", () => {
+    for (const s of [-1, 1]) {
+      const P = (dx: number, y: number): Vec3 => [face - dx, y, s * 1.33];
+      m.rod("handrail", P(0.12, 0.86), P(0.14, 0.42), 0.014, 6);
+      m.rod("handrail", P(0.14, 0.42), P(0.42, 0.42), 0.014, 6);
+      m.rod("handrail", P(0.42, 0.42), P(0.44, 0.86), 0.014, 6);
+    }
+  });
 }
 
 /** The plain #2 end at |x| = face (-X): the end door with its window and grab irons, the anticlimber. */
