@@ -43,9 +43,11 @@ joints, the silhouette of the back and neck. Barrel rings are cheap to cut with 
   and hanging lower lip, the elephant's trunk tip; the mouth's line back from the muzzle.
   Ears with their inside coloured (`<species>Inner`). No blinkers: they hide the eyes.
 - **The species' marks.** A horse's forelock, flowing mane and blaze, the Clydesdale's
-  feathering; a donkey's long ears and pale muzzle; a cow's horns, poll ridge, dewlap and
-  hip bones, cloven hooves; a camel's hump, knee calluses and broad pads; an elephant's
-  twin-domed forehead, ear flaps, trunk, tusks, lower lip and toenails.
+  feathering; a donkey's long ears and pale muzzle; an ox's short face with a broad flat
+  forehead (`CREST`), horns, poll ridge, dewlap and hip bones, cloven hooves; a camel's heavy
+  brow (`BROW`), domed forehead, bulbous snout, hump, knee calluses and broad pads; an
+  elephant's twin-domed forehead, wrinkled eye socket, curved ear flaps (`flap`), trunk,
+  tusks, lower lip and toenails.
 - **The harness** of its kind (`harness`): collar and hames, a breast band and pad, the
   cow's yoke drawn with the team; the bridle (head band, noseband, cheek pieces).
 
@@ -58,7 +60,9 @@ joints, the silhouette of the back and neck. Barrel rings are cheap to cut with 
   millimetres proud or is a blob half sunk into the skin; a tube's end cap must not lie in
   the plane of another material's cap (the mane starts 3 cm up the neck). The build
   refuses a flickering model and the test checks every vehicle at every team.
-- The gait (`gaitPose`, `addGait`) folds every knee and fetlock in the swing; the body is
+- The gait (`gaitPose`, `addGait`) folds every knee and fetlock in the swing, at once after
+  the foot leaves the ground; a trotter's `duty` stays under 0.5 so the swinging pair is
+  tucked while the other carries the body (tested); the body is
   lifted so the lowest point of any foot (`footOutline`, through the three joints) stands
   on the ground. A new foot shape adds its outline there.
 - Parameters, ids, sounds and game figures belong to the team (`teamParams`, `teamGame`):

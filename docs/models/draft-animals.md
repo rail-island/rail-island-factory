@@ -25,7 +25,7 @@ along the animal from its middle, y up from the ground, z to its right):
 | `horse` (a bay Clydesdale, the former horse tram's) | 1.7 m | collar, hames, traces | `hoof` | trot | 2.4 m | 1, 2, 4, 6 | 12 km/h | 6 kW | 0.8 t |
 | `donkey` | 1.1 m | collar | `hoof` | trot | 1.5 m | 1, 2, 4, 6 | 6 km/h | 2.5 kW | 0.25 t |
 | `mule` | 1.45 m | collar | `hoof` | trot | 2.0 m | 1, 2, 4, 6 | 9 km/h | 5 kW | 0.45 t |
-| `cow` | 1.4 m | neck yoke | `cloven` | walk | 1.3 m | 1, 2, 4, 6 | 4 km/h | 3.5 kW | 0.6 t |
+| `cow` (a draft ox: short face, flat forehead) | 1.4 m | neck yoke | `cloven` | walk | 1.3 m | 1, 2, 4, 6 | 4 km/h | 3.5 kW | 0.6 t |
 | `camel` (dromedary) | 1.9 m (hump 2.2 m) | breast band, saddle pad | `padded` | pace | 2.6 m | 1, 2, 3 | 8 km/h | 4.5 kW | 0.5 t |
 | `elephant` (Asian) | 2.9 m | breast band, pad | `padded` | walk | 2.4 m | 1, 2 | 6 km/h | 12 kW | 4 t |
 
@@ -46,9 +46,13 @@ with a light car up a 5 % grade, as the horse tram's 10 kW for a pair did.
   detail - placed by `face` (along the head, above its axis, the radius); the nose by `face.nose`
   (an equine's nostrils, a bovine's broad pink pad with its nostrils, a camel's slits, split upper
   lip and hanging lower lip, an elephant's trunk tip with its nostrils and its lower lip) and the
-  mouth's line back from the muzzle; the ears, flattened cones with their insides coloured
-  (`Inner`; an elephant's a thick flap with a folded top edge); a horse's or mule's forelock, the
-  horse's blaze, a cow's horns and poll ridge, an elephant's twin-domed forehead, trunk and tusks;
+  mouth's line back from the muzzle; a heavy brow over the eye (`BROW`: the camel's, the
+  elephant's wrinkled socket, the ox's lighter); the ears, flattened cones with their insides
+  coloured (`Inner`; an elephant's a thick curved flap, `flap`, rooted down the side of the head,
+  cupped away from it, its top edge rolled out and its lobe hanging below the jaw); the head's
+  top by `CREST` (narrowed on the equines, squared into the ox's broad flat forehead on its short
+  face); a horse's or mule's forelock, the horse's blaze, a cow's horns and poll ridge, the
+  camel's domed forehead, an elephant's twin-domed forehead, trunk and tusks;
   the bridle (head band, noseband and cheek pieces; no blinkers, which would hide the eyes);
 - **the tail**, a hair tail or a tuft, its dock inside the rump;
 - **the legs**, each through the joints `legChain` gives (the species' `legs`): the root at the
@@ -112,7 +116,10 @@ pace: the lateral pairs; walk: hind left, fore left, hind right, fore right a qu
 foot planted for the species' `duty` share and sliding back under the body by the stride's share,
 then swung forward with its joints folded (`legPose`: the front knee and every fetlock tuck the
 foot back, a hock brings it forward under the body, the elephant's hind knee back; padded feet
-fold less); the head nods, the tail swishes, and each body is lifted
+fold less). The joints fold at once as the foot leaves the ground and open again before it lands
+(`sin(pi sqrt(t))` of the swing), and the trotters plant a foot for less than half the stride
+(`duty` 0.42-0.45; the camel's pace 0.48), so one diagonal pair carries the body while the
+other is tucked up, never all four legs straight and spread; the head nods, the tail swishes, and each body is lifted
 so the lowest point of any foot - the sole's edges and the widest rings above it
 (`footOutline`), carried through the three joints - stands on the ground (`gaitPose`). Each animal steps at its own phase
 (`teamPhase`: a pair out of step, each row a little behind), deterministic.

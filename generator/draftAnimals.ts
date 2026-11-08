@@ -128,7 +128,7 @@ export const SPECIES_SPECS: Readonly<Record<Species, SpeciesSpec>> = {
     ears: { length: 0.16, width: 0.045, droop: 0 },
     face: { eye: 0.24, eyeUp: 0.42, eyeR: 0.042, nose: "equine", forelock: true },
     colors: { coat: "#5a2c19", mane: "#1c1411", muzzle: "#d7b3a3", foot: "#3a322d", lower: "#ece5d8", blaze: "#ece5d8", inner: "#2a1710", nose: "#3a2420" },
-    mane: "flowing", harness: "collar", foot: "hoof", gait: "trot", stride: 2.4, duty: 0.5,
+    mane: "flowing", harness: "collar", foot: "hoof", gait: "trot", stride: 2.4, duty: 0.42,
     pairWidth: 0.92, rowLength: 3.1, counts: [1, 2, 4, 6], abreast: true,
     pace: 12, power: 6, weight: 0.8, size: 0.55,
   },
@@ -139,7 +139,7 @@ export const SPECIES_SPECS: Readonly<Record<Species, SpeciesSpec>> = {
     ears: { length: 0.28, width: 0.06, droop: 0.15 },
     face: { eye: 0.26, eyeUp: 0.42, eyeR: 0.034, nose: "equine" },
     colors: { coat: "#7d7570", mane: "#3b3532", muzzle: "#e4ddd3", foot: "#33302d", lid: "#d9d2c8", inner: "#e9e2d8", nose: "#2f2a27" },
-    mane: "upright", harness: "collar", foot: "hoof", gait: "trot", stride: 1.5, duty: 0.55,
+    mane: "upright", harness: "collar", foot: "hoof", gait: "trot", stride: 1.5, duty: 0.45,
     pairWidth: 0.62, rowLength: 2.1, counts: [1, 2, 4, 6], abreast: true,
     pace: 6, power: 2.5, weight: 0.25, size: 0.15,
   },
@@ -150,7 +150,7 @@ export const SPECIES_SPECS: Readonly<Record<Species, SpeciesSpec>> = {
     ears: { length: 0.25, width: 0.055, droop: 0.08 },
     face: { eye: 0.25, eyeUp: 0.42, eyeR: 0.038, nose: "equine", forelock: true },
     colors: { coat: "#4a3326", mane: "#231a15", muzzle: "#bfa48f", foot: "#2f2925", lid: "#7a604e", inner: "#b49a86", nose: "#2a1d17" },
-    mane: "upright", harness: "collar", foot: "hoof", gait: "trot", stride: 2.0, duty: 0.52,
+    mane: "upright", harness: "collar", foot: "hoof", gait: "trot", stride: 2.0, duty: 0.43,
     pairWidth: 0.82, rowLength: 2.7, counts: [1, 2, 4, 6], abreast: true,
     pace: 9, power: 5, weight: 0.45, size: 0.4,
   },
@@ -158,14 +158,14 @@ export const SPECIES_SPECS: Readonly<Record<Species, SpeciesSpec>> = {
     species: "cow", title: "Draft Cow",
     barrel: [[-0.98, 1.12, 0.12, 0.14], [-0.92, 1.1, 0.3, 0.33], [-0.7, 1.07, 0.36, 0.4], [-0.3, 1.04, 0.38, 0.43], [0.15, 1.03, 0.39, 0.45], [0.55, 1.07, 0.34, 0.43], [0.8, 1.1, 0.27, 0.36], [0.92, 1.06, 0.14, 0.22]],
     neck: [[0.7, 1.15, 0.24, 0.33], [0.92, 1.19, 0.2, 0.28], [1.08, 1.24, 0.16, 0.22]],
-    head: [[1.06, 1.4, 0.14, 0.11], [1.12, 1.34, 0.165, 0.15], [1.2, 1.23, 0.15, 0.14], [1.28, 1.11, 0.13, 0.12], [1.34, 1.02, 0.125, 0.1], [1.38, 0.97, 0.13, 0.085], [1.41, 0.94, 0.125, 0.07]],
+    head: [[1.07, 1.41, 0.16, 0.1], [1.12, 1.35, 0.19, 0.14], [1.18, 1.25, 0.18, 0.14], [1.24, 1.14, 0.155, 0.12], [1.29, 1.06, 0.145, 0.1], [1.32, 1.01, 0.15, 0.09], [1.34, 0.98, 0.145, 0.074]],
     legs: {
       front: 0.6, hind: -0.66, z: 0.21, top: 0.86, knee: 0.42, hock: 0.5, fetlock: 0.13, r: [0.16, 0.085, 0.065, 0.085],
       fore: [0.0, 0.0, 0.04], rear: [-0.12, -0.09, -0.05], hindFold: 1,
     },
     tail: { root: [-0.97, 1.3], tip: [-1.0, 0.45], r: 0.03, tuft: true },
     ears: { length: 0.16, width: 0.065, droop: 1.05 },
-    face: { eye: 0.2, eyeUp: 0.3, eyeR: 0.038, nose: "bovine" },
+    face: { eye: 0.24, eyeUp: 0.3, eyeR: 0.038, nose: "bovine" },
     colors: { coat: "#8c5a32", mane: "#6e4524", muzzle: "#d8b6a0", foot: "#2b2522", lid: "#6e4524", inner: "#d8b6a0", nose: "#c98f86" },
     mane: "none", feature: "horns", harness: "yoke", foot: "cloven", gait: "walk", stride: 1.3, duty: 0.65,
     pairWidth: 1.05, rowLength: 2.9, counts: [1, 2, 4, 6], abreast: true,
@@ -175,7 +175,7 @@ export const SPECIES_SPECS: Readonly<Record<Species, SpeciesSpec>> = {
     species: "camel", title: "Camel",
     barrel: [[-0.82, 1.62, 0.08, 0.1], [-0.76, 1.6, 0.22, 0.26], [-0.5, 1.6, 0.28, 0.32], [-0.1, 1.62, 0.3, 0.36], [0.3, 1.62, 0.28, 0.36], [0.6, 1.58, 0.22, 0.32], [0.76, 1.52, 0.12, 0.2]],
     neck: [[0.62, 1.62, 0.15, 0.2], [0.98, 1.38, 0.1, 0.13], [1.28, 1.42, 0.09, 0.11], [1.44, 1.78, 0.08, 0.1], [1.46, 2.19, 0.075, 0.085]],
-    head: [[1.37, 2.21, 0.08, 0.08], [1.5, 2.2, 0.1, 0.1], [1.6, 2.17, 0.09, 0.095], [1.72, 2.11, 0.075, 0.08], [1.83, 2.05, 0.065, 0.07], [1.9, 2.02, 0.06, 0.062], [1.94, 2.0, 0.05, 0.05]],
+    head: [[1.37, 2.21, 0.08, 0.085], [1.49, 2.21, 0.105, 0.115], [1.6, 2.17, 0.092, 0.1], [1.72, 2.1, 0.072, 0.08], [1.83, 2.04, 0.07, 0.077], [1.9, 2.01, 0.07, 0.072], [1.95, 1.99, 0.058, 0.058]],
     legs: {
       front: 0.5, hind: -0.55, z: 0.2, top: 1.42, knee: 0.72, hock: 0.8, fetlock: 0.2, r: [0.11, 0.062, 0.042, 0.1],
       fore: [0.02, 0.0, 0.07], rear: [-0.12, -0.07, -0.02], hindFold: 1,
@@ -184,7 +184,7 @@ export const SPECIES_SPECS: Readonly<Record<Species, SpeciesSpec>> = {
     ears: { length: 0.08, width: 0.04, droop: 0.4 },
     face: { eye: 0.22, eyeUp: 0.38, eyeR: 0.034, nose: "camel" },
     colors: { coat: "#c49a62", mane: "#9c7646", muzzle: "#b58b56", foot: "#6e5536", lid: "#8a6a40", inner: "#7d5f3a", nose: "#3a2a1a" },
-    mane: "none", feature: "hump", harness: "breastband", foot: "padded", gait: "pace", stride: 2.6, duty: 0.55,
+    mane: "none", feature: "hump", harness: "breastband", foot: "padded", gait: "pace", stride: 2.6, duty: 0.48,
     pairWidth: 1.0, rowLength: 3.4, counts: [1, 2, 3], abreast: false,
     pace: 8, power: 4.5, weight: 0.5, size: 0.7,
   },
@@ -199,7 +199,7 @@ export const SPECIES_SPECS: Readonly<Record<Species, SpeciesSpec>> = {
     },
     tail: { root: [-1.25, 2.3], tip: [-1.32, 1.2], r: 0.04, tuft: true },
     ears: { length: 0.7, width: 0.55, droop: 0.2 },
-    face: { eye: 0.5, eyeUp: 0.08, eyeR: 0.05, nose: "trunk" },
+    face: { eye: 0.42, eyeUp: 0.14, eyeR: 0.06, nose: "trunk" },
     colors: { coat: "#7c7671", mane: "#4b4642", muzzle: "#6e6863", foot: "#5a5550", lid: "#5f5955", inner: "#9a8a80", nose: "#b89a8c" },
     mane: "none", feature: "trunk", harness: "breastband", foot: "padded", gait: "walk", stride: 2.4, duty: 0.66,
     pairWidth: 2.0, rowLength: 4.4, counts: [1, 2], abreast: false,
@@ -759,6 +759,12 @@ function drawTail(m: MeshBuilder, a: Drawn): void {
 /** Where the head's surface lies across at a share `up` (-1..1) of its half height: its half width there. */
 const halfWidthAt = (w: number, up: number, jaw: number): number => w * Math.sqrt(Math.max(0, 1 - up * up)) * (1 - (up < 0 ? jaw * Math.abs(up) : 0));
 
+/** The head's top: narrowed (> 0) on the equines' and the camel's, squared (< 0) on the ox's flat forehead. */
+const CREST: Record<Species, number> = { horse: 0.08, donkey: 0.08, mule: 0.08, cow: -0.22, camel: 0.04, elephant: 0 };
+
+/** How heavy a brow overhangs the eye (0 none): the camel's and the elephant's, the ox's lighter. */
+const BROW: Record<Species, number> = { horse: 0, donkey: 0, mule: 0, cow: 0.9, camel: 1.6, elephant: 1.2 };
+
 /** The head's jaw taper by species: the equines' and the camel's deep narrow jaw, the cow's broad one. */
 const JAW: Record<Species, number> = { horse: 0.38, donkey: 0.32, mule: 0.35, cow: 0.18, camel: 0.3, elephant: 0.08 };
 
@@ -784,6 +790,12 @@ function drawEyes(m: MeshBuilder, a: Drawn): void {
     blob(m, a.mat("Lid"), lid, [look, fwd, upv], [eyeR * 0.75, eyeR * 1.45, eyeR * 1.2], d.eye);
     const ball = add(c0, mul(side, surf - eyeR * 0.12));
     blob(m, "eye", ball, [look, fwd, upv], [eyeR * 0.72, eyeR * 1.08, eyeR * 0.88], d.eye);
+    const k = BROW[s.species];
+    if (k) {
+      // a heavy brow over the eye (the camel's, the ox's) or the elephant's wrinkled socket
+      const brow = add(add(c0, mul(up, eyeR * 1.15)), mul(side, surf - eyeR * 0.55 * k));
+      blob(m, a.mat("Coat"), brow, [look, fwd, upv], [eyeR * 0.75 * k, eyeR * 1.7 * k, eyeR * 0.6 * k], Math.max(4, d.eye - 2));
+    }
     if (d.fine) {
       // the glint: a small facet just off the eyeball, up and forward
       const dirn = norm(add(add(look, mul(fwd, 0.45)), mul(upv, 0.45)));
@@ -856,6 +868,40 @@ export function earRoot(s: SpeciesSpec, d: Detail, sd: number): { base: Vec3; ro
   return { base, root: add(base, mul(dir, -Math.min(s.ears.length * 0.25, ph * 0.5))), dir };
 }
 
+/**
+ * A thick curved flap (an elephant's ear): `grid` the outer surface, rows by columns,
+ * its inner surface the same moved by `thick`, the edges walled; every face turned out.
+ */
+function flap(m: MeshBuilder, mat: string, grid: readonly Vec3[][], thick: Vec3): void {
+  const inner = grid.map((row) => row.map((p) => add(p, thick)));
+  const away = mul(norm(thick), -1);
+  const centre = mean(grid.flat().map((p) => add(p, mul(thick, 0.5))));
+  const face = (pa: Vec3, pb: Vec3, pc: Vec3, dirn: Vec3) => m.facets(mat, [pa, pb, pc], dirn);
+  const R = grid.length;
+  const C = grid[0]!.length;
+  for (let r = 0; r + 1 < R; r++) for (let c = 0; c + 1 < C; c++) {
+    for (const [g, dir] of [[grid, away], [inner, mul(away, -1)]] as const) {
+      const [p00, p01, p10, p11] = [g[r]![c]!, g[r]![c + 1]!, g[r + 1]![c]!, g[r + 1]![c + 1]!];
+      face(p00, p01, p11, dir);
+      face(p00, p11, p10, dir);
+    }
+  }
+  // the walls round the edge: the border of the grid, in order
+  const ring: Array<[number, number]> = [];
+  for (let c = 0; c < C; c++) ring.push([0, c]);
+  for (let r = 1; r < R; r++) ring.push([r, C - 1]);
+  for (let c = C - 2; c >= 0; c--) ring.push([R - 1, c]);
+  for (let r = R - 2; r > 0; r--) ring.push([r, 0]);
+  for (let i = 0; i < ring.length; i++) {
+    const [ra, ca] = ring[i]!;
+    const [rb, cb] = ring[(i + 1) % ring.length]!;
+    const [a0, b0, a1, b1] = [grid[ra]![ca]!, grid[rb]![cb]!, inner[ra]![ca]!, inner[rb]![cb]!];
+    const out = sub(mean([a0, b0]), centre);
+    face(a0, b0, b1, out);
+    face(a0, b1, a1, out);
+  }
+}
+
 /** The ears: a flattened cone with its opening forward and its inside coloured; an elephant's a broad flap. */
 function drawEars(m: MeshBuilder, a: Drawn): void {
   const { s, d } = a;
@@ -863,13 +909,22 @@ function drawEars(m: MeshBuilder, a: Drawn): void {
   const { length, width } = s.ears;
   for (const sd of [-1, 1]) {
     if (s.feature === "trunk") {
-      // an elephant's ear: a thick rounded flap against the side of the head, its top edge folded over
-      const [hx, hy, hw] = stationAt(head, 0.25);
-      const zz = sd * (hw * 0.92 + 0.04);
-      const c = at(a, hx - 0.1, hy - 0.08, zz);
-      const outline: Vec3[] = [[0.1, 0.3], [-0.12, 0.34], [-0.32, 0.22], [-0.4, -0.02], [-0.34, -0.3], [-0.16, -0.52], [0.02, -0.46], [0.12, -0.2]].map(([x, y]) => add(c, [x!, y!, sd * 0.05 * (1 - (x! + 0.4) / 0.6)]));
-      m.slab(a.mat("Coat"), outline, [0, 0, -sd * 0.05]);
-      tube3(m, a.mat("Coat"), [add(c, [0.1, 0.3, sd * 0.02]), add(c, [-0.12, 0.35, sd * 0.03]), add(c, [-0.33, 0.23, sd * 0.06]), add(c, [-0.41, -0.02, sd * 0.07])], [0.035, 0.04, 0.04, 0.03], Math.max(5, d.eye - 2), Z);
+      // an elephant's ear: a thick flap rooted along the side of the head, cupped away
+      // from it toward its free back edge, its top edge rolled outward, the lobe hanging down
+      const [hx, hy, hw] = stationAt(head, 0.3);
+      const top = hy + 0.32;
+      // rows from the top down: (height below the top, the flap's width back from its root)
+      const rows: ReadonlyArray<readonly [number, number]> = d.fine
+        ? [[0, 0.14], [0.07, 0.34], [0.2, 0.44], [0.38, 0.44], [0.56, 0.37], [0.72, 0.24], [0.84, 0.07]]
+        : [[0, 0.14], [0.2, 0.44], [0.5, 0.4], [0.84, 0.07]];
+      const cols = d.fine ? [0, 0.3, 0.6, 0.85, 1] : [0, 0.5, 1];
+      const grid = rows.map(([dy, w], r) => cols.map((u): Vec3 => {
+        const v = r / (rows.length - 1);
+        // the root runs down the side of the head and back under the jaw to the hanging lobe
+        const out = hw * 0.86 + 0.05 + 0.11 * u ** 1.6 + 0.03 * Math.sin(Math.PI * v) + (r === 0 ? 0.04 * u : 0);
+        return at(a, hx + 0.02 - 0.16 * v * v - w * u, top - dy + 0.05 * u * (1 - v) - 0.04 * u * v, sd * out);
+      }));
+      flap(m, a.mat("Coat"), grid, [0, 0, -sd * 0.045]);
       continue;
     }
     const e = earRoot(s, d, sd);
@@ -918,7 +973,7 @@ function drawHead(m: MeshBuilder, a: Drawn): void {
   m.scope("head", () => {
     const head = smooth(s.head, d.sub);
     const mi = (s.head.length - 2) * d.sub;
-    const crest = s.feature === "trunk" ? 0 : 0.08;
+    const crest = CREST[s.species];
     tubeOf(m, a, a.mat("Coat"), head.slice(0, mi + 1), d.neck, { end: false }, jaw, crest);
     tubeOf(m, a, a.mat("Muzzle"), head.slice(mi), d.neck, { start: false }, jaw, crest);
     drawEyes(m, a);
@@ -941,6 +996,12 @@ function drawHead(m: MeshBuilder, a: Drawn): void {
       // the forelock falling from the poll over the forehead
       const [, , w0] = s.head[0]!;
       tube3(m, a.mat("Mane"), [top(0, 0.75), top(0.07, 1.04), top(0.15, 1.05), top(0.21, 1.0)], [w0 * 0.3, w0 * 0.45, w0 * 0.35, w0 * 0.12], Math.max(5, d.eye - 2));
+    }
+    if (s.species === "camel") {
+      // the camel's domed forehead between and behind its eyes
+      const [x, y, w, h] = stationAt(hs(a), 0.17);
+      const { up, d: along } = axisAt(hs(a), 0.17);
+      blob(m, a.mat("Coat"), add(at(a, x, y, 0), mul(up, h * 0.45)), [up, along, Z], [h * 0.65, h * 1.35, w * 0.82], d.neck);
     }
     m.scope("ears", () => drawEars(m, a));
     if (s.feature === "horns") {
@@ -1118,7 +1179,9 @@ function legPose(s: SpeciesSpec, l: Leg, u: number): LegPose {
   const max = Math.asin(Math.min(0.95, half / len));
   if (u < s.duty) return { swing: Math.asin(Math.max(-0.95, Math.min(0.95, (half * (1 - (2 * u) / s.duty)) / len))), knee: 0, fet: 0 };
   const t = (u - s.duty) / (1 - s.duty);
-  const b = Math.sin(Math.PI * t);
+  // the joints fold at once as the foot leaves the ground and open again before it lands,
+  // so the swinging pair is tucked up while the planted one carries the body
+  const b = Math.sin(Math.PI * Math.sqrt(t));
   const padded = s.foot === "padded";
   const fold = padded ? 0.45 : 1.1;
   const front = l.startsWith("front");

@@ -154,6 +154,18 @@ describe("the draft animals", () => {
     }
   });
 
+  it("trot with the swinging diagonal pair tucked up, never all four legs straight and spread", () => {
+    for (const s of SPECIES.filter((x) => SPECIES_SPECS[x].gait === "trot")) {
+      for (let k = 0; k < 24; k++) {
+        const p = gaitPose(s, k / 24);
+        // some leg is folded at the knee at every moment of the stride
+        expect(Math.max(...Object.values(p.legs).map((l) => Math.abs(l.knee))), `${s} at ${k}/24`).toBeGreaterThan(0.25);
+      }
+      // a suspension share: a foot is planted for less than half the stride
+      expect(SPECIES_SPECS[s].duty).toBeLessThan(0.5);
+    }
+  });
+
   it("keeps a planted foot on the ground through the stride", () => {
     for (const s of SPECIES) {
       for (let k = 0; k < 24; k++) {
