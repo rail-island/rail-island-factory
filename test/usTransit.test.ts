@@ -67,27 +67,49 @@ describe("the US passenger cars, urban rail and freight cars", () => {
     expect(s.max[0] - s.min[0]).toBeCloseTo(zephyrTrain().reduce((t, c) => t + ZEPHYR_LENGTH[c.car], 0), 1);
   });
 
-  it("gives each RDC cab end its door outline and a headlight hood with twin lamps", () => {
+  it("gives each RDC cab end its door outline and a headlight housing with twin lamps", () => {
     for (const variant of ["rdc1", "rdc2"]) {
       const tris = readTriangles(designGlb("proc-vehicle-budd-rdc", { variant }));
       // the end walls: the cab glass farthest out at each end
       const glassX = tris.filter((t) => t.material === "cabGlass").flatMap((t) => t.p.map((p) => p[0]));
       for (const [e, face] of [[1, Math.max(...glassX)], [-1, -Math.min(...glassX)]] as const) {
         const out = (mat: string, beyond: number) => tris.filter((t) => t.material === mat && t.p.every((p) => e * p[0] > face + beyond));
-        // the hood stands out of the end over the door, below the roof
-        const hood = out("ssDark", 0.1).flatMap((t) => t.p);
+        // the housing's black bezel stands out of the end over the door, under the dome
+        const hood = out("black", 0.03).filter((t) => t.p.every((p) => p[1] > 3.0 && Math.abs(p[2]) < 0.35)).flatMap((t) => t.p);
         expect(hood.length, `${variant} ${e}`).toBeGreaterThan(0);
         expect(Math.min(...hood.map((p) => p[1]))).toBeGreaterThan(3.1);
-        expect(Math.max(...hood.map((p) => p[1]))).toBeLessThan(3.7);
+        expect(Math.max(...hood.map((p) => p[1]))).toBeLessThan(3.6);
         // two headlights on its front, one each side of the middle
-        const lamps = out("lampHead", 0.15).map((t) => (t.p[0][2] + t.p[1][2] + t.p[2][2]) / 3);
+        const lamps = out("lampHead", 0.05).map((t) => (t.p[0][2] + t.p[1][2] + t.p[2][2]) / 3);
         expect(lamps.some((z) => z < -0.05) && lamps.some((z) => z > 0.05)).toBe(true);
         // the door's seams frame the middle pane down to the floor
-        const seams = tris.filter((t) => t.material === "rubber" && t.p.every((p) => Math.abs(e * p[0] - face) < 0.01 && Math.abs(Math.abs(p[2]) - 0.39) < 0.02));
+        const seams = tris.filter((t) => t.material === "rubber" && t.p.every((p) => Math.abs(e * p[0] - face) < 0.01 && Math.abs(Math.abs(p[2]) - 0.43) < 0.02));
         const ys = seams.flatMap((t) => t.p.map((p) => p[1]));
         expect(Math.min(...ys)).toBeLessThan(1.4);
         expect(Math.max(...ys)).toBeGreaterThan(3.0);
       }
+    }
+  });
+
+  it("lays out each RDC side by the photographs: the engineer's window at its right-hand end, eleven or eight saloon windows", () => {
+    // the glass panes on side s between two heights, as their x spans
+    const panes = (variant: string, s: number, y0: number, y1: number) => {
+      const g = readTriangles(designGlb("proc-vehicle-budd-rdc", { variant })).filter((t) => t.material === "glass" && t.p.every((p) => s * p[2] > 1.3 && p[1] > y0 && p[1] < y1));
+      const spans: Array<[number, number]> = [];
+      for (const t of g) {
+        const [a, b] = [Math.min(...t.p.map((p) => p[0])), Math.max(...t.p.map((p) => p[0]))];
+        const hit = spans.find((q) => a < q[1] + 0.05 && b > q[0] - 0.05);
+        if (hit) { hit[0] = Math.min(hit[0], a); hit[1] = Math.max(hit[1], b); } else spans.push([a, b]);
+      }
+      return spans.filter(([a, b]) => b - a > 0.1);
+    };
+    for (const s of [1, -1]) {
+      // the engineer sits on the right at each end: his window (sill 2.3 m) on +Z at the +X end, on -Z at the -X end
+      const cab = panes("rdc1", s, 2.32, 2.99).filter(([a, b]) => b - a < 0.8 && Math.abs(a + b) / 2 > 11);
+      expect(cab.map(([a, b]) => Math.sign(a + b)), `side ${s}`).toEqual([s]);
+      // eleven 1.4 m saloon windows a side on the RDC-1, eight behind the baggage room on the RDC-2
+      for (const [variant, n] of [["rdc1", 11], ["rdc2", 8]] as const)
+        expect(panes(variant, s, 2.09, 2.78).filter(([a, b]) => b - a > 1.3), `${variant} ${s}`).toHaveLength(n);
     }
   });
 
