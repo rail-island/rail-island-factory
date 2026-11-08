@@ -11,6 +11,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { DIESEL_LOCO_CATALOG } from "./cd163.ts";
 import { paint } from "./dieselParts.ts";
 import { buildUsHood, usHoodLod, type Band, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
+import { buildSd70ace, sd70aceLod, type Sd70Key } from "./sd70ace.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 
@@ -238,11 +239,13 @@ export function geEs44ac(params?: ParamValues): MeshBuilder {
 export function geEs44acLod(params?: ParamValues): MeshBuilder {
   return usHoodLod(ES44_SPEC, liveryOf(ES44_PARAMS, ES44_LIVERIES, params));
 }
+// the SD70ACe is drawn by its own builder (sd70ace.ts); SD70_SPEC stays for the kit's WDP4D (inLocos.ts)
+const sd70Key = (v?: ParamValues) => resolveParams(SD70_PARAMS, v).livery as Sd70Key;
 export function emdSd70ace(params?: ParamValues): MeshBuilder {
-  return buildUsHood(SD70_SPEC, liveryOf(SD70_PARAMS, SD70_LIVERIES, params));
+  return buildSd70ace(sd70Key(params));
 }
 export function emdSd70aceLod(params?: ParamValues): MeshBuilder {
-  return usHoodLod(SD70_SPEC, liveryOf(SD70_PARAMS, SD70_LIVERIES, params));
+  return sd70aceLod(sd70Key(params));
 }
 
 // ---------------------------------------------------------------------------
