@@ -10,10 +10,11 @@ import { resolveParams } from "./design.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { DIESEL_LOCO_CATALOG } from "./cd163.ts";
 import { paint } from "./dieselParts.ts";
-import { buildUsHood, usHoodLod, type Band, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
+import { type Band, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
 import { GP9_PAINT, buildGp9, gp9Lod, type Gp9Livery } from "./usGp9.ts";
 import { SD40_2_PAINT, buildSd40_2, sd40_2Lod } from "./usSd40.ts";
 import { ES44AC_LIVERIES, buildEs44ac, buildEs44acLod } from "./geEs44ac.ts";
+import { buildSd70ace, sd70aceLod, type Sd70Key } from "./sd70ace.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 
@@ -201,8 +202,6 @@ export const SD40_PARAMS = liveryParam(SD40_LIVERIES);
 export const ES44_PARAMS = liveryParam(ES44_LIVERIES);
 export const SD70_PARAMS = liveryParam(SD70_LIVERIES);
 
-const liveryOf = (params: readonly ParamSpec[], l: Liveries, v?: ParamValues): UsLivery => l[resolveParams(params, v).livery!]!;
-
 export function emdGp9(params?: ParamValues): MeshBuilder {
   return buildGp9(GP9_LIVERIES[resolveParams(GP9_PARAMS, params).livery!]!);
 }
@@ -225,11 +224,13 @@ export function geEs44ac(params?: ParamValues): MeshBuilder {
 export function geEs44acLod(params?: ParamValues): MeshBuilder {
   return buildEs44acLod(es44Livery(params));
 }
+// the SD70ACe is drawn by its own builder (sd70ace.ts); SD70_SPEC stays for the kit's WDP4D (inLocos.ts)
+const sd70Key = (v?: ParamValues) => resolveParams(SD70_PARAMS, v).livery as Sd70Key;
 export function emdSd70ace(params?: ParamValues): MeshBuilder {
-  return buildUsHood(SD70_SPEC, liveryOf(SD70_PARAMS, SD70_LIVERIES, params));
+  return buildSd70ace(sd70Key(params));
 }
 export function emdSd70aceLod(params?: ParamValues): MeshBuilder {
-  return usHoodLod(SD70_SPEC, liveryOf(SD70_PARAMS, SD70_LIVERIES, params));
+  return sd70aceLod(sd70Key(params));
 }
 
 // ---------------------------------------------------------------------------
