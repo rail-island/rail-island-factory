@@ -23,6 +23,7 @@
 export const TEXTURE_SLUGS = {
   asphalt: "aerial_asphalt_01",
   bigstone: "rocks_ground_06",
+  boulder: "rock_boulder_dry",
   cobblestone: "cobblestone_floor_04",
   concrete: "concrete_floor_worn_001",
   grass: "aerial_grass_rock",
@@ -57,6 +58,7 @@ export const MAX_TEXTURES = 16;
 export const TEXTURE_AVERAGE: Readonly<Record<TextureName, string>> = {
   asphalt: "#676268",
   bigstone: "#928373",
+  boulder: "#a89b8c",
   cobblestone: "#8a7d62",
   concrete: "#565754",
   grass: "#726125",
@@ -123,6 +125,9 @@ export const SURFACES = {
   // dams (DamMesh)
   "dam-concrete": { texture: "concrete", tile: 6, tintLift: 0.92, gain: 1.4, normalScale: 0.45, flat: "#636462" },
   "dam-stone": { texture: "cobblestone", tile: 6, tintLift: 0.92, gain: 1.4, normalScale: 0.45, flat: "#8a8068" },
+  // The boulders in a rapid: granite photo over the game's dark wet-stone colour,
+  // a repeat about a boulder across, a strong normal for the rounded face.
+  "river-boulder": { texture: "boulder", tile: 2.5, tintLift: 0.55, normalScale: 0.9, flat: "#5f5d58" },
   // tunnel portals (TunnelMesh), the alpine gallery (LineDecorationLayer), house plinths (HouseMesh)
   "tunnel-portal": { texture: "cobblestone", tile: 6, tintLift: 0.85, fill: 0.3, flat: "#9b8c70" },
   "gallery-concrete": { texture: "concrete", tile: 6, tintLift: 0.92, gain: 1.65 },
@@ -136,6 +141,7 @@ export const SURFACES = {
   // nothing in the game binds these
   "swatch-asphalt": { texture: "asphalt", tile: 4, tintLift: 1 },
   "swatch-bigstone": { texture: "bigstone", tile: 4, tintLift: 1 },
+  "swatch-boulder": { texture: "boulder", tile: 4, tintLift: 1 },
   "swatch-cobblestone": { texture: "cobblestone", tile: 4, tintLift: 1 },
   "swatch-concrete": { texture: "concrete", tile: 4, tintLift: 1 },
   "swatch-grass": { texture: "grass", tile: 4, tintLift: 1 },
