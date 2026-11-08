@@ -528,7 +528,11 @@ const HU_TRAILING: Array<[number, number]> = [[13.07, ft(0, 36)], [14.79, ft(0, 
 /** The bullet nose: half an ellipsoid about the boiler's axis (height y, radius r), its tip at source x `tip`, its equator at `x`, the casing's front. */
 const HU_DOME = { y: 3.2, r: 1.12, tip: 0.75, x: 2.0 };
 /** The casing over the boiler, the right half of its section bottom to top (its bottom is cut by HU_CASING_BOTTOM). */
-const HU_CASING: Pt[] = [[1.45, 1.2], [1.45, 3.35], [1.41, 3.72], [1.3, 4.02], [1.1, 4.28], [0.75, 4.47], [0.3, 4.55]];
+const HU_CASING: Pt[] = [[1.45, 1.2], ...Array.from({ length: 9 }, (_, i): Pt => {
+  // the shoulder: a full quarter round from the side to the flat top over the vent
+  const a = (i / 8) * (Math.PI / 2);
+  return [Math.round((0.3 + 1.15 * Math.pow(Math.cos(a), 0.85)) * 1000) / 1000, Math.round((3.35 + 1.2 * Math.pow(Math.sin(a), 0.85)) * 1000) / 1000];
+})];
 const HU_TOP = 4.55;
 /** The casing's lower edge: the shelf over the drivers, then the skirt arching down behind the last driver over the trailing truck. */
 const HU_SHELF = 2.45;
@@ -631,7 +635,7 @@ function huPilotText(t: Steam, mat: string, text: string, y: number, h: number, 
 function hudsonPilot(t: Steam): void {
   const m = t.m;
   m.scope("front pilot", () => {
-    const N = 16;
+    const N = 22;
     const ring = (l: [number, number, number, number]): Vec3[] => {
       const pts: Vec3[] = [];
       for (let k = 0; k <= N; k++) {
@@ -678,6 +682,8 @@ function hudsonPilot(t: Steam): void {
       const [x, y] = [b0[0] + (b1[0] - b0[0]) * f, b0[1] + (b1[1] - b0[1]) * f];
       t.sideBox("black", s, x - 0.05, x + 0.2, y - 0.03, y, 1.1, 1.32);
     }
+    // the ladder's stringer along the edge
+    for (const s of [-1, 1]) m.rod("silver", huP(t, b0[0] + 0.12, b0[1] + 0.25, s * 1.3), huP(t, b1[0] - 0.02, b1[1] - 0.05, s * 1.3), 0.025, 6);
     // its inner edge a chord inside the nose's equator, so the nose hides it
     const cowl: Pt[] = [[0.8, 2.5], [1.45, 2.5], [1.45, 3.15], [1.118, 3.15]];
     for (const s of [-1, 1]) m.slab("pilot", cowl.map(([z, y]) => huP(t, HU_DOME.x - 0.015, y, s * z)), [-0.015, 0, 0]);
@@ -725,7 +731,7 @@ function hudsonNose(t: Steam): void {
   const { y: yc, r, tip, x: xe } = HU_DOME;
   const a = xe - tip;
   m.scope("nose", () => {
-    const n = 22, K = 8;
+    const n = 28, K = 10;
     const rings: Vec3[][] = [];
     for (let k = 1; k <= K; k++) {
       const th = (k / K) * (Math.PI / 2);
@@ -778,6 +784,8 @@ function hudsonCasingDetails(t: Steam): void {
   });
   m.scope("access handles", () => { for (const s of [-1, 1]) for (let x = 3.6; x < 12.5; x += 1.15) t.sidePanel(sec, "black", s, x, x + 0.1, 3.95, 4.08); });
   m.scope("pipes", () => { for (const s of [-1, 1]) t.cylX("black", 4.4, 12.0, s * 1.22, 2.25, 0.06, 8); });
+  // the air pumps hung under the shelf behind the cylinders, over the valve gear
+  m.scope("air pumps", () => { for (const s of [-1, 1]) { t.cylY("black", 5.3, s * 1.27, 1.75, 2.4, 0.14, 10, false); t.cylY("steel", 5.3, s * 1.27, 1.68, 1.75, 0.1, 8); } });
 }
 
 /** Light text on side s of a vertical face at |z| = face, centred at source x, its foot at y (no plate behind it). */

@@ -767,7 +767,7 @@ export class RunningGear {
           if (sides >= 3) {
             // a round hole about mid radius, a fan of `sides` triangles
             const c = add([X, ay], polar(rm, a));
-            const hr = Math.min((r1 - r0) * 0.36, rm * Math.sin(Math.PI / holes) * 0.7);
+            const hr = Math.min((r1 - r0) * 0.27, rm * Math.sin(Math.PI / holes) * 0.55);
             for (let j = 0; j < sides; j++) {
               const p = add(c, polar(hr, (j / sides) * Math.PI * 2));
               const q = add(c, polar(hr, ((j + 1) / sides) * Math.PI * 2));
