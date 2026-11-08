@@ -1004,6 +1004,8 @@ interface AlcLivery extends CarbodyLivery {
   fields: ReadonlyArray<{ mat: string; pts: Pt[] }>;
   /** The black surround of the windscreen and the headlight box. */
   masks: readonly FaceRect[];
+  /** The lamps in black housings standing out of the face (Phase VII), else flat on it. */
+  housings?: boolean;
   /** The headlights under the windscreen: lat, y, radius. */
   headlights: ReadonlyArray<readonly [number, number, number]>;
   /** The anticlimber's paint and the stripe across its face. */
@@ -1144,8 +1146,6 @@ function alcLogo(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: numb
 const alcVee = (y0: number, rise: number, w: number, reach = 1.7): Pt[] => [[-reach, y0 + rise * reach + w], [0, y0 + w], [reach, y0 + rise * reach + w], [reach, y0 + rise * reach], [0, y0], [-reach, y0 + rise * reach]];
 const alcUnder = (y0: number, rise: number, bottom: number, reach = 1.7): Pt[] => [[-reach, bottom], [reach, bottom], [reach, y0 + rise * reach], [0, y0], [-reach, y0 + rise * reach]];
 
-/** The ditch light housings: slanted lozenges, the outer end higher (lat > 0 the viewer's right). */
-const alcEye = (sd: number): Pt[] => ([[0.58, 2.0], [1.18, 2.08], [1.32, 2.2], [1.32, 2.44], [1.22, 2.5], [0.7, 2.36], [0.58, 2.24]] as Pt[]).map(([l, y]) => [sd * l, y]);
 
 /** Amtrak's travel mark on the face under its name, centred at lat, its top at y, w wide: three stripes, each as a few convex quads. */
 function alcNoseMark(lat: number, y: number, w: number): Array<{ mat: string; pts: Pt[]; fine: number }> {
@@ -1162,7 +1162,7 @@ function alcNoseMark(lat: number, y: number, w: number): Array<{ mat: string; pt
   return out;
 }
 
-const ALC_WINDSCREEN: FaceRect[] = [{ lat: [-0.94, -0.05], y: [3.0, 3.84], r: 0.07 }, { lat: [0.05, 0.94], y: [3.0, 3.84], r: 0.07 }];
+const ALC_WINDSCREEN: FaceRect[] = [{ lat: [-0.82, -0.05], y: [3.0, 3.84], r: 0.07 }, { lat: [0.05, 0.82], y: [3.0, 3.84], r: 0.07 }];
 
 export const ALC_LIVERIES: Record<string, AlcLivery> = {
   phaseVII: {
@@ -1182,12 +1182,11 @@ export const ALC_LIVERIES: Record<string, AlcLivery> = {
       { mat: "alcWhite", pts: alcVee(2.4, 0.15, 0.1) },
       { mat: "amRed", pts: [[-1.7, 2.755], [0, 2.5], [1.7, 2.755], [1.7, 2.99], [-1.7, 2.99]] },
       // the roof's middle over the windscreen
-      { mat: "midnight", pts: [[-0.98, 4.18], [0.98, 4.18], [0.98, 4.4], [-0.98, 4.4]] },
-      { mat: "black", pts: alcEye(-1) }, { mat: "black", pts: alcEye(1) },
+      { mat: "midnight", pts: [[-0.7, 4.18], [0.7, 4.18], [0.7, 4.4], [-0.7, 4.4]] },
       // the windscreen's black surround reaches down to the vee
-      { mat: "black", pts: [[-1.03, 2.665], [0, 2.51], [1.03, 2.665], [1.03, 2.99], [-1.03, 2.99]] },
+      { mat: "black", pts: [[-0.9, 2.645], [0, 2.51], [0.9, 2.645], [0.9, 2.99], [-0.9, 2.99]] },
     ],
-    masks: [{ lat: [-1.03, 1.03], y: [2.8, 4.2], r: 0.14, mat: "black" }],
+    masks: [{ lat: [-0.9, 0.9], y: [2.8, 4.2], r: 0.14, mat: "black" }], housings: true,
     headlights: [[-0.16, 2.78, 0.09], [0.16, 2.78, 0.09]], climber: "black", climberStripe: "amRed",
     lodFace: [[0, 2.55, "midnight"], [2.55, 2.65, "alcWhite"], [2.65, 4.36, "amRed"], [4.36, 9, "midnight"]],
     lodCab: [[0, 1.33, "amRed"], [1.33, 1.38, "alcWhite"], [1.38, 3.55, "midnight"], [3.55, 3.8, "alcWhite"], [3.8, 9, "amRed"]],
@@ -1211,10 +1210,10 @@ export const ALC_LIVERIES: Record<string, AlcLivery> = {
     fields: [
       { mat: "amBlue", pts: [[-1.7, 1.0], [1.7, 1.0], [1.7, 4.4], [-1.7, 4.4]] },
       // the white sweep's start on the face's corners
-      { mat: "alcWhite", pts: [[1.3, 2.42], [1.8, 2.42], [1.8, 4.4], [1.3, 4.4]] }, { mat: "alcWhite", pts: [[-1.8, 2.42], [-1.3, 2.42], [-1.3, 4.4], [-1.8, 4.4]] },
+      { mat: "alcWhite", pts: [[1.0, 2.42], [1.8, 2.42], [1.8, 4.4], [1.0, 4.4]] }, { mat: "alcWhite", pts: [[-1.8, 2.42], [-1.0, 2.42], [-1.0, 4.4], [-1.8, 4.4]] },
     ],
     // the windscreen's surround from the roof down round the headlights
-    masks: [{ lat: [-0.98, 0.98], y: [2.28, 4.42], r: 0.22, mat: "black" }],
+    masks: [{ lat: [-0.9, 0.9], y: [2.28, 4.42], r: 0.22, mat: "black" }],
     headlights: [[-0.36, 2.55, 0.1], [0.36, 2.55, 0.1]], climber: "amBlue", climberStripe: "amRed",
     lodFace: [[0, 2.42, "amBlue"], [2.42, 9, "black"]],
     lodCab: [[0, 1.68, "alcGrey"], [1.68, 1.78, "amRed"], [1.78, 3.4, "amBlue"], [3.4, 3.8, "alcWhite"], [3.8, 9, "amBlue"]],
@@ -1230,7 +1229,10 @@ function alcFace(l: AlcLivery): SeriesCabFace {
     // little round the headlight box, the windscreen raked back 38 degrees, the brow rounding into
     // the cab roof
     profile: [[ALC_FOOT, 0.12], [1.45, 0.05], [1.9, 0], [2.35, 0], [2.62, 0.05], [2.95, 0.2], [3.4, 0.55], [3.85, 0.9], [4.035, 1.05], [4.15, 1.16], [4.295, 1.38], [4.34, 1.55], [4.385, 1.8], [ALC_ROOF, ALC_JOIN]],
-    corner: [[ALC_FOOT, 0.3], [2.62, 0.32], [2.95, 0.5], [3.4, 0.58], [3.85, 0.6], [4.035, 0.55], [ALC_ROOF, 0.3]],
+    corner: [[ALC_FOOT, 0.3], [2.62, 0.32], [2.95, 0.42], [3.4, 0.45], [3.85, 0.45], [4.035, 0.42], [ALC_ROOF, 0.3]],
+    // the pillars lean in: the face narrower at the windscreen's head than at the lamps (331: about
+    // 0.35 m each side at the head, the cab side flaring back out to the body by dSide)
+    planInset: [[2.62, 0], [2.95, 0.06], [3.4, 0.2], [3.85, 0.34], [4.035, 0.38], [4.15, 0.36], [4.295, 0.12], [ALC_ROOF, 0]],
     cornerDepth: [[ALC_FOOT, 0.3], [2.62, 0.28], [2.95, 0.26], [3.4, 0.25], [3.85, 0.28], [4.035, 0.26], [ALC_ROOF, 0.15]],
     // the face's vee: its edges this far behind the centre line
     bulge: [[ALC_FOOT, 0.1], [2.35, 0.16], [2.95, 0.15], [3.4, 0.15], [3.85, 0.15], [4.15, 0.14], [ALC_ROOF, 0.05]],
@@ -1244,8 +1246,16 @@ function alcFace(l: AlcLivery): SeriesCabFace {
     fields: [...l.fields],
     masks: l.masks,
     panes: ALC_WINDSCREEN,
-    lodGlass: { hw: 0.94, y: [3.0, 3.84] },
-    lamps: [
+    lodGlass: { hw: 0.82, y: [3.0, 3.84] },
+    // Phase VII: the headlights in one black housing under the windscreen, each ditch light pair in an
+    // almond housing standing out of the face (the red lamp inward, the white outward)
+    ...(l.housings ? {
+      pods: [
+        { lat: 0, y: 2.8, w: 0.62, h: 0.24, r: 0.12, proud: 0.04, depth: 0.12, mat: "black", lamps: l.headlights.map(([lat, , r]): [number, number, string] => [lat, r, "lampHead"]) },
+        ...[-1, 1].map((sd) => ({ lat: sd * 0.95, y: 2.25, w: 0.64, h: 0.27, r: 0.135, proud: 0.05, depth: 0.14, mat: "black", lamps: [[-sd * 0.15, 0.065, "lampRed"], [sd * 0.14, 0.085, "ditch"]] as Array<[number, number, string]> })),
+      ],
+    } : {}),
+    lamps: l.housings ? [] : [
       ...l.headlights.map(([lat, y, r]): readonly [number, number, number, string] => [lat, y, r, "lampHead"]),
       // the ditch lights: the white outward, the red inward
       ...[-1, 1].flatMap((sd): Array<readonly [number, number, number, string]> => [[sd * 1.1, 2.3, 0.085, "ditch"], [sd * 0.82, 2.22, 0.07, "lampRed"]]),
@@ -1259,7 +1269,7 @@ function alcFace(l: AlcLivery): SeriesCabFace {
 const alcPaint = (l: AlcLivery): FacePaint => ({ sides: l.bands, face: l.face, roof: l.roof, skirt: l.skirt, S: ALC_RIB, A: ALC_FOOT, number: l.number });
 
 export function buildAlc42(l: AlcLivery): MeshBuilder {
-  const m = new Builder({ ...CARBODY_PALETTE, ...l.palette });
+  const m = new Builder({ ...CARBODY_PALETTE, alcSocket: paint("#2f6fc4", 0.5), ...l.palette });
   const swTop = l.roofRear ? alcB(l.roofRear.d) : Infinity;
   const b = carbody({ ...ALC_SPEC, edges: edgesOf(l, ALC_SPEC.Y, ALC_SPEC.S), ...(l.roofRear ? { stations: [swTop] } : {}) });
   const tip = ALC_TIP;
@@ -1346,14 +1356,20 @@ export function buildAlc42(l: AlcLivery): MeshBuilder {
     m.scope("cab face", () => drawCabFace(m, face, 1, tip, half, alcPaint(l)));
     // the anticlimber over the pilot with its stripe, the MU sockets either side of it, the pilot and coupler
     m.scope("anticlimber", () => {
-      block(m, l.climber, tip - 0.3, tip + 0.13, 1.16, 1.43, -1.25, 1.25);
-      block(m, l.climberStripe, tip + 0.13, tip + 0.135, 1.25, 1.34, -0.58, 0.58);
+      block(m, l.climber, tip - 0.3, tip + 0.13, 1.2, 1.42, -1.22, 1.22);
+      block(m, l.climberStripe, tip + 0.13, tip + 0.135, 1.26, 1.35, -0.58, 0.58);
     });
+    // the MU sockets over the anticlimber (blue inside, red outside), their hoses hanging in front of the pocket
     m.scope("sockets", () => {
-      for (const z of [-1.0, -0.72, 0.72, 1.0]) m.sweep(Math.abs(z) > 0.9 ? "lampRed" : "black", "x", ngon(8, 0.06, 0, z, 1.53), tip - 0.05, ngon(8, 0.06, 0, z, 1.53), tip + 0.12);
-      for (const z of [-0.85, 0.85]) m.rod("black", [tip + 0.1, 1.5, z], [tip + 0.24, 1.0, z * 0.85], 0.03, 6);
+      for (const z of [-1.02, -0.72, 0.72, 1.02]) m.sweep(Math.abs(z) > 0.9 ? "lampRed" : "alcSocket", "x", ngon(8, 0.065, 0, z, 1.53), tip - 0.05, ngon(8, 0.065, 0, z, 1.53), tip + 0.12);
+      for (const z of [-0.85, -0.6, 0.6, 0.85]) m.rod("black", [tip + 0.1, 1.2, z], [tip + 0.2, 0.82, z * 0.9], 0.025, 6);
     });
-    m.scope("pilot", () => pilotPlate(m, "black", 1, tip + 0.1, 0.2, 1.16, 1.22, 0.32, 0.55));
+    // the end sill either side of the coupler pocket, and the plough low down
+    m.scope("pilot", () => {
+      for (const sd of [-1, 1]) block(m, "truckBlack", tip - 0.3, tip + 0.06, 0.78, 1.2, ...side(sd, 0.62, 1.18));
+      block(m, "black", tip - 0.4, tip - 0.12, 0.72, 1.2, -0.62, 0.62);
+      pilotPlate(m, "black", 1, tip + 0.1, 0.22, 0.78, 1.16, 0.22, 0.5);
+    });
     m.scope("coupler", () => knuckleCoupler(m, 1, tip - 0.25, ALC_LENGTH / 2, COUPLER_Y));
   });
   m.scope("rear end", () => {

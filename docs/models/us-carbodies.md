@@ -11,7 +11,7 @@
 | `proc-vehicle-emd-f7` | EMD F7 | `livery`: `santaFe` (red warbonnet), `unionPacific`, `southernPacific` (Daylight); `unit`: `aUnit` (cab), `bUnit` (booster), `train` (`cars` 2 A-B, 3 A-B-A, 4 A-B-B-A) | 15.44 m A, 15.24 m B | about 11,000 - 13,000 a unit |
 | `proc-vehicle-emd-f40ph` | EMD F40PH (draft) | `livery`: `phaseIII`, `phaseII` | 17.12 m | about 11,000 |
 | `proc-vehicle-ge-p42dc` | GE P42DC Genesis | `livery`: `phaseV`, `phaseIII`, `via` | 21.03 m | 8,400 - 8,800 |
-| `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 15,400 (Midwest 13,500) |
+| `proc-vehicle-siemens-alc42` | Siemens ALC-42 Charger | `livery`: `phaseVII`, `midwest` (the SC-44's Amtrak Midwest scheme) | 21.79 m | about 13,800 |
 | `proc-vehicle-prr-gg1` | PRR GG1 | `livery`: `brunswick`, `tuscan`, `pennCentral` | 24.23 m | 13,300 - 14,400 |
 | `proc-vehicle-amtrak-superliner` | Amtrak Superliner | `unit`: `coach`, `sleeper` | 25.91 m | 8,500 - 8,700 |
 | `proc-vehicle-amtrak-acela` | Acela Express | `unit`: `powerCar`, `businessClass`, `firstClass`, `cafe`, `train` (`cars` 3 - 8, default 4) | 21.22 m power car, 26.64 m coach | 7,200 - 10,200 a car |
@@ -87,14 +87,18 @@ nose along the surface's chord (`chordBox`).
   to the crease at 3.68 m, the upper panel and roof as a three-facet arc to 4.39 m); the whole
   cab, 4.6 m back from the tip, is one painted cab face (seriesCab.ts `drawCabFace`): the lower
   face upright and bowed at the ditch lights, the windscreen raked 38 degrees in a shallow vee,
-  wide shallow corners as the pillars, the raked cab side window, door, handrails and mirror.
+  wide shallow corners as the pillars leaning in (the face about 0.35 m narrower each side at
+  the windscreen's head than at the lamps, 331; `planInset`), the raked cab side window, door, handrails and mirror.
   Phase VII: midnight blue, the red cab top over the white sweep from the face's vee to the roof
   behind the door, the white swoosh (foot at 9.4 m, top at 11.6 m) ahead of the lighter blue
-  rear, the red and white foot stripe; the black windscreen surround down to the vee, two
-  headlights, the slanted ditch light housings (red inward, white outward), the logo on the
+  rear, the red and white foot stripe; the black windscreen surround down to the vee, the
+  headlights in a black housing and each ditch light pair in an almond housing standing out of
+  the face (red inward, white outward), the red-striped anticlimber over the MU sockets (blue
+  and red), hoses, the end sill either side of the coupler pocket and the plough; the logo on the
   face and sides. Midwest: silver over a dark grey foot and red stripe, the blue cab under its
   white sweep, the black surround over the roof, the dots fading back from the cab, two white
-  lines. Sides differ as photographed: the left one has the louvred radiator intake (6.1 - 7.4
+  lines. The red and white rear chevron of photo 304 is Phase VI (301 - 308), not drawn; Phase
+  VII units (309 on, 363) end in the plain lighter blue. Sides differ as photographed: the left one has the louvred radiator intake (6.1 - 7.4
   m) and the eight-pane filter panel behind the X intake (11.75 - 15.15 m), the right one
   neither. Roof: cab hatch, horns, hatches, exhaust at 8.15 m, the radiator mesh with two fans
   over the X intakes.
