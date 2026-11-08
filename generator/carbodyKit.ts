@@ -64,6 +64,8 @@ export interface CarbodySpec {
   noseStep?: number;
   /** Extra stations along the body (default none): where a painter's colour changes along the car. */
   stations?: readonly number[];
+  /** The roof arc's superellipse exponent (SliceBody.arcPower); default a quarter ellipse. */
+  roofPower?: number;
 }
 
 /** What a face is: its slice's region (sliceBody.ts edgeRole) or an end cap. */
@@ -151,6 +153,7 @@ export function carbody(s: CarbodySpec): SliceBody {
     Y, w, S, C,
     edges: (d) => s.edges.map((y) => Math.min(S(d), Math.max(Y(d), y))),
     lean: s.lean, arc: s.arc, stations,
+    ...(s.roofPower !== undefined ? { arcPower: s.roofPower } : {}),
   };
 }
 

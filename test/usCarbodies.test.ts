@@ -208,6 +208,24 @@ describe("the US carbodies", () => {
     }
   });
 
+  it("drops the Superliner's floor between the trucks, keeps the stripes off its ends and lays out each side by the photographs", () => {
+    for (const unit of ["coach", "sleeper"]) {
+      const tris = readTriangles(amtrakSuperliner({ unit }).toGlb(unit));
+      const silver = tris.filter((t) => t.material === "slSilver");
+      const lowest = (x0: number, x1: number) => Math.min(...silver.filter((t) => t.p.every((p) => p[0] >= x0 && p[0] <= x1 && Math.abs(p[2]) > 1.4)).flatMap((t) => t.p.map((p) => p[1])));
+      // the side reaches down to 0.25 m over the low floor, ends at 0.88 m over the trucks (the corner steps aside)
+      expect(lowest(-4, 4)).toBeLessThan(0.3);
+      expect(lowest(-11.5, -9)).toBeGreaterThan(0.85);
+      // the blue band runs along the sides only: none on the end walls
+      const ends = tris.filter((t) => t.material === "slBlue" && t.p.every((p) => Math.abs(p[0]) > 12.5));
+      expect(ends.every((t) => t.p.some((p) => Math.abs(p[2]) > 1.3))).toBe(true);
+      // windows (their dark frames' glass) per side: both sides carry the same upper count, the right one the lower deck's extra window on the sleeper
+      const glass = (s: number, lo: number, hi: number) => tris.filter((t) => t.material === "glass" && t.p.every((p) => s * p[2] > 1.4 && p[1] > lo && p[1] < hi)).length;
+      if (unit === "sleeper") expect(glass(1, 1.0, 1.9)).toBeGreaterThan(glass(-1, 1.0, 1.9));
+      expect(glass(1, 3.3, 4.2)).toBeGreaterThan(0);
+    }
+  });
+
   it("builds the same bytes twice and keeps valid distant models", () => {
     for (const d of US_CARBODIES) {
       expect(Buffer.from(d.build().toGlb("a")).equals(Buffer.from(d.build().toGlb("a")))).toBe(true);
