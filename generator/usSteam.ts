@@ -459,10 +459,10 @@ const K4_SMOKEBOX = 3.09;
 const K4_CONE = 7.4;
 const K4_Y1 = 3.07;
 const K4_R1 = 1.1;
-/** The Belpaire firebox's front, the cab's front and rear, the running board's height. */
+/** The Belpaire firebox's front, the cab's front and rear, the running board's height (clear of the drivers' 2.03 m tops). */
 const K4_BELPAIRE = 9.17;
 const K4_CAB: [number, number] = [12.97, 14.6];
-const K4_BOARD = 2.05;
+const K4_BOARD = 2.15;
 /** The Belpaire firebox's right half: flat sides and a flat top joined by square shoulders. */
 const K4_FIREBOX: Pt[] = [[1.0, 1.55], [1.12, 1.95], [1.12, 3.85], [1.08, 4.03], [0.98, 4.13], [0.84, 4.18], [0, 4.19]];
 const K4_NUMBER = "1361";
@@ -541,6 +541,9 @@ function k4sFront(t: Steam): void {
     // the door's rim and eight of its dogs on the smokebox front
     const X = t.X(K4_FRONT);
     m.tube("smokeboxRim", "x", 0, K4_Y, K4_R * 0.82 + 0.06, K4_R * 0.82 - 0.03, X + 0.01, X + 0.05, 16, Math.PI / 16);
+    // the door's plain dished face over the kit's hinge straps (the K4s's are not seen)
+    const face = ngon(20, K4_R * 0.8, Math.PI / 20, 0, K4_Y);
+    m.sweep("smokebox", "x", face, X + 0.088, face, X + 0.098);
     for (let k = 0; k < 8; k++) {
       const a = Math.PI / 8 + (k * Math.PI) / 4;
       const [z, y] = [Math.cos(a) * (K4_R * 0.82 + 0.12), K4_Y + Math.sin(a) * (K4_R * 0.82 + 0.12)];
@@ -600,6 +603,19 @@ function k4sBoiler(t: Steam): void {
   });
   m.scope("running board box", () => t.sideBox("pipe", 1, 4.9, 6.3, K4_BOARD, 2.45, 1.16, 1.45));
   m.scope("reach rod", () => m.rod("steel", P(12.9, 2.22, -1.32), P(5.4, 2.22, -1.32), 0.025, 6));
+  m.scope("sand pipes", () => {
+    // from the sand dome down the boiler's side, 5 cm off it, forward to the running board
+    for (const s of [-1, 1]) {
+      const pts = [30, 60, 90, 112].map((deg, k): Vec3 => {
+        const a = (deg * Math.PI) / 180;
+        return P(5.85 - k * 0.18, 3.04 + 1.12 * Math.cos(a), s * 1.12 * Math.sin(a));
+      });
+      pts.push(P(5.2, K4_BOARD, s * 1.0));
+      for (let i = 0; i + 1 < pts.length; i++) m.rod("pipe", pts[i]!, pts[i + 1]!, 0.025, 6);
+    }
+  });
+  // the feed pipe from the air pump forward along the boiler's left side
+  m.scope("air pipe", () => m.rod("pipe", P(8.05, 2.32, -0.88), P(3.2, 2.32, -0.88), 0.04, 6));
   m.scope("whistle", () => {
     t.cylY("steel", 10.0, 0.3, 4.1, 4.4, 0.045, 8);
     t.cylY("brass", 10.0, 0.3, 4.4, 4.48, 0.06, 8);
@@ -612,7 +628,12 @@ function k4sCab(t: Steam): void {
   m.scope("cab roof", () => {
     m.scope("roof", () => t.section("roof", 12.92, 15.25, mirrored([[1.63, 3.58], [1.6, 3.9], [1.38, 4.15], [0.9, 4.33], [0, 4.39]])));
     // the hood forward over the firebox's back, shading the front windows
-    m.scope("hood", () => t.section("roof", 11.8, 13.1, mirrored([[1.3, 3.92], [1.22, 4.12], [0.9, 4.3], [0, 4.36]])));
+    m.scope("hood", () => {
+      const full = mirrored([[1.3, 3.92], [1.22, 4.12], [0.9, 4.3], [0, 4.36]]);
+      // its front rounded down toward the firebox's top
+      t.m.sweep("roof", "x", full, t.X(12.3), mirrored([[1.22, 3.98], [1.12, 4.12], [0.8, 4.22], [0, 4.26]]), t.X(11.8));
+      t.m.sweep("roof", "x", full, t.X(13.1), full, t.X(12.3), false);
+    });
     m.scope("ventilator", () => t.box("roof", 12.95, 14.9, 4.37, 4.45, -0.18, 0.18));
   });
   m.scope("numbers", () => {
@@ -640,7 +661,7 @@ function k4sSpec(): LocoSpec {
       // Brunswick green, near black; the smokebox and stack graphite
       paint: { color: "#1f2c24", roughness: 0.55 }, wheel: { color: "#1c1d1f", roughness: 0.6 }, frame: { color: "#1c1d1f", roughness: 0.65 },
       smokebox: { color: "#3c3f42", roughness: 0.7, metallic: 0.2 },
-      smokeboxRim: { color: "#55595d", roughness: 0.5, metallic: 0.3 },
+      smokeboxRim: { color: "#4a4e52", roughness: 0.5, metallic: 0.3 },
       roof: { color: "#1b231e", roughness: 0.7 },
       lining: { color: "#d4b05a", roughness: 0.4 }, gold: { color: "#c9a24e", roughness: 0.4, metallic: 0.3 },
       plate: { color: "#1f2c24", roughness: 0.55 }, plateText: { color: "#d4b05a", roughness: 0.4 },
@@ -928,7 +949,7 @@ export function prrK4s(params?: ParamValues): MeshBuilder { return buildLoco(k4s
 export function prrK4sLod(params?: ParamValues): MeshBuilder {
   // from afar the boiler runs at the conical course's mean size from the smokebox into the firebox
   const spec = k4s(params);
-  return steamLocoLod(spec.boiler ? { ...spec, boiler: { ...spec.boiler, x1: K4_BELPAIRE + 0.1, y: 3.03, r: 1.03 } } : spec);
+  return steamLocoLod(spec.boiler ? { ...spec, boiler: { ...spec.boiler, x1: K4_BELPAIRE + 0.1, y: 3.03, r: 1.03 } } : spec, 200);
 }
 export function nycHudson(params?: ParamValues): MeshBuilder { return buildLoco(hudson(params)); }
 export function nycHudsonLod(params?: ParamValues): MeshBuilder { return steamLocoLod(hudson(params), 200); }
@@ -957,7 +978,7 @@ const AMERICAN_GAME: GameProperties = {
 
 export const US_STEAM: ProceduralDesign[] = [
   { id: "proc-vehicle-up-big-boy", title: "UP Big Boy", build: upBigBoy, buildLod: upBigBoyLod, params: [UNIT_PARAM], game: withTender(345, 4690, 129, 155), lodTriangles: 200, catalog: STEAM_CATALOG, loadingGauge: "us", references: "up-big-boy" },
-  { id: "proc-vehicle-prr-k4s", title: "PRR K4s", build: prrK4s, buildLod: prrK4sLod, params: [UNIT_PARAM], game: withTender(141, 2400, 161, 95), catalog: STEAM_CATALOG, loadingGauge: "us", references: "prr-k4s" },
+  { id: "proc-vehicle-prr-k4s", title: "PRR K4s", build: prrK4s, buildLod: prrK4sLod, params: [UNIT_PARAM], game: withTender(141, 2400, 161, 95), lodTriangles: 200, catalog: STEAM_CATALOG, loadingGauge: "us", references: "prr-k4s" },
   { id: "proc-vehicle-nyc-hudson", title: "NYC J-3a Hudson", build: nycHudson, buildLod: nycHudsonLod, params: [UNIT_PARAM], game: withTender(163, 3500, 161, 130), lodTriangles: 200, catalog: STEAM_CATALOG, loadingGauge: "us", references: "nyc-hudson" },
   { id: "proc-vehicle-american-440", title: "Golden Spike 4-4-0", build: american440, buildLod: american440Lod, params: AMERICAN_PARAMS, game: AMERICAN_GAME, catalog: STEAM_CATALOG, loadingGauge: "us", references: "american-440" },
 ];
