@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | `proc-vehicle-us-caboose` | Cupola caboose | `livery`: `santaFe` (red), `unionPacific` (yellow) | 10.97 m | about 4,600 |
 | `proc-vehicle-us-boxcar` | 50 ft boxcar | `livery`: `boxcarRed`, `railbox` | 16.87 m | 9,300 / 8,200 |
-| `proc-vehicle-us-well-car` | Double-stack well car | `cargo`: `single` (default), `empty`, `double` | 19.35 m | 3,700 - 4,000 |
+| `proc-vehicle-us-well-car` | Double-stack well car | `cargo`: `single` (default), `empty`, `double` | 19.35 m | 11,000 / 8,700 / 13,300 |
 | `proc-vehicle-sf-cable-car` | San Francisco cable car | `livery`: `powell`, `california` | 8.38 m | about 4,200 |
 
 The freight cars are wagons (`WAGON_CATALOG`) on two freight trucks with knuckle couplers; the
@@ -36,18 +36,36 @@ doors: its grip sections are open (`NO_DOORS` in test/doors.test.ts).
   toward the right end, posts 0.87 m apart, "rail box" lettering with its outline logo, "next load",
   the red and blue X and "any road". The lettering reads alike on both sides (u from the viewer's
   left) and is repeated on the faces of the posts it crosses. Both liveries keep the same extent.
-- **Well car** - the end platforms over the trucks, the deep side girders round the well and
-  its floor; a 40 ft high-cube container (12.19 by 2.44 by 2.9 m, corrugated, its doors at the
-  rear) in the well (`single`, the default), a second stacked on it (`double`), or none. The
-  double stack reaches 6.18 m: this design is held to the `usDoubleStack` gauge (3.3 by 6.2 m;
-  [loading-gauge.md](loading-gauge.md)).
+- **Well car** - a stand-alone 40 ft car of TTX's DTTX 45xxxx series (Gunderson's Husky-Stack
+  type) measured from DTTX 455501 side-on at 43.9 px/m (assets/us-well-car/SOURCES.md): 17.7 m over
+  the end sills, trucks at 52 ft centres. The side girders are 1.0 m deep plates from 0.2 m above
+  the rail to the top chord at 1.25 m (a box section 0.28 m wide with its lip), their bottoms flat
+  over 12.3 m and sloping up over 0.8 m to 0.68 m under the end structures; stiffeners inside at the
+  floor's seven cross-bearers, X braces in the six bays between them, the container pedestals with
+  their locating cones at the 40 ft corners. Each end structure has the well's end wall, the box over
+  the truck with its raised cover, perforated walkways across the well's end, across the car's end
+  and along the chords, flared container guides at the well's corners, the end ladders whose stiles
+  rise above the platform as grab irons, the sill steps and grab irons, the angle cock and hose; the
+  B end (-x) carries the brake wheel on its stand, the reservoir and the AB valve. The trucks are the
+  boxcar's 70-ton trucks. The car is TTX yellow with DTTX 455501's lettering on both sides alike (u
+  from the viewer's left): "40", the reporting marks in their black panel, the red TTX mark with
+  "FORWARD THINKING", the data and stencil, the conspicuity reflectors. The cargo is a 40 ft
+  high-cube container (12.19 by 2.44 by 2.9 m) in the well (`single`, the default, blue), a second
+  on inter-box connectors on it (`double`, oxide red), or none: corrugated sides (0.278 m pitch) and
+  blind end, a ribbed roof, the door end at -x with two leaves, hinges and four locking bars with
+  their keepers and handles, the eight corner castings with their apertures, the owner's code and
+  number (RIXU, valid check digits) and the high-cube stripes. The distant model is the girders' box,
+  the container(s) over the well and the trucks. The double stack reaches 6.18 m: this design is held
+  to the `usDoubleStack` gauge (3.3 by 6.2 m; [loading-gauge.md](loading-gauge.md)).
 - **Cable car** - the closed centre cabin with its windows, the open grip sections with
   outward-facing benches, brass poles and end dash panels with a headlamp, running boards,
   the clerestory roof with the line's name, the grip lever, two small trucks.
 
 ## Deviations
 
-- The caboose's and well car's freight trucks' wheelbase is 1.45 m (a 70-ton truck's 5 ft 8 in is 1.73 m), so the
+- The well car rides on the boxcar's 70-ton trucks (33 in wheels, 5 ft 8 in wheelbase), where the
+  real car's 100-ton trucks have 36 in wheels and a 5 ft 10 in wheelbase.
+- The caboose's freight trucks' wheelbase is 1.45 m (a 70-ton truck's 5 ft 8 in is 1.73 m), so the
   shared truck geometry keeps its brake cylinders clear of the transoms.
 - The cable car's grip into the slot and its track brakes are a lever and a shank.
 

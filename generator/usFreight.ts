@@ -503,58 +503,331 @@ export function boxcarLod(params?: ParamValues): MeshBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// Double-stack well car
+// Double-stack well car: a stand-alone 40 ft car of TTX's DTTX 45xxxx series (the
+// Gunderson "Husky-Stack" type), measured from assets/us-well-car/ (DTTX 455501
+// side-on at 43.9 px/m: the 40 ft container's 12.19 m over 535 px). Deep side
+// girders round an open well whose floor is cross-bearers with X braces; the
+// girders' bottoms slope up to the end structures over the trucks, which carry the
+// perforated walkways, the container guides, the end ladders and, on the B end
+// (-x), the brake wheel on its stand. Along a side, u runs from the viewer's left
+// to right (x = s * u), so both sides read alike.
 
 export const WELL_PARAMS: readonly ParamSpec[] = [{
   name: "cargo", title: "Cargo", default: "single",
   values: [{ value: "empty", title: "Empty" }, { value: "single", title: "Single stack" }, { value: "double", title: "Double stack" }],
 }];
 export const WELL_LENGTH = ft(63, 6);
-const WL = { sill: 9.2, well: 6.25, deck: 0.36, girder: 1.75, half: 1.42, centre: ft(52) / 2 };
+/**
+ * The car's measures (m): the end sills, the well's ends, the girders' deep bottom
+ * and where it slopes up to the bottom over the trucks, the top chord, the end
+ * structure's underside, the girders' outer and inner faces and the chord's reach.
+ */
+const WL = {
+  sill: 8.85, well: 6.3, flat: 6.15, slope: 6.95, deck: 0.36, bottom: 0.2, high: 0.68, chord: 1.03, top: 1.25, endUnder: 0.9,
+  outer: 1.5, inner: 1.34, chordOut: 1.56, chordIn: 1.28, centre: ft(52) / 2,
+};
 /** An ISO 40 ft high-cube container: 12.19 by 2.44 by 2.9 m. */
 const CONTAINER = { len: 12.19, half: 1.22, h: 2.9 };
+const WC_PALETTE: Record<string, MaterialSpec> = {
+  ...US_PALETTE, wcYellow: paint("#d9aa3e", 0.7), wcGrate: paint("#9c9a92", 0.6), wcRed: paint("#b5262c", 0.6),
+  cBlue: paint("#24508f", 0.6), cRed: paint("#9a2d22", 0.6), cWhite: paint("#ecebe6", 0.5),
+};
 
-function container(m: MeshBuilder, y0: number, mat: string): void {
-  const [x0, x1] = [-CONTAINER.len / 2, CONTAINER.len / 2];
-  block(m, mat, x0, x1, y0, y0 + CONTAINER.h, -CONTAINER.half, CONTAINER.half);
-  // the corrugated sides and the doors at the rear
-  for (const s of [-1, 1]) for (let x = x0 + 0.3; x < x1 - 0.3; x += 0.3) decalZ(m, "louvre", s * (CONTAINER.half + 0.003), s, x, x + 0.1, y0 + 0.1, y0 + CONTAINER.h - 0.1);
-  for (const z of [-0.6, 0.6]) decalX(m, "steel", x0 - 0.003, -1, z - 0.55, z + 0.55, y0 + 0.1, y0 + CONTAINER.h - 0.1);
+/** A quad in (u, v) as two triangles. */
+const wcRect = (u0: number, u1: number, v0: number, v1: number): BxUV[] => [[u0, v0], [u1, v0], [u1, v1], [u0, v0], [u1, v1], [u0, v1]];
+
+/** A plain plate along z (its outline in x, y, convex) from z0 to z1. */
+function wcPlate(m: MeshBuilder, mat: string, pts: Array<[number, number]>, z0: number, z1: number): void {
+  const area = pts.reduce((a, p, i) => { const n = pts[(i + 1) % pts.length]!; return a + p[0] * n[1] - n[0] * p[1]; }, 0);
+  extrude(m, mat, "z", area > 0 ? pts : [...pts].reverse(), [z0, z1]);
+}
+
+/** A perforated walkway plate: x0 .. x1 by z0 .. z1 on top of y, its holes `pitch` apart. */
+function wcGrating(m: MeshBuilder, x0: number, x1: number, z0: number, z1: number, y: number, pitch: number): void {
+  block(m, "wcGrate", x0, x1, y, y + 0.025, z0, z1);
+  const nx = Math.floor((x1 - x0) / pitch), nz = Math.floor((z1 - z0) / pitch);
+  const ox = x0 + (x1 - x0 - (nx - 1) * pitch) / 2, oz = z0 + (z1 - z0 - (nz - 1) * pitch) / 2, r = pitch * 0.22;
+  const pts: Vec3[] = [];
+  for (let i = 0; i < nx; i++)
+    for (let j = 0; j < nz; j++) {
+      const [x, z] = [ox + i * pitch + ((j % 2) * pitch) / 2, oz + j * pitch];
+      if (x + r > x1 - 0.02) continue;
+      pts.push([x - r, y + 0.028, z - r], [x + r, y + 0.028, z + r], [x + r, y + 0.028, z - r], [x - r, y + 0.028, z - r], [x - r, y + 0.028, z + r], [x + r, y + 0.028, z + r]);
+    }
+  m.facets("black", pts, [0, 1, 0]);
+}
+
+/** The side girder on side s: the deep plate, its bottom flange, the top chord, the stiffeners inside. */
+function wcGirder(m: MeshBuilder, s: number): void {
+  const z = side(s, WL.inner, WL.outer);
+  // the plate: the deep middle with its sloping ends, the shallow parts over the trucks
+  wcPlate(m, "wcYellow", [[-WL.slope, WL.high], [-WL.flat, WL.bottom], [WL.flat, WL.bottom], [WL.slope, WL.high], [WL.slope, WL.chord], [-WL.slope, WL.chord]], ...z);
+  for (const e of [1, -1]) wcPlate(m, "wcYellow", [[e * WL.slope, WL.high], [e * WL.sill, WL.high], [e * WL.sill, WL.chord], [e * WL.slope, WL.chord]], ...z);
+  // the bottom flange following the plate's lower edge
+  const edge: Array<[number, number]> = [[-WL.sill, WL.high], [-WL.slope, WL.high], [-WL.flat, WL.bottom], [WL.flat, WL.bottom], [WL.slope, WL.high], [WL.sill, WL.high]];
+  for (let i = 0; i + 1 < edge.length; i++) {
+    const [[xa, ya], [xb, yb]] = [edge[i]!, edge[i + 1]!];
+    wcPlate(m, "wcYellow", [[xa, ya], [xb, yb], [xb, yb + 0.03], [xa, ya + 0.03]], ...side(s, WL.inner - 0.08, WL.outer + 0.02));
+  }
+  // the top chord: a box section wider than the plate, its lip along the outside
+  block(m, "wcYellow", -WL.sill, WL.sill, WL.chord, WL.top, ...side(s, WL.chordIn, WL.chordOut));
+  block(m, "wcYellow", -WL.sill, WL.sill, WL.chord - 0.04, WL.chord, ...side(s, WL.outer, WL.chordOut));
+  // the end posts outside where the slope meets the shallow part, and at the end sill
+  for (const e of [1, -1])
+    for (const x of [WL.slope, WL.sill - 0.05]) block(m, "wcYellow", e * x - 0.05, e * x + 0.05, WL.high, WL.chord - 0.04, ...side(s, WL.outer, WL.outer + 0.018));
+  // the stiffeners on the inner face, at the floor's cross-bearers
+  for (const x of WC_BEARERS) {
+    const yb = Math.abs(x) > WL.flat ? WL.bottom + ((Math.abs(x) - WL.flat) / (WL.slope - WL.flat)) * (WL.high - WL.bottom) : WL.bottom;
+    block(m, "wcYellow", x - 0.05, x + 0.05, yb + 0.03, WL.chord, ...side(s, WL.inner - 0.06, WL.inner));
+  }
+}
+/** The well floor's cross-bearers (x), the container's corners resting on the outer two. */
+const WC_BEARERS = [-6.05, -4.03, -2.02, 0, 2.02, 4.03, 6.05];
+
+/** The well floor: cross-bearers between the girders, X braces in each bay, the container pedestals. */
+function wcFloor(m: MeshBuilder): void {
+  const zi = WL.inner - 0.06;
+  for (const x of WC_BEARERS) block(m, "wcYellow", x - 0.1, x + 0.1, WL.bottom + 0.02, WL.deck - 0.04, -zi, zi);
+  for (let i = 0; i + 1 < WC_BEARERS.length; i++) {
+    const [xa, xb] = [WC_BEARERS[i]! + 0.1, WC_BEARERS[i + 1]! - 0.1];
+    for (const k of [-1, 1]) m.rod("wcYellow", [xa, WL.bottom + 0.06, -k * zi], [xb, WL.bottom + 0.06, k * zi], 0.035, 4);
+  }
+  // the container pedestals at the 40 ft corners, their locating cones (inter-box connectors)
+  for (const e of [1, -1])
+    for (const sd of [-1, 1]) {
+      const [x, z] = [e * (CONTAINER.len / 2 - 0.09), sd * (CONTAINER.half - 0.08)];
+      block(m, "wcYellow", x - 0.17, x + 0.17, WL.deck - 0.04, WL.deck - 0.005, z - 0.14, z + 0.14);
+      m.prism("black", ngon(4, 0.05, Math.PI / 4, x, z), WL.deck - 0.005, WL.deck + 0.06);
+    }
+}
+
+/** The end structure on end e: the well's end wall, the box over the truck, walkways, guides, ladders, steps. */
+function wcEnd(m: MeshBuilder, e: number): void {
+  const ax = (a: number, b: number): [number, number] => [Math.min(e * a, e * b), Math.max(e * a, e * b)];
+  const zi = WL.inner;
+  // the well's end wall, the box over the truck, the body bolster, the draft sill and the end sill
+  block(m, "wcYellow", ...ax(WL.well, WL.well + 0.25), WL.bottom + 0.05, WL.top, -zi, zi);
+  block(m, "wcYellow", ...ax(WL.well + 0.25, WL.sill), WL.endUnder, WL.top, -zi, zi);
+  block(m, "wcYellow", ...ax(WL.centre - 0.25, WL.centre + 0.25), 0.82, WL.endUnder, -1.25, 1.25);
+  block(m, "wcYellow", ...ax(WL.centre + 0.4, WL.sill), 0.66, WL.endUnder, -0.28, 0.28);
+  block(m, "wcYellow", ...ax(WL.sill, WL.sill + 0.06), 0.62, WL.top, -WL.outer, WL.outer);
+  // the walkways: across the well's end, across the car's end, the chord tops along the well's end
+  wcGrating(m, ...ax(WL.well - 0.05, WL.well + 0.6), -WL.chordOut, WL.chordOut, WL.top, 0.11);
+  wcGrating(m, ...ax(WL.sill - 0.55, WL.sill + 0.06), -WL.chordOut, WL.chordOut, WL.top, 0.11);
+  for (const sd of [-1, 1]) wcGrating(m, ...ax(WL.well - 1.7, WL.well - 0.05), ...side(sd, WL.chordIn, WL.chordOut), WL.top, 0.09);
+  // the raised box between them, its sloped cover over the bolster
+  const [xa, xb] = [WL.well + 0.6, WL.sill - 0.55];
+  wcPlate(m, "wcYellow", [[e * xa, WL.top], [e * xb, WL.top], [e * (xb - 0.12), WL.top + 0.16], [e * (xa + 0.12), WL.top + 0.16]], -1.0, 1.0);
+  // the container guides at the well's corners: an angle standing on the walkway, both legs flared outward at the top
+  for (const sd of [-1, 1]) {
+    const [y0, y1, y2] = [WL.top + 0.025, WL.top + 0.33, WL.top + 0.48];
+    block(m, "wcYellow", ...ax(WL.well - 0.02, WL.well + 0.02), y0, y1, ...side(sd, 0.95, 1.32));
+    block(m, "wcYellow", ...ax(WL.well - 0.38, WL.well - 0.02), y0, y1, ...side(sd, 1.28, 1.32));
+    const P = (x: number, y: number, z: number): Vec3 => [e * x, y, sd * z];
+    m.slab("wcYellow", [P(WL.well - 0.02, y1, 0.95), P(WL.well - 0.02, y1, 1.32), P(WL.well + 0.1, y2, 1.4), P(WL.well + 0.1, y2, 0.95)], [e * 0.04, 0, 0]);
+    m.slab("wcYellow", [P(WL.well - 0.38, y1, 1.28), P(WL.well - 0.02, y1, 1.28), P(WL.well + 0.1, y2, 1.4), P(WL.well - 0.38, y2, 1.4)], [0, 0, sd * 0.04]);
+  }
+  // the train line's angle cock and air hose beside the coupler
+  m.rod("steel", [e * (WL.sill + 0.06), 0.72, e * 0.42], [e * (WL.sill + 0.2), 0.72, e * 0.42], 0.03, 6);
+  m.rod("hose", [e * (WL.sill + 0.2), 0.72, e * 0.42], [e * (WL.sill + 0.45), 0.5, e * 0.3], 0.03, 6);
+  // the end ladders at both corners, their stiles reaching up as grab irons, the sill steps below
+  const xl = e * (WL.sill + 0.12);
+  for (const sd of [-1, 1]) {
+    const [za, zb] = [sd * 1.06, sd * 1.42];
+    for (const z of [za, zb]) {
+      m.rod("handrail", [xl, 0.42, z], [xl, 2.25, z], 0.02, 6);
+      for (const y of [0.9, 2.1]) m.rod("handrail", [e * (WL.sill + 0.06), y, z], [xl, y, z], 0.016, 4, false);
+    }
+    for (const y of [0.42, 0.75, 1.6, 1.95, 2.25]) m.rod("handrail", [xl, y, za], [xl, y, zb], 0.016, 6);
+    // the side's sill step and the grab iron over it
+    const xs = e * (WL.sill - 0.35);
+    for (const x of [xs - 0.2, xs + 0.2]) m.rod("handrail", [x, WL.high, sd * (WL.outer - 0.02)], [x, 0.4, sd * (WL.outer + 0.06)], 0.018, 4, false);
+    m.rod("handrail", [xs - 0.2, 0.4, sd * (WL.outer + 0.06)], [xs + 0.2, 0.4, sd * (WL.outer + 0.06)], 0.02, 4);
+    bxGrab(m, [xs - 0.25, 1.0, sd * WL.outer], [xs + 0.25, 1.0, sd * WL.outer], [0, 0, sd], 0.07);
+  }
+  if (e < 0)
+    m.scope("hand brake", () => {
+      // the B end: the brake wheel on its stand, the housing, the chain down to the gear; the reservoir and valve beside it
+      const [zb, yb] = [0.45, 2.2];
+      block(m, "wcYellow", ...ax(WL.sill - 0.25, WL.sill - 0.05), WL.top + 0.025, yb - 0.25, zb - 0.12, zb + 0.12);
+      block(m, "black", ...ax(WL.sill - 0.05, WL.sill + 0.08), yb - 0.3, yb + 0.08, zb - 0.15, zb + 0.15);
+      m.tube("black", "x", zb, yb, 0.28, 0.25, ...ax(WL.sill + 0.12, WL.sill + 0.15), 14);
+      for (const t of [0, 1, 2]) {
+        const ang = Math.PI / 2 + (t * 2 * Math.PI) / 3;
+        m.rod("black", [e * (WL.sill + 0.135), yb, zb], [e * (WL.sill + 0.135), yb + Math.sin(ang) * 0.255, zb + Math.cos(ang) * 0.255], 0.015, 4, false);
+      }
+      m.rod("black", [e * (WL.sill + 0.08), yb, zb], [e * (WL.sill + 0.16), yb, zb], 0.04, 6);
+      m.rod("steel", [e * (WL.sill + 0.02), yb - 0.3, zb], [e * (WL.sill + 0.02), 0.95, zb + 0.2], 0.012, 4, false);
+      m.sweep("black", "z", ngon(10, 0.17, 0, e * (WL.centre - 0.1), WL.top + 0.17), -1.1, ngon(10, 0.17, 0, e * (WL.centre - 0.1), WL.top + 0.17), -0.3);
+      block(m, "black", ...ax(WL.centre + 0.25, WL.centre + 0.6), WL.top + 0.025, WL.top + 0.4, -0.95, -0.6);
+    });
+}
+
+/** TTX's mark: the T T and the X with its chevron half, from u0, v0 .. v0 + h. */
+function wcTtx(u0: number, v0: number, h: number): BxUV[] {
+  const w = h * 1.05, st = h * 0.24;
+  const T = (u: number): BxUV[] => [...wcRect(u, u + w, v0 + h - st, v0 + h), ...wcRect(u + w / 2 - st / 2, u + w / 2 + st / 2, v0, v0 + h - st)];
+  const ux = u0 + 2 * w + 0.04;
+  return [...T(u0), ...T(u0 + w + 0.02), ...bxBars([[[ux + st / 2, v0 + h - st / 2], [ux + w - st / 2, v0 + st / 2]], [[ux + st / 2, v0 + st / 2], [ux + w - st / 2, v0 + h - st / 2]]], st)];
+}
+
+/** The side lettering of DTTX 455501, both sides alike: the well's size, the reporting marks, the TTX mark, the data. */
+function wcMarks(): Array<{ mat: string; tris: BxUV[]; layer?: number }> {
+  return [
+    { mat: "black", tris: [...bxText("40", -6.26, 0.47, 0.38, 0.2, 0.05, 0.08), ...wcRect(-5.19, -2.62, 0.8, 1.0)] },
+    { mat: "cWhite", layer: 1, tris: [...bxText("DTTX", -4.8, 0.82, 0.16, 0.14, 0.05, 0.034), ...bxText("455501", -3.42, 0.82, 0.16, 0.12, 0.034, 0.034)] },
+    { mat: "wcRed", tris: wcTtx(2.24, 0.58, 0.4) },
+    { mat: "black", tris: [
+      ...bxText("FORWARD THINKING", 2.92, 0.49, 0.05, 0.07, 0.02, 0.009),
+      ...bxText("LD LMT", 4.6, 0.86, 0.06, 0.04, 0.015, 0.01), ...bxText("LT WT", 4.6, 0.76, 0.06, 0.04, 0.015, 0.01),
+      ...bxText("LOAD ONLY 40 FT CONTAINERS", -3.9, 0.66, 0.05, 0.035, 0.012, 0.008),
+    ] },
+    // the consolidated stencil, its white outline, and the conspicuity reflectors along the bottom
+    { mat: "cWhite", tris: [...wcRect(5.92, 6.39, 0.54, 0.56), ...wcRect(5.92, 6.39, 0.79, 0.81), ...wcRect(5.92, 5.94, 0.54, 0.81), ...wcRect(6.37, 6.39, 0.54, 0.81), ...wcRect(6.145, 6.165, 0.56, 0.79)] },
+    { mat: "safety", tris: [...wcRect(-4.5, -4.2, 0.3, 0.4), ...wcRect(-0.15, 0.15, 0.3, 0.4), ...wcRect(4.2, 4.5, 0.3, 0.4), ...wcRect(-8.6, -8.3, 0.73, 0.83), ...wcRect(8.3, 8.6, 0.73, 0.83)] },
+  ];
+}
+
+/** A 40 ft high-cube container from y0: corrugated sides and blind end, the door end at -x with its locking bars, corner castings, its marks. */
+function container(m: MeshBuilder, y0: number, mat: string, number: string): void {
+  const { len, half, h } = CONTAINER;
+  const [x0, x1, y1] = [-len / 2, len / 2, y0 + h];
+  const post = 0.17, d = 0.036;
+  // the body behind the panels, the roof, the top and bottom side rails, the corner posts
+  block(m, mat, x0 + 0.03, x1 - 0.05, y0 + 0.02, y1 - 0.02, -(half - 0.05), half - 0.05);
+  block(m, mat, x0 + post, x1 - post, y1 - 0.04, y1 - 0.012, -(half - 0.05), half - 0.05);
+  // the roof's shallow ribs across
+  for (let i = 0; i < 21; i++) { const x = x0 + 0.5 + i * ((len - 1.0) / 20); block(m, mat, x - 0.05, x + 0.05, y1 - 0.012, y1 - 0.005, -(half - 0.06), half - 0.06); }
+  for (const s of [-1, 1]) {
+    block(m, mat, x0, x1, y0, y0 + 0.16, ...side(s, half - 0.06, half));
+    block(m, mat, x0, x1, y1 - 0.11, y1, ...side(s, half - 0.06, half));
+    for (const x of [x0, x1 - post]) block(m, mat, x, x + post, y0, y1, ...side(s, half - post, half));
+  }
+  for (const x of [x0, x1 - 0.12]) {
+    block(m, mat, x, x + 0.12, y0, y0 + 0.14, -(half - post), half - post);
+    block(m, mat, x, x + 0.12, y1 - 0.2, y1, -(half - post), half - post);
+  }
+  // the corrugations: trapezoids pressed in, 0.278 m pitch
+  const corr = (a: number, b: number): Array<[number, number]> => {
+    const n = Math.round((b - a) / 0.278), p = (b - a) / n, out: Array<[number, number]> = [];
+    for (let i = 0; i < n; i++) { const q = a + i * p; out.push([q, 0], [q + p * 0.26, 0], [q + p * 0.38, d], [q + p * 0.88, d], [q + p, 0]); }
+    return out;
+  };
+  const [ya, yb] = [y0 + 0.16, y1 - 0.11];
+  for (const s of [-1, 1]) {
+    const pts = corr(x0 + post, x1 - post);
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const [[ua, da], [ub, db]] = [pts[i]!, pts[i + 1]!];
+      if (ua === ub && da === db) continue;
+      const P = (u: number, dd: number, y: number): Vec3 => [u, y, s * (half - dd)];
+      if (s > 0) m.quad(mat, P(ua, da, ya), P(ub, db, ya), P(ub, db, yb), P(ua, da, yb));
+      else m.quad(mat, P(ub, db, ya), P(ua, da, ya), P(ua, da, yb), P(ub, db, yb));
+    }
+  }
+  {
+    // the blind end at +x: corrugated across
+    const pts = corr(-(half - post), half - post);
+    const [yc, yd] = [y0 + 0.14, y1 - 0.2];
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const [[ua, da], [ub, db]] = [pts[i]!, pts[i + 1]!];
+      if (ua === ub && da === db) continue;
+      const P = (u: number, dd: number, y: number): Vec3 => [x1 - dd, y, -u];
+      m.quad(mat, P(ua, da, yc), P(ub, db, yc), P(ub, db, yd), P(ua, da, yd));
+    }
+  }
+  m.scope("doors", () => {
+    // two leaves set in the frame, three ribs each, the hinges, four locking bars with their keepers and handles
+    const [yc, yd] = [y0 + 0.14, y1 - 0.2];
+    for (const s of [-1, 1]) {
+      const [za, zb] = side(s, 0.005, half - post);
+      block(m, mat, x0 + 0.03, x0 + 0.06, yc, yd, za, zb);
+      for (const t of [0.25, 0.5, 0.75]) block(m, mat, x0 + 0.015, x0 + 0.03, yc + 0.08, yd - 0.08, s * (0.03 + t * (half - post - 0.06)) - 0.04, s * (0.03 + t * (half - post - 0.06)) + 0.04);
+      for (const y of [yc + 0.25, yc + 0.95, yd - 0.95, yd - 0.25]) block(m, "steel", x0 - 0.015, x0, y - 0.06, y + 0.06, ...side(s, half - post - 0.06, half - post + 0.04));
+      for (const zc of [0.32, 0.82]) {
+        const z = s * zc;
+        m.rod("steel", [x0 - 0.035, yc + 0.02, z], [x0 - 0.035, yd - 0.02, z], 0.017, 6);
+        for (const y of [yc + 0.03, yd - 0.03]) block(m, "steel", x0 - 0.06, x0, y - 0.04, y + 0.04, z - 0.04, z + 0.04);
+        for (const y of [yc + 0.4, yd - 0.4]) block(m, "steel", x0 - 0.05, x0, y - 0.02, y + 0.02, z - 0.035, z + 0.035);
+        m.rod("steel", [x0 - 0.035, y0 + 1.15, z], [x0 - 0.06, y0 + 1.0, z - s * 0.28], 0.014, 4);
+      }
+    }
+  });
+  m.scope("corner castings", () => {
+    // the eight castings standing a little proud, their apertures on the side, end and top faces
+    for (const [xa, ex] of [[x0, -1], [x1, 1]] as const)
+      for (const [ya2, ey] of [[y0, -1], [y1, 1]] as const)
+        for (const s of [-1, 1]) {
+          const xc = xa - ex * 0.089, yc = ya2 - ey * 0.059, zc = s * (half - 0.081);
+          block(m, mat, xc - 0.095, xc + 0.095, yc - 0.064, yc + 0.064, zc - 0.087, zc + 0.087);
+          decalZ(m, "black", s * (half + 0.009), s, xc - 0.06, xc + 0.06, yc - 0.03, yc + 0.03);
+          decalX(m, "black", xa + ex * 0.009, ex, zc - 0.03, zc + 0.03, yc - 0.03, yc + 0.03);
+        }
+  });
+  m.scope("marks", () => {
+    // the owner's code and number near the door end, the high-cube stripes at the top corners
+    for (const s of [-1, 1]) {
+      const zw = half + 0.003;
+      sideText(m, "cWhite", number, s, zw, x0 + 1.4, y1 - 0.42, 0.14);
+      for (const xe of [x0 + 0.25, x1 - 0.85])
+        for (let i = 0; i < 6; i++) {
+          const xa = xe + i * 0.1;
+          m.facets(i % 2 ? "black" : "hazard", [[xa, y1 - 0.105, s * zw], [xa + 0.1, y1 - 0.105, s * zw], [xa + 0.1, y1 - 0.005, s * zw], [xa, y1 - 0.105, s * zw], [xa + 0.1, y1 - 0.005, s * zw], [xa, y1 - 0.005, s * zw]], [0, 0, s]);
+        }
+    }
+    m.facets("cWhite", bxText(number, -0.55, y1 - 0.55, 0.09, 0.045, 0.02, 0.014).map(([u, v]): Vec3 => [x0 + 0.012, v, u]), [-1, 0, 0]);
+  });
+}
+
+/** Inter-box connectors between the lower box's top castings and the upper's bottom ones. */
+function wcIbcs(m: MeshBuilder, y: number): void {
+  for (const ex of [-1, 1]) for (const s of [-1, 1]) block(m, "black", ex * (CONTAINER.len / 2 - 0.089) - 0.07, ex * (CONTAINER.len / 2 - 0.089) + 0.07, y, y + 0.02, s * (CONTAINER.half - 0.081) - 0.06, s * (CONTAINER.half - 0.081) + 0.06);
 }
 
 export function wellCar(params?: ParamValues): MeshBuilder {
   const { cargo } = resolveParams(WELL_PARAMS, params);
-  const m = new MeshBuilder({ ...US_PALETTE, wcGrey: paint("#5d6266", 0.7), cBlue: paint("#24508f", 0.6), cRed: paint("#a3281f", 0.6) });
+  const m = new MeshBuilder(WC_PALETTE);
   m.scope("car", () => {
-    // the two end platforms over the trucks and the side girders round the well
-    for (const e of [1, -1]) block(m, "wcGrey", ...(e > 0 ? [WL.well, WL.sill] : [-WL.sill, -WL.well]) as [number, number], 0.95, 1.35, -1.4, 1.4);
-    for (const s of [-1, 1]) {
-      const sec: Array<[number, number]> = [[-WL.sill + 0.05, 0.95], [-WL.well, 0.95], [-WL.well + 0.6, 0.3], [WL.well - 0.6, 0.3], [WL.well, 0.95], [WL.sill - 0.05, 0.95]];
-      // the girder: a plate from its deep middle to the ends, its top rail along
-      for (let i = 0; i + 1 < sec.length; i++) {
-        const [[xa, ya], [xb, yb]] = [sec[i]!, sec[i + 1]!];
-        const q: Vec3[] = [[xa, ya, s * WL.half], [xb, yb, s * WL.half], [xb, WL.girder, s * WL.half], [xa, WL.girder, s * WL.half]];
-        m.slab("wcGrey", q, [0, 0, -s * 0.1]);
-      }
-      block(m, "steel", -WL.sill + 0.05, WL.sill - 0.05, WL.girder, WL.girder + 0.06, ...side(s, WL.half - 0.12, WL.half + 0.04));
-    }
-    block(m, "wcGrey", -WL.well + 0.6, WL.well - 0.6, WL.deck - 0.1, WL.deck, -1.32, 1.32);
-    if (cargo === "empty") for (const x of [-4.0, 0, 4.0]) block(m, "wcGrey", x - 0.1, x + 0.1, WL.deck, 0.8, -1.32, 1.32);
+    for (const s of [-1, 1])
+      m.scope(s > 0 ? "right side" : "left side", () => {
+        wcGirder(m, s);
+        m.scope("lettering", () => {
+          for (const k of wcMarks()) {
+            const z = s * (WL.outer + 0.003 * (1 + (k.layer ?? 0)));
+            m.facets(k.mat, k.tris.map(([u, v]): Vec3 => [s * u, v, z]), [0, 0, s]);
+          }
+        });
+      });
+    m.scope("floor", () => wcFloor(m));
+    for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => wcEnd(m, e));
   });
   if (cargo !== "empty")
     m.scope("containers", () => {
-      m.scope("lower", () => container(m, WL.deck, "cBlue"));
-      if (cargo === "double") m.scope("upper", () => container(m, WL.deck + CONTAINER.h + 0.02, "cRed"));
+      m.scope("lower", () => container(m, WL.deck, "cBlue", "RIXU 401235 0"));
+      if (cargo === "double")
+        m.scope("upper", () => {
+          wcIbcs(m, WL.deck + CONTAINER.h);
+          container(m, WL.deck + CONTAINER.h + 0.02, "cRed", "RIXU 512870 3");
+        });
     });
-  runningGear(m, WL.centre, WL.sill, WELL_LENGTH, freightTruck());
+  m.scope("trucks", () => {
+    m.scope("front truck", () => m.bogie(() => bxTruck(m, WL.centre)));
+    m.scope("rear truck", () => m.bogie(() => bxTruck(m, -WL.centre)));
+  });
+  for (const e of [1, -1]) m.scope(e > 0 ? "front coupler" : "rear coupler", () => knuckleCoupler(m, e, WL.sill + 0.06, WELL_LENGTH / 2, COUPLER_Y));
   return m;
 }
 
 export function wellCarLod(params?: ParamValues): MeshBuilder {
   const { cargo } = resolveParams(WELL_PARAMS, params);
-  const top = cargo === "empty" ? WL.girder : WL.deck + CONTAINER.h * (cargo === "double" ? 2 : 1);
-  const bands: LodBand[] = cargo === "empty" ? [[0.3, WL.girder, "wcGrey"]] : [[0.3, WL.girder, "wcGrey"], [WL.girder, WL.deck + CONTAINER.h, "cBlue"], ...(cargo === "double" ? [[WL.deck + CONTAINER.h, top, "cRed"] as LodBand] : [])];
-  return boxLod({ ...US_PALETTE, wcGrey: paint("#5d6266", 0.7), cBlue: paint("#24508f", 0.6), cRed: paint("#a3281f", 0.6) }, -WL.sill, WL.sill, 0.3, top, WL.half, bands, cargo === "double" ? "cRed" : cargo === "single" ? "cBlue" : "wcGrey", WL.centre, freightTruck());
+  // the girders and end structures as one box, the containers standing out of the well on it, the trucks
+  const body: UnitBody = { y0: WL.bottom, hw: [[WL.bottom, WL.outer], [WL.top, WL.outer]], side: [[WL.bottom, WL.top, "wcYellow"]], roof: "wcYellow", front: { tip: [[WL.bottom, WL.sill]] }, rear: { tip: [[WL.bottom, -WL.sill]] }, windows: [] };
+  const [x0, x1] = [-CONTAINER.len / 2, CONTAINER.len / 2];
+  const boxes: Array<[number, string]> = cargo === "empty" ? [] : cargo === "single" ? [[WL.deck, "cBlue"]] : [[WL.deck, "cBlue"], [WL.deck + CONTAINER.h + 0.02, "cRed"]];
+  const parts: LodPart[] = [
+    ...bogieParts([[WL.centre, 1.3], [-WL.centre, 1.3]], WL.endUnder),
+    ...boxes.map(([y0, mat]): LodPart => ({ draw: (m) => m.scope("containers", () => block(m, mat, x0, x1, Math.max(y0, WL.top - 0.1), y0 + CONTAINER.h, -CONTAINER.half, CONTAINER.half)) })),
+  ];
+  return fitUnit({ palette: WC_PALETTE, bodies: [body], parts }, 100);
 }
 
 // ---------------------------------------------------------------------------
