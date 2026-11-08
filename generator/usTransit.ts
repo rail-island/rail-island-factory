@@ -14,7 +14,8 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { bogieGeometry, buffers, coupling, exhaust, extrude, horn, paint, type BogieSpec } from "./dieselParts.ts";
 import { block, side } from "./vehicleParts.ts";
 import { add, mul, type Pt } from "./sliceLoft.ts";
-import { crownPoint, halfSlice, sideAt, sideDecal, sideLettering, sidePanel, sliceCabin, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
+import { crownPoint, halfSlice, sideAt, sideDecal, sideLettering, sidePanel, sliceCabin, surfaceDisc, type SliceBody, type SliceDoorway } from "./sliceBody.ts";
+import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { openable, plugMove } from "./doors.ts";
 import { INTERIOR_PALETTE } from "./interior.ts";
 import { CARBODY_PALETTE, bandPainter, carbody, carbodyShell, endDiaphragm, faceLamps, type CarbodySpec, type Painter } from "./carbodyKit.ts";
@@ -23,7 +24,7 @@ import { centreCoupler, enumParam } from "./emuParts.ts";
 import { METRO_CATALOG } from "./metro.ts";
 import { RAIL_CATALOG, coil } from "./cd163.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
-import { bogieParts, fitUnit, roofPart, type UnitBody } from "./lodUnits.ts";
+import { bogieParts, fitUnit, roofPart, underPart, type UnitBody } from "./lodUnits.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 type Band = readonly [number, number, string];
@@ -44,8 +45,8 @@ export interface CarDef {
   strips?: ReadonlyArray<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }>;
   /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square). */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number }>;
-  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds the leaf windows' corners (default square). */
-  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number };
+  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds a pair of narrow leaf windows (`glassW`, `glassPair`) (default square); `glassSurround` sets those rounded windows in a rubber surround with a bright rim (default none). */
+  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number; glassSurround?: boolean };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
@@ -121,7 +122,13 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
         const w = c.doors.glassW, dm = (d0 + d1) / 2, pair = c.doors.glassPair;
         // a double leaf: two narrow windows `glassPair` apart, the leaves' seam between them
         const gr = c.doors.glassCornerR;
-        if (w && pair && gr) for (const k of [-1, 1]) roundedSidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], gr, 0.012, 0.004);
+        if (w && pair && gr && c.doors.glassSurround) for (const k of [-1, 1]) {
+          const [g0, g1] = c.doors.glass, gm = dm + (k * pair) / 2;
+          roundedSidePanel(mm, b, X, s, "rubber", gm - w / 2 - 0.035, gm + w / 2 + 0.035, g0 - 0.035, g1 + 0.035, gr + 0.035, 0.009, 0);
+          roundedSidePanel(mm, b, X, s, "frameSilver", gm - w / 2 - 0.02, gm + w / 2 + 0.02, g0 - 0.02, g1 + 0.02, gr + 0.02, 0.0105, 0);
+          roundedSidePanel(mm, b, X, s, "glass", gm - w / 2, gm + w / 2, g0, g1, gr, 0.012, 0);
+        }
+        else if (w && pair && gr) for (const k of [-1, 1]) roundedSidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], gr, 0.012, 0.004);
         else if (w && pair) for (const k of [-1, 1]) sidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
         else sidePanel(mm, b, X, s, "glass", w ? dm - w / 2 : d0 + 0.12, w ? dm + w / 2 : d1 - 0.12, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
         if (w && pair) sidePanel(mm, b, X, s, "rubber", dm - 0.012, dm + 0.012, y0 + 0.04, y1 - 0.04, 0.011, 0.004);
@@ -265,10 +272,6 @@ export const truckSpec = (wb: number, wheelR: number, bolster: number): BogieSpe
   axles: [-wb / 2, wb / 2], wheelR, frameHalf: wb / 2 + wheelR + 0.15, frameTop: wheelR + 0.42, frameBottom: wheelR + 0.08, frameZ: [0.92, 1.04], primary: "coil",
   secondary: [-0.4, 0.4], secondaryZ: 1.08, bolster,
 });
-
-/** Spans of n windows w wide, evenly over d0..d1. */
-const row = (d0: number, d1: number, n: number, w: number): Array<[number, number]> =>
-  Array.from({ length: n }, (_, i): [number, number] => { const d = d0 + ((d1 - d0) * (i + 0.5)) / n; return [d - w / 2, d + w / 2]; });
 
 /** The LOD body of a car. */
 export function carLodBody(c: CarDef, X: (d: number) => number, section?: number): UnitBody {
@@ -648,29 +651,81 @@ export const R160_LENGTH = ft(60, 2.5);
 export const CTA_LENGTH = ft(48);
 const METRO_PAL = { ss: paint("#c3c7ca", 0.3), ssDark: paint("#9a9ea1", 0.4), mask: paint("#1c1d1f", 0.4), ctaRed: paint("#c8102e"), ctaBlue: paint("#00a1de"), under: paint("#2a2c2f", 0.85) };
 
+// NYC Subway R160 (Kawasaki and Alstom, 2005 - 2010), measured on the photographs in
+// assets/nyc-r160/ (SOURCES.md): the 9184 side (a 1-D projective fit over its door edges), the
+// F-train cab ends head-on (133 px/m on the 10 ft width), the 8539 delivery (the trucks).
+const R160_GAP = 0.25;
+const R160_BODY = R160_LENGTH - 2 * R160_GAP;
+/** The door centres from the car's middle, the 50 in opening and sill to head, the dark door pocket's frame beside it, the leaf windows. */
+const R160_DOOR = { c: [-7.01, -2.34, 2.34, 7.01], w: 1.27, y: [1.14, 3.15] as const, frame: 0.14, head: 3.22, glass: [2.1, 3.05] as const };
+/** One window centred between each pair of doors: rounded corners, its upper light over a transom (the LED destination sign in the window nearest the front). */
+const R160_WIN = { c: [-4.68, 0, 4.68], w: 1.33, y: [2.1, 3.08] as const, bar: [2.79, 2.84] as const, r: 0.12 };
+/** Truck centres 1.675 m inside the body's ends (the 8539 delivery photograph), a 2.0 m wheelbase, 28 in wheels. */
+const R160_TRUCK_D = [1.675, R160_BODY - 1.675];
+const R160_WB = 2.0;
+const R160_WHEEL = ft(0, 14);
+/** Each end: the corners rounded 0.12 m back in plan, the roof rolling down into the end wall (about 0.35 m radius). */
+const r160End = {
+  len: 0.12, tip: 0.92, power: 2,
+  C: [[0, 3.31], [0.04, 3.45], [0.09, 3.53], [0.15, 3.59], [0.24, 3.63], [0.37, 3.65]] as Pt[],
+  S: [[0, 3.28]] as Pt[],
+};
+/** The air-conditioning shroud at each end of the roof: d from that end, its flat top and half widths. */
+const R160_AC = { d: [0.42, 5.3] as const, ramp: 0.3, top: 3.7, half: 0.78, foot: 0.9 };
+/** The cab end (z: + the train's right, where the cab is): the door's frame and leaf, the black fields, the windscreen, the lamps (z, r, lens) and the route sign. */
+const R160_CAB = {
+  door: { z: [-0.58, 0.42] as const, leaf: [-0.5, 0.34] as const, y: [1.14, 3.19] as const, glass: [-0.36, 0.2, 2.17, 3.02] as const },
+  screen: [0.53, 1.26, 1.97, 2.96] as const,
+  lampY: 1.6,
+  lamps: [[0.75, 0.085, "lampHead"], [-0.75, 0.085, "lampHead"], [1.12, 0.075, "r160Marker"], [-1.12, 0.075, "r160Marker"]] as const,
+  sign: [-0.33, 0.17, 3.28, 3.63] as const,
+};
+/** The cab's side window on the right: d from the cab end, sill and head. */
+const R160_CAB_SIDE = { d: [0.3, 0.95] as const, y: [1.95, 2.92] as const };
+const R160_PAL = {
+  ss: paint("#c3c7ca", 0.3), ssDark: paint("#9a9ea1", 0.4), ssBright: paint("#dfe2e4", 0.2), mask: paint("#1c1d1f", 0.4), under: paint("#2a2c2f", 0.85),
+  doorFrame: paint("#857f77", 0.4), anticlimber: paint("#3a3c3f", 0.7), barrier: paint("#9b8a70", 0.7), shoeBeam: paint("#3f3428", 0.85), fuse: paint("#b8322b", 0.6),
+  led: paint("#ffa62b", 0.3), display: paint("#262628", 0.5), routeRed: paint("#e8303c", 0.3), flagRed: paint("#b22234", 0.5), flagBlue: paint("#3c3b6e", 0.5),
+  logoWhite: paint("#eef0f2", 0.4), mtaBlue: paint("#0039a6", 0.4), numberWhite: paint("#f4f4f2", 0.4),
+  // the marker lamps' clear lenses, lit red at the rear
+  r160Marker: { color: "#e3d9d6", roughness: 0.2, lamp: { role: "tail" } } as MaterialSpec,
+};
+
 function r160Def(u: MetroCar): CarDef {
-  const L = R160_LENGTH - 0.5;
-  const doorAt = [-6.9, -2.3, 2.3, 6.9].map((x) => L / 2 + x);
-  const doors = doorAt.map((d): [number, number] => [d - 0.635, d + 0.635]);
-  const gaps: Array<[number, number]> = [[1.0, doors[0]![0] - 0.2], ...doors.slice(0, -1).map((dd, i): [number, number] => [dd[1] + 0.2, doors[i + 1]![0] - 0.2]), [doors[3]![1] + 0.2, L - 1.0]];
-  const windows = gaps.flatMap(([a, b]) => row(a, b, b - a > 2.5 ? 2 : 1, Math.min(1.3, (b - a) / (b - a > 2.5 ? 2 : 1) - 0.25)));
-  const trucks = [L / 2 - 6.285, L / 2 + 6.285];
+  const L = R160_BODY, cab = u === "cabCar";
+  const doors = R160_DOOR.c.map((c): [number, number] => [L / 2 + c - R160_DOOR.w / 2, L / 2 + c + R160_DOOR.w / 2]);
   return {
-    spec: { length: L, W: 1.52, Y: 1.15, S: 3.3, C: 3.66, lean: 0.985, arc: 5, B: 0.92, wl: 1.48, A: 1.0, wa: 1.51, edges: [], step: 1.0 },
+    spec: { length: L, W: 1.524, Y: 1.15, S: 3.28, C: 3.65, lean: 0.985, arc: 6, B: 0.92, wl: 1.48, A: 1.0, wa: 1.51, front: r160End, rear: r160End, edges: [], step: 1.0, noseStep: 0.12 },
     bands: [[0, 9, "ss"]], roof: "ss", skirt: "ssDark", under: "under",
-    windows: [{ y: [1.95, 2.75], spans: windows, frame: "mask" }],
-    doors: { spans: doors, y: [1.13, 3.08], glass: [1.95, 2.7] },
-    fluting: { y0: 1.2, y1: 1.85, pitch: 0.1, mat: "ssDark" },
-    cab: { mask: [1.0, 3.4, "mask"], panes: [[0.55, 1.35, 1.95, 2.85], [-0.35, 0.35, 1.9, 2.95], [-1.35, -0.55, 1.95, 2.85]], lamps: [[-0.95, 1.4, 0.08, "lampHead"], [0.95, 1.4, 0.08, "lampHead"], [-1.2, 1.4, 0.05, "lampRed"], [1.2, 1.4, 0.05, "lampRed"]] },
-    cabEnds: u === "cabCar" ? [1] : [], diaphragm: [1.2, 3.0],
-    trucks, truck: truckSpec(ft(7), ft(0, 14), 0.92),
-    coupler: "centre", couplerY: 0.82, gap: [0.25, 0.25],
-    lettering: [{ text: "8713", d: L / 2, y: 3.0, h: 0.14, mat: "mask" }],
-    extras: (m, _b, X) => m.scope("underfloor", () => block(m, "under", X(L / 2 + 3.5), X(L / 2 - 3.5), 0.45, 0.93, -1.1, 1.1)),
+    windows: [
+      { y: R160_WIN.y, spans: R160_WIN.c.map((c): [number, number] => [L / 2 + c - R160_WIN.w / 2, L / 2 + c + R160_WIN.w / 2]), frame: "frameSilver", cornerR: R160_WIN.r },
+      // the cab's side window on the operator's (right) side, in the end panel before the first door (the 21 St photograph)
+      ...(cab ? [{ y: R160_CAB_SIDE.y, spans: [R160_CAB_SIDE.d], frame: "frameSilver", onSide: 1, cornerR: 0.06 }] : []),
+    ],
+    doors: { spans: doors, y: R160_DOOR.y, glass: R160_DOOR.glass, glassW: 0.27, glassPair: 0.635, glassCornerR: 0.12, glassSurround: true },
+    cabEnds: [], diaphragm: null,
+    // the trucks are drawn with the extras (r160Truck)
+    trucks: [], truck: truckSpec(R160_WB, R160_WHEEL, 0.92),
+    coupler: "centre", couplerY: 0.82, gap: [R160_GAP, R160_GAP],
+    // the cab end's black crown over the windscreen and the door
+    repaint: (base) => (d, y, r) => (cab && d < 0.3 && (r === "arc" || (r === "cap" && y > 3.25)) ? "mask" : base(d, y, r)),
+    extras: (m, b, X) => {
+      m.scope("door frames", () => { for (const s of [1, -1]) doors.forEach(([a, e]) => r160DoorFrame(m, b, X, s, a, e)); });
+      m.scope("side details", () => { for (const s of [1, -1]) r160Side(m, b, X, s, doors, cab ? "8713" : "8714", cab && s > 0); });
+      m.scope("roof", () => r160Roof(m, b, X));
+      m.scope("underfloor", () => r160Underfloor(m, X));
+      m.scope("running gear", () => R160_TRUCK_D.forEach((d, i) => m.scope(`truck ${i + 1}`, () => m.bogie(() => r160Truck(m, X(d))))));
+      for (const e of [1, -1])
+        m.scope(e > 0 ? "front end" : "rear end", () => {
+          const face = Math.abs(X(e > 0 ? 0 : L));
+          if (cab && e > 0) r160CabEnd(m, e, face);
+          else r160InnerEnd(m, e, face);
+          r160Sill(m, e, face);
+        });
+    },
   };
 }
 
-import { surfaceDisc } from "./sliceBody.ts";
 import { endText } from "./usHoodKit.ts";
 
 // The Chicago 'L' 5000-series (Bombardier, 2009 - 2015): a married-pair car with its
@@ -709,6 +764,309 @@ const CTA_PAL = {
 /** The face's plan and crown: the bonnet a little narrower than the body, its top rolling back into the roof. */
 const ctaCabEnd = { len: 0.2, tip: 0.9, power: 2.5, C: [[0, 3.6], [0.06, 3.64], [0.2, 3.66]] as Pt[], S: [[0, 3.4], [0.1, 3.3], [0.2, 3.2]] as Pt[] };
 const ctaPlainEnd = { len: 0.2, tip: 0.92, power: 2.5, C: [[0, 3.6], [0.08, 3.65], [0.2, 3.66]] as Pt[], S: [[0, 3.36], [0.1, 3.28], [0.2, 3.2]] as Pt[] };
+
+/** A convex outline (z, y) flat on the end wall at |x| = face + off, facing e. */
+function r160Flat(m: MeshBuilder, mat: string, e: number, face: number, off: number, pts: readonly Pt[]): void {
+  const p = pts.map(([z, y]): Vec3 => [e * (face + off), y, z]);
+  m.facets(mat, p.slice(1, -1).flatMap((q, i) => [p[0]!, q, p[i + 2]!]), [e, 0, 0]);
+}
+
+/** Text on the end wall at |x| = face + off facing e, centred at z, its foot at y, reading left to right from outside. */
+function r160EndText(m: MeshBuilder, mat: string, e: number, face: number, off: number, text: string, z: number, y: number, h: number): void {
+  const w = h * 0.6, gap = h * 0.2, width = strokeWidth(text, w, gap);
+  const tris = strokeText(text, -width / 2, y, h, w, gap, false, h * 0.16).map(([u, v]): Vec3 => [e * (face + off), v, z - e * u]);
+  m.facets(mat, tris, [e, 0, 0]);
+}
+
+/** The x span from a to c outside the end wall at |x| = face (negative inside it), ordered. */
+const r160Ax = (e: number, face: number, a: number, c: number): [number, number] => (e > 0 ? [face + a, face + c] : [-face - c, -face - a]);
+
+/** The door pocket's dark frame on side s beside and over the door opening d0..d1. */
+function r160DoorFrame(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, d0: number, d1: number): void {
+  const { frame: f, head } = R160_DOOR, [y0, y1] = R160_DOOR.y;
+  sidePanel(m, b, X, s, "doorFrame", d0 - f, d0, y0 - 0.08, head, 0.008, 0.03);
+  sidePanel(m, b, X, s, "doorFrame", d1, d1 + f, y0 - 0.08, head, 0.008, 0.03);
+  sidePanel(m, b, X, s, "doorFrame", d0, d1, y1, head, 0.008, 0.03);
+}
+
+/**
+ * Side s's fittings: the rain strip under the roof, the belt seam, the round plate under each window,
+ * the windows' transoms (the LED destination sign in the front window), the flag decal, and at each
+ * end the car number on its black plate and the MTA logo (`cabSide`: not at the front, where the cab's side window is).
+ */
+function r160Side(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, doors: ReadonlyArray<readonly [number, number]>, number: string, cabSide: boolean): void {
+  const L = b.length, f = R160_DOOR.frame;
+  // runs from 0.13 to L - 0.13 broken over the door frames
+  const runs: Array<[number, number]> = [];
+  let from = 0.13;
+  for (const [a, e] of doors) { runs.push([from, a - f - 0.01]); from = e + f + 0.01; }
+  runs.push([from, L - 0.13]);
+  m.scope("rain strip", () => sidePanel(m, b, X, s, "ss", 0.13, L - 0.13, R160_DOOR.head, 3.27, 0.012, 0.02));
+  m.scope("belt seam", () => sideDecal(m, b, X, s, "ssDark", runs.flatMap(([p, q]): Pt[] => [[p, 1.925], [q, 1.925], [q, 1.937], [p, 1.925], [q, 1.937], [p, 1.937]]), 0.003));
+  R160_WIN.c.forEach((c, i) => {
+    const dc = L / 2 + c, [a, e] = [dc - R160_WIN.w / 2 + 0.04, dc + R160_WIN.w / 2 - 0.04];
+    m.scope(`window ${i + 1} transom`, () => sidePanel(m, b, X, s, "frameSilver", a, e, R160_WIN.bar[0], R160_WIN.bar[1], 0.016, 0.006));
+    m.scope("plate", () => {
+      surfaceDisc(m, b, X, dc, 1.48, s, "anticlimber", 0.075, 0.004, 0.01, 14);
+      surfaceDisc(m, b, X, dc, 1.48, s, "ssDark", 0.05, 0.009, 0.004, 12);
+    });
+    // the destination sign behind the upper light of the front window (the E-train photograph)
+    if (i === 0)
+      m.scope("destination sign", () => {
+        sidePanel(m, b, X, s, "display", a + 0.04, e - 0.04, R160_WIN.bar[1] + 0.012, R160_WIN.y[1] - 0.075, 0.014, 0.002);
+        sideLettering(m, b, X, s, "F  JAMAICA 179 ST", dc, R160_WIN.bar[1] + 0.045, 0.085, "led", 0.0165);
+      });
+  });
+  m.scope("flag", () => {
+    const [d0, d1, y0, y1] = [2.85, 3.4, 2.78, 3.07], h = (y1 - y0) / 13;
+    sidePanel(m, b, X, s, "logoWhite", d0, d1, y0, y1, 0.005, 0.003);
+    for (let k = 0; k < 13; k += 2) sidePanel(m, b, X, s, "flagRed", d0, d1, y0 + k * h, y0 + (k + 1) * h, 0.007, 0.001);
+    // the canton toward the front, as the flag flies when the car runs forward
+    sidePanel(m, b, X, s, "flagBlue", d0, d0 + 0.22, y0 + 6 * h, y1, 0.009, 0.001);
+  });
+  // (the cab's side window takes the front end panel on the cab side)
+  for (const dc of cabSide ? [L - 0.48] : [0.48, L - 0.48])
+    m.scope("number and logo", () => {
+      sidePanel(m, b, X, s, "mask", dc - 0.29, dc + 0.29, 2.8, 3.04, 0.006, 0.004);
+      sideLettering(m, b, X, s, number, dc, 2.84, 0.16, "numberWhite", 0.009);
+      surfaceDisc(m, b, X, dc, 2.45, s, "logoWhite", 0.23, 0.005, 0.004, 18);
+      // the MTA disc at the logo's upper left, the lettering under it
+      surfaceDisc(m, b, X, dc + s * 0.07, 2.53, s, "mtaBlue", 0.065, 0.008, 0.002, 12);
+      sidePanel(m, b, X, s, "mtaBlue", dc - 0.14, dc + 0.12, 2.39, 2.41, 0.008, 0.002);
+      sidePanel(m, b, X, s, "mtaBlue", dc - 0.14, dc + 0.04, 2.35, 2.37, 0.008, 0.002);
+    });
+}
+
+/** The roof: its flutes and the air-conditioning shroud at each end with the condenser grilles. */
+function r160Roof(m: MeshBuilder, b: SliceBody, X: (d: number) => number): void {
+  const L = b.length, arc = rdcArc(b, L / 2), ac = R160_AC;
+  const shrouds = [[ac.d[0], ac.d[1]], [L - ac.d[1], L - ac.d[0]]] as const;
+  m.scope("flutes", () => {
+    for (let u = 0.06; u + 0.03 < arc.len - 0.04; u += 0.095) {
+      const p = arc.at(u), q = arc.at(u + 0.022);
+      if (p.seg !== q.seg) continue;
+      const n = p.n;
+      const cuts = p.p[0] < ac.foot + 0.04 ? shrouds.map(([a, e]) => [a - 0.05, e + 0.05] as const) : [];
+      let from = 0.42;
+      const runs: Array<[number, number]> = [];
+      for (const [a, e] of cuts) { if (a > from + 0.05) runs.push([from, a]); from = Math.max(from, e); }
+      if (L - 0.42 > from + 0.05) runs.push([from, L - 0.42]);
+      for (const s of [1, -1])
+        for (const [a, e] of runs) {
+          const P = (d: number, r: Pt): Vec3 => [X(d), r[1] + n[1] * 0.004, s * (r[0] + n[0] * 0.004)];
+          m.facets("ssDark", [P(a, p.p), P(e, p.p), P(e, q.p), P(a, p.p), P(e, q.p), P(a, q.p)], [0, n[1], s * n[0]]);
+        }
+    }
+  });
+  m.scope("air conditioning", () => {
+    const foot = crownPoint(b, L / 2, ac.foot)[1] - 0.03;
+    const sec: Pt[] = [[-ac.foot, foot], [ac.foot, foot], [ac.foot - 0.04, ac.top - 0.04], [ac.half, ac.top], [-ac.half, ac.top], [-(ac.foot - 0.04), ac.top - 0.04]];
+    const low = sec.map(([z, y]): Pt => [z * 0.96, foot + (y - foot) * 0.15]);
+    for (const [d0, d1] of shrouds) {
+      m.sweep("ss", "x", low, X(d0), sec, X(d0 + ac.ramp), false);
+      m.sweep("ss", "x", sec, X(d0 + ac.ramp), sec, X(d1 - ac.ramp), false);
+      m.sweep("ss", "x", sec, X(d1 - ac.ramp), low, X(d1), false);
+    }
+    // the condenser grilles near each end, on the shroud's top
+    for (const e of [1, -1])
+      for (const [g0, g1] of [[0.85, 1.6], [1.75, 2.5]] as const) {
+        const [a, c] = e > 0 ? [g0, g1] : [L - g1, L - g0];
+        const [x0, x1] = [Math.min(X(a), X(c)), Math.max(X(a), X(c))];
+        block(m, "grille", x0, x1, ac.top - 0.01, ac.top + 0.008, -0.62, 0.62);
+        for (let k = 1; k < 5; k++) { const x = x0 + ((x1 - x0) * k) / 5; m.rod("louvre", [x, ac.top + 0.012, -0.6], [x, ac.top + 0.012, 0.6], 0.01, 4); }
+      }
+  });
+}
+
+/** Under the floor between the trucks (the 9184 and 8539 photographs): the propulsion and auxiliary boxes, the battery box, the braking resistor grids and the air reservoir; the other side the same turned end for end. */
+function r160Underfloor(m: MeshBuilder, X: (d: number) => number): void {
+  const L = R160_BODY;
+  for (const s of [1, -1]) {
+    const at = (d: number) => (s > 0 ? d : L - d);
+    const box = (mat: string, d0: number, d1: number, y0: number, y1: number, z0: number, z1: number) => rdcBlock(m, X, mat, at(d0), at(d1), y0, y1, s * z0, s * z1);
+    m.scope("auxiliary inverter", () => box("under", 3.4, 5.25, 0.48, 0.95, 0.3, 1.2));
+    m.scope("propulsion", () => {
+      box("under", 5.5, 7.6, 0.42, 0.95, 0.25, 1.22);
+      box("grille", 5.75, 7.35, 0.52, 0.85, 1.22, 1.235);
+      for (let y = 0.57; y < 0.82; y += 0.06) m.rod("louvre", [X(at(5.78)), y, s * 1.24], [X(at(7.32)), y, s * 1.24], 0.01, 4);
+    });
+    m.scope("battery box", () => { box("under", 7.8, 8.45, 0.52, 0.95, 0.4, 1.18); box("safety", 7.85, 8.4, 0.56, 0.84, 1.18, 1.2); });
+    m.scope("equipment", () => box("under", 8.7, 10.9, 0.5, 0.95, 0.2, 1.2));
+    m.scope("resistor grids", () => {
+      for (const [d0, d1] of [[11.1, 11.65], [11.72, 12.27]] as const) {
+        box("under", d0, d1, 0.46, 0.95, 0.45, 1.16);
+        box("grille", d0 + 0.03, d1 - 0.03, 0.5, 0.86, 1.16, 1.2);
+      }
+    });
+    m.scope("air reservoir", () => m.sweep("under", "x", ngon(10, 0.2, 0, s * 0.95, 0.7), X(at(12.45)), ngon(10, 0.2, 0, s * 0.95, 0.7), X(at(13.45))));
+    m.scope("compressor", () => box("under", 13.6, 14.55, 0.5, 0.95, 0.35, 1.1));
+  }
+  m.scope("centre sill", () => rdcBlock(m, X, "under", 3.3, L - 3.3, 0.6, 0.95, -0.22, 0.22));
+}
+
+/** The R160 truck at model x xc: wheelsets with outside axle boxes and chevron springs, an H frame dropped between the axles, air springs, the third-rail shoe beam and shoe on each side with its fuse box, and the traction motors. */
+function r160Truck(m: MeshBuilder, xc: number): void {
+  const R = R160_WHEEL, ay = R * Math.cos(Math.PI / 20), a2 = R160_WB / 2;
+  for (const dx of [-a2, a2])
+    m.scope("wheelset", () => {
+      const x = xc + dx;
+      const axle = ngon(8, 0.075, 0, x, ay);
+      m.sweep("steel", "z", axle, -0.9, axle, 0.9);
+      for (const s of [-1, 1]) {
+        extrude(m, "steel", "z", ngon(20, R, Math.PI / 20, x, ay), side(s, 0.665, 0.8));
+        extrude(m, "wheel", "z", ngon(16, R * 0.8, 0, x, ay), side(s, 0.8, 0.82));
+        m.scope("axle box", () => extrude(m, "bogie", "z", ngon(10, 0.12, 0, x, ay), side(s, 0.82, 1.02)));
+        m.scope("box cover", () => extrude(m, "spring", "z", ngon(10, 0.08, 0, x, ay), side(s, 1.02, 1.06)));
+        // the chevron rubber springs over the box, under the frame's end
+        m.scope("chevron spring", () => block(m, "rubber", x - 0.17, x + 0.17, ay + 0.1, 0.61, ...side(s, 0.84, 1.0)));
+        // the traction motor inboard of the axle
+        if (s > 0) m.scope("motor", () => block(m, "bogie", ...((dx < 0 ? [x + 0.15, xc - 0.12] : [xc + 0.12, x - 0.15]) as [number, number]), 0.22, 0.58, -0.42, 0.42));
+      }
+    });
+  m.scope("frame", () => {
+    for (const s of [-1, 1]) {
+      extrude(m, "bogie", "z", [[xc - 1.3, 0.6], [xc + 1.3, 0.6], [xc + 1.3, 0.76], [xc - 1.3, 0.76]], side(s, 0.86, 0.98));
+      extrude(m, "bogie", "z", [[xc - 0.62, 0.42], [xc + 0.62, 0.42], [xc + 0.75, 0.62], [xc - 0.75, 0.62]], side(s, 0.87, 0.97));
+      // the air spring on the frame, under the bolster
+      m.rod("rubber", [xc, 0.74, s * 0.92], [xc, 0.9, s * 0.92], 0.14, 10);
+      // the third-rail shoe beam outside the axle boxes, its hanger and shoe, the shoe fuse box
+      block(m, "shoeBeam", xc - 1.18, xc + 1.18, 0.3, 0.38, ...side(s, 1.07, 1.13));
+      block(m, "steel", xc - 0.06, xc + 0.06, 0.19, 0.31, ...side(s, 1.1, 1.14));
+      block(m, "steel", xc - 0.16, xc + 0.16, 0.17, 0.205, ...side(s, 1.11, 1.42));
+      block(m, "fuse", xc - 0.34, xc - 0.1, 0.4, 0.56, ...side(s, 1.0, 1.16));
+    }
+    block(m, "bogie", xc - 0.22, xc + 0.22, 0.46, 0.6, -0.9, 0.9);
+    block(m, "bogie", xc - 0.3, xc + 0.3, 0.88, 0.915, -1.05, 1.05);
+  });
+}
+
+/** The anticlimber across the end at the floor and the boxes under it beside the coupler. */
+function r160Sill(m: MeshBuilder, e: number, face: number): void {
+  const ax = (a: number, c: number) => r160Ax(e, face, a, c);
+  m.scope("anticlimber", () => {
+    block(m, "anticlimber", ...ax(-0.02, 0.1), 1.0, 1.14, -1.38, 1.38);
+    for (const y of [1.025, 1.06, 1.095]) block(m, "anticlimber", ...ax(0.08, 0.125), y, y + 0.02, -1.34, 1.34);
+    for (const s of [-1, 1]) block(m, "under", ...ax(-0.1, 0.06), 0.62, 0.92, ...side(s, 0.35, 0.78));
+  });
+}
+
+/** The cab end at |x| = face facing e: the black fields with the windscreen, the stainless door with its window and safety chains, the lamps, the route sign in the crown, the flag and the MTA logo. */
+function r160CabEnd(m: MeshBuilder, e: number, face: number): void {
+  const F = (mat: string, off: number, pts: readonly Pt[]) => r160Flat(m, mat, e, face, off, pts);
+  const ax = (a: number, c: number) => r160Ax(e, face, a, c);
+  const x = (off: number) => e * (face + off);
+  const { door, screen, lampY, sign } = R160_CAB;
+  m.scope("mask", () => {
+    // the cab side's field down past the lamps, the other side's with its inner corner cut back, the band over the door
+    F("mask", 0.003, [[door.z[1], 3.28], [door.z[1], 1.36], [door.z[1] + 0.04, 1.31], [door.z[1] + 0.13, 1.29], [1.2, 1.4], [1.3, 1.45], [1.36, 1.55], [1.36, 3.28]]);
+    F("mask", 0.003, [[door.z[0], 3.28], [-1.36, 3.28], [-1.36, 1.55], [-1.3, 1.45], [-1.2, 1.4], [door.z[0] - 0.16, 1.29], [door.z[0] - 0.08, 1.36], [door.z[0], 1.72]]);
+    F("mask", 0.003, [[door.z[0], door.y[1]], [door.z[1], door.y[1]], [door.z[1], 3.28], [door.z[0], 3.28]]);
+  });
+  m.scope("windscreen", () => {
+    F("cabGlass", 0.006, roundedOutline(screen[0], screen[1], screen[2], screen[3], 0.06));
+    // the wiper hanging from its spindle over the glass
+    m.rod("black", [x(0.02), 3.02, 0.98], [x(0.02), 2.42, 0.8], 0.012, 5);
+    m.rod("black", [x(0.03), 2.75, 0.89], [x(0.03), 2.2, 0.74], 0.01, 5);
+    // the grab handle under it
+    for (const z of [0.62, 1.18]) m.rod("handrail", [x(0), 1.87, z], [x(0.06), 1.87, z], 0.012, 5);
+    m.rod("handrail", [x(0.06), 1.87, 0.62], [x(0.06), 1.87, 1.18], 0.014, 6);
+  });
+  m.scope("end door", () => {
+    const [l0, l1] = door.leaf;
+    // the seams round the leaf, the leaf standing out of the frame, its window's rim and glass
+    for (const [z0, z1, y0, y1] of [[l0 - 0.02, l0, door.y[0], door.y[1] - 0.06], [l1, l1 + 0.02, door.y[0], door.y[1] - 0.06], [l0 - 0.02, l1 + 0.02, door.y[1] - 0.08, door.y[1] - 0.06]] as const) F("rubber", 0.004, [[z0, y0], [z1, y0], [z1, y1], [z0, y1]]);
+    block(m, "ss", ...ax(-0.01, 0.012), door.y[0] + 0.02, door.y[1] - 0.08, l0, l1);
+    const [g0, g1, h0, h1] = door.glass;
+    F("rubber", 0.013, roundedOutline(g0 - 0.015, g1 + 0.015, h0 - 0.015, h1 + 0.015, 0.09));
+    F("ssBright", 0.014, roundedOutline(g0, g1, h0, h1, 0.08));
+    F("cabGlass", 0.016, roundedOutline(g0 + 0.035, g1 - 0.035, h0 + 0.035, h1 - 0.035, 0.05));
+    // the safety chains strung across the door in vees
+    const zm = (l0 + l1) / 2;
+    for (const h of [2.48, 2.04, 1.6]) {
+      m.rod("black", [x(0.05), h, l0 + 0.02], [x(0.05), h - 0.42, zm], 0.014, 5);
+      m.rod("black", [x(0.05), h - 0.42, zm], [x(0.05), h, l1 - 0.02], 0.014, 5);
+    }
+    m.rod("handrail", [x(0.03), 1.4, l1 - 0.06], [x(0.03), 1.4, l1 - 0.18], 0.012, 5);
+  });
+  m.scope("lamps", () => {
+    for (const [z, r, lens] of R160_CAB.lamps) {
+      extrude(m, "ssBright", "x", ngon(16, r + 0.04, 0, z, lampY), ax(-0.01, 0.03));
+      extrude(m, lens, "x", ngon(16, r, 0, z, lampY), ax(0.03, 0.04));
+    }
+  });
+  m.scope("route sign", () => {
+    const [z0, z1, y0, y1] = sign, zc = (z0 + z1) / 2, yc = (y0 + y1) / 2;
+    extrude(m, "mask", "x", roundedOutline(z0, z1, y0, y1, 0.06), ax(-0.28, 0.03));
+    F("display", 0.033, roundedOutline(z0 + 0.04, z1 - 0.04, y0 + 0.03, y1 - 0.03, 0.04));
+    const ring: Vec3[] = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * 2 * Math.PI, c = ((i + 1) / 16) * 2 * Math.PI;
+      const P = (r: number, t: number): Vec3 => [x(0.036), yc + r * Math.sin(t), zc + r * Math.cos(t)];
+      ring.push(P(0.115, a), P(0.135, a), P(0.135, c), P(0.115, a), P(0.135, c), P(0.115, c));
+    }
+    m.facets("routeRed", ring, [e, 0, 0]);
+    r160EndText(m, "routeRed", e, face, 0.036, "F", zc, yc - 0.07, 0.14);
+  });
+  m.scope("flag", () => {
+    const [z0, z1, y0, y1] = [-1.27, -0.66, 2.88, 3.2], h = (y1 - y0) / 13;
+    F("logoWhite", 0.005, [[z0, y0], [z1, y0], [z1, y1], [z0, y1]]);
+    for (let k = 0; k < 13; k += 2) F("flagRed", 0.007, [[z0, y0 + k * h], [z1, y0 + k * h], [z1, y0 + (k + 1) * h], [z0, y0 + (k + 1) * h]]);
+    // the canton at the upper left seen from ahead
+    F("flagBlue", 0.009, [[z1 - 0.25, y0 + 6 * h], [z1, y0 + 6 * h], [z1, y1], [z1 - 0.25, y1]]);
+  });
+  m.scope("logo", () => {
+    F("logoWhite", 0.005, ngon(20, 0.23, 0, -0.97, 2.55));
+    F("mtaBlue", 0.008, ngon(12, 0.065, 0, -0.97 + 0.07, 2.63));
+    F("mtaBlue", 0.008, [[-1.1, 2.48], [-0.85, 2.48], [-0.85, 2.5], [-1.1, 2.5]]);
+    F("mtaBlue", 0.008, [[-1.1, 2.44], [-0.95, 2.44], [-0.95, 2.46], [-1.1, 2.46]]);
+  });
+  m.scope("grab irons", () => {
+    for (const [y0, y1] of [[2.5, 2.99], [1.98, 2.31]] as const) {
+      m.rod("handrail", [x(0.05), y0, -1.2], [x(0.05), y1, -1.2], 0.013, 5);
+      for (const y of [y0, y1]) m.rod("handrail", [x(0), y, -1.2], [x(0.05), y, -1.2], 0.01, 4);
+    }
+  });
+}
+
+/** An inner end at |x| = face facing e: the stainless end door with its window, and the safety barriers either side of it between the corner posts and the door posts. */
+function r160InnerEnd(m: MeshBuilder, e: number, face: number): void {
+  const F = (mat: string, off: number, pts: readonly Pt[]) => r160Flat(m, mat, e, face, off, pts);
+  const x = (off: number) => e * (face + off);
+  m.scope("end door", () => {
+    const [z0, z1, y0, y1] = [-0.46, 0.46, 1.16, 3.12];
+    for (const [a, c, p, q] of [[z0 - 0.025, z0, y0, y1], [z1, z1 + 0.025, y0, y1], [z0 - 0.025, z1 + 0.025, y1, y1 + 0.025]] as const) F("rubber", 0.004, [[a, p], [c, p], [c, q], [a, q]]);
+    F("frameSilver", 0.006, roundedOutline(-0.33, 0.33, 2.05, 3.06, 0.1));
+    F("glass", 0.008, roundedOutline(-0.3, 0.3, 2.08, 3.03, 0.07));
+    m.rod("handrail", [x(0.03), 1.95, 0.32], [x(0.03), 1.95, 0.42], 0.012, 5);
+  });
+  m.scope("barriers", () => {
+    for (const s of [-1, 1]) {
+      for (const z of [1.32, 0.56]) m.rod("handrail", [x(0.07), 1.3, s * z], [x(0.07), 2.75, s * z], 0.02, 6);
+      // each a sagging spring: four straight runs through a parabola
+      for (const h of [2.62, 2.05, 1.48]) {
+        const P = (t: number): Vec3 => [x(0.09), h - 0.18 * (1 - (2 * t - 1) ** 2), s * (1.32 - 0.76 * t)];
+        for (let k = 0; k < 4; k++) m.rod("barrier", P(k / 4), P((k + 1) / 4), 0.025, 6);
+      }
+    }
+  });
+}
+
+/** The LOD: the body with its cab end's black field and windscreen, the trucks, the roof shrouds and the underfloor equipment. */
+function r160Lod(u: MetroCar): MeshBuilder {
+  const c = r160Def(u), L = R160_BODY, X = (d: number) => R160_LENGTH / 2 - R160_GAP - d;
+  const body = carLodBody(c, X), top = c.spec.C;
+  const flat = (end: UnitBody["front"]): UnitBody["front"] => ({ ...end, setback: [[c.spec.B, 0.1], [top, 0.1]] });
+  const windows = R160_WIN.c.map((cc) => ({ u: [X(L / 2 + cc + R160_WIN.w / 2 - 0.04), X(L / 2 + cc - R160_WIN.w / 2 + 0.04)] as const, y: [R160_WIN.y[0] + 0.04, R160_WIN.y[1] - 0.04] as const, mat: LOD_GLASS }));
+  const front = u === "cabCar"
+    ? { ...flat(body.front), paint: [[c.spec.B, 1.3, "ss"], [1.3, top, "mask"]] as LodBand[], windows: [{ u: [R160_CAB.screen[0], R160_CAB.screen[1]] as const, y: [R160_CAB.screen[2], R160_CAB.screen[3]] as const, mat: LOD_GLASS }] }
+    : flat(body.front);
+  const parts = [
+    ...bogieParts(R160_TRUCK_D.map((d) => [X(d), 1.3] as const), c.spec.B),
+    ...[[R160_AC.d[0], R160_AC.d[1]], [L - R160_AC.d[1], L - R160_AC.d[0]]].map(([a, e]) => roofPart("ss", X(a!), X(e!), R160_AC.foot, R160_AC.half, 3.55, R160_AC.top)),
+    underPart(X(3.3), X(L - 3.3), 0.45, 0.95, 1.2),
+  ];
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...R160_PAL }, bodies: [{ ...body, front, rear: flat(body.rear), windows }], parts }, 100);
+}
 
 function ctaDef(): CarDef {
   const L = CTA_BODY, mid = L / 2;
@@ -976,13 +1334,12 @@ function ctaPlainFace(m: MeshBuilder, face: number): void {
 
 export function nycR160(params?: ParamValues): MeshBuilder {
   const u = resolveParams(R160_PARAMS, params).unit as MetroCar;
-  const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...METRO_PAL });
-  drawCar(m, r160Def(u), (d) => R160_LENGTH / 2 - 0.25 - d);
+  const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...R160_PAL });
+  drawCar(m, r160Def(u), (d) => R160_LENGTH / 2 - R160_GAP - d);
   return m;
 }
 export function nycR160Lod(params?: ParamValues): MeshBuilder {
-  const u = resolveParams(R160_PARAMS, params).unit as MetroCar;
-  return carLod(r160Def(u), (d) => R160_LENGTH / 2 - 0.25 - d, { ...CARBODY_PALETTE, ...METRO_PAL });
+  return r160Lod(resolveParams(R160_PARAMS, params).unit as MetroCar);
 }
 const ctaX = (d: number) => CTA_LENGTH / 2 - 0.25 - d;
 export function cta5000(): MeshBuilder {
