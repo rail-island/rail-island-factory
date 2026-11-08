@@ -478,35 +478,35 @@ function k4Quad(m: MeshBuilder, mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3,
 }
 
 /**
- * The K4s's cast steel pilot under its beam: a face leaning back toward the rail and
- * narrowing from the beam's width to the bottom, its cheeks swept back clear of the
- * lead truck, the coupler through it, the front deck behind the beam, the steps.
+ * The K4s's cast steel pilot: a narrow face, about the frames' width, leaning back from
+ * under the thin front deck to the rail, its cheeks swept back clear of the lead truck,
+ * the coupler under the deck, the steps at the deck's corners and up to the platform.
  */
 function k4sPilot(t: Steam): void {
   const m = t.m;
   m.scope("front pilot", () => {
-    t.box("black", 0.15, 0.5, 0.95, 1.38, -1.32, 1.32);
     const P = (x: number, y: number, z: number): Vec3 => [t.X(x), y, z];
-    // the face: from the beam's foot (x 0.18, 1.0 m) to the rail (x 0.45, 0.1 m)
-    const ft: Vec3[] = [P(0.18, 0.98, -1.25), P(0.18, 0.98, 1.25), P(0.45, 0.1, 0.85), P(0.45, 0.1, -0.85)];
-    const bk: Vec3[] = [P(0.8, 0.98, -1.2), P(0.8, 0.98, 1.2), P(0.82, 0.1, 0.85), P(0.82, 0.1, -0.85)];
-    const inside = P(0.5, 0.55, 0);
+    // the thin deck plate over the coupler, back to the smokebox saddle
+    t.box("black", 0.12, 1.5, 1.12, 1.16, -1.2, 1.2);
+    // the face: from under the deck (x 0.16, 1.1 m) to the rail (x 0.6, 0.1 m)
+    const ft: Vec3[] = [P(0.16, 1.1, -0.72), P(0.16, 1.1, 0.72), P(0.6, 0.1, 0.5), P(0.6, 0.1, -0.5)];
+    const bk: Vec3[] = [P(0.78, 1.1, -0.72), P(0.78, 1.1, 0.72), P(0.86, 0.1, 0.5), P(0.86, 0.1, -0.5)];
+    const inside = P(0.6, 0.6, 0);
     k4Quad(m, "black", ft[0]!, ft[1]!, ft[2]!, ft[3]!, inside);
     k4Quad(m, "black", bk[0]!, bk[1]!, bk[2]!, bk[3]!, inside);
     for (const [i, j] of [[0, 3], [1, 2]] as const) k4Quad(m, "black", ft[i]!, bk[i]!, bk[j]!, ft[j]!, inside);
     k4Quad(m, "black", ft[2]!, ft[3]!, bk[3]!, bk[2]!, inside);
     // three ribs across the face
     for (const k of [0.3, 0.55, 0.8]) {
-      const y = 0.98 - k * 0.88, x = 0.18 + k * 0.27, hz = 1.25 - k * 0.4;
+      const y = 1.1 - k, x = 0.16 + k * 0.44, hz = 0.72 - k * 0.22;
       m.slab("black", [P(x - 0.012, y + 0.035, -hz + 0.05), P(x - 0.012, y + 0.035, hz - 0.05), P(x - 0.012, y - 0.035, hz - 0.05), P(x - 0.012, y - 0.035, -hz + 0.05)], [-0.03, 0, 0]);
     }
-    // the deck behind the beam, up to the smokebox saddle
-    t.box("black", 0.48, 1.5, 1.32, 1.36, -1.25, 1.25);
-    // the steps at the beam's ends and up to the front platform
+    // the steps at the deck's corners and up to the front platform
     for (const s of [-1, 1]) {
-      t.sideBox("black", s, 0.25, 0.55, 0.5, 0.54, 1.2, 1.42);
-      for (const y of [1.6, 1.82]) t.sideBox("black", s, 0.98, 1.22, y - 0.03, y, 1.2, 1.42);
-      t.sideBox("black", s, 1.2, 1.23, 1.36, K4_BOARD - 0.04, 1.2, 1.42);
+      t.sideBox("black", s, 0.25, 0.55, 0.62, 0.66, 1.0, 1.2);
+      for (const x of [0.27, 0.53]) t.sideBox("black", s, x - 0.02, x + 0.02, 0.66, 1.12, 1.16, 1.2);
+      for (const y of [1.5, 1.8]) t.sideBox("black", s, 0.98, 1.22, y - 0.03, y, 1.2, 1.42);
+      t.sideBox("black", s, 1.2, 1.23, 1.16, K4_BOARD - 0.04, 1.2, 1.42);
     }
     knuckleCoupler(m, 1, t.X(0) - 0.6, t.X(0), COUPLER_Y);
   });
@@ -652,6 +652,25 @@ function k4sCab(t: Steam): void {
   });
 }
 
+/**
+ * Behind the rear driver, open as on 5400: the frame as thin bars over the trailing
+ * truck, the ash pan under the firebox's foot, the deck plate under the cab.
+ */
+function k4sTrailing(t: Steam): void {
+  t.m.scope("trailing frame", () => {
+    for (const s of [-1, 1]) {
+      t.sideBox("frame", s, 10.2, 14.45, 1.38, 1.52, 0.5, 0.6);
+      t.sideBox("frame", s, 10.2, 11.4, 0.62, 0.74, 0.5, 0.6);
+      t.sideBox("frame", s, 11.3, 11.42, 0.74, 1.38, 0.5, 0.6);
+    }
+    t.box("frame", 13.2, 14.45, 1.52, 1.58, -0.75, 0.75);
+  });
+  t.m.scope("ash pan", () => {
+    t.box("black", 10.15, K4_CAB[0] - 0.1, 1.48, 1.56, -1.04, 1.04);
+    t.box("black", 10.2, 11.5, 1.12, 1.48, -0.45, 0.45);
+  });
+}
+
 function k4sSpec(): LocoSpec {
   const [lead0, lead1, d0, d1, d2, trail] = K4_AXLES as [number, number, number, number, number, number];
   return {
@@ -667,6 +686,7 @@ function k4sSpec(): LocoSpec {
       plate: { color: "#1f2c24", roughness: 0.55 }, plateText: { color: "#d4b05a", roughness: 0.4 },
       keystone: { color: "#b3261e", roughness: 0.5 },
       pipe: { color: "#2a2e2c", roughness: 0.45, metallic: 0.3 },
+      cylinder: { color: "#1e1f21", roughness: 0.6 },
     },
     heads: [0, 14.86],
     beams: { front: false, rear: false },
@@ -677,8 +697,9 @@ function k4sSpec(): LocoSpec {
     domes: [{ x: 5.96, top: 4.53, r: 0.5 }, { x: 8.07, top: 4.45, r: 0.45 }],
     valves: { x: 9.6, top: 4.42 },
     // the front platform ahead of the smokebox, the running boards along the boiler
-    runningBoard: { profile: [[0.95, K4_BOARD], [K4_CAB[0] + 0.03, K4_BOARD]], half: 1.5, valance: 0.1 },
-    frame: { x0: 1.4, x1: 14.45, top: 1.6 },
+    runningBoard: { profile: [[0.95, K4_BOARD], [K4_CAB[0] + 0.03, K4_BOARD]], half: 1.5, valance: 0.035 },
+    // the plate frames to the rear driver; behind it the frame is bars (k4sTrailing)
+    frame: { x0: 1.4, x1: 10.25, top: 1.6 },
     cab: {
       x0: K4_CAB[0], x1: K4_CAB[1], half: [[1.56, 1.95], [1.56, 3.62], [1.5, 3.88], [1.3, 4.1], [0.85, 4.25], [0, 4.3]], roofY: 4.3,
       // the sash window in two panes; the front windows beside the firebox
@@ -699,6 +720,8 @@ function k4sSpec(): LocoSpec {
       // 27 by 28 in cylinders
       engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 1.92, x1: 3.06, y: 1.03, r: 0.4 }, crank: 0.356, phase: 0.4, valveGear: true }],
       cylinderZ: 1.2, reference: 3, wheelMaterial: "wheel",
+      // black cylinders and covers, as on 1361
+      cylinderMat: "cylinder", cylinderCoverMat: "pipe",
     },
     extras: (t) => {
       k4sBoiler(t);
@@ -706,6 +729,7 @@ function k4sSpec(): LocoSpec {
       k4sFront(t);
       k4sPilot(t);
       k4sCab(t);
+      k4sTrailing(t);
       t.m.scope("drawbar", () => t.box("black", 14.4, 14.86, 0.8, 1.0, -0.15, 0.15));
     },
   };

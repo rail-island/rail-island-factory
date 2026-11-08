@@ -134,6 +134,10 @@ export interface RunningGearSpec {
    * round the hub (a Boxpok centre read from afar), 2 triangles each. None by default.
    */
   discOpenings?: number;
+  /** The cylinders' and valve chests' paint (the K4s's black); the paint drawStatic is given by default. */
+  cylinderMat?: string;
+  /** The cylinder covers' material; the bright "steel" by default. */
+  cylinderCoverMat?: string;
 }
 
 /**
@@ -427,8 +431,9 @@ export class RunningGear {
    * carrying wheels -- of turning unit `unit` (drawn inside its bogie), or with
    * -1 of everything on the body.
    */
-  drawStatic(m: MeshBuilder, paint: string, unit = -1): void {
+  drawStatic(m: MeshBuilder, bodyPaint: string, unit = -1): void {
     const z = this.spec.cylinderZ;
+    const paint = this.spec.cylinderMat ?? bodyPaint;
     for (const { engine, index, s, side: es } of this.sides) {
       if (this.unitOfEngine(index) !== unit) continue;
       m.scope(`cylinder ${this.suffix(engine, s)}`, () => {
@@ -439,7 +444,7 @@ export class RunningGear {
         m.sweep(paint, "x", ngon(16, r, Math.PI / 16, zc, y), x0 + 0.06, ngon(16, r, Math.PI / 16, zc, y), x1 - 0.06);
         for (const xc of [x0 + 0.03, x1 - 0.03]) {
           const cover = ngon(16, r + 0.035, Math.PI / 16, zc, y);
-          m.sweep("steel", "x", cover, xc - 0.03, cover, xc + 0.03);
+          m.sweep(this.spec.cylinderCoverMat ?? "steel", "x", cover, xc - 0.03, cover, xc + 0.03);
         }
         // the piston valve's chest on top, reaching back to the spindle's gland
         const vy = y + r + 0.17 - 0.02;

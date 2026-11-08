@@ -9,7 +9,7 @@
 | id | title | arrangement | drivers | parameters | triangles (loco / tender) |
 |---|---|---|---|---|---|
 | `proc-vehicle-up-big-boy` | UP Big Boy | 4-8-8-4, two engines | 68 in | `unit` | 15,900 / 4,500 |
-| `proc-vehicle-prr-k4s` | PRR K4s | 4-6-2, Belpaire firebox | 80 in | `unit` | 12,300 / 3,900 |
+| `proc-vehicle-prr-k4s` | PRR K4s | 4-6-2, Belpaire firebox | 80 in | `unit` | 12,400 / 3,900 |
 | `proc-vehicle-nyc-hudson` | NYC J-3a Hudson | 4-6-4, Dreyfuss streamlining | 79 in | `unit` | about 9,000 / 3,800 |
 | `proc-vehicle-american-440` | Golden Spike 4-4-0 | 4-4-0 American | 60 in | `unit`, `livery` (`jupiter`, `no119`) | 6,200 / 2,600 |
 
@@ -95,11 +95,13 @@ source x from the coupler face, 0.17 m ahead of the pilot.
   the Belpaire firebox from 9.17 m to the cab, flat-sided and flat-topped with square shoulders
   standing out beyond the round barrel. Stack 4.57 m, bell, sand dome and steam dome where the
   drawing puts them; the safety valves and whistle on the firebox's front.
-- **Front** - the cast steel pilot under its beam, its face leaning back and narrowing to the rail,
-  the deck and steps; the platform ahead of the smokebox at the running board's height (2.15 m,
+- **Front** - the narrow cast steel pilot under a thin deck plate, leaning back to the rail; black cylinders and covers (the kit's `cylinderMat`, `cylinderCoverMat`);
+  the steps; the platform ahead of the smokebox at the running board's height (2.15 m,
   clear of the drivers); the door's rim and dogs, its plain face over the kit's hinge straps, the
   keystone; the electric headlight on top with its number boards, the turbo-generator behind it, the
-  marker lamps and the grab rail; the outside steam pipes down to the steam chests.
+  marker lamps and the grab rail; the outside steam pipes down to the steam chests. Behind the rear
+  driver the frame is thin bars over the trailing truck and the ash pan, open as on 5400; the
+  running board has a thin valance.
 - **Sides** - handrails off the smokebox, the cone and the firebox's flat sides; the sand pipes down
   from the sand dome; on the left the air pump on the running board with its pipe forward and the
   reach rod, on the right the pumps hung under the running board ahead of the drivers and the box
