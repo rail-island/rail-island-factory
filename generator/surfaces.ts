@@ -24,6 +24,7 @@ export const TEXTURE_SLUGS = {
   asphalt: "aerial_asphalt_01",
   bigstone: "rocks_ground_06",
   boulder: "rock_boulder_dry",
+  clay: "red_laterite_soil_stones",
   cobblestone: "cobblestone_floor_04",
   concrete: "concrete_floor_worn_001",
   grass: "aerial_grass_rock",
@@ -37,6 +38,7 @@ export const TEXTURE_SLUGS = {
   sandstone: "rock_face_03",
   slate: "dark_rock",
   snow: "snow_field_aerial",
+  tundra: "aerial_rocks_04",
   wall: "red_brick_03",
   wood: "weathered_planks",
 } as const;
@@ -52,9 +54,11 @@ export const TEXTURE_SIZE = 512;
  * about 4 MiB on the GPU with mips and there is no texture compression, so a new
  * look reuses a photo where it can. Raised from 16 to 18 for the sandstone and
  * limestone rock photos: each reads as its own stone, and no photo in the
- * library stands in for them.
+ * library stands in for them. Raised again to 20 for the game's climate grounds
+ * `tundra` (moss and lichen) and `clay` (red badlands soil), which were re-tinted
+ * soil before and read as paint.
  */
-export const MAX_TEXTURES = 18;
+export const MAX_TEXTURES = 20;
 /**
  * The mean albedo of each photo, sRGB hex: what a surface's honest flat colour is
  * held near (test/surfaces.test.ts measures the files against it).
@@ -63,6 +67,7 @@ export const TEXTURE_AVERAGE: Readonly<Record<TextureName, string>> = {
   asphalt: "#676268",
   bigstone: "#928373",
   boulder: "#a89b8c",
+  clay: "#653e2e",
   cobblestone: "#8a7d62",
   concrete: "#565754",
   grass: "#726125",
@@ -76,6 +81,7 @@ export const TEXTURE_AVERAGE: Readonly<Record<TextureName, string>> = {
   sandstone: "#836950",
   slate: "#211c18",
   snow: "#878694",
+  tundra: "#615028",
   wall: "#6b534c",
   wood: "#50433b",
 };
@@ -148,6 +154,7 @@ export const SURFACES = {
   "swatch-asphalt": { texture: "asphalt", tile: 4, tintLift: 1 },
   "swatch-bigstone": { texture: "bigstone", tile: 4, tintLift: 1 },
   "swatch-boulder": { texture: "boulder", tile: 4, tintLift: 1 },
+  "swatch-clay": { texture: "clay", tile: 4, tintLift: 1 },
   "swatch-cobblestone": { texture: "cobblestone", tile: 4, tintLift: 1 },
   "swatch-concrete": { texture: "concrete", tile: 4, tintLift: 1 },
   "swatch-grass": { texture: "grass", tile: 4, tintLift: 1 },
@@ -161,6 +168,7 @@ export const SURFACES = {
   "swatch-sandstone": { texture: "sandstone", tile: 4, tintLift: 1 },
   "swatch-slate": { texture: "slate", tile: 4, tintLift: 1 },
   "swatch-snow": { texture: "snow", tile: 4, tintLift: 1 },
+  "swatch-tundra": { texture: "tundra", tile: 4, tintLift: 1 },
   "swatch-wall": { texture: "wall", tile: 4, tintLift: 1 },
   "swatch-wood": { texture: "wood", tile: 4, tintLift: 1 },
 } as const satisfies Record<string, SurfacePreset>;
