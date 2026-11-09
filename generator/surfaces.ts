@@ -27,12 +27,14 @@ export const TEXTURE_SLUGS = {
   cobblestone: "cobblestone_floor_04",
   concrete: "concrete_floor_worn_001",
   grass: "aerial_grass_rock",
+  limestone: "marble_cliff_01",
   gravel: "gravel_embedded_concrete",
   ground: "aerial_ground_rock",
   mud: "aerial_mud_1",
   pavement: "floor_tiles_02",
   rock: "rock_ground",
   sand: "coast_sand_01",
+  sandstone: "rock_face_03",
   slate: "dark_rock",
   snow: "snow_field_aerial",
   wall: "red_brick_03",
@@ -48,9 +50,11 @@ export const TEXTURE_SIZE = 512;
 /**
  * The most photo sets the library may hold (test/surfaces.test.ts): every set is
  * about 4 MiB on the GPU with mips and there is no texture compression, so a new
- * look reuses a photo where it can.
+ * look reuses a photo where it can. Raised from 16 to 18 for the sandstone and
+ * limestone rock photos: each reads as its own stone, and no photo in the
+ * library stands in for them.
  */
-export const MAX_TEXTURES = 16;
+export const MAX_TEXTURES = 18;
 /**
  * The mean albedo of each photo, sRGB hex: what a surface's honest flat colour is
  * held near (test/surfaces.test.ts measures the files against it).
@@ -62,12 +66,14 @@ export const TEXTURE_AVERAGE: Readonly<Record<TextureName, string>> = {
   cobblestone: "#8a7d62",
   concrete: "#565754",
   grass: "#726125",
+  limestone: "#ac8f75",
   gravel: "#958e84",
   ground: "#80695a",
   mud: "#3e3835",
   pavement: "#9f907f",
   rock: "#726960",
   sand: "#82735c",
+  sandstone: "#836950",
   slate: "#211c18",
   snow: "#878694",
   wall: "#6b534c",
@@ -145,12 +151,14 @@ export const SURFACES = {
   "swatch-cobblestone": { texture: "cobblestone", tile: 4, tintLift: 1 },
   "swatch-concrete": { texture: "concrete", tile: 4, tintLift: 1 },
   "swatch-grass": { texture: "grass", tile: 4, tintLift: 1 },
+  "swatch-limestone": { texture: "limestone", tile: 4, tintLift: 1 },
   "swatch-gravel": { texture: "gravel", tile: 4, tintLift: 1 },
   "swatch-ground": { texture: "ground", tile: 4, tintLift: 1 },
   "swatch-mud": { texture: "mud", tile: 4, tintLift: 1 },
   "swatch-pavement": { texture: "pavement", tile: 4, tintLift: 1 },
   "swatch-rock": { texture: "rock", tile: 4, tintLift: 1 },
   "swatch-sand": { texture: "sand", tile: 4, tintLift: 1 },
+  "swatch-sandstone": { texture: "sandstone", tile: 4, tintLift: 1 },
   "swatch-slate": { texture: "slate", tile: 4, tintLift: 1 },
   "swatch-snow": { texture: "snow", tile: 4, tintLift: 1 },
   "swatch-wall": { texture: "wall", tile: 4, tintLift: 1 },
