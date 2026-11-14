@@ -17,6 +17,9 @@ lives in the workshop until somebody confirms it.
 - Confirmed since: the 19 draft buses of 7,000 triangles and more (2026-11), the 20 Swiss
   trains (2026-11) and the 19 Japanese draft trains - Shinkansen, JR/JNR, private-railway
   units, locomotives and the Blue Train coach (2026-11). The Japanese trams stay drafts.
+  The 20 German trains of the detail pass (2026-11): the ICE 3, 4, T and 2, the BR 423, 642
+  and 650, the VT 98, the SVT 877, the BR 103, 101, 120 and 218, the E 18, E 94 and V 200,
+  the 01, 52 and P 8, and the Intercity coach (docs/models/germany-trains.md).
 - **A new model starts as a draft**: nothing to do when adding one. It reaches the
   game only once confirmed.
 - **Confirming** a model is adding its id to `ids` in `catalogModels.json` (sorted). Do it
