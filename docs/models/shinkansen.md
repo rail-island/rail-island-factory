@@ -163,7 +163,9 @@ combinations hashed before and after):
   cut, on leaf springs.
 - `endCrown` - with a cab face, the end car's crown still rising behind the join ([d behind the body's
   front, height], a crown-only nose of the body's full plan): the 500's roof reaching full height behind its
-  first door; a livery's `roofStripe` - its own paint along every car's crown out to a half width on the
+  first door; `endCrownStep` - the body's slice spacing along that crown table (default 0.25 m; the ICE 4's
+  1.0 m: its end car's roof rising 11 to 12 m behind the join would otherwise cost 2,000 triangles of slices);
+  a livery's `roofStripe` - its own paint along every car's crown out to a half width on the
   roof's arc (the distant model's roof takes it), and `pantograph` - the livery's sets' own pantograph in
   place of the series' (`"wing"`: the 500 W sets' T-shaped wing, a post hinged at its foot carrying a level
   wing and its carbon, on a low shroud; drawn in `shinkansen.ts`);
