@@ -209,6 +209,8 @@ export interface ShinkansenSeries {
   metro?: boolean;
   /** The coupler at a cab end: the unit's centre coupler (default) or buffers and a screw coupling. */
   endCoupler?: "centre" | "buffers";
+  /** With buffers at the cab ends: false leaves the buffer beam out, the buffers standing out of the cab face's own bodywork (the VT 98's; default drawn). */
+  bufferBeam?: boolean;
   /** The roof arc's segments (default 8). */
   arc?: number;
   /** The centre coupler's height (default 1.0 m; a tube car's sits under its low floor). */
@@ -364,7 +366,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       frameTop: s.wheelbase > 0 ? wheelR + 0.4 : s.A + 0.03, frameBottom: wheelR + 0.08,
       frameZ: [0.92, 1.04], primary: s.wheelbase > 0 ? "coil" : "leaf", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: s.B,
     },
-    coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: couplerOf(s),
+    coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: couplerOf(s), ...(s.bufferBeam === false ? { bufferBeam: false } : {}),
     gap: [end ? frontGap(s, true) : GAP, s.single ? frontGap(s, true) : GAP],
     // a Jacobs bogie's skirt cut reaches in from the joint: the cabin stops short of it
     ...(s.jacobs ? { cabin: [end ? first - 1.2 : reach - GAP + 0.05, L - (reach - GAP) - 0.05] as const } : end ? { cabin: [first - 1.2, s.single ? L - first + 1.2 : L] as const } : {}),

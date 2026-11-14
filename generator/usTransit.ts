@@ -69,6 +69,8 @@ export interface CarDef {
   /** The coupler: AAR knuckle, a unit's centre coupler, or buffers and a screw coupling on a buffer beam (European stock). */
   coupler: "knuckle" | "centre" | "buffers";
   couplerY: number;
+  /** With buffers: false leaves the buffer beam out, the buffers standing straight out of the end's own bodywork (default drawn). */
+  bufferBeam?: boolean;
   /** The coupling planes beyond the body's ends. */
   gap: readonly [number, number];
   lettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
@@ -256,7 +258,7 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
           else if (c.coupler === "buffers") {
             // the beam under the end, the buffer heads at the coupling plane
             const beam = face - 0.62;
-            block(m, "underframe", ...((e > 0 ? [beam - 0.25, beam] : [-beam, -beam + 0.25]) as [number, number]), c.couplerY - 0.25, c.couplerY + 0.22, -1.3, 1.3);
+            if (c.bufferBeam !== false) block(m, "underframe", ...((e > 0 ? [beam - 0.25, beam] : [-beam, -beam + 0.25]) as [number, number]), c.couplerY - 0.25, c.couplerY + 0.22, -1.3, 1.3);
             buffers(m, e, beam, face, c.couplerY, "round");
             coupling(m, e, beam, c.couplerY - 0.05);
           } else centreCoupler(m, e, x - e * 0.6, e * face, c.couplerY, "knuckle");

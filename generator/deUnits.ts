@@ -1,7 +1,7 @@
 // German units on the series kit (shinkansen.ts): the ICE 3 (BR 403, its own
 // cab face in deIce3.ts), the ICE 4 (BR 412), the tilting ICE T (BR 411), the
 // Munich and Stuttgart S-Bahn's BR 423 (deBr423.ts), the Desiro Classic (BR 642) and the
-// RegioShuttle (BR 650, deBr650.ts) diesel railcars, the Uerdinger railbus (VT 98) and the
+// RegioShuttle (BR 650, deBr650.ts) diesel railcars, the Uerdinger railbus (VT 98, deVt98.ts) and the
 // Fliegender Hamburger (SVT 877); and the ICE 2, the ICE 1's power car and coach
 // (ice1.ts) with a driving trailer on the series kit. See docs/models/germany-trains.md.
 
@@ -10,42 +10,22 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { ice1, ice1Lod } from "./ice1.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, nose, NO_NOSE, striped } from "./seriesHelpers.ts";
+import { c, nose, striped } from "./seriesHelpers.ts";
 import { ICE3 } from "./deIce3.ts";
 import { ICE4 } from "./deIce4.ts";
 import { ICE_T } from "./deIceT.ts";
 import { BR423 } from "./deBr423.ts";
 import { BR642 } from "./deBr642.ts";
 import { BR650 } from "./deBr650.ts";
+import { VT98 } from "./deVt98.ts";
 
-export { ICE3 };
+export { ICE3, VT98 };
 
 const ICE_WHITE = "#eceeee";
 const TRAFFIC_RED = "#ec0016";
 
 
 
-export const VT98: ShinkansenSeries = {
-  endLength: 13.95, midLength: 13.95, W: 1.5, Y: 1.4, S: 3.0, C: 3.28, lean: 0.97, B: 1.0, A: 1.15,
-  // the railbus's upright ends, bowed in plan with wide rounded corners: the two big front
-  // windows wrapping round them up to the roof dome, the lamps low at the corners, the roof lamp
-  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  cabFace: {
-    dJoin: 0.5, dSide: 0.45, profile: [[1.0, 0.02], [1.15, 0], [2.9, 0], [3.05, 0.07], [3.18, 0.2], [3.28, 0.5]],
-    corner: [[1.0, 0.5], [2.9, 0.5], [3.18, 0.3], [3.28, 0.1]], bulge: 0.1, rows: [1.0, 1.15, 1.4, 1.9, 2.0, 2.45, 2.9, 3.05, 3.18, 3.28], roofFrom: 3.0,
-    masks: [{ lat: [-1.32, -0.02], y: [1.95, 2.9], r: 0.1, mat: "rubber" }, { lat: [0.02, 1.32], y: [1.95, 2.9], r: 0.1, mat: "rubber" }],
-    panes: [{ lat: [-1.28, -0.07], y: [1.99, 2.86], r: 0.08 }, { lat: [0.07, 1.28], y: [1.99, 2.86], r: 0.08 }],
-    lamps: [[-1.05, 1.55, 0.1, "lampHead"], [1.05, 1.55, 0.1, "lampHead"]], roofLamp: [0, 3.12, 0.08],
-    wipers: [[[-0.7, 2.04], [-0.35, 2.7]], [[0.55, 2.04], [0.9, 2.7]]], first: 2.4,
-  },
-  windows: [[1.95, 2.75]], windowW: 1.05, pitch: 1.2, door: [1.2, 2.85, 1.95, 2.6], doorW: 0.9,
-  bogieCentres: 6.0, wheelR: 0.45, wheelbase: 0, traction: "diesel", single: true, endCoupler: "buffers",
-  liveries: {
-    dbRed: { title: "DB red", palette: { red: c("#a9221d"), cream: c("#e8dfc4"), roofG: c("#a9221d", 0.55), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 2.85, "red"], [2.85, 9, "cream"]], roof: "roofG", skirt: "skirtG", number: "798 652" },
-    orientRed: { title: "Orient red", palette: { red: c("#c8462a"), white: c("#efefea"), roofG: c("#8f9396", 0.6), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.7, "red"], [1.7, 1.8, "white"], [1.8, 9, "red"]], roof: "roofG", skirt: "skirtG", number: "798 776" },
-  },
-  weight: { end: 21, middle: 21 }, power: 220, maxspeed: 90,
-};
 
 export const SVT877: ShinkansenSeries = {
   endLength: 20.95, midLength: 20.95, W: 1.425, Y: 1.4, S: 3.0, C: 3.6, lean: 0.95, B: 0.8, A: 1.05,
