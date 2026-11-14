@@ -1,7 +1,7 @@
 # Germany's trains
 
 **Covers** - the twenty German designs of the eight-country plan: the ICE 3, ICE 4, ICE T and ICE 2, the S-Bahn BR 423, the Desiro 642, the RegioShuttle 650, the Uerdingen railbus VT 98 and the Fliegender Hamburger; the BR 103, 101, 120, E 18, E 94, V 200 and 218 locomotives; the 01, 52 and Prussian P 8 steam engines; the Intercity coaches. Their modules, figures, the detail pass that matched each to its photographs, deviations and tests.
-**Code** - `generator/deUnits.ts` (`DE_UNITS`, the units' registry), `generator/deLocos.ts` (`DE_LOCOS`, the locomotives' registry), one module per vehicle: `generator/deIce3.ts`, `deIce4.ts`, `deIceT.ts`, `deBr423.ts`, `deBr642.ts`, `deBr650.ts`, `deVt98.ts`, `deSvt877.ts`, `deIce2.ts`, `deBr103.ts`, `deBr101.ts`, `deBr120.ts`, `deE18.ts`, `deE94.ts`, `deV200.ts`, `deBr218.ts`, `deSteam01.ts`, `deSteam52.ts`, `deSteamP8.ts`; `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/deE18.test.ts`, `assets/db-*/`, `assets/drg-*/`, `assets/dr-52/`, `assets/kpev-p8/`
+**Code** - `generator/deUnits.ts` (`DE_UNITS`, the units' registry), `generator/deLocos.ts` (`DE_LOCOS`, the locomotives' registry), one module per vehicle: `generator/deIce3.ts`, `deIce4.ts`, `deIceT.ts`, `deBr423.ts`, `deBr642.ts`, `deBr650.ts`, `deVt98.ts`, `deSvt877.ts`, `deIce2.ts`, `deBr103.ts`, `deBr101.ts`, `deBr120.ts`, `deE18.ts`, `deE94.ts`, `deV200.ts`, `deBr218.ts`, `deSteam01.ts`, `deSteam52.ts`, `deSteamP8.ts`, `deIcCoach.ts`; `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/deE18.test.ts`, `assets/db-*/`, `assets/drg-*/`, `assets/dr-52/`, `assets/kpev-p8/`
 **See also** - [shinkansen.md](shinkansen.md) (the series kit), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [steam-locomotives.md](steam-locomotives.md), [world-coaches.md](world-coaches.md), [foreign-units.md](foreign-units.md) (the ICE 1), [mainline-electrics.md](mainline-electrics.md)
 
 The catalog already had the DB 111, 212 and 628, the Dosto, the ICE 1, the DR 243,
@@ -31,7 +31,7 @@ design is filed under Germany (`generator/countryTable.ts`).
 | `proc-vehicle-drg-01` | DRG 01 | steam, own spec (`deSteam01.ts`) | `unit` | 2'C1' h2, 2.0 m drivers, Wagner deflectors, 2'2' T 32 tender, 23.94 m; 1,670 kW, 130 km/h |
 | `proc-vehicle-dr-52` | DR 52 | steam, own spec (`deSteam52.ts`) | `unit` | 1'E, 1.4 m drivers, the 52.80 rebuild with the T 30 tub tender, 22.975 m; 1,192 kW, 80 km/h |
 | `proc-vehicle-kpev-p8` | Prussian P 8 | steam, own spec (`deSteamP8.ts`) | `unit`, `livery` (`kpev`, `drBlack`) | 2'C, 1.75 m drivers, T 21.5 tender, 18.585 m; 868 kW, 100 km/h |
-| `proc-vehicle-db-ic-coach` | DB Intercity coach | coach | `unit` (`avmz`, `bpmz`), `livery` (`tee`, `oceanBlue`, `intercity`) | 26.4 m over buffers, 200 km/h |
+| `proc-vehicle-db-ic-coach` | DB Intercity coach | coach kit (`deIcCoach.ts`) | `unit` (`avmz`, `bpmz`), `livery` (`tee`, `oceanBlue`, `intercity`) | 26.4 m over buffers, bogies 19.0 m, 200 km/h |
 
 The figures are the published ones (each `assets/<name>/SOURCES.md`): Wikipedia's
 articles on each class, cited there, and the works drawings where one was found.
@@ -51,7 +51,8 @@ byte-identical (hash-checked): the series kit's `endCrownStep`,
 `rearEnd` and `exhaustInFittings` ([shinkansen.md](shinkansen.md)), the steam
 kit's `bogieFrameMat` and `drawOnTruckFrame`
 ([steam-locomotives.md](steam-locomotives.md)), the car kit's single rounded door
-window and `bufferBeam` ([us-transit.md](us-transit.md)).
+window, `bufferBeam`, a window row's `glass` and the doors' `glassInward`
+([us-transit.md](us-transit.md)).
 
 ### Units
 
@@ -169,6 +170,19 @@ window and `bufferBeam` ([us-transit.md](us-transit.md)).
   tall chimney, the domes and sand box, the feed-water heater drums on the running board,
   and the T 21.5 tender with flared coal rails. KPEV green after 2455 Posen and 38 3199; DR
   black after 38 1772 with the small Wagner plates.
+
+### Coaches
+
+- **Intercity coaches** (`deIcCoach.ts`). Laid out side by side from photographs: the Avmz
+  111's compartment side with nine 1.4 m windows on 2.3 m between frosted toilet windows,
+  its corridor side with nine on 2.2 m between 0.8 m vestibule windows and top lights,
+  folding doors with the window in the inner leaf; the Bpmz with swing-plug doors, a toilet
+  window, a narrow window and nine 1.42 m windows on 1.81 m. A dark solebar the length, the
+  skirt to 0.5 m between the bogies, rounded roof ends. TEE is the AKE coach's early scheme
+  (beige to the eaves, purple red belly, beige line, black-grey skirt); ocean blue is ivory
+  over blue; Intercity is light grey with the traffic-red band broken by the DB logo at
+  each end. Not modelled: the MD 36 bogie's own details, the folding door's seam, the later
+  straight-ended roof.
 
 ## Deviations
 
