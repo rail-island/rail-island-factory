@@ -12,6 +12,7 @@ import { EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, striped, velaro } from "./seriesHelpers.ts";
 import { ICE4 } from "./deIce4.ts";
+import { ICE_T } from "./deIceT.ts";
 
 const ICE_WHITE = "#eceeee";
 const TRAFFIC_RED = "#ec0016";
@@ -23,20 +24,6 @@ export const ICE3: ShinkansenSeries = velaro({
   },
   weight: { end: 55, middle: 50 }, power: 1000, maxspeed: 330,
 });
-
-export const ICE_T: ShinkansenSeries = {
-  endLength: 27.45, midLength: 25.9, W: 1.425, Y: 1.4, S: 3.05, C: 3.84, lean: 0.92, B: 0.8, A: 1.05,
-  // the tilting train's narrow, tucked-in body and its rounded nose
-  nose: nose(4.6, 0.06, 2.3, [[0, 1.3], [0.5, 1.8], [2.0, 2.5], [3.6, 3.2], [5.0, 3.84]], [[0, 1.25], [0.5, 1.7], [2.0, 2.3], [3.6, 2.8], [5.0, 3.05]], [[0, 1.2], [1.2, 1.35]], [[0, 1.1], [1.0, 1.05]], [[0, 1.05], [0.5, 0.8]]),
-  windscreen: [2.8, 4.5, 0.07, 1.1], lamps: [0.9, 1.5],
-  windows: [[1.95, 2.7]], windowW: 1.3, pitch: 1.45, door: [1.3, 3.05, 1.95, 2.6], doorW: 0.9,
-  bogieCentres: 19.0, wheelR: 0.43, wheelbase: 2.5,
-  liveries: {
-    dbIce: striped("DB ICE", ICE_WHITE, TRAFFIC_RED, 1.65, 1.78, "411 001"),
-    obb: striped("OBB ICE T", ICE_WHITE, TRAFFIC_RED, 1.65, 1.78, "4011 090"),
-  },
-  weight: { end: 52, middle: 48 }, power: 500, maxspeed: 230,
-};
 
 const sBahn = (title: string, number: string) => ({
   title, palette: { red: c(TRAFFIC_RED), grey: c("#d7dadc", 0.35), dark: c("#404346", 0.5), roofG: c("#bcc0c2", 0.55), skirtG: c("#404346", 0.7) },

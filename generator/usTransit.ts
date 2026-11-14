@@ -45,7 +45,7 @@ export interface CarDef {
   strips?: ReadonlyArray<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }>;
   /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square). */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number }>;
-  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds a pair of narrow leaf windows (`glassW`, `glassPair`) (default square); `glassSurround` sets those rounded windows in a rubber surround with a bright rim (default none). */
+  /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds a pair of narrow leaf windows (`glassW`, `glassPair`), or a single one (`glassW` alone: a porthole) (default square); `glassSurround` sets those rounded windows in a rubber surround with a bright rim (default none). */
   doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number; glassSurround?: boolean };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
@@ -129,6 +129,7 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
           roundedSidePanel(mm, b, X, s, "glass", gm - w / 2, gm + w / 2, g0, g1, gr, 0.012, 0);
         }
         else if (w && pair && gr) for (const k of [-1, 1]) roundedSidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], gr, 0.012, 0.004);
+        else if (w && !pair && gr) roundedSidePanel(mm, b, X, s, "glass", dm - w / 2, dm + w / 2, c.doors.glass[0], c.doors.glass[1], gr, 0.012, 0.004);
         else if (w && pair) for (const k of [-1, 1]) sidePanel(mm, b, X, s, "glass", dm + (k * pair) / 2 - w / 2, dm + (k * pair) / 2 + w / 2, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
         else sidePanel(mm, b, X, s, "glass", w ? dm - w / 2 : d0 + 0.12, w ? dm + w / 2 : d1 - 0.12, c.doors.glass[0], c.doors.glass[1], 0.012, 0.004);
         if (w && pair) sidePanel(mm, b, X, s, "rubber", dm - 0.012, dm + 0.012, y0 + 0.04, y1 - 0.04, 0.011, 0.004);
