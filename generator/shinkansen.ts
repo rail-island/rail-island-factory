@@ -153,6 +153,8 @@ export interface ShinkansenSeries {
   sidePanels?: { end?: readonly SeriesSidePanel[]; middle?: readonly SeriesSidePanel[] };
   /** One pantograph only, on the second car (default two from four cars up). */
   onePantograph?: boolean;
+  /** The two pantographs on the cars next to the end cars, the second and the next-to-last (default the third and the third from last; the ICE 3's transformer cars). */
+  pantographsBesideEnds?: boolean;
   /** Jacobs bogies: the cars' inner ends share one bogie centred on each joint (the end car's leading bogie at `endBogies[0]`, else bogieCentres ahead of the joint); a lone car stands on its joint bogies, half beyond its body (the FLIRT; `jacobsInset` the Giruno's). */
   jacobs?: boolean;
   /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
@@ -659,7 +661,7 @@ export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[
       return out;
     });
   }
-  const pan = (k: number) => (unwired(s) ? false : s.onePantograph && !s.endPantograph ? k === 1 : s.endPantograph === "lead" ? k === 0 : s.endPantograph === "trail" ? k === n - 1 : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : k === 2 || k === n - 3);
+  const pan = (k: number) => (unwired(s) ? false : s.onePantograph && !s.endPantograph ? k === 1 : s.endPantograph === "lead" ? k === 0 : s.endPantograph === "trail" ? k === n - 1 : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : s.pantographsBesideEnds ? k === 1 || k === n - 2 : k === 2 || k === n - 3);
   const total = 2 * s.endLength + (n - 2) * s.midLength;
   let hi = total / 2;
   return Array.from({ length: n }, (_, k) => {

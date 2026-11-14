@@ -1,5 +1,5 @@
-// German units on the series kit (shinkansen.ts): the ICE 3 (BR 403, on the
-// shared Velaro body), the ICE 4 (BR 412), the tilting ICE T (BR 411), the
+// German units on the series kit (shinkansen.ts): the ICE 3 (BR 403, its own
+// cab face in deIce3.ts), the ICE 4 (BR 412), the tilting ICE T (BR 411), the
 // Munich and Stuttgart S-Bahn's BR 423, the Desiro Classic (BR 642) and the
 // RegioShuttle (BR 650) diesel railcars, the Uerdinger railbus (VT 98) and the
 // Fliegender Hamburger (SVT 877); and the ICE 2, the ICE 1's power car and coach
@@ -10,19 +10,15 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { ice1, ice1Lod } from "./ice1.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose, NO_NOSE, striped, velaro } from "./seriesHelpers.ts";
+import { c, flatCab, nose, NO_NOSE, striped } from "./seriesHelpers.ts";
+import { ICE3 } from "./deIce3.ts";
 import { ICE4 } from "./deIce4.ts";
+
+export { ICE3 };
 
 const ICE_WHITE = "#eceeee";
 const TRAFFIC_RED = "#ec0016";
 
-export const ICE3: ShinkansenSeries = velaro({
-  liveries: {
-    dbIce: striped("DB ICE", ICE_WHITE, TRAFFIC_RED, 1.68, 1.82, "403 001"),
-    nsInternational: striped("NS International", ICE_WHITE, TRAFFIC_RED, 1.68, 1.82, "406 051", "#d9dcde", "#003082", { nsBlue: c("#003082") }),
-  },
-  weight: { end: 55, middle: 50 }, power: 1000, maxspeed: 330,
-});
 
 export const ICE_T: ShinkansenSeries = {
   endLength: 27.45, midLength: 25.9, W: 1.425, Y: 1.4, S: 3.05, C: 3.84, lean: 0.92, B: 0.8, A: 1.05,
