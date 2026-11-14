@@ -76,8 +76,8 @@ reaches `UNIT_WHEELBASE` (5.5 m) into **turning units**, front first, `bogie0`,
 `bogie1`, ...:
 
 - every **carrying truck** - the carrying wheels inside one of the spec's truck
-  frames (`bogies`), with that frame, or a run of neighbouring carrying axles (a
-  pony truck, a trailing axle);
+  frames (`bogies`, black unless `bogieFrameMat` names another paint, as the DRG 01's red), with that
+  frame, or a run of neighbouring carrying axles (a pony truck, a trailing axle);
 - every **engine** - its coupled wheels with its cylinders, slide bars, rods and
   valve gear, and the plate frames from its cylinders to its last driver (two
   engines meet in the middle of the frame between them: the Big Boy, the 636);

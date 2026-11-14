@@ -1,7 +1,7 @@
 # Steam locomotives in a few measures
 
 **Covers** - the parametric steam generator (`steamEngineSpec`, `steamTenderSpec`) and the steam designs of the eight-country plan drawn with it: the layout it derives, its couplers and tenders, its guards, and the designs.
-**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/steamLoco.ts`, `generator/lodSteam.ts`
+**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/deSteam01.ts` (the DRG 01), `generator/steamLoco.ts`, `generator/lodSteam.ts`
 **See also** - [steam-locomotives.md](steam-locomotives.md) (the kit), [jnr-locos.md](jnr-locos.md), [germany-trains.md](germany-trains.md)
 
 The steam kit draws a locomotive from a `LocoSpec`: boiler, chimney, domes, running
@@ -60,6 +60,12 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-cr-qj` | China | 1'E1' | 1.5 m | Wagner | four axles |
 | `proc-vehicle-cr-sy` | China | 1'D1' | 1.37 m | none | four axles |
 | `proc-vehicle-cr-js` | China | 1'D1' | 1.37 m | Wagner | four axles |
+
+The DRG 01 is not derived: `generator/deSteam01.ts` states its engine and tender `LocoSpec` directly from the
+dimensioned DEWAG drawing (its row in `WORLD_STEAM` gives only the title and the table's measures) - the long
+smokebox with the feed-water heater across it, three low domes, the Wagner plates reaching down to the buffer
+beam, the bar frames (dark plates with red top bars and horn guides), red trucks (`bogieFrameMat`), the
+2'2' T 32 tender with its narrower coal box.
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.
