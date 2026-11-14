@@ -66,7 +66,7 @@ const CAB1 = 14.45;
 const HALF = 1.42;
 
 /** The cab's right half section: the sheets from the floor at 1.64 m, a round roof from 3.62 m to 4.2 m. */
-const CAB_HALF: Pt[] = [[1.5, 1.64], [1.5, 3.62], [1.33, 3.94], [0.82, 4.14], [0, 4.2]];
+const CAB_HALF: Pt[] = [[1.48, 1.64], [1.48, 3.62], [1.32, 3.94], [0.82, 4.14], [0, 4.2]];
 
 /** A quad wound so its face looks along `out`. */
 function face(m: Steam["m"], mat: string, p: Vec3[], out: Vec3): void {
