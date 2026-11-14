@@ -165,6 +165,8 @@ export interface ShinkansenSeries {
   cabFace?: SeriesCabFace;
   /** With a cab face: the end car's crown still rising behind the face's join, [d behind the body's front, crown height] (the 500's roof reaching full height behind its first door). */
   endCrown?: Pt[];
+  /** The body's slice spacing along `endCrown`'s table (default 0.25 m): a long, gentle crown table needs fewer slices (the ICE 4's). */
+  endCrownStep?: number;
   power: number;
   maxspeed: number;
   /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric); `none` an unpowered set of coaches. */
@@ -337,7 +339,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       ...(end && !s.flatCab && !s.cabFace ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
       ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}),
       // a crown rising behind a cab face: a nose of the body's full plan whose crown table ends past the join
-      ...(end && s.cabFace && s.endCrown ? { front: { len: 1e-3, tip: 1, power: 2, C: s.endCrown, S: [[0, s.S]] } } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: 0.25,
+      ...(end && s.cabFace && s.endCrown ? { front: { len: 1e-3, tip: 1, power: 2, C: s.endCrown, S: [[0, s.S]] } } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: end && s.cabFace && s.endCrown ? (s.endCrownStep ?? 0.25) : 0.25,
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),

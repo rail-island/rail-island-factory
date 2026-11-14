@@ -11,6 +11,7 @@ import { ice1, ice1Lod } from "./ice1.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, striped, velaro } from "./seriesHelpers.ts";
+import { ICE4 } from "./deIce4.ts";
 
 const ICE_WHITE = "#eceeee";
 const TRAFFIC_RED = "#ec0016";
@@ -22,20 +23,6 @@ export const ICE3: ShinkansenSeries = velaro({
   },
   weight: { end: 55, middle: 50 }, power: 1000, maxspeed: 330,
 });
-
-export const ICE4: ShinkansenSeries = {
-  endLength: 28.75, midLength: 27.9, W: 1.426, Y: 1.4, S: 3.2, C: 4.05, lean: 0.95, B: 0.8, A: 1.05,
-  // the short, angular nose under the black cab mask
-  nose: nose(4.0, 0.18, 2.6, [[0, 1.5], [0.4, 2.05], [1.6, 2.75], [3.0, 3.5], [4.3, 4.05]], [[0, 1.45], [0.4, 1.95], [1.6, 2.55], [3.0, 3.0], [4.3, 3.2]], [[0, 1.4], [1.0, 1.4]], [[0, 1.25], [1.0, 1.05]], [[0, 1.2], [0.4, 0.8]]),
-  windscreen: [2.2, 3.8, 0.07, 1.1], lamps: [0.6, 1.6],
-  windows: [[1.95, 2.8]], windowW: 1.6, pitch: 1.95, door: [1.3, 3.15, 1.95, 2.7], doorW: 0.95,
-  bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5,
-  liveries: {
-    dbIce: striped("DB ICE", ICE_WHITE, TRAFFIC_RED, 1.7, 1.84, "412 001"),
-    greenStripe: striped("Green stripe", ICE_WHITE, "#3c9b38", 1.7, 1.84, "412 013"),
-  },
-  weight: { end: 55, middle: 53 }, power: 825, maxspeed: 250,
-};
 
 export const ICE_T: ShinkansenSeries = {
   endLength: 27.45, midLength: 25.9, W: 1.425, Y: 1.4, S: 3.05, C: 3.84, lean: 0.92, B: 0.8, A: 1.05,
