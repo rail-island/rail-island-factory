@@ -1,6 +1,6 @@
 // German units on the series kit (shinkansen.ts): the ICE 3 (BR 403, its own
 // cab face in deIce3.ts), the ICE 4 (BR 412), the tilting ICE T (BR 411), the
-// Munich and Stuttgart S-Bahn's BR 423, the Desiro Classic (BR 642) and the
+// Munich and Stuttgart S-Bahn's BR 423 (deBr423.ts), the Desiro Classic (BR 642) and the
 // RegioShuttle (BR 650) diesel railcars, the Uerdinger railbus (VT 98) and the
 // Fliegender Hamburger (SVT 877); and the ICE 2, the ICE 1's power car and coach
 // (ice1.ts) with a driving trailer on the series kit. See docs/models/germany-trains.md.
@@ -14,6 +14,7 @@ import { c, flatCab, nose, NO_NOSE, striped } from "./seriesHelpers.ts";
 import { ICE3 } from "./deIce3.ts";
 import { ICE4 } from "./deIce4.ts";
 import { ICE_T } from "./deIceT.ts";
+import { BR423 } from "./deBr423.ts";
 
 export { ICE3 };
 
@@ -21,21 +22,6 @@ const ICE_WHITE = "#eceeee";
 const TRAFFIC_RED = "#ec0016";
 
 
-const sBahn = (title: string, number: string) => ({
-  title, palette: { red: c(TRAFFIC_RED), grey: c("#d7dadc", 0.35), dark: c("#404346", 0.5), roofG: c("#bcc0c2", 0.55), skirtG: c("#404346", 0.7) },
-  bands: [[0, 1.6, "red"], [1.6, 1.72, "dark"], [1.72, 2.9, "grey"], [2.9, 3.05, "red"], [3.05, 9, "grey"]] as const, roof: "roofG", skirt: "skirtG", number,
-});
-
-export const BR423: ShinkansenSeries = {
-  endLength: 17.5, midLength: 16.2, W: 1.51, Y: 1.4, S: 3.3, C: 3.85, lean: 0.97, B: 0.95, A: 1.1,
-  // the rounded S-Bahn front, its big windscreen leaning back
-  nose: nose(1.6, 0.45, 2.4, [[0, 2.6], [0.4, 3.2], [1.2, 3.65], [1.8, 3.85]], [[0, 2.5], [0.4, 3.0], [1.2, 3.25], [1.8, 3.3]], [[0, 1.5], [0.8, 1.4]], [[0, 1.2], [0.6, 1.1]], [[0, 1.1], [0.3, 0.95]]),
-  windscreen: [0.3, 1.5, 0.07, 1.2], lamps: [0.15, 1.5],
-  windows: [[1.85, 2.8]], windowW: 1.4, pitch: 1.6, door: [1.15, 3.1, 1.85, 2.75], doorW: 1.4, doorCount: 2,
-  bogieCentres: 11.5, wheelR: 0.43, wheelbase: 2.2, endPantograph: true, cars: [4],
-  liveries: { sBahn: sBahn("S-Bahn", "423 001") },
-  weight: { end: 31, middle: 28 }, power: 590, maxspeed: 140,
-};
 
 const dbRegio = (title: string, number: string) => ({
   title, palette: { red: c(TRAFFIC_RED), grey: c("#d7dadc", 0.35), roofG: c("#bcc0c2", 0.55), skirtG: c("#404346", 0.7), cabMask: c("#1d1f22", 0.3) },
