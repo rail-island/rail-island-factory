@@ -84,7 +84,9 @@ combinations hashed before and after):
 - `jacobs` - Jacobs bogies: one bogie centred on each joint, carrying both cars (a car shown
   alone stands on its joint bogies, half beyond its body; the cabin stops short of their
   skirt cuts), the end car's leading bogie at `endBogies[0]` (the SBB FLIRT);
-  `onePantograph` - one pantograph only, on the second car;
+  `onePantograph` - one pantograph only, on the second car; `pantographsBesideEnds` - the two
+  pantographs on the second and the next-to-last car, not the third and third from last (the ICE 3's
+  transformer cars, `generator/deIce3.ts`);
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by
@@ -189,7 +191,7 @@ refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
 transoms) and a skirt bottom on the centre coupler's draft gear or on the transoms.
 
 `seriesHelpers.ts` holds the paint, nose and flat-cab helpers, the one-colour `striped`
-livery and `velaro()`, the Siemens Velaro body the ICE 3, the CRH3C and the AVE S-103 share.
+livery and `velaro()`, the Siemens Velaro body the CRH3C and the AVE S-103 share (the ICE 3 has its own cab face in `deIce3.ts`).
 
 ## The 500 series
 
