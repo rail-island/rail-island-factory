@@ -53,6 +53,8 @@ export interface LocoSpec {
   volumes?: Array<{ name: string; sec: Pt[]; plan: Pt[]; top?: Pt[]; bottom?: Pt[]; bands: Array<[number, number, string]> }>;
   /** Side frames of bogies and trucks: source x range at height y. */
   bogies?: Array<{ x0: number; x1: number; y: number }>;
+  /** The truck frames' paint (the DRG 01's red); "black" by default. */
+  bogieFrameMat?: string;
   gear: RunningGearSpec;
   /** Lamps: (x, y, z) feet at each end, the lens looking out. */
   lamps?: { front: Array<[number, number, number]>; rear: Array<[number, number, number]> };
@@ -184,7 +186,7 @@ export function buildLoco(spec: LocoSpec, units: LocoUnit[] = turningUnits(spec)
     if (!list.length) return;
     m.scope("bogie frames", () => {
       for (const b of list) for (const s of [-1, 1]) {
-        t.sideFrame("black", s, b.x0, b.x1, b.y - 0.09, b.y + 0.09, 0.88, 0.97);
+        t.sideFrame(spec.bogieFrameMat ?? "black", s, b.x0, b.x1, b.y - 0.09, b.y + 0.09, 0.88, 0.97);
         t.sideFrame("steel", s, (b.x0 + b.x1) / 2 - 0.35, (b.x0 + b.x1) / 2 + 0.35, b.y - 0.2, b.y - 0.09, 0.89, 0.96);
       }
     });

@@ -10,6 +10,7 @@ import { STEAM_CATALOG, UNIT_PARAM } from "./steamLocos.ts";
 import { enumParam } from "./emuParts.ts";
 import { ROCKET_VERSIONS, buildRocket, buildRocketLod, type RocketVersion } from "./rocket.ts";
 import { steamEngineSpec, steamTenderSpec, type WorldSteam } from "./steamWorld.ts";
+import { DRG01_WORLD, drg01Spec } from "./deSteam01.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -28,7 +29,7 @@ const CR = { top: 4.75, coupler: "knuckle", half: 1.55 } as const;
 const UIC = { top: 4.65, coupler: "buffers", half: 1.5 } as const;
 
 export const WORLD_STEAM: Record<string, SteamDesign> = {
-  "proc-vehicle-drg-01": { base: { ...UIC, title: "DRG 01", lead: 2, coupled: 3, trail: 1, leadD: 0.85, coupledD: 2.0, trailD: 1.25, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: BLACK_RED, tender: { length: 9.2, axles: 4, d: 1.0 }, number: "01 118" } },
+  "proc-vehicle-drg-01": DRG01_WORLD,
   "proc-vehicle-dr-52": { base: { ...UIC, title: "DR 52", lead: 1, coupled: 5, trail: 0, leadD: 0.85, coupledD: 1.4, trailD: 0, boilerR: 0.85, deflectors: "wagner", domes: 2, palette: BLACK_RED, tender: { length: 8.9, axles: 4, d: 1.0 }, number: "52 8154" } },
   "proc-vehicle-kpev-p8": {
     base: { ...UIC, title: "Prussian P 8", lead: 2, coupled: 3, trail: 0, leadD: 1.0, coupledD: 1.75, trailD: 0, boilerR: 0.83, deflectors: "none", domes: 2, palette: { paint: "#1f3b2c", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.3, axles: 4, d: 1.0 }, number: "2455 POSEN" },
@@ -78,8 +79,10 @@ export function worldSteamSpec(id: string, v?: ParamValues) {
   return p.unit === "tender" ? steamTenderSpec(s) : steamEngineSpec(s);
 }
 
-export function drg01(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-drg-01", v)); }
-export function drg01Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-drg-01", v)); }
+// the DRG 01 is drawn from its own spec (deSteam01.ts)
+const drg01Unit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-drg-01"]!, v).unit!;
+export function drg01(v?: ParamValues): MeshBuilder { return buildLoco(drg01Spec(drg01Unit(v))); }
+export function drg01Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(drg01Spec(drg01Unit(v))); }
 export function dr52(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-dr-52", v)); }
 export function dr52Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-dr-52", v)); }
 export function sncf241p(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-sncf-241p", v)); }
