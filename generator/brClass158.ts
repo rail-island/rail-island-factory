@@ -269,7 +269,7 @@ function coupler(m: MeshBuilder, e: number, head: number, back: number): void {
 // A car
 
 /** Draws one car, cab at +X and centred between its coupling planes, into `m`; `inner` draws its gangway (a lone car). */
-function drawCar(m: MeshBuilder, livery: C158Livery, inner: boolean, place: (p: [number, number, number]) => [number, number, number] = (p) => p): void {
+function drawCar(m: MeshBuilder, livery: C158Livery, inner: boolean): void {
   const p = PAINTS[livery];
   const car = new Car(p.palette, FRAME, m);
   const body = car.volume(bodyVolume(p), car.doorways(DOORS.map(doorBox), 0.03));
@@ -326,9 +326,9 @@ function drawCar(m: MeshBuilder, livery: C158Livery, inner: boolean, place: (p: 
       }
     });
     m.scope("vents", () => { for (const d of [4.5, 9.0, 13.5]) block(m, "roofDark", car.X(d - 0.25), car.X(d + 0.25), CROWN - 0.06, CROWN + 0.04, -0.3, 0.3); });
-    // the stack drawn through the builder's frame; its smoke placed where the car stands (an emitter is not moved by it)
+    // the stack and its smoke, both through the builder's frame (the car's place in the train)
     m.scope("exhaust", () => {
-      m.emit("smoke", place([car.X(0.7), CROWN + 0.08, -0.6]), 0.07);
+      m.emit("smoke", [car.X(0.7), CROWN + 0.08, -0.6], 0.07);
       m.prism("exhaust", ngon(8, 0.07, Math.PI / 8, car.X(0.7), -0.6), 3.6, CROWN + 0.08);
     });
   });
@@ -348,8 +348,8 @@ export function class158(unit: C158Unit, livery: C158Livery): MeshBuilder {
   }
   const h = C158_CAR / 2;
   articulate({ m }, [
-    { x0: INNER, x1: C158_CAR, draw: () => m.scope("car 1", () => m.moved(([x, y, z]) => [x + h, y, z], () => drawCar(m, livery, false, ([x, y, z]) => [x + h, y, z]))) },
-    { x0: -C158_CAR, x1: -INNER, draw: () => m.scope("car 2", () => m.turned(0, () => m.moved(([x, y, z]) => [x + h, y, z], () => drawCar(m, livery, false, ([x, y, z]) => [-(x + h), y, -z])))) },
+    { x0: INNER, x1: C158_CAR, draw: () => m.scope("car 1", () => m.moved(([x, y, z]) => [x + h, y, z], () => drawCar(m, livery, false))) },
+    { x0: -C158_CAR, x1: -INNER, draw: () => m.scope("car 2", () => m.turned(0, () => m.moved(([x, y, z]) => [x + h, y, z], () => drawCar(m, livery, false)))) },
   ], COUPLER_Y, { profile: BELLOWS, folds: 4, depth: 0.03 }, 10, [0]);
   return m;
 }

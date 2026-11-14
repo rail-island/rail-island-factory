@@ -186,10 +186,7 @@ function svt877Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number,
     // the slim stack on the dome, 1.4 m behind the tip, 4.08 m over the rail
     const x = X(1.4 - JOIN);
     m.loft("exhaust", ngon(10, 0.09, 0, x, 0), 3.55, ngon(10, 0.065, 0, x, 0), 4.08);
-    // MeshCore.emit records its point as given, outside an enclosing turned() (the train's rear car): map it
-    // through the builder's frame here, as the stack's own triangles are
-    const frame = (m as unknown as { frame: (p: Vec3) => Vec3 }).frame;
-    m.emit("smoke", frame([x, 4.08, 0]), 0.06);
+    m.emit("smoke", [x, 4.08, 0], 0.06);
   });
   m.scope("roof vent", () => {
     const x = X(L - 1.3);

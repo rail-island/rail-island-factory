@@ -203,9 +203,6 @@ window, `bufferBeam`, a window row's `glass` and the doors' `glassInward`
 - **Steam.** Each engine's own spec places boiler, domes and cab from its drawing or photos;
   pipework, air pumps and smokebox door dogs are simplified. The P 8 has one dome layout for
   both eras and keeps the Prussian tender in DR black.
-- **MeshCore.emit** does not apply a turned car's frame; the 642 and the SVT 877 map their
-  off-centre stacks themselves. The other diesel series' turned cars keep a slightly
-  misplaced emitter until the kit is fixed on its own.
 
 ## Tests
 

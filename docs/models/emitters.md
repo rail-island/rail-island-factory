@@ -30,7 +30,10 @@ interface Emitter {
 
 A design records one with `m.emit(kind, at, radius, flame?)` **where it draws the stack**, so a
 parameter that moves or heightens the stack moves its smoke with it (the chimney's `height`, a power
-plant's `type`). Nothing is derived from an old model's coordinates.
+plant's `type`). Nothing is derived from an old model's coordinates. The point goes through the
+builder's current frame like the stack's triangles: inside `m.turned` (a train's rear car, facing
+the other way) and `m.moved` (a car moved into its place in the train) a design states it in the
+car's own coordinates, never mapped by hand. A flame's `dir` is taken as given.
 
 ## Who emits
 
@@ -87,7 +90,8 @@ The low-detail build carries none; a consumer reads them from the full build.
 Every emitter must sit on a mouth: geometry at its height within twice its radius, and nothing
 covering it (`test/emitterCheck.ts`). The catalog sweep (`test/catalogSweep.ts`) checks it on every
 design's defaults and sampled combinations, from the builds it makes anyway;
-`test/emitters.test.ts` checks every combination of the listed smokers and the steam locomotives.
+`test/emitters.test.ts` checks every combination of the listed smokers and the steam locomotives,
+and the `train` variant of every multi-car design (its turned and moved cars' smoke on their stacks).
 It also requires the chimneys, power plants, foundry, mill, process plant, ships with funnels and
 every steam locomotive to emit, the refinery and the offshore platform to flare, and the chimney's smoke to rise with its
 `height`. For the fountains it requires each to state its style, pools and jets, a drawn water

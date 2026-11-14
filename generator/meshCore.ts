@@ -556,7 +556,9 @@ export class MeshCore {
   /**
    * Records an emitter (see Emitter): where the game should start the smoke, steam
    * or flame of this model. Called where the stack is drawn, so a parameter that
-   * moves or heightens the stack moves its smoke with it.
+   * moves or heightens the stack moves its smoke with it; the point goes through the
+   * current frame like the stack's triangles (a `turned` car's, a `moved` part's).
+   * A flame's `dir` is taken as given.
    */
   emit(kind: Emitter["kind"], at: Vec3, radius: number, flame?: { dir?: Vec3; height: number; color: string }): void {
     if (!(radius > 0) || at.some((v) => !Number.isFinite(v))) throw new Error(`emit(${kind}): bad point or radius`);
@@ -564,7 +566,7 @@ export class MeshCore {
     const part = this.currentPart >= 0 ? this.parts[this.currentPart]!.name : undefined;
     this.emitterList.push({
       kind,
-      at: [...at] as Vec3,
+      at: this.frame(at).map((v) => v + 0) as Vec3, // + 0: never -0
       radius,
       ...(kind === "flame" ? { dir: flame!.dir ?? [0, 1, 0], height: flame!.height, color: flame!.color } : {}),
       ...(part !== undefined ? { part } : {}),
