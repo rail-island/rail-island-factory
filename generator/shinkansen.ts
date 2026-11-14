@@ -13,7 +13,7 @@ import { liftable } from "./liftable.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { paint } from "./dieselParts.ts";
 import { block } from "./vehicleParts.ts";
-import { bogieGeometry, exhaust } from "./dieselParts.ts";
+import { bogieGeometry, exhaust, type BogieSpec } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { crownDisc, crownPane, sideDecal, sidePanel, surfaceDisc, type SliceBody } from "./sliceBody.ts";
 import { decalX } from "./usHoodKit.ts";
@@ -159,7 +159,12 @@ export interface ShinkansenSeries {
   onePantograph?: boolean;
   /** The two pantographs on the cars next to the end cars, the second and the next-to-last (default the third and the third from last; the ICE 3's transformer cars). */
   pantographsBesideEnds?: boolean;
-  /** Jacobs bogies: the cars' inner ends share one bogie centred on each joint (the end car's leading bogie at `endBogies[0]`, else bogieCentres ahead of the joint); a lone car stands on its joint bogies, half beyond its body (the FLIRT; `jacobsInset` the Giruno's). */
+  /**
+   * Jacobs bogies: the cars' inner ends share one bogie centred on each joint (the end car's leading
+   * bogie at `endBogies[0]`, else bogieCentres ahead of the joint). A lone car keeps, at each inner end,
+   * only its own half of the joint's bogie - one axle under its body (`loneJointAxles`), never a bogie
+   * reaching beyond it, which the game cannot couple by hand (the FLIRT; `jacobsInset` the Giruno's).
+   */
   jacobs?: boolean;
   /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
   flatCab?: NonNullable<CarDef["cab"]>;
@@ -308,6 +313,23 @@ function bogies(s: ShinkansenSeries, end: boolean, power?: SeriesPowerCar): [num
   const back = s.jacobsInset !== undefined ? L - s.jacobsInset : L - 3.5;
   // a short car's leading bogie comes in so that its wheels stay under the body
   return [Math.max(back - s.bogieCentres, s.wheelbase / 2 + s.wheelR + 0.2), back];
+}
+
+/**
+ * A lone car of a Jacobs set (`jacobs`): the d of the one axle it keeps at each inner end - the joint
+ * bogie's axle under its own body, half a wheelbase inside the joint - by the index of the joint's
+ * bogie in `bogies` (an end car's rear one, a middle car's both). The full train (unit `train`) has
+ * the whole bogie under the joint.
+ */
+export function loneJointAxles(s: ShinkansenSeries, end: boolean): Array<{ i: number; d: number }> {
+  if (!s.jacobs) return [];
+  const L = end ? endBody(s) : midBody(s), half = s.wheelbase / 2;
+  return end ? [{ i: 1, d: L + GAP - half }] : [{ i: 0, d: -GAP + half }, { i: 1, d: L + GAP - half }];
+}
+
+/** The single axle a lone Jacobs car stands on at an inner end: the joint bogie's wheelset and axle boxes on leaf springs. */
+function loneAxleSpec(s: ShinkansenSeries, t: BogieSpec): BogieSpec {
+  return { ...t, axles: [0], frameHalf: s.wheelR + 0.45, frameTop: s.A + 0.05, primary: "leaf" };
 }
 
 function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean | "lowered", number: string, joint = false, power?: SeriesPowerCar, rear = false): CarDef {
@@ -711,7 +733,11 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
     const panto = !unwired(s) && (s.powerCar ? !!power : s.endPantograph ? end : !end);
     // the nose covers its coupler; buffers stand out at a cab end
     const inside = !end || s.endCoupler === "buffers" ? [] : s.single ? [1, -1] : [1];
-    drawCar(m, carDef(s, l, end, panto, l.number, false, power), (d) => len / 2 - frontGap(s, end) - d, inside.length ? { inside } : {});
+    const def = carDef(s, l, end, panto, l.number, false, power), X = (d: number) => len / 2 - frontGap(s, end) - d;
+    // a Jacobs set's lone car: one axle of its own at each inner end in place of the joint's bogie
+    const lone = power ? [] : loneJointAxles(s, end);
+    drawCar(m, def, X, { ...(inside.length ? { inside } : {}), ...(lone.length ? { trucks: def.trucks.map((_, i) => !lone.some((a) => a.i === i)) } : {}) });
+    if (lone.length) m.scope("joint axles", () => lone.forEach((a, k) => m.scope(`axle ${k + 1}`, () => bogieGeometry(m, X(a.d), loneAxleSpec(s, def.truck)))));
     return m;
   }
   const slots = shinkansenTrain(s, carsIn(s, p));
@@ -768,10 +794,12 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   const T = (x: number) => (turned ? 2 * cx - x : x);
   // Jacobs bogies in a train: each joint's bogie once, with the car ahead of it
   const all = bogies(s, end, power), tr = all.filter((_, i) => !(s.jacobs && section !== undefined) || (i === 0 ? end : !turned));
+  // a lone car of a Jacobs set: its own axle at each inner end, under its body
+  const lone = section === undefined && !power ? loneJointAxles(s, end) : [];
   // the power car's raised pantograph, else the kit's place
   const panD = power ? (power.pantographs.find((p) => p.raised) ?? power.pantographs[0]!).d : pantographAt(s, end, all);
   const parts: LodPart[] = [
-    ...bogieParts(tr.filter((_, i) => trucks[i] !== false).map((d) => [T(X(d)), power ? Math.max(...power.axles.map(Math.abs)) + power.wheelR + 0.2 : s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
+    ...bogieParts(tr.filter((_, i) => trucks[i] !== false).map((d, i) => { const a = lone.find((q) => q.i === i); return [T(X(a ? a.d : d)), a ? s.wheelR + 0.2 : power ? Math.max(...power.axles.map(Math.abs)) + power.wheelR + 0.2 : s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const; }) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
     ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
     ...(pantograph ? [{ ...roofPart("pantograph", T(X(panD)) - 0.8, T(X(panD)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
   ];

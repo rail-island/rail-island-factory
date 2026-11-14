@@ -1,7 +1,7 @@
 # The later Shinkansen series
 
 **Covers** - the seven later Shinkansen designs (`proc-vehicle-shinkansen-n700s`, `-e5`, `-500`, `-700`, `-e6`, `-100`, `-e4`): the series specs, their cars and trains, liveries, the gauge, deviations and tests.
-**Code** - `generator/seriesCab.ts`, `generator/seriesHelpers.ts`, `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `assets/shinkansen-*/`
+**Code** - `generator/seriesCab.ts`, `generator/seriesHelpers.ts`, `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `test/loneJacobsCars.test.ts`, `assets/shinkansen-*/`
 **See also** - [shinkansen-0.md](shinkansen-0.md), [us-transit.md](us-transit.md), [us-carbodies.md](us-carbodies.md), [loading-gauge.md](loading-gauge.md)
 
 ## The designs
@@ -81,9 +81,13 @@ combinations hashed before and after):
   a bogie near each end); `pantographAt` - where the raised pantograph stands, d behind the
   body's +X end of the car raising it (default 1.5 m ahead of the rear bogie; the Allegra's
   over the cab, the FLIRT's over its leading bogie), in the distant model too;
-- `jacobs` - Jacobs bogies: one bogie centred on each joint, carrying both cars (a car shown
-  alone stands on its joint bogies, half beyond its body; the cabin stops short of their
-  skirt cuts), the end car's leading bogie at `endBogies[0]` (the SBB FLIRT);
+- `jacobs` - Jacobs bogies: one bogie centred on each joint, carrying both cars (the cabin
+  stops short of their skirt cuts), the end car's leading bogie at `endBogies[0]` (the SBB
+  FLIRT, the DB 423, the SVT 877). A car shown alone keeps at each inner end only its own half
+  of the joint's bogie: one axle on leaf springs, half a wheelbase inside the joint and under
+  its body, a lone wheelset in the rig (`loneJointAxles`). The game couples single cars by hand
+  and cannot handle a bogie reaching beyond a car's body; the full train (`unit` `train`) has
+  the whole bogie under each joint (`test/loneJacobsCars.test.ts`);
   `onePantograph` - one pantograph only, on the second car; `pantographsBesideEnds` - the two
   pantographs on the second and the next-to-last car, not the third and third from last (the ICE 3's
   transformer cars, `generator/deIce3.ts`);
@@ -165,7 +169,7 @@ combinations hashed before and after):
 - `jacobsInset` - the set rides on Jacobs bogies: in the train one bogie under each joint carries both
   cars (its rig support names both sections) and the cars' skirts are cut open at their inner
   ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
-  FLIRT's `jacobs` stands a lone car on its joint bogies instead);
+  FLIRT's `jacobs` stands a lone car on one axle at each inner end instead);
 - `fluting` - bands of horizontal ribs on every car's sides, round the windows and doors (the car
   builder's `fluting`, which takes several bands); `roofRibs` - ribs along the roof either side of
   the crown (the Talgo III's stainless body);

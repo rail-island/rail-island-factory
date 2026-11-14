@@ -209,6 +209,14 @@ shinkansen-0.md, tgv-duplex.md):
    on two bogies (a trailer that rides on Jacobs bogies in the train gets two
    of its own as a lone car), with couplers and gangway frames at its ends, so
    the game can couple single cars in any order and turn them.
+   **No running gear of a lone car may reach beyond its body**: the game cannot
+   handle a bogie hanging past the car's end when a player couples single cars
+   by hand (only the full train, `unit` `train`, is exact). Never stand a lone
+   car on its joint bogies' centres. Either give it its own bogie inside each
+   inner end, or keep only its own half of each joint's Jacobs bogie - one axle
+   under its body half a wheelbase inside the joint (the series kit's `jacobs`,
+   `loneJointAxles` in `shinkansen.ts`). Check every lone car's side view and
+   test it (`test/loneJacobsCars.test.ts`).
 6. **One builder per body, drawn into any builder at any position**: a car is
    a function of its builder and a mapping `X(d)` from the distance d behind
    its +X end to model x, so the lone car, the train and the turned car share

@@ -140,8 +140,8 @@ on the Commons photograph of FO 105 and a side view of the LGB model
   doors a car, tall windows from 1.05 m, the raised window behind the cab). The cars ride
   on Jacobs bogies under the joints (kit `jacobs`), the motor bogie 5.3 m behind the
   front; one pantograph on the second car over its leading bogie (`onePantograph`,
-  `pantographAt`). An end or middle car shown alone stands on its joint bogies, half
-  beyond its body. Not drawn: the side emblem, the grilles' slats; the distant model carries the black band over the cab too.
+  `pantographAt`). An end or middle car shown alone stands on one axle of its own at
+  each inner end, under its body (the joint bogie's half; the full train has the whole bogie). Not drawn: the side emblem, the grilles' slats; the distant model carries the black band over the cab too.
 - **KISS (RABe 511).** Its own layout (`layout` with per-row `rows`) from the photographs, the
   RABe 512 profile corrected for perspective: on every car the double deck lies between the two
   doors (end car 9.0 - 10.6 and 18.95 - 20.55 m behind the tip), five lower windows between them
