@@ -437,7 +437,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
           if (s.exhaustAt === undefined) return exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14);
           // off the car's middle: the smoke at the stack's mouth where a turned car draws it (emit takes model coordinates)
           const x = X(s.exhaustAt);
-          m.emit("smoke", m.toModel([x, s.C + 0.1, 0]), 0.07);
+          // the builder's frame (MeshCore.frame) maps it through the enclosing turned and moved frames; + 0: never -0
+          const toModel = (m as unknown as { frame: (p: Vec3) => Vec3 }).frame;
+          m.emit("smoke", toModel([x, s.C + 0.1, 0]).map((v) => v + 0) as Vec3, 0.07);
           block(m, "exhaust", x - 0.07, x + 0.07, s.C - 0.05, s.C + 0.1, -0.07, 0.07);
         });
       if (l.roofStripe) m.scope("roof stripe", () => { for (const sd of [1, -1]) crownPane(m, b, X, sd, l.roofStripe!.mat, [0, L], [0, l.roofStripe!.z], 0.004); });
