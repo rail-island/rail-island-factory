@@ -13,7 +13,8 @@ import type { ShinkansenSeries } from "../generator/shinkansen.ts";
 // units that had the generic short nose with the windscreens on its crown
 // rake: how far the face's top at the panes may stand behind its foot (default 0.5 m, an upright face)
 const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: number; single: boolean; rake?: number }> = [
-  { design: DE_UNITS.find((d) => d.id === "proc-vehicle-db-vt98")!, series: VT98, panes: 2, single: true },
+  // the VT 98: two big front windows and the two corner windows wrapping round the corners
+  { design: DE_UNITS.find((d) => d.id === "proc-vehicle-db-vt98")!, series: VT98, panes: 4, single: true },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-mat46")!, series: MAT46, panes: 5, single: false },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },

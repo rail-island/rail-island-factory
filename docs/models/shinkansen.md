@@ -101,7 +101,9 @@ combinations hashed before and after):
   the bands (columns on the sides, narrow strips across the arc); `endLettering` - the end
   car's own markings on both sides (the InterCity 125's double arrow and name);
 - `endCoupler: "buffers"` - buffers and a screw coupling on a beam at the cab ends (the car
-  builder's `buffers` coupler), the coupling plane 0.65 m out;
+  builder's `buffers` coupler), the coupling plane 0.65 m out; `bufferBeam: false` leaves the
+  beam out (the car builder's `bufferBeam`), the buffers standing straight out of the cab face's
+  own bodywork (the VT 98's rounded end, `generator/deVt98.ts`);
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
 - `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
 - `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
