@@ -228,6 +228,14 @@ export interface ShinkansenSeries {
   centredBogies?: boolean;
   /** The doors and windows of the end and the middle car (d from the body's +X end), in place of the generated layout. */
   layout?: { end: SeriesLayout; middle: SeriesLayout };
+  /**
+   * A set whose rear end car differs from its leading one (the SVT 877's two cars): in a train the rear
+   * end car takes this layout and these cab side windows (none when omitted) in place of the end car's
+   * `layout.end` and `cabWindows`; a lone end car is always the leading one.
+   */
+  rearEnd?: { layout: SeriesLayout; cabWindows?: ShinkansenSeries["cabWindows"] };
+  /** A diesel unit's exhaust stacks drawn by the series' own `fittings` (on the cab's dome), not over each car's middle. */
+  exhaustInFittings?: boolean;
   /** The side number: d behind the body's centre, its foot and height (default 3 m from the rear, just above the belly). */
   numberAt?: readonly [number, number, number];
   /** A block on the end car's roof in the distant model (d span behind the tip, half width, heights, paint): a cab turret's silhouette. */
@@ -302,7 +310,7 @@ function bogies(s: ShinkansenSeries, end: boolean, power?: SeriesPowerCar): [num
   return [Math.max(back - s.bogieCentres, s.wheelbase / 2 + s.wheelR + 0.2), back];
 }
 
-function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean | "lowered", number: string, joint = false, power?: SeriesPowerCar): CarDef {
+function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean | "lowered", number: string, joint = false, power?: SeriesPowerCar, rear = false): CarDef {
   // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
   if (Math.abs(s.B - (couplerOf(s) - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms (0 is a single axle)
@@ -331,7 +339,10 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     spans = [];
     for (let i = 0; i + 1 < edges.length; i += 2) if (edges[i + 1]! - edges[i]! > s.windowW + 0.4) spans.push(...row(edges[i]! + 0.2, edges[i + 1]! - 0.2));
   }
-  const own = power ? power.layout : s.layout?.[end ? "end" : "middle"];
+  // a train's rear end car with a layout of its own (rearEnd)
+  const rearOwn = end && rear && s.rearEnd !== undefined;
+  const own = power ? power.layout : rearOwn ? s.rearEnd!.layout : s.layout?.[end ? "end" : "middle"];
+  const cabWindows = rearOwn ? s.rearEnd!.cabWindows : s.cabWindows;
   if (own) {
     doors = own.doors.map(([a, e]): [number, number] => [a, e]);
     spans = own.windows.map(([a, e]): [number, number] => [a, e]);
@@ -391,9 +402,9 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
           for (const sd of [1, -1]) sideDecal(m, b, X, sd, f.mat, tris, 0.004);
         }
       });
-      if (end && s.cabWindows) m.scope("cab windows", () => {
+      if (end && cabWindows) m.scope("cab windows", () => {
         // a single railcar's rear cab too, mirrored
-        const spans = s.cabWindows!.flatMap(([d0, d1, y0, y1, side]) => [[d0, d1, y0, y1, side], ...(s.single ? [[L - d1, L - d0, y0, y1, side]] : [])]);
+        const spans = cabWindows.flatMap(([d0, d1, y0, y1, side]) => [[d0, d1, y0, y1, side], ...(s.single ? [[L - d1, L - d0, y0, y1, side]] : [])]);
         for (const sd of [1, -1]) for (const [d0, d1, y0, y1, side] of spans) {
           if (side !== undefined && side !== sd) continue;
           sidePanel(m, b, X, sd, "rubber", d0!, d1!, y0!, y1!, 0.007, 0.03);
@@ -421,7 +432,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         for (const sd of [1, -1])
           for (let z = r.pitch / 2; z + 0.025 <= r.zMax; z += r.pitch) crownPane(m, b, X, sd, r.mat, [0.3, L - 0.3], [z, z + 0.025], 0.004);
       });
-      if (isDiesel(s))
+      if (isDiesel(s) && !s.exhaustInFittings)
         m.scope("exhaust", () => {
           if (s.exhaustAt === undefined) return exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14);
           // off the car's middle: the smoke at the stack's mouth where a turned car draws it (emit takes model coordinates)
@@ -708,7 +719,7 @@ export function buildSeries(s: ShinkansenSeries, params: readonly ParamSpec[], v
     const cx = (slot.lo + slot.hi) / 2;
     const len = slot.power ? s.powerCar!.length : slot.end ? s.endLength : s.midLength;
     const X = (d: number) => cx + len / 2 - frontGap(s, slot.end) - d;
-    const def = carDef(s, l, slot.end, slot.pantograph && s.trailingLowered && s.endPantograph === true && slot.turned ? "lowered" : slot.pantograph, l.number, s.jacobsInset !== undefined, slot.power ? s.powerCar : undefined);
+    const def = carDef(s, l, slot.end, slot.pantograph && s.trailingLowered && s.endPantograph === true && slot.turned ? "lowered" : slot.pantograph, l.number, s.jacobsInset !== undefined, slot.power ? s.powerCar : undefined, slot.turned);
     // a buffered cab end keeps its buffers at the train's two ends
     const inside = slot.end && s.endCoupler === "buffers" ? [-1] : [1, -1];
     if (s.jacobs) {

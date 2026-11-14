@@ -122,6 +122,11 @@ combinations hashed before and after):
   place of the generated ones; `numberAt` - the side number's place;
 - `fittings` - the series' own fittings (a cab front, underfloor equipment), drawn in place
   of the plain underfloor box.
+- `rearEnd` - a set whose rear end car differs from its leading one: in a train the rear end car
+  takes its own `layout` and `cabWindows` (none when omitted) in place of `layout.end` and the
+  series' `cabWindows`; a lone end car is the leading one (the SVT 877's 877 b, `generator/deSvt877.ts`);
+  `exhaustInFittings` - a diesel unit's exhaust stacks drawn by the series' `fittings` (the SVT 877's on
+  the cab's dome) instead of over each car's middle.
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);
