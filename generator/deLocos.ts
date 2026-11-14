@@ -14,7 +14,7 @@ import { BR120_PARAMS, db120, db120Lod } from "./deBr120.ts";
 import { E94_PARAMS, drgE94, drgE94Lod } from "./deE94.ts";
 import { E18_PARAMS, drgE18, drgE18Lod } from "./deE18.ts";
 
-export { dbV200, dbV200Lod };
+export { dbV200, dbV200Lod, dbBr218, dbBr218Lod };
 export { db103, db103Lod };
 export { db101, db101Lod };
 export { db120, db120Lod };

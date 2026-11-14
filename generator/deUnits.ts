@@ -17,9 +17,9 @@ import { BR642 } from "./deBr642.ts";
 import { BR650 } from "./deBr650.ts";
 import { VT98 } from "./deVt98.ts";
 import { SVT877 } from "./deSvt877.ts";
-import { ICE2_DESIGN } from "./deIce2.ts";
+import { ICE2_DESIGN, dbIce2, dbIce2Lod } from "./deIce2.ts";
 
-export { ICE3, VT98 };
+export { ICE3, VT98, dbIce2, dbIce2Lod };
 
 const P = {
   ice3: seriesParams(ICE3), ice4: seriesParams(ICE4), iceT: seriesParams(ICE_T), br423: seriesParams(BR423),
