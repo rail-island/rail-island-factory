@@ -1,7 +1,7 @@
 # Coaches in a few measures
 
 **Covers** - the coach generator on the passenger car builder: the measures a coach design states, its types of car and liveries, and the designs drawn with it.
-**Code** - `generator/worldCoaches.ts` (`WorldCoach`, `buildCoach`, `buildCoachLod`, `coachDesign`, `WORLD_COACHES`), `generator/usTransit.ts` (`drawCar`, `carLod`, the `buffers` coupler)
+**Code** - `generator/worldCoaches.ts` (`WorldCoach`, `buildCoach`, `buildCoachLod`, `coachDesign`, `WORLD_COACHES`), `generator/deIcCoach.ts` (the DB Intercity coach, laid out per side through `layout`), `generator/usTransit.ts` (`drawCar`, `carLod`, the `buffers` coupler)
 **See also** - [us-transit.md](us-transit.md) (the car builder), [germany-trains.md](germany-trains.md)
 
 A `WorldCoach` states a locomotive-hauled coach: its length over the buffers (or

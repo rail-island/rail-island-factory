@@ -43,10 +43,10 @@ export interface CarDef {
   field?: { d: number; y: readonly [number, number]; mat: string };
   /** Painted strips on both sides over the bands, the skirt and the roof's arc: d spans, between two heights (a double-deck coach's door strips). */
   strips?: ReadonlyArray<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }>;
-  /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square). */
-  windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number }>;
+  /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square); `glass` the panes' paint (default "glass": a frosted toilet window). */
+  windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number; glass?: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds a pair of narrow leaf windows (`glassW`, `glassPair`), or a single one (`glassW` alone: a porthole) (default square); `glassSurround` sets those rounded windows in a rubber surround with a bright rim (default none). */
-  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number; glassSurround?: boolean };
+  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number; glassSurround?: boolean; glassInward?: number };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
@@ -119,7 +119,9 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
       });
       mm.scope("glass", () => {
         // a narrow window centred on the leaf, or the leaf's full width
-        const w = c.doors.glassW, dm = (d0 + d1) / 2, pair = c.doors.glassPair;
+        // `glassInward` (default 0) moves a narrow window off the leaf's centre toward the car's middle (a folding door's inner leaf)
+        const w = c.doors.glassW, pair = c.doors.glassPair;
+        const dm = (d0 + d1) / 2 + (c.doors.glassInward ? ((d0 + d1) / 2 < b.length / 2 ? 1 : -1) * c.doors.glassInward : 0);
         // a double leaf: two narrow windows `glassPair` apart, the leaves' seam between them
         const gr = c.doors.glassCornerR;
         if (w && pair && gr && c.doors.glassSurround) for (const k of [-1, 1]) {
@@ -220,11 +222,11 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
           m.scope(`windows ${r + 1}`, () => w.spans.forEach(([a, e], i) => m.scope(`window ${i + 1}`, () => {
             if (w.cornerR) {
               roundedSidePanel(m, b, X, s, w.frame, a, e, w.y[0], w.y[1], w.cornerR, 0.006, 0.03);
-              roundedSidePanel(m, b, X, s, "glass", a + 0.04, e - 0.04, w.y[0] + 0.04, w.y[1] - 0.04, Math.max(0.01, w.cornerR - 0.03), 0.012, 0);
+              roundedSidePanel(m, b, X, s, w.glass ?? "glass", a + 0.04, e - 0.04, w.y[0] + 0.04, w.y[1] - 0.04, Math.max(0.01, w.cornerR - 0.03), 0.012, 0);
               return;
             }
             sidePanel(m, b, X, s, w.frame, a, e, w.y[0], w.y[1], 0.006, 0.03);
-            sidePanel(m, b, X, s, "glass", a + 0.04, e - 0.04, w.y[0] + 0.04, w.y[1] - 0.04, 0.012, 0.004);
+            sidePanel(m, b, X, s, w.glass ?? "glass", a + 0.04, e - 0.04, w.y[0] + 0.04, w.y[1] - 0.04, 0.012, 0.004);
           }))));
         m.scope("doors", () => c.doors.spans.forEach(([a, e], i) => doorOn(c, i, s) && m.scope(`door ${i + 1}`, () => door(m, c, b, X, s, a, e, i))));
         if (c.fluting) m.scope("fluting", () => fluting(m, c, b, X, s));

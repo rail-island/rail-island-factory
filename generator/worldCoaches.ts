@@ -19,6 +19,7 @@ import { carLod, carLodBody, drawCar, type CarDef } from "./usTransit.ts";
 import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { enumParam } from "./emuParts.ts";
+import { DB_IC } from "./deIcCoach.ts";
 
 type Band = readonly [number, number, string];
 
@@ -336,19 +337,7 @@ const c = (hex: string, r = 0.45) => paint(hex, r);
 // ---------------------------------------------------------------------------
 // Germany: the Intercity coaches (Avmz first class, Bpmz second class, 26.4 m)
 
-export const DB_IC: WorldCoach = {
-  length: 26.4, W: 1.41, Y: 1.4, S: 3.2, C: 4.05, B: 1.0, A: 1.15, rows: [[1.95, 2.85]], doorIn: 0.7, doorW: 0.75, door: [1.2, 3.1],
-  bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5, coupler: "buffers", maxspeed: 200,
-  types: {
-    avmz: { title: "First class", windows: 11, windowW: 1.4, number: "61 80 19-91 001-2", weight: 47 },
-    bpmz: { title: "Second class", windows: 12, windowW: 1.25, number: "61 80 22-91 101-3", weight: 45 },
-  },
-  liveries: {
-    tee: { title: "TEE", palette: { red: c("#8a1c2b"), beige: c("#e3d3a6"), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "red"], [1.85, 2.95, "beige"], [2.95, 9, "red"]], roof: "roofG", skirt: "skirtG" },
-    oceanBlue: { title: "Ocean blue", palette: { blue: c("#104058"), beige: c("#e3d3a6"), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "blue"], [1.85, 2.95, "beige"], [2.95, 9, "blue"]], roof: "roofG", skirt: "skirtG" },
-    intercity: { title: "Intercity", palette: { white: c("#eceeee", 0.35), red: c("#ec0016"), roofG: c("#b9bdc0", 0.6), skirtG: c("#4a4d50", 0.7) }, bands: [[0, 1.7, "white"], [1.7, 1.84, "red"], [1.84, 9, "white"]], roof: "roofG", skirt: "skirtG" },
-  },
-};
+export { DB_IC } from "./deIcCoach.ts";
 
 // ---------------------------------------------------------------------------
 // France: the Corail (VTU), the Grand Confort and the Wagons-Lits cars
