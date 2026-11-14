@@ -55,6 +55,8 @@ export interface LocoSpec {
   bogies?: Array<{ x0: number; x1: number; y: number }>;
   /** The truck frames' paint (the DRG 01's red); "black" by default. */
   bogieFrameMat?: string;
+  /** More parts drawn with each truck frame (a tender's pressed side frames and springs), turning with it; none by default. */
+  drawOnTruckFrame?: (t: Steam, frame: { x0: number; x1: number; y: number }) => void;
   gear: RunningGearSpec;
   /** Lamps: (x, y, z) feet at each end, the lens looking out. */
   lamps?: { front: Array<[number, number, number]>; rear: Array<[number, number, number]> };
@@ -189,6 +191,7 @@ export function buildLoco(spec: LocoSpec, units: LocoUnit[] = turningUnits(spec)
         t.sideFrame(spec.bogieFrameMat ?? "black", s, b.x0, b.x1, b.y - 0.09, b.y + 0.09, 0.88, 0.97);
         t.sideFrame("steel", s, (b.x0 + b.x1) / 2 - 0.35, (b.x0 + b.x1) / 2 + 0.35, b.y - 0.2, b.y - 0.09, 0.89, 0.96);
       }
+      if (spec.drawOnTruckFrame) for (const b of list) spec.drawOnTruckFrame(t, b);
     });
   };
   const unitBogies = new Set(units.flatMap((u) => u.bogies));
