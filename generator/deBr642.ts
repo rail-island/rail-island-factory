@@ -21,7 +21,7 @@ import { block } from "./vehicleParts.ts";
 const TRAFFIC_RED = "#ec0016";
 
 /** Where the cab face meets the body, behind the tip; the roof still rises behind it (`endCrown`). */
-const DJOIN = 2.3;
+const DJOIN = 2.9;
 /** The coupling plane ahead of the face: the Scharfenberg head in its recess. */
 const REACH = 0.35;
 
@@ -51,11 +51,11 @@ function desiroLivery(title: string, number: string, lettering?: string): Shinka
     doors: [[0, 9, "doorG"]], roof: "roofG", skirt: "skirtG",
     endSweeps: [
       // the cab's black side band: its front edge raked back with the face, parallel to the windscreen
-      { mat: "band", front: [[HIGH_BAND[0], 2.0], [HIGH_BAND[1], 2.62]], back: [[HIGH_BAND[0], 10.25], [HIGH_BAND[1], 10.25]] },
+      { mat: "band", face: true, front: [[HIGH_BAND[0], 2.0], [HIGH_BAND[1], 2.62]], back: [[HIGH_BAND[0], 10.25], [HIGH_BAND[1], 10.25]] },
       // the raked cab side window in it, its front edge along the band's, a narrow head
-      { mat: "screen", front: [[2.15, 2.12], [3.14, 2.74]], back: [[2.15, 2.86], [3.14, 2.86]] },
+      { mat: "screen", face: true, front: [[2.15, 2.12], [3.14, 2.74]], back: [[2.15, 2.86], [3.14, 2.86]] },
     ],
-    ...(lettering ? { endLettering: [{ text: lettering, d: 2.4 - B0, y: 1.86, h: 0.14, mat: "letterW" }] } : {}),
+    ...(lettering ? { endLettering: [{ text: lettering, d: 0.1, y: 1.86, h: 0.14, mat: "letterW" }] } : {}),
   };
 }
 
@@ -71,14 +71,14 @@ const closed = (half: Pt[]): Pt[] => [...half, ...mirror(half).slice(1, -1)];
  * (Annaberg and Stockheim photographs, 106 px/m head-on).
  */
 function maskHalf(g: number): Pt[] {
-  return [[0, 1.68 - g], [1.04 + g, 1.68 - g], [1.12 + g, 2.4], [1.18 + g, 2.6], [1.25 + g, 2.95], [1.22 + g, 3.18], [1.06 + g * 0.7, 3.34 + g * 0.7], [0.6, 3.43 + g], [0, 3.46 + g]];
+  return [[0, 1.68 - g], [1.1 + g, 1.68 - g], [1.18 + g, 2.0], [1.21 + g, 2.47], [1.2 + g, 2.8], [1.12 + g, 3.08], [0.94 + g * 0.8, 3.28 + g * 0.7], [0.6, 3.42 + g], [0, 3.47 + g]];
 }
 /** The windscreen's glass inside the mask, above the bar at 2.47 - 2.53 m. */
 function screenHalf(): Pt[] {
-  return [[0, 2.53], [1.14, 2.53], [1.18, 2.65], [1.21, 2.95], [1.18, 3.16], [1.03, 3.31], [0.6, 3.39], [0, 3.42]];
+  return [[0, 2.53], [1.15, 2.53], [1.15, 2.8], [1.08, 3.06], [0.9, 3.25], [0.58, 3.38], [0, 3.42]];
 }
 /** The lower panel's dark glass: the display, the lamps and the logo behind it. */
-const PANEL: Pt[] = [[-1.06, 1.71], [1.06, 1.71], [1.11, 2.44], [-1.11, 2.44]];
+const PANEL: Pt[] = [[-1.08, 1.71], [1.08, 1.71], [1.16, 2.44], [-1.16, 2.44]];
 
 /** The DB logo, 0.3 by 0.21 m, under the display: its white ground, red frame and the letters D and B in bars. */
 const LOGO: readonly [number, number] = [0, 1.79];
@@ -98,12 +98,12 @@ const DB_LOGO: Pt[][] = [
  * windscreen wraps round them).
  */
 const DESIRO_FACE: SeriesCabFace = {
-  dJoin: DJOIN, dSide: 1.95, reach: REACH, first: 10.62, roofFrom: 3.44, cols: [6, 4, 1, 1], tolerance: 0.03,
-  profile: [[0.3, 0.32], [0.38, 0.17], [0.5, 0.07], [0.68, 0.03], [0.82, 0.01], [1.0, 0], [1.6, 0], [2.0, 0.01], [2.47, 0.05], [2.53, 0.08], [2.8, 0.25], [3.1, 0.47], [3.44, 0.78], [3.56, 1.1], [3.66, 1.5], [3.73, 1.95], [3.76, DJOIN]],
-  corner: [[0.3, 0.5], [0.82, 0.55], [1.6, 0.58], [2.5, 0.62], [3.0, 0.68], [3.44, 0.75], [3.6, 0.6], [3.7, 0.4], [3.76, 0.2]],
-  cornerDepth: [[0.3, 1.05], [0.82, 1.1], [1.6, 1.15], [2.5, 1.25], [3.0, 1.4], [3.44, 1.45], [3.6, 1.0], [3.7, 0.5], [3.76, 0.2]],
+  dJoin: DJOIN, dSide: 2.75, reach: REACH, first: 10.62, roofFrom: 3.44, cols: [5, 4, 1, 1], tolerance: 0.035,
+  profile: [[0.3, 0.3], [0.38, 0.15], [0.5, 0.06], [0.68, 0.02], [0.82, 0], [1.62, 0], [1.68, 0.04], [1.74, 0.11], [2.0, 0.17], [2.47, 0.3], [2.53, 0.33], [2.8, 0.5], [3.1, 0.72], [3.3, 0.9], [3.44, 1.05], [3.54, 1.25], [3.62, 1.55], [3.68, 1.9], [3.72, 2.3], [3.76, DJOIN]],
+  corner: [[0.3, 0.6], [0.82, 0.6], [1.62, 0.62], [2.0, 0.7], [2.5, 0.8], [3.0, 0.95], [3.44, 1.05], [3.62, 0.95], [3.72, 0.6], [3.76, 0.3]],
+  cornerDepth: [[0.3, 1.0], [0.82, 1.05], [1.62, 1.1], [2.0, 1.3], [2.5, 1.5], [3.0, 1.65], [3.44, 1.65], [3.62, 1.2], [3.72, 0.6], [3.76, 0.3]],
   bulge: 0.1,
-  rows: [0.3, 0.38, 0.5, 0.68, 0.82, 0.97, 1.0, 1.3, 1.6, 2.0, 2.47, 2.53, 2.8, 3.1, 3.3, 3.44, 3.56, 3.66, 3.73, 3.76],
+  rows: [0.3, 0.38, 0.5, 0.68, 0.82, 0.97, 1.0, 1.62, 1.68, 1.74, 2.0, 2.47, 2.53, 2.8, 3.1, 3.3, 3.44, 3.54, 3.62, 3.68, 3.72, 3.76],
   bands: (l) => l.bands,
   // (the distant model's face: the black mask between the red flanks)
   lodBands: [[0, 0.82, "skirtG"], [0.82, 1.55, "recess"], [1.55, 1.68, "skirtG"], [1.68, 3.44, "cabMask"]],
@@ -114,7 +114,7 @@ const DESIRO_FACE: SeriesCabFace = {
   fields: [
     // the coupler's black recess and the number's grey strip over it
     { mat: "recess", pts: [[-0.8, 0.8], [0.8, 0.8], [0.88, 1.55], [-0.88, 1.55]] },
-    { mat: "skirtG", pts: box(-0.97, 0.97, 1.55, 1.68) },
+    { mat: "skirtG", pts: box(-1.06, 1.06, 1.55, 1.68) },
     // the mask, the windscreen and the lower panel's glass
     { mat: "cabMask", pts: closed(maskHalf(0)) },
     { mat: "screen", pts: closed(screenHalf()) },
@@ -129,7 +129,7 @@ const DESIRO_FACE: SeriesCabFace = {
   panes: [],
   lodGlass: { hw: 1.1, y: [2.53, 3.4] },
   decals: DB_LOGO.map((pts) => ({ mat: "logoRed", pts, fine: 1 })),
-  texts: [{ text: "REGIONALBAHN", lat: 0, y: 2.14, h: 0.1, mat: "display" }],
+  texts: [{ text: "RB 73", lat: 0, y: 2.14, h: 0.1, mat: "display" }],
   // the headlights outside, the tail lamps inside them, low in the panel
   lamps: [[-0.9, 1.88, 0.07, "lampHead"], [0.9, 1.88, 0.07, "lampHead"], [-0.72, 1.88, 0.05, "lampRed"], [0.72, 1.88, 0.05, "lampRed"]],
   roofLamp: [0, 3.635, 0.045],
