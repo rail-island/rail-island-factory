@@ -15,6 +15,7 @@ import { ICE3 } from "./deIce3.ts";
 import { ICE4 } from "./deIce4.ts";
 import { ICE_T } from "./deIceT.ts";
 import { BR423 } from "./deBr423.ts";
+import { SVT877 } from "./deSvt877.ts";
 
 export { ICE3 };
 
@@ -72,19 +73,6 @@ export const VT98: ShinkansenSeries = {
   weight: { end: 21, middle: 21 }, power: 220, maxspeed: 90,
 };
 
-export const SVT877: ShinkansenSeries = {
-  endLength: 20.95, midLength: 20.95, W: 1.425, Y: 1.4, S: 3.0, C: 3.6, lean: 0.95, B: 0.8, A: 1.05,
-  // the streamlined 1932 front: a round snout, the windscreen in the curve of the roof
-  nose: nose(2.8, 0.2, 2.0, [[0, 1.6], [0.4, 2.2], [1.4, 2.9], [2.4, 3.35], [3.2, 3.6]], [[0, 1.55], [0.4, 2.05], [1.4, 2.65], [2.4, 2.9], [3.2, 3.0]], [[0, 1.4], [1.0, 1.4]], [[0, 1.2], [1.0, 1.05]], [[0, 1.1], [0.5, 0.8]]),
-  windscreen: [1.3, 2.5, 0.07, 1.0], lamps: [0.35, 1.55],
-  windows: [[1.9, 2.65]], windowW: 1.3, pitch: 1.6, door: [1.2, 2.95, 1.9, 2.55], doorW: 0.8,
-  bogieCentres: 14.5, wheelR: 0.5, wheelbase: 3.0, traction: "diesel", cars: [2],
-  liveries: {
-    drg: { title: "Violet and cream", palette: { violet: c("#4a3466"), cream: c("#e6dcc0"), roofG: c("#5b5f63", 0.6), skirtG: c("#4a3466", 0.6) }, bands: [[0, 1.85, "violet"], [1.85, 2.75, "cream"], [2.75, 9, "violet"]], roof: "roofG", skirt: "skirtG", number: "877 a" },
-    dbVt04: { title: "DB VT 04", palette: { red: c("#a9221d"), cream: c("#e6dcc0"), roofG: c("#5b5f63", 0.6), skirtG: c("#2a2c2f", 0.7) }, bands: [[0, 1.85, "red"], [1.85, 2.75, "cream"], [2.75, 9, "red"]], roof: "roofG", skirt: "skirtG", number: "VT 04 000" },
-  },
-  weight: { end: 39, middle: 39 }, power: 302, maxspeed: 160,
-};
 
 /** The ICE 2's driving trailer (class 808): the ICE 1's coach body under a nose with a cab. */
 export const ICE2_DT: ShinkansenSeries = {
