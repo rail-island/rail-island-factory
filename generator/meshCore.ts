@@ -397,6 +397,11 @@ export class MeshCore {
     }
   }
 
+  /** A point drawn here, in the model's own coordinates: through the enclosing `turned`, `moved` and loft frames. */
+  toModel(p: Vec3): Vec3 {
+    return this.frame(p).map((v) => v + 0) as Vec3; // + 0: never -0
+  }
+
   /**
    * Draws `fn` moved by the rigid motion `move` (a point of the model, before any
    * enclosing `turned`, to where it goes): an opening door's leaf. `move` must be
