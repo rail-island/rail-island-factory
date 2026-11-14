@@ -104,6 +104,10 @@ combinations hashed before and after):
   builder's `buffers` coupler), the coupling plane 0.65 m out;
 - `wheelbase: 0` - a single axle at each truck position (a two-axle railbus, a Talgo car);
 - `traction: "none"` - an unpowered set of coaches (the Talgo III), filed with the coaches.
+- `exhaustAt` - a diesel unit's exhaust stack d behind the body's +X end of every car, over its
+  engine, in place of the car's middle (the Desiro 642's behind the cab's cooler); its smoke is
+  emitted where a turned car draws the stack (`MeshCore.toModel`). Unset, the stack and its smoke
+  stay as before.
 - `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
   reaching this far past the panes and joined over the centre pillar (the ICNG).
 - `arc` - the roof arc's segments (default 8); `couplerY` - the centre coupler's height

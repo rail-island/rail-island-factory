@@ -14,6 +14,7 @@ import { c, flatCab, nose, NO_NOSE, striped } from "./seriesHelpers.ts";
 import { ICE3 } from "./deIce3.ts";
 import { ICE4 } from "./deIce4.ts";
 import { ICE_T } from "./deIceT.ts";
+import { BR642 } from "./deBr642.ts";
 
 export { ICE3 };
 
@@ -41,17 +42,6 @@ const dbRegio = (title: string, number: string) => ({
   title, palette: { red: c(TRAFFIC_RED), grey: c("#d7dadc", 0.35), roofG: c("#bcc0c2", 0.55), skirtG: c("#404346", 0.7), cabMask: c("#1d1f22", 0.3) },
   bands: [[0, 1.75, "red"], [1.75, 2.85, "grey"], [2.85, 9, "red"]] as const, roof: "roofG", skirt: "skirtG", number,
 });
-
-export const BR642: ShinkansenSeries = {
-  endLength: 20.85, midLength: 20.85, W: 1.415, Y: 1.3, S: 3.15, C: 3.83, lean: 0.96, B: 0.72, A: 0.85,
-  // the Desiro's rounded front, raked windscreen and low floor
-  nose: nose(1.8, 0.35, 2.4, [[0, 2.4], [0.4, 3.05], [1.3, 3.6], [2.0, 3.83]], [[0, 2.3], [0.4, 2.85], [1.3, 3.1], [2.0, 3.15]], [[0, 1.5], [0.8, 1.35]], [[0, 1.25], [0.6, 1.1]], [[0, 1.15], [0.3, 0.95]]),
-  windscreen: [0.35, 1.6, 0.07, 1.15], lamps: [0.2, 1.45],
-  windows: [[1.6, 2.7]], windowW: 1.5, pitch: 1.75, door: [1.0, 3.0, 1.6, 2.6], doorW: 1.3,
-  bogieCentres: 13.5, wheelR: 0.385, wheelbase: 2.2, traction: "diesel", cars: [2],
-  liveries: { dbRegio: dbRegio("DB Regio", "642 001"), erzgebirgsbahn: { ...dbRegio("Erzgebirgsbahn", "642 039"), palette: { ...dbRegio("", "").palette, red: c("#0a6a3a") } } },
-  weight: { end: 34, middle: 34 }, power: 275, maxspeed: 120,
-};
 
 export const BR650: ShinkansenSeries = {
   endLength: 25.5, midLength: 25.5, W: 1.52, Y: 1.3, S: 3.15, C: 3.85, lean: 0.96, B: 0.75, A: 0.9,

@@ -177,6 +177,8 @@ export interface ShinkansenSeries {
   maxspeed: number;
   /** A diesel unit: no pantograph, exhaust stacks on the roof, filed with the DMUs (default electric); `none` an unpowered set of coaches. */
   traction?: "electric" | "diesel" | "none";
+  /** A diesel unit's exhaust stack, d behind the body's +X end of every car (default the car's middle): over the engine. */
+  exhaustAt?: number;
   /** The train lengths offered (default 3 - 8; 4 the default when offered, else the shortest). */
   cars?: readonly number[];
   /** One double-ended railcar, a cab or nose at both ends: no car or train choice. */
@@ -418,7 +420,13 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
           for (let z = r.pitch / 2; z + 0.025 <= r.zMax; z += r.pitch) crownPane(m, b, X, sd, r.mat, [0.3, L - 0.3], [z, z + 0.025], 0.004);
       });
       if (isDiesel(s))
-        m.scope("exhaust", () => exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14));
+        m.scope("exhaust", () => {
+          if (s.exhaustAt === undefined) return exhaust(m, X(L / 2), 0, s.C - 0.05, s.C + 0.1, 0.14, 0.14);
+          // off the car's middle: the smoke at the stack's mouth where a turned car draws it (emit takes model coordinates)
+          const x = X(s.exhaustAt);
+          m.emit("smoke", m.toModel([x, s.C + 0.1, 0]), 0.07);
+          block(m, "exhaust", x - 0.07, x + 0.07, s.C - 0.05, s.C + 0.1, -0.07, 0.07);
+        });
       if (l.roofStripe) m.scope("roof stripe", () => { for (const sd of [1, -1]) crownPane(m, b, X, sd, l.roofStripe!.mat, [0, L], [0, l.roofStripe!.z], 0.004); });
       if (end && l.endRoofEdge) m.scope("roof edge", () => roofEdge(m, b, X, l.endRoofEdge!, s.cabFace?.dJoin ?? 0));
       const panels = s.sidePanels?.[end ? "end" : "middle"];
