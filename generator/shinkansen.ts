@@ -133,6 +133,10 @@ export interface ShinkansenSeries {
   upperOverDoors?: boolean;
   /** The door's two leaves, each with a narrow window (`doorGlassW` wide) this far apart, centre to centre. */
   doorGlassPair?: number;
+  /** The door leaf's window rounded at this corner radius (with `doorGlassW`; half its width makes a porthole: the ICE T's). */
+  doorGlassR?: number;
+  /** A tilting train's section: the skirt top's and the bottom's half widths over W (default 0.97 and 0.9: the side tucked in under the belly) and the roof arc's superellipse power (default 2). */
+  tiltSection?: { wa: number; wl: number; roofPower?: number };
   bogieCentres: number;
   wheelR: number;
   wheelbase: number;
@@ -337,7 +341,8 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   const reach = power ? Math.max(...axles.map(Math.abs)) + wheelR + 0.25 : s.wheelbase / 2 + s.wheelR + 0.25;
   return {
     spec: {
-      length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: s.arc ?? 8, B: s.B, wl: s.W * 0.9, A: s.A, wa: s.W * 0.97,
+      length: L, W: s.W, Y: s.Y, S: s.S, C: s.C, lean: s.lean, arc: s.arc ?? 8, B: s.B, wl: s.W * (s.tiltSection?.wl ?? 0.9), A: s.A, wa: s.W * (s.tiltSection?.wa ?? 0.97),
+      ...(s.tiltSection?.roofPower !== undefined ? { roofPower: s.tiltSection.roofPower } : {}),
       ...(end && !s.flatCab && !s.cabFace ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
       ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}),
       // a crown rising behind a cab face: a nose of the body's full plan whose crown table ends past the join
@@ -347,7 +352,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
     windows: power ? [{ y: power.windows, spans, frame: "rubber" }] : s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber" })),
     ...(s.fluting ? { fluting: s.fluting } : {}),
-    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
+    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(s.doorGlassR ? { glassCornerR: s.doorGlassR } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     // a cab face draws its own panes and lamps: an empty cab keeps the gangway frame off its end
     ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : end && s.cabFace ? { cab: { panes: [], lamps: [] } } : {}), cabEnds: end && (s.flatCab || s.noseCab || s.cabFace) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
@@ -732,7 +737,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   const ys = [s.B, s.Y, (s.Y + s.S) / 2, s.S, (s.S + s.C) / 2, s.C - 0.02];
   const spans = def.windows[0]!.spans;
   let body: UnitBody = {
-    y0: s.B, hw: [[s.B, s.W * 0.9], [s.A, s.W * 0.97], [s.Y, s.W], [s.S, s.W * s.lean], [s.C, 0.4]], side, roof,
+    y0: s.B, hw: [[s.B, s.W * (s.tiltSection?.wl ?? 0.9)], [s.A, s.W * (s.tiltSection?.wa ?? 0.97)], [s.Y, s.W], [s.S, s.W * s.lean], [s.C, 0.4]], side, roof,
     front: end && s.cabFace ? cabFaceLod(s.cabFace, 1, X(-s.cabFace.dJoin), bodyHalf(b, 0), facePaint(s, l, l.number), s.C) : end ? { tip: ys.map((y) => [y, X(at(y))] as const), setback: [[s.B, 2.0], [s.C, 1.0]] } : { tip: [[s.B, X(0)]], ...(section !== undefined ? { hidden: true } : {}) },
     rear: end && s.single && s.cabFace ? cabFaceLod(s.cabFace, -1, -X(b.length + s.cabFace.dJoin), bodyHalf(b, 0), facePaint(s, l, l.number), s.C) : { tip: [[s.B, X(b.length)]], ...(section !== undefined ? { hidden: true } : {}) },
     windows: [{ u: [Math.min(X(spans[0]![0]), X(spans[spans.length - 1]![1])), Math.max(X(spans[0]![0]), X(spans[spans.length - 1]![1]))], y: [def.windows[0]!.y[0], def.windows[0]!.y[1]], mat: LOD_GLASS }],
