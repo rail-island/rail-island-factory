@@ -1,7 +1,7 @@
 // German units on the series kit (shinkansen.ts): the ICE 3 (BR 403, its own
 // cab face in deIce3.ts), the ICE 4 (BR 412), the tilting ICE T (BR 411), the
 // Munich and Stuttgart S-Bahn's BR 423 (deBr423.ts), the Desiro Classic (BR 642) and the
-// RegioShuttle (BR 650) diesel railcars, the Uerdinger railbus (VT 98) and the
+// RegioShuttle (BR 650, deBr650.ts) diesel railcars, the Uerdinger railbus (VT 98) and the
 // Fliegender Hamburger (SVT 877); and the ICE 2, the ICE 1's power car and coach
 // (ice1.ts) with a driving trailer on the series kit. See docs/models/germany-trains.md.
 
@@ -10,11 +10,12 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { ice1, ice1Lod } from "./ice1.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose, NO_NOSE, striped } from "./seriesHelpers.ts";
+import { c, nose, NO_NOSE, striped } from "./seriesHelpers.ts";
 import { ICE3 } from "./deIce3.ts";
 import { ICE4 } from "./deIce4.ts";
 import { ICE_T } from "./deIceT.ts";
 import { BR423 } from "./deBr423.ts";
+import { BR650 } from "./deBr650.ts";
 
 export { ICE3 };
 
@@ -37,17 +38,6 @@ export const BR642: ShinkansenSeries = {
   bogieCentres: 13.5, wheelR: 0.385, wheelbase: 2.2, traction: "diesel", cars: [2],
   liveries: { dbRegio: dbRegio("DB Regio", "642 001"), erzgebirgsbahn: { ...dbRegio("Erzgebirgsbahn", "642 039"), palette: { ...dbRegio("", "").palette, red: c("#0a6a3a") } } },
   weight: { end: 34, middle: 34 }, power: 275, maxspeed: 120,
-};
-
-export const BR650: ShinkansenSeries = {
-  endLength: 25.5, midLength: 25.5, W: 1.52, Y: 1.3, S: 3.15, C: 3.85, lean: 0.96, B: 0.75, A: 0.9,
-  nose: nose(0.1, 1, 2, [[0, 3.85]], [[0, 3.15]], [[0, 1.35]], [[0, 1.15]], [[0, 1.0]]),
-  windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.52, 2.0, 2.85, "cabMask", 1.55),
-  windows: [[1.7, 2.75]], windowW: 1.5, pitch: 1.75, door: [1.05, 3.0, 1.65, 2.6], doorW: 1.3,
-  bogieCentres: 17.0, wheelR: 0.385, wheelbase: 2.2, traction: "diesel", single: true,
-  liveries: { dbRegio: dbRegio("DB Regio", "650 001"), odeg: { ...dbRegio("ODEG", "VT 650.62"), palette: { ...dbRegio("", "").palette, red: c("#00843d"), grey: c("#f3f3ef", 0.35) } } },
-  weight: { end: 40, middle: 40 }, power: 514, maxspeed: 120,
 };
 
 export const VT98: ShinkansenSeries = {
