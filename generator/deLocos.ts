@@ -10,6 +10,9 @@ import { c } from "./czElectricKit.ts";
 import { enumParam } from "./emuParts.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { worldLocoSpec, type WorldLoco } from "./worldLocoKit.ts";
+import { V200_PARAMS, dbV200, dbV200Lod } from "./deV200.ts";
+
+export { dbV200, dbV200Lod };
 
 /** A design's liveries: each a full WorldLoco (the body is the same, the paint differs). */
 type Liveries = Record<string, { title: string; loco: WorldLoco }>;
@@ -57,12 +60,6 @@ const E94: Liveries = {
   green: { title: "Green", loco: { ...E94_BODY, palette: { green: c("#2d4c3b"), black: c("#1e1f21", 0.7) }, side: [[1.4, 1.6, "black"], [1.6, 4.1, "green"]], number: "E 94 088" } },
 };
 
-const V200_BODY = { length: 18.53, W: 1.5, y0: 1.35, roof: 3.9, nose: "streamlined", bogies: boBo(4.85, 1.6, 0.475), exhausts: [-4.6, 4.6], room: { kind: "windows", n: 5, y: [2.6, 3.2] } } as const;
-const V200: Liveries = {
-  dbRed: { title: "DB red", loco: { ...V200_BODY, palette: { red: c("#8a1c2b"), silver: c("#b9bdc0", 0.3), grey: GREY }, side: [[1.35, 1.65, "grey"], [1.65, 2.35, "red"], [2.35, 2.42, "silver"], [2.42, 4.0, "red"]], number: "V 200 007" } },
-  orientRed: { title: "Orient red", loco: { ...V200_BODY, palette: { red: c("#c8462a"), white: c("#efefea"), grey: GREY }, side: [[1.35, 1.65, "grey"], [1.65, 2.35, "red"], [2.35, 2.42, "white"], [2.42, 4.0, "red"]], number: "220 053-2" } },
-};
-
 const BR218_BODY = { length: 16.4, W: 1.5, y0: 1.4, roof: 4.25, nose: "hoods", cabHalf: 1.45, hoodTop: 3.45, bogies: boBo(4.0, 1.4, 0.5), exhausts: [-4.2] } as const;
 const BR218: Liveries = {
   purpleRed: { title: "Purple red", loco: { ...BR218_BODY, palette: { red: c("#8a1c2b"), grey: GREY, cream: c("#e3d3a6") }, side: [[1.4, 1.7, "grey"], [1.7, 1.78, "cream"], [1.78, 4.4, "red"]], number: "218 217-7" } },
@@ -75,7 +72,7 @@ const BR218: Liveries = {
 const paramsOf = (l: Liveries): ParamSpec[] => [enumParam("livery", "Livery", Object.fromEntries(Object.entries(l).map(([k, v]) => [k, v.title])))];
 const specOf = (l: Liveries, p: readonly ParamSpec[], v?: ParamValues) => worldLocoSpec(l[resolveParams(p, v).livery!]!.loco);
 
-const P = { br103: paramsOf(BR103), br101: paramsOf(BR101), br120: paramsOf(BR120), e18: paramsOf(E18), e94: paramsOf(E94), v200: paramsOf(V200), br218: paramsOf(BR218) };
+const P = { br103: paramsOf(BR103), br101: paramsOf(BR101), br120: paramsOf(BR120), e18: paramsOf(E18), e94: paramsOf(E94), br218: paramsOf(BR218) };
 
 export function db103(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR103, P.br103, v)); }
 export function db103Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR103, P.br103, v)); }
@@ -87,8 +84,6 @@ export function drgE18(v?: ParamValues): MeshBuilder { return buildBoxLoco(specO
 export function drgE18Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(E18, P.e18, v)); }
 export function drgE94(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(E94, P.e94, v)); }
 export function drgE94Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(E94, P.e94, v)); }
-export function dbV200(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(V200, P.v200, v)); }
-export function dbV200Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(V200, P.v200, v)); }
 export function db218(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR218, P.br218, v)); }
 export function db218Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR218, P.br218, v)); }
 
@@ -102,6 +97,6 @@ export const DE_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-db-120", title: "DB 120", build: db120, buildLod: db120Lod, ...params(P.br120), game: game(84, 5600, 200), catalog: ELECTRIC_LOCO_CATALOG, references: "db-120" },
   { id: "proc-vehicle-drg-e18", title: "DRG E 18", build: drgE18, buildLod: drgE18Lod, ...params(P.e18), game: game(108, 3040, 150), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e18" },
   { id: "proc-vehicle-drg-e94", title: "DRG E 94", build: drgE94, buildLod: drgE94Lod, ...params(P.e94), game: game(118, 3300, 90), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e94" },
-  { id: "proc-vehicle-db-v200", title: "DB V 200", build: dbV200, buildLod: dbV200Lod, ...params(P.v200), game: game(80, 1620, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-v200" },
+  { id: "proc-vehicle-db-v200", title: "DB V 200", build: dbV200, buildLod: dbV200Lod, params: V200_PARAMS, game: game(80, 1620, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-v200" },
   { id: "proc-vehicle-db-218", title: "DB 218", build: db218, buildLod: db218Lod, ...params(P.br218), game: game(79, 1840, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-218" },
 ];
