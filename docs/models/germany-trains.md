@@ -1,7 +1,7 @@
 # Germany's trains
 
 **Covers** - the twenty German designs of the eight-country plan: the ICE 3, ICE 4, ICE T and ICE 2, the S-Bahn BR 423, the Desiro 642, the RegioShuttle 650, the Uerdingen railbus VT 98 and the Fliegender Hamburger; the BR 103, 101, 120, E 18, E 94, V 200 and 218 locomotives; the 01, 52 and Prussian P 8 steam engines; the Intercity coaches. Their modules, figures, the detail pass that matched each to its photographs, deviations and tests.
-**Code** - `generator/deUnits.ts` (`DE_UNITS`, the units' registry), `generator/deLocos.ts` (`DE_LOCOS`, the locomotives' registry), one module per vehicle: `generator/deIce3.ts`, `deIce4.ts`, `deIceT.ts`, `deBr423.ts`, `deBr642.ts`, `deBr650.ts`, `deVt98.ts`, `deSvt877.ts`, `deBr103.ts`, `deBr101.ts`, `deBr120.ts`, `deE18.ts`, `deE94.ts`, `deV200.ts`, `deBr218.ts`, `deSteam01.ts`, `deSteam52.ts`, `deSteamP8.ts`; `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/deE18.test.ts`, `assets/db-*/`, `assets/drg-*/`, `assets/dr-52/`, `assets/kpev-p8/`
+**Code** - `generator/deUnits.ts` (`DE_UNITS`, the units' registry), `generator/deLocos.ts` (`DE_LOCOS`, the locomotives' registry), one module per vehicle: `generator/deIce3.ts`, `deIce4.ts`, `deIceT.ts`, `deBr423.ts`, `deBr642.ts`, `deBr650.ts`, `deVt98.ts`, `deSvt877.ts`, `deIce2.ts`, `deBr103.ts`, `deBr101.ts`, `deBr120.ts`, `deE18.ts`, `deE94.ts`, `deV200.ts`, `deBr218.ts`, `deSteam01.ts`, `deSteam52.ts`, `deSteamP8.ts`; `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/deE18.test.ts`, `assets/db-*/`, `assets/drg-*/`, `assets/dr-52/`, `assets/kpev-p8/`
 **See also** - [shinkansen.md](shinkansen.md) (the series kit), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [steam-locomotives.md](steam-locomotives.md), [world-coaches.md](world-coaches.md), [foreign-units.md](foreign-units.md) (the ICE 1), [mainline-electrics.md](mainline-electrics.md)
 
 The catalog already had the DB 111, 212 and 628, the Dosto, the ICE 1, the DR 243,
@@ -15,7 +15,7 @@ design is filed under Germany (`generator/countryTable.ts`).
 | `proc-vehicle-db-ice3` | ICE 3 | series, own cab face (`deIce3.ts`) | `unit`, `cars` 3 - 8, `livery` (`dbIce`, `nsInternational`) | end 25.675 m, middle 24.775 m, 3.89 m high; 330 km/h |
 | `proc-vehicle-db-ice4` | ICE 4 | series, cab face (`deIce4.ts`) | `unit`, `cars`, `livery` (`dbIce`, `greenStripe`) | 29.106 / 28.75 m; 250 km/h |
 | `proc-vehicle-db-ice-t` | ICE T | series, cab face, tilting section (`deIceT.ts`) | `unit`, `cars`, `livery` (`dbIce`, `obb`) | 27.45 / 25.9 m, bogie centres 19.0 m; the end cars' pantographs; 230 km/h |
-| `proc-vehicle-db-ice2` | ICE 2 | ICE 1 builder + series | `unit` (`powerCar`, `coach`, `drivingTrailer`) | the ICE 1's power car and coach, a driving trailer of 26.58 m; 280 km/h |
+| `proc-vehicle-db-ice2` | ICE 2 | ICE 1 builder (`ice2` option) + series cab face (`deIce2.ts`) | `unit` (`powerCar`, `coach`, `drivingTrailer`) | power car and coaches in the ICE 2's paint, a 26.40 m driving trailer with the 402's face; 280 km/h |
 | `proc-vehicle-db-423` | DB 423 | series, cab face, Jacobs (`deBr423.ts`) | `unit`, `cars` 4, `livery` (`sBahn`) | Bo'(Bo')(2')(Bo')Bo', end cars 18.24 m to the joint, middle cars 15.46 m, 67.4 m; one pantograph; 140 km/h |
 | `proc-vehicle-db-642` | DB 642 Desiro | series, diesel, cab face, Jacobs (`deBr642.ts`) | `unit` (`endCar`, `train`), `cars` 2, `livery` (`dbRegio`, `erzgebirgsbahn`) | B'2'B', two cars, 41.7 m, 2 x 275 kW; 120 km/h |
 | `proc-vehicle-db-650` | RegioShuttle RS1 | series, diesel, single, cab face (`deBr650.ts`) | `livery` (`dbRegio`, `odeg`) | 25.5 m over buffers, 2.9 m wide; 120 km/h |
@@ -102,6 +102,16 @@ window and `bufferBeam` ([us-transit.md](us-transit.md)).
   Jacobs bogie, the rear car with its own layout (`rearEnd`); the stack on the dome
   (`exhaustInFittings`). DRG violet and ivory with gold lines and "DEUTSCHE REICHSBAHN".
 
+- **ICE 2** (`deIce2.ts`). The power car and the coach are the ICE 1's builders with
+  `ice2`: the traffic-red stripe without the pink line, raised under the coaches' windows
+  (1.62 - 1.86 m) and on the power car swept down to the nose's crossing, the 402's split
+  coupler flap with the guide horn, the DB logo in the stripe. The driving trailer (808) is
+  a series end car with a cab face from the photographs: the two-pane windscreen
+  (2.56 - 3.34 m), upper lamp, paired head and tail lamps with the slatted grille, the
+  bulging split flap with the stripe across it sweeping up the flanks, the raked cab side
+  window, the grey ICE, one door and nine 1.5 m panes; 26.40 m from the published 205.36 m
+  half train.
+
 ### Locomotives
 
 - **BR 103** (`deBr103.ts`). Upright below the waist, the lower face leaning only 6 - 8
@@ -167,8 +177,11 @@ window and `bufferBeam` ([us-transit.md](us-transit.md)).
   2.7 m, the RS1's 2.2 m instead of 1.8 m); the ICE 4 runs on its trailer bogies everywhere.
   Lettering uses the stroke font (capitals, thin). A 4-car ICE 4 raises both middle cars'
   pantographs.
-- **ICE 2.** The power car and the coach are the ICE 1's (`ice1.ts`, its pixel-map
-  paint: the ICE 1's band, not the ICE 2's); only the driving trailer is new.
+- **ICE 2.** The power car keeps the ICE 1's sloped nose and the coach the ICE 1's layout
+  (the confirmed `ice1.ts` builders, now with the `ice2` paint option; the ICE 1 is
+  byte-identical). The driving trailer's nose length and rake are estimated from oblique
+  photographs: no free side-on photograph of an 808 was found. The door window is the
+  pre-redesign narrow slot.
 - **Locomotives.** The DB emblems are frames without letters on the 218 and V 200; the V 200's
   nose number lacks its V (the plate font draws digits only). The E 94's hoods are part of
   the body (the real ones ride on the bogie frames). The E 18's quill-drive spring cups are
