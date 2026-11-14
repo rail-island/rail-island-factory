@@ -54,14 +54,16 @@ const CAB_JOINT = 6.4;
 
 /** The nose's centre line [y, |x|], bottom first. */
 const TIP: Table = [
-  [Y0, N - 0.12], [1.25, N], [1.6, N], [1.94, N - 0.09], [2.6, N - 0.36],
-  [SCREEN[0], N - 0.5], [SCREEN[1], N - 0.84], [3.6, N - 1.22], [3.72, N - 1.7], [CROWN, N - 2.35],
+  // the face nearly upright (about 6 degrees) from the skirt to the sill, the windscreen about 30 degrees,
+  // the roof's full height 1.4 m behind the sill (the user's true side view of 103 113-7)
+  [Y0, N - 0.06], [1.25, N], [1.6, N], [1.94, N - 0.05], [2.6, N - 0.15],
+  [SCREEN[0], N - 0.2], [SCREEN[1], N - 0.52], [3.6, N - 0.78], [3.72, N - 1.1], [CROWN, N - 1.6],
 ];
 /** The half width [y, hw]: the skirt, the widest at the waist, the upper walls leaning in, the roof's curve. */
 const HW: Table = [[Y0, 1.51], [1.2, 1.522], [WAIST, 1.53], [2.0, 1.525], [3.42, 1.42], [3.6, 1.3], [3.72, 1.1], [3.78, 0.85], [CROWN, 0.6]];
 /** The nose corner's width across (m of z) and its depth back into the side (m of x), by height. */
 const CORNER_Z: Table = [[Y0, 0.5], [1.94, 0.55], [SCREEN[0], 0.55], [SCREEN[1], 0.6], [CROWN, 0.5]];
-const CORNER_X: Table = [[Y0, 0.45], [1.6, 0.5], [1.94, 0.6], [SCREEN[0], 0.8], [SCREEN[1], 0.75], [3.72, 0.75], [CROWN, 0.6]];
+const CORNER_X: Table = [[Y0, 0.45], [1.6, 0.5], [1.94, 0.62], [SCREEN[0], 0.95], [SCREEN[1], 0.7], [3.72, 0.7], [CROWN, 0.6]];
 /** How far the face's middle bows ahead of the corners' start. */
 const BOW = 0.05;
 const ANGLES = [15, 30, 45, 60, 75, 90].map((a) => (a * Math.PI) / 180);
