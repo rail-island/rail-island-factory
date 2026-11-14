@@ -115,8 +115,8 @@ const LIVERIES: Record<string, Br103Livery> = {
   tee: {
     title: "TEE",
     palette: { red: c("#7c1c2a"), beige: c("#dccb9d"), grey: GREY_SKIRT, plate: c("#7c1c2a"), roof: HOOD, pantograph: RED_PANTOGRAPH },
-    // the grey skirt, the cream line over it, the purple red lower body, beige above
-    side: [[Y0, 1.13, "grey"], [1.13, 1.17, "beige"], [1.17, WAIST, "red"], [WAIST, 4.0, "beige"]],
+    // the purple red lower body down to the skirt's edge, the cream line in it 0.27 m up, beige above (103 113-7)
+    side: [[Y0, 1.13, "red"], [1.13, 1.17, "beige"], [1.17, WAIST, "red"], [WAIST, 4.0, "beige"]],
     // the front red up to the waist, the beige line, the red stripe, beige above
     end: [[Y0, WAIST, "red"], [WAIST, STRIPE[0], "beige"], [STRIPE[0], STRIPE[1], "red"], [STRIPE[1], 4.0, "beige"]],
     roof: "beige",
@@ -160,7 +160,7 @@ const liveryOf = (v?: ParamValues): Br103Livery => LIVERIES[resolveParams(BR103_
 // --- the body ----------------------------------------------------------------------
 
 /** The machine room's five window bays: their centres and half width; the two rows. */
-const BAYS = { centres: [-3.76, -1.88, 0, 1.88, 3.76], half: 0.87, rows: [[2.02, 2.53], [2.62, 3.19]] as const };
+const BAYS = { centres: [-3.76, -1.88, 0, 1.88, 3.76], half: 0.87, rows: [[2.02, 2.56], [2.6, 3.19]] as const };
 /** The body joints between the machine room's panels and behind the cabs. */
 const JOINTS = [-CAB_JOINT, -2.82, 2.82, CAB_JOINT];
 
@@ -198,11 +198,16 @@ function frontLogo(cy: number, l: Logo): EndItem[] {
 function spec(l: Br103Livery): LocoSpec {
   const windows: SideItem[] = [];
   BAYS.centres.forEach((cx, i) =>
-    // square corners (a radius under the kit's 1e-6 draws a plain rectangle): the rounded ones cost 90 triangles a window
-    BAYS.rows.forEach(([y0, y1], j) => windows.push({ kind: "window", name: `machine room window ${i + 1}${j ? " upper" : " lower"}`, x: [cx - BAYS.half, cx + BAYS.half], y: [y0, y1], mat: "rim", r: 1e-7 })));
+    // the louvred panes: light grey with two silver louvre bars each (the kit's grille), square cornered
+    BAYS.rows.forEach(([y0, y1], j) => windows.push({ kind: "grille", name: `machine room window ${i + 1}${j ? " upper" : " lower"}`, x: [cx - BAYS.half, cx + BAYS.half], y: [y0, y1], mat: "rim", slats: "h", pitch: (y1 - y0) / 3 })));
   const joints: SideItem[] = JOINTS.map((x, i) => ({ kind: "paint", name: `body joint ${i + 1}`, x: [x - 0.012, x + 0.012], y: [Math.abs(x) > 5 ? 1.2 : WAIST + 0.02, 3.5], mat: "groove", layer: 1 }));
   return {
-    palette: { groove: c("#3a3536", 0.7), rim: c("#a7acae", 0.4), ...l.palette },
+    palette: {
+      groove: c("#3a3536", 0.7), rim: c("#a7acae", 0.4), louvre: c("#8e9395", 0.55), hoodLouvre: c("#2e3134", 0.8),
+      // the running gear dark, as on the photographs
+      bogie: c("#262729", 0.8), steel: c("#4a4d51", 0.5), spring: c("#323436", 0.7), wheel: c("#36383b", 0.6),
+      ...l.palette,
+    },
     y0: Y0,
     tip: TIP,
     hw: HW,
@@ -254,14 +259,18 @@ function facing(m: MeshBuilder, mat: string, q: readonly [Vec3, Vec3, Vec3, Vec3
 }
 
 /** The cab side window: its rear edge upright, its front edge following the nose corner, the corners cut. */
-const CAB_WINDOW = { x: 6.85, y: [2.89, 3.38] as const, margin: 0.1, cut: 0.06 };
+const CAB_WINDOW = { x: 6.8, y: [2.84, 3.46] as const, margin: 0.1, cut: 0.06, round: 0.16 };
 
 function cabWindowRing(inset: number, e: number): Ring {
   const [y0, y1] = [CAB_WINDOW.y[0] + inset, CAB_WINDOW.y[1] - inset];
   const x0 = CAB_WINDOW.x + inset;
   const [fb, ft] = [wallEnd(CAB_WINDOW.y[0]) - CAB_WINDOW.margin - inset, wallEnd(CAB_WINDOW.y[1]) - CAB_WINDOW.margin - inset];
   const k = CAB_WINDOW.cut;
-  const ring: Ring = [[x0 + k, y0], [fb - k, y0], [fb, y0 + k], [ft, y1 - k], [ft - k, y1], [x0 + k, y1], [x0, y1 - k], [x0, y0 + k]];
+  // the top front corner rounded about a centre R in from the front edge and the head
+  const R = CAB_WINDOW.round;
+  const fr = fb + ((ft - fb) * (y1 - R - y0)) / (y1 - y0);
+  const arc = [0, 30, 60, 90].map((a) => [fr - R + R * Math.cos((a * Math.PI) / 180), y1 - R + R * Math.sin((a * Math.PI) / 180)] as [number, number]);
+  const ring: Ring = [[x0 + k, y0], [fb - k, y0], [fb, y0 + k], ...arc, [x0 + k, y1], [x0, y1 - k], [x0, y0 + k]];
   return e > 0 ? ring : ring.map(([u, v]) => [-u, v] as [number, number]).reverse();
 }
 
@@ -350,7 +359,7 @@ function hoodLouvres(m: MeshBuilder): void {
         const x0 = -4.65 + i * 1.57, x1 = x0 + 1.37;
         m.scope(`${s > 0 ? "right" : "left"} ${i + 1}`, () => {
           const [ya, yb] = [3.77, 3.91];
-          facing(m, "louvre", [pt(x0, ya, s, 0.006), pt(x1, ya, s, 0.006), pt(x1, yb, s, 0.006), pt(x0, yb, s, 0.006)], [0, n[1], s * n[0]]);
+          facing(m, "hoodLouvre", [pt(x0, ya, s, 0.006), pt(x1, ya, s, 0.006), pt(x1, yb, s, 0.006), pt(x0, yb, s, 0.006)], [0, n[1], s * n[0]]);
         });
       }
   });
