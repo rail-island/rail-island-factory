@@ -11,6 +11,7 @@ import { enumParam } from "./emuParts.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { worldLocoSpec, type WorldLoco } from "./worldLocoKit.ts";
 import { V200_PARAMS, dbV200, dbV200Lod } from "./deV200.ts";
+import { BR218_PARAMS, dbBr218, dbBr218Lod } from "./deBr218.ts";
 
 export { dbV200, dbV200Lod };
 
@@ -60,19 +61,12 @@ const E94: Liveries = {
   green: { title: "Green", loco: { ...E94_BODY, palette: { green: c("#2d4c3b"), black: c("#1e1f21", 0.7) }, side: [[1.4, 1.6, "black"], [1.6, 4.1, "green"]], number: "E 94 088" } },
 };
 
-const BR218_BODY = { length: 16.4, W: 1.5, y0: 1.4, roof: 4.25, nose: "hoods", cabHalf: 1.45, hoodTop: 3.45, bogies: boBo(4.0, 1.4, 0.5), exhausts: [-4.2] } as const;
-const BR218: Liveries = {
-  purpleRed: { title: "Purple red", loco: { ...BR218_BODY, palette: { red: c("#8a1c2b"), grey: GREY, cream: c("#e3d3a6") }, side: [[1.4, 1.7, "grey"], [1.7, 1.78, "cream"], [1.78, 4.4, "red"]], number: "218 217-7" } },
-  orientRed: { title: "Orient red", loco: { ...BR218_BODY, palette: { red: c("#c8462a"), white: c("#efefea"), grey: GREY }, side: [[1.4, 1.7, "grey"], [1.7, 2.3, "red"], [2.3, 2.4, "white"], [2.4, 4.4, "red"]], number: "218 166-6" } },
-  trafficRed: { title: "Traffic red", loco: { ...BR218_BODY, palette: { red: c("#ec0016"), grey: GREY }, side: [[1.4, 1.7, "grey"], [1.7, 4.4, "red"]], number: "218 433-0" } },
-};
-
 // ---------------------------------------------------------------------------
 
 const paramsOf = (l: Liveries): ParamSpec[] => [enumParam("livery", "Livery", Object.fromEntries(Object.entries(l).map(([k, v]) => [k, v.title])))];
 const specOf = (l: Liveries, p: readonly ParamSpec[], v?: ParamValues) => worldLocoSpec(l[resolveParams(p, v).livery!]!.loco);
 
-const P = { br103: paramsOf(BR103), br101: paramsOf(BR101), br120: paramsOf(BR120), e18: paramsOf(E18), e94: paramsOf(E94), br218: paramsOf(BR218) };
+const P = { br103: paramsOf(BR103), br101: paramsOf(BR101), br120: paramsOf(BR120), e18: paramsOf(E18), e94: paramsOf(E94) };
 
 export function db103(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR103, P.br103, v)); }
 export function db103Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR103, P.br103, v)); }
@@ -84,8 +78,6 @@ export function drgE18(v?: ParamValues): MeshBuilder { return buildBoxLoco(specO
 export function drgE18Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(E18, P.e18, v)); }
 export function drgE94(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(E94, P.e94, v)); }
 export function drgE94Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(E94, P.e94, v)); }
-export function db218(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR218, P.br218, v)); }
-export function db218Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR218, P.br218, v)); }
 
 const game = (weight: number, power: number, maxspeed: number): GameProperties => ({ weight, power, maxspeed, accel: null });
 /** A design's parameters: none for a single livery. */
@@ -98,5 +90,5 @@ export const DE_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-drg-e18", title: "DRG E 18", build: drgE18, buildLod: drgE18Lod, ...params(P.e18), game: game(108, 3040, 150), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e18" },
   { id: "proc-vehicle-drg-e94", title: "DRG E 94", build: drgE94, buildLod: drgE94Lod, ...params(P.e94), game: game(118, 3300, 90), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e94" },
   { id: "proc-vehicle-db-v200", title: "DB V 200", build: dbV200, buildLod: dbV200Lod, params: V200_PARAMS, game: game(80, 1620, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-v200" },
-  { id: "proc-vehicle-db-218", title: "DB 218", build: db218, buildLod: db218Lod, ...params(P.br218), game: game(79, 1840, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-218" },
+  { id: "proc-vehicle-db-218", title: "DB 218", build: dbBr218, buildLod: dbBr218Lod, params: BR218_PARAMS, game: game(79, 1840, 140), catalog: DIESEL_LOCO_CATALOG, references: "db-218" },
 ];
