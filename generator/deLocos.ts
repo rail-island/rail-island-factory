@@ -25,12 +25,8 @@ const boBo = (pivot: number, base: number, r: number) => [[-pivot, [-base, base]
 
 // the BR 103 has its own module (its own profile, measured on photographs)
 import { BR103_PARAMS, db103, db103Lod } from "./deBr103.ts";
-
-const BR101_BODY = { length: 19.1, W: 1.5, y0: 1.3, roof: 3.85, nose: "raked", bogies: boBo(4.95, 1.35, 0.625), pantograph: "singleArm", pantographX: 5.0, room: { kind: "grilles", n: 4, y: [2.6, 3.35] } } as const;
-const BR101: Liveries = {
-  trafficRed: { title: "Traffic red", loco: { ...BR101_BODY, palette: { red: c("#ec0016"), grey: GREY }, side: [[1.3, 1.55, "grey"], [1.55, 4.0, "red"]], number: "101 001-6" } },
-  intercity: { title: "Intercity", loco: { ...BR101_BODY, palette: { white: c("#eceeee"), red: c("#ec0016"), grey: GREY }, side: [[1.3, 1.55, "grey"], [1.55, 1.9, "white"], [1.9, 2.05, "red"], [2.05, 4.0, "white"]], number: "101 042-0" } },
-};
+// the BR 101 has its own module (its own profile, measured on photographs)
+import { BR101_PARAMS, db101, db101Lod } from "./deBr101.ts";
 
 const BR120_BODY = { length: 19.2, W: 1.5, y0: 1.3, roof: 3.85, nose: "raked", bogies: boBo(4.95, 1.4, 0.625), pantograph: "singleArm", pantographX: 5.0, room: { kind: "grilles", n: 4, y: [2.5, 3.3] } } as const;
 const BR120: Liveries = {
@@ -68,11 +64,10 @@ const BR218: Liveries = {
 const paramsOf = (l: Liveries): ParamSpec[] => [enumParam("livery", "Livery", Object.fromEntries(Object.entries(l).map(([k, v]) => [k, v.title])))];
 const specOf = (l: Liveries, p: readonly ParamSpec[], v?: ParamValues) => worldLocoSpec(l[resolveParams(p, v).livery!]!.loco);
 
-const P = { br101: paramsOf(BR101), br120: paramsOf(BR120), e18: paramsOf(E18), e94: paramsOf(E94), br218: paramsOf(BR218) };
+const P = { br120: paramsOf(BR120), e18: paramsOf(E18), e94: paramsOf(E94), br218: paramsOf(BR218) };
 
 export { db103, db103Lod };
-export function db101(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR101, P.br101, v)); }
-export function db101Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR101, P.br101, v)); }
+export { db101, db101Lod };
 export function db120(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(BR120, P.br120, v)); }
 export function db120Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(specOf(BR120, P.br120, v)); }
 export function drgE18(v?: ParamValues): MeshBuilder { return buildBoxLoco(specOf(E18, P.e18, v)); }
@@ -88,7 +83,7 @@ const params = (p: ParamSpec[]) => (p[0]!.values.length > 1 ? { params: p } : {}
 
 export const DE_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-db-103", title: "DB 103", build: db103, buildLod: db103Lod, params: BR103_PARAMS, game: game(114, 7440, 200), catalog: ELECTRIC_LOCO_CATALOG, references: "db-103" },
-  { id: "proc-vehicle-db-101", title: "DB 101", build: db101, buildLod: db101Lod, ...params(P.br101), game: game(87, 6400, 220), catalog: ELECTRIC_LOCO_CATALOG, references: "db-101" },
+  { id: "proc-vehicle-db-101", title: "DB 101", build: db101, buildLod: db101Lod, params: BR101_PARAMS, game: game(87, 6400, 220), catalog: ELECTRIC_LOCO_CATALOG, references: "db-101" },
   { id: "proc-vehicle-db-120", title: "DB 120", build: db120, buildLod: db120Lod, ...params(P.br120), game: game(84, 5600, 200), catalog: ELECTRIC_LOCO_CATALOG, references: "db-120" },
   { id: "proc-vehicle-drg-e18", title: "DRG E 18", build: drgE18, buildLod: drgE18Lod, ...params(P.e18), game: game(108, 3040, 150), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e18" },
   { id: "proc-vehicle-drg-e94", title: "DRG E 94", build: drgE94, buildLod: drgE94Lod, ...params(P.e94), game: game(118, 3300, 90), catalog: ELECTRIC_LOCO_CATALOG, references: "drg-e94" },
