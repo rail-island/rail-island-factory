@@ -12,6 +12,7 @@ import { ROCKET_VERSIONS, buildRocket, buildRocketLod, type RocketVersion } from
 import { steamEngineSpec, steamTenderSpec, type WorldSteam } from "./steamWorld.ts";
 import { DRG01_WORLD, drg01Spec } from "./deSteam01.ts";
 import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
+import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -19,7 +20,6 @@ interface SteamDesign {
   liveries?: Record<string, { title: string; palette: WorldSteam["palette"]; number: string }>;
 }
 
-const BLACK_RED = { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" };
 const ALL_BLACK = { paint: "#1d1e20", wheel: "#2a2b2d", frame: "#a51a1f", smokebox: "#1c1d22" };
 /** Britain's W6a gauge: the chimneys under 4.0 m, the cabs 2.74 m wide. */
 const UK = { top: 3.95, coupler: "buffers", half: 1.37 } as const;
@@ -32,13 +32,7 @@ const UIC = { top: 4.65, coupler: "buffers", half: 1.5 } as const;
 export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-drg-01": DRG01_WORLD,
   "proc-vehicle-dr-52": DR52_WORLD,
-  "proc-vehicle-kpev-p8": {
-    base: { ...UIC, title: "Prussian P 8", lead: 2, coupled: 3, trail: 0, leadD: 1.0, coupledD: 1.75, trailD: 0, boilerR: 0.83, deflectors: "none", domes: 2, palette: { paint: "#1f3b2c", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.3, axles: 4, d: 1.0 }, number: "2455 POSEN" },
-    liveries: {
-      kpev: { title: "KPEV green", palette: { paint: "#1f3b2c", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "2455 POSEN" },
-      drBlack: { title: "DR black", palette: BLACK_RED, number: "38 1772" },
-    },
-  },
+  "proc-vehicle-kpev-p8": P8_WORLD,
   "proc-vehicle-sncf-241p": { base: { ...UIC, title: "SNCF 241 P", lead: 2, coupled: 4, trail: 1, leadD: 1.0, coupledD: 2.02, trailD: 1.35, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: ALL_BLACK, tender: { length: 10.2, axles: 4, d: 1.0 }, number: "241 P 17" } },
   "proc-vehicle-sncf-141r": { base: { ...UIC, title: "SNCF 141 R", lead: 1, coupled: 4, trail: 1, leadD: 0.92, coupledD: 1.65, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 10.5, axles: 4, d: 0.92 }, number: "141 R 1199" } },
   "proc-vehicle-ns-3700": { base: { ...UIC, title: "NS 3700", lead: 2, coupled: 3, trail: 0, leadD: 1.0, coupledD: 1.85, trailD: 0, boilerR: 0.84, deflectors: "none", domes: 1, palette: { paint: "#244a33", wheel: "#2a2b2d", frame: "#7a2e22", smokebox: "#1c1d22" }, tender: { length: 7.8, axles: 4, d: 1.0 }, number: "3737" } },
@@ -125,8 +119,10 @@ export function crSy(v?: ParamValues): MeshBuilder { return buildLoco(worldSteam
 export function crSyLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-cr-sy", v)); }
 export function crJs(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-js", v)); }
 export function crJsLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-cr-js", v)); }
-export function kpevP8(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-kpev-p8", v)); }
-export function kpevP8Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-kpev-p8", v)); }
+// the Prussian P 8 is drawn from its own spec (deSteamP8.ts)
+const p8Params = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-kpev-p8"]!, v);
+export function kpevP8(v?: ParamValues): MeshBuilder { const p = p8Params(v); return buildLoco(p8Spec(p.unit!, p.livery!)); }
+export function kpevP8Lod(v?: ParamValues): MeshBuilder { const p = p8Params(v); return steamLocoLod(p8LodSpec(p.unit!, p.livery!)); }
 
 /** Engine and tender weights (t), power (kW), top speed. */
 const steamGame = (weight: number, power: number, maxspeed: number, tender: number): GameProperties => ({

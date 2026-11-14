@@ -1,7 +1,7 @@
 # Steam locomotives in a few measures
 
 **Covers** - the parametric steam generator (`steamEngineSpec`, `steamTenderSpec`) and the steam designs of the eight-country plan drawn with it: the layout it derives, its couplers and tenders, its guards, and the designs.
-**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/deSteam01.ts` (the DRG 01), `generator/deSteam52.ts` (the DR 52), `generator/steamLoco.ts`, `generator/lodSteam.ts`
+**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/deSteam01.ts` (the DRG 01), `generator/deSteam52.ts` (the DR 52), `generator/deSteamP8.ts` (the Prussian P 8), `generator/steamLoco.ts`, `generator/lodSteam.ts`
 **See also** - [steam-locomotives.md](steam-locomotives.md) (the kit), [jnr-locos.md](jnr-locos.md), [germany-trains.md](germany-trains.md)
 
 The steam kit draws a locomotive from a `LocoSpec`: boiler, chimney, domes, running
@@ -41,7 +41,7 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 |---|---|---|---|---|---|
 | `proc-vehicle-drg-01` | Germany | 2'C1' | 2.0 m | Wagner | four axles |
 | `proc-vehicle-dr-52` | Germany | 1'E | 1.4 m | curved, on the smokebox | four axles (tub) |
-| `proc-vehicle-kpev-p8` | Germany | 2'C | 1.75 m | none | four axles |
+| `proc-vehicle-kpev-p8` | Germany | 2'C | 1.75 m | none (small Wagner in DR black) | four axles |
 | `proc-vehicle-sncf-241p` | France | 2'D1' | 2.02 m | Wagner | four axles |
 | `proc-vehicle-sncf-141r` | France | 1'D1' | 1.65 m | none | four axles |
 | `proc-vehicle-ns-3700` | the Netherlands | 2'C | 1.85 m | none | four axles |
@@ -77,6 +77,18 @@ with its open entrance and oval front windows, and the tub tender: a round-botto
 in side view and whose rear corners round in plan, the coal box on its front half, pressed red truck side
 frames outside the wheels (`drawOnTruckFrame`). Its distant model draws the deflectors as flat plates and the
 tub as a prism of its middle section.
+
+The Prussian P 8 is not derived either: `generator/deSteamP8.ts` states the engine and its Prussian 2'2' T 21.5
+tender from 38 3650's side-on photograph (52.8 px/m) and the published figures (18.585 m over buffers, axles
+2.2 + 1.57 + 2 x 2.29 m, 15.565 m with the tender) - the boiler on 2.8 m with its long smokebox and tall chimney,
+the small feed dome, the round dome, sand box and second dome (round caps drawn by the module, the kit's domes in
+the distant model), the feed-water heater's drums on the running boards, the high running board on 1.9 m sweeping
+down to the buffer beam, the outside cylinders between the bogie's axles driving the middle coupled axle, the cab
+with its pointed "Windschneide" front (two faces meeting 0.32 m ahead of the side sheets, a round-topped window in
+each, the roof following them) drawn by the module, and the tender's tank with its diagonal seam, the flared coal
+rails and the round tool box across its rear wall. Both liveries share the shape; DR black adds the small Wagner
+plates beside the smokebox (38 1772), KPEV green (2455 Posen) has none and carries Posen's brass plate on the
+smokebox. Its distant model draws the cab as a prism from the middle of the pointed front.
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.
