@@ -11,7 +11,7 @@
 // Every length is in metres along the locomotive from its front buffer heads
 // (the tender: from its own front buffer heads), y up from the rail top.
 
-import type { MaterialSpec } from "./meshBuilder.ts";
+import { ngon, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import type { LocoSpec } from "./steamLoco.ts";
 import type { Pt, Steam } from "./steamParts.ts";
@@ -28,7 +28,11 @@ const PALETTE: Record<string, MaterialSpec> = {
   red: mat("#a51a1f", 0.65),
   smokebox: mat("#1c1d22", 0.85),
   plate: mat("#141416", 0.5),
-  coal: mat("#303033", 0.9),
+  coal: { color: "#3a3b3e", metallic: 0.15, roughness: 0.6 },
+  coalLump: { color: "#5a5b60", metallic: 0.2, roughness: 0.45 },
+  // the fittings dark steel: buffer heads and shanks, hinge straps, handrails (01 118 has no bright steel but its rods)
+  steel: { color: "#3e4146", metallic: 0.3, roughness: 0.55 },
+  doorRing: { color: "#45484d", metallic: 0.35, roughness: 0.5 },
   plateText: { color: "#d2ad4e", metallic: 0.45, roughness: 0.35 },
 };
 
@@ -107,6 +111,8 @@ function engineExtras(t: Steam): void {
   });
   m.scope("cab roof vent", () => t.box("roof", 13.55, 14.75, 4.18, 4.3, -0.32, 0.32));
   m.scope("smokebox door wheel", () => {
+    // the door's seating ring standing out of the smokebox front, so the door reads as a circle head-on
+    m.tube("doorRing", "x", 0, BY, BR + 0.05, BR * 0.93, t.X(SMOKEBOX[0]) - 0.01, t.X(SMOKEBOX[0]) + 0.035, 28);
     // the central locking hand wheel
     t.cylX("steel", SMOKEBOX[0] - 0.11, SMOKEBOX[0] - 0.075, 0, BY + 0.12, 0.14, 12);
   });
@@ -119,7 +125,7 @@ function engine(): LocoSpec {
     palette: PALETTE,
     heads: [0, END],
     beams: { y0: 0.8, y1: 1.28, length: [0.65, 0.3], half: 1.44 },
-    boiler: { x0: SMOKEBOX[0], x1: CAB0, y: BY, r: BR, smokebox: SMOKEBOX[1] - SMOKEBOX[0], bands, band: "black" },
+    boiler: { x0: SMOKEBOX[0], x1: CAB0, y: BY, r: BR, smokebox: SMOKEBOX[1] - SMOKEBOX[0], bands, band: "black", n: 28 },
     chimney: { x: 2.8, top: 4.55, r: 0.25 },
     // the feed dome, the sand dome and the steam dome: low, rounded covers
     domes: [{ x: 5.96, top: 4.33, r: 0.47, len: 1.0 }, { x: 7.27, top: 4.38, r: 0.42, len: 0.88 }, { x: 8.65, top: 4.34, r: 0.48, len: 1.05 }],
@@ -156,7 +162,7 @@ function engine(): LocoSpec {
       ],
       // two outside cylinders 650 x 660 mm between the bogie's axles; the main rods drive the second coupled axle
       engines: [{ coupled: [2, 3, 4], main: 3, cylinder: { x0: 2.25, x1: 3.25, y: 1.05, r: 0.36 }, crank: 0.33, phase: 0.3, valveGear: true }],
-      cylinderZ: 1.12, reference: 2, wheelMaterial: "wheel",
+      cylinderZ: 1.12, reference: 2, wheelMaterial: "wheel", cylinderCoverMat: "paint",
     },
     lamps: { front: [[0.68, 1.4, 0.83], [0.68, 1.4, -0.83], [SMOKEBOX[0] - 0.13, 3.52, 0]], rear: [[CAB1 - 0.05, 1.32, 0.7], [CAB1 - 0.05, 1.32, -0.7]] },
     number: { text: DRG01_NUMBER, side: [13.7, 1.95, CAB_HALF[0]![0]], front: [SMOKEBOX[0] - 0.075, 2.5] },
@@ -189,6 +195,25 @@ function tenderExtras(t: Steam): void {
       t.sideBox("paint", s, x - 0.025, x + 0.025, TANK_TOP - 0.01, COAL_TOP - 0.15, COAL_HALF - 0.02, COAL_HALF + 0.03);
     }
   });
+  m.scope("coal lumps", () => {
+    // lumps on the heap (coal() in steamParts.ts: flat top over the middle 0.6 of its width, sloping to the rim)
+    const [y, half, rise] = [COAL_TOP - 0.08, COAL_HALF - 0.08, 0.32];
+    const top = (z: number) => {
+      const a = Math.abs(z) / half;
+      return a <= 0.3 ? y + rise : a <= 0.75 ? y + rise - ((a - 0.3) / 0.45) * 0.4 * rise : y + 0.6 * rise - ((a - 0.75) / 0.25) * 0.6 * rise;
+    };
+    for (let i = 0; i < 11; i++) for (let j = 0; j < 5; j++) {
+      const x = COAL[0] + 0.45 + i * ((COAL[1] - COAL[0] - 0.9) / 10) + (j % 2) * 0.12;
+      const z = (j - 2) * half * 0.36 + ((i * 7 + j * 3) % 5 - 2) * 0.03;
+      const r = 0.09 + ((i * 3 + j * 5) % 4) * 0.02;
+      const h = top(z);
+      m.spire("coalLump", ngon(4, r, (i + j) * 0.7, t.X(x), z), h - 0.05, h + r * 0.5);
+    }
+  });
+  m.scope("coal box front", () => {
+    // the raised front sheet of the coal box toward the cab, its top corners cut back
+    t.section("paint", COAL[0] - 0.02, COAL[0] + 0.08, [[-COAL_HALF + 0.02, COAL_TOP - 0.2], [COAL_HALF - 0.02, COAL_TOP - 0.2], [COAL_HALF - 0.02, COAL_TOP + 0.12], [COAL_HALF - 0.3, COAL_TOP + 0.3], [-COAL_HALF + 0.3, COAL_TOP + 0.3], [-COAL_HALF + 0.02, COAL_TOP + 0.12]]);
+  });
   m.scope("front lockers", () => {
     for (const s of [-1, 1]) t.sideBox("paint", s, 0.49, TANK[0] + 0.05, TANK_FOOT + 0.01, 2.62, 0.92, T_HALF - 0.05);
   });
@@ -210,7 +235,7 @@ function tender(): LocoSpec {
       { name: "tank", x0: TANK[0], x1: TANK[1], half: [[T_HALF, TANK_FOOT], [T_HALF, TANK_TOP - 0.08], [T_HALF - 0.06, TANK_TOP - 0.01], [T_HALF - 0.14, TANK_TOP]] },
       { name: "coal box", x0: COAL[0], x1: COAL[1], half: [[COAL_HALF, TANK_TOP - 0.02], [COAL_HALF, COAL_TOP - 0.1], [COAL_HALF - 0.08, COAL_TOP]] },
     ],
-    coal: { x0: COAL[0] + 0.08, x1: COAL[1] - 0.08, y: COAL_TOP - 0.06, half: COAL_HALF - 0.1, rise: 0.16 },
+    coal: { x0: COAL[0] + 0.08, x1: COAL[1] - 0.08, y: COAL_TOP - 0.08, half: COAL_HALF - 0.08, rise: 0.32 },
     bogies: [{ x0: T_AXLES[0]! - 0.65, x1: T_AXLES[1]! + 0.65, y: 0.6 }, { x0: T_AXLES[2]! - 0.65, x1: T_AXLES[3]! + 0.65, y: 0.6 }],
     bogieFrameMat: "red",
     gear: { wheels: T_AXLES.map((x) => ({ x, d: 1.0, spokes: 10 })), engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel" },
