@@ -1,7 +1,7 @@
 # Steam locomotives in a few measures
 
 **Covers** - the parametric steam generator (`steamEngineSpec`, `steamTenderSpec`) and the steam designs of the eight-country plan drawn with it: the layout it derives, its couplers and tenders, its guards, and the designs.
-**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/deSteam01.ts` (the DRG 01), `generator/steamLoco.ts`, `generator/lodSteam.ts`
+**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/deSteam01.ts` (the DRG 01), `generator/deSteam52.ts` (the DR 52), `generator/steamLoco.ts`, `generator/lodSteam.ts`
 **See also** - [steam-locomotives.md](steam-locomotives.md) (the kit), [jnr-locos.md](jnr-locos.md), [germany-trains.md](germany-trains.md)
 
 The steam kit draws a locomotive from a `LocoSpec`: boiler, chimney, domes, running
@@ -40,7 +40,7 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | id | country | wheels | drivers | deflectors | tender |
 |---|---|---|---|---|---|
 | `proc-vehicle-drg-01` | Germany | 2'C1' | 2.0 m | Wagner | four axles |
-| `proc-vehicle-dr-52` | Germany | 1'E | 1.4 m | Wagner | four axles |
+| `proc-vehicle-dr-52` | Germany | 1'E | 1.4 m | curved, on the smokebox | four axles (tub) |
 | `proc-vehicle-kpev-p8` | Germany | 2'C | 1.75 m | none | four axles |
 | `proc-vehicle-sncf-241p` | France | 2'D1' | 2.02 m | Wagner | four axles |
 | `proc-vehicle-sncf-141r` | France | 1'D1' | 1.65 m | none | four axles |
@@ -66,6 +66,17 @@ dimensioned DEWAG drawing (its row in `WORLD_STEAM` gives only the title and the
 smokebox with the feed-water heater across it, three low domes, the Wagner plates reaching down to the buffer
 beam, the bar frames (dark plates with red top bars and horn guides), red trucks (`bogieFrameMat`), the
 2'2' T 32 tender with its narrower coal box.
+
+The DR 52 is not derived either: `generator/deSteam52.ts` states the DR's rebuilt 52.80 (52 8154 as it runs
+today) and its 2'2' T 30 tender from a side-on photograph measured at 49.9 px/m against the published 22.975 m
+over buffers and 19.0 m wheelbase - the 50E boiler on 3.15 m with its long smokebox, the curved smoke
+deflectors standing off the smokebox's flanks (thin sheets with a round rear end and a turned-in top), the
+mixing preheater's box ahead of the chimney and its vessels on the running board, the feed dome, two sand boxes
+either side of the round steam dome, the dark plate frames with red top edges and horn guides, the plain cab
+with its open entrance and oval front windows, and the tub tender: a round-bottomed tank whose ends round up
+in side view and whose rear corners round in plan, the coal box on its front half, pressed red truck side
+frames outside the wheels (`drawOnTruckFrame`). Its distant model draws the deflectors as flat plates and the
+tub as a prism of its middle section.
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.
