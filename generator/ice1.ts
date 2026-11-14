@@ -25,6 +25,20 @@ import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, skirtParts }
 
 export type Ice1Unit = "powerCar" | "coach" | "restaurant";
 
+/**
+ * The ICE 2's cars drawn on the ICE 1's builders (deIce2.ts): `ice2` paints the single traffic-red
+ * stripe without the pale pink line, the coaches' stripe raised under the windows (1.62 - 1.86 m,
+ * the ICE 2's photographs) and the power car's sweeping up to it from the nose's crossing, the
+ * class 402's split coupler flap with its guide horn ("Greifer"), and the DB logo in the stripe.
+ * Without it (the default) every car is the ICE 1's, byte for byte.
+ */
+export interface Ice1Variant {
+  ice2?: boolean;
+}
+
+/** The ICE 2's stripe on the coaches and the power car's sides, under the window band. */
+export const ICE2_STRIPE: readonly [number, number] = [1.62, 1.86];
+
 export const ICE1_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
     powerCar: "Power car",
@@ -78,6 +92,12 @@ const RESTAURANT_SECTION = section(COACH_K_Z, [[0.7, 4.3]]);
 /** The paint: grey skirts, white, the pale pink line under the red stripe (rows 26..27 of the power car, 31..32 of the coaches). */
 const powerBands = (): Array<[number, number, string]> => [[0.1, 0.5, "skirt"], [0.5, 1.11, "white"], [1.11, 1.21, "pink"], [1.21, 1.52, "red"], [1.52, 3.8, "white"]];
 const coachBands = (top: number): Array<[number, number, string]> => [[0.1, 0.5, "skirt"], [0.5, 1.1, "white"], [1.1, 1.2, "pink"], [1.2, 1.5, "red"], [1.5, top, "white"]];
+/** The ICE 2 power car's body: the stripe across the nose at the ICE 1's height, no pink line (the sides are repainted over it). */
+const ice2PowerBands = (): Array<[number, number, string]> => [[0.1, 0.5, "skirt"], [0.5, 1.21, "white"], [1.21, 1.52, "red"], [1.52, 3.8, "white"]];
+/** The ICE 2's sides: white, the stripe under the windows (the coaches, the power car's door and its distant model). */
+const ice2Bands = (top: number): Array<[number, number, string]> => [[0.1, 0.5, "skirt"], [0.5, ICE2_STRIPE[0], "white"], [ICE2_STRIPE[0], ICE2_STRIPE[1], "red"], [ICE2_STRIPE[1], top, "white"]];
+/** The ICE 2's traffic red. */
+const ICE2_PALETTE: Record<string, MaterialSpec> = { ...PALETTE, red: { color: "#ec0016", roughness: 0.45 } };
 
 interface CarLayout {
   key: string;
@@ -116,19 +136,21 @@ export const ICE1_COACH_BOGIES: [number, number] = [3.7, 22.7];
  * skirts between and beyond the bogies, the bogies, the power car's roof
  * hatches and its raised pantograph.
  */
-export function ice1Lod(params?: ParamValues): MeshBuilder {
+export function ice1Lod(params?: ParamValues, variant: Ice1Variant = {}): MeshBuilder {
   const unit = resolveParams(ICE1_PARAMS, params).unit as Ice1Unit;
   const L = LAYOUTS[unit];
   const centre = L.length / 2;
   const X = (x: number) => bOf(L.map, x) - centre;
   const power = unit === "powerCar";
-  const v = power ? powerVolume() : coachVolume(unit);
+  const ice2 = !!variant.ice2;
+  // at a distance the ICE 2 power car's stripe runs at the coaches' height (its sweep to the nose left out)
+  const v = power ? powerVolume(ice2 ? ice2Bands(3.8) : undefined) : coachVolume(unit, ice2);
   const rect = (b: PxBox) => { const r = sideBox(L.map, b); return { u: [r.x0 - centre, r.x1 - centre] as const, y: [r.y0, r.y1] as const, mat: LOD_GLASS }; };
   const windows = power ? [] : unit === "coach" ? [rect([15, 13, 250, 22])] : [rect([21, 13, 80, 22]), rect([164, 13, 244, 22])];
   const body = coachBody([{ v, X: (b) => b - centre }], { y0: 0.5, windows, ...(power ? { frontWindows: [{ u: [-1.18, 1.18], y: [2.3, 3.32], mat: LOD_GLASS }] } : {}) });
   const bogies = power ? ICE1_POWER_BOGIES : ICE1_COACH_BOGIES;
   return fitUnit({
-    palette: PALETTE,
+    palette: ice2 ? ICE2_PALETTE : PALETTE,
     bodies: [body],
     parts: [
       ...bogieParts(bogies.map((x) => [X(x), (power ? 1.5 + 0.52 : 1.25 + 0.46) + 0.2] as const), 0.5),
@@ -141,9 +163,10 @@ export function ice1Lod(params?: ParamValues): MeshBuilder {
   }, 100);
 }
 
-export function ice1(params?: ParamValues): MeshBuilder {
+export function ice1(params?: ParamValues, variant: Ice1Variant = {}): MeshBuilder {
   const unit = resolveParams(ICE1_PARAMS, params).unit as Ice1Unit;
-  return unit === "powerCar" ? powerCar() : coach(unit);
+  const ice2 = !!variant.ice2;
+  return unit === "powerCar" ? powerCar(ice2) : coach(unit, ice2);
 }
 
 /** A polyline (source x, y) with extra stations where it crosses the bands' edges. */
@@ -159,11 +182,11 @@ function withEdges(pts: Pt[], bands: Array<[number, number, string]>): Pt[] {
 }
 
 /** The power car's body: the nose sloping from the coupler to the roof, the skirts between and beyond the bogies. */
-function powerVolume(): Volume {
+function powerVolume(paint?: Array<[number, number, string]>): Volume {
   const L = LAYOUTS.powerCar;
   const B = (x: number) => bOf(L.map, x);
   const asc = (pts: Pt[]) => pts.map(([x, y]): Pt => [B(x), y]).sort((a, b) => a[0] - b[0]);
-  const bands = powerBands();
+  const bands = paint ?? powerBands();
   const [b1, b2] = ICE1_POWER_BOGIES;
   return {
     name: "body",
@@ -178,11 +201,11 @@ function powerVolume(): Volume {
 }
 
 /** A coach's body: the restaurant's raised roof, the skirts between and beyond the bogies. */
-function coachVolume(unit: "coach" | "restaurant"): Volume {
+function coachVolume(unit: "coach" | "restaurant", ice2 = false): Volume {
   const L = LAYOUTS[unit];
   const B = (x: number) => bOf(L.map, x);
   const asc = (pts: Pt[]) => pts.map(([x, y]): Pt => [B(x), y]).sort((a, b) => a[0] - b[0]);
-  const bands = coachBands(unit === "restaurant" ? 4.3 : 3.8);
+  const bands = (ice2 ? ice2Bands : coachBands)(unit === "restaurant" ? 4.3 : 3.8);
   const [b1, b2] = ICE1_COACH_BOGIES;
   return {
     name: "body",
@@ -195,21 +218,29 @@ function coachVolume(unit: "coach" | "restaurant"): Volume {
   };
 }
 
-function powerCar(): MeshBuilder {
+function powerCar(ice2 = false): MeshBuilder {
   const L = LAYOUTS.powerCar;
-  const c = new Coach(PALETTE, L.length / 2);
+  const c = new Coach(ice2 ? ICE2_PALETTE : PALETTE, L.length / 2);
   const m = c.m;
   const B = (x: number) => bOf(L.map, x);
   const box = (b: PxBox) => sideBox(L.map, b);
-  const body = powerVolume();
+  const body = powerVolume(ice2 ? ice2PowerBands() : undefined);
   m.scope("body", () => {
     c.volume(body);
     for (const s of [1, -1])
       m.scope(s > 0 ? "right side" : "left side", () => {
+        if (ice2) m.scope("stripe", () => ice2PowerStripe(c, body, s));
         m.scope("cab window", () => c.window(body, s, box([19, 9, 23, 13]), { frame: "frame", glass: "cabGlass", fw: 0.05 }));
         m.scope("grilles", () => ([[35, 7, 48, 13], [49, 7, 62, 13], [160, 7, 173, 14], [174, 7, 187, 14]] as PxBox[]).forEach((g, i) => m.scope(`grille ${i + 1}`, () => grille(c, body, s, box(g)))));
-        m.scope("door", () => c.door(body, s, box([62, 14, 71, 28]), "bands", { seam: 0.02 }));
+        // the ICE 2's door carries the stripe at the sides' height
+        m.scope("door", () => c.door(ice2 ? { ...body, bands: ice2Bands(3.8) } : body, s, box([62, 14, 71, 28]), "bands", { seam: 0.02 }));
         m.scope("logo", () => {
+          if (ice2) {
+            // in the stripe (rows 19.9 - 21.65: 1.64 - 1.84 m)
+            c.sidePanel(body, "white", s, box([178.5, 19.9, 185.5, 21.65]), 0.007, 0.004);
+            c.sidePanel(body, "red", s, box([179.5, 20.2, 184.5, 21.35]), 0.01, 0.003);
+            return;
+          }
           c.sidePanel(body, "white", s, box([178.5, 23.2, 185.5, 26.8]), 0.006, 0.004);
           c.sidePanel(body, "red", s, box([179.5, 23.8, 184.5, 26.2]), 0.01, 0.003);
         });
@@ -239,10 +270,18 @@ function powerCar(): MeshBuilder {
       slopePanel(m, "frame", 1, lower, -0.4, 0.4, 1.56, 1.7, 0.008, 0.01);
       for (const y of [1.585, 1.625, 1.665]) slopePanel(m, "grille", 1, lower, -0.36, 0.36, y, y + 0.018, 0.012, 0.004);
     });
-    m.scope("logo", () => {
-      slopePanel(m, "white", 1, face, -0.28, 0.28, 1.23, 1.39, 0.006, 0.004);
-      slopePanel(m, "red", 1, face, -0.22, 0.22, 1.26, 1.36, 0.01, 0.003);
-    });
+    if (ice2)
+      // the class 402's coupler flap: two halves meeting down the middle, the Scharfenberg coupler's guide horn under it
+      m.scope("coupler flap", () => {
+        slopePanel(m, "rubber", 1, face, -0.008, 0.008, 0.9, 1.4, 0.006, 0.004);
+        slopePanel(m, "rubber", 1, { x0: X(0), y0: 0.9, x1: X(0.4), y1: 0.3 }, -0.008, 0.008, 0.32, 0.9, 0.006, 0.004);
+        m.scope("guide horn", () => block(m, "coupler", X(0.2), X(-0.12), 0.64, 0.72, 0.04, 0.2));
+      });
+    else
+      m.scope("logo", () => {
+        slopePanel(m, "white", 1, face, -0.28, 0.28, 1.23, 1.39, 0.006, 0.004);
+        slopePanel(m, "red", 1, face, -0.22, 0.22, 1.26, 1.36, 0.01, 0.003);
+      });
   });
   m.scope("rear end", () => {
     const wall = B(20.5);
@@ -271,18 +310,18 @@ function powerCar(): MeshBuilder {
   return m;
 }
 
-function coach(unit: "coach" | "restaurant"): MeshBuilder {
+function coach(unit: "coach" | "restaurant", ice2 = false): MeshBuilder {
   const L = LAYOUTS[unit];
-  const c = new Coach(PALETTE, L.length / 2);
+  const c = new Coach(ice2 ? ICE2_PALETTE : PALETTE, L.length / 2);
   const m = c.m;
   const B = (x: number) => bOf(L.map, x);
   const box = (b: PxBox) => sideBox(L.map, b);
-  const body = coachVolume(unit);
+  const body = coachVolume(unit, ice2);
   // the plug doors open through doorways, so an open one shows the interior (doors.ts)
   body.openings = [1, -1].flatMap((s) => ICE1_DOORS.map(([a, b]) => c.doorOpening(s, box([a, 9, b, 36]), 0.02)));
   m.scope("body", () => {
     c.volume(body);
-    for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => coachSide(c, body, unit, s, box));
+    for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => coachSide(c, body, unit, s, box, ice2));
   });
   for (const e of [1, -1])
     m.scope(e > 0 ? "front end" : "rear end", () => {
@@ -309,7 +348,7 @@ function coach(unit: "coach" | "restaurant"): MeshBuilder {
 const ICE1_DOORS: ReadonlyArray<readonly [number, number]> = [[4, 13], [252, 261]];
 
 /** A coach's side: the dark window band and its glass, the doors, the logo; the restaurant's dining windows, clerestory and kitchen door. */
-function coachSide(c: Coach, v: Volume, unit: "coach" | "restaurant", s: number, box: (b: PxBox) => Box): void {
+function coachSide(c: Coach, v: Volume, unit: "coach" | "restaurant", s: number, box: (b: PxBox) => Box, ice2 = false): void {
   const m = c.m;
   const glass = (b: PxBox) => c.sidePanel(v, "glass", s, box(b), 0.014, 0.004);
   const glassBox = (b: Box) => c.sidePanel(v, "glass", s, b, 0.014, 0.004);
@@ -353,9 +392,41 @@ function coachSide(c: Coach, v: Volume, unit: "coach" | "restaurant", s: number,
     ),
   );
   m.scope("logo", () => {
+    if (ice2) {
+      // in the stripe beside the front door (rows 24.7 - 26.5: 1.65 - 1.83 m)
+      c.sidePanel(v, "white", s, box([15.5, 24.7, 20.5, 26.5]), 0.006, 0.004);
+      c.sidePanel(v, "red", s, box([16.3, 25.0, 19.7, 26.2]), 0.01, 0.003);
+      return;
+    }
     c.sidePanel(v, "white", s, box([40.5, 28.2, 47.5, 31.8]), 0.006, 0.004);
     c.sidePanel(v, "red", s, box([41.5, 28.8, 46.5, 31.2]), 0.01, 0.003);
   });
+}
+
+/**
+ * The ICE 2 power car's stripe on side s: the body's band (the ICE 1's height) painted over in white
+ * from 0.9 m behind the tip, a sweep rising from it to the coaches' stripe 3.4 m behind the tip
+ * (the photographs: from the coupler flap's flank up under the cab window) and the stripe on to the
+ * rear end, laid on the flat side (full width from 0.3 m back, 0.9 - 3.3 m high).
+ */
+function ice2PowerStripe(c: Coach, v: Volume, s: number): void {
+  const m = c.m;
+  const B = (x: number) => bOf(POWER_MAP, x);
+  const [xa, xb, end] = [0.9, 3.4, 20.5];
+  c.sidePanel(v, "white", s, { x0: B(end), x1: B(xa), y0: 1.2, y1: 1.53 }, 0.003, 0.003);
+  c.sidePanel(v, "red", s, { x0: B(end), x1: B(xb), y0: ICE2_STRIPE[0], y1: ICE2_STRIPE[1] }, 0.005, 0.003);
+  const z = s * (1.5 * POWER_K_Z + 0.005);
+  const smooth = (t: number) => t * t * (3 - 2 * t);
+  const n = 8;
+  const at = (i: number) => {
+    const t = i / n, k = smooth(t);
+    return { x: c.X(B(xa + t * (xb - xa))), lo: 1.21 + (ICE2_STRIPE[0] - 1.21) * k, hi: 1.52 + (ICE2_STRIPE[1] - 1.52) * k };
+  };
+  for (let i = 0; i < n; i++) {
+    // body x falls toward the rear: the rear station first, as sidePanel lays its quads
+    const [r, f] = [at(i + 1), at(i)];
+    m.slab("red", [[r.x, r.lo, z], [f.x, f.lo, z], [f.x, f.hi, z], [r.x, r.hi, z]], [0, 0, -s * 0.003]);
+  }
 }
 
 /** A grille: a frame and horizontal slats. */
