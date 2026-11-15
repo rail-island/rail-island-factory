@@ -4,7 +4,8 @@
 // leaning back 0.4 m to the windscreens' head, the hipped cab roof behind it,
 // two windscreens behind their stone guards with a centre pillar, the twin
 // headlamp and the marker lamps on the waist stripe, the headlight pod and the
-// horns on the cab roof, the cab side window in two panes ahead of the door,
+// horns on the cab roof, the open-bar plough, one large cab side window ahead of
+// the door, the painted "INDIAN RAILWAYS",
 // the sides' louvre panels (point-symmetric: one side's rear-end pattern is the
 // other side's front-end one), two single-arm pantographs over the bogies with
 // the roof bar between them, the transformer tank between the Co-Co bogies.
@@ -13,8 +14,9 @@
 
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues } from "./design.ts";
-import { boxLocoLod, buildBoxLoco, type EndItem, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
-import { c, lerpTable } from "./czElectricKit.ts";
+import { boxLocoLod, buildBoxLoco, shellOf, type EndItem, type LocoSpec, type SideItem } from "./boxLocoKit.ts";
+import { c, lerpTable, onSide, type ShellSpec } from "./czElectricKit.ts";
+import { letters, wordWidth } from "./letters.ts";
 import { enumParam } from "./emuParts.ts";
 import type { Band } from "./cd163.ts";
 
@@ -27,9 +29,9 @@ const N = 9.65;
 const W = 1.575;
 const Y0 = 1.3;
 const ROOF = 4.18;
-/** The face's foot (the grey skirt's top), the windscreens' head, the hip's foot. */
+/** The face's foot (the dark band's top under the face), the windscreens' head, the hip's foot. */
 const FOOT = 1.72, HEAD = 3.78, HIP = 3.92;
-/** The end's centre line [y, |x|]: upright skirt, the face leaning 0.4 m back, the hipped roof. */
+/** The end's centre line [y, |x|]: upright below the face, the face leaning 0.4 m back, the hipped roof. */
 const TIP: ReadonlyArray<readonly [number, number]> = [[Y0, N], [FOOT, N], [HEAD, N - 0.4], [HIP, N - 0.5], [ROOF, N - 1.45]];
 const HW: ReadonlyArray<readonly [number, number]> = [[Y0, W], [3.7, W], [4.04, W - 0.18], [ROOF, W - 0.42]];
 /** The face is nearly flat, its upright corners rounded. */
@@ -44,16 +46,16 @@ const STRIPE: readonly [number, number] = [2.22, 2.48];
 
 // --- liveries -----------------------------------------------------------------------------
 
-interface Livery { title: string; number: string; body: string; stripe: string }
+interface Livery { title: string; number: string; body: string; stripe: string; letter: string }
 
 /** The keys are stored in saved maps: never rename them. */
 const LIVERIES: Record<string, Livery> = {
   // the white body with the red waist stripe (Ghaziabad, Lallaguda, Royapuram ... 30262, 39231, 39342)
-  redWhite: { title: "Red and white", number: "30201", body: "#efeee8", stripe: "#c0312b" },
+  redWhite: { title: "Red and white", number: "30201", body: "#efeee8", stripe: "#c0312b", letter: "#3a3f45" },
   // the early dark blue scheme with a cream stripe
-  blue: { title: "IR blue", number: "30351", body: "#1d3f80", stripe: "#e8dcc0" },
+  blue: { title: "IR blue", number: "30351", body: "#1d3f80", stripe: "#e8dcc0", letter: "#e8dcc0" },
   // the WAG-9's brown with the yellow stripe
-  wag9: { title: "WAG-9 brown", number: "31001", body: "#6b3a22", stripe: "#f2c31a" },
+  wag9: { title: "WAG-9 brown", number: "31001", body: "#6b3a22", stripe: "#f2c31a", letter: "#f2c31a" },
 };
 
 export const WAP7_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", Object.fromEntries(Object.entries(LIVERIES).map(([k, v]) => [k, v.title])))];
@@ -65,7 +67,7 @@ const turned = (it: SideItem): SideItem => ({ ...it, name: `${it.name} (left)`, 
 
 /** The machine room's louvre panels on the right side (+z), front +x. */
 function roomItems(): SideItem[] {
-  const g = (name: string, x: readonly [number, number], y: readonly [number, number]): SideItem => ({ kind: "grille", name, x, y, slats: "h", pitch: 0.075, mat: "slat", sides: [1], r: 0.03 });
+  const g = (name: string, x: readonly [number, number], y: readonly [number, number]): SideItem => ({ kind: "grille", name, x, y, slats: "h", pitch: 0.11, mat: "slat", sides: [1], r: 0.03 });
   const right: SideItem[] = [
     // a pair of small louvres over a pair of larger ones across the stripe, 3.0 - 4.5 m behind the rear cab's end
     g("rear upper louvre a", [-6.6, -5.93], [3.03, 3.62]),
@@ -85,16 +87,16 @@ function roomItems(): SideItem[] {
 
 function spec(l: Livery): LocoSpec {
   const palette: Record<string, MaterialSpec> = {
-    body: c(l.body), stripe: c(l.stripe), skirt: c("#7d8184", 0.6), dark: c("#3b3d40", 0.7),
+    body: c(l.body), stripe: c(l.stripe), letter: c(l.letter), dark: c("#3b3d40", 0.7),
     roof: { color: "#8e9294", roughness: 0.7 }, plate: c("#3a3b3d", 0.6),
   };
-  const side: Band[] = [[Y0, FOOT, "skirt"], [FOOT, STRIPE[0], "body"], [STRIPE[0], STRIPE[1], "stripe"], [STRIPE[1], 9, "body"]];
+  const side: Band[] = [[Y0, STRIPE[0], "body"], [STRIPE[0], STRIPE[1], "stripe"], [STRIPE[1], 9, "body"]];
   const end: Band[] = [[Y0, FOOT, "dark"], [FOOT, STRIPE[0], "body"], [STRIPE[0], STRIPE[1], "stripe"], [STRIPE[1], 9, "body"]];
   const sy = (STRIPE[0] + STRIPE[1]) / 2;
   const sideItems: SideItem[] = [
     { kind: "door", name: "cab door", x: [7.5, 8.15], y: [FOOT, 3.82], win: [2.97, 3.66], rails: true, mirror: true },
-    { kind: "window", name: "cab window rear pane", x: [8.24, 8.58], y: [2.97, 3.66], mat: "rubber", mirror: true, r: 0.06 },
-    { kind: "window", name: "cab window front pane", x: [8.62, 8.94], y: [2.97, 3.66], mat: "rubber", mirror: true, r: 0.06 },
+    // one large cab side window ahead of the door, its corners rounded
+    { kind: "window", name: "cab window", x: [8.22, 8.94], y: [2.88, 3.68], mat: "rubber", mirror: true, r: 0.12 },
     ...roomItems(),
     { kind: "plate", name: "number", x: [-0.5, 0.5], y: [1.86, 2.06] },
   ];
@@ -126,7 +128,7 @@ function spec(l: Livery): LocoSpec {
     buffers: HALF,
     beam: N,
     bufferY: 1.105,
-    frame: { y0: Y0 - 0.35, y1: Y0, half: N, hw: W - 0.3, mat: "dark" },
+    frame: { y0: Y0 - 0.35, y1: Y0, half: N, hw: W - 0.05, mat: "dark" },
     bogies: [-PIVOT, PIVOT].map((xc) => ({ xc, axles: [-BASE, 0, BASE], wheelR: WHEEL_R, frameTop: WHEEL_R + 0.25 })),
     pantograph: { kind: "singleArm", x: PANTO_X, roofY: ROOF + 0.07, baseY: ROOF + 0.24 },
     hvLine: { x: 1.4, y: ROOF + 0.42, z: 0.32 },
@@ -140,7 +142,6 @@ function spec(l: Livery): LocoSpec {
       { name: "fan box", x: [0.4, 1.7], w: [0.45, 0.42], y: [ROOF + 0.06, ROOF + 0.32], mat: "slat" },
     ],
     underItems: [[-2.3, 2.3, Y0 - 0.8, Y0 - 0.35, W - 0.5]],
-    plough: "frame",
     number: l.number,
   };
 }
@@ -204,6 +205,45 @@ function lampRail(m: MeshBuilder, e: number): void {
   }
 }
 
+/** The open-bar plough under the buffer beam: a top beam, posts leaning forward to the foot, rails across. */
+function plough(m: MeshBuilder, e: number): void {
+  const [yb, yt] = [0.17, Y0 - 0.37];
+  const [xb, xt] = [N + 0.5, N + 0.3];
+  const at = (y: number) => xb + ((xt - xb) * (y - yb)) / (yt - yb);
+  m.scope("top beam", () => {
+    const sec: Ring = [[-1.2, yt - 0.02], [1.2, yt - 0.02], [1.2, Y0 - 0.33], [-1.2, Y0 - 0.33]];
+    const [a, b] = e > 0 ? [N - 0.2, xt + 0.06] : [-(xt + 0.06), -(N - 0.2)];
+    m.sweep("dark", "x", sec, a, sec, b);
+  });
+  m.scope("posts", () => {
+    const n = 7;
+    for (let i = 0; i < n; i++) {
+      const z = -1.08 + (2.16 * i) / (n - 1);
+      const ring = (y: number): Ring => ngon(4, 0.035, Math.PI / 4, e * at(y), z);
+      m.loft("dark", ring(yb), yb, ring(yt), yt);
+    }
+  });
+  m.scope("rails", () => {
+    for (const y of [yb + 0.03, 0.42, 0.66]) {
+      const sec = ngon(4, 0.03, Math.PI / 4, e * (at(y) + 0.03), y);
+      m.sweep("dark", "z", sec, -1.15, sec, 1.15);
+    }
+  });
+}
+
+/** The painted "INDIAN RAILWAYS" on each side between the louvres (point-symmetric, as the panels). */
+function sideLettering(m: MeshBuilder, sp: ShellSpec): void {
+  const text = "INDIAN RAILWAYS", h = 0.48, y = 3.1, style = { weight: 0.19, width: 0.6, gap: 0.14 };
+  const w = wordWidth(text, h, style);
+  for (const sd of [-1, 1]) {
+    const x = sd * 0.6;
+    const at = onSide(sp, sd);
+    // on the right side (+z) the reader's right is +x
+    const tris = letters(text, sd > 0 ? x - w / 2 : x + w / 2, y, h, sd < 0, style);
+    m.scope(sd > 0 ? "right" : "left", () => m.facets("letter", tris.map(([u, v]) => at(u, v, 0.0115)), [0, 0, sd]));
+  }
+}
+
 /** The headlight pod on the cab roof's front edge and the two horns beside it. */
 function roofFront(m: MeshBuilder, e: number): void {
   const xf = N - 1.12, xb = N - 1.62;
@@ -250,17 +290,20 @@ function roofGear(m: MeshBuilder): void {
 const livery = (v?: ParamValues): Livery => LIVERIES[resolveParams(WAP7_PARAMS, v).livery!]!;
 
 export function irWap7(v?: ParamValues): MeshBuilder {
-  const m = buildBoxLoco(spec(livery(v)));
+  const sp = spec(livery(v));
+  const m = buildBoxLoco(sp);
+  m.scope("lettering", () => sideLettering(m, shellOf(sp)));
   m.scope("cab details", () => {
     for (const e of [-1, 1])
       m.scope(e > 0 ? "front" : "rear", () => {
         m.scope("stone guards", () => screenGuards(m, e));
         m.scope("lamp rail", () => lampRail(m, e));
+        m.scope("plough", () => plough(m, e));
         roofFront(m, e);
       });
   });
   roofGear(m);
-  // the shell's underside beside the frame, which stands back 0.3 m from the sides
+  // the shell's underside beside the frame, which stands 5 cm in from the sides
   m.scope("underside", () => {
     const [H, w, k] = [N - 0.01, W - 0.01, 0.17];
     const r: Ring = [[H, -w + k], [H - k, -w], [-H + k, -w], [-H, -w + k], [-H, w - k], [-H + k, w], [H - k, w], [H, w - k]];

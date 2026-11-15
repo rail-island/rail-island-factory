@@ -48,14 +48,15 @@ The catalog had no Indian train before. Every design is filed under India.
   (`generator/inWap7.ts`), measured on the photographs of `assets/ir-wap7/` (SOURCES.md): the
   face leaning 0.4 m back to the windscreens' head under a hipped cab roof, two windscreens behind
   stone guards with a centre pillar, the twin headlamp and the white-over-red marker lamps on the
-  waist stripe inside the lamp handrail, the headlight pod and horns on the cab roof, the cab side
-  window in two panes ahead of the door, the louvre panels of the photographed side (the other side
-  drawn point-symmetric - not checked against a photograph), single-arm pantographs about 4.8 m
-  from the middle with the roof bar, the grey skirt band. `redWhite` is the white body with the
-  red stripe of the photographs; `blue` and `wag9` keep the earlier dark blue / brown bodies with a
-  cream / yellow stripe on the same layout (no photograph of them was found; the WAG-9's green
-  scheme is not drawn, and the WAG-9 is otherwise the same body). The plough is the kit's solid
-  one, not the open grid; the lettering is not drawn.
+  waist stripe inside the lamp handrail, the headlight pod and horns on the cab roof, the open-bar
+  plough, one large cab side window ahead of the door, the louvre panels and the painted
+  "INDIAN RAILWAYS" of the photographed side (the other side drawn point-symmetric - not checked
+  against a photograph), single-arm pantographs about 4.8 m from the middle with the roof bar, the
+  body colour down to the dark frame. `redWhite` is the white body with the red stripe of the
+  photographs; `blue` and `wag9` keep the earlier dark blue / brown bodies with a cream / yellow
+  stripe and lettering on the same layout (no photograph of them was found; the WAG-9's green
+  scheme is not drawn, and the WAG-9 is otherwise the same body). The front number is a plate,
+  not painted.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
 - **WP.** The bullet-nosed smokebox front is the generator's plain one.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
