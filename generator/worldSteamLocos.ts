@@ -15,6 +15,7 @@ import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
 import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
 import { wpLod, wpSpec } from "./inWp.ts";
 import { wgLod, wgSpec } from "./inWg.ts";
+import { dhrBLod, dhrBSpec } from "./inDhrB.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -117,8 +118,9 @@ export function irWg(v?: ParamValues): MeshBuilder { return buildLoco(wgSpec(irW
 export function irWgLod(v?: ParamValues): MeshBuilder { return wgLod(irWgUnit(v)); }
 export function eirFairyQueen(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-eir-fairy-queen", v)); }
 export function eirFairyQueenLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-eir-fairy-queen", v)); }
-export function dhrBClass(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-dhr-b-class", v)); }
-export function dhrBClassLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-dhr-b-class", v)); }
+// the DHR B class is a saddle tank engine drawn from its own spec (inDhrB.ts): both `unit` values draw the engine
+export function dhrBClass(_v?: ParamValues): MeshBuilder { return buildLoco(dhrBSpec()); }
+export function dhrBClassLod(_v?: ParamValues): MeshBuilder { return dhrBLod(); }
 export function crQj(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-qj", v)); }
 export function crQjLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-cr-qj", v)); }
 export function crSy(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-sy", v)); }
@@ -155,7 +157,7 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-ir-wp", irWp, irWpLod, steamGame(102, 1440, 110, 75), "ir-wp", "us"),
   design("proc-vehicle-ir-wg", irWg, irWgLod, steamGame(122, 1600, 80, 80), "ir-wg", "us"),
   design("proc-vehicle-eir-fairy-queen", eirFairyQueen, eirFairyQueenLod, steamGame(26, 97, 40, 14), "eir-fairy-queen", "us"),
-  design("proc-vehicle-dhr-b-class", dhrBClass, dhrBClassLod, steamGame(14, 60, 30, 4), "dhr-b-class"),
+  design("proc-vehicle-dhr-b-class", dhrBClass, dhrBClassLod, { weight: 14, power: 60, maxspeed: 30, accel: null }, "dhr-b-class"),
   design("proc-vehicle-cr-qj", crQj, crQjLod, steamGame(134, 2200, 80, 92), "cr-qj", "us"),
   design("proc-vehicle-cr-sy", crSy, crSyLod, steamGame(89, 1100, 80, 55), "cr-sy", "us"),
   design("proc-vehicle-cr-js", crJs, crJsLod, steamGame(104, 1500, 85, 70), "cr-js", "us"),
