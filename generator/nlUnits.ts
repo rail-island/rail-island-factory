@@ -18,6 +18,7 @@ import { MAT46 } from "./nlMat46.ts";
 import { VIRM } from "./nlVirm.ts";
 
 export { DE1, MAT46, VIRM };
+import { SNG } from "./nlSng.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -34,25 +35,6 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
   }
 }
 
-
-export const SLT: ShinkansenSeries = {
-  endLength: 17.5, midLength: 15.8, W: 1.4, Y: 1.25, S: 3.2, C: 4.0, lean: 0.96, B: 0.6, A: 0.8,
-  nose: nose(1.8, 0.35, 2.3, [[0, 2.4], [0.4, 3.1], [1.3, 3.75], [2.0, 4.0]], [[0, 2.3], [0.4, 2.9], [1.3, 3.15], [2.0, 3.2]], [[0, 1.25], [0.8, 1.25]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
-  windscreen: [0.4, 1.6, 0.07, 1.2], lamps: [0.15, 1.35],
-  windows: [[1.45, 2.65]], windowW: 1.5, pitch: 1.75, door: [0.95, 3.0, 1.5, 2.6], doorW: 1.3, doorCount: 2,
-  bogieCentres: 11.5, wheelR: 0.42, wheelbase: 2.3, cars: [4, 6],
-  liveries: { sprinter: nsLivery("sprinter", "2401") },
-  weight: { end: 40, middle: 32 }, power: 380, maxspeed: 160,
-};
-
-export const SNG: ShinkansenSeries = {
-  ...SLT,
-  endLength: 18.4, midLength: 16.6,
-  nose: nose(1.6, 0.4, 2.4, [[0, 2.6], [0.4, 3.25], [1.2, 3.8], [1.8, 4.0]], [[0, 2.5], [0.4, 3.0], [1.2, 3.2]], [[0, 1.25], [0.8, 1.25]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
-  cars: [3, 4],
-  liveries: { sprinter: nsLivery("sprinter", "2301") },
-  weight: { end: 42, middle: 34 }, power: 360, maxspeed: 160,
-};
 
 export const ICNG: ShinkansenSeries = {
   endLength: 23.6, midLength: 18.4, W: 1.41, Y: 1.3, S: 3.2, C: 4.1, lean: 0.95, B: 0.65, A: 0.85,
