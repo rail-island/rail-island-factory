@@ -15,6 +15,7 @@ import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
 import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
 import { QJ_WORLD, qjLodSpec, qjSpec } from "./cnQj.ts";
 import { SY_WORLD, syLodSpec, sySpec } from "./cnSy.ts";
+import { JS_WORLD, jsLodSpec, jsSpec } from "./cnJs.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -27,8 +28,6 @@ const ALL_BLACK = { paint: "#1d1e20", wheel: "#2a2b2d", frame: "#a51a1f", smokeb
 const UK = { top: 3.95, coupler: "buffers", half: 1.37 } as const;
 /** India's broad gauge: the bodies on the 3.3 m gauge, buffers and screw couplings; the 610 mm Darjeeling line's tiny engines. */
 const IR = { top: 4.5, coupler: "buffers", half: 1.6 } as const;
-/** China's steam: the larger Chinese loading gauge, automatic knuckle couplers. */
-const CR = { top: 4.75, coupler: "knuckle", half: 1.55 } as const;
 const UIC = { top: 4.65, coupler: "buffers", half: 1.5 } as const;
 
 export const WORLD_STEAM: Record<string, SteamDesign> = {
@@ -56,7 +55,7 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-dhr-b-class": { base: { top: 3.2, coupler: "buffers", half: 1.05, title: "DHR B class", lead: 0, coupled: 2, trail: 0, leadD: 0, coupledD: 0.66, trailD: 0, boilerR: 0.5, deflectors: "none", domes: 1, noValveGear: true, palette: { paint: "#1d4596", wheel: "#a51a1f", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 3.6, axles: 2, d: 0.6 }, number: "779" } },
   "proc-vehicle-cr-qj": QJ_WORLD,
   "proc-vehicle-cr-sy": SY_WORLD,
-  "proc-vehicle-cr-js": { base: { ...CR, title: "CR JS", lead: 1, coupled: 4, trail: 1, leadD: 0.84, coupledD: 1.37, trailD: 1.0, boilerR: 0.92, deflectors: "wagner", domes: 1, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 10.2, axles: 4, d: 0.9 }, number: "JS 8366" } },
+  "proc-vehicle-cr-js": JS_WORLD,
 };
 
 function paramsOf(d: SteamDesign): ParamSpec[] {
@@ -123,8 +122,10 @@ export function crQjLod(v?: ParamValues): MeshBuilder { return steamLocoLod(qjLo
 const crSyUnit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-cr-sy"]!, v).unit!;
 export function crSy(v?: ParamValues): MeshBuilder { return buildLoco(sySpec(crSyUnit(v))); }
 export function crSyLod(v?: ParamValues): MeshBuilder { return steamLocoLod(syLodSpec(crSyUnit(v))); }
-export function crJs(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-js", v)); }
-export function crJsLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-cr-js", v)); }
+// the JS is drawn from its own spec (cnJs.ts)
+const jsUnit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-cr-js"]!, v).unit!;
+export function crJs(v?: ParamValues): MeshBuilder { return buildLoco(jsSpec(jsUnit(v))); }
+export function crJsLod(v?: ParamValues): MeshBuilder { return steamLocoLod(jsLodSpec(jsUnit(v))); }
 // the Prussian P 8 is drawn from its own spec (deSteamP8.ts)
 const p8Params = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-kpev-p8"]!, v);
 export function kpevP8(v?: ParamValues): MeshBuilder { const p = p8Params(v); return buildLoco(p8Spec(p.unit!, p.livery!)); }
@@ -158,7 +159,7 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-dhr-b-class", dhrBClass, dhrBClassLod, steamGame(14, 60, 30, 4), "dhr-b-class"),
   design("proc-vehicle-cr-qj", crQj, crQjLod, steamGame(134, 2200, 80, 118), "cr-qj", "us"),
   design("proc-vehicle-cr-sy", crSy, crSyLod, steamGame(84, 1100, 80, 54.5), "cr-sy", "us"),
-  design("proc-vehicle-cr-js", crJs, crJsLod, steamGame(104, 1500, 85, 70), "cr-js", "us"),
+  design("proc-vehicle-cr-js", crJs, crJsLod, steamGame(104, 1690, 85, 84), "cr-js", "us"),
   design("proc-vehicle-ns-3700", ns3700, ns3700Lod, steamGame(72, 920, 100, 45), "ns-3700"),
   design("proc-vehicle-sncf-141r", sncf141r, sncf141rLod, steamGame(116, 1840, 100, 84), "sncf-141r"),
 ];
