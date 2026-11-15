@@ -8,6 +8,9 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { VIRM } from "./nlVirm.ts";
+
+export { VIRM };
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -23,8 +26,6 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
     case "fyra": return { title: "Fyra", number, palette: pal({ burgundy: "#6b1d3a", grey: "#c9cccd", magenta: "#c8007a" }), bands: [[0, 1.6, "burgundy"], [1.6, 1.68, "magenta"], [1.68, s - 0.3, "grey"], [s - 0.3, 9, "burgundy"]], roof: "roofG", skirt: "skirtG" };
   }
 }
-
-const DD_ROWS: ReadonlyArray<readonly [number, number]> = [[1.25, 1.95], [2.8, 3.5]];
 
 /** The Mat '46 in NS green, read from photo-spoorwegmuseum-treinstel-ns-273.jpg: the silver skirt, the red waist and cantrail bands, the silver roof; the red band rising over the front's windows. */
 const MAT46_GREEN: ShinkansenLivery = {
@@ -131,18 +132,17 @@ export const ICM: ShinkansenSeries = {
   weight: { end: 54, middle: 48 }, power: 320, maxspeed: 160,
 };
 
-export const VIRM: ShinkansenSeries = {
+/** The DDZ's double-deck body, the VIRM's first draft (the VIRM itself is in nlVirm.ts now). */
+const DDZ_BASE: ShinkansenSeries = {
   endLength: 27.0, midLength: 26.4, W: 1.41, Y: 1.2, S: 3.85, C: 4.6, lean: 0.97, B: 0.75, A: 0.95,
-  nose: nose(1.8, 0.4, 2.3, [[0, 2.8], [0.5, 3.6], [1.4, 4.35], [2.0, 4.6]], [[0, 2.7], [0.5, 3.35], [1.4, 3.8], [2.0, 3.85]], [[0, 1.2], [0.8, 1.2]], [[0, 1.0], [0.6, 0.95]], [[0, 0.9], [0.3, 0.75]]),
-  windscreen: [0.35, 1.6, 0.07, 1.15], lamps: [0.1, 1.5],
-  windows: DD_ROWS, windowW: 1.3, pitch: 1.55, door: [1.1, 3.05, 1.8, 2.6], doorW: 1.3,
+  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0],
+  windows: [[1.25, 1.95], [2.8, 3.5]], windowW: 1.3, pitch: 1.55, door: [1.1, 3.05, 1.8, 2.6], doorW: 1.3,
   bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5, cars: [4, 6],
-  liveries: { yellowBlue: nsLivery("yellowBlue", "9401", 3.85), yellowGrey: nsLivery("yellowGrey", "8601", 3.85) },
-  weight: { end: 62, middle: 55 }, power: 330, maxspeed: 160,
+  liveries: {}, weight: { end: 62, middle: 55 }, power: 330, maxspeed: 160,
 };
 
 export const DDZ: ShinkansenSeries = {
-  ...VIRM,
+  ...DDZ_BASE,
   nose: nose(0.1, 1, 2, [[0, 4.6]], [[0, 3.85]], [[0, 1.2]], [[0, 0.95]], [[0, 0.75]]),
   windscreen: [0, 0, 0, 0], lamps: [0, 0],
   flatCab: flatCab(1.41, 2.8, 3.55, "cabMask", 1.5),

@@ -83,6 +83,13 @@ export interface ShinkansenLivery {
   roofStripe?: { z: number; mat: string };
   /** This livery's sets' pantograph, in place of the series' (the 500's W sets' T-shaped wing, its V sets' single arm). */
   pantograph?: "single" | "diamond" | "wing";
+  /**
+   * Painted fields on both sides of the end car and of an intermediate car, over the bands: convex
+   * polygons [d, y] (d behind the body's front end, heights between the belly and the shoulder), laid
+   * as decals - colour areas that are not bands along the whole car (the VIRM's window bands framing
+   * each deck and the end sections). They must not cover a door leaf.
+   */
+  sideFields?: { end?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }>; middle?: ReadonlyArray<{ mat: string; pts: readonly Pt[] }> };
 }
 
 /** A fitting on a car's sides, both sides (d span behind the car's front, the end car's from its tip; sill and head). */
@@ -245,6 +252,14 @@ export interface ShinkansenSeries {
   numberAt?: readonly [number, number, number];
   /** A block on the end car's roof in the distant model (d span behind the tip, half width, heights, paint): a cab turret's silhouette. */
   lodRoof?: { d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string };
+  /**
+   * Lowered roofs over the cars' inner end sections (the VIRM's wells holding the pantographs and the
+   * roof grilles): their crown and shoulder, the ramp up to the full roof (m), each well's length from
+   * the body's end - the end car's at its inner end, an intermediate car's at its front and rear - and
+   * the body's slice spacing along them. The wells' sides over their shoulder take the roof's paint; the
+   * raised pantograph stands on its car's roof, lowered or not.
+   */
+  roofWells?: { C: number; S: number; ramp: number; end: number; front: number; rear: number; step: number };
   /** A power car of its own among the intermediate cars (the unit value `powerCar`): the train's only pantograph car. */
   powerCar?: SeriesPowerCar;
   /** Fittings of the series' own, drawn in place of the plain underfloor box. */
@@ -383,13 +398,17 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       ...(end && !s.flatCab && !s.cabFace ? { front: s.nose, ...(s.single ? { rear: s.nose } : {}) } : {}),
       ...(end && s.flatCab && s.cabNose ? { front: s.cabNose, ...(s.single ? { rear: s.cabNose } : {}) } : {}),
       // a crown rising behind a cab face: a nose of the body's full plan whose crown table ends past the join
-      ...(end && s.cabFace && s.endCrown ? { front: { len: 1e-3, tip: 1, power: 2, C: s.endCrown, S: [[0, s.S]] } } : {}), cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: end && s.cabFace && s.endCrown ? (s.endCrownStep ?? 0.25) : 0.25,
+      ...(end && s.cabFace && s.endCrown ? { front: { len: 1e-3, tip: 1, power: 2, C: s.endCrown, S: [[0, s.S]] } } : {}),
+      // the roof wells: a nose of the body's full plan at each inner end whose crown and shoulder tables rise to the roof
+      ...(s.roofWells && !power ? wellNoses(s, end) : {}),
+      cuts: jacobsCuts(s, end, L, tr, reach, joint), edges: [], step: 1.0, noseStep: end && s.cabFace && s.endCrown ? (s.endCrownStep ?? 0.25) : s.roofWells && !power ? s.roofWells.step : 0.25,
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
     windows: power ? [{ y: power.windows, spans, frame: "rubber" }] : s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber" })),
     ...(s.fluting ? { fluting: s.fluting } : {}),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(s.doorGlassR ? { glassCornerR: s.doorGlassR } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
+    ...(s.roofWells && !power ? { strips: wellStrips(s, end, L, l.roof) } : {}),
     ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     // a cab face draws its own panes and lamps: an empty cab keeps the gangway frame off its end
     ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : end && s.cabFace ? { cab: { panes: [], lamps: [] } } : {}), cabEnds: end && (s.flatCab || s.noseCab || s.cabFace) ? (s.single ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
@@ -414,6 +433,12 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       if (l.overDoors) m.scope("over doors", () => {
         for (const sd of [1, -1]) for (const [d0, d1] of doors) for (const [y0, y1, mat] of l.overDoors!) sidePanel(m, b, X, sd, mat, d0, d1, y0, y1, 0.004, 0.003);
       });
+      const fields = l.sideFields?.[end ? "end" : "middle"];
+      if (fields) m.scope("side fields", () => fields.forEach((f, i) => m.scope(`field ${i + 1}`, () => {
+        const tris: Pt[] = [];
+        for (let k = 1; k + 1 < f.pts.length; k++) tris.push(f.pts[0]!, f.pts[k]!, f.pts[k + 1]!);
+        for (const sd of [1, -1]) sideDecal(m, b, X, sd, f.mat, tris, 0.003);
+      })));
       if (end && l.endSweeps) m.scope("sweeps", () => l.endSweeps!.forEach((w, i) => m.scope(`sweep ${i + 1}`, () => endSweep(m, b, X, w, s.cabFace?.dJoin ?? 0, 0.003 + 0.0015 * i))));
       if (l.doorFlags) m.scope("door flags", () => {
         const f = l.doorFlags!;
@@ -492,17 +517,32 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
           m.scope("cover", () => pantographCover(m, x, s.C, cv));
           singleArm(m, { xc: x, roofY: s.C + cv.h, baseY: s.C + cv.h + 0.2, h: 1, raised });
         } else {
-          block(m, l.roof, x - 1.6, x + 1.6, s.C - 0.06, s.C + 0.05, -0.85, 0.85);
+          // on a roof well's lowered roof where it stands in one
+          const C = s.roofWells ? b.C(pantographAt(s, end, tr)) : s.C;
+          block(m, l.roof, x - 1.6, x + 1.6, C - 0.06, C + 0.05, -0.85, 0.85);
           const kind = l.pantograph ?? s.pantograph;
-          if (kind === "diamond") diamond(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.35, raised });
-          else if (kind === "wing") wingPantograph(m, x, s.C + 0.05, raised, l.roofStripe?.mat ?? l.roof);
-          else singleArm(m, { xc: x, roofY: s.C + 0.05, baseY: s.C + 0.3, h: 1, raised });
+          if (kind === "diamond") diamond(m, { xc: x, roofY: C + 0.05, baseY: C + 0.35, raised });
+          else if (kind === "wing") wingPantograph(m, x, C + 0.05, raised, l.roofStripe?.mat ?? l.roof);
+          else singleArm(m, { xc: x, roofY: C + 0.05, baseY: C + 0.3, h: 1, raised });
         }
       });
       if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr });
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
+}
+
+/** The roof wells' noses (`roofWells`): the end car's at its inner (rear) end, an intermediate car's at both. */
+function wellNoses(s: ShinkansenSeries, end: boolean): { front?: NoseShape; rear: NoseShape } {
+  const w = s.roofWells!;
+  const well = (len: number): NoseShape => ({ len: 1e-3, tip: 1, power: 2, C: [[0, w.C], [len - w.ramp, w.C], [len, s.C]], S: [[0, w.S], [len - w.ramp, w.S], [len, s.S]] });
+  return end ? { rear: well(w.end) } : { front: well(w.front), rear: well(w.rear) };
+}
+
+/** The roof's paint over a roof well's sides, above its shoulder, out to the ramp's top. */
+function wellStrips(s: ShinkansenSeries, end: boolean, L: number, roof: string): Array<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }> {
+  const w = s.roofWells!, y = [w.S, s.C + 0.1] as const;
+  return end ? [{ d: [L - w.end, L], y, mat: roof }] : [{ d: [0, w.front], y, mat: roof }, { d: [L - w.rear, L], y, mat: roof }];
 }
 
 /** A pantograph's streamlined cover: a frustum from a rounded rectangle sunk in the roof to a smaller one at its top. */

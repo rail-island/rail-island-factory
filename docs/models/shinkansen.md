@@ -206,6 +206,12 @@ combinations hashed before and after):
   higher where two interlace), a roof line on insulators between them, louvres on the roof's
   edges, its slot in a train of n cars, its weight and power. It is the train's only pantograph
   car; the other intermediate cars draw none, and the train's power is the power car's.
+- `roofWells` - lowered roofs over the cars' inner end sections (crown, shoulder, ramp, the end car's
+  well at its inner end and an intermediate car's at its front and rear, the slice spacing along them):
+  crown-and-shoulder noses at those ends, the well's sides above its shoulder in the roof's paint (`strips`),
+  the raised pantograph standing on the lowered roof; and a livery's `sideFields` - convex [d, y] polygons
+  painted as decals on the end car's and an intermediate car's sides, colour areas that are not bands (both
+  the VIRM's, `generator/nlVirm.ts`).
 
 A nose end never carries a gangway frame, buffered or not. A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
