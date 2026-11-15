@@ -21,5 +21,5 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 Wikipedia "Indian locomotive class WDG-4G" (en), infobox: 22,567 mm over couplers, 3,200 mm wide, 4,227 mm high,
 1,092 mm wheels, 1,900 mm axle spacing, 14,478 mm pivot centres (13.4 m measured on the side photograph; 13.8 m
 drawn), two cabs. Running number drawn: 49095 (photographed at Meerut). The livery photographed is red and orange in
-diagonal stripes; the design's livery key `redGrey` and its title "Red, grey" are kept from the earlier drawing
+diagonal stripes; the design's livery key `redGrey` is kept from the earlier drawing, its title is now "Red, orange"
 (saved maps store the key).

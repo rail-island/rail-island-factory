@@ -10,10 +10,11 @@
 // red with orange lower corners. +X toward cab 1, wheel contact at y = 0.
 // See docs/models/india-trains.md.
 
-import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
+import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { tubeX } from "./cd163.ts";
-import { block, bogie, buffers, exhaust, extrude, horn, paint, roofFan, side, type BogieSpec } from "./dieselParts.ts";
+import { block, buffers, exhaust, extrude, horn, paint, roofFan, side } from "./dieselParts.ts";
+import { coil } from "./cd163.ts";
 import { US_PALETTE, decalX, decalZ, endText, sideText } from "./usHoodKit.ts";
 import { LOD_GLASS, type LodBand, type LodShell } from "./lodKit.ts";
 import { locoLod, sideWindows, type LocoBox } from "./lodLocos.ts";
@@ -33,18 +34,16 @@ const DECK_HALF = 1.58;
 const CAB_HALF = 1.55;
 const CAB_LEN = 2.45;
 const CAB_REAR = END - CAB_LEN; // 8.35
-const CAB_TOP = 3.9;
-const CAB_EDGE = 3.77; // where the roof's edge starts to round
+const CAB_TOP = 4.02; // about 0.2 m over the hood, as on the side photograph
+const CAB_EDGE = 3.9; // where the roof's edge starts to round
 const RAKE_FOOT = 2.85; // the windscreens' rake starts
 const RAKE = 0.17;
 const HOOD_HALF = 1.22;
 const HOOD_TOP = 3.82;
 const HOOD_R = 0.15;
 const TRUCK_CENTRE = 6.9;
-const TRUCK: BogieSpec = {
-  axles: [-1.9, 0, 1.9], wheelR: 0.546, frameHalf: 2.75, frameTop: 1.12, frameBottom: 0.62,
-  frameZ: [0.9, 1.06], primary: "coil", secondary: [-1.0, 1.0], secondaryZ: 1.12, bolster: 1.2,
-};
+/** The fabricated Co-Co truck: axles, wheel radius, the side frame's half length, its top and its plane (z). */
+const TRUCK = { axles: [-1.9, 0, 1.9], wheelR: 0.546, frameHalf: 2.6, frameTop: 1.1, frameZ: [0.94, 1.06] as const };
 const TANK = { x0: -2.4, x1: 3.0, y0: 0.46, half: 1.38 };
 
 // ---------------------------------------------------------------------------
@@ -144,8 +143,8 @@ export function buildWdg4g(l: Wdg4gLivery): MeshBuilder {
   m.scope("hood", () => hood(m, l));
   m.scope("walkways", () => walkways(m));
   m.scope("trucks", () => {
-    m.scope("cab 1 truck", () => bogie(m, TRUCK_CENTRE, TRUCK));
-    m.scope("cab 2 truck", () => bogie(m, -TRUCK_CENTRE, TRUCK));
+    m.scope("cab 1 truck", () => truck(m, TRUCK_CENTRE));
+    m.scope("cab 2 truck", () => truck(m, -TRUCK_CENTRE));
   });
   m.scope("underframe", () => underframe(m));
   return m;
@@ -218,7 +217,7 @@ function cab(m: MeshBuilder, l: Wdg4gLivery, e: number): void {
   m.scope("windscreens", () => {
     const at = (y: number, d: number): number => X(((y - RAKE_FOOT) / (CAB_EDGE - RAKE_FOOT)) * uRake) + e * d;
     const n: Vec3 = [e * (CAB_EDGE - RAKE_FOOT), uRake, 0];
-    const y0 = 2.93, y1 = 3.72;
+    const y0 = 2.95, y1 = 3.8;
     for (const sd of [-1, 1]) {
       const [z0, z1] = side(sd, 0.13, 1.33);
       const quad = (d: number, za: number, zb: number, ya: number, yb: number): Vec3[] => [[at(ya, d), ya, za], [at(ya, d), ya, zb], [at(yb, d), yb, zb], [at(yb, d), yb, za]];
@@ -260,12 +259,12 @@ function cab(m: MeshBuilder, l: Wdg4gLivery, e: number): void {
   // the roof box with the horns and the roof headlight
   m.scope("roof box", () => {
     const [a, b] = e > 0 ? [CAB_REAR + 0.3, END - 0.4] : [-END + 0.4, -CAB_REAR - 0.3];
-    block(m, "irRed", a, b, CAB_TOP - 0.02, 4.18, -0.68, 0.68);
+    block(m, "irRed", a, b, CAB_TOP - 0.02, 4.22, -0.68, 0.68);
     const xb = e > 0 ? b : a;
-    extrude(m, "black", "x", ngon(10, 0.1, 0, 0, 3.98), e > 0 ? [xb - 0.01, xb + 0.04] : [xb - 0.04, xb + 0.01]);
-    extrude(m, "lampHead", "x", ngon(10, 0.075, 0, 0, 3.98), e > 0 ? [xb + 0.04, xb + 0.05] : [xb - 0.05, xb - 0.04]);
-    for (const z of [-0.14, 0.14]) horn(m, e, xb - e * 0.2, z, 4.26);
-    m.prism("black", ngon(6, 0.025, 0, e * (CAB_REAR + 0.5), 0.5), 4.16, 4.4);
+    extrude(m, "black", "x", ngon(10, 0.08, 0, 0, 4.12), e > 0 ? [xb - 0.01, xb + 0.04] : [xb - 0.04, xb + 0.01]);
+    extrude(m, "lampHead", "x", ngon(10, 0.06, 0, 0, 4.12), e > 0 ? [xb + 0.04, xb + 0.05] : [xb - 0.05, xb - 0.04]);
+    for (const z of [-0.14, 0.14]) horn(m, e, xb - e * 0.2, z, 4.3);
+    m.prism("black", ngon(6, 0.025, 0, e * (CAB_REAR + 0.5), 0.5), 4.2, 4.36);
   });
   // the side windows (a front pane and a narrower rear one), the shed's GE roundel
   m.scope("side windows", () => {
@@ -368,6 +367,81 @@ function walkways(m: MeshBuilder): void {
     });
 }
 
+/**
+ * A truck centred at xc, as on the photographs: the wheelsets, a deep side frame
+ * (a top beam, a cast belly between the axles, pedestal legs either side of each
+ * journal box), the journal boxes standing out with two coil springs over each,
+ * the transoms, the traction motors and the brake cylinders.
+ */
+function truck(m: MeshBuilder, xc: number): void {
+  m.bogie(() => {
+    const N = 20, T = TRUCK;
+    const ay = T.wheelR * Math.cos(Math.PI / N);
+    const [fz0, fz1] = T.frameZ;
+    const xs = [...T.axles].sort((a, b) => a - b);
+    for (const dx of xs)
+      m.scope("wheelset", () => {
+        const x = xc + dx;
+        const axle = ngon(8, 0.08, 0, x, ay);
+        m.sweep("steel", "z", axle, -0.9, axle, 0.9);
+        for (const s of [-1, 1]) {
+          extrude(m, "steel", "z", ngon(N, T.wheelR, Math.PI / N, x, ay), side(s, 0.665, 0.8));
+          extrude(m, "wheel", "z", ngon(16, T.wheelR * 0.82, 0, x, ay), side(s, 0.8, 0.82));
+        }
+      });
+    // convex (x, y) outlines given thickness across the side frames' plane, both sides
+    const sideFrame = (ring: Ring): void => {
+      for (const s of [-1, 1]) {
+        const [za, zb] = [s * fz0, s * fz1];
+        poly(m, "bogie", ring.map(([x, y]): Vec3 => [x, y, zb]), [0, 0, s]);
+        poly(m, "bogie", ring.map(([x, y]): Vec3 => [x, y, za]), [0, 0, -s]);
+        const cx = ring.reduce((t, p) => t + p[0], 0) / ring.length, cy = ring.reduce((t, p) => t + p[1], 0) / ring.length;
+        ring.forEach(([x0, y0], i) => {
+          const [x1, y1] = ring[(i + 1) % ring.length]!;
+          poly(m, "bogie", [[x0, y0, za], [x1, y1, za], [x1, y1, zb], [x0, y0, zb]], [(x0 + x1) / 2 - cx, (y0 + y1) / 2 - cy, 0]);
+        });
+      }
+    };
+    const top = T.frameTop, beam = top - 0.18;
+    m.scope("side frames", () => {
+      sideFrame([[xc - T.frameHalf, beam], [xc + T.frameHalf, beam], [xc + T.frameHalf, top], [xc - T.frameHalf, top]]);
+      for (let i = 0; i + 1 < xs.length; i++) {
+        const a = xc + xs[i]!, b = xc + xs[i + 1]!;
+        sideFrame([[a + 0.55, 0.53], [b - 0.55, 0.53], [b - 0.36, beam], [a + 0.36, beam]]);
+      }
+      const inner = xs[xs.length - 1]! + 0.36;
+      sideFrame([[xc + inner, beam - 0.3], [xc + T.frameHalf, beam - 0.12], [xc + T.frameHalf, beam], [xc + inner, beam]]);
+      sideFrame([[xc - T.frameHalf, beam - 0.12], [xc - inner, beam - 0.3], [xc - inner, beam], [xc - T.frameHalf, beam]]);
+      for (const dx of xs)
+        for (const d of [-1, 1]) {
+          const x = xc + dx + d * 0.31;
+          sideFrame([[x - 0.045, ay - 0.16], [x + 0.045, ay - 0.16], [x + 0.045, beam], [x - 0.045, beam]]);
+        }
+      for (const x of [xc - 0.4, xc + 0.4]) block(m, "bogie", x - 0.09, x + 0.09, top - 0.26, top - 0.04, -fz0, fz0);
+      block(m, "bogie", xc - 0.35, xc + 0.35, top - 0.04, 1.19, -0.6, 0.6);
+    });
+    m.scope("journal boxes", () => {
+      for (const dx of xs)
+        for (const s of [-1, 1]) {
+          const x = xc + dx;
+          block(m, "bogie", x - 0.2, x + 0.2, ay - 0.15, ay + 0.15, ...side(s, 0.84, fz1 + 0.08));
+          extrude(m, "spring", "z", ngon(8, 0.09, Math.PI / 8, x, ay), side(s, fz1 + 0.08, fz1 + 0.1));
+          for (const d of [-0.12, 0.12]) coil(m, "spring", x + d, s * (fz1 - 0.02), ay + 0.15, beam, 0.065, 2, 6);
+        }
+    });
+    m.scope("traction motors", () => {
+      for (const dx of xs) {
+        const motor = ngon(10, 0.26, 0, xc + dx + (dx > 0.1 ? -0.5 : 0.5), ay + 0.05);
+        m.sweep("bogie", "z", motor, -0.5, motor, 0.5);
+      }
+    });
+    m.scope("brake cylinders", () => {
+      for (const s of [-1, 1])
+        for (const dx of [xs[0]! + 0.62, xs[xs.length - 1]! - 0.62]) extrude(m, "spring", "z", ngon(8, 0.08, Math.PI / 8, xc + dx, top - 0.32), side(s, fz0 - 0.18, fz0));
+    });
+  });
+}
+
 function underframe(m: MeshBuilder): void {
   const t = TANK;
   m.scope("fuel tank", () => {
@@ -422,7 +496,7 @@ export function buildWdg4gLod(l: Wdg4gLivery, budget = 100): MeshBuilder {
     { name: "frame", mat: "irBlack", x: [-BEAM, BEAM], y: [SILL_BOTTOM, DECK], w: DECK_HALF },
     { name: "fuel tank", mat: "irBlack", x: [TANK.x0, TANK.x1], y: [TANK.y0, SILL_BOTTOM], w: TANK.half, top: false, optional: 35 },
     ...[-1, 1].map((e): LocoBox => ({ name: "buffer beam", mat: "irBlack", x: e > 0 ? [BEAM - 0.35, BEAM] : [-BEAM, -BEAM + 0.35], y: [0.15, SILL_BOTTOM], w: CAB_HALF - 0.05, top: false, optional: 30 })),
-    ...[-1, 1].map((e): LocoBox => ({ name: "roof box", mat: "irRed", x: e > 0 ? [CAB_REAR + 0.3, END - 0.4] : [-END + 0.4, -CAB_REAR - 0.3], y: [CAB_TOP - 0.02, 4.18], w: 0.68, optional: 20 })),
+    ...[-1, 1].map((e): LocoBox => ({ name: "roof box", mat: "irRed", x: e > 0 ? [CAB_REAR + 0.3, END - 0.4] : [-END + 0.4, -CAB_REAR - 0.3], y: [CAB_TOP - 0.02, 4.22], w: 0.68, optional: 20 })),
   ];
   return locoLod({
     palette: palette(l),

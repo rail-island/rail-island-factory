@@ -39,7 +39,7 @@ type HoodLiveries = Record<string, UsLivery>;
 const WDM2: HoodLiveries = { maroon: irLivery("Maroon, cream", "18040", "#6b1d24", "#e8dcc0", 2.4), blue: irLivery("Blue, cream", "16887", "#1d3f80", "#e8dcc0", 2.4) };
 const WDP4D: HoodLiveries = { blueYellow: irLivery("Blue, yellow", "40002", "#1d3f80", "#f2c31a", 2.6) };
 // The WDG-4G is drawn by its own module from photographs (inWdg4g.ts); the key and title stay.
-const WDG4G: Record<string, Wdg4gLivery> = { redGrey: { title: "Red, grey", number: "49095", red: "#cf2a1e", orange: "#ee9c16" } };
+const WDG4G: Record<string, Wdg4gLivery> = { redGrey: { title: "Red, orange", number: "49095", red: "#cf2a1e", orange: "#ee9c16" } };
 
 const hoodParams = (l: HoodLiveries): ParamSpec[] => [enumParam("livery", "Livery", Object.fromEntries(Object.entries(l).map(([k, v]) => [k, v.title])))];
 const H = { wdm2: hoodParams(WDM2), wdp4d: hoodParams(WDP4D), wdg4g: [enumParam("livery", "Livery", Object.fromEntries(Object.entries(WDG4G).map(([k, v]) => [k, v.title])))] };

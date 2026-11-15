@@ -49,7 +49,8 @@ The catalog had no Indian train before. Every design is filed under India.
   narrow hood between them (louvres behind cab 2, the raised engine room and dynamic brake,
   three radiator intakes ahead of cab 1), side buffers and a centre buffer coupler, the red and
   orange diagonal stripes (mirror-symmetric) and the faces' orange lower corners. The livery key
-  `redGrey` and its title "Red, grey" are the earlier drawing's: the class is red and orange.
+  `redGrey` is the earlier drawing's (saved maps store it); its title is now "Red, orange". The trucks
+  have their own deep side frames with journal boxes and coil springs; the cab roofs stand 0.2 m over the hood.
   Bogie centres 13.8 m (13.4 m on the side photograph, 14.48 m published); the Devanagari
   lettering of the right side is not drawn, the left side's "Indian Railways" is in capitals.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
