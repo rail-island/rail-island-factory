@@ -96,7 +96,7 @@ combinations hashed before and after):
   `pantographSlots` - the pantograph cars of an n-car
   train and which are folded, in place of both rules (the CRH380A's cars 4 and 6, only the rear one
   raised, `generator/cnCrh380a.ts`); `pantographFittings` - fittings drawn round an intermediate
-  car's pantograph (the CRH380A's side shields);
+  car's pantograph (the CRH380A's side shields); `leadCar` - another series whose end car leads the train (its own length, body, bogies, livery and pantograph; the CR200J's power car before its coaches, `generator/cnCr200j.ts`; not combined with the Jacobs options);
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by

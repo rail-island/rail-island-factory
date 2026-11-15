@@ -1,13 +1,12 @@
-// Chinese units on the series kit (shinkansen.ts): the Fuxing CR400AF and
-// CR400BF, the CRH380A and CRH2A (the Shinkansen-derived noses), the CRH3C on
-// the shared Velaro body, the CRH5A, the CR200J "Green Giant" and the CRH6A.
-// The high-speed trains on the Shinkansen gauge, narrowed from their real
-// 3.36 - 3.38 m. See docs/models/china-trains.md.
+// Chinese units on the series kit (shinkansen.ts): the registry of the Fuxing
+// CR400AF and CR400BF, the CRH380A, CRH2A, CRH3C, CRH5A, the CR200J "Green
+// Giant" and the CRH6A. Each unit's measured body lives in its own module
+// (cnCr400af.ts, cnCrh2a.ts, ...). The high-speed trains on the Shinkansen
+// gauge, narrowed from their real 3.36 - 3.38 m. See docs/models/china-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
-import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, nose } from "./seriesHelpers.ts";
+import { buildSeries, buildSeriesLod, seriesDesign, seriesParams } from "./shinkansen.ts";
 import { CRH3C } from "./cnCrh3c.ts";
 import { CRH5A } from "./cnCrh5a.ts";
 import { CRH2A } from "./cnCrh2a.ts";
@@ -15,31 +14,14 @@ import { CR400BF } from "./cnCr400bf.ts";
 import { CR400AF } from "./cnCr400af.ts";
 import { CRH380A } from "./cnCrh380a.ts";
 import { CRH6A } from "./cnCrh6a.ts";
-
-const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
-  const palette: ShinkansenLivery["palette"] = { roofG: c("#d9dcde", 0.6), skirtG: c("#9aa0a5", 0.7), cabMask: c("#1d1f22", 0.3) };
-  const bands: Array<[number, number, string]> = [];
-  let y = 0;
-  list.forEach(([top, colour], i) => { palette[`b${i}`] = c(colour); bands.push([y, top, `b${i}`]); y = top; });
-  return { title, number, palette, bands, roof: "roofG", skirt: "skirtG" };
-};
-const WHITE = "#f1f1ee";
+import { CR200J, CR200J_DESIGN, cr200j, cr200jLod } from "./cnCr200j.ts";
 
 export { CRH380A };
 export { CRH3C };
 
 export { CRH5A };
 
-export const CR200J: ShinkansenSeries = {
-  endLength: 19.4, midLength: 25.5, W: 1.55, Y: 1.4, S: 3.3, C: 4.3, lean: 0.97, B: 0.9, A: 1.1,
-  // the power car's rounded nose; the coaches behind it
-  nose: nose(3.4, 0.2, 2.4, [[0, 1.6], [0.5, 2.2], [1.8, 3.1], [3.0, 3.85], [3.8, 4.3]], [[0, 1.55], [0.5, 2.05], [1.8, 2.8], [3.0, 3.2], [3.8, 3.3]], [[0, 1.4], [1.0, 1.4]], [[0, 1.2], [0.8, 1.1]], [[0, 1.1], [0.4, 0.9]]),
-  windscreen: [1.7, 3.3, 0.07, 1.15], lamps: [0.4, 1.55],
-  windows: [[1.95, 2.8]], windowW: 1.1, pitch: 1.35, door: [1.25, 3.1, 1.95, 2.65], doorW: 0.8,
-  bogieCentres: 18.0, wheelR: 0.46, wheelbase: 2.5, endPantograph: true, cars: [4, 8],
-  liveries: { green: lv("Green Giant", "CR200J-1001", [1.6, "#0b6b3a"], [1.72, "#f2c31a"], [9, "#0b6b3a"]), whiteRed: lv("White and red", "CR200J-2001", [1.6, WHITE], [1.72, "#c8102e"], [9, WHITE]) },
-  weight: { end: 85, middle: 47 }, power: 5600, maxspeed: 160,
-};
+export { CR200J };
 
 export { CRH6A };
 
@@ -57,8 +39,8 @@ export function crCrh3c(v?: ParamValues): MeshBuilder { return buildSeries(CRH3C
 export function crCrh3cLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH3C, P.c3c, v); }
 export function crCrh5a(v?: ParamValues): MeshBuilder { return buildSeries(CRH5A, P.c5a, v); }
 export function crCrh5aLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH5A, P.c5a, v); }
-export function crCr200j(v?: ParamValues): MeshBuilder { return buildSeries(CR200J, P.j, v); }
-export function crCr200jLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR200J, P.j, v); }
+export function crCr200j(v?: ParamValues): MeshBuilder { return cr200j(v); }
+export function crCr200jLod(v?: ParamValues): MeshBuilder { return cr200jLod(v); }
 export function crCrh6a(v?: ParamValues): MeshBuilder { return buildSeries(CRH6A, P.c6a, v); }
 export function crCrh6aLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH6A, P.c6a, v); }
 
@@ -69,6 +51,6 @@ export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-crh2a", "CRH2A", CRH2A, P.c2a, crCrh2a, crCrh2aLod, "cr-crh2a"),
   seriesDesign("proc-vehicle-cr-crh3c", "CRH3C", CRH3C, P.c3c, crCrh3c, crCrh3cLod, "cr-crh3c", "uic"),
   seriesDesign("proc-vehicle-cr-crh5a", "CRH5A", CRH5A, P.c5a, crCrh5a, crCrh5aLod, "cr-crh5a"),
-  seriesDesign("proc-vehicle-cr-cr200j", "Fuxing CR200J", CR200J, P.j, crCr200j, crCr200jLod, "cr-cr200j", "us"),
+  CR200J_DESIGN(crCr200j, crCr200jLod),
   seriesDesign("proc-vehicle-cr-crh6a", "CRH6A", CRH6A, P.c6a, crCrh6a, crCrh6aLod, "cr-crh6a"),
 ];

@@ -17,7 +17,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge, its own E2 cab face (`generator/cnCrh2a.ts`) | `unit`, `cars` 3 - 8 | 25.7 / 25 m cars, 9.2 m E2 nose; 250 km/h |
 | `proc-vehicle-cr-crh3c` | CRH3C | series, the ICE 3's Velaro cab face (`cnCrh3c.ts`) | `unit`, `cars` 3 - 8 | end 25.675 m, middle 24.775 m, 3.1 m wide (real 3.265 m), 3.89 m high; 350 km/h |
 | `proc-vehicle-cr-crh5a` | CRH5A | series, its own cab face (`cnCrh5a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the Pendolino snout; 27.6 / 25.0 m, 3.2 m wide; 250 km/h |
-| `proc-vehicle-cr-cr200j` | Fuxing CR200J | series, its power cars' pantographs | `unit`, `cars` 4 - 8, `livery` (`green`, `whiteRed`) | 160 km/h |
+| `proc-vehicle-cr-cr200j` | Fuxing CR200J | series: the power car as the coaches' lead car (`leadCar`), one cab face for it and the driving trailer (`cnCr200j.ts`) | `unit` (`endCar` power car, `middleCar` coach, `drivingTrailer`, `train`), `cars` 4 - 8, `livery` (`green`, `whiteRed`) | power car 20.0 m, coach 25.5 m, driving trailer 27.955 m; 5,600 kW, 160 km/h |
 | `proc-vehicle-cr-crh6a` | CRH6A | series, its own cab face (`cnCrh6a.ts`), Shinkansen gauge | `unit`, `cars` 4, 8 | the short intercity nose; 25.7 / 25.0 m, 3.86 m high; 5,520 kW, 200 km/h |
 | `proc-vehicle-cr-hxn5` | CR HXN5 | its own (`cnHxn5.ts`): GE Evolution hood, full-width Chinese cab | - | 22.295 m, Co-Co, 150 t, 4,660 kW, 120 km/h |
 | `proc-vehicle-cr-hxd1` | CR HXD1 | its own twin-section body (`generator/cnHxd1.ts`), two articulated sections | - | 2 x 17.611 m Bo'Bo', 3.1 m wide (real 3.247 m), 9,600 kW, 120 km/h |
@@ -38,7 +38,7 @@ Railway's trains. Every design here is filed under China.
   gauge's 3.3 m, as the Shinkansen are.
 - **Couplers.** The box locomotives carry the kit's buffers; China's are automatic couplers.
 - **HXD1.** Drawn in its original blue and silver livery under the plan's `red` livery key (the class never ran in red); the model has one livery and no parameter.
-- **CR200J.** The power cars are the series kit's end cars, with windows.
+- **CR200J.** Only the short sets' formation (power car, coaches, driving trailer) is drawn; the long sets have a power car at each end.
 
 ## Tests
 
@@ -335,3 +335,45 @@ side) and the published figures.
   roof line and the main breaker.
 - **Distant model.** Both sections with their noses, the silver trapezoid as a band, the bogies,
   frame, transformer, cooler boxes and pantographs, 196 triangles of 200.
+
+## The CR200J's body
+
+`generator/cnCr200j.ts`, matched to the photographs in `assets/cr-cr200j/` (power cars FXD1-J0009,
+FXD1-J0010, FXD3-J0271; sets CR200J-1009, CR200J-2039). The short sets run as Mc + 7T + Tc: one power
+car, the coaches and a driving trailer with the same nose at the other end. On the series kit the coaches
+and the driving trailer are one series (`CR200J`, unwired) and the power car is its lead car (`leadCar`,
+shinkansen.ts): a train is the power car, `cars` - 2 coaches and the driving trailer, turned. The unit
+values keep their keys: `endCar` is the power car (the default), `middleCar` a coach, the new
+`drivingTrailer` the control car.
+
+- **Size.** Power car 20.0 m, coach 25.5 m, driving trailer 27.955 m over the couplers (published);
+  3.1 m wide (3.105 m); the power car's roof 4.33 m, the coaches' 4.43 m (published 4.433 m), drawn to
+  the US gauge.
+- **Nose.** One cab face for both cab cars, its centre line measured on the side-on photograph (about
+  71 px/m): a broad, rounded bumper (its front 0.9 m up, its top lip 1.2 m), the chin rising at about
+  43 degrees to the windscreen's foot (2.56 m, 1.64 m behind the tip), the windscreen to 3.5 m, the
+  canopy rounding over to the roof 5.3 m behind the tip, where the crown still rises for 1.5 - 2.4 m.
+  In plan the face bows back (its edges up to 1.0 m behind its centre at the lamps), its corners
+  0.6 - 0.8 m round, so the lamps at its edges stand 1.3 m behind the chin and still face ahead.
+- **Face paint.** The plough black; the bumper in the body's paint, split down its middle; the chin
+  (dark grey, or deep green on the white sets) with the orange emblem, parted from the eyes by two
+  stripes of body paint; the eyes, the windscreen's frame and the canopy dark grey, the canopy running
+  back over the roof; the head lamps and the red tail lamps in the eyes, a lamp on the canopy.
+- **Power car.** The cab side window's two panes in a slanted dark frame (3.9 - 6.8 m behind the tip),
+  no passenger windows, one crew door 9.2 m behind the tip; louvres along both roof edges over 7.05 -
+  9.9 m and 15.4 - 18.5 m; two single-arm pantographs, the rear one (15.8 m) raised, the front one
+  (7.6 m) folded on its tall insulators, the breaker between them; Bo-Bo bogies 7.9 m apart (8.28 m
+  and 16.2 m behind the tip) on 1.25 m wheels, 2.8 m wheelbase.
+- **Coaches.** A door at each end with a tall rounded window, twelve 1.05 m windows 1.72 m apart in the
+  dark band, an air-conditioning unit over one end; bogies 18 m apart.
+- **Driving trailer.** The nose, the chevron's blank panel with "CR", a door 11.0 m behind the tip,
+  seven windows 1.7 m apart from 13.1 m, a small one and the rear door; no pantograph.
+- **Green Giant.** Bright green (`#3fae4b`); the dark window band 1.66 - 2.92 m and the yellow line
+  1.36 - 1.54 m under it on every car. On both cab cars the yellow chevron: the line running forward and
+  down to a point 4.05 m behind the tip at 1.12 m, its upper leg rising back to the band's top 8.2 -
+  8.6 m behind the tip, and the band's slanted front parallel to it. "CR" in white on the band, the
+  running number in yellow under the line.
+- **White and red.** White; a deep green window band and a red line (1.46 - 1.56 m) under it, a green
+  line low along every car; on the cab cars the green carried round the cab window, two red waves
+  rising from the line toward it, and the bumper white over a green line; the chin deep green.
+
