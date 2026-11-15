@@ -28,7 +28,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-df11` | CR DF11 Dongfeng | box locomotive, streamlined, diesel | - | Co-Co, 21.25 m, 3,040 kW, 170 km/h |
 | `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers | `unit` | 2-10-2, 1.5 m drivers |
 | `proc-vehicle-cr-sy` | CR SY | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
-| `proc-vehicle-cr-js` | CR JS | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
+| `proc-vehicle-cr-js` | CR JS | steam, its own spec on the steam kit (`generator/cnJs.ts`), knuckle couplers | `unit` | 2-8-2, 1.37 m drivers, 23.37 m with the tender; 104 t, 1,690 kW, 85 km/h |
 | `proc-vehicle-cr-25t-coach` | CR 25-series coach | coach, knuckle couplers | `unit` (`softSleeper`, `hardSeat`), `livery` (`z25t`, `green25b`) | 26.6 m; 160 km/h |
 | `proc-vehicle-cr-c70-wagon` | CR C70 / P70 wagon | wagon | `unit` (`open`, `covered`) | 13.98 m and 17.0 m |
 
@@ -445,3 +445,40 @@ by a projective fit over its six equally spaced portholes).
 - **Distant model.** The same profiles without the rim, the waist stripe kept and the lower one
   left out, the resistor housings, the bogie blocks and the raised pantograph (100 triangles).
 
+## The CR JS's body
+
+`generator/cnJs.ts` states the engine and tender `LocoSpec` on the steam kit (like the DR 52,
+[world-steam.md](world-steam.md)), matched to the photographs in `assets/cr-js/` and drawn as
+JS 6500 (Datong 1981-86 batch). Its `WORLD_STEAM` row gives only the title and the table's measures.
+
+- **Size.** 23.37 m over the couplers with the tender (engine 14.0 m to its drawbar, tender 9.37 m);
+  axles from the front coupler face at 1.55 (pony truck, 0.84 m), 4.25 - 8.669 (four 1.37 m drivers
+  1.473 m apart) and 11.742 m (trailing truck, 1.12 m): 10.192 m engine wheelbase, 20.487 m with the
+  tender, as published. The pony-to-driver spacing and the tender's bogies (1.85 m wheelbase, 4.75 m
+  apart) come from a projective fit over the axles of JS 8010's side-on photograph. 4.71 m high,
+  the cab 3.1 m wide.
+- **Boiler and casing.** The boiler on 3.0 m, 0.98 m radius; no separate chimney or domes: the
+  skyline casing covers them - the Worthington feed-water heater's tall box (0.96 m wide, 4.71 m)
+  from the smokebox front to 4.0 m with its louvres and the red star on its front, sloping down to
+  the lower casing (4.36 m) over the sand dome, which slopes onto the boiler at 7.9 m; the chimney's
+  mouth is a ring in the casing's top. Safety valves behind the casing and before the cab.
+- **No smoke deflectors** - the class had none as built (a few engines were fitted with small ones
+  later); this is what tells it from the QJ besides its four drivers, and its casing, front board,
+  long front steps and bogie tender from the smaller SY.
+- **Front.** The red pilot beam with a knuckle coupler and the red slatted pilot under it, the red
+  board on the deck with the white CR emblem, the headlamp above the smokebox door's centre with
+  its white rim and the red "6500" plate under it, white handrails from the deck up beside the
+  smokebox and along the boiler.
+- **Running board and gear.** On 2.3 m with a white edge, sloping from the deck at 1.1 m up to 2.05 m;
+  cylinders over the pony truck with large round steam chests (the kit's `cylinderDressing`), Boxpok
+  drivers in red with white tyres, the main rods on the third driver; the air and feed pumps beside
+  the smokebox, red-ringed reservoirs over the drivers, red air pipes along the boiler.
+- **Cab.** Three side windows over "JS 6500" in white, the open entrance behind them with white
+  grab rails, two front windows outboard of the firebox, a round roof with a vent.
+- **Tender.** The tank on red sole bars, 3.0 m wide, its front half raised to 4.3 m round the coal and
+  the rear at 4.08 m; the CR emblem on its sides, the rear ladder and headlamp, an open underframe
+  (centre sill, bolsters) over two cast two-axle bogies with black disc wheels and white tyres.
+- **Distant model.** The casing as two prisms (heater box and lower casing), the tank as two prisms
+  and the red sole bars; the engine's LOD uses 96 of its 100 triangles, so the pilot's red is left out.
+- **Not drawn.** The bureau characters on the board and tender sides, the builder's plates' text,
+  the second headlamp of some 8000-series engines, the mechanical stoker, brake rigging.

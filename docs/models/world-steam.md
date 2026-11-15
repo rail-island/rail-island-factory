@@ -59,7 +59,7 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-dhr-b-class` | India | B | 0.66 m | none | two axles |
 | `proc-vehicle-cr-qj` | China | 1'E1' | 1.5 m | Wagner | four axles |
 | `proc-vehicle-cr-sy` | China | 1'D1' | 1.37 m | none | four axles |
-| `proc-vehicle-cr-js` | China | 1'D1' | 1.37 m | Wagner | four axles |
+| `proc-vehicle-cr-js` | China | 1'D1' | 1.37 m | none (its own module, `generator/cnJs.ts`; [china-trains.md](china-trains.md)) | four axles, two bogies |
 
 The DRG 01 is not derived: `generator/deSteam01.ts` states its engine and tender `LocoSpec` directly from the
 dimensioned DEWAG drawing (its row in `WORLD_STEAM` gives only the title and the table's measures) - the long
