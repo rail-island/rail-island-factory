@@ -6,7 +6,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, flirt, nose } from "./seriesHelpers.ts";
+import { c, flirt, nose } from "./seriesHelpers.ts";
 import { DE1 } from "./nlDe1.ts";
 import { SGM, sgmGame, sgmSeries } from "./nlSgm.ts";
 import { SLT_SERIES } from "./nlSlt.ts";
