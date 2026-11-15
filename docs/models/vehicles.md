@@ -381,7 +381,7 @@ is a hole the player sees through. Three rules hold for rail vehicles:
 
 - **A lofted shell is closed at both ends** (`drawShell`, `carbodyShell` in
   `sliceBody.ts` and `carbodyKit.ts`): a flat wall and a nose's tip alike. A blunt nose
-  (the series kit's `tip`, e.g. the ICNG's 0.3) ends in a slice of real width; it was
+  (the series kit's `tip`, e.g. the first ICNG's 0.3) ends in a slice of real width; it was
   once left open and showed the cab through the front of some 56 units.
 - **Rings for `prism`, `loft` and `cap` wind counter-clockwise seen from above**
   (`ngon`'s order: from +x toward -z). A rectangle is `[[x1, w], [x1, -w], [x0, -w],
