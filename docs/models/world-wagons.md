@@ -12,5 +12,5 @@ cylinders clear of the transoms from 2.05 m.
 
 | id | country | open | covered |
 |---|---|---|---|
-| `proc-vehicle-ir-boxn-wagon` | India | BOXN, 10.71 m | BCNA, 15.43 m |
+| `proc-vehicle-ir-boxn-wagon` | India | BOXN, 10.71 m (drawn in `inBoxnWagon.ts`, [india-trains.md](india-trains.md)) | BCNA, 15.43 m |
 | `proc-vehicle-cr-c70-wagon` | China | C70, 13.976 m (its own body, `cnC70.ts`; [china-trains.md](china-trains.md)) | P70, 17.0 m (the same) |

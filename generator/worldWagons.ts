@@ -99,14 +99,11 @@ export function buildWagonLod(open: WorldWagon, cov: WorldWagon, v?: ParamValues
 export const wagonGame = (open: number, covered: number, maxspeed: number): GameProperties => ({ weight: open, power: 0, maxspeed, accel: null, variants: [{ params: { unit: "covered" }, weight: covered }] });
 
 // ---------------------------------------------------------------------------
-// India: the BOXN open and BCNA covered wagons; China: the C70 open and P70 covered wagons
+// India: the BOXN open and BCNA covered wagons (drawn by inBoxnWagon.ts); China: the C70 open and P70 covered wagons
 
-const BROWN = "#5a2e22";
-export const BOXN: WorldWagon = { length: 10.71, body: 4.9, half: 1.5, floor: 1.25, top: 3.2, centre: 3.3, wheelR: 0.5, colour: BROWN, ink: "#e8e6df", text: "BOXNHL", roofRise: 0 };
-export const BCNA: WorldWagon = { length: 15.43, body: 7.3, half: 1.55, floor: 1.25, top: 3.6, centre: 5.15, wheelR: 0.5, colour: BROWN, ink: "#e8e6df", text: "BCNA", roofRise: 0.4 };
-
-export function irBoxnWagon(v?: ParamValues): MeshBuilder { return buildWagon(BOXN, BCNA, v); }
-export function irBoxnWagonLod(v?: ParamValues): MeshBuilder { return buildWagonLod(BOXN, BCNA, v); }
+// the BOXN and BCNA are drawn in their own module (inBoxnWagon.ts); the game bundle imports them from here
+import { irBoxnWagon, irBoxnWagonLod } from "./inBoxnWagon.ts";
+export { irBoxnWagon, irBoxnWagonLod };
 // the C70 and P70 have their own measured bodies (cnC70.ts)
 export function crC70Wagon(v?: ParamValues): MeshBuilder { return buildCnC70(v); }
 export function crC70WagonLod(v?: ParamValues): MeshBuilder { return buildCnC70Lod(v); }

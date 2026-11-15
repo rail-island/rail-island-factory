@@ -1095,7 +1095,8 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-ir-wp": loco(1947, RAIL, { presets: presets({ unit: "tender" }, { livery: "greenYellow" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-ir-wg": loco(1950, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-eir-fairy-queen": loco(1855, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
-  "proc-vehicle-dhr-b-class": loco(1889, RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  // a saddle tank engine: no tender (its old `unit=tender` preset and formation are retired in openttdIds.json)
+  "proc-vehicle-dhr-b-class": loco(1889, RAIL, { presets: presets() }),
   "proc-vehicle-ir-lhb-coach": pax(2000, 72, RAIL, { variants: [at({ unit: "chairCar" }, { capacity: 78 })], presets: presets({ unit: "chairCar" }, ...each("livery", "shatabdi", "humsafar", "tejas")) }),
   "proc-vehicle-ir-icf-coach": pax(1955, 72, RAIL, { variants: [at({ unit: "general" }, { capacity: 100 })], presets: presets({ unit: "general" }, ...each("livery", "maroon")) }),
   "proc-vehicle-ir-boxn-wagon": wagon(1981, 58, "COAL", ["bulk"], { variants: [at({ unit: "covered" }, { capacity: 58, cargo: "GOOD", refitClasses: ["piece", "express"] })], presets: presets({ unit: "covered" }) }),

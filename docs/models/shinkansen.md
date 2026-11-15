@@ -166,7 +166,8 @@ combinations hashed before and after):
   narrower than the nose round it, its front and side windows drawn by one pair of edges (the E6's);
 
   `lodGlass` gives the distant model's windscreen (half width, heights) where the windscreen is
-  `paint`, not a pane (the E6);
+  `paint`, not a pane (the E6); `lodPaint` adds painted fields to the distant model's face (lateral
+  span, heights, paint) after its glass, a livery's corners (the Vande Bharat's swoosh; none by default);
 
 - a cab face's `reshape` - its depth reshaped across the face (`cabNose.ts`; the distant model keeps the
   plain slices): the N700S's canopy, valleys and wing crests, the E6's canopy cab; a livery sweep's `face` paints it on the face's
@@ -176,6 +177,13 @@ combinations hashed before and after):
   cars (its rig support names both sections) and the cars' skirts are cut open at their inner
   ends; a lone car stands on its own bogie `jacobsInset` inside each inner end (the Giruno; the
   FLIRT's `jacobs` stands a lone car on one axle at each inner end instead);
+- `jacobsTrailers` - a power-car train's articulated rake (the Eurostar's): the intermediate cars
+  share a Jacobs bogie under each joint between two of them, the power cars keep both of their own
+  bogies, and the first and last intermediate cars ride on a bogie of their own `jacobsTrailers`
+  inside their end beside a power car (the motor bogie); a lone intermediate car stands on two
+  bogies that far inside its ends; `trailerSection` - the intermediate cars' own, lower shoulder
+  and crown (a power car taller than its trailers); a power car's `endSides` may list no windows
+  (the distant model then draws no glass band on it);
 - `fluting` - bands of horizontal ribs on every car's sides, round the windows and doors (the car
   builder's `fluting`, which takes several bands); `roofRibs` - ribs along the roof either side of
   the crown (the Talgo III's stainless body);
