@@ -39,6 +39,9 @@ export interface NoseQuery {
   side: boolean;
 }
 
+/** A layer's material that leaves its region of the surface open (a wheel arch cut into the cab sides). */
+export const NOSE_HOLE = "__hole__";
+
 export interface NoseLayer {
   mat: string;
   /** The scope its pieces are drawn in (the material's name when omitted). */
@@ -100,6 +103,8 @@ export interface NoseSpec {
   /** The material of the crown cap and the bottom cap. */
   capTop?: string;
   capBottom?: string;
+  /** No bottom cap (default one): a face opened over a wheel (seriesCab `wheelCut`), closed by the arch instead. */
+  noBottomCap?: boolean;
   /**
    * The face's and corners' depth reshaped (default unchanged): given a point's lateral position
    * (unsigned), height and the depth the slice gives it, the depth drawn - a relief across the face
@@ -450,6 +455,8 @@ export class CabNose {
   /** One convex piece of a cell (u, y points), mapped bilinearly onto the cell. */
   private piece(id: number, poly: Pt[], ua: number, ub: number, j: number, corners: ReadonlyArray<readonly [Vec3, Vec3]>): void {
     if (Math.abs(polyArea(poly)) < 1e-9) return;
+    // an opening in the surface (NOSE_HOLE): nothing drawn
+    if (this.mat(id) === NOSE_HOLE) return;
     const rows = this.s.rows;
     const [y0, y1] = [rows[j]!, rows[j + 1]!];
     const [a0, b0] = corners[j]!;
@@ -479,6 +486,7 @@ export class CabNose {
       const ring = cols.map((u) => this.at(u, y).p);
       // a crown that closes to a ridge or a point has no cap
       if (Math.abs(polyArea(ring.map((p): Pt => [p[0], p[2]]))) < 1e-6) continue;
+      if (!up && this.s.noBottomCap) continue;
       const tris: Vec3[] = [];
       for (let i = 1; i + 1 < ring.length; i++) tris.push(ring[0]!, ring[i]!, ring[i + 1]!);
       this.m.scope(up ? "crown" : "bottom", () => this.m.facets(mat ?? this.s.base, tris, [0, up ? 1 : -1, 0]));

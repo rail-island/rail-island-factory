@@ -1,7 +1,7 @@
 # The later Shinkansen series
 
 **Covers** - the seven later Shinkansen designs (`proc-vehicle-shinkansen-n700s`, `-e5`, `-500`, `-700`, `-e6`, `-100`, `-e4`): the series specs, their cars and trains, liveries, the gauge, deviations and tests.
-**Code** - `generator/seriesCab.ts`, `generator/seriesHelpers.ts`, `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `test/loneJacobsCars.test.ts`, `assets/shinkansen-*/`
+**Code** - `generator/seriesCab.ts`, `generator/seriesHelpers.ts`, `generator/shinkansen.ts` (`SHINKANSEN_DESIGNS`, `SHINKANSEN_SERIES`, `shinkansenTrain`), `generator/usTransit.ts` (`drawCar`), `generator/carbodyKit.ts`, `test/shinkansen.test.ts`, `test/loneJacobsCars.test.ts`, `test/bogieGaps.test.ts`, `assets/shinkansen-*/`
 **See also** - [shinkansen-0.md](shinkansen-0.md), [us-transit.md](us-transit.md), [us-carbodies.md](us-carbodies.md), [loading-gauge.md](loading-gauge.md)
 
 ## The designs
@@ -149,6 +149,12 @@ combinations hashed before and after):
 - `cabFaceFrontOnly` - with `single` and a `cabFace`: the face at the front end only, the rear end
   square - a flat end wall with the gangway frame and the centre coupler a coupling gap behind it,
   the distant model's rear flat too (the NS DE-I, `generator/nlDe1.ts`; default a face at both ends).
+- the cab face's `wheelCut` (`{ d, y }`, `generator/seriesCab.ts`) - the skirt's cut over a leading bogie
+  that stands partly under the face, carried into it: behind d (behind the tip) and below y (the skirt's
+  top) the face's corners and cab sides are left open (`cabNose.ts` `NOSE_HOLE`, no bottom cap), the
+  kit closing the arch with a dark roof and front wall (the VIRM, the ICE 2's driving trailer, the
+  CRH6A; default none). Every family design's bogies are checked to stand in their gaps
+  (`test/bogieGap.ts`, `test/worldTrainsSuite.ts`, `test/bogieGaps.test.ts`).
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);

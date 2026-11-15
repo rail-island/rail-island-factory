@@ -9,7 +9,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { halfSlice, type SliceBody } from "./sliceBody.ts";
-import { CabNose, inRoundRect, type NoseLayer, type NoseQuery, type NoseScan, type NoseSpec } from "./cabNose.ts";
+import { CabNose, inRoundRect, NOSE_HOLE, type NoseLayer, type NoseQuery, type NoseScan, type NoseSpec } from "./cabNose.ts";
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { noseEnd, type UnitEnd } from "./lodUnits.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
@@ -86,6 +86,12 @@ export interface SeriesCabFace {
   number?: { lat: number; y: number; h: number; mat: string };
   /** Wipers: [lat, y] of the pivot and of the blade's tip, each mirrored to the other side when `mirror`. */
   wipers?: ReadonlyArray<readonly [Pt, Pt]>;
+  /**
+   * The skirt's cut over the leading bogie carried into the face (default none): behind `d` (behind the
+   * tip) and below `y` (the skirt's top) the cab sides and corners are left open, so a bogie that stands
+   * partly under the face shows in its gap; the series kit closes the arch above and ahead of it.
+   */
+  wheelCut?: { d: number; y: number };
   /** A lamp on the roof dome over the face (lat, y, r). */
   roofLamp?: readonly [number, number, number];
   /** The coupling plane's reach beyond the tip at the coupler (default 0.07; buffered ends use the buffers' gap). */
@@ -191,6 +197,9 @@ function layers(f: SeriesCabFace, p: FacePaint): NoseLayer[] {
   });
   (f.masks ?? []).forEach((r, i) => out.push({ mat: r.mat ?? "cabMask", name: `surround ${i + 1}`, where: { face: true, y: [r.y[0] - 1e-6, r.y[1] + 1e-6] }, inside: (q) => onFace(q) && inRect(q, r) }));
   f.panes.forEach((r, i) => out.push({ mat: r.mat ?? "cabGlass", name: `pane ${i + 1}`, where: { face: true, y: [r.y[0] - 1e-6, r.y[1] + 1e-6] }, inside: (q) => onFace(q) && inRect(q, r) }));
+  // the wheel arch over the leading bogie: left open, over every other layer
+  const wc = f.wheelCut;
+  if (wc) out.push({ mat: NOSE_HOLE, name: "wheel cut", where: { y: [-10, wc.y] }, inside: (q) => q.d >= wc.d && q.y < wc.y });
   return out;
 }
 
@@ -260,7 +269,7 @@ export function drawCabFace(m: MeshBuilder, f: SeriesCabFace, e: number, xTip: n
   const n = new CabNose(m, {
     ...spec(f, e, xTip, half), dJoin: f.dJoin, dSide: f.dSide ?? f.dJoin / 2,
     base: p.face[0]?.[2] ?? p.sides[0]![2], layers: layers(f, p), cols: f.cols ?? [8, 4, 1, 1], ...(f.tolerance ? { tolerance: f.tolerance } : {}), capTop: p.roof, capBottom: p.skirt,
-    ...(f.reshape ? { reshape: f.reshape } : {}),
+    ...(f.reshape ? { reshape: f.reshape } : {}), ...(f.wheelCut ? { noBottomCap: true } : {}),
   });
   const id = faceId(f);
   const skin = cached(SKINS, `${id}|${skinKey([e, xTip, half, p])}`, () => {

@@ -34,7 +34,7 @@ Downloaded from Wikimedia Commons (`pnpm refs:fetch`), scaled to 1600 px or less
   75 px/m. Upper windows 11, about 1.62 m wide at a 1.97 m pitch, 3.36 - 4.13 m high; lower windows
   1.08 - 1.80 m: a narrow one and two pairs under the 3rd to 5th upper window; the door 2.1 m past
   the second pair (1.2 m frame, narrow window 1.25 - 2.1 m); the grille u 9.8 - 11.5; the low floor's
-  skirt u -7.8 to 6.6, down to about 0.25 m; over the trucks the body ends at about 0.88 m. Stripes:
+  skirt u -7.25 (clear of the truck's inner wheel; first read as -7.8, which covered it) to 6.6, down to about 0.25 m; over the trucks the body ends at about 0.88 m. Stripes:
   red line 0.96 - 1.0 m; blue band 2.40 - 2.60 m, red pinstripes 2.64 - 2.675 and 2.71 - 2.745 m (their
   widths in proportion from the 32112 close-up).
 - **Sleeper (48142611)** - the same fit: five roomette windows (1.42 m, 1.8 m pitch, centred u -6.9),

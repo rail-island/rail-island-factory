@@ -2839,8 +2839,8 @@ const SL_BANDS: ReadonlyArray<readonly [number, number, string]> = [
 const SL_UPPER: [number, number] = [3.36, 4.13];
 const SL_LOWER: [number, number] = [1.08, 1.8];
 const SL_DOOR_Y: [number, number] = [0.3, 2.26];
-/** The low floor between the trucks: its side reaches down to 0.25 m from u -7.8 to 6.6; over the trucks the body ends at 0.88 m. */
-const SL_DROP: [number, number] = [-7.8, 6.6];
+/** The low floor between the trucks: its side reaches down to 0.25 m from u -7.25 (clear of the -X truck's inner wheel, at -7.32) to 6.6; over the trucks the body ends at 0.88 m. */
+const SL_DROP: [number, number] = [-7.25, 6.6];
 const SL_FLOOR = 0.88;
 const SL_END: NonNullable<CarbodySpec["front"]> = { len: 0.15, tip: 0.9, power: 2, C: [], S: [] };
 const SL_SPEC: CarbodySpec = {

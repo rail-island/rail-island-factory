@@ -60,6 +60,8 @@ const mirror = (pts: readonly Pt[]): Pt[] => pts.map(([l, y]): Pt => [-l, y]).re
  */
 const HOOD: Pt[] = [[-1.65, 2.75], [-1.5, 2.42], [-1.3, 2.2], [-1.0, 2.02], [-0.6, 1.93], [0, 1.89], [0.6, 1.93], [1.0, 2.02], [1.3, 2.2], [1.5, 2.42], [1.65, 2.75], [1.65, 4.9], [-1.65, 4.9]];
 const VIRM_FACE: SeriesCabFace = {
+  // the skirt's cut over the leading bogie (3.33 m behind the tip, reach 1.96 m) runs on into the face
+  wheelCut: { d: 3.33 - 1.96, y: 0.96 },
   dJoin: JOIN, dSide: 1.6, first: 2.87, roofFrom: 4.06, bulge: 0.08, cols: [6, 3, 1, 1], tolerance: 0.03,
   profile: PROFILE,
   corner: [[0.2, 0.42], [1.87, 0.45], [2.5, 0.6], [3.5, 0.75], [4.0, 0.65], [4.3, 0.42], [CAB_TOP, 0.12]],

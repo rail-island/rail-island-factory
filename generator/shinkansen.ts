@@ -505,6 +505,16 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
         const f = s.cabFace, half = bodyHalf(b, 0), fp = facePaint(s, l, number);
         m.scope("cab face", () => drawCabFace(m, f, 1, X(-f.dJoin), half, fp));
         if (twoCabs(s)) m.scope("rear cab face", () => drawCabFace(m, f, -1, -X(L + f.dJoin), half, fp));
+        // the wheel arch cut into the face (wheelCut): its roof at the skirt's top and its front wall, dark
+        const wc = f.wheelCut;
+        if (wc) m.scope("wheel arch", () => {
+          const hw = s.W - 0.08, y0 = f.rows[0]! + 0.02;
+          for (const [d0, d1] of twoCabs(s) ? [[wc.d - f.dJoin, 0], [L + f.dJoin - wc.d, L]] : [[wc.d - f.dJoin, 0]]) {
+            const [x0, x1] = [Math.min(X(d0!), X(d1!)), Math.max(X(d0!), X(d1!))], xw = X(d0!);
+            block(m, "under", x0, x1, wc.y - 0.04, wc.y - 0.005, -hw, hw);
+            block(m, "under", xw - 0.02, xw + 0.02, y0, wc.y - 0.04, -hw, hw);
+          }
+        });
       } else if (end && !s.flatCab) noseFittings(m, s, b, X);
       if (end && l.capSlope && l.frontRoof) m.scope("cab roof", () => capSlope(m, b, X, l.capSlope!, l.frontRoof!));
       if (l.overDoors) m.scope("over doors", () => {

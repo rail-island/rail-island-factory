@@ -157,7 +157,7 @@ nose along the surface's chord (`chordBox`).
   (assets/amtrak-superliner/SOURCES.md has the measurements): 85 ft long and 16 ft 2 in high, the
   nearly flat roof with rounded corners (`roofPower` 3.2) and its flutes, the slightly leaning sides,
   the body ending 0.88 m over the trucks and its side carried down to 0.25 m over the low floor
-  between them (u -7.8 to 6.6 m from the middle, the drop-centre underframe), the corner steps at
+  between them (u -7.25 to 6.6 m from the middle, clear of the trucks' inner wheels, the drop-centre underframe), the corner steps at
   the ends. Phase IVb paint: the red line under the lower windows, two red pinstripes over the blue
   band (2.40 - 2.60 m) under the upper windows, "SUPERLINER" in the band and the number over it near
   the right-hand end, the travel mark beside the door; the stainless end walls plain. The lower deck

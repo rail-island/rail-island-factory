@@ -82,6 +82,8 @@ const FLAP_EDGE: Pt[] = [[0, 1.565], [0.95, 1.565], [1.15, 1.53], [1.28, 1.45], 
 const PANEL_SEAM: Pt[] = [[1.2, 2.5], [1.3, 2.36], [1.37, 2.18], [1.41, 2.0], [1.42, 1.88]];
 
 const ICE2_FACE: SeriesCabFace = {
+  // the skirt's cut over the leading bogie (3.9 m behind the tip, reach 1.96 m) runs on into the face
+  wheelCut: { d: 3.9 - 1.96, y: 0.55 },
   dJoin: JOIN, dSide: 3.6, first: 5.15, roofFrom: 9, cols: [6, 4, 1, 1], tolerance: 0.03, wrap: true,
   profile: PROFILE, corner: CORNER, cornerDepth: CORNER_DEPTH,
   rows: [...new Set([...PROFILE.map(([y]) => y), 1.01, 1.22, 1.62, 1.82, 1.86, 2.3, 2.5, 2.6, 3.3])].sort((a, b) => a - b),

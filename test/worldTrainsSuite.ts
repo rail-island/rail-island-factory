@@ -21,8 +21,23 @@ import { buildLodModel } from "../generator/lodModel";
 import { KIT_FAMILY_MODULES, variantsUnderTest } from "./catalogCache";
 import { expectEmittersOnMouths } from "./emitterCheck";
 import { parseGlb } from "../generator/glbTriangles";
+import { bogieCovers, offGap } from "./bogieGap";
 
 const FAMILIES = [...DESIGNS.values()].filter((d) => KIT_FAMILY_MODULES.has(designSource(d.id)));
+
+/**
+ * The designs whose body covers one half of a bogie's wheels on the prototype too: steps and
+ * ladders under a cab door or a vestibule, a pilot, an apron or a nose skirt over the wheels.
+ */
+const COVERED = new Set([
+  // the cab doors' ladders and steps over the outer wheels
+  "proc-vehicle-sncf-cc6500", "proc-vehicle-sncf-bb22200", "proc-vehicle-sncf-bb27000", "proc-vehicle-sncf-bb67400", "proc-vehicle-sncf-cc72000",
+  "proc-vehicle-br-class-55", "proc-vehicle-br-class-47", "proc-vehicle-cr-hxd1", "proc-vehicle-ir-icf-coach", "proc-vehicle-ir-memu", "proc-vehicle-ns-plan-v",
+  // a pilot ahead of the leading wheels
+  "proc-vehicle-ir-wap5", "proc-vehicle-ir-wag12b",
+  // aprons and nose skirts over the bogies (the Fliegender Hamburger's almost to the rail)
+  "proc-vehicle-drg-svt877", "proc-vehicle-db-ice4", "proc-vehicle-ns-v250", "proc-vehicle-sbb-roter-pfeil", "proc-vehicle-cr-crh5a",
+]);
 
 /** The length (m) each default build spans over its buffers or couplers, where the design states one. */
 const LENGTHS: Record<string, number> = {
@@ -107,6 +122,9 @@ describe("the eight countries' trains", () => {
             expect(sup.axles, label).toBeGreaterThanOrEqual(1);
             expect(sup.axles, label).toBeLessThanOrEqual(steam ? 5 : 3);
           }
+          // each bogie stands in its skirt's gap: the body covers neither half of its wheels alone (test/bogieGap.ts),
+          // unless it does on the prototype (COVERED)
+          if (!COVERED.has(d.id)) expect(bogieCovers(glb, supports).filter(offGap), `${label} bogie off its gap`).toEqual([]);
           // doors open on a passenger car (a unit's cars, a coach), never on a locomotive
           const opens = m.animations().some((c) => c.drive.drive === "door");
           expect(opens, label).toBe(PASSENGER_GROUPS.has(d.catalog?.group ?? "") && !(d.id === "proc-vehicle-db-ice2"));

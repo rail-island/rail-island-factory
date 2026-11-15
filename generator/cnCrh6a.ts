@@ -82,6 +82,8 @@ const STRIP: Pt[] = [[-0.92, 2.07], [0.92, 2.07], [0.99, 2.16], [0.97, 2.31], [0
 const SCREEN: Pt[] = [[-0.86, 2.62], [0.86, 2.62], [0.95, 2.72], [0.94, 3.35], [0.86, 3.62], [0.66, 3.72], [-0.66, 3.72], [-0.86, 3.62], [-0.94, 3.35], [-0.95, 2.72]];
 
 export const CRH6A_FACE: SeriesCabFace = {
+  // the skirt's cut over the leading bogie (6.0 m behind the tip, reach 1.93 m) runs on into the face
+  wheelCut: { d: 6.0 - 1.93, y: A },
   dJoin: JOIN, reach: 0.07, first: 5.4, roofFrom: 9, cols: [1, 12, 1, 1], tolerance: 0.035, wrap: true,
   profile: PROFILE,
   // a round nose: the corner is the whole half width, elliptic, reaching full width 2.1 m behind the
