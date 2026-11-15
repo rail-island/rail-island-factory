@@ -20,6 +20,8 @@ import { PRIMA_BODY, liveryParams, liverySpec, locoGame, paramsOf, type Liveries
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { WAP5_PARAMS, irWap5, irWap5Lod } from "./inWap5.ts";
 import { WAP7_PARAMS, irWap7, irWap7Lod } from "./inWap7.ts";
+// the bundle of a design imports its build functions from the module that lists it (jsModel.ts)
+export { irWap5, irWap5Lod, irWap7, irWap7Lod };
 
 // ---------------------------------------------------------------------------
 // The road diesels
