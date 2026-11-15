@@ -24,4 +24,4 @@ what they share (the nose, the paint, the roof).
 ## Published figures
 
 - **Figures** - Wikipedia, [Mat '64](https://nl.wikipedia.org/wiki/Mat_%2764): 52.1 m over the couplers for the two cars (26.05 m a car), floor 1.23 m, 2'Bo'+Bo'2', doors 1300 mm, Scharfenberg couplers, 140 km/h; the 1968 house style "geel met grijs en schuine blauwe reclamebanen", the corner windows painted yellow in the last years; power and first year as the design states them (`generator/nlPlanV.ts`, `generator/openttdTable.ts`).
-- **Estimated** - the body's heights (crown 3.95 m, eaves 3.32 m, windows 1.95 - 2.9 m), the nose (windscreen foot 1.0 m, head 1.5 m, cab door 4.3 m behind the tip, from projective fits on the two side photographs) and the bogie centres (5.0 and 22.0 m behind the tip) are measured on the photographs, not published.
+- **Estimated** - the body's heights (crown 3.95 m, eaves 3.32 m, windows 1.95 - 2.9 m), the nose (windscreen foot 1.0 m at 2.92 m, head 1.38 m at 3.55 m, cab door 4.3 m behind the tip, from projective fits on the two side photographs) and the bogie centres (5.0 and 22.0 m behind the tip) are measured on the photographs, not published.

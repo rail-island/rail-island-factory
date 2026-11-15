@@ -40,17 +40,17 @@ const W = 1.45;
  * head-on photo-441-in-vlissingen.jpg for the heights: the chin rounding under from the side's foot,
  * the bulge's front upright through the lamp band (1.3 - 1.7 m), then the long rounded hood leaning
  * back ever more past the head lamp to the windscreen's foot 1.0 m behind the tip at 2.92 m, the
- * windscreen raked to its head 1.5 m behind the tip at 3.44 m, the cab roof rounding over to the crown
+ * windscreen standing steep to its head 1.38 m behind the tip at 3.55 m, the cab roof rounding over to the crown
  * at the join.
  */
 const PROFILE: Pt[] = [
   [B, 0.12], [0.95, 0.05], [1.1, 0.015], [1.3, 0], [1.7, 0], [1.95, 0.04], [2.2, 0.12], [2.45, 0.24], [2.65, 0.4], [2.8, 0.6], [2.88, 0.8], [2.92, 1.0],
-  [3.2, 1.25], [3.44, 1.5], [3.56, 1.7], [3.68, 1.98], [3.8, 2.4], [3.88, 2.8], [3.93, 3.1], [C, JOIN],
+  [3.2, 1.18], [3.55, 1.38], [3.65, 1.6], [3.75, 1.9], [3.84, 2.3], [3.9, 2.75], [3.94, 3.1], [C, JOIN],
 ];
 
 /** The plan: the bulge's front flat over about 1.2 m, its corners rounding back 1.5 m into the sides (the lamp band wraps round them); the cab's corners as round, the windscreen's side panes on them. */
-const CORNER: Pt[] = [[B, 0.75], [1.3, 0.85], [1.7, 0.85], [2.45, 0.85], [2.92, 0.88], [3.44, 0.88], [3.68, 0.75], [3.88, 0.45], [C, 0.2]];
-const DEPTH: Pt[] = [[B, 1.15], [1.3, 1.5], [1.7, 1.6], [2.45, 1.9], [2.92, 2.2], [3.44, 1.8], [3.68, 1.2], [3.88, 0.5], [C, 0.05]];
+const CORNER: Pt[] = [[B, 0.75], [1.3, 0.85], [1.7, 0.85], [2.45, 0.85], [2.92, 0.88], [3.55, 0.88], [3.72, 0.75], [3.88, 0.45], [C, 0.2]];
+const DEPTH: Pt[] = [[B, 1.15], [1.3, 1.5], [1.7, 1.6], [2.45, 1.9], [2.92, 2.2], [3.55, 1.75], [3.72, 1.2], [3.88, 0.5], [C, 0.05]];
 const edge = (pts: readonly Pt[], y: number): number => {
   if (y <= pts[0]![0]) return pts[0]![1];
   for (let i = 1; i < pts.length; i++) {
@@ -64,17 +64,17 @@ const CORNER_DEPTH: Pt[] = PROFILE.map(([y, d]): Pt => [y, Math.max(0.05, Math.m
 /** The lamp band (dark grey), wrapping round the bulge's corners back to 1.75 m behind the tip. */
 const BAND: readonly [number, number] = [1.3, 1.7];
 /** The windscreen: the centre pane and the side panes on the corners, their sills and heads. */
-const SCREEN: readonly [number, number] = [2.92, 3.44];
+const SCREEN: readonly [number, number] = [2.92, 3.55];
 /** The coupler's recess: its half width and top (it runs down through the chin to 0.62 m). */
 const RECESS = { hw: 0.82, y0: 0.55, y1: 1.15 };
 
-const ROWS = [...new Set([...PROFILE.map(([y]) => y), 0.95, RECESS.y1, 1.37, 1.63, 2.15, 2.45, 2.84, 2.88, SCREEN[0], SCREEN[1], 3.6])].sort((a, b) => a - b);
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), 0.95, RECESS.y1, 1.37, 1.63, 2.15, 2.45, 2.84, 2.88, SCREEN[0], SCREEN[1], 3.66])].sort((a, b) => a - b);
 
 /** A rectangle [lat0, lat1] x [y0, y1]. */
 const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0], [l1, y0], [l1, y1], [l0, y1]];
 
 export const PLAN_V_FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 3.2, reach: 0.3, first: 4.3, roofFrom: 3.6, bulge: 0.02, tolerance: 0.02, cols: [6, 4, 1, 1],
+  dJoin: JOIN, dSide: 3.2, reach: 0.3, first: 4.3, roofFrom: 3.66, bulge: 0.02, tolerance: 0.02, cols: [6, 4, 1, 1],
   profile: PROFILE, corner: CORNER, cornerDepth: CORNER_DEPTH,
   rows: ROWS,
   // yellow over the dark chin; the lamp band is the livery's sweep (it runs on round the corners)
@@ -110,15 +110,15 @@ export const PLAN_V_FACE: SeriesCabFace = {
     [0, 2.3, 0.085, "lampHead"],
   ],
   // the wipers hang from the screen's head on the left and centre panes; the right pane's parks along its foot
-  wipers: [[[-0.97, 3.4], [-1.1, 3.02]], [[0.02, 3.42], [0.36, 3.0]], [[1.24, 2.98], [0.75, 2.99]]],
+  wipers: [[[-0.97, 3.5], [-1.1, 3.05]], [[0.02, 3.53], [0.38, 3.03]], [[1.24, 2.98], [0.75, 2.99]]],
 };
 
 /** The D-shaped corner window on the cab side behind the side pane: its front edge rounding forward over the top. */
-const CORNER_WIN_FRONT: Pt[] = [[2.92, 3.48], [3.01, 3.36], [3.12, 3.29], [3.26, 3.25], [3.38, 3.26], [3.44, 3.32]];
-const CORNER_WIN_BACK: Pt[] = [[2.92, 3.94], [3.44, 3.94]];
+const CORNER_WIN_FRONT: Pt[] = [[2.92, 3.48], [3.06, 3.35], [3.22, 3.28], [3.4, 3.25], [3.5, 3.27], [3.55, 3.33]];
+const CORNER_WIN_BACK: Pt[] = [[2.92, 3.94], [3.55, 3.94]];
 /** Its glass, inside the rubber. */
-const CORNER_GLASS_FRONT: Pt[] = [[2.96, 3.51], [3.03, 3.41], [3.13, 3.34], [3.26, 3.3], [3.36, 3.31], [3.4, 3.36]];
-const CORNER_GLASS_BACK: Pt[] = [[2.96, 3.9], [3.4, 3.9]];
+const CORNER_GLASS_FRONT: Pt[] = [[2.96, 3.51], [3.08, 3.4], [3.23, 3.33], [3.4, 3.3], [3.48, 3.32], [3.51, 3.37]];
+const CORNER_GLASS_BACK: Pt[] = [[2.96, 3.9], [3.51, 3.9]];
 
 /** The layout behind the face, d behind the tip (photo-planv-uitgeest.jpg, photo-plan-v-454-te-deventer.jpg). */
 const CAB_DOOR: readonly [number, number] = [4.3, 4.85];
@@ -305,8 +305,8 @@ function planVLivery(title: string, number: string, stripe: string, cornerGlass:
       // the lamp band across the front and round the corners, its end rounded
       { mat: "band", face: true, front: [[BAND[0], -9], [BAND[1], -9]], back: [[BAND[0], 1.2], [BAND[0] + 0.06, 1.32], [1.5, 1.4], [BAND[1] - 0.06, 1.32], [BAND[1], 1.2]] },
       // the corner window: its rubber, then the glass (or the yellow it was later painted over with)
-      { mat: "rubber", face: true, front: CORNER_WIN_FRONT, back: CORNER_WIN_BACK },
-      { mat: cornerGlass ? "cabGlass" : "yellow", face: true, front: CORNER_GLASS_FRONT, back: CORNER_GLASS_BACK },
+      { mat: "rubber", face: true, front: CORNER_WIN_FRONT, back: CORNER_WIN_BACK, top: 3.6 },
+      { mat: cornerGlass ? "cabGlass" : "yellow", face: true, front: CORNER_GLASS_FRONT, back: CORNER_GLASS_BACK, top: 3.6 },
     ],
   };
 }
