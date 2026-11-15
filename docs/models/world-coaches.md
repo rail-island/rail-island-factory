@@ -7,7 +7,8 @@
 A `WorldCoach` states a locomotive-hauled coach: its length over the buffers (or
 couplers), the body's half width, belly, eaves and crown, the skirt, the window rows,
 the doors at each end, the bogies and the coupler (`buffers`: a beam, two buffers and a
-screw coupling 0.65 m beyond the body; `knuckle`; `centre`). Each type of car (`unit`)
+screw coupling 0.65 m beyond the body; `knuckle`; `centre`; an optional `gap` sets the coupling plane's
+distance beyond the end wall, default 0.65 m with buffers and 0.35 m otherwise). Each type of car (`unit`)
 has its own window count and width, number and weight; each livery its paints and side
 bands; a first-class type (`first`) takes a livery's first-class bands, and a livery may paint the door leaves
 and the ends apart (`doorBands`, `ends`: bands up to the doors' inner edges and the end walls' paint). Optional

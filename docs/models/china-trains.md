@@ -29,7 +29,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers | `unit` | 2-10-2, 1.5 m drivers |
 | `proc-vehicle-cr-sy` | CR SY | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
 | `proc-vehicle-cr-js` | CR JS | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
-| `proc-vehicle-cr-25t-coach` | CR 25-series coach | coach, knuckle couplers | `unit` (`softSleeper`, `hardSeat`), `livery` (`z25t`, `green25b`) | 26.6 m; 160 km/h |
+| `proc-vehicle-cr-25t-coach` | CR 25-series coach | coach, its own layout on the coach kit (`generator/cnCoach25.ts`), knuckle couplers, US gauge | `unit` (`softSleeper`, `hardSeat`), `livery` (`z25t`, `green25b`) | 25.5 m body, 26.6 m over the couplers, 3.105 m wide; RW 54.5 t, YZ 48 t; 160 km/h |
 | `proc-vehicle-cr-c70-wagon` | CR C70 / P70 wagon | wagon | `unit` (`open`, `covered`) | 13.98 m and 17.0 m |
 
 ## Deviations
@@ -474,4 +474,32 @@ couplers, a 16.3 m body, 3.1 m wide, 88 t, 1.25 m wheels. Drawn as SS8 0228 (Gua
   single-arm pantograph behind each at 4.4 m from the middle (the rear raised), the roof cable and the main
   breaker between them. Bogie centres 8.2 m and a 2.8 m wheelbase (measured; not published).
 - **Distant model.** The kit's: the same profile and bands, the louvre panel as a band along the side.
+
+## The 25-series coach's body
+
+`generator/cnCoach25.ts` lays out the 25T body on the coach kit (`layout`, `lod`, the kit's optional `gap`),
+matched to the photographs in `assets/cr-25t-coach/` (RW25T 553849, 554056, 553745; YZ25T 350662, 351219).
+The `z25t` livery is the Z expresses' white and blue, `green25b` the 25B's green with yellow lines, which the
+25T cars wear today.
+
+- **Size.** Body 25.5 m, 26.6 m over the couplers (painted on the car), 3.105 m wide, the air-conditioning
+  units' top 4.43 m (published 4.433 m), the roof's crown 4.3 m, the eaves 3.5 m, the side's foot 0.8 m; bogies
+  18 m apart, 2.4 m wheelbase, 0.915 m wheels; the roof rounds down over each end wall.
+- **Soft sleeper (RW25T).** A door at each end. The compartment side (-Z): two narrow windows beside the
+  air-conditioned end's door, nine 1.52 m windows on a 2.0 m pitch, a narrow window and a blank panel; the
+  corridor side (+Z): a narrow window, ten 1.27 m windows on 2.0 m, a narrow window. One air-conditioning unit
+  over the +X end, a roof grille near the eaves over the other.
+- **Hard seat (YZ25T).** A door at each end, a blank wall beside one, twelve 1.09 m windows on a 1.62 m pitch,
+  two narrow windows by the other door; the other side the same turned end for end (every photograph shows the
+  blank end on the left; not confirmed). An air-conditioning unit over each end.
+- **Windows.** Frames 1.92 - 2.96 m with rounded corners and a top light's bar 0.34 m under the head; white
+  frames on the green, dark frames and grey-blue glass in the white livery's band. The door's tall rounded
+  window 0.45 m wide.
+- **Green.** Dark green, yellow lines 1.66 - 1.82 m and 3.06 - 3.17 m from door to door, the doors and ends
+  plain green, a grey roof, yellow running numbers.
+- **White and blue.** White, a dark blue band 1.86 - 3.02 m broken by a white gap behind each end's door group
+  (the door leaves blue in the band), a red line at the foot, a light grey roof, dark running numbers.
+- **Ends and gear.** A closed bellows round the end door from the wall toward the coupling plane, the knuckle
+  coupler at 0.88 m, grab rails beside the doors, underframe boxes between the bogies.
+- **Distant model.** The kit's shell with the bands and window strip, the air-conditioning boxes.
 
