@@ -11,7 +11,8 @@
 // quarters (the wing, the lines, the hatch's box), the intermediate car of 5033 (bands, door window)
 // and the 5017 near side-on (the nose's rise). Heights over the rail, d behind the tip.
 
-import type { MaterialSpec } from "./meshBuilder.ts";
+import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import type { Vec3 } from "./meshCore.ts";
 import { paint } from "./dieselParts.ts";
 import type { Pt } from "./sliceLoft.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
@@ -34,17 +35,23 @@ const LINE2: readonly [number, number] = [1.675, 1.75];
 const LINE1: readonly [number, number] = [1.875, 1.95];
 const BAND: readonly [number, number] = [2.02, 2.92];
 
-/** The centre line's profile [y, d]: the hatch's front upright at the tip, the nose rising at about 15 degrees to the crown. */
+/**
+ * The centre line's profile [y, d] behind the coupler hatch (drawn apart, `hatchBulb`): the face
+ * 0.55 m behind the tip round the bulb, then rising over its top in a convex curve - steep at first
+ * (35 degrees), flattening toward the crown (the 0031 and 5017 side views).
+ */
 const PROFILE: Pt[] = [
-  [B, 0.36], [0.7, 0.04], [0.9, 0], [1.3, 0.05], [1.4, 0.15], [1.5, 0.34], [1.6, 0.56], [1.7, 0.72], [2.0, 1.12],
-  [2.2, 1.4], [2.4, 1.7], [2.6, 2.05], [2.8, 2.45], [3.0, 2.95], [3.2, 3.55], [3.4, 4.3], [3.6, 5.2], [3.75, 6.05], [3.9, 7.1], [3.97, 7.85], [4.02, 8.6], [C, DJOIN],
+  [B, 0.75], [0.7, 0.6], [0.9, 0.55], [1.15, 0.55], [1.35, 0.6], [1.5, 0.68], [1.65, 0.78], [1.8, 0.88], [2.0, 1.04],
+  [2.3, 1.33], [2.6, 1.72], [2.9, 2.3], [3.2, 3.15], [3.4, 3.75], [3.6, 4.55], [3.75, 5.35], [3.9, 6.4], [3.97, 7.3], [4.02, 8.3], [C, DJOIN],
 ];
 const ROWS = PROFILE.map(([y]) => y);
-/** The hatch: a box 1.94 m wide at the tip (the face inside the body's half width there), the nose over it round in plan. */
-const INSET: Pt[] = [[B, 0.5], [0.85, 0.6], [1.3, 0.65], [1.5, 0.35], [1.6, 0.14], [1.7, 0.03], [1.8, 0]];
-const CORNER: Pt[] = [[B, 0.42], [1.3, 0.45], [1.5, 0.9], [1.6, 1.3], [1.7, 1.55], [1.8, 1.62], [C, 1.62]];
-/** How far back the round plan reaches the body's full width, by height (the 5167 view from above). */
-const DEPTH: Pt[] = [[B, 0.42], [1.3, 0.45], [1.5, 1.4], [1.6, 2.1], [1.7, 2.5], [1.8, 2.7], [2.2, 2.7], [2.6, 2.5], [3.0, 2.3], [3.5, 2.05], [3.8, 1.5], [3.97, 0.8], [C, 0.05]];
+/** The face a little inside the body's half width low down, round in plan at every height (the 5167 view from above). */
+const INSET: Pt[] = [[B, 0.12], [1.5, 0.06], [1.7, 0]];
+const CORNER: Pt[] = [[B, 1.62], [C, 1.62]];
+/** How far back the round plan reaches the body's full width, by height. */
+const DEPTH: Pt[] = [[B, 2.0], [1.0, 2.3], [1.5, 2.5], [1.8, 2.7], [2.2, 2.7], [2.6, 2.5], [3.0, 2.3], [3.5, 2.05], [3.8, 1.5], [3.97, 0.8], [C, 0.05]];
+/** The coupler hatch: a half ellipsoid 1.8 m wide from 0.49 to 1.53 m, bowed 1.25 m forward of its rim sunk in the face. */
+const HATCH = { y: 1.01, hh: 0.52, hw: 0.9, depth: 1.25 };
 
 /** Linear interpolation in a [x, y] table (held past its ends). */
 function at(t: readonly Pt[], x: number): number {
@@ -77,7 +84,16 @@ const CANOPY: ReadonlyArray<readonly [number, number | null, number?]> = [
   [1.68, 0.06], [1.72, 0.22], [1.78, 0.36], [1.85, 0.48], [1.9, 0.58], [2.0, 0.76], [2.1, 0.92], [2.2, 1.06], [2.3, 1.18], [2.4, 1.28], [2.5, 1.37], [2.6, 1.44],
   [2.7, null, 4.3], [2.85, null, 5.2], [3.0, null, 6.1], [3.15, null, 6.9], [3.3, null, 7.55], [3.5, null, 8.15], [3.7, null, 8.6], [3.9, null, 8.85], [C, null, 9.0],
 ];
-const canopyEdge = (dy: number): Pt[] => CANOPY.map(([y, w, side]): Pt => [Math.round((y - dy) * 1e4) / 1e4, edgeD(y, w, side)]);
+const canopyEdge = (): Pt[] => CANOPY.map(([y, w, side]): Pt => [y, edgeD(y, w, side)]);
+/** Its outline in the livery's colour, a narrow border: 0.11 m wider head-on, 0.1 m lower on the sides, 0.06 m below the chin's point. */
+const borderEdge = (): Pt[] => {
+  const out: Pt[] = [[1.62, edgeD(1.62, 0.02)]];
+  for (const [y, w, side] of CANOPY) {
+    const yy = Math.round((w === null ? y - 0.1 : y) * 1e4) / 1e4;
+    if (yy > out[out.length - 1]![0] + 1e-6) out.push([yy, w === null ? side! : edgeD(y, w + 0.11)]);
+  }
+  return out;
+};
 
 /** A polygon mirrored about the centre line, from its right half (bottom centre round to top centre). */
 const mirror = (half: Pt[]): Pt[] => [...half, ...half.slice(1, -1).reverse().map(([l, y]): Pt => [-l, y])];
@@ -99,12 +115,52 @@ function outline(mat: string, pts: readonly Pt[], t: number, closed = true): Arr
   }
   return out;
 }
-/** A rounded rectangle's outline: half width hw, from y0 to y1, top and bottom corner radii. */
-function roundRect(hw: number, y0: number, y1: number, rt: number, rb: number): Pt[] {
-  const out: Pt[] = [];
-  const arc = (cx: number, cy: number, r: number, a0: number) => { for (let j = 0; j <= 3; j++) { const a = ((a0 + 30 * j) * Math.PI) / 180; out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); } };
-  arc(hw - rb, y0 + rb, rb, -90); arc(hw - rt, y1 - rt, rt, 0); arc(-hw + rt, y1 - rt, rt, 90); arc(-hw + rb, y0 + rb, rb, 180);
-  return out.map(([x, y]): Pt => [Math.round(x * 1e4) / 1e4, Math.round(y * 1e4) / 1e4]);
+/** A triangle wound outward from a centre point. */
+function outward(m: MeshBuilder, mat: string, c: Vec3, a: Vec3, b: Vec3, e: Vec3): void {
+  const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [e[0] - a[0], e[1] - a[1], e[2] - a[2]];
+  const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const g = [a[0] + b[0] + e[0] - 3 * c[0], a[1] + b[1] + e[1] - 3 * c[1], a[2] + b[2] + e[2] - 3 * c[2]];
+  if (n[0] * g[0] + n[1] * g[1] + n[2] * g[2] >= 0) m.tri(mat, a, b, e);
+  else m.tri(mat, a, e, b);
+}
+
+/**
+ * The coupler hatch (5001 head-on, A-3033): a fat rounded bulb at the tip, round in plan and in
+ * profile, narrower than the face round it - half an ellipsoid whose rim sinks into the face (its last
+ * ring the seam's dark line), a seam down its middle where the two leaves meet.
+ */
+function hatchBulb(m: MeshBuilder, X: (d: number) => number): void {
+  const H = HATCH, xc = X(H.depth - DJOIN), fwd = Math.sign(X(-1) - X(0));
+  const [na, nb] = [8, 24];
+  const PHI = Array.from({ length: na + 1 }, (_, i) => (Math.PI / 2) * (i < na ? (0.96 * i) / (na - 1) : 1));
+  const at = (i: number, j: number): Vec3 => {
+    const phi = PHI[i]!, th = (2 * Math.PI * j) / nb;
+    // a blunt bulb (its front bowed, its sides steep) of rounded-rectangle sections
+    const [s, c] = [Math.sin(th), Math.cos(th)];
+    return [xc + fwd * H.depth * Math.cos(phi) ** 0.55, H.y + H.hh * Math.sin(phi) * Math.sign(s) * Math.abs(s) ** 0.6, H.hw * Math.sin(phi) * Math.sign(c) * Math.abs(c) ** 0.6];
+  };
+  const ctr: Vec3 = [xc, H.y, 0];
+  m.scope("bulb", () => {
+    for (let i = 0; i < na; i++)
+      for (let j = 0; j < nb; j++) {
+        const mat = i === na - 1 ? "rubber" : "white";
+        const [a, b, e, f] = [at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1)];
+        outward(m, mat, ctr, a, b, e);
+        if (i > 0) outward(m, mat, ctr, a, e, f);
+      }
+  });
+  // the leaves' joint: a thin dark strip just off the bulb down its middle, top and bottom halves
+  m.scope("seam", () => {
+    for (const s of [1, -1])
+      for (let i = 0; i + 1 < na; i++) {
+        const p = (k: number, z: number): Vec3 => {
+          const phi = PHI[k]!, r = 1.004;
+          return [xc + fwd * H.depth * Math.cos(phi) ** 0.55 * r, H.y + s * H.hh * Math.sin(phi) * r, z];
+        };
+        outward(m, "rubber", ctr, p(i, -0.009), p(i + 1, -0.009), p(i + 1, 0.009));
+        outward(m, "rubber", ctr, p(i, -0.009), p(i + 1, 0.009), p(i, 0.009));
+      }
+  });
 }
 /** The China Railway emblem on the chin: a ring, the rail's head across it and its web down the middle. */
 function emblem(mat: string): Array<{ mat: string; pts: Pt[]; fine: number }> {
@@ -125,9 +181,11 @@ const FACE: SeriesCabFace = {
   // lines, the wing and the band ahead of the join the livery's sweeps
   bands: () => [[0, 9, "white"]],
   lodBands: [[0, 2.1, "white"], [2.1, 9, "cabMask"]],
+  // the distant model's end reaching forward over the hatch to the tip
+  lod: { profile: [[B, 0.15], [0.9, 0], [1.3, 0.05], [1.65, 0.78], [2.3, 1.33], [3.0, 2.7], [3.6, 4.55], [3.9, 6.4], [C, DJOIN]], corner: [[B, 1.4], [C, 1.62]], rows: [B, 0.9, 1.3, 1.65, 2.3, 3.0, 3.6, 3.9, C], cornerDepth: [[B, 1.4], [1.65, 2.6], [3.0, 2.3], [3.9, 1.0], [C, 0.05]] },
   paint: [
-    { mat: "line", front: canopyEdge(0.1).map(([y]): Pt => [y, -9]), back: canopyEdge(0.1) },
-    { mat: "cabMask", front: canopyEdge(0).map(([y]): Pt => [y, -9]), back: canopyEdge(0) },
+    { mat: "line", front: borderEdge().map(([y]): Pt => [y, -9]), back: borderEdge() },
+    { mat: "cabMask", front: canopyEdge().map(([y]): Pt => [y, -9]), back: canopyEdge() },
   ],
   fields: [
     { mat: "bfGlass", pts: GLASS },
@@ -135,9 +193,6 @@ const FACE: SeriesCabFace = {
     { mat: "lampRed", pts: TAIL }, { mat: "lampRed", pts: flip(TAIL) },
   ],
   decals: [
-    // the coupler hatch's seam round the box and down its middle
-    ...outline("rubber", roundRect(0.9, 0.56, 1.42, 0.32, 0.22), 0.012),
-    ...outline("rubber", [[0, 0.56], [0, 1.42]], 0.01, false),
     ...emblem("line"),
   ],
   panes: [], lodGlass: { hw: 1.1, y: [2.15, 3.6] },
@@ -201,7 +256,7 @@ export const CR400BF: ShinkansenSeries = {
     gold: livery("Fuxing gold", "CR400BF-5001", "#c4923f"),
     red: livery("Fuxing red", "CR400BF-5033", "#c8102e"),
   },
-  // the skirts reach down to 0.5 m: no underfloor box below them
-  fittings: () => {},
+  // the coupler hatch; the skirts reach down to 0.5 m: no underfloor box below them
+  fittings: (m, _b, X, car) => { if (car.end) m.scope("coupler hatch", () => hatchBulb(m, X)); },
   weight: { end: 52, middle: 50 }, power: 1250, maxspeed: 350,
 };

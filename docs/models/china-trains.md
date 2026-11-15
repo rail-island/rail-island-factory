@@ -54,15 +54,17 @@ published figures; heights over the rail, d behind the nose's tip.
   published), eight cars 208.9 m (209.06 m). 17.5 m bogie centres, 920 mm wheels; the leading bogie
   7.05 m behind the tip, the others 3.85 m in from the body ends. Body 0.5 - 4.05 m, 3.24 m wide in the
   gauge (3.36 m real); white skirts down to 0.5 m, no underfloor box below them.
-- **The nose** is a cab face joined to the body 9.4 m behind the tip. The coupler hatch is a box 1.94 m
-  wide from 0.5 to 1.45 m standing out at the tip (the face inside the body's width there, flaring out to
-  it by 3.2 m), its seam drawn round it and down its middle. Over it the nose rises from 1.6 m about
-  35 degrees at first and flattening (2.6 m at 2.05 m back, 3.6 m at 5.2 m, the crown 9.4 m back); its
-  plan is round (elliptic corners 2.7 m deep at the windscreen's foot, 2.0 m at 3.5 m) - the rounder,
-  shorter "phoenix" head, not the CR400AF's.
+- **The nose** is a cab face joined to the body 9.4 m behind the tip. The coupler hatch is a fat bulb
+  standing out at the tip (`hatchBulb`): half a blunt ellipsoid of rounded-rectangle sections, 1.8 m
+  wide from 0.49 to 1.53 m, its front bowed 1.25 m ahead of its rim, which sinks into the face; the rim
+  and the leaves' joint down its middle are dark seams. The face behind it stands 0.55 m back and rises
+  over the bulb's top in a convex curve (2.0 m at 1.04 m back, 2.6 m at 1.72 m, 3.6 m at 4.55 m, the
+  crown 9.4 m back); its plan is round at every height (elliptic corners 2.0 - 2.7 m deep) - the
+  rounder, fuller "phoenix" head, not the CR400AF's. The distant model's end reaches forward over the
+  hatch to the tip.
 - **The canopy.** Black from a rounded point on the chin (1.7 m) widening as a shield to the lamps
   (1.0 m half width at 2.1 m, 1.44 m at 2.6 m), then running back on the sides over the cab window to
-  the crown 9.0 m behind the tip; outlined by a 0.1 m line in the livery's colour. The windscreen glass
+  the crown 9.0 m behind the tip; outlined by a narrow border in the livery's colour (0.11 m wider head-on, 0.1 m on the sides), the face below it white. The windscreen glass
   from 2.12 m (centre) to 3.6 m; a lamp strip and a round lamp at each lower corner of it, a red tail lamp
   above, the China Railway emblem on the chin, one wiper, a roof lamp.
 - **The side's paint.** A charcoal window band 2.02 - 2.92 m; under it the upper line 1.875 - 1.95 m and
