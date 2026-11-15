@@ -160,7 +160,8 @@ combinations hashed before and after):
   narrower than the nose round it, its front and side windows drawn by one pair of edges (the E6's);
 
   `lodGlass` gives the distant model's windscreen (half width, heights) where the windscreen is
-  `paint`, not a pane (the E6);
+  `paint`, not a pane (the E6); `lodPaint` adds painted fields to the distant model's face (lateral
+  span, heights, paint) after its glass, a livery's corners (the Vande Bharat's swoosh; none by default);
 
 - a cab face's `reshape` - its depth reshaped across the face (`cabNose.ts`; the distant model keeps the
   plain slices): the N700S's canopy, valleys and wing crests, the E6's canopy cab; a livery sweep's `face` paints it on the face's

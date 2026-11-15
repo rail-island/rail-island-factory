@@ -34,10 +34,12 @@ The catalog had no Indian train before. Every design is filed under India.
 ## Deviations
 
 - **Vande Bharat.** The end car's cab is a cab face (`generator/inVandeBharat.ts`) measured from the
-  photographs in `assets/ir-vande-bharat/`: the bulbous coupler cover with its centre seam, the emblem
-  plate, the slanted lamp slots (head and tail lamp), the windscreen raked about 58 degrees in a black
-  surround with the destination display, the dome lamp; the blue (or saffron) swoosh up the corners into
-  the roof band; the deflector under the nose. Plug doors at both ends of every car, the crew door, big
+  photographs in `assets/ir-vande-bharat/`: the bulbous coupler cover (about 45 % of the face over the
+  skirt) with its centre seam, the emblem plate, long slanted lamp slots along the cover's edges (tail
+  and head lamp), the windscreen raked about 64 degrees in a black surround, the display in a narrower
+  black band over it, the dome lamp; the blue (or saffron) swoosh up the corners into the roof band,
+  also on the distant model's face (`lodPaint`; dropped from the 8-car train's 500 triangles); the
+  dark skirt under the cover, curving with it. Plug doors at both ends of every car, the crew door, big
   panes; pantographs on the third and third-from-last cars (the transformer trailers). The nose's lengths
   come from a slightly oblique photo (about 10 % uncertain); the IR roundel is a plain two-colour disc.
 - **Delhi Metro RS1.** The cab is a cab face (the series kit's `cabFace`): flat and raked back over

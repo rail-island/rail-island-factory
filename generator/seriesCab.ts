@@ -76,6 +76,8 @@ export interface SeriesCabFace {
   panes: readonly FaceRect[];
   /** The distant model's glass, its half width and heights, in place of the panes' extent: a windscreen painted by `paint` (default the panes'). */
   lodGlass?: { hw: number; y: readonly [number, number] };
+  /** The distant model's painted fields on the face, lateral span (viewer's right positive) and heights, after its glass: a livery's corners (none by default). */
+  lodPaint?: ReadonlyArray<{ lat: readonly [number, number]; y: readonly [number, number]; mat: string }>;
   /** Round lamps on the face: lat, y, radius, lens. */
   lamps?: ReadonlyArray<readonly [number, number, number, string]>;
   /** A gangway door: its frame standing off the face (half width, sill, head, bar width) and the leaf's paint. */
@@ -361,5 +363,6 @@ export function cabFaceLod(face: SeriesCabFace, e: number, xTip: number, half: P
   const g = face.lodGlass;
   const lo = g ? g.y[0] : Math.min(...f.panes.map((r) => r.y[0])), hi = g ? g.y[1] : Math.max(...f.panes.map((r) => r.y[1]));
   const w = g ? g.hw : Math.max(...f.panes.map((r) => Math.max(Math.abs(r.lat[0]), Math.abs(r.lat[1]))));
-  return noseEnd(spec(f, e, xTip, half), paint, (g || f.panes.length) && f.lod?.glass !== false ? [{ u: [-w, w], y: [lo, hi], mat: LOD_GLASS }] : []);
+  const glass = (g || f.panes.length) && f.lod?.glass !== false ? [{ u: [-w, w] as const, y: [lo, hi] as const, mat: LOD_GLASS }] : [];
+  return noseEnd(spec(f, e, xTip, half), paint, face.lodPaint ? [...glass, ...face.lodPaint.map((r) => ({ u: r.lat, y: r.y, mat: r.mat }))] : glass);
 }
