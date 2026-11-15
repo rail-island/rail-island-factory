@@ -37,7 +37,7 @@ const DOOR_W = 0.9;
  * stands out of this surface (`reshape`, POD).
  */
 const PROFILE: Pt[] = [
-  [0.67, 0.48], [0.82, 0.26], [1.0, 0.16], [1.24, 0.18], [1.5, 0.3], [1.7, 0.42], [1.86, 0.5], [2.05, 0.66], [2.3, 0.95],
+  [0.67, 0.52], [0.82, 0.3], [1.0, 0.2], [1.24, 0.22], [1.5, 0.34], [1.7, 0.45], [1.86, 0.5], [2.05, 0.66], [2.3, 0.95],
   [2.6, 1.45], [2.9, 2.0], [3.2, 2.7], [3.4, 3.15], [3.55, 3.55], [3.65, JOIN],
 ];
 
@@ -50,7 +50,11 @@ const DEPTH: Pt[] = [[0.67, 3.0], [1.0, 3.1], [1.5, 2.9], [2.0, 2.5], [2.3, 2.3]
  * windscreen), its front 0.16 m proud; and the snout drawn to a point in plan (the flanks a parabola behind
  * the centre line, 0.3 m deeper at the corners up to the windscreen's foot, none at the roof).
  */
-const POD = { lat: 0.92, y: 1.24, h: 0.62, proud: 0.16 };
+const POD = { lat: 0.92, y: 1.24, h: 0.62, proud: 0.2 };
+/** The pod's outline head on at height y (its half width). */
+const podLat = (y: number): number => POD.lat * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(y - POD.y) / POD.h, 2.4)), 1 / 2.4);
+/** The height of the pod's arch at half width lat. */
+const podTop = (lat: number): number => POD.y + POD.h * Math.pow(Math.max(0, 1 - Math.pow(lat / POD.lat, 2.4)), 1 / 2.4);
 const vee = (y: number): number => (y <= 2.3 ? 0.3 : y >= 3.3 ? 0 : 0.3 * (3.3 - y));
 function c800Reshape(lat: number, y: number, d: number): number {
   const r = Math.pow(lat / POD.lat, 2.4) + Math.pow(Math.abs(y - POD.y) / POD.h, 2.4);
@@ -62,12 +66,12 @@ function c800Reshape(lat: number, y: number, d: number): number {
 const mirror = (pts: readonly Pt[]): Pt[] => pts.map(([l, y]): Pt => [-l, y]).reverse();
 
 /** The cover's yellow front: its arched top, then its sides (inside the pod's flanks, LNER red, GWR green) narrowing to its foot. */
-const CONE_HALF: Pt[] = [[0, 1.86], [0.42, 1.83], [0.66, 1.76], [0.74, 1.7], [0.68, 1.4], [0.6, 1.1], [0.5, 0.86], [0.36, 0.71], [0, 0.68]];
+const CONE_HALF: Pt[] = [...[0, 0.3, 0.5, 0.62].map((l): Pt => [l, podTop(l) - 0.012]), [0.58, 1.45], [0.5, 1.1], [0.4, 0.86], [0.28, 0.72], [0, 0.69]];
 const CONE: Pt[] = [...CONE_HALF.slice(0, -1).reverse().map(([l, y]): Pt => [-l, y]), ...CONE_HALF].reverse();
 /** The yellow panel under the windscreen, between the lamp clusters. */
-const PANEL: Pt[] = [[-0.74, 1.7], [0.74, 1.7], [0.8, 2.31], [-0.8, 2.31]];
+const PANEL: Pt[] = [[-0.6, 1.72], [0.6, 1.72], [0.72, 2.31], [-0.72, 2.31]];
 /** A lamp cluster's black housing on the flank beside the cover's top, angled outward. */
-const LAMP: Pt[] = [[0.72, 1.76], [1.06, 1.66], [1.25, 1.84], [1.21, 2.2], [0.8, 2.26]];
+const LAMP: Pt[] = Array.from({ length: 10 }, (_, i): Pt => { const a = (2 * Math.PI * i) / 10, t = -0.45; const [x, y] = [0.2 * Math.cos(a), 0.15 * Math.sin(a)]; return [0.97 + x * Math.cos(t) - y * Math.sin(t), 2.1 + x * Math.sin(t) + y * Math.cos(t)]; });
 /** The windscreen: its black surround and the glass, a trapezoid narrower at the head, its corners rounded. */
 const SURROUND: Pt[] = [[-0.88, 2.29], [0.88, 2.29], [0.9, 2.42], [0.82, 3.0], [0.7, 3.22], [-0.7, 3.22], [-0.82, 3.0], [-0.9, 2.42]];
 const GLASS: Pt[] = [[-0.8, 2.36], [0.8, 2.36], [0.82, 2.47], [0.74, 2.98], [0.64, 3.15], [-0.64, 3.15], [-0.74, 2.98], [-0.82, 2.47]];
@@ -81,10 +85,11 @@ const strip = (a: Pt, b: Pt, w: number): Pt[] => {
   return [[a[0] + nx, a[1] + ny], [a[0] - nx, a[1] - ny], [b[0] - nx, b[1] - ny], [b[0] + nx, b[1] + ny]];
 };
 /** The seam over the cover's arch, and its split down the middle (the coupler's flaps). */
-const SEAM: Pt[][] = CONE_HALF.slice(1, 4).map((p, i) => strip(CONE_HALF[i]!, p, 0.018));
-const SEAMS: Pt[][] = [...SEAM, ...SEAM.map(mirror), strip([0, 0.72], [0, 1.85], 0.014)];
+const CREASE_HALF: Pt[] = [...[0, 0.3, 0.5, 0.65, 0.78, 0.87].map((l): Pt => [l, podTop(l)]), ...[1.24, 1.0, 0.8, 0.68].map((y): Pt => [podLat(y), y])];
+const SEAM: Pt[][] = CREASE_HALF.slice(1).map((p, i) => strip(CREASE_HALF[i]!, p, 0.028));
+const SEAMS: Pt[][] = [...SEAM, ...SEAM.map(mirror), strip([0, 0.72], [0, 1.82], 0.014)];
 /** The rim between the yellow and the cover's flanks, 3.5 cm out (LNER's white line; the GWR's is the cover's own yellow). */
-const RIM_HALF: Pt[] = CONE_HALF.slice(3).map(([l, y]): Pt => [l + (l > 0.3 ? 0.035 : 0), y - (l < 0.45 ? 0.035 : 0)]);
+const RIM_HALF: Pt[] = CONE_HALF.slice(4).map(([l, y]): Pt => [l + (l > 0.3 ? 0.035 : 0), y - (l < 0.45 ? 0.035 : 0)]);
 const RIM: Pt[][] = RIM_HALF.slice(1).map((p, i) => strip(RIM_HALF[i]!, p, 0.04));
 const RIMS: Pt[][] = [...RIM, ...RIM.map(mirror)];
 
@@ -108,7 +113,7 @@ export const C800_FACE: SeriesCabFace = {
   // the face takes the side's bands (the line under the windows, the cantrail line); its paint is drawn over them
   bands: (l) => l.bands,
   lodBands: [[0, 2.3, "noseYellow"], [2.3, 9, "body"]],
-  lod: { profile: PROFILE.map(([y, d]): Pt => [y, y < 1.86 ? Math.max(0, d - 0.16) : d]), corner: [[0.67, 2.0], [3.65, 2.0]], rows: [0.67, 1.0, 1.5, 1.86, 2.3, 2.9, 3.4, 3.65], cornerDepth: [[0.67, 2.8], [1.0, 3.0], [1.86, 2.6], [2.3, 2.3], [2.9, 1.6], [3.4, 0.5], [3.65, 0.05]] },
+  lod: { profile: PROFILE.map(([y, d]): Pt => [y, y < 1.86 ? Math.max(0, d - 0.2) : d]), corner: [[0.67, 2.0], [3.65, 2.0]], rows: [0.67, 1.0, 1.5, 1.86, 2.3, 2.9, 3.4, 3.65], cornerDepth: [[0.67, 2.8], [1.0, 3.0], [1.86, 2.6], [2.3, 2.3], [2.9, 1.6], [3.4, 0.5], [3.65, 0.05]] },
   lodGlass: { hw: 0.8, y: [2.36, 3.15] },
   paint: [
     // the cover's flanks and the lower nose round it (LNER red, GWR green), back along the foot to the leading bogie
@@ -124,12 +129,12 @@ export const C800_FACE: SeriesCabFace = {
   ],
   panes: [],
   decals: [
-    ...SEAMS.map((pts) => ({ mat: "seam", pts, fine: 1 })), ...RIMS.map((pts) => ({ mat: "rim", pts, fine: 1 })),
+    ...SEAMS.map((pts) => ({ mat: "seam", pts, fine: 2 })), ...RIMS.map((pts) => ({ mat: "rim", pts, fine: 3 })),
     { mat: "cabMask", pts: LAMP, fine: 3 }, { mat: "cabMask", pts: mirror(LAMP), fine: 3 }, { mat: "markerBox", pts: MARKER, fine: 2 },
   ],
   lamps: [
-    [0.88, 1.98, 0.09, "lampHead"], [1.07, 1.93, 0.08, "lampHead"], [1.13, 2.1, 0.035, "lampRed"],
-    [-0.88, 1.98, 0.09, "lampHead"], [-1.07, 1.93, 0.08, "lampHead"], [-1.13, 2.1, 0.035, "lampRed"],
+    [0.92, 2.04, 0.075, "lampHead"], [1.02, 2.17, 0.07, "lampHead"], [1.1, 2.03, 0.03, "lampRed"],
+    [-0.92, 2.04, 0.075, "lampHead"], [-1.02, 2.17, 0.07, "lampHead"], [-1.1, 2.03, 0.03, "lampRed"],
   ],
   roofLamp: [0, 3.4, 0.045],
   // the one long wiper, parked from the screen's foot up its left side (seen from ahead)
@@ -141,7 +146,7 @@ type Paints = Record<string, ReturnType<typeof c>>;
 /** The paints the face and the fittings name, by livery. */
 function palette(body: string, extra: Paints): Paints {
   return {
-    body: c(body), noseYellow: c("#f6c52a", 0.45), cabMask: c("#17191b", 0.3), seam: c("#3b3a30", 0.5),
+    body: c(body), noseYellow: c("#f6c52a", 0.45), cabMask: c("#17191b", 0.3), seam: c("#101413", 0.5),
     markerBox: c("#202224", 0.3), skirtG: c("#55595c", 0.7), underG: c("#7c8185", 0.6), roofBox: c("#8e9397", 0.55), louvre: c("#2b2e31", 0.6),
     ...extra,
   };
