@@ -21,11 +21,12 @@ import type { Pt } from "./sliceLoft.ts";
 import type { ShinkansenLivery, ShinkansenSeries } from "./shinkansen.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import { c, NO_NOSE } from "./seriesHelpers.ts";
-import { sidePanel, type SliceBody } from "./sliceBody.ts";
+import { sideDecal, sidePanel, type SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
 
 const NS_YELLOW = "#ffc917";
-const NS_BLUE = "#0063d3";
+/** NS blue as the photographs show it in daylight (2302, 2324): a deep royal blue. */
+const NS_BLUE = "#2340a0";
 
 /** Where the face meets the body: the crown at full height 2.6 m behind the bumper's front. */
 const JOIN = 2.6;
@@ -39,6 +40,7 @@ const S = 3.5;
 const YELLOW_LINE: readonly [number, number] = [0.78, 0.9];
 const WHITE_BAND: readonly [number, number] = [0.9, 1.15];
 const ROOF_LINE: readonly [number, number] = [3.36, 3.46];
+const WHITE_MID = (0.9 + 1.15) / 2;
 /** The windows' sill and head (2302 side-on: 1.55 - 2.9 m). */
 const WINDOWS: readonly [number, number] = [1.55, 2.9];
 /** The cab door's front edge, behind the tip (2302: 3.0 m). */
@@ -51,11 +53,11 @@ const CAB_DOOR = 2.98;
  * degrees to its head (3.55 m, 1.5 m back); the cap rounding over into the crown 2.6 m behind the tip.
  */
 const PROFILE: Pt[] = [
-  [0.58, 0.14], [0.66, 0.04], [0.8, 0], [1.4, 0], [1.45, 0.05], [1.5, 0.22], [1.62, 0.27], [1.9, 0.37], [2.08, 0.45],
+  [0.58, 0.14], [0.66, 0.04], [0.8, 0], [1.4, 0], [1.45, 0.05], [1.5, 0.22], [1.62, 0.27], [1.9, 0.37], [2.18, 0.5],
   [2.6, 0.8], [3.1, 1.15], [3.55, 1.5], [3.72, 1.8], [3.83, 2.15], [C, JOIN],
 ];
 
-const ROWS = [...new Set([...PROFILE.map(([y]) => y), 1.48, 1.62, 1.7, 1.95, 2.0, 2.15, 3.25, 3.3, 3.48, 3.62])].sort((a, b) => a - b);
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), 1.45, 1.6, 1.7, 1.86, 1.95, 2.05, 2.16, 2.26, 3.3, 3.34, 3.5, 3.62])].sort((a, b) => a - b);
 
 /** A rectangle [lat0, lat1] x [y0, y1]. */
 const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0], [l1, y0], [l1, y1], [l0, y1]];
@@ -73,6 +75,9 @@ const NS_LOGO: Pt[][] = ([
 /** The face's plan: a broad bumper with round corners, the face over it narrowing toward the cap, its corners swept back deep (the lamps sit in them). */
 const DEPTH: Pt[] = [[0.58, 0.7], [1.4, 0.8], [1.5, 1.05], [1.62, 1.15], [2.08, 1.2], [2.6, 1.1], [3.1, 0.95], [3.55, 0.8], [3.72, 0.6], [3.83, 0.4], [C, 0.15]];
 
+/** A lamp housing (right side, head-on [lat, y]): the inner end low, the outer end higher. */
+const LAMP: Pt[] = [[0.56, 1.86], [0.68, 1.83], [1.26, 1.92], [1.36, 2.02], [1.32, 2.15], [1.2, 2.17], [0.62, 2.07], [0.54, 1.96]];
+
 export const SNG_FACE: SeriesCabFace = {
   dJoin: JOIN, dSide: 2.2, reach: REACH, first: 9.2, roofFrom: C + 0.2, bulge: 0.08, tolerance: 0.025,
   profile: PROFILE,
@@ -80,33 +85,37 @@ export const SNG_FACE: SeriesCabFace = {
   cornerDepth: DEPTH.map(([y, k]): Pt => [y, Math.max(0.05, Math.min(JOIN - PROFILE.reduce((d, [py, pd]) => (py <= y ? pd : d), 0) - 0.05, k))]),
   rows: ROWS,
   // the dark grey bumper, the white band over it, the yellow front up to the cap
-  bands: () => [[0, 1.48, "bumper"], [1.48, 1.62, "white"], [1.62, 9, "yellow"]],
-  lodBands: [[0, 1.48, "bumper"], [1.48, 1.62, "white"], [1.62, 3.62, "yellow"], [3.62, 9, "capGrey"]],
-  lodGlass: { hw: 0.9, y: [2.12, 3.5] },
+  bands: () => [[0, 1.45, "bumper"], [1.45, 1.6, "white"], [1.6, 9, "yellow"]],
+  lodBands: [[0, 1.45, "bumper"], [1.45, 1.6, "white"], [1.6, 3.62, "yellow"], [3.62, 9, "capGrey"]],
+  lodGlass: { hw: 0.95, y: [2.26, 3.5] },
   fields: [
     // the open coupler recess in the bumper
     { mat: "recess", pts: box(-0.48, 0.48, 0.72, 1.32) },
     // the white wedges under the lamps, widening to the corners
-    { mat: "white", pts: [[0.62, 1.62], [1.5, 1.62], [1.5, 1.98]] },
-    { mat: "white", pts: [[-1.5, 1.62], [-0.62, 1.62], [-1.5, 1.98]] },
+    { mat: "white", pts: [[0.62, 1.6], [1.5, 1.6], [1.5, 1.95]] },
+    { mat: "white", pts: [[-1.5, 1.6], [-0.62, 1.6], [-1.5, 1.95]] },
+    // the slanted lamp housings at the corners (Lelystad head-on, 2324): 0.8 m wide over the corner, 0.3 m tall, the outer end higher and wrapping round
+    ...[1, -1].map((sd) => ({ mat: "black", pts: LAMP.map(([l, y]): Pt => [sd * l, y]) })),
     // the light grey cap over the windscreen between the yellow pillars, the camera's dark box in it
-    { mat: "capGrey", pts: box(-1.0, 1.0, 3.6, 4.2) },
+    { mat: "capGrey", pts: box(-0.8, 0.8, 3.6, 4.2) },
     { mat: "black", pts: box(-0.3, 0.3, 3.68, 3.82) },
   ],
   masks: [
     // the windscreen's black surround
-    { lat: [-1.1, 1.1], y: [2.03, 3.62], r: 0.18, mat: "black" },
+    { lat: [-1.1, 1.1], y: [2.17, 3.62], r: 0.18, mat: "black" },
   ],
   panes: [
-    { lat: [-1.02, 1.02], y: [2.12, 3.27], r: 0.12 },
+    { lat: [-1.02, 1.02], y: [2.26, 3.3], r: 0.12 },
     // the destination display in the windscreen's head
-    { lat: [-0.62, 0.62], y: [3.31, 3.5], r: 0.03, mat: "display" },
+    { lat: [-0.62, 0.62], y: [3.34, 3.5], r: 0.03, mat: "display" },
   ],
   decals: NS_LOGO.map((pts) => ({ mat: "logoBlue", pts, fine: 1 })),
   // the slanted lamp clusters on the corners: the headlight outside, the tail lamp inside
-  pods: [1, -1].map((sd) => ({ lat: sd * 0.88, y: 1.95, w: 0.66, h: 0.3, r: 0.14, proud: 0.015, depth: 0.04, mat: "black", lamps: [[sd * 0.1, 0.085, "lampHead"], [-sd * 0.13, 0.05, "lampRed"]] as const })),
   // the third headlight in the cap's box
-  lamps: [[0, 3.75, 0.05, "lampHead"]],
+  lamps: [
+    ...[1, -1].flatMap((sd) => [[sd * 1.08, 2.04, 0.1, "lampHead"], [sd * 0.78, 1.96, 0.07, "lampRed"]] as const),
+    [0, 3.75, 0.05, "lampHead"],
+  ],
   wipers: [[[0.2, 2.16], [0.55, 2.95]]],
 };
 
@@ -115,7 +124,7 @@ function sngLivery(title: string, number: string): ShinkansenLivery {
   return {
     title, number,
     palette: {
-      blue: c(NS_BLUE, 0.35), roofB: c("#0a58b8", 0.5), white: c("#f2f2ef", 0.35), yellow: c(NS_YELLOW, 0.35), bumper: c("#3c4044", 0.55),
+      blue: c(NS_BLUE, 0.35), roofB: c("#1f3990", 0.5), white: c("#f2f2ef", 0.35), yellow: c(NS_YELLOW, 0.35), bumper: c("#3c4044", 0.55),
       skirtG: c("#2f3235", 0.7), capGrey: c("#d6d9da", 0.4), black: c("#141618", 0.25), recess: c("#1b1c1e", 0.75), logoBlue: c("#003082", 0.4),
       display: { color: "#1b1d1f", metallic: 0.2, roughness: 0.15, glass: true }, cabMask: c("#1d1f22", 0.3),
       equip: c("#a9aeb1", 0.5), grille: c("#6e7376", 0.6), rubber: c("#1d1f22", 0.6),
@@ -127,13 +136,14 @@ function sngLivery(title: string, number: string): ShinkansenLivery {
       // the nose's side white from the white band to the roof line, up to the cab door
       { mat: "white", front: [[WHITE_BAND[0], -9], [ROOF_LINE[1], -9]], back: [[WHITE_BAND[0], CAB_DOOR], [ROOF_LINE[1], CAB_DOOR]] },
       // the yellow front round the corners, its back edge the swoosh's front: rising from the lamps to behind the cab window
-      { mat: "yellow", front: [[1.6, -9], [4.2, -9]], back: [[1.6, 0.35], [2.0, 0.65], [2.2, 1.05], [2.26, 2.4], [2.5, 2.56], [2.8, 2.64], [3.4, 2.68], [4.2, 2.74]], top: 9 },
+      { mat: "yellow", front: [[1.6, -9], [4.2, -9]], back: [[1.6, 0.35], [2.0, 0.7], [2.4, 1.12], [3.14, 1.62], [3.2, 2.62], [3.6, 2.66], [4.2, 2.74]], top: 9 },
       // the blue wedge in front of the cab door, its point forward
-      { mat: "blue", front: [[1.25, CAB_DOOR - 0.01], [1.82, 1.5], [2.4, CAB_DOOR - 0.01]], back: [[1.25, CAB_DOOR + 0.02], [2.4, CAB_DOOR + 0.02]] },
+      { mat: "blue", front: [[1.2, CAB_DOOR - 0.01], [1.72, 1.55], [1.95, CAB_DOOR - 0.01]], back: [[1.2, CAB_DOOR + 0.02], [1.95, CAB_DOOR + 0.02]] },
       // the dark grey bumper wrapping round onto the sides, its top rising toward the front
       { mat: "bumper", front: [[0.5, -9], [1.5, -9]], back: [[0.5, 3.05], [0.9, 2.95], [1.05, 2.2], [1.22, 1.3], [1.4, 0.6], [1.5, 0.3]] },
-      // the raked cab side window, its front edge along the windscreen's rake
-      { mat: "black", front: [[2.25, 1.15], [3.33, 1.8]], back: [[2.25, 2.36], [2.5, 2.5], [3.15, 2.56], [3.33, 2.42]] },
+      // the big raked cab side window (2302, 2324): its front edge along the windscreen's rake just behind
+      // the yellow pillar, its sill rising forward from 2.0 m at the swoosh to 2.42 m, its head at 3.2 m
+      { mat: "black", face: true, front: [[2.0, 2.6], [2.42, 1.07], [3.2, 1.6]], back: [[2.0, 2.68], [2.3, 2.72], [3.0, 2.72], [3.2, 2.58]] },
       // the white bar over the first-class windows
       { mat: "white", front: [[2.98, 4.45], [3.04, 4.45]], back: [[2.98, 8.9], [3.04, 8.9]] },
     ],
@@ -196,6 +206,16 @@ function sngFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car
       out("equip", REACH - 0.12, REACH, 0.84, 1.16, 0.2);
     });
   }
+  m.scope("side logos", () => {
+    // the blue NS logo on the white band between the doors, 1.6 m ahead of the rear door (2302, 2348)
+    const d = car.end ? 16.07 - 1.6 - JOIN : 10.92 - 1.6;
+    const dir = Math.sign(X(0) - X(1));
+    for (const sd of [1, -1]) {
+      const tris: Pt[] = [];
+      for (const poly of NS_LOGO) for (let i = 1; i + 1 < poly.length; i++) for (const [l, y] of [poly[0]!, poly[i]!, poly[i + 1]!]) tris.push([d - dir * sd * (l - LOGO_C[0]), WHITE_MID + (y - LOGO_C[1])]);
+      sideDecal(m, b, X, sd, "logoBlue", tris);
+    }
+  });
   m.scope("underfloor", () => {
     // the low floor leaves little under the body: tanks and boxes between the bogies
     if (car.end) { at("skirtG", 6.8 - JOIN, 8.6 - JOIN, 0.4, 0.62, 1.05); at("skirtG", 11.0 - JOIN, 15.0 - JOIN, 0.4, 0.62, 1.05); }
