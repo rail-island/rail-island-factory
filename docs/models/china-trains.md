@@ -22,7 +22,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-hxn5` | CR HXN5 | hood unit, the ES44AC's body | - | 4,660 kW, 120 km/h |
 | `proc-vehicle-cr-hxd1` | CR HXD1 | box locomotive | - | 35.2 m, eight axles, 9,600 kW |
 | `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, raked | - | Co-Co, 20.85 m, 7,200 kW, 160 km/h |
-| `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, flat | - | Co-Co, 20.4 m, 3,780 kW |
+| `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, its own profile tables (`generator/cnSs1.ts`) | - | Co-Co, 20.368 m, 3,780 kW, 90 km/h |
 | `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, streamlined | - | Bo-Bo, 17.5 m, 3,600 kW, 170 km/h |
 | `proc-vehicle-cr-df4` | CR DF4 Dongfeng | box locomotive, diesel | `livery` (`orangeWhite`, `green`) | Co-Co, 20.5 m, 1,985 kW |
 | `proc-vehicle-cr-df11` | CR DF11 Dongfeng | box locomotive, streamlined, diesel | - | Co-Co, 21.25 m, 3,040 kW, 170 km/h |
@@ -240,4 +240,42 @@ leading bogie 5.35 m behind the tip.
   and the one two ahead of it), only the rear one raised; each stands between four raked side shields
   on the roof's edges.
 - **Distant model**: the nose from five rows (dome, rising top, canopy) with the windscreen as glass.
+
+## The SS1's body
+
+`generator/cnSs1.ts`, its own profile tables on the box locomotive kit, matched to the photographs
+in `assets/cr-ss1/` (SOURCES.md): SS1 008 at the China Railway Museum in the green and yellow livery,
+measured on a near side-on photograph of SS1 0681 (heights about 103 px/m, positions along the side
+by a projective fit over its six equally spaced portholes).
+
+- **Size.** 20.368 m over the couplers, 19.4 m over the frame, the roof 4.14 m above the rail; the
+  body is drawn 3.0 m wide with a 3.08 m rim (published 3.106 m), so its handrails stay in the UIC
+  gauge. Two three-axle bogies 10.9 m apart (not published; read from the photograph), 2.3 m between
+  the axles, 1.25 m wheels. 90 km/h, as the Chinese article states (the English one says 95).
+- **Cab front.** Upright to the waist and leaning back 0.16 m to the windscreens' head, the lower
+  body tucking in under the lower stripe, the face slightly bowed with its corners rounded 0.42 m
+  back into the sides; the roof's rim stands 4 cm out over the face and the sides, the cab roof
+  rounds down from 4.14 m. Two windscreens 2.84 - 3.6 m, a red handrail under each, the roof
+  headlight's drum on the roof's front edge, two lamp housings standing 0.13 m out of the face at
+  1.78 - 2.1 m (headlight outboard, tail lamp inboard), the number plate on the lower stripe, an
+  automatic coupler (no side buffers) over a red pilot of three bent tubes on a bottom plate.
+- **Livery.** Light green upper body (sampled `#8fc48e`), dark green lower body (`#1f4a36`), yellow
+  (`#f0a828`) stripes at 1.36 - 1.46 m and 2.45 - 2.57 m round the body. On the face the waist stripe
+  becomes a vee from the corners to a point at 1.72 m, light green inside it, holding the red CR
+  emblem (0.28 m radius, white ring) at 2.32 m.
+- **Sides.** At each end the narrow corner window, the cab window (2.74 - 3.5 m, divided) and the
+  plain cab door (7.0 - 7.6 m from the middle, 1.62 - 3.46 m high) with its handrails, the step
+  recess and the steps below. The machine room between the doors has twelve louvre columns in the
+  body's colour: two tiers of louvres in three columns at each end, a louvre over a window in the
+  first, the last and the four middle columns, as on the louvre side of SS1 008 and 202 (later units
+  had one long louvre panel under a row of portholes, not drawn). Two pressed ribs along the lower
+  body, the side number plate ahead of each door. Both sides alike.
+- **Roof.** The braking-resistor housing behind each cab (6.0 - 8.0 m from the middle, up to 4.5 m),
+  sloping down toward the middle with louvres on the slope and the sides; the walkway's railings
+  between them; the single-arm pantographs over the bogies at 4.75 m from the middle, the rear one
+  raised; the main circuit breaker and the roof line in the middle.
+- **Running gear.** The module's own lighter three-axle bogies (the skirt hides all but the wheels'
+  bottoms, the axle boxes and the springs) and the main reservoirs between the bogies.
+- **Distant model.** The same profiles without the rim, the waist stripe kept and the lower one
+  left out, the resistor housings, the bogie blocks and the raised pantograph (100 triangles).
 
