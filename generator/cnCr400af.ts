@@ -68,12 +68,12 @@ export const CR400AF_FACE: SeriesCabFace = {
   rows: ROWS,
   // silver, the plough dark grey; the visor, lamps and windows are painted below, the livery's sweeps under them
   bands: () => [[0, 0.72, "skirtG"], [0.72, 9, "silver"]],
-  lodBands: [[0, 0.72, "skirtG"], [0.72, 2.3, "silver"], [2.3, 9, "visor"]],
+  lodBands: [[0, 0.72, "skirtG"], [0.72, 2.3, "silver"], [2.3, 9, "gunmetal"]],
   lod: { profile: PROFILE.filter((_, i) => i % 3 === 0 || i === PROFILE.length - 1), corner: [[0.55, 2.0], [4.05, 2.0]], rows: [0.55, 0.85, 1.0, 1.3, 1.58, 2.07, 2.52, 2.96, 3.36, 3.7, 3.92, 4.05], cornerDepth: [[0.55, 6.0], [1.0, 6.3], [1.58, 6.3], [2.07, 5.9], [2.52, 5.6], [2.96, 4.8], [3.36, 3.5], [3.7, 2.4], [3.92, 1.6], [4.05, 0.05]] },
   lodGlass: { hw: 0.82, y: [2.36, 3.0] },
   paint: [
     // the gunmetal visor over the windscreen, from the face's front over the cab to the roof
-    { mat: "visor", front: [[1.85, -9], [4.1, -9]], back: VISOR_BACK },
+    { mat: "gunmetal", front: [[1.85, -9], [4.1, -9]], back: VISOR_BACK },
     // the headlamps and the cab side windows, each in a silver rim
     { mat: "frameSilver", ...grow(LAMP_FRONT, LAMP_BACK, 0.04) },
     { mat: "lampHead", front: LAMP_FRONT, back: LAMP_BACK },
@@ -131,7 +131,7 @@ function cr400afLivery(title: string, number: string, smart: boolean): Shinkanse
   return {
     title, number,
     palette: {
-      silver: c(SILVER, 0.3), red: c(CR_RED), white: c("#f2f2ef"), band: c(BAND, 0.3), visor: c(VISOR, 0.25),
+      silver: c(SILVER, 0.3), red: c(CR_RED), white: c("#f2f2ef"), band: c(BAND, 0.3), gunmetal: c(VISOR, 0.25),
       orange: c("#ee7d1e"), yellow: c("#f5c518"),
       roofG: c("#b9bcbf", 0.45), skirtG: c("#6f7377", 0.7), cabMask: c("#1d1f22", 0.3),
     },
