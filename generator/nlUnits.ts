@@ -8,6 +8,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose } from "./seriesHelpers.ts";
 import { DE1 } from "./nlDe1.ts";
+import { SGM, sgmGame, sgmSeries } from "./nlSgm.ts";
 import { SLT_SERIES } from "./nlSlt.ts";
 import { PLAN_V } from "./nlPlanV.ts";
 import { MAT54 } from "./nlMat54.ts";
@@ -33,17 +34,6 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
   }
 }
 
-
-export const SGM: ShinkansenSeries = {
-  endLength: 26.1, midLength: 26.1, W: 1.43, Y: 1.4, S: 3.2, C: 4.02, lean: 0.97, B: 1.0, A: 1.15,
-  nose: nose(0.1, 1, 2, [[0, 4.02]], [[0, 3.2]], [[0, 1.4]], [[0, 1.15]], [[0, 1.0]]),
-  windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.43, 2.0, 2.9, "cabMask", 1.55),
-  windows: [[1.95, 2.85]], windowW: 1.4, pitch: 1.65, door: [1.2, 3.05, 1.95, 2.65], doorW: 1.3, doorCount: 2,
-  bogieCentres: 18.0, wheelR: 0.47, wheelbase: 2.5, cars: [2, 3],
-  liveries: { yellowGrey: nsLivery("yellowGrey", "2001"), sprinter: nsLivery("sprinter", "2101") },
-  weight: { end: 45, middle: 40 }, power: 320, maxspeed: 125,
-};
 
 export const SLT: ShinkansenSeries = {
   endLength: 17.5, midLength: 15.8, W: 1.4, Y: 1.25, S: 3.2, C: 4.0, lean: 0.96, B: 0.6, A: 0.8,
@@ -108,8 +98,8 @@ export function nsIcm(v?: ParamValues): MeshBuilder { return buildSeries(ICM, P.
 export function nsIcmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(ICM, P.icm, v); }
 export function nsVirm(v?: ParamValues): MeshBuilder { return buildSeries(VIRM, P.virm, v); }
 export function nsVirmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(VIRM, P.virm, v); }
-export function nsSgm(v?: ParamValues): MeshBuilder { return buildSeries(SGM, P.sgm, v); }
-export function nsSgmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(SGM, P.sgm, v); }
+export function nsSgm(v?: ParamValues): MeshBuilder { return buildSeries(sgmSeries(v), P.sgm, v); }
+export function nsSgmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(sgmSeries(v), P.sgm, v); }
 export function nsSlt(v?: ParamValues): MeshBuilder { return buildSeries(SLT_SERIES, P.slt, v); }
 export function nsSltLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(SLT_SERIES, P.slt, v); }
 export function nsSng(v?: ParamValues): MeshBuilder { return buildSeries(SNG, P.sng, v); }
@@ -129,7 +119,7 @@ export const NL_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-ns-icm", "NS ICM Koploper", ICM, P.icm, nsIcm, nsIcmLod, "ns-icm", "uic"),
   seriesDesign("proc-vehicle-ns-virm", "NS VIRM", VIRM, P.virm, nsVirm, nsVirmLod, "ns-virm", "uic"),
   seriesDesign("proc-vehicle-ns-ddz", "NS DDZ", DDZ, P.ddz, nsDdz, nsDdzLod, "ns-ddz", "uic"),
-  seriesDesign("proc-vehicle-ns-sgm", "NS SGM Sprinter", SGM, P.sgm, nsSgm, nsSgmLod, "ns-sgm", "uic"),
+  ((d) => ({ ...d, game: sgmGame(d.game!) }))(seriesDesign("proc-vehicle-ns-sgm", "NS SGM Sprinter", SGM, P.sgm, nsSgm, nsSgmLod, "ns-sgm", "uic")),
   seriesDesign("proc-vehicle-ns-slt", "NS SLT", SLT_SERIES, P.slt, nsSlt, nsSltLod, "ns-slt", "uic"),
   seriesDesign("proc-vehicle-ns-sng", "NS SNG", SNG, P.sng, nsSng, nsSngLod, "ns-sng", "uic"),
   seriesDesign("proc-vehicle-ns-icng", "NS ICNG", ICNG, P.icng, nsIcng, nsIcngLod, "ns-icng", "uic"),
