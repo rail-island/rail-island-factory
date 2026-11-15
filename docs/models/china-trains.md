@@ -27,7 +27,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-df4` | CR DF4 Dongfeng | box locomotive, diesel | `livery` (`orangeWhite`, `green`) | Co-Co, 20.5 m, 1,985 kW |
 | `proc-vehicle-cr-df11` | CR DF11 Dongfeng | box locomotive, streamlined, diesel | - | Co-Co, 21.25 m, 3,040 kW, 170 km/h |
 | `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers | `unit` | 2-10-2, 1.5 m drivers |
-| `proc-vehicle-cr-sy` | CR SY | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
+| `proc-vehicle-cr-sy` | CR SY | steam, its own spec (`generator/cnSy.ts`), knuckle couplers | `unit` | 1'D1', 1.37 m drivers, 21.643 m with the tender, 84 + 54.5 t, 1,100 kW, 80 km/h |
 | `proc-vehicle-cr-js` | CR JS | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
 | `proc-vehicle-cr-25t-coach` | CR 25-series coach | coach, knuckle couplers | `unit` (`softSleeper`, `hardSeat`), `livery` (`z25t`, `green25b`) | 26.6 m; 160 km/h |
 | `proc-vehicle-cr-c70-wagon` | CR C70 / P70 wagon | wagon | `unit` (`open`, `covered`) | 13.98 m and 17.0 m |
@@ -406,3 +406,33 @@ values keep their keys: `endCar` is the power car (the default), `middleCar` a c
 - **Distant model.** The kit's, with the maroon wedges painted on its sides.
 - **Not drawn.** The small cab-side number and depot lettering, the face panel's grille, the brake
   hoses and sockets.
+
+## The SY's body
+
+`generator/cnSy.ts` (`SY_WORLD`, `sySpec`, `syLodSpec`), on the steam kit like the DR 52, from the photographs in
+`assets/cr-sy/` (SY 1702 side-on, its tender, SY 1721, SY 1000, SY 1599, SY 0368, SY 0652); the model carries SY 1772,
+the last SY built.
+
+- **Layout.** A projective fit of SY 1702's side-on photograph over the drivers' published 4.42 m wheelbase gives
+  the pony axle 2.42 m ahead of the first driver and the trailing axle 7.14 m behind it (9.56 m; published 9.55 m).
+  From the front coupler face: pony 1.33 m, drivers 3.75 - 8.17 m, trailing axle 10.89 m, engine coupling plane
+  13.1 m; the tender 8.54 m, so 21.643 m over both as published. Wheels 0.84 / 1.37 / 1.0 m; tender wheels 0.84 m
+  on two bogies of 1.75 m wheelbase, 4.03 m apart.
+- **Engine.** Boiler on 2.77 m, radius 0.81 m (barrel top 3.58 m), the smokebox from 1.57 m with the chimney well
+  back on it (3.21 m, top 4.45 m, the published 4.446 m height), no smoke deflectors; the small dome with its
+  visor at 5.44 m and the big round dome at 6.8 m; the high running board on 2.04 m with its white edge, from the
+  smokebox front to the cab; the white step ladders from the red pilot beam up to it and the tall white grab rails
+  at its front corners; the slatted red pilot and the knuckle coupler; the headlamp on the smokebox's right
+  shoulder; the number plate on the smokebox door and the cab sides; the air pumps on the right running board,
+  boxes on the left, outside steam pipes; the cylinders 530 x 710 mm over the pony truck with a red star on each,
+  the main rods on the third driver; red Boxpok drivers and red truck wheels, all with white tyres; the long cab
+  (10.84 - 12.95 m) with two side windows under a rain strip.
+- **Tender.** A tank 3.0 m wide to 3.1 m with round top edges and rear corners, the tall coal box on its middle
+  (to 4.2 m) with the coal space ahead of it, white railings, the narrowed rear water tank (2.1 m wide, to 3.3 m)
+  that lets the crew see back when shunting, the reversing headlamp on its frame, red sole bars, beam and steps,
+  black wheels with white tyres, China Railway's emblem in white.
+- **Distant model.** The kit's steam LOD; the tender's rounded tanks as prisms of their middle sections and its
+  sole bars as a red band.
+- **Differences.** The bar frames are the kit's plates; the trailing truck is the kit's outside frame, not the
+  real Delta truck; pipework is reduced to a few runs; the headlamp follows most engines (on the right), though
+  some (SY 1599, SY 1504) carry theirs on the left.

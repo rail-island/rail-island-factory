@@ -13,6 +13,7 @@ import { steamEngineSpec, steamTenderSpec, type WorldSteam } from "./steamWorld.
 import { DRG01_WORLD, drg01Spec } from "./deSteam01.ts";
 import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
 import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
+import { SY_WORLD, syLodSpec, sySpec } from "./cnSy.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -53,7 +54,7 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-eir-fairy-queen": { base: { ...IR, title: "Fairy Queen", lead: 1, coupled: 1, trail: 1, leadD: 1.0, coupledD: 1.83, trailD: 1.0, boilerR: 0.6, deflectors: "none", domes: 1, noValveGear: true, palette: { paint: "#2f5e3a", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 5.2, axles: 2, d: 1.0 }, number: "22 EIR" } },
   "proc-vehicle-dhr-b-class": { base: { top: 3.2, coupler: "buffers", half: 1.05, title: "DHR B class", lead: 0, coupled: 2, trail: 0, leadD: 0, coupledD: 0.66, trailD: 0, boilerR: 0.5, deflectors: "none", domes: 1, noValveGear: true, palette: { paint: "#1d4596", wheel: "#a51a1f", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 3.6, axles: 2, d: 0.6 }, number: "779" } },
   "proc-vehicle-cr-qj": { base: { ...CR, title: "CR QJ", lead: 1, coupled: 5, trail: 1, leadD: 0.84, coupledD: 1.5, trailD: 1.0, boilerR: 0.95, deflectors: "wagner", domes: 1, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 11.2, axles: 4, d: 0.95 }, number: "QJ 6999" } },
-  "proc-vehicle-cr-sy": { base: { ...CR, title: "CR SY", lead: 1, coupled: 4, trail: 1, leadD: 0.84, coupledD: 1.37, trailD: 1.0, boilerR: 0.86, deflectors: "none", domes: 1, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 9.4, axles: 4, d: 0.9 }, number: "SY 1772" } },
+  "proc-vehicle-cr-sy": SY_WORLD,
   "proc-vehicle-cr-js": { base: { ...CR, title: "CR JS", lead: 1, coupled: 4, trail: 1, leadD: 0.84, coupledD: 1.37, trailD: 1.0, boilerR: 0.92, deflectors: "wagner", domes: 1, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 10.2, axles: 4, d: 0.9 }, number: "JS 8366" } },
 };
 
@@ -115,8 +116,10 @@ export function dhrBClass(v?: ParamValues): MeshBuilder { return buildLoco(world
 export function dhrBClassLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-dhr-b-class", v)); }
 export function crQj(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-qj", v)); }
 export function crQjLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-cr-qj", v)); }
-export function crSy(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-sy", v)); }
-export function crSyLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-cr-sy", v)); }
+// the SY is drawn from its own spec (cnSy.ts)
+const crSyUnit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-cr-sy"]!, v).unit!;
+export function crSy(v?: ParamValues): MeshBuilder { return buildLoco(sySpec(crSyUnit(v))); }
+export function crSyLod(v?: ParamValues): MeshBuilder { return steamLocoLod(syLodSpec(crSyUnit(v))); }
 export function crJs(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-js", v)); }
 export function crJsLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-cr-js", v)); }
 // the Prussian P 8 is drawn from its own spec (deSteamP8.ts)
@@ -151,7 +154,7 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-eir-fairy-queen", eirFairyQueen, eirFairyQueenLod, steamGame(26, 97, 40, 14), "eir-fairy-queen", "us"),
   design("proc-vehicle-dhr-b-class", dhrBClass, dhrBClassLod, steamGame(14, 60, 30, 4), "dhr-b-class"),
   design("proc-vehicle-cr-qj", crQj, crQjLod, steamGame(134, 2200, 80, 92), "cr-qj", "us"),
-  design("proc-vehicle-cr-sy", crSy, crSyLod, steamGame(89, 1100, 80, 55), "cr-sy", "us"),
+  design("proc-vehicle-cr-sy", crSy, crSyLod, steamGame(84, 1100, 80, 54.5), "cr-sy", "us"),
   design("proc-vehicle-cr-js", crJs, crJsLod, steamGame(104, 1500, 85, 70), "cr-js", "us"),
   design("proc-vehicle-ns-3700", ns3700, ns3700Lod, steamGame(72, 920, 100, 45), "ns-3700"),
   design("proc-vehicle-sncf-141r", sncf141r, sncf141rLod, steamGame(116, 1840, 100, 84), "sncf-141r"),
