@@ -22,15 +22,15 @@ import type { CoachLivery, WorldCoach } from "./worldCoaches.ts";
 
 const c = (hex: string, r = 0.45) => paint(hex, r);
 
-/** The grey lower band's top (the photographs: 0.35 m under the window sills). */
-const GREY_TOP = 1.68;
+/** The grey lower band's top (the photographs: 0.26-0.32 of the side from the body bottom to the cant rail, 0.23 m under the window sills). */
+const GREY_TOP = 1.75;
 const GREY = c("#a9acae", 0.45), ROOF = c("#b4b7b9", 0.6), SKIRT = c("#8e9193", 0.6);
 
 export const IR_LHB: WorldCoach = {
-  length: 24.0, W: 1.62, Y: 1.25, S: 3.55, C: 3.99, B: 0.98, A: 1.12, rows: [[2.02, 2.82]], doorIn: 1.7, doorW: 0.9, door: [1.27, 3.42],
+  length: 24.0, W: 1.62, Y: 1.25, S: 3.55, C: 3.99, B: 0.98, A: 1.12, rows: [[1.98, 2.84]], doorIn: 1.7, doorW: 0.9, door: [1.27, 3.42],
   bogieCentres: 14.9, wheelR: 0.4575, wheelbase: 2.56, coupler: "knuckle", maxspeed: 160,
   types: {
-    ac3: { title: "AC three-tier", windows: 9, windowW: 1.16, number: "3A 211303", weight: 47 },
+    ac3: { title: "AC three-tier", windows: 9, windowW: 1.2, number: "3A 211303", weight: 47 },
     chairCar: { title: "AC chair car", windows: 8, windowW: 1.38, number: "CC 211251", weight: 45 },
   },
   liveries: {
@@ -57,12 +57,12 @@ const X = (d: number) => L / 2 - d;
  */
 interface Layout { door: readonly [number, number]; toilet: readonly [number, number]; toiletY: readonly [number, number]; pitch: number }
 const LAYOUT: Record<string, Layout> = {
-  // Tejas 3A side view (projective fit, 9 windows, 1.87 m pitch, windows 0.62 of it): door 1.70-2.60, toilet window 0.55-1.20
-  ac3: { door: [1.7, 2.6], toilet: [0.55, 1.2], toiletY: [2.06, 2.94], pitch: 1.87 },
+  // Tejas 3A side view (projective fit, 9 windows, 1.87 m pitch, windows 0.64 of it): door 1.70-2.60, toilet window 0.55-1.20
+  ac3: { door: [1.7, 2.6], toilet: [0.55, 1.2], toiletY: [2.02, 2.94], pitch: 1.87 },
   // Shatabdi chair car (12017 and 12277 views): 8 windows at 1.91 m; the door 1.25 m in, the toilet's shallow window beside it
   chairCar: { door: [1.25, 2.15], toilet: [2.25, 3.5], toiletY: [2.42, 2.86], pitch: 1.91 },
 };
-const SILL = 2.02, HEAD = 2.82;
+const SILL = 1.98, HEAD = 2.84;
 const mirror = (sp: readonly [number, number]): Array<readonly [number, number]> => [[sp[0], sp[1]], [L - sp[1], L - sp[0]]];
 
 /** The red and blue liveries' end panel: grey below a line from the door's outer edge at the band's top up to the end below the roof. */
@@ -95,7 +95,7 @@ function lhbDef(unit: string, liveryKey: string, l: CoachLivery, lod: boolean): 
     ...(l.doorBands ? { doorBands: l.doorBands } : {}),
     ends: { d: 0, bands: l.bands, cap: "endWall" },
     windows: [
-      { y: [SILL, HEAD], spans: row, frame: "rubber", cornerR: 0.1 },
+      { y: [SILL, HEAD], spans: row, frame: "rubber", cornerR: 0.15 },
       { y: lay.toiletY, spans: mirror(lay.toilet), frame: "rubber", cornerR: 0.07, glass: "frost" },
     ],
     doors: { spans: doors, y: s.door, glass: [1.95, 3.0], glassW: 0.36, glassCornerR: 0.12 },

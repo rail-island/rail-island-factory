@@ -48,9 +48,9 @@ The catalog had no Indian train before. Every design is filed under India.
 - **WP.** The bullet-nosed smokebox front is the generator's plain one.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
 - **LHB coach.** Measured on photographs (`assets/ir-lhb-coach/SOURCES.md`; Tejas 3A side fitted
-  projectively, 1.87 m window pitch): the 3A has nine 1.16 m windows and its louvred toilet window in
+  projectively, 1.87 m window pitch): the 3A has nine 1.2 m by 0.86 m windows (round-cornered) and its louvred toilet window in
   the end panel beyond the door; the chair car eight 1.38 m windows and a shallow toilet window inside
-  the door. The red and blue liveries' end panels are grey below a diagonal from the door's foot to
+  the door. The grey lower band reaches 1.75 m; the red and blue liveries' end panels are grey below a diagonal from the door's foot to
   the roof; two roof AC packages, sealed gangways, folding steps. Still simplified: the bogies are the
   kit's generic two-axle bogie (not the FIAT frame), the Humsafar's wave graphics are straight bands
   and the Tejas's yellow-to-orange fade is three bands.
