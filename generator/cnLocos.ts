@@ -15,6 +15,7 @@ import { buildUsHood, usHoodLod, type UsLivery } from "./usHoodKit.ts";
 import { ES44_SPEC } from "./usDiesels.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
+import { crHxd3dBody, crHxd3dBodyLod } from "./cnHxd3d.ts";
 
 const HXN5_LIVERY: Record<string, UsLivery> = {
   orange: {
@@ -61,8 +62,8 @@ const lod = (k: string, v?: ParamValues): MeshBuilder => boxLocoLod(liverySpec(L
 
 export function crHxd1(v?: ParamValues): MeshBuilder { return b("hxd1", v); }
 export function crHxd1Lod(v?: ParamValues): MeshBuilder { return lod("hxd1", v); }
-export function crHxd3d(v?: ParamValues): MeshBuilder { return b("hxd3d", v); }
-export function crHxd3dLod(v?: ParamValues): MeshBuilder { return lod("hxd3d", v); }
+export function crHxd3d(_v?: ParamValues): MeshBuilder { return crHxd3dBody(); }
+export function crHxd3dLod(_v?: ParamValues): MeshBuilder { return crHxd3dBodyLod(); }
 export function crSs1(v?: ParamValues): MeshBuilder { return b("ss1", v); }
 export function crSs1Lod(v?: ParamValues): MeshBuilder { return lod("ss1", v); }
 export function crSs8(v?: ParamValues): MeshBuilder { return b("ss8", v); }

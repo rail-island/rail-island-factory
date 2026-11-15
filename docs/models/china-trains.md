@@ -21,7 +21,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-crh6a` | CRH6A | series | `unit`, `cars` 4 - 8 | 200 km/h |
 | `proc-vehicle-cr-hxn5` | CR HXN5 | hood unit, the ES44AC's body | - | 4,660 kW, 120 km/h |
 | `proc-vehicle-cr-hxd1` | CR HXD1 | box locomotive | - | 35.2 m, eight axles, 9,600 kW |
-| `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, raked | - | Co-Co, 20.85 m, 7,200 kW, 160 km/h |
+| `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, its own cab and livery (`generator/cnHxd3d.ts`) | - | Co-Co, 22.99 m, 126 t, 7,200 kW, 160 km/h |
 | `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, flat | - | Co-Co, 20.4 m, 3,780 kW |
 | `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, streamlined | - | Bo-Bo, 17.5 m, 3,600 kW, 170 km/h |
 | `proc-vehicle-cr-df4` | CR DF4 Dongfeng | box locomotive, diesel | `livery` (`orangeWhite`, `green`) | Co-Co, 20.5 m, 1,985 kW |
@@ -208,3 +208,33 @@ Chinese units keep the shared `hsr()` nose.
   others; single-arm pantographs on the third and sixth cars (the kit's rule).
 - **Not drawn.** The business saloon's panes in the band on the nose (painted black), the Chinese "Fuxing Hao"
   lettering, the roof's small fittings.
+
+## The HXD3D's body
+
+`generator/cnHxd3d.ts`, its own profile tables on the box locomotive kit, matched to the photographs in
+`assets/cr-hxd3d/` (unit HXD3D 0080, the "red orangutan" production livery every photograph shows).
+
+- **Size.** 22.989 m over the automatic couplers (the model's own centre coupler at 0.88 m, not the
+  kit's buffers), 21.9 m over the faces, 4.1 m high. The body is drawn 3.0 m wide, not the real 3.1 m,
+  so the cab doors' handrails stay inside the UIC gauge. Bogie pivots 11.4 m apart (measured; no
+  published figure found), each bogie's wheelbase 2.0 + 2.35 m with the longer pair inboard, 1.25 m wheels.
+- **Cab.** The TRAXX-derived face: upright to the grey skirt's top (1.5 m), leaning back 0.12 m to the
+  waist (2.37 m) and 0.45 m to the windscreen's head (3.44 m), the roof rounding down 1.75 m to it; the
+  corners chamfered 0.38 m back from 1.19 m out. Two windscreen panes (2.62 - 3.44 m, 2.14 m across) with
+  wipers; on the red waist band a stacked pair of round headlights in a silver housing at each side and
+  between them a dark red panel with the CR emblem, "Hexie" and the number; the double top headlight in a
+  dark housing on the roof's slope and two yellow horns behind it. Under the face the grey lower cab,
+  its rear edge slanting from 1.5 m to 1.0 m behind the face, red air-hose cocks, and a yellow plough
+  with black chevrons.
+- **Sides.** Smooth, no machine-room openings: the cab window (8.85 - 9.27 m from the centre, 2.62 -
+  3.22 m) ahead of the cab door (7.95 - 8.7 m); sixteen louvres along the cantrail's slope (3.6 - 3.95 m).
+- **Paint.** Red body and roof, a dark grey skirt to 1.5 m (the lower face too), the face maroon from
+  the waist to the roof's slope; on each side a maroon wedge behind each cab, its foot at the waist 1.9 m
+  behind the face, its head at the cantrail 5.6 m behind it. The large white "Hexie" (0.76 m, drawn as
+  simplified brush strokes) and "HXD3D0080" stand a little behind the middle of each side, read left
+  to right from either side.
+- **Roof.** Two single-arm pantographs 10 m apart (the DSA-200 drawn as the kit's), the trailing one
+  raised, the roof line between them, the main breaker's base and a hatch.
+- **Distant model.** The kit's, with the maroon wedges painted on its sides.
+- **Not drawn.** The small cab-side number and depot lettering, the face panel's grille, the brake
+  hoses and sockets.
