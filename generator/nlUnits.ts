@@ -8,6 +8,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { ICM } from "./nlIcm.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -118,17 +119,6 @@ export const DE1: ShinkansenSeries = {
   bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, traction: "diesel", single: true,
   liveries: { blue: DE1_BLUE },
   weight: { end: 64, middle: 64 }, power: 300, maxspeed: 120,
-};
-
-export const ICM: ShinkansenSeries = {
-  endLength: 27.0, midLength: 26.4, W: 1.41, Y: 1.4, S: 3.15, C: 4.03, lean: 0.97, B: 1.0, A: 1.15,
-  // the "Koploper": the cab raised over the nose's gangway door
-  nose: nose(1.8, 0.6, 2.3, [[0, 2.6], [0.4, 2.8], [1.0, 3.45], [1.8, 3.95], [2.4, 4.03]], [[0, 2.5], [0.4, 2.7], [1.0, 3.05], [1.8, 3.15]], [[0, 1.5], [0.8, 1.4]], [[0, 1.3], [0.6, 1.15]], [[0, 1.2], [0.3, 1.0]]),
-  windscreen: [0.5, 1.6, 0.07, 1.15], lamps: [0.1, 1.6],
-  windows: [[1.95, 2.85]], windowW: 1.3, pitch: 1.55, door: [1.2, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 19.0, wheelR: 0.47, wheelbase: 2.5, cars: [3, 4],
-  liveries: { yellowBlue: nsLivery("yellowBlue", "4011"), yellowGrey: nsLivery("yellowGrey", "4201") },
-  weight: { end: 54, middle: 48 }, power: 320, maxspeed: 160,
 };
 
 export const VIRM: ShinkansenSeries = {
