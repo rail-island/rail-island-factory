@@ -1107,7 +1107,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-crh2a": series(2007, 50, 100, ELRL, { cars: 8 }),
   "proc-vehicle-cr-crh3c": series(2008, 40, 80, ELRL, { cars: 8 }),
   "proc-vehicle-cr-crh5a": series(2007, 50, 90, ELRL, { cars: 8 }),
-  "proc-vehicle-cr-cr200j": series(2019, 0, 90, ELRL, { cars: 8, liveries: ["whiteRed"] }),
+  // the power car (no seats) leading six coaches and the driving trailer, turned
+  "proc-vehicle-cr-cr200j": pax(2019, 0, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 90 }), at({ unit: "drivingTrailer" }, { capacity: 60 })],
+    presets: presets({ unit: "middleCar" }, { livery: "whiteRed" }),
+    formations: [formation("8 cars", {}, ...Array.from({ length: 6 }, () => ({ unit: "middleCar" })), [{ unit: "drivingTrailer" }, "turned"])],
+  }),
   "proc-vehicle-cr-crh6a": series(2014, 60, 90, ELRL, { cars: 8 }),
   "proc-vehicle-cr-hxn5": loco(2008, RAIL, { presets: presets() }),
   "proc-vehicle-cr-hxd1": loco(2006, ELRL, { presets: presets() }),
