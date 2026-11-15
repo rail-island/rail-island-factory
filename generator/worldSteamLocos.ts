@@ -13,6 +13,7 @@ import { steamEngineSpec, steamTenderSpec, type WorldSteam } from "./steamWorld.
 import { DRG01_WORLD, drg01Spec } from "./deSteam01.ts";
 import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
 import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
+import { NS3700_WORLD, ns3700LodSpec, ns3700Spec } from "./nl3700.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -35,7 +36,7 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-kpev-p8": P8_WORLD,
   "proc-vehicle-sncf-241p": { base: { ...UIC, title: "SNCF 241 P", lead: 2, coupled: 4, trail: 1, leadD: 1.0, coupledD: 2.02, trailD: 1.35, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: ALL_BLACK, tender: { length: 10.2, axles: 4, d: 1.0 }, number: "241 P 17" } },
   "proc-vehicle-sncf-141r": { base: { ...UIC, title: "SNCF 141 R", lead: 1, coupled: 4, trail: 1, leadD: 0.92, coupledD: 1.65, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 10.5, axles: 4, d: 0.92 }, number: "141 R 1199" } },
-  "proc-vehicle-ns-3700": { base: { ...UIC, title: "NS 3700", lead: 2, coupled: 3, trail: 0, leadD: 1.0, coupledD: 1.85, trailD: 0, boilerR: 0.84, deflectors: "none", domes: 1, palette: { paint: "#244a33", wheel: "#2a2b2d", frame: "#7a2e22", smokebox: "#1c1d22" }, tender: { length: 7.8, axles: 4, d: 1.0 }, number: "3737" } },
+  "proc-vehicle-ns-3700": NS3700_WORLD,
   "proc-vehicle-renfe-141f": { base: { ...UIC, title: "Renfe 141F Mikado", lead: 1, coupled: 4, trail: 1, leadD: 1.0, coupledD: 1.56, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 8.9, axles: 4, d: 0.95 }, number: "141F 2111" } },
   "proc-vehicle-renfe-242f": { base: { ...UIC, title: "Renfe 242F", lead: 2, coupled: 4, trail: 1, leadD: 0.95, coupledD: 1.9, trailD: 1.1, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: { paint: "#244a33", wheel: "#2a2b2d", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 10.4, axles: 4, d: 1.0 }, number: "242F 2009" } },
   "proc-vehicle-lner-a4": { base: { ...UK, title: "LNER A4", lead: 2, coupled: 3, trail: 1, leadD: 0.97, coupledD: 2.03, trailD: 1.17, boilerR: 0.85, deflectors: "none", domes: 1, palette: { paint: "#1d3f80", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.6, axles: 4, d: 1.0 }, number: "4468 MALLARD" },
@@ -86,8 +87,10 @@ export function sncf241p(v?: ParamValues): MeshBuilder { return buildLoco(worldS
 export function sncf241pLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-sncf-241p", v)); }
 export function sncf141r(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-sncf-141r", v)); }
 export function sncf141rLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-sncf-141r", v)); }
-export function ns3700(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ns-3700", v)); }
-export function ns3700Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ns-3700", v)); }
+// the NS 3700 is drawn from its own spec (nl3700.ts)
+const ns3700Unit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-ns-3700"]!, v).unit!;
+export function ns3700(v?: ParamValues): MeshBuilder { return buildLoco(ns3700Spec(ns3700Unit(v))); }
+export function ns3700Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(ns3700LodSpec(ns3700Unit(v))); }
 export function renfe141f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-renfe-141f", v)); }
 export function renfe141fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-renfe-141f", v)); }
 export function renfe242f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-renfe-242f", v)); }
@@ -153,6 +156,6 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-cr-qj", crQj, crQjLod, steamGame(134, 2200, 80, 92), "cr-qj", "us"),
   design("proc-vehicle-cr-sy", crSy, crSyLod, steamGame(89, 1100, 80, 55), "cr-sy", "us"),
   design("proc-vehicle-cr-js", crJs, crJsLod, steamGame(104, 1500, 85, 70), "cr-js", "us"),
-  design("proc-vehicle-ns-3700", ns3700, ns3700Lod, steamGame(72, 920, 100, 45), "ns-3700"),
+  design("proc-vehicle-ns-3700", ns3700, ns3700Lod, steamGame(72, 990, 110, 43), "ns-3700"),
   design("proc-vehicle-sncf-141r", sncf141r, sncf141rLod, steamGame(116, 1840, 100, 84), "sncf-141r"),
 ];
