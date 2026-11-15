@@ -73,6 +73,12 @@ The spec asked for a new branch per feature; this session may only push its own 
    (`hero.fleet`), English in all thirteen other locales, marked `untranslated(en.hero.fleet)`.
    This changes the spec's "decoration only" decision at the user's request; the spec
    records it.
+3. **No layout shift.** The strip and its caption line now take their full height in the
+   page's markup from the first paint and are only filled after load (trains slide in, the
+   caption fades in); a failed load leaves an empty track rather than collapsing it. The
+   site's Google Fonts got metric-matched local Arial fallbacks per weight, so the font
+   swap no longer reflows the news band and hero. Landing-page CLS with fonts delayed
+   1.2 s, 360-1440 px: before 0.004-0.031, after 0.001-0.002.
 
 ## How to test
 
@@ -104,8 +110,10 @@ The spec asked for a new branch per feature; this session may only push its own 
 **Also worth trying.**
 - Emulate `prefers-reduced-motion: reduce`: one train stands still, centred if it fits.
 - Switch to another tab for a while and back: the train continues where it was.
-- Serve `trains.json` without the CORS header, or stop the server: the strip stays
-  hidden, the hero is otherwise unchanged, no console error but the failed request.
+- Serve `trains.json` without the CORS header, or stop the server: the empty track
+  stays where it is and the caption line stays blank; nothing on the page moves.
+- Record a performance trace (DevTools > Performance, or a `layout-shift`
+  PerformanceObserver) while loading the page with slow fonts: CLS stays about 0.001.
 - In the factory, add a car with an unknown livery to `TRAIN_PARADE`: `pnpm build:trains`
   fails naming the train and car.
 
@@ -136,4 +144,5 @@ Nothing - the spec is implemented in full.
 ## Changelog
 
 - The landing page shows Rail Island trains passing one at a time along a track in the hero.
+- The landing page no longer jumps while it loads: the hero keeps its layout as the trains and fonts arrive.
 - Under the trains, the page says how many train models and variants the game has.
