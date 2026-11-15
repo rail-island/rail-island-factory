@@ -1,5 +1,5 @@
-// Chinese locomotives: the HXN5 on the hood unit kit (the GE Evolution, on the
-// ES44AC's body, usDiesels.ts); the HXD1, HXD3D, SS1 and SS8 electrics and the
+// Chinese locomotives: the HXN5 measured from photographs (cnHxn5.ts, the GE
+// Evolution's hood behind a full-width Chinese cab); the HXD1, HXD3D, SS1 and SS8 electrics and the
 // DF4 and DF11 diesels on the box locomotive kit (worldLocoKit.ts), whose
 // buffers stand in for their automatic couplers (a deviation).
 // See docs/models/china-trains.md.
@@ -10,23 +10,13 @@ import { boxLocoLod, buildBoxLoco } from "./boxLocoKit.ts";
 import { c } from "./czElectricKit.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { enumParam } from "./emuParts.ts";
-import { paint } from "./dieselParts.ts";
-import { buildUsHood, usHoodLod, type UsLivery } from "./usHoodKit.ts";
-import { ES44_SPEC } from "./usDiesels.ts";
+import { buildHxn5, buildHxn5Lod, HXN5_LIVERIES } from "./cnHxn5.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 
-const HXN5_LIVERY: Record<string, UsLivery> = {
-  orange: {
-    title: "CR orange", railroad: "", letterH: 0.3, letterY: 1.0, number: "HXN5 0001",
-    palette: { cnOrange: paint("#e8701e"), cnWhite: paint("#efefea"), cnGrey: paint("#8f9396", 0.6) },
-    body: [[0, 2.6, "cnOrange"], [2.6, 2.85, "cnWhite"], [2.85, 9, "cnOrange"]], roof: "cnGrey", frame: "cnOrange", sillStripe: [0.04, 0.12, "cnWhite"],
-    trucks: "underframe", pilot: "cnOrange", letter: "cnWhite", numberMat: "cnWhite", rails: "cnWhite",
-  },
-};
-const HXN5_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { orange: "CR orange" })];
-export function crHxn5(v?: ParamValues): MeshBuilder { return buildUsHood(ES44_SPEC, HXN5_LIVERY[resolveParams(HXN5_PARAMS, v).livery!]!); }
-export function crHxn5Lod(v?: ParamValues): MeshBuilder { return usHoodLod(ES44_SPEC, HXN5_LIVERY[resolveParams(HXN5_PARAMS, v).livery!]!); }
+const HXN5_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { orange: "CR green" })];
+export function crHxn5(v?: ParamValues): MeshBuilder { return buildHxn5(HXN5_LIVERIES[resolveParams(HXN5_PARAMS, v).livery!]!); }
+export function crHxn5Lod(v?: ParamValues): MeshBuilder { return buildHxn5Lod(HXN5_LIVERIES[resolveParams(HXN5_PARAMS, v).livery!]!); }
 
 type Body = Omit<WorldLoco, "palette" | "side" | "number">;
 const GREY = c("#5a5d60", 0.6);
