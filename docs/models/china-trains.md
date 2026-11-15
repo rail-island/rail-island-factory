@@ -15,7 +15,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-cr400bf` | Fuxing CR400BF | series, Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`gold`, `red`) | 350 km/h |
 | `proc-vehicle-cr-crh380a` | CRH380A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the long nose; 350 km/h |
 | `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the E2-derived nose; 250 km/h |
-| `proc-vehicle-cr-crh3c` | CRH3C | series, Velaro body | `unit`, `cars` 3 - 8 | 350 km/h |
+| `proc-vehicle-cr-crh3c` | CRH3C | series, the ICE 3's Velaro cab face (`cnCrh3c.ts`) | `unit`, `cars` 3 - 8 | end 25.675 m, middle 24.775 m, 3.1 m wide (real 3.265 m), 3.89 m high; 350 km/h |
 | `proc-vehicle-cr-crh5a` | CRH5A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | 250 km/h |
 | `proc-vehicle-cr-cr200j` | Fuxing CR200J | series, its power cars' pantographs | `unit`, `cars` 4 - 8, `livery` (`green`, `whiteRed`) | 160 km/h |
 | `proc-vehicle-cr-crh6a` | CRH6A | series | `unit`, `cars` 4 - 8 | 200 km/h |
@@ -44,3 +44,32 @@ Railway's trains. Every design here is filed under China.
 
 `test/worldTrains.test.ts` (all 160 plan designs) and, for each module's first design,
 the catalog sweep.
+
+## The CRH3C's body
+
+`generator/cnCrh3c.ts`, matched to the photographs in `assets/cr-crh3c/` (unit CRH3-037C).
+The Velaro CN shares the ICE 3's snout, so the design reuses its measured cab face
+(`ICE3_FACE`, [germany-trains.md](germany-trains.md)) with the CRH face's own paint; the
+shared `velaro()` body is no longer used by it (the AVE S-103 keeps it).
+
+- **Size.** End car 25.675 m and middle car 24.775 m over the couplers (200 m for eight
+  cars), 3.89 m high, bogie centres 17.375 m. The real body is 3.265 m wide, wider than the
+  ICE 3's 2.95 m; the model is drawn 3.1 m wide, the UIC gauge's limit.
+- **Face.** The canopy's tinted glass from 2.47 m with a light grey lip below it
+  (2.17 - 2.49 m) holding the round upper lamp, a dark rim round both; the black "Hexie hao"
+  characters drawn as simplified strokes just under the lip; the two lamp clusters
+  (1.55 - 1.98 m, leaning out at the top) with the head and red lamps on their outer half and
+  six black slats on the inner; the coupler cover's seam over its top and flanks; a light
+  grey plough under it.
+- **Livery.** White; one royal-blue band (sampled `#1048a8`), 7 cm high at 1.865 - 1.935 m,
+  8.5 cm under the windows' foot, along every car. On the end car it falls from the join
+  (7 m behind the tip) to a point 1.48 m behind the tip at 1.35 m, low on the nose's flank
+  behind the coupler cover, and a thin line rises back from the point to 2.42 m behind the
+  tip at 2.26 m, just ahead of the lounge window: a chevron opening backward. The navy "CRH"
+  mark at the end car's rear, the running number under the windows.
+- **Sides.** The end car: the VIP lounge's raked window band behind the cab (its front edge
+  leaning further back than the ICE 3's), one door 8.45 m behind the tip, the saloon's
+  windows to the CRH mark. The middle cars: a door a side at each end (the photographs'
+  second and third cars), the windows between.
+- **Roof.** Two low air-conditioning units on the rear half of the end car; the single-arm
+  pantographs on low fairings on the second and next-to-last cars.

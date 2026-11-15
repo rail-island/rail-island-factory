@@ -7,7 +7,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, nose, velaro } from "./seriesHelpers.ts";
+import { c, nose } from "./seriesHelpers.ts";
+import { CRH3C } from "./cnCrh3c.ts";
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#d9dcde", 0.6), skirtG: c("#9aa0a5", 0.7), cabMask: c("#1d1f22", 0.3) };
@@ -40,7 +41,7 @@ export const CRH380A = hsr({ endLength: 26.5, midLength: 25.0, noseLen: 11.5, C:
   liveries: { crh: lv("CRH blue", "CRH380A-6041", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) } });
 export const CRH2A = hsr({ endLength: 25.7, midLength: 25.0, noseLen: 7.0, C: 3.7, power: 1050, maxspeed: 250, weight: { end: 46, middle: 44 },
   liveries: { crh: lv("CRH blue", "CRH2A-2001", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) } });
-export const CRH3C: ShinkansenSeries = velaro({ W: 1.5, endLength: 25.675, midLength: 24.775, liveries: { crh: lv("CRH blue", "CRH3C-3001", [1.68, WHITE], [1.82, "#1d3f80"], [9, WHITE]) }, weight: { end: 55, middle: 50 }, power: 1100, maxspeed: 350 });
+export { CRH3C };
 
 export const CRH5A: ShinkansenSeries = {
   endLength: 27.6, midLength: 25.0, W: 1.6, Y: 1.4, S: 3.0, C: 4.0, lean: 0.93, B: 0.8, A: 1.05,
