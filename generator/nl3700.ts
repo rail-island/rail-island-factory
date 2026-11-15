@@ -74,14 +74,14 @@ const LEAD = [1.65, 3.95];
 const COUPLED = [6.45, 8.5, 10.63];
 /** The engine's rear head; the tender's front head meets it. */
 const END = 12.9;
-/** Boiler centre and barrel radius (barrel top 3.74 m); the running board's top. */
-const BY = 2.9;
+/** Boiler centre and barrel radius (barrel top 3.69 m); the running board's top. */
+const BY = 2.85;
 const BR = 0.84;
 const RB = 1.65;
 const HALF = 1.38;
-/** The smokebox from its front ring to its rear ring, its riveted wrapper's radius. */
+/** The smokebox from its front ring to its rear ring, its riveted wrapper's radius (2 cm over the kit's own smokebox, about the barrel's size as on 3767). */
 const SMOKEBOX = [1.79, 3.58] as const;
-const SBR = 0.95;
+const SBR = 0.9;
 /** The Belpaire firebox's front (its throat plate); the cab sides. */
 const FIREBOX0 = 7.71;
 const CAB0 = 10.28;
@@ -289,7 +289,7 @@ function engineExtras(t: Steam): void {
   });
   m.scope("smokebox door", () => {
     // the wide door, its polished rim, the two hinge straps and the dart wheel and handle
-    const [x0, r] = [SMOKEBOX[0] - 0.02, 0.8];
+    const [x0, r] = [SMOKEBOX[0] - 0.02, 0.74];
     const X0 = t.X(x0);
     const door = ngon(28, r, Math.PI / 28, 0, BY);
     // the door's face 1.5 cm ahead of the kit's own door and its dart (boiler()), which it hides
@@ -357,7 +357,8 @@ function brassLamp(t: Steam, e: number, x: number, y: number, z: number): void {
   });
 }
 
-const CHIMNEY = { x: 2.58, top: 4.52, r: 0.25 };
+/** The tall stack: 0.77 m above the smokebox to the published 4.52 m. */
+const CHIMNEY = { x: 2.58, top: 4.52, r: 0.22 };
 /** The outside cylinders between the bogie's axles, 400 x 660 mm. */
 const CYL = [2.22, 3.4] as const;
 const CYL_Y = 1.02;
@@ -371,7 +372,7 @@ function engine(): LocoSpec {
     heads: [0, END],
     beams: { y0: 0.8, y1: 1.38, length: [0.6, 0.3], half: 1.44 },
     boiler: { x0: SMOKEBOX[0], x1: FIREBOX0 + 0.3, y: BY, r: BR, smokebox: SMOKEBOX[1] - SMOKEBOX[0], bands: [4.55, 6.5, 7.5], band: "black", n: 24 },
-    chimney: { x: CHIMNEY.x, top: CHIMNEY.top, r: CHIMNEY.r, base: 3.8 },
+    chimney: { x: CHIMNEY.x, top: CHIMNEY.top, r: CHIMNEY.r, base: BY + SBR - 0.07 },
     // the board from the beam's top up the short ramp ahead of the smokebox, straight on to the cab
     runningBoard: { profile: [[0.62, 1.4], [1.0, 1.4], [1.18, 1.46], [1.3, 1.56], [1.36, RB], [CAB1 + 0.03, RB]], half: HALF, valance: 0.14 },
     frame: { x0: 0.8, x1: END - 0.3, top: RB - 0.06 },
