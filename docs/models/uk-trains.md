@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan and London Overground's Class 378 Capitalstar (a draft), at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass142.ts` (the Pacer's cars), `generator/brClass158.ts` (the Class 158's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/ukLocoFronts.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass158.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/eurostar373.ts` (the Eurostar's power car face, sides and liveries), `generator/brClass142.ts` (the Pacer's cars), `generator/brClass158.ts` (the Class 158's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/ukLocoFronts.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass158.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -15,7 +15,7 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 | `proc-vehicle-br-ic225` | InterCity 225 | series, Mk4 cars | `unit`, `cars` 4 - 8, `livery` (`intercity`, `lner`) | the Class 91's end; 225 km/h |
 | `proc-vehicle-br-class-800` | Class 800 IET | series | `unit`, `cars` 5 - 8, `livery` (`gwr`, `azuma`) | 26 m cars; 200 km/h |
 | `proc-vehicle-br-class-390` | Class 390 Pendolino | series | `unit`, `cars` 4 - 8, `livery` (`virgin`, `avanti`) | tilting; 225 km/h |
-| `proc-vehicle-eurostar-373` | Eurostar e300 | series | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | 300 km/h |
+| `proc-vehicle-eurostar-373` | Eurostar e300 | series, cab face, Jacobs trailers | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | power car 22.15 m, trailer 18.7 m; 300 km/h |
 | `proc-vehicle-br-class-158` | Class 158 | its own cars on bogies (`brClass158.ts`) | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m, 2.70 m wide; 145 km/h |
 | `proc-vehicle-br-class-142` | Class 142 Pacer | its own two-axle cars (`brClass142.ts`) | `unit`, `livery` (`provincial`, `northern`, `walesTeal`, `provincialBlue`, `metro`, `walesWrap`) | two cars of 15.45 m; 120 km/h |
 | `proc-vehicle-br-class-378` | Class 378 Capitalstar | series, two doors a side | `unit`, `cars` 3 - 5 (4 default) | Electrostar, 2.80 m wide, end car 20.4 m, middle 20.1 m; 2,400 kW a five-car unit; 121 km/h |
@@ -46,11 +46,8 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   third-rail shoes are not drawn. The seats (272 a
   five-car unit, tip-ups included) and the 2,400 kW are shared evenly over the cars.
 
-- **Power cars.** The Eurostar's power cars are drawn as locomotives: bogies 14 m apart
-  under the middle, the cab door and a porthole behind the cab, the machine room's long
-  louvre band, and the pantograph on the power car - raised on the trailing one in a train,
-  none on the trailers (photographs in `assets/eurostar-373/`); the leading power car's
-  folded pantograph is not drawn. The HST's Class 43 is drawn as a locomotive: its long rounded wedge nose
+- **Power cars.** The Eurostar's power cars are locomotives with a cab face (see "The Eurostar
+  e300" below). The HST's Class 43 is drawn as a locomotive: its long rounded wedge nose
   (a broad superellipse plan, the chin bulging over the low valance, the bonnet sloping
   up to the raked windscreen in its black surround, the cab roof rounding into the body
   4.6 m behind the tip), bogies 10.29 m apart under the middle of the body, plain sides
@@ -93,6 +90,46 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   high. The tender is the same for both.
 - **1938 Stock.** A metro on the series kit: no collector is drawn (the tube's conductor
   rails are not modelled), nor the shoe gear on the bogies.
+
+## The Eurostar e300
+
+Measured on the photographs in `assets/eurostar-373/` (3104 and 3308 in the original scheme, 3211
+in the blue one) and the published figures there. `eurostar373.ts` holds the series; `ukUnits.ts`
+only registers it.
+
+- **Nose.** A cab face (`E300_FACE`, seriesCab.ts) 4.5 m long: the white bumper bulging to the tip
+  at 1.1 m with its seam over the top and down the corners and the coupler cover's centre seam,
+  the lamp band (two dark lamp housings, head and tail lamps, the perforated grille between them),
+  the long bonnet rising to the canopy's visor at 2.27 m, 2.2 m back, the wrap-round windscreen
+  raked back to 3.2 m, the roof lamp on the canopy and the crown (3.95 m) at the join. The plan is
+  round, the corners' depth growing from the blunt bumper to the bonnet. The dark plough under the
+  bumper is a fitting.
+- **Paint.** The yellow band across the lamps and over the bonnet climbs the canopy's sides and runs
+  on as a line along the cantrail of every car; the dark canopy covers the windscreen and the cab
+  roof; both edges are [y, d] tables (`YELLOW_FOOT`, `CANOPY_FOOT`) shared by the two schemes.
+  `eurostar` (original, 3104): white, a lower yellow band over the dark skirt on the power car and
+  the trailers, "eurostar" in yellow under the three navy waves. `eurostar2011` (the 2011 brand as
+  the refurbished sets carry it, 3211): the nose, its lamps and grille without a dark housing, the
+  plough and the skirts silver-grey, Eurostar blue above a
+  yellow line on both car types, the blue's front edge leaning on the cab side, the white "e" and
+  "EUROSTAR". The interim 2011 logo on the original paint is not drawn.
+- **Power car.** 22.15 m; the front bogie 5.1 m behind the tip (under the machine-room door, as the
+  photographs show; the TGV power car's 14 m bogie centres) and the rear one 3 m from its inner end;
+  outlines of the number hatch and the cab door on the nose's side, the porthole, the machine-room
+  door, then the long grille of three ribbed panels between lighter frames; roof air intakes behind
+  the canopy and over the machine room. Two single-arm pantographs over the rear bogie (25 kV and
+  DC): in a train the trailing power car raises the rear one, the other stays folded, and the
+  leading power car keeps both folded; a lone power car raises one.
+- **Trailers.** 18.7 m, lower than the power car (crown 3.45 m, the series kit's `trailerSection`),
+  one door at the front end and nine windows a side. In a train they ride on Jacobs bogies between
+  each other, and the first and last on a motor bogie of their own 3 m inside the end beside the
+  power car (`jacobsTrailers`); a lone trailer stands on two bogies 3 m inside its ends. The longer
+  end trailers (21.845 m), the bar car and the louvres over the motor bogie are not drawn.
+- **Not drawn.** The running number on the cab side (it is on the body near the inner end, as the
+  kit draws it), the canopy's red pinstripe, the third-rail shoes (removed in 2007).
+
+About 14,400 triangles the original power car, 15,300 the blue one, 7,100 a trailer.
+`test/ukPowerCars.test.ts` checks the bogies, the Jacobs rake and the lower trailers.
 
 ## London 1938 Stock
 
