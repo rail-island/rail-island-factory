@@ -30,6 +30,8 @@ export interface WpLivery {
   wheel: string;
   frame: string;
   number: string;
+  /** The name on the board over the buffer beam, if any. */
+  name?: string;
 }
 
 /** The two liveries (WORLD_STEAM keys `black` and `greenYellow`). */
@@ -37,7 +39,7 @@ export const WP_LIVERIES: Record<string, WpLivery> = {
   // in service: black, the valance, sweep, cylinders and buffer beam crimson, red wheels with white tyres (7043, 7200 'Ruby Queen')
   black: { paint: "#1d1e20", trim: "#a51a1f", wheel: "#a51a1f", frame: "#2a2224", number: "7200" },
   // 7161 'Akbar' (CLW 1965): green cab, tender, valance and cylinders lined in yellow, black wheels with white tyres
-  greenYellow: { paint: "#1f5a3c", trim: "#1f5a3c", lining: "#d9b54a", wheel: "#1d1e20", frame: "#1d1e20", number: "7161" },
+  greenYellow: { paint: "#1f5a3c", trim: "#1f5a3c", lining: "#d9b54a", wheel: "#1d1e20", frame: "#1d1e20", number: "7161", name: "AKBAR" },
 };
 
 function palette(l: WpLivery): Record<string, MaterialSpec> {
@@ -84,6 +86,9 @@ const HALF = 1.58;
 /** The running board's profile: down from the high board in an S to the buffer beam. */
 const BOARD: Pt[] = [[0.78, 1.33], [1.05, 1.36], [1.35, 1.48], [1.65, 1.66], [1.95, 1.84], [2.25, 1.96], [2.55, 2.02], [CAB1 - 0.02, RB]];
 const VALANCE = 0.28;
+/** The S's segments drawn here (the first FRONT of BOARD); its fender plate 0.45 m deep, narrowing to the valance behind. */
+const FRONT = 6;
+const fenderDepth = (x: number) => (x <= 2.0 ? 0.45 : x >= 2.55 ? VALANCE : 0.45 + ((x - 2.0) / 0.55) * (VALANCE - 0.45));
 
 /** The cab's right half section: wide, its roof about level with the boiler top. */
 const CAB_HALF: Pt[] = [[HALF, RB], [HALF, 3.68], [1.45, 3.86], [0.85, 3.97], [0, 4.0]];
@@ -162,29 +167,60 @@ function engineExtras(t: Steam, l: WpLivery): void {
     // the plate frames ahead of the high running board: low, under the sloping front deck
     for (const s of [-1, 1]) t.sideFrame("frame", s, 0.82, 2.6, 0.45, 1.25, 0.52, 0.6);
   });
+  // the running board's front S: a tread along each side and the broad fender plate under it
+  // (the high board behind is the kit's runningBoard), the middle left open over the frames
+  const [zIn, zOut] = [HALF - 0.08 - 0.03, HALF - 0.08 - 0.005];
+  m.scope("front fenders", () => {
+    for (let i = 0; i < FRONT; i++) {
+      const [[xa, ya], [xb, yb]] = [BOARD[i]!, BOARD[i + 1]!];
+      const tread: Pt[] = [[t.X(xa), ya - 0.04], [t.X(xb), yb - 0.04], [t.X(xb), yb], [t.X(xa), ya]];
+      for (const s of [-1, 1]) m.sweep("black", "z", tread, s * 1.12, tread, s * zOut);
+      const plate: Pt[] = [[t.X(xa), ya - 0.04 - fenderDepth(xa)], [t.X(xb), yb - 0.04 - fenderDepth(xb)], [t.X(xb), yb - 0.04], [t.X(xa), ya - 0.04]];
+      for (const s of [-1, 1]) m.sweep("trim", "z", plate, s * zIn, plate, s * zOut);
+    }
+  });
+  m.scope("front step", () => {
+    // the platform behind the buffer beam, the smokebox's front plate under the nose
+    t.box("black", 0.8, 1.62, 1.4, 1.46, -1.1, 1.1);
+    t.box("smokebox", 1.62, 2.12, 1.4, 2.02, -0.75, 0.75);
+  });
+  if (l.name) m.scope("nameboard", () => {
+    // the board on its bracket over the beam, under the nose (7161 'Akbar'; 7200 and the engines in service carry none)
+    for (const z of [-0.32, 0.32]) t.box("steel", 0.86, 0.9, 1.46, 1.62, z - 0.025, z + 0.025);
+    t.box("lining", 0.82, 0.86, 1.6, 1.98, -0.5, 0.5);
+    t.box("trim", 0.808, 0.84, 1.63, 1.95, -0.47, 0.47);
+    if (l.name) {
+      const h = 0.15, w = h * 0.62, gap = h * 0.2;
+      const width = strokeWidth(l.name, w, gap);
+      m.facets("lining", strokeText(l.name, width / 2, 1.715, h, w, gap, true).map(([u, v]): Vec3 => [t.X(0.808) + 0.004, v, u]), [1, 0, 0]);
+    }
+  });
   if (l.lining) {
     m.scope("valance lining", () => {
-      // a yellow line along the valance's foot, both sides, following the S
+      // a yellow line along the fender's and valance's foot, both sides, following the S
       for (const s of [-1, 1]) for (let i = 0; i + 1 < BOARD.length; i++) {
         const [[xa, ya], [xb, yb]] = [BOARD[i]!, BOARD[i + 1]!];
-        const [y0, y1] = [ya - 0.04 - VALANCE + 0.04, yb - 0.04 - VALANCE + 0.04];
-        const z = s * (HALF - 0.08 - 0.005 + 0.006);
+        const [y0, y1] = [ya - fenderDepth(xa), yb - fenderDepth(xb)];
+        const z = s * (zOut + 0.006);
         const pts: Vec3[] = [[t.X(xa), y0, z], [t.X(xb), y1, z], [t.X(xb), y1 + 0.05, z], [t.X(xa), y0 + 0.05, z]];
         m.slab("lining", pts, [0, 0, -s * 0.003]);
       }
     });
   }
   m.scope("cowcatcher", () => {
-    // a grid of flat bars below the buffer beam, leaning forward to the rail
-    const top = [0.79, 0.78] as const, foot = [0.32, 0.14] as const;
-    const at = (f: number, z: number): Vec3 => [t.X(top[0] + (foot[0] - top[0]) * f), top[1] + (foot[1] - top[1]) * f, z];
-    for (const z of [-1.1, -0.66, -0.22, 0.22, 0.66, 1.1]) m.rod("chrome", at(0, z), at(1, z * 0.92), 0.025, 4);
-    for (const f of [0.08, 0.36, 0.64, 0.92]) m.rod("chrome", at(f, -1.12), at(f, 1.12), 0.022, 4);
+    // the bar pilot: heavy horizontal bars raked back toward the rail, on uprights
+    const rows = [0.68, 0.54, 0.4, 0.27, 0.15];
+    const front = (y: number) => 0.62 + (0.72 - y) * 0.42;
+    for (const y of rows) {
+      const half = 1.12 - (0.72 - y) * 0.25;
+      t.box("chrome", front(y), front(y) + 0.06, y - 0.04, y + 0.04, -half, half);
+    }
+    for (const z of [-1.0, -0.5, 0, 0.5, 1.0]) m.rod("chrome", [t.X(front(0.74) + 0.07), 0.74, z], [t.X(front(0.1) + 0.07), 0.1, z * 0.95], 0.03, 4);
   });
   m.scope("nose handrails", () => {
-    // the bright rails from the buffer beam up past the nose to the smokebox shoulders
+    // the bright rails from the buffer beam up beside the nose to the height of the star's upper points, then in to the smokebox
     for (const s of [-1, 1]) {
-      const p: Vec3[] = [[t.X(0.74), 1.34, s * 1.02], [t.X(1.45), 2.6, s * 1.04], [t.X(1.7), 3.45, s * 0.86], [t.X(2.1), 3.8, s * 0.45]];
+      const p: Vec3[] = [[t.X(0.74), 1.34, s * 1.02], [t.X(1.5), 2.7, s * 1.04], [t.X(1.75), 3.3, s * 1.0], [t.X(2.15), 3.38, s * 0.86]];
       for (let i = 0; i + 1 < p.length; i++) m.rod("chrome", p[i]!, p[i + 1]!, 0.022, 6);
     }
     // the rail across the nose below the headlamp
@@ -222,7 +258,7 @@ function engine(l: WpLivery): LocoSpec {
     domes: [{ x: 7.4, top: 3.98, r: 0.42, len: 1.2, mat: "jacket" }],
     valves: { x: CAB0 - 0.7, top: 3.98 },
     handrail: { x0: 3.9, x1: 10.9, y: BY + 0.28 },
-    runningBoard: { profile: BOARD, half: HALF - 0.08, valance: VALANCE, valanceMat: "trim" },
+    runningBoard: { profile: BOARD.slice(FRONT), half: HALF - 0.08, valance: VALANCE, valanceMat: "trim" },
     frame: { x0: 2.6, x1: CAB1, top: Math.min(RB - 0.1, BY - BR - 0.05) },
     cab: {
       x0: CAB0, x1: CAB1, half: CAB_HALF, roofY: 3.68,

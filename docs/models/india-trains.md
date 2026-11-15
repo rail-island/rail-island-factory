@@ -45,7 +45,7 @@ The catalog had no Indian train before. Every design is filed under India.
 - **Diesels.** The WDM-2, WDP-4D and WDG-4G are drawn on their American relatives'
   bodies (GP9 re-trucked, SD70ACe, ES44AC) in IR paint; the WDP-4D's second cab is left out.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
-- **WP.** Drawn from its own spec (`generator/inWp.ts`) on the steam kit: the bullet nose with its star and headlamp, the running board's S sweep and the cab are measured from three-quarter photographs (no side-on photo on Commons). The tender is a plain high box; the sweep plates are narrower than the real fenders.
+- **WP.** Drawn from its own spec (`generator/inWp.ts`) on the steam kit: the bullet nose with its star and headlamp, the running board's S sweep and the cab are measured from three-quarter photographs (no side-on photo on Commons). The front S is a 0.45 m fender plate under a tread each side, open over the frames, with a bar pilot; 7161 carries its AKBAR board. The tender is a plain high box.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
 
 ## Tests
