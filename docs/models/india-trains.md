@@ -49,11 +49,11 @@ The catalog had no Indian train before. Every design is filed under India.
   face upright to 2.9 m and raked 0.22 m over the barred screens, the roof arched from the 3.86 m eaves to the
   4.12 m crown, the twin headlight, marker lamps and the crown lamp under the horn box; the hood flared to the
   cabs' width over the radiator behind cab 2 (its side grilles under the overhang) and over the equipment
-  section behind cab 1 (two round hatches); side buffers and the centre coupler on deep headstocks; HTSC Co-Co
+  section behind cab 1 (two round hatches); side buffers and the centre coupler on deep headstocks; HTSC Co-Co (cast side frames, a pair of coils on each journal box)
   bogies at +-6.35 m (axles 2.06 m apart), measured by a projective fit along 40086's side. 19.964 m over the
   headstocks, 21.244 m over the buffers, 3.127 m over the walkways. Paint: the yellow-band scheme (blue hood
   with yellow and white bands, white cabs, the band narrowing to a point on the face, the blue foot band);
-  the side window's guard bars, the flags and the wipers are not drawn.
+  the face's upright corners rounded (0.16 m), a wiper on each screen; the flags, the roof air conditioner and the GSM-R aerial are not drawn, and the buffer heads are the shared 0.4 m ones (IR's are about 0.45 m).
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
 - **WP.** The bullet-nosed smokebox front is the generator's plain one.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.

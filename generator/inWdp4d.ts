@@ -18,7 +18,7 @@
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { tubeX, type Band } from "./cd163.ts";
-import { block, bogie, buffers, exhaust, extrude, horn, paint, roofFan, side, tankX, type BogieSpec } from "./dieselParts.ts";
+import { block, buffers, coil, exhaust, extrude, horn, paint, plate, roofFan, side, tankX, type BogieSpec } from "./dieselParts.ts";
 import { lodBands, LOD_GLASS, type LodBand } from "./lodKit.ts";
 import { locoLod, sideWindows, type LocoBox } from "./lodLocos.ts";
 import { US_PALETTE, decalX, decalZ, endText, knuckleCoupler, paintedSweep, sideText, type Paint } from "./usHoodKit.ts";
@@ -79,8 +79,8 @@ const HOOD_BANDS: Band[] = [[0, 2.31, "wBlue"], [2.31, 2.58, "wYellow"], [2.58, 
 const CAB_SIDE: Band[] = [[0, 1.82, "wBlue"], [1.82, 2.31, "wWhite"], [2.31, 2.58, "wYellow"], [2.58, 9, "wWhite"]];
 const CAB_FACE: Band[] = [[0, 1.98, "wBlue"], [1.98, 9, "wWhite"]];
 const CAB_CORNER: Band[] = [[0, 1.98, "wBlue"], [1.98, 2.31, "wWhite"], [2.31, 2.58, "wYellow"], [2.58, 9, "wWhite"]];
-/** The chamfer of the face's upright corners. */
-const CORNER = 0.12;
+/** The radius of the face's upright corners. */
+const CORNER = 0.16;
 
 /** The cab of end e: its x span (rear wall, face). */
 const cabX = (e: number): [number, number] => (e > 0 ? [HEAD - CAB.len1, HEAD] : [-HEAD + CAB.len2, -HEAD]);
@@ -112,8 +112,8 @@ export function buildWdp4d(): MeshBuilder {
   for (const e of [1, -1]) m.scope(e > 0 ? "cab 1" : "cab 2", () => cab(m, e));
   m.scope("walkways", () => walkways(m));
   m.scope("trucks", () => {
-    m.scope("front truck", () => bogie(m, TRUCK_C, TRUCK));
-    m.scope("rear truck", () => bogie(m, -TRUCK_C, TRUCK));
+    m.scope("front truck", () => htsc(m, TRUCK_C));
+    m.scope("rear truck", () => htsc(m, -TRUCK_C));
   });
   m.scope("underframe", () => underframe(m));
   return m;
@@ -228,19 +228,38 @@ function cabShell(m: MeshBuilder, e: number, xr: number): void {
     const h0 = cabHalf(y0), h1 = cabHalf(y1), f0 = faceX(e, y0), f1 = faceX(e, y1);
     const roofy = ym > CAB.eave;
     const sideMat = roofy ? "wWhite" : bandAt(CAB_SIDE, ym);
-    // the face's corners chamfered by CORNER, the yellow band carried round them
+    // the face's upright corners rounded to CORNER, the yellow band carried round them
     const b0 = f0 - e * CORNER, b1 = f1 - e * CORNER;
     const cornerMat = roofy ? "wWhite" : bandAt(CAB_CORNER, ym);
     for (const sd of [-1, 1]) {
       quad(sideMat, [xr, y0, sd * h0], [b0, y0, sd * h0], [b1, y1, sd * h1], [xr, y1, sd * h1]);
-      quad(cornerMat, [b0, y0, sd * h0], [f0, y0, sd * (h0 - CORNER)], [f1, y1, sd * (h1 - CORNER)], [b1, y1, sd * h1]);
+      const c0 = cornerArc(e, sd, f0, h0), c1 = cornerArc(e, sd, f1, h1);
+      for (let k = 0; k + 1 < c0.length; k++)
+        quad(cornerMat, [c0[k]![0], y0, c0[k]![1]], [c0[k + 1]![0], y0, c0[k + 1]![1]], [c1[k + 1]![0], y1, c1[k + 1]![1]], [c1[k]![0], y1, c1[k]![1]]);
     }
     quad(roofy ? "wWhite" : bandAt(CAB_FACE, ym), [f0, y0, -(h0 - CORNER)], [f0, y0, h0 - CORNER], [f1, y1, h1 - CORNER], [f1, y1, -(h1 - CORNER)]);
     quad(sideMat, [xr, y0, -h0], [xr, y0, h0], [xr, y1, h1], [xr, y1, -h1]);
   }
-  const yt = CAB.top, ht = cabHalf(yt), ft = faceX(e, yt), bt = ft - e * CORNER;
-  quad("wWhite", [xr, yt, -ht], [bt, yt, -ht], [bt, yt, ht], [xr, yt, ht]);
-  quad("wWhite", [bt, yt, -ht], [ft, yt, -(ht - CORNER)], [ft, yt, ht - CORNER], [bt, yt, ht]);
+  // the roof's top: a fan over the outline, the rounded corners included
+  const yt = CAB.top, ht = cabHalf(yt), ft = faceX(e, yt);
+  const outline: Array<readonly [number, number]> = [[xr, -ht], ...cornerArc(e, -1, ft, ht), ...[...cornerArc(e, 1, ft, ht)].reverse(), [xr, ht]];
+  const c: Vec3 = [(xr + ft) / 2, yt, 0];
+  const pts: Vec3[] = [];
+  for (let k = 0; k < outline.length; k++) {
+    const p = outline[k]!, q = outline[(k + 1) % outline.length]!;
+    pts.push(c, [p[0], yt, p[1]], [q[0], yt, q[1]]);
+  }
+  m.facets("wWhite", pts, [0, 1, 0]);
+}
+
+/** The rounded corner of the face on side sd at one height: (x, z) from the side wall round to the face. */
+function cornerArc(e: number, sd: number, f: number, h: number): Array<readonly [number, number]> {
+  const out: Array<readonly [number, number]> = [];
+  for (let k = 0; k <= 3; k++) {
+    const t = (k / 3) * (Math.PI / 2);
+    out.push([f - e * CORNER * (1 - Math.sin(t)), sd * (h - CORNER * (1 - Math.cos(t)))]);
+  }
+  return out;
 }
 
 function cab(m: MeshBuilder, e: number): void {
@@ -273,6 +292,12 @@ function cab(m: MeshBuilder, e: number): void {
       }
       guard.push(...q(0.04, z0 + 0.03, z1 - 0.03, ya + 0.02, ya + 0.05), ...q(0.04, z0 + 0.03, z1 - 0.03, yb - 0.05, yb - 0.02));
       m.facets("steel", guard, n);
+      // the wiper: pivoted low inboard, its arm and blade leaning up toward the outer edge
+      const P = (z: number, y: number, d: number): Vec3 => [faceX(e, y) + e * d, y, z];
+      const [pz, py, tz, ty] = [sd * 0.5, ya + 0.04, sd * 1.05, ya + 0.62];
+      const wz = 0.035;
+      m.facets("black", [P(pz - wz, py, 0.025), P(pz + wz, py, 0.025), P(tz + wz, ty, 0.025), P(pz - wz, py, 0.025), P(tz + wz, ty, 0.025), P(tz - wz, ty, 0.025)], n);
+      extrude(m, "black", "x", ngon(8, 0.035, 0, pz, ya - 0.03), along(Math.abs(faceX(e, ya - 0.03)), Math.abs(faceX(e, ya - 0.03)) + 0.05));
     }
     // the visor over both screens
     const xv = Math.abs(faceX(e, yb + 0.04));
@@ -325,6 +350,64 @@ function cab(m: MeshBuilder, e: number): void {
       sideText(m, "wRed", NUMBER, sd, CAB.half + 0.008, xn, 2.35, 0.2);
       sideText(m, "wRed", "WDP4D", sd, CAB.half + 0.006, xn, 2.06, 0.14);
     }
+  });
+}
+
+/**
+ * The HTSC (high tensile steel cast) three-axle bogie centred at xc: the wheelsets;
+ * each cast side frame a top chord over the journal boxes, stepping down at its
+ * ends, and a lower member sagging between the axles, tied by columns; the journal
+ * boxes with a pair of primary coils standing on each, under the chord; the
+ * bolster and transoms; nose-hung motors; brake cylinders on the frame.
+ */
+function htsc(m: MeshBuilder, xc: number): void {
+  const N = 20, R = WHEEL_R, ay = R * Math.cos(Math.PI / N);
+  const xs = TRUCK.axles.map((a) => xc + a);
+  const [fz0, fz1] = TRUCK.frameZ;
+  const x0 = xs[0]! - 0.62, x1 = xs[2]! + 0.62;
+  m.bogie(() => {
+    for (const x of xs)
+      m.scope("wheelset", () => {
+        const axle = ngon(8, 0.08, 0, x, ay);
+        m.sweep("steel", "z", axle, -0.9, axle, 0.9);
+        for (const sd of [-1, 1]) {
+          extrude(m, "steel", "z", ngon(N, R, Math.PI / N, x, ay), side(sd, 0.665, 0.8));
+          extrude(m, "wheel", "z", ngon(16, R * 0.82, 0, x, ay), side(sd, 0.8, 0.815));
+        }
+      });
+    for (const sd of [-1, 1])
+      m.scope(sd > 0 ? "right frame" : "left frame", () => {
+        const z = side(sd, fz0, fz1);
+        // the top chord over the journal boxes, stepping down at the ends
+        plate(m, "wFrame", [[x0, 0.98], [x0 + 0.32, 1.1], [x1 - 0.32, 1.1], [x1, 0.98]], [[x0, 0.86], [x0 + 0.32, 0.92], [x1 - 0.32, 0.92], [x1, 0.86]], ...z);
+        // the lower member sagging between the axles, and the columns tying it to the chord
+        for (let i = 0; i < 2; i++) {
+          const a = xs[i]! + 0.36, b = xs[i + 1]! - 0.36, mid = (a + b) / 2;
+          plate(m, "wFrame", [[a, 0.92], [mid - 0.3, 0.68], [mid + 0.3, 0.68], [b, 0.92]], [[a, 0.78], [mid - 0.3, 0.5], [mid + 0.3, 0.5], [b, 0.78]], ...z);
+          for (const d of [-0.36, 0.36]) block(m, "wFrame", mid + d - 0.05, mid + d + 0.05, 0.62, 0.92, ...z);
+        }
+        for (const x of xs) {
+          // the journal box and its lid, the two primary coils on its wings
+          block(m, "bogie", x - 0.18, x + 0.18, ay - 0.16, ay + 0.17, ...side(sd, 0.82, fz1 + 0.03));
+          extrude(m, "spring", "z", ngon(8, 0.1, Math.PI / 8, x, ay), side(sd, fz1 + 0.03, fz1 + 0.06));
+          for (const d of [-0.28, 0.28]) {
+            block(m, "bogie", x + d - 0.1, x + d + 0.1, ay + 0.06, ay + 0.1, ...z);
+            coil(m, "spring", x + d, sd * ((fz0 + fz1) / 2), ay + 0.1, 0.86, 0.08, 3, 6);
+          }
+        }
+        // the brake cylinders on the chord's outer face
+        for (const x of [xs[0]! + 0.95, xs[2]! - 0.95]) extrude(m, "spring", "z", ngon(8, 0.09, Math.PI / 8, x, 1.0), side(sd, fz1, fz1 + 0.12));
+      });
+    m.scope("bolster", () => block(m, "wFrame", xc - 0.35, xc + 0.35, 0.9, TRUCK.bolster, -fz0 + 0.02, fz0 - 0.02));
+    m.scope("transoms", () => {
+      for (const d of [-1, 1]) block(m, "wFrame", xc + d * 1.03 - 0.08, xc + d * 1.03 + 0.08, 0.86, 1.0, -fz0 + 0.02, fz0 - 0.02);
+    });
+    m.scope("traction motors", () => {
+      for (const x of xs) {
+        const motor = ngon(10, 0.27, 0, x + (x > xc + 0.1 ? -0.5 : 0.5), ay + 0.05);
+        m.sweep("bogie", "z", motor, -0.5, motor, 0.5);
+      }
+    });
   });
 }
 
