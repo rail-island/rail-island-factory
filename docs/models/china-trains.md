@@ -30,7 +30,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-sy` | CR SY | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
 | `proc-vehicle-cr-js` | CR JS | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
 | `proc-vehicle-cr-25t-coach` | CR 25-series coach | coach, knuckle couplers | `unit` (`softSleeper`, `hardSeat`), `livery` (`z25t`, `green25b`) | 26.6 m; 160 km/h |
-| `proc-vehicle-cr-c70-wagon` | CR C70 / P70 wagon | wagon | `unit` (`open`, `covered`) | 13.98 m and 17.0 m |
+| `proc-vehicle-cr-c70-wagon` | CR C70 / P70 wagon | its own (`generator/cnC70.ts`): measured C70 and P70 bodies on K6 bogies, US gauge (3.3 m) for the C70's 3.242 m | `unit` (`open`, `covered`) | 13.976 m and 17.0 m; C70 bogie centres 9.21 m, 3.143 m high |
 
 ## Deviations
 
@@ -514,3 +514,43 @@ common DF4B and measured from the works drawing and the photographs in `assets/c
   the two exhaust stacks over the engine and a low box over the No. 1 end.
 - **Distant model.** The kit's box locomotive LOD from the same tables and paint (98
   triangles); the pilots, lamp boxes and headlights are left out.
+
+## The C70 / P70 wagons' bodies
+
+`generator/cnC70.ts`, matched to the photographs in `assets/cr-c70-wagon/` (C70 1658252 and
+1618678, P70 3817696, 3808323 and 0201654). The design no longer uses the few-measures wagon kit
+of `worldWagons.ts` (India's BOXN / BCNA keep it); it is drawn to the US loading gauge, 3.3 m,
+for the C70's real 3.242 m.
+
+- **C70 size.** 13.976 m over the couplers, a 13.5 m body (13.48 m measured by a projective fit on
+  the wheel centres of the square-on photo), 3.242 m over the stakes and top chord, 3.143 m high,
+  side sill 0.82 m, floor 1.09 m; K6 bogies 9.21 m apart, 1.83 m wheelbase, 840 mm wheels.
+- **C70 side.** Seven bays between slim hat-section stakes at +-0.91, +-2.80 and +-4.67 m (the end
+  bays 2.07 m, the others about 1.88 m), the top chord over them (3.03 - 3.143 m), the side sill
+  below. The middle bay holds the two side door leaves with their pressed panels, outer hinges
+  and the locking bar; every other bay a bottom door 1.33 m wide, 0.93 - 2.0 m, with its rim, the
+  two straps hinged at the top, their lugs and latches (the end bays' door next to the inner
+  stake), and an A of two pressed braces from beside the door up to the chord. A ladder at each
+  side's right-hand corner (the sides are alike turned end for end).
+- **C70 ends and load.** Four horizontal ribs over each end, corner posts, the chord across; the
+  hand brake wheel on end 1 (+X). The coal heaped to a ridge 0.22 m over the chord.
+- **P70 size and body.** 17.0 m over the couplers, a 16.6 m body, the eaves at 4.0 m and an arched
+  roof 0.6 m higher (estimates from the inside 16.1 x 2.8 x 2.8 m and 145 m3 of its load marks),
+  bogie centres 12.0 m (estimated). Seven bays of 0.95 m each side of the 3.3 m door frame,
+  hat-section posts, four pressed ribs in every panel; a top-hinged vent hatch with its oval
+  emboss in the second and fifth bays from each end; the sliding door's horizontal corrugations
+  between its top and bottom tracks, the lock bars at the leaves' meeting edges; the ladder in the
+  end bay.
+- **P70 roof and ends.** A transverse rib over every post pitch, four round caps on the ridge (at
+  -4.2, -1.25, 5.1 and 7.75 m, as on P70 3817696), the roof handrail over end 1; the arched end
+  walls with four vertical posts between the corner posts, the hand brake wheel high on end 1 and
+  its step.
+- **Paint.** The C70 weathered dark brownish grey, the P70 black, each with white lettering:
+  "C70", the CR emblem, the number split "16 58252" around the brace, the load marks (70 t,
+  23.6 t, 77 m3, 1.3) and the number on the sill; "P70", the emblem, "3817 696" split by a post,
+  the load marks (70 t, 24.6 t, 145 m3, 1.6), the low number, the end numbers 1 and 2. The
+  stakes, braces, chord, ribs and door rims take the same paint a shade lighter, as their worn
+  edges catch the light; without it the relief vanishes in the game's side light.
+- **LOD.** One box per unit with the C70's coal ridge or the P70's arched roof and the two bogies:
+  42 and 50 triangles. The full models: about 7,300 (C70) and 10,200 (P70) triangles.
+
