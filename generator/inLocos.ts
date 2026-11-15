@@ -19,6 +19,7 @@ import { WDM2_BODY, WDM2_LIVERIES, buildWdm2, wdm2Lod } from "./inWdm2.ts";
 import { PRIMA_BODY, liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { WAP5_PARAMS, irWap5, irWap5Lod } from "./inWap5.ts";
+import { WAP7_PARAMS, irWap7, irWap7Lod } from "./inWap7.ts";
 
 // ---------------------------------------------------------------------------
 // The road diesels
@@ -68,13 +69,11 @@ const bands = (body: Body, number: string, ...list: Array<[number, string]>): Wo
 
 const WAM4: Body = { length: 18.79, W: 1.6, y0: 1.35, roof: 4.1, nose: "flat", bogies: coCo(5.3, 1.7, 0.56), pantograph: "diamond", pantographX: 5.4, room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 const WAP4: Body = { length: 18.79, W: 1.6, y0: 1.35, roof: 4.1, nose: "raked", bogies: coCo(5.3, 1.7, 0.56), pantograph: "singleArm", pantographX: 5.4, room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
-const WAP7: Body = { length: 20.56, W: 1.6, y0: 1.35, roof: 4.15, nose: "raked", bogies: coCo(5.6, 1.85, 0.545), pantograph: "singleArm", pantographX: 6.0, room: { kind: "grilles", n: 6, y: [2.6, 3.4] } };
 const WAG12: Body = { ...PRIMA_BODY, length: 35.0, W: 1.6, roof: 4.15, bogies: [[-12.5, [-1.35, 1.35], 0.55], [-5.0, [-1.35, 1.35], 0.55], [5.0, [-1.35, 1.35], 0.55], [12.5, [-1.35, 1.35], 0.55]], pantographX: 13.5, room: { kind: "windows", n: 6, y: [2.7, 3.3] } };
 
 const L: Record<string, Liveries> = {
   wam4: { blue: { title: "IR blue", loco: bands(WAM4, "21322", [2.3, "#1d3f80"], [2.5, "#e8dcc0"], [4.5, "#1d3f80"]) }, maroon: { title: "Maroon, cream", loco: bands(WAM4, "20502", [2.3, "#6b1d24"], [2.5, "#e8dcc0"], [4.5, "#6b1d24"]) } },
   wap4: { rajdhani: { title: "Rajdhani red", loco: bands(WAP4, "22301", [2.3, "#b5232b"], [2.5, "#e8dcc0"], [4.5, "#b5232b"]) }, shatabdi: { title: "Shatabdi blue", loco: bands(WAP4, "22518", [2.3, "#1d3f80"], [2.5, "#e8dcc0"], [4.5, "#1d3f80"]) } },
-  wap7: { redWhite: { title: "Red and white", loco: bands(WAP7, "30201", [2.3, "#b5232b"], [2.6, "#f1f1ee"], [4.5, "#b5232b"]) }, blue: { title: "IR blue", loco: bands(WAP7, "30351", [2.3, "#1d3f80"], [2.6, "#f1f1ee"], [4.5, "#1d3f80"]) }, wag9: { title: "WAG-9 brown", loco: bands(WAP7, "31001", [2.3, "#6b3a22"], [2.6, "#f2c31a"], [4.5, "#6b3a22"]) } },
   wag12: { greyRed: { title: "Grey and red", loco: bands(WAG12, "60001", [2.2, "#b5232b"], [4.5, "#9aa0a5"]) } },
 };
 
@@ -86,8 +85,6 @@ export function irWam4(v?: ParamValues): MeshBuilder { return b("wam4", v); }
 export function irWam4Lod(v?: ParamValues): MeshBuilder { return lod("wam4", v); }
 export function irWap4(v?: ParamValues): MeshBuilder { return b("wap4", v); }
 export function irWap4Lod(v?: ParamValues): MeshBuilder { return lod("wap4", v); }
-export function irWap7(v?: ParamValues): MeshBuilder { return b("wap7", v); }
-export function irWap7Lod(v?: ParamValues): MeshBuilder { return lod("wap7", v); }
 export function irWag12b(v?: ParamValues): MeshBuilder { return b("wag12", v); }
 export function irWag12bLod(v?: ParamValues): MeshBuilder { return lod("wag12", v); }
 
@@ -101,7 +98,7 @@ export const IN_LOCOS: ProceduralDesign[] = [
   d("ir-wdg4g", "IR WDG-4G", H.wdg4g, irWdg4g, irWdg4gLod, 135, 3400, 100, D),
   d("ir-wam4", "IR WAM-4", P.wam4!, irWam4, irWam4Lod, 113, 2700, 120),
   d("ir-wap4", "IR WAP-4", P.wap4!, irWap4, irWap4Lod, 112, 3800, 140),
-  d("ir-wap7", "IR WAP-7 / WAG-9", P.wap7!, irWap7, irWap7Lod, 123, 4500, 140),
+  d("ir-wap7", "IR WAP-7 / WAG-9", WAP7_PARAMS, irWap7, irWap7Lod, 123, 4500, 140),
   d("ir-wap5", "IR WAP-5", WAP5_PARAMS, irWap5, irWap5Lod, 78, 4000, 160),
   d("ir-wag12b", "IR WAG-12B", P.wag12!, irWag12b, irWag12bLod, 180, 9000, 120),
 ];
