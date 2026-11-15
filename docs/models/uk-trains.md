@@ -109,7 +109,8 @@ only registers it.
   roof; both edges are [y, d] tables (`YELLOW_FOOT`, `CANOPY_FOOT`) shared by the two schemes.
   `eurostar` (original, 3104): white, a lower yellow band over the dark skirt on the power car and
   the trailers, "eurostar" in yellow under the three navy waves. `eurostar2011` (the 2011 brand as
-  the refurbished sets carry it, 3211): the nose and lower body light grey, Eurostar blue above a
+  the refurbished sets carry it, 3211): the nose, its lamps and grille without a dark housing, the
+  plough and the skirts silver-grey, Eurostar blue above a
   yellow line on both car types, the blue's front edge leaning on the cab side, the white "e" and
   "EUROSTAR". The interim 2011 logo on the original paint is not drawn.
 - **Power car.** 22.15 m; the front bogie 5.1 m behind the tip (under the machine-room door, as the

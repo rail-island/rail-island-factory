@@ -69,8 +69,8 @@ export const E300_FACE: SeriesCabFace = {
   ],
   fields: [
     // the lamp housings either side, their outer ends slanting back, and the perforated grille between them
-    { mat: "lampGlass", pts: [[0.23, 1.31], [0.9, 1.31], [0.98, 1.4], [0.96, 1.51], [0.23, 1.51]] },
-    { mat: "lampGlass", pts: [[-0.23, 1.51], [-0.96, 1.51], [-0.98, 1.4], [-0.9, 1.31], [-0.23, 1.31]] },
+    { mat: "lampBand", pts: [[0.23, 1.31], [0.9, 1.31], [0.98, 1.4], [0.96, 1.51], [0.23, 1.51]] },
+    { mat: "lampBand", pts: [[-0.23, 1.51], [-0.96, 1.51], [-0.98, 1.4], [-0.9, 1.31], [-0.23, 1.31]] },
     { mat: "noseGrille", pts: [[-0.2, 1.32], [0.2, 1.32], [0.2, 1.5], [-0.2, 1.5]] },
   ],
   // the windscreen, wrapping round under the canopy
@@ -113,6 +113,8 @@ const GRILLE: SeriesSidePanel[] = [[7.0, 11.5], [11.6, 16.0], [16.1, 20.5]].flat
 
 interface E300Paint {
   base: string; skirt: string; roof: string; canopy: string; yellow: string; grille: string; noseGrille: string;
+  /** The lamp housings' band across the nose (the blue scheme has none: the nose's own grey). */
+  lampBand: string;
   /** The power car's and the trailers' side bands, bottom first. */
   power: Array<[number, number, string]>;
   trailer: Array<[number, number, string]>;
@@ -123,7 +125,7 @@ function e300Livery(title: string, number: string, p: E300Paint, extra: Record<s
     title, number,
     palette: {
       faceBase: c(p.base, 0.35), skirtE: c(p.skirt, 0.7), roofE: c(p.roof, 0.55), canopy: c(p.canopy, 0.25), noseYellow: c(p.yellow, 0.35),
-      visor: c("#15181d", 0.3), lampGlass: c("#24262b", 0.15), grille: c(p.grille, 0.6), noseGrille: c(p.noseGrille, 0.5), grilleFrame: c("#a9adb2", 0.5), grilleRib: c("#585c62", 0.6),
+      visor: c("#15181d", 0.3), lampGlass: c("#24262b", 0.15), grille: c(p.grille, 0.6), noseGrille: c(p.noseGrille, 0.5), lampBand: c(p.lampBand, p.lampBand === p.base ? 0.35 : 0.15), grilleFrame: c("#a9adb2", 0.5), grilleRib: c("#585c62", 0.6),
       seam: c("#3a3d42", 0.6), cabMask: c("#15181d", 0.3), lettering: c("#2a2c30", 0.5),
       ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, c(v, 0.4)])),
     },
@@ -138,14 +140,14 @@ function e300Livery(title: string, number: string, p: E300Paint, extra: Record<s
 }
 
 const ORIGINAL: E300Paint = {
-  base: "#efefea", skirt: "#2b2f3a", roof: "#8e9399", canopy: "#262c3d", yellow: "#f5bf0f", grille: "#6d7176", noseGrille: "#d39b0b",
+  base: "#efefea", skirt: "#2b2f3a", roof: "#8e9399", canopy: "#262c3d", yellow: "#f5bf0f", grille: "#6d7176", noseGrille: "#d39b0b", lampBand: "#24262b",
   power: [[0, 1.3, "skirtE"], [1.3, 1.6, "noseYellow"], [1.6, 3.3, "faceBase"], [3.3, 9, "noseYellow"]],
   trailer: [[0, 1.3, "skirtE"], [1.3, 1.6, "noseYellow"], [1.6, 2.87, "faceBase"], [2.87, 9, "noseYellow"]],
 };
 
 /** The refurbished sets' scheme of the 2011 brand: Eurostar blue over light grey, the yellow line between them, the grey nose under the yellow band. */
 const BLUE: E300Paint = {
-  base: "#c3c7cc", skirt: "#3a3f47", roof: "#3c4452", canopy: "#1b2452", yellow: "#f2cf1d", grille: "#1f2c72", noseGrille: "#9ea3a8",
+  base: "#c3c7cc", skirt: "#b3b8bd", roof: "#3c4452", canopy: "#1b2452", yellow: "#f2cf1d", grille: "#1f2c72", noseGrille: "#9ea3a8", lampBand: "#c3c7cc",
   power: [[0, 1.3, "skirtE"], [1.3, 1.52, "faceBase"], [1.52, 1.62, "noseYellow"], [1.62, 9, "blue"]],
   trailer: [[0, 1.3, "skirtE"], [1.3, 1.52, "faceBase"], [1.52, 1.62, "noseYellow"], [1.62, 9, "blue"]],
 };
