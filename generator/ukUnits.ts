@@ -9,6 +9,7 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { class142, class142Lod, type C142Livery, type C142Unit } from "./brClass142.ts";
 import { class158, class158Lod, type C158Livery, type C158Unit } from "./brClass158.ts";
+import { C390, C390_AVANTI } from "./brClass390.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, nose } from "./seriesHelpers.ts";
 import { E300 } from "./eurostar373.ts";
@@ -91,17 +92,6 @@ export const C800: ShinkansenSeries = {
   bogieCentres: 18.0, wheelR: 0.43, wheelbase: 2.6, cars: [5, 8],
   liveries: { gwr: lv("GWR green", "800 001", [9, "#0b4d3a"]), azuma: lv("LNER Azuma", "800 101", [1.1, "#c8102e"], [9, "#f1f1ee"]) },
   weight: { end: 50, middle: 45 }, power: 700, maxspeed: 200,
-};
-
-export const C390: ShinkansenSeries = {
-  endLength: 24.8, midLength: 23.9, W: 1.36, Y: 1.3, S: 2.95, C: 3.56, lean: 0.9, B: 0.8, A: 1.0,
-  // the tilting Pendolino's narrowing body and pointed nose
-  nose: nose(3.6, 0.15, 2.3, [[0, 1.4], [0.5, 1.9], [1.8, 2.6], [3.2, 3.25], [4.0, 3.56]], [[0, 1.35], [0.5, 1.8], [1.8, 2.4], [3.2, 2.85], [4.0, 2.95]], [[0, 1.3], [1.0, 1.3]], [[0, 1.1], [0.8, 1.0]], [[0, 1.0], [0.4, 0.8]]),
-  windscreen: [1.8, 3.4, 0.07, 0.95], lamps: [0.5, 1.4],
-  windows: [[1.8, 2.6]], windowW: 1.2, pitch: 1.5, door: [1.15, 2.9, 1.8, 2.5], doorW: 0.85,
-  bogieCentres: 17.0, wheelR: 0.43, wheelbase: 2.7, cars: [4, 6, 8],
-  liveries: { virgin: lv("Virgin", "390 001", [1.2, "#3a3d40"], [1.3, "#c8102e"], [9, "#9aa0a5"]), avanti: lv("Avanti", "390 103", [1.2, "#003b4a"], [1.3, "#e86a5c"], [9, "#003b4a"]) },
-  weight: { end: 57, middle: 50 }, power: 850, maxspeed: 225,
 };
 
 export { E300 };
@@ -190,8 +180,10 @@ export function brIc225(v?: ParamValues): MeshBuilder { return buildSeries(IC225
 export function brIc225Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(IC225, P.ic225, v); }
 export function brClass800(v?: ParamValues): MeshBuilder { return buildSeries(C800, P.c800, v); }
 export function brClass800Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C800, P.c800, v); }
-export function brClass390(v?: ParamValues): MeshBuilder { return buildSeries(C390, P.c390, v); }
-export function brClass390Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(C390, P.c390, v); }
+/** The Class 390 (brClass390.ts): the Avanti livery has its own face and paint on the cars. */
+const c390 = (v?: ParamValues) => (resolveParams(P.c390, v).livery === "avanti" ? C390_AVANTI : C390);
+export function brClass390(v?: ParamValues): MeshBuilder { return buildSeries(c390(v), P.c390, v); }
+export function brClass390Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(c390(v), P.c390, v); }
 export function eurostar373(v?: ParamValues): MeshBuilder { return buildSeries(E300, P.e300, v); }
 export function eurostar373Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(E300, P.e300, v); }
 export function brClass158(v?: ParamValues): MeshBuilder { const p = resolveParams(P.c158, v); return class158(p.unit as C158Unit, p.livery as C158Livery); }

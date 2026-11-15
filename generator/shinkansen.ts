@@ -83,6 +83,12 @@ export interface ShinkansenLivery {
   roofStripe?: { z: number; mat: string };
   /** This livery's sets' pantograph, in place of the series' (the 500's W sets' T-shaped wing, its V sets' single arm). */
   pantograph?: "single" | "diamond" | "wing";
+  /**
+   * The distant model's sides painted in other bands over a stretch of the car (the end car's d behind
+   * its tip, an intermediate car's behind its +X end): a sweep's colour field that the side bands alone
+   * do not show (the Class 390's red front, the Avanti cars' white and teal).
+   */
+  lodSideFields?: { end?: ReadonlyArray<{ d: readonly [number, number]; bands: readonly Band[] }>; middle?: ReadonlyArray<{ d: readonly [number, number]; bands: readonly Band[] }> };
 }
 
 /** A fitting on a car's sides, both sides (d span behind the car's front, the end car's from its tip; sill and head). */
@@ -127,6 +133,8 @@ export interface ShinkansenSeries {
   /** Doors: sill, head, the leaf's window; their width. */
   door: readonly [number, number, number, number];
   doorW: number;
+  /** The passenger windows' corner radius (default square): rounded windows in their rubber frames (the Class 390's). */
+  windowCornerRadius?: number;
   /** The door leaf's window: its width, centred (default the leaf's width less 0.24 m). */
   doorGlassW?: number;
   /** The upper window rows run on over the doors, from the first door to the car's end (a double-deck car's upper deck). */
@@ -400,7 +408,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
-    windows: power ? [{ y: power.windows, spans, frame: "rubber" }] : s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber" })),
+    windows: power ? [{ y: power.windows, spans, frame: "rubber" }] : s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber", ...(s.windowCornerRadius ? { cornerR: s.windowCornerRadius } : {}) })),
     ...(s.fluting ? { fluting: s.fluting } : {}),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(s.doorGlassR ? { glassCornerR: s.doorGlassR } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(l.doors ? { doorBands: l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
@@ -823,6 +831,18 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     windows: spans.length ? [{ u: [Math.min(X(spans[0]![0]), X(spans[spans.length - 1]![1])), Math.max(X(spans[0]![0]), X(spans[spans.length - 1]![1]))], y: [def.windows[0]!.y[0], def.windows[0]!.y[1]], mat: LOD_GLASS }] : [],
     ...(section !== undefined ? { section } : {}),
   };
+  const fields = power ? undefined : l.lodSideFields?.[end ? "end" : "middle"];
+  if (fields?.length) {
+    // along the car (an end car's d from its tip, the nose included)
+    const dTip = end ? (s.cabFace?.dJoin ?? 0) : 0;
+    body = {
+      ...body,
+      cabs: fields.map((f) => {
+        const [a, e] = [Math.max(-dTip, f.d[0] - dTip), Math.min(b.length, f.d[1] - dTip)];
+        return { x0: Math.min(X(a), X(e)), x1: Math.max(X(a), X(e)), side: [...f.bands.map(([y0, y1, mt]): [number, number, string] => [Math.max(y0, s.B), Math.min(y1, s.S), mt]).filter(([y0, y1]) => y1 > y0 + 1e-6), [s.S, s.C, roof]] };
+      }),
+    };
+  }
   if (turned) body = turnBody(body, cx);
   const T = (x: number) => (turned ? 2 * cx - x : x);
   // Jacobs bogies in a train: each joint's bogie once, with the car ahead of it
