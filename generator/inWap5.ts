@@ -42,16 +42,16 @@ const PANTO_X = 4.6;
 const BUFFER_Y = 1.105;
 
 /** The half width by height: upright sides, a rounded cantrail and a low crown. */
-const HW: Table = [[Y0, W], [EAVE, W], [3.72, W - 0.08], [3.9, W - 0.3], [ROOF, W - 0.72]];
+const HW: Table = [[Y0, W], [3.35, W], [3.55, W - 0.05], [3.72, W - 0.16], [3.88, W - 0.38], [ROOF, W - 0.75]];
 
-/** Cab 1, the aerodynamic end: [y, |x|] of its centre line. */
-const AERO_TIP: Table = [[Y0, N - 0.06], [1.5, N], [2.2, N], [2.42, N - 0.08], [2.62, N - 0.28], [3.38, N - 1.12], [3.6, N - 1.5], [3.85, N - 1.95], [ROOF, N - 2.35]];
+/** Cab 1, the aerodynamic end: [y, |x|] of its centre line, the lower nose bulging 0.25 m ahead of the headstock at the stripes. */
+const AERO_TIP: Table = [[Y0, N - 0.04], [1.65, N + 0.14], [2.05, N + 0.25], [2.32, N + 0.18], [2.48, N - 0.02], [2.62, N - 0.28], [3.38, N - 1.12], [3.6, N - 1.5], [3.85, N - 1.95], [ROOF, N - 2.35]];
 /** Cab 2, the flat end. */
 const FLAT_TIP: Table = [[Y0, N], [2.42, N], [2.6, N - 0.03], [3.5, N - 0.2], [EAVE + 0.03, N - 0.24], [3.78, N - 0.5], [3.93, N - 0.8], [ROOF, N - 1.05]];
 
 /** The ends' plans at half width w: [z, setback], the aerodynamic nose rounded wide, the flat face's corners tight. */
 const aeroPlan = (y: number, w: number): Table => {
-  const k = 1 + 0.15 * Math.min(1, Math.max(0, (y - 2.2) / 0.42));
+  const k = 1.5 - 0.35 * Math.min(1, Math.max(0, (y - 2.05) / 0.57)); // the lower nose rounds wider
   return [[0, 0], [w * 0.4, 0.04 * k], [w * 0.7, 0.14 * k], [w * 0.88, 0.29 * k], [w, 0.46 * k]];
 };
 const flatPlan = (_y: number, w: number): Table => [[0, 0], [w * 0.55, 0.02], [w * 0.85, 0.08], [w * 0.96, 0.17], [w, 0.27]];
@@ -266,11 +266,20 @@ function face(m: MeshBuilder, end: EndSpec, l: Wap5Livery): void {
   m.scope("roof pod", () => roofPod(m, end));
   m.scope("lower end", () => {
     buffers(m, e, N, HALF, BUFFER_Y);
+    // the open cowcatcher: raked posts under the headstock and horizontal bars across them
     m.scope("plough", () => {
-      const a = e * (N + 0.1);
-      const ring = (x0: number, w: number, back: number): Ring => (e > 0 ? [[x0, -w], [x0 - back, -w - 0.05], [x0 - back, w + 0.05], [x0, w]] : [[x0 + back, -w - 0.05], [x0, -w], [x0, w], [x0 + back, w + 0.05]]);
-      m.loft("guard", ring(a, 0.95, 0.25), 0.22, ring(e > 0 ? a + 0.03 : a - 0.03, 1.15, 0.3), Y0 - 0.35, false);
-      m.cap("guard", ring(a, 0.95, 0.25), 0.22, false);
+      const [yb, yt] = [0.22, Y0 - 0.35];
+      const xAt = (y: number) => N + 0.32 - ((y - yb) / (yt - yb)) * 0.28;
+      m.scope("posts", () => {
+        for (const z of [-1.05, -0.7, -0.35, 0, 0.35, 0.7, 1.05]) m.loft("frame", ngon(4, 0.035, Math.PI / 4, e * xAt(yb), z), yb, ngon(4, 0.035, Math.PI / 4, e * xAt(yt), z), yt);
+      });
+      m.scope("bars", () => {
+        for (const y of [0.24, 0.36, 0.48, 0.6, 0.72, 0.84]) {
+          const x = xAt(y + 0.02);
+          const [x0, x1] = e > 0 ? [x - 0.025, x + 0.045] : [-x - 0.045, -x + 0.025];
+          block(m, "frame", x0, x1, y, y + 0.04, -1.12, 1.12);
+        }
+      });
     });
   });
 }
