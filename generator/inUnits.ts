@@ -50,7 +50,9 @@ const flatEmu = (o: { number: string; title: string; colours: Array<[number, str
 });
 
 export const MUMBAI_EMU = flatEmu({ number: "SIEMENS 001", title: "Mumbai suburban", colours: [[1.85, "#6a2c8e"], [2.95, "#e8dcc0"], [9, "#6a2c8e"]], second: ["Western Railway", [[1.85, "#b5232b"], [2.95, "#e8dcc0"], [9, "#b5232b"]]], doorCount: 3, doorW: 1.25, power: 920, maxspeed: 100, cars: [3, 6] });
-export const MEMU = flatEmu({ number: "MEMU 001", title: "MEMU maroon", colours: [[1.85, "#6b1d24"], [2.95, "#e8dcc0"], [9, "#6b1d24"]], second: ["MEMU blue", [[1.85, "#1d3f80"], [2.95, "#e8dcc0"], [9, "#1d3f80"]]], doorCount: 2, doorW: 1.0, power: 920, maxspeed: 110, cars: [4, 8] });
+// the MEMU has its own spec, cab face and fittings (inMemu.ts)
+import { MEMU, irMemu, irMemuLod } from "./inMemu.ts";
+export { MEMU, irMemu, irMemuLod };
 
 /**
  * The RS1's cab: a flat face raked back over the windscreens, its corners rounded; the black
@@ -93,8 +95,6 @@ export function ncrtcNamoBharat(v?: ParamValues): MeshBuilder { return buildSeri
 export function ncrtcNamoBharatLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(NAMO_BHARAT, P.nb, v); }
 export function irMumbaiEmu(v?: ParamValues): MeshBuilder { return buildSeries(MUMBAI_EMU, P.mumbai, v); }
 export function irMumbaiEmuLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MUMBAI_EMU, P.mumbai, v); }
-export function irMemu(v?: ParamValues): MeshBuilder { return buildSeries(MEMU, P.memu, v); }
-export function irMemuLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MEMU, P.memu, v); }
 export function dmrcRs1(v?: ParamValues): MeshBuilder { return buildSeries(DELHI_METRO, P.dmrc, v); }
 export function dmrcRs1Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(DELHI_METRO, P.dmrc, v); }
 
