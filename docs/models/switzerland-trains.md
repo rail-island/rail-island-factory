@@ -128,7 +128,7 @@ on the Commons photograph of FO 105 and a side view of the LGB model
   fairings beside the diamond pantograph over cab I. The distant model keeps the bonnet's
   step in its profile (the face's `lod`) and gives up the cab's glass for the pantograph.
 - **FLIRT.** A RABe 523 (assets/sbb-flirt/SOURCES.md) on its own spec, not the shared
-  `flirt()` base (the NS Flirt's): a cab face (`FLIRT_FACE`) with the upright bumper, the
+  `flirt()` base (the NS Flirt has its own too, `nlFlirt.ts`): a cab face (`FLIRT_FACE`) with the upright bumper, the
   red lamp panel and pods, the windscreen raked about 43 degrees under a black dome, the
   red rising either side of it to the roof stripe every car carries; the rounded cab side
   window an `endSweeps` pane, the cab door's droplight and outline behind it. Its own

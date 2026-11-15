@@ -82,27 +82,30 @@ const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0],
  * to the roof with the destination display (3.78 - 3.9 m); the NS logo in the yellow under the point.
  */
 const FLIRT3_FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 1.4, reach: REACH, first: 7.75, roofFrom: 4.5, bulge: 0.07, cols: [8, 4, 1, 2], tolerance: 0.015,
+  dJoin: JOIN, dSide: 1.4, reach: REACH, first: 7.75, roofFrom: 4.5, bulge: 0.07, cols: [7, 4, 1, 2], tolerance: 0.02,
   profile: PROFILE,
   // nearly as wide as the body up to the windscreen's head, the corners rounded 0.3 - 0.5 m and swept back
   corner: [[B, 0.3], [1.5, 0.32], [2.0, 0.4], [2.6, 0.48], [3.4, 0.58], [3.84, 0.62], [3.95, 0.5], [C, 0.3]],
   cornerDepth: [[B, 0.3], [1.5, 0.35], [2.0, 0.5], [2.6, 0.65], [3.4, 0.8], [3.84, 0.8], [C, 0.4]],
-  rows: [...new Set([...PROFILE.map(([y]) => y), 0.75, 1.02, 1.3, 1.6, 1.72, 1.76, 1.85, 2.08, 2.17, 2.45, 2.52, 2.62, 2.68, 2.9, 3.45, 3.6, 3.74, 3.79, 3.9])].sort((a, b) => a - b),
+  rows: [...new Set([...PROFILE.map(([y]) => y), 0.75, 1.02, 1.3, 1.6, 1.62, 1.63, 1.73, 1.84, 1.85, 2.08, 2.17, 2.45, 2.52, 2.62, 2.63, 2.67, 2.9, 3.45, 3.6, 3.74, 3.76, 3.78, 3.79, 3.9])].sort((a, b) => a - b),
   bands: () => [[0, 1.5, "grey"], [1.5, 2.0, "white"], [2.0, 9, "yellow"]],
-  lodBands: [[0, 1.5, "grey"], [1.5, 2.0, "white"], [2.0, 2.58, "yellow"], [2.58, 9, "cabMask"]],
+  lodBands: [[0, 1.5, "grey"], [1.5, 2.0, "white"], [2.0, 2.63, "yellow"], [2.63, 9, "cabMask"]],
+  // the lamp housings' outer ends wrapping round the corners onto the cab sides
+  paint: [{ mat: "cabMask", front: [[1.62, 0.3], [1.84, 0.3]], back: [[1.62, 0.72], [1.84, 0.68]] }],
   lodGlass: { hw: 1.05, y: [2.68, 3.74] },
   fields: [
-    // the windscreen's black surround: a shallow point at its foot, narrowing upward, running on as the cap over the crown
-    { mat: "cabMask", pts: [[-1.26, 2.62], [0, 2.52], [1.26, 2.62], [1.24, 3.2], [1.1, 3.8], [0.96, 4.4], [-0.96, 4.4], [-1.1, 3.8], [-1.24, 3.2]] },
+    // the windscreen's thin black frame (the yellow running up the pillars beside it), the black cap with the display over it
+    { mat: "cabMask", pts: [[-1.1, 2.63], [1.1, 2.63], [1.08, 3.2], [1.06, 3.78], [-1.06, 3.78], [-1.08, 3.2]] },
+    { mat: "cabMask", pts: [[-1.06, 3.76], [1.06, 3.76], [0.96, 4.4], [-0.96, 4.4]] },
     // the apron's dark grey rising at the corners to the lamp housings, the white band over them
-    ...[1, -1].map((sd) => ({ mat: "grey", pts: ([[0.62, 1.49], [1.7, 1.49], [1.7, 1.76], [0.66, 1.76], [0.62, 1.7]] as Pt[]).map(([l, y]): Pt => [sd * l, y]) })),
+    ...[1, -1].map((sd) => ({ mat: "grey", pts: ([[0.62, 1.49], [1.7, 1.49], [1.7, 1.63], [0.66, 1.63], [0.62, 1.6]] as Pt[]).map(([l, y]): Pt => [sd * l, y]) })),
   ],
   masks: [
     // the coupler's recess in the apron
     { lat: [-0.52, 0.52], y: [0.58, 1.32], r: 0.08, mat: "black" },
   ],
   panes: [
-    { lat: [-1.06, 1.06], y: [2.68, 3.74], r: 0.12 },
+    { lat: [-1.03, 1.03], y: [2.67, 3.74], r: 0.1 },
     { lat: [-0.36, 0.36], y: [3.79, 3.9], r: 0.02, mat: "display" },
   ],
   decals: [
@@ -114,13 +117,13 @@ const FLIRT3_FACE: SeriesCabFace = {
   pods: [
     // the lamp housings at the white band's ends: the round headlight outside, the LED cluster and the tail light inside
     ...[1, -1].map((sd) => ({
-      lat: sd * 0.99, y: 1.72, w: 0.7, h: 0.28, r: 0.1, proud: 0.04, depth: 0.06, mat: "cabMask",
-      lamps: [[sd * 0.2, 0.075, "lampHead"], [-sd * 0.02, 0.045, "lampHead"], [-sd * 0.15, 0.045, "lampRed"]] as const,
+      lat: sd * 0.96, y: 1.73, w: 0.55, h: 0.22, r: 0.08, proud: 0.04, depth: 0.06, mat: "cabMask",
+      lamps: [[sd * 0.17, 0.085, "lampHead"], [sd * 0.02, 0.055, "lampHead"], [-sd * 0.09, 0.055, "lampHead"], [-sd * 0.19, 0.055, "lampRed"]] as const,
     })),
     // the louvred boxes at the apron's corners
     ...[1, -1].map((sd) => ({ lat: sd * 1.15, y: 1.02, w: 0.42, h: 0.55, r: 0.05, proud: 0.1, depth: 0.05, mat: "grille" })),
   ],
-  wipers: [[[0.68, 2.72], [0.4, 3.35]]],
+  wipers: [[[0.75, 2.72], [0.5, 3.3]]],
 };
 
 /** The NS logo as convex pieces (two bars, an arrow tip on each, the diagonal joining them), h tall, centred at (u, v). */
