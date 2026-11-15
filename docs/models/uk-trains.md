@@ -143,12 +143,18 @@ layout; the heights from the photographs):
 - **Body.** Driving cars 25.85 m, intermediate cars 26.0 m over the couplers, 2.7 m wide, the crown at
   3.65 m; the body side down to 1.1 m, the dark skirt and the grey underframe covers with their louvre
   grilles below it between the bogies.
-- **Nose.** The face meets the body 4.0 m behind the tip. The yellow coupler cover stands out furthest
-  at 1.0 m as an arch-topped bullet 1.6 m across (0.62 of the face), its seam and the flaps' split
-  drawn; the yellow panel above it under the windscreen; the lamp clusters in black housings at the
-  face's corners; the windscreen raked about 28 degrees from 2.25 m to 3.2 m in its black surround, one
-  long wiper, the headcode light on the cab roof; the plan rounded right across, reaching full width
-  2.8 m behind the cover low down. The cab side window is raked with the windscreen's side.
+- **Nose.** The face meets the body 4.0 m behind the tip (the drawing's cab door at 4.1 m). The yellow
+  coupler cover is a pod standing 0.16 m out of the face (the face's `reshape`): head on (the Kentish
+  Town photograph, 270 px/m at the cover) 1.84 m across, two thirds of the face, from the nose's foot to
+  its arched top at 1.86 m, its front furthest out at 1.0 - 1.24 m; its yellow front narrows to the foot
+  between the flanks (LNER red behind a white line, GWR green behind a dark crease); the seam over the
+  arch and the flaps' split are drawn. Above it the yellow panel to the windscreen's foot at 2.3 m, the
+  lamp clusters in black housings on the flanks beside the cover's top, angled outward; the windscreen a
+  trapezoid (1.6 m across at its foot, 1.3 m at its head) raked about 28 degrees to 3.2 m in a black
+  surround, white beside it on the Azuma; one long wiper, the headcode light on the cab roof. The plan is
+  rounded right across and drawn to a point (the flanks a parabola 0.3 m behind the centre line at the
+  corners up to the windscreen's foot), reaching full width about 3 m behind the face low down. The cab
+  side window is raked with the windscreen's side.
 - **Layout.** The driving car: the cab door 4.05 m behind the tip, the operator's panel (GWR / LNER)
   and the passenger door at 7.45 m, six windows 1.44 m wide 1.92 m apart (the drawing's first-class
   end), the door 3.0 m from the inner end. An intermediate car: nine windows 1.98 m apart between doors
@@ -163,9 +169,10 @@ layout; the heights from the photographs):
   from the lamp up the cab side and back to the passenger door with "LNER" on it, the red lower nose
   round the cover with its white rim, the black cab roof, the orange cantrail line.
 - **Not drawn.** The 9-car sets' unpowered trailers (every intermediate car carries a generator unit),
-  the doors' grab rails, the pantograph well; the cab roof's black ends at the face's join.
+  the doors' grab rails, the pantograph well; the cab roof's black ends at the face's join. The distant model keeps the plain
+  slices (no pod, no point).
 
-About 13,300 (GWR) and 13,600 (Azuma) triangles the driving car, 8,600 - 9,100 an intermediate car.
+About 13,700 (GWR) and 14,600 (Azuma) triangles the driving car, 8,600 - 9,100 an intermediate car.
 
 ## The Class 142 Pacer
 

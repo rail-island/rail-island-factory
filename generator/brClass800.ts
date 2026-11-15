@@ -29,33 +29,48 @@ const BAND: readonly [number, number] = [1.98, 2.88];
 const DOOR_W = 0.9;
 
 /**
- * The nose's centre line (photo-edinburgh-...-800108 and the GWR photographs, the side drawing for d): the
- * skirt's foot 0.55 m up and 0.62 m back under the yellow coupler cover, whose front stands furthest out at
- * 1.0 m; the cover rounding back to its arched top at the lamps (1.86 m, 0.42 m back), the yellow panel
- * under the windscreen leaning back a little to the glass's foot at 2.25 m, 0.62 m back; the glass raked
- * about 28 degrees to its head at 3.2 m, 2.4 m back; the cab roof rounding to the 3.65 m crown at the join.
+ * The nose's centre line beside the coupler cover (photo-british-rail-class-800-gwr-kentish-town-west, head
+ * on, 270 px/m at the cover; photo-edinburgh-...-800108 and the side drawing for d): the face 0.16 m behind
+ * the cover's front low down, rising past the lamps to the yellow panel and the windscreen's foot at 2.3 m,
+ * 0.95 m back; the glass raked about 28 degrees to its head at 3.2 m, 2.7 m back; the cab roof rounding to
+ * the 3.65 m crown at the join, 4.0 m back (the drawing's cab door 4.1 m behind the tip). The cover itself
+ * stands out of this surface (`reshape`, POD).
  */
 const PROFILE: Pt[] = [
-  [0.67, 0.34], [0.82, 0.08], [1.0, 0], [1.2, 0.03], [1.45, 0.15], [1.7, 0.33], [1.86, 0.42], [2.25, 0.62],
-  [2.6, 1.2], [2.9, 1.72], [3.2, 2.4], [3.4, 2.95], [3.55, 3.45], [3.65, JOIN],
+  [0.67, 0.48], [0.82, 0.26], [1.0, 0.16], [1.24, 0.18], [1.5, 0.3], [1.7, 0.42], [1.86, 0.5], [2.05, 0.66], [2.3, 0.95],
+  [2.6, 1.45], [2.9, 2.0], [3.2, 2.7], [3.4, 3.15], [3.55, 3.55], [3.65, JOIN],
 ];
 
 /** The plan: rounded right across (the corner is the whole half width), reaching full width this far behind the face line by height. */
-const DEPTH: Pt[] = [[0.67, 2.75], [1.0, 2.8], [1.5, 2.6], [2.0, 2.1], [2.3, 1.95], [2.9, 1.6], [3.2, 1.25], [3.4, 0.7], [3.65, 0.05]];
+const DEPTH: Pt[] = [[0.67, 3.0], [1.0, 3.1], [1.5, 2.9], [2.0, 2.5], [2.3, 2.3], [2.9, 1.7], [3.2, 1.2], [3.4, 0.75], [3.65, 0.05]];
+
+/**
+ * The coupler cover standing out of the face as a rounded pod (head on: 1.84 m across at its widest, two
+ * thirds of the face, from the nose's foot to its arched top at 1.86 m, 0.6 of the face's height under the
+ * windscreen), its front 0.16 m proud; and the snout drawn to a point in plan (the flanks a parabola behind
+ * the centre line, 0.3 m deeper at the corners up to the windscreen's foot, none at the roof).
+ */
+const POD = { lat: 0.92, y: 1.24, h: 0.62, proud: 0.16 };
+const vee = (y: number): number => (y <= 2.3 ? 0.3 : y >= 3.3 ? 0 : 0.3 * (3.3 - y));
+function c800Reshape(lat: number, y: number, d: number): number {
+  const r = Math.pow(lat / POD.lat, 2.4) + Math.pow(Math.abs(y - POD.y) / POD.h, 2.4);
+  const pod = r < 1 ? POD.proud * Math.sqrt(1 - r) : 0;
+  return Math.max(0, d + vee(y) * (lat / 1.35) ** 2 - pod);
+}
 
 /** A shape on the other side (seen from ahead). */
 const mirror = (pts: readonly Pt[]): Pt[] => pts.map(([l, y]): Pt => [-l, y]).reverse();
 
-/** The coupler cover's outline, an arch-topped bullet narrower than the face (0.62 of it across at its widest). */
-const CONE_HALF: Pt[] = [[0, 1.86], [0.4, 1.83], [0.66, 1.72], [0.79, 1.48], [0.8, 1.2], [0.74, 0.92], [0.56, 0.76], [0, 0.71]];
+/** The cover's yellow front: its arched top, then its sides (inside the pod's flanks, LNER red, GWR green) narrowing to its foot. */
+const CONE_HALF: Pt[] = [[0, 1.86], [0.42, 1.83], [0.66, 1.76], [0.74, 1.7], [0.68, 1.4], [0.6, 1.1], [0.5, 0.86], [0.36, 0.71], [0, 0.68]];
 const CONE: Pt[] = [...CONE_HALF.slice(0, -1).reverse().map(([l, y]): Pt => [-l, y]), ...CONE_HALF].reverse();
 /** The yellow panel under the windscreen, between the lamp clusters. */
-const PANEL: Pt[] = [[-1.0, 1.74], [1.0, 1.74], [0.99, 2.28], [-0.99, 2.28]];
-/** A lamp cluster's black housing at the face's corner under the windscreen's, slanting back and up. */
-const LAMP: Pt[] = [[0.8, 1.84], [1.12, 1.76], [1.3, 1.92], [1.26, 2.24], [0.84, 2.27]];
-/** The windscreen: its black surround and the glass, wider at the foot, the head's corners rounded. */
-const SURROUND: Pt[] = [[-1.0, 2.24], [1.0, 2.24], [1.03, 2.4], [0.93, 3.02], [0.77, 3.23], [-0.77, 3.23], [-0.93, 3.02], [-1.03, 2.4]];
-const GLASS: Pt[] = [[-0.94, 2.3], [0.94, 2.3], [0.96, 2.42], [0.87, 2.98], [0.72, 3.17], [-0.72, 3.17], [-0.87, 2.98], [-0.96, 2.42]];
+const PANEL: Pt[] = [[-0.74, 1.7], [0.74, 1.7], [0.8, 2.31], [-0.8, 2.31]];
+/** A lamp cluster's black housing on the flank beside the cover's top, angled outward. */
+const LAMP: Pt[] = [[0.72, 1.76], [1.06, 1.66], [1.25, 1.84], [1.21, 2.2], [0.8, 2.26]];
+/** The windscreen: its black surround and the glass, a trapezoid narrower at the head, its corners rounded. */
+const SURROUND: Pt[] = [[-0.88, 2.29], [0.88, 2.29], [0.9, 2.42], [0.82, 3.0], [0.7, 3.22], [-0.7, 3.22], [-0.82, 3.0], [-0.9, 2.42]];
+const GLASS: Pt[] = [[-0.8, 2.36], [0.8, 2.36], [0.82, 2.47], [0.74, 2.98], [0.64, 3.15], [-0.64, 3.15], [-0.74, 2.98], [-0.82, 2.47]];
 /** The headcode light's box on the cab roof over the windscreen. */
 const MARKER: Pt[] = [[-0.16, 3.33], [0.16, 3.33], [0.13, 3.46], [-0.13, 3.46]];
 
@@ -66,18 +81,18 @@ const strip = (a: Pt, b: Pt, w: number): Pt[] => {
   return [[a[0] + nx, a[1] + ny], [a[0] - nx, a[1] - ny], [b[0] - nx, b[1] - ny], [b[0] + nx, b[1] + ny]];
 };
 /** The seam over the cover's arch, and its split down the middle (the coupler's flaps). */
-const SEAM: Pt[][] = CONE_HALF.slice(1, 3).map((p, i) => strip(CONE_HALF[i]!, p, 0.018));
+const SEAM: Pt[][] = CONE_HALF.slice(1, 4).map((p, i) => strip(CONE_HALF[i]!, p, 0.018));
 const SEAMS: Pt[][] = [...SEAM, ...SEAM.map(mirror), strip([0, 0.72], [0, 1.85], 0.014)];
-/** The rim round the cover's sides and foot, 4 cm out (LNER's white line; the GWR's is the cover's own yellow). */
-const RIM_HALF: Pt[] = CONE_HALF.slice(2).map(([l, y]): Pt => [l + (l > 0.3 ? 0.04 : 0), y - (l < 0.7 ? 0.04 : 0)]);
-const RIM: Pt[][] = RIM_HALF.slice(1).map((p, i) => strip(RIM_HALF[i]!, p, 0.045));
+/** The rim between the yellow and the cover's flanks, 3.5 cm out (LNER's white line; the GWR's is the cover's own yellow). */
+const RIM_HALF: Pt[] = CONE_HALF.slice(3).map(([l, y]): Pt => [l + (l > 0.3 ? 0.035 : 0), y - (l < 0.45 ? 0.035 : 0)]);
+const RIM: Pt[][] = RIM_HALF.slice(1).map((p, i) => strip(RIM_HALF[i]!, p, 0.04));
 const RIMS: Pt[][] = [...RIM, ...RIM.map(mirror)];
 
-const ROWS = PROFILE.map(([y]) => y);
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), 0.75, 0.91, 1.12, 1.37, 1.62, 1.78])].sort((a, b) => a - b);
 
 /** The cab side window (black-framed tinted glass), its front parallel to the windscreen's side, its foot rising to the rear. */
-const CABWIN_FRONT: Pt[] = [[2.36, 2.3], [3.0, 3.1]];
-const CABWIN_BACK: Pt[] = [[2.36, 2.36], [2.6, 3.8], [3.0, 3.8]];
+const CABWIN_FRONT: Pt[] = [[2.38, 2.65], [3.0, 3.35]];
+const CABWIN_BACK: Pt[] = [[2.38, 2.7], [2.6, 3.8], [3.0, 3.8]];
 
 export const C800_FACE: SeriesCabFace = {
   dJoin: JOIN, reach: 0.07, first: 4.05, roofFrom: 9, cols: [1, 9, 1, 1], tolerance: 0.05, wrap: true,
@@ -86,17 +101,18 @@ export const C800_FACE: SeriesCabFace = {
   cornerDepth: PROFILE.map(([y, d]): Pt => {
     let k = DEPTH[DEPTH.length - 1]![1];
     for (let i = 1; i < DEPTH.length; i++) if (y <= DEPTH[i]![0]) { const [a, b] = [DEPTH[i - 1]!, DEPTH[i]!]; k = a[1] + ((y - a[0]) / (b[0] - a[0])) * (b[1] - a[1]); break; }
-    return [y, Math.max(0.05, Math.min(JOIN - d - 0.02, k))];
+    return [y, Math.max(0.05, Math.min(JOIN - d - 0.35, k))];
   }),
   rows: ROWS,
+  reshape: c800Reshape,
   // the face takes the side's bands (the line under the windows, the cantrail line); its paint is drawn over them
   bands: (l) => l.bands,
-  lodBands: [[0, 2.26, "noseYellow"], [2.26, 9, "body"]],
-  lod: { profile: PROFILE, corner: [[0.67, 2.0], [3.65, 2.0]], rows: [0.67, 0.82, 1.0, 1.45, 1.86, 2.25, 2.9, 3.4, 3.65], cornerDepth: [[0.67, 2.4], [1.0, 2.8], [1.86, 2.2], [2.25, 1.98], [2.9, 1.6], [3.4, 0.7], [3.65, 0.05]] },
-  lodGlass: { hw: 0.94, y: [2.3, 3.17] },
+  lodBands: [[0, 2.3, "noseYellow"], [2.3, 9, "body"]],
+  lod: { profile: PROFILE.map(([y, d]): Pt => [y, y < 1.86 ? Math.max(0, d - 0.16) : d]), corner: [[0.67, 2.0], [3.65, 2.0]], rows: [0.67, 1.0, 1.5, 1.86, 2.3, 2.9, 3.4, 3.65], cornerDepth: [[0.67, 2.8], [1.0, 3.0], [1.86, 2.6], [2.3, 2.3], [2.9, 1.6], [3.4, 0.5], [3.65, 0.05]] },
+  lodGlass: { hw: 0.8, y: [2.36, 3.15] },
   paint: [
-    // the lower nose round the coupler cover (LNER red, GWR green), back along the foot to the leading bogie
-    { mat: "flank", front: [[0.67, -9], [1.8, -9]], back: [[0.67, 3.1], [0.95, 3.05], [1.3, 2.3], [1.6, 1.7], [1.8, 1.4]], top: 1.8 },
+    // the cover's flanks and the lower nose round it (LNER red, GWR green), back along the foot to the leading bogie
+    { mat: "flank", front: [[0.67, -9], [1.8, -9]], back: [[0.67, 3.3], [0.95, 3.2], [1.3, 2.5], [1.6, 1.9], [1.8, 1.5]], top: 1.8 },
     // the cab side window, dark tinted glass
     { mat: "cabGlass", front: CABWIN_FRONT, back: CABWIN_BACK, top: 3.0 },
   ],
@@ -112,12 +128,12 @@ export const C800_FACE: SeriesCabFace = {
     { mat: "cabMask", pts: LAMP, fine: 3 }, { mat: "cabMask", pts: mirror(LAMP), fine: 3 }, { mat: "markerBox", pts: MARKER, fine: 2 },
   ],
   lamps: [
-    [0.96, 2.04, 0.085, "lampHead"], [1.14, 2.0, 0.075, "lampHead"], [1.2, 2.16, 0.035, "lampRed"],
-    [-0.96, 2.04, 0.085, "lampHead"], [-1.14, 2.0, 0.075, "lampHead"], [-1.2, 2.16, 0.035, "lampRed"],
+    [0.88, 1.98, 0.09, "lampHead"], [1.07, 1.93, 0.08, "lampHead"], [1.13, 2.1, 0.035, "lampRed"],
+    [-0.88, 1.98, 0.09, "lampHead"], [-1.07, 1.93, 0.08, "lampHead"], [-1.13, 2.1, 0.035, "lampRed"],
   ],
   roofLamp: [0, 3.4, 0.045],
   // the one long wiper, parked from the screen's foot up its left side (seen from ahead)
-  wipers: [[[0.08, 2.34], [-0.78, 2.98]]],
+  wipers: [[[0.06, 2.4], [-0.66, 2.98]]],
 };
 
 type Paints = Record<string, ReturnType<typeof c>>;
@@ -135,14 +151,14 @@ function palette(body: string, extra: Paints): Paints {
 const GWR: ShinkansenLivery = {
   title: "GWR green", number: "800 011",
   palette: palette("#13342a", {
-    line: c("#c98c4c", 0.4), flank: c("#13342a"), rim: c("#f6c52a", 0.45), winBand: c("#13342a"),
+    line: c("#c98c4c", 0.4), flank: c("#13342a"), rim: c("#0c211a", 0.4), winBand: c("#13342a"),
     roofG: c("#a9aeb1", 0.5), black: c("#121416", 0.35), lettering: c("#c9a35c", 0.4), logo: c("#d8dcd6", 0.4),
   }),
   bands: [[0, 3.23, "body"], [3.23, 3.265, "line"], [3.265, 9, "body"]],
   roof: "roofG", skirt: "skirtG",
   endSweeps: [
     // the black round the cab side window, from the windscreen's side back to the cab door
-    { mat: "black", front: [[2.1, 1.75], [2.6, 2.0], [3.15, 2.8]], back: [[2.1, 2.3], [2.3, 3.95], [3.15, 3.95]], top: 3.15, face: true },
+    { mat: "black", front: [[2.1, 2.0], [2.6, 2.4], [3.15, 3.1]], back: [[2.1, 2.3], [2.3, 3.95], [3.15, 3.95]], top: 3.15, face: true },
   ],
   endLettering: [{ text: "GWR", d: 6.25 - JOIN, y: 2.25, h: 0.42, mat: "logo" }],
 };
@@ -158,7 +174,7 @@ const AZUMA: ShinkansenLivery = {
   roof: "roofG", skirt: "skirtG",
   endSweeps: [
     // the red sweep: up the cab side from the lamp beside the windscreen to the cantrail, back to the passenger door
-    { mat: "red", front: [[BAND[0], 1.85], [2.6, 2.15], [3.2, 2.95]], back: [[BAND[0], 7.45], [3.2, 7.45]], top: 3.2, face: true },
+    { mat: "red", front: [[BAND[0], 2.1], [2.6, 2.6], [3.2, 3.3]], back: [[BAND[0], 7.45], [3.2, 7.45]], top: 3.2, face: true },
   ],
   // the black cab roof over the windscreen, its edge falling back to the cantrail line at the join
   faceFields: [{ mat: "capBlack", pts: [[-1.4, 3.21], [1.4, 3.21], [1.4, 3.7], [-1.4, 3.7]] }],
