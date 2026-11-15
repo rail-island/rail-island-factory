@@ -90,7 +90,9 @@ publishes the list - was interrupted by this change and is asked again with it i
 **Answer: ~10 mixed.** The starting list (each a confirmed model; formations as stated in
 `generator/openttdTable.ts`):
 
-1. TGV Duplex - `proc-vehicle-tgv-duplex`, its formation "power cars, 8 trailers".
+1. TGV Duplex - `proc-vehicle-tgv-duplex`, its formation "power cars, 8 trailers". (Later replaced by the
+   whole-train model, 8 cars, so the shared Jacobs bogies are drawn once - a follow-up
+   the user asked for.)
 2. ICE 1 - `proc-vehicle-ice-1`, "power cars, 6 coaches".
 3. Shinkansen 0 series - `proc-vehicle-shinkansen-0`, "8 cars".
 4. CD 680 Pendolino - `proc-vehicle-cd-680`, "7 cars".
@@ -130,7 +132,13 @@ written; the list is the factory's and can change without a spec change.
 | No, decoration only | Pure animation, hidden from assistive technology, nothing to translate. |
 | Name + link to factory | A small English label under the train linking to the model's factory page. |
 
-**Answer: No, decoration only.**
+**Answer: No, decoration only** - later changed by the user, after the POC was built:
+"add some text to web, something like '232 models with 450 variants available'. This
+numbers should publish factory in that JSON. Variant count is number of all distinct
+parameter values (except from number of coaches in full train). It is not count of
+combinations. Make only english variant, other languages will have marked english text."
+So `trains.json` carries the counts and the hero shows one caption under the track,
+English in every locale until translated (marked `untranslated`).
 
 ### This spec touches both repositories. Where should it be committed?
 | Option | What it means |

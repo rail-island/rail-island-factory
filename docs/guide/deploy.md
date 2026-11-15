@@ -17,6 +17,11 @@ otherwise switch that off because `routes` is set). Every page is a prerendered 
 `not_found_handling: 404-page` answers any other path with `404.html` and a 404
 status (the app, marked `noindex`).
 
+The build emits `dist/_headers` (`ASSET_HEADERS` in `vite.config.ts`), which
+wrangler applies to the responses and does not serve: it allows any origin on
+`/trains.json`, which railisland.com reads in the browser
+([../site/train-parade.md](../site/train-parade.md)).
+
 There is one environment. The site is public and has no sign-in.
 
 ## Workflows

@@ -9,6 +9,7 @@
 | [models/legacy-mapping.md](models/legacy-mapping.md) | Complete Creator mapping, canonical procedural IDs, metre units and runtime compatibility |
 | [models/historical.md](models/historical.md) | Detailed Pagoda, parametric Castle and Palace, landmark budgets and authoring skill |
 | [models/remaining-models.md](models/remaining-models.md) | Remaining fountains, historical buildings, aircraft, liner, cabin and freight variants |
+| [site/train-parade.md](site/train-parade.md) | the train parade: the hand-picked trains (`trainParade.ts`), the cars rendered at build time into `export/trains/` (a whole train in sections), the fleet counts, `trains.json` and its CORS header, what railisland.com does with it |
 | [site/workshop.md](site/workshop.md) | the catalog and the workshop: drafts (models not yet confirmed, `catalogModels.json`), what the export leaves out, the site's Catalog / Workshop switch, a model's web links (`linkTable.ts`) on the Sources tab |
 | [guide/setup-and-build.md](guide/setup-and-build.md) | installing, the scripts, what `pnpm build` produces, tests |
 | [guide/deploy.md](guide/deploy.md) | the Cloudflare Worker, the GitHub Actions workflows, secrets |

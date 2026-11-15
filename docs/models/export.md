@@ -32,6 +32,7 @@ the same JS models and trees on demand ([../site/catalog-site.md](../site/catalo
 | `export/text/<code>.json` | every exported text in each of the game's 14 languages ([text.md](text.md)) |
 | `export/textures/*.jpg`, `export/surfaces.meta.json` | the texture library and every named surface, for the game to import ([surfaces.md](surfaces.md)) |
 | `export/catalog.json` | what the site lists |
+| `export/trains.json`, `export/trains/*.png` | the train parade railisland.com drives across its landing page, written by `pnpm build:trains`, not `build:models` ([../site/train-parade.md](../site/train-parade.md)) |
 | `export/.build-keys.json` | the build-cache key each JS model and tree file was written for ([../guide/build-cache.md](../guide/build-cache.md)) |
 
 `export/` is also Vite's `publicDir`, so `vite build` copies it into `dist/` as

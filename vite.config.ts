@@ -68,6 +68,26 @@ function sitePages(): Plugin {
   };
 }
 
+/**
+ * Cloudflare's response headers for the assets-only Worker (`_headers` at the
+ * root of dist/; wrangler reads it and does not serve it). trains.json is read by
+ * railisland.com's own script in the browser, so it allows any origin; its
+ * images are plain <img> loads and need nothing (docs/site/train-parade.md).
+ */
+export const ASSET_HEADERS = `/trains.json
+  Access-Control-Allow-Origin: *
+`;
+
+function assetHeaders(): Plugin {
+  return {
+    name: "asset-headers",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "_headers", source: ASSET_HEADERS });
+    },
+  };
+}
+
 // The site is a static Solid SPA. Its data is the generator's export folder,
 // served as Vite's publicDir: `pnpm build:models` writes export/ (js/, thumbs/,
 // catalog.json, skyscrapers.meta.json) and `vite build` copies it into dist/ as
@@ -75,7 +95,7 @@ function sitePages(): Plugin {
 // `pnpm dev` uses no export folder: generator/devServer.ts serves the data on
 // demand and the browser measures and renders the rest (docs/site/catalog-site.md).
 export default defineConfig(({ command }) => ({
-  plugins: [solid(), inlineBoot(), socialPreview(), sitePages(), devExport()],
+  plugins: [solid(), inlineBoot(), socialPreview(), assetHeaders(), sitePages(), devExport()],
   publicDir: command === "serve" ? false : "export",
   build: {
     // three (~560 kB) is its own chunk, loaded only when a model page opens
