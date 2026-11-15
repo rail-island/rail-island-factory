@@ -1,7 +1,7 @@
 # Steam locomotives in a few measures
 
 **Covers** - the parametric steam generator (`steamEngineSpec`, `steamTenderSpec`) and the steam designs of the eight-country plan drawn with it: the layout it derives, its couplers and tenders, its guards, and the designs.
-**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/deSteam01.ts` (the DRG 01), `generator/deSteam52.ts` (the DR 52), `generator/deSteamP8.ts` (the Prussian P 8), `generator/cnSy.ts` (the CR SY), `generator/steamLoco.ts`, `generator/lodSteam.ts`
+**Code** - `generator/steamWorld.ts` (`WorldSteam`), `generator/worldSteamLocos.ts` (`WORLD_STEAM`, `WORLD_STEAM_DESIGNS`), `generator/deSteam01.ts` (the DRG 01), `generator/deSteam52.ts` (the DR 52), `generator/deSteamP8.ts` (the Prussian P 8), `generator/cnQj.ts` (the China Railways QJ), `generator/cnSy.ts` (the CR SY), `generator/steamLoco.ts`, `generator/lodSteam.ts`
 **See also** - [steam-locomotives.md](steam-locomotives.md) (the kit), [jnr-locos.md](jnr-locos.md), [germany-trains.md](germany-trains.md)
 
 The steam kit draws a locomotive from a `LocoSpec`: boiler, chimney, domes, running
@@ -57,7 +57,7 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-ir-wg` | India | 1'D1' | 1.56 m | none | four axles |
 | `proc-vehicle-eir-fairy-queen` | India | 1A1 | 1.83 m | none | two axles |
 | `proc-vehicle-dhr-b-class` | India | B | 0.66 m | none | two axles |
-| `proc-vehicle-cr-qj` | China | 1'E1' | 1.5 m | Wagner | four axles |
+| `proc-vehicle-cr-qj` | China | 1'E1' | 1.5 m | curled, ribbed | six axles |
 | `proc-vehicle-cr-sy` | China | 1'D1' | 1.37 m | none | four axles (narrowed rear) |
 | `proc-vehicle-cr-js` | China | 1'D1' | 1.37 m | Wagner | four axles |
 
@@ -89,6 +89,15 @@ each, the roof following them) drawn by the module, and the tender's tank with i
 rails and the round tool box across its rear wall. Both liveries share the shape; DR black adds the small Wagner
 plates beside the smokebox (38 1772), KPEV green (2455 Posen) has none and carries Posen's brass plate on the
 smokebox. Its distant model draws the cab as a prism from the middle of the pointed front.
+
+The China Railways QJ is not derived either: `generator/cnQj.ts` states QJ 2204 and its six-axle tender from
+the dimensioned works diagram (16,140 mm, measured at 83 px/m on a 3x copy) and photographs (29,181 mm with the
+tender) - the boiler on 3.02 m, the long casing along its top over the feed-water heater, the big deflectors
+whose ribbed plates curl in over the smokebox (sheets swept through stations, their front corner rounded), the
+red front plate with the emblem, the red beam and slatted pilot, the knuckle couplers, the running board on 2.6 m
+with its white edge, white bands and tyres, and the tender's tall box with the coal space's step and two
+three-axle bogies. Its distant model draws the deflectors as flat plates and the casing as a long dome
+([china-trains.md](china-trains.md), "The QJ's body").
 
 Each design's published figures and photographs are in its `assets/<name>/SOURCES.md`;
 the layout is the class's in proportion, not to the centimetre.
