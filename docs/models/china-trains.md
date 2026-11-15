@@ -25,7 +25,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, flat | - | Co-Co, 20.4 m, 3,780 kW |
 | `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, streamlined | - | Bo-Bo, 17.5 m, 3,600 kW, 170 km/h |
 | `proc-vehicle-cr-df4` | CR DF4 Dongfeng | box locomotive, diesel | `livery` (`orangeWhite`, `green`) | Co-Co, 20.5 m, 1,985 kW |
-| `proc-vehicle-cr-df11` | CR DF11 Dongfeng | box locomotive, streamlined, diesel | - | Co-Co, 21.25 m, 3,040 kW, 170 km/h |
+| `proc-vehicle-cr-df11` | CR DF11 Dongfeng | its own double-ended body (`generator/cnDf11.ts`), blue and cream | - | Co-Co, 21.25 m, 3.0 m wide (real 3.304 m), bogie centres 11.8 m, 138 t, 3,040 kW, 170 km/h |
 | `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers | `unit` | 2-10-2, 1.5 m drivers |
 | `proc-vehicle-cr-sy` | CR SY | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
 | `proc-vehicle-cr-js` | CR JS | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
@@ -335,3 +335,42 @@ side) and the published figures.
   roof line and the main breaker.
 - **Distant model.** Both sections with their noses, the silver trapezoid as a band, the bogies,
   frame, transformer, cooler boxes and pantographs, 196 triangles of 200.
+
+## The DF11's body
+
+`generator/cnDf11.ts`, measured from the photographs in `assets/cr-df11/` (SOURCES.md): heights
+from the head-on view of DF11 0441 (145 px/m), lengths along the side from DF11 0177 by a 1-D
+projective fit over the louvre panels. The running number is DF11 0010.
+
+- **Size.** 21.25 m over the knuckle couplers, 20.15 m over the body, 3.0 m wide (real 3.304 m,
+  narrowed so the handrails stay inside the UIC gauge's 3.1 m), 4.47 m at the roof's crown and
+  4.68 m over the horns (published 4.736 m). Two three-axle bogies on 11.8 m centres (the
+  photograph's traction brackets 3.95 m and 15.75 m behind the face), axles 2.0 m apart, 1.05 m
+  wheels; the leading axle 2.2 m behind the face, close behind the pilot.
+- **Cabs.** One shell lofted from the cab's tables, the same at both ends: the lower face upright
+  from the body's foot (1.08 m) to the waist (2.56 m), the windscreen raked 25 degrees back to the
+  eave at 3.74 m, the roof cap rounding back 2.3 m to the crown; the face flat across with
+  rounded corners 0.25 m wide. Two windscreens 2.86 - 3.66 m with wipers, a handrail across the
+  face under them, two dark lamp housings (white head lamp outboard, red tail lamp inboard) with
+  the red "DF11 0010" plate between them, a grab bar low on the face, the round headlight in a
+  pod on the roof cap and two horns behind it. Below, the grey pilot with the knuckle coupler, the
+  hoses and the plough plate leaning forward, its red and white chevrons under a gable whose apex
+  sits under the coupler, four slots in its grey shoulders.
+- **Livery.** Blue and cream, the scheme every photograph shows (the plan's red and white was not
+  found): cream above, royal blue below; at the waist a thin blue line over a cream line
+  (2.63 - 2.77 m along the sides) that sweeps down over the last metre behind each cab door to
+  the face's level (2.41 - 2.56 m) and runs across it; a cream stripe at 1.66 - 1.73 m all
+  round; grey roof, grey pilot and bogies.
+- **Sides.** From the +X cab, on both sides alike: the cab window with its front edge raked with
+  the windscreen, the cab door with its window, handrails and steps, a window, a louvre panel, a
+  large window, a louvre panel, two small brown grilles, the white CR emblem, two windows, three
+  louvre panels, a window, the other door and cab window. The louvre panels have slats in the
+  cream above the waist lines and in the blue below them. Red number plates on the blue below
+  each cab window.
+- **Roof.** Radiator louvres on both shoulders 4.2 - 6.6 m behind the +X face, two small vents a
+  side, the exhaust silencer box and a second box on the crown, low hatch plates.
+- **Underframe.** The ribbed fuel tank between the bogies, two air reservoirs beside each end of
+  it, the traction brackets over the bogies.
+- **Distant model.** The shell's silhouette with both cab noses, the paint bands, windscreens and
+  cab side windows, and the two bogies reaching the rail: 98 triangles of 100 (the fuel tank and
+  the exhaust box are optional parts the budget leaves out).

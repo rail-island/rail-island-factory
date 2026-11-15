@@ -14,6 +14,7 @@ import { buildHxn5, buildHxn5Lod, HXN5_LIVERIES } from "./cnHxn5.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { crHxd1, crHxd1Lod } from "./cnHxd1.ts";
+import { buildDf11, buildDf11Lod } from "./cnDf11.ts";
 
 const HXN5_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { orange: "CR green" })];
 export function crHxn5(v?: ParamValues): MeshBuilder { return buildHxn5(HXN5_LIVERIES[resolveParams(HXN5_PARAMS, v).livery!]!); }
@@ -34,14 +35,12 @@ const HXD3D: Body = { length: 20.85, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked",
 const SS1: Body = { length: 20.4, W: 1.5, y0: 1.35, roof: 4.0, nose: "flat", bogies: coCo(5.4, 1.75, 0.625), pantograph: "diamond", pantographX: 5.6, room: { kind: "windows", n: 5, y: [2.6, 3.2] } };
 const SS8: Body = { length: 17.5, W: 1.5, y0: 1.35, roof: 4.0, nose: "streamlined", bogies: [[-4.5, [-1.45, 1.45], 0.625], [4.5, [-1.45, 1.45], 0.625]], pantograph: "singleArm", pantographX: 4.6, room: { kind: "grilles", n: 4, y: [2.6, 3.4] } };
 const DF4: Body = { length: 20.5, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked", bogies: coCo(5.5, 1.8, 0.525), exhausts: [0], room: { kind: "windows", n: 5, y: [2.6, 3.2] } };
-const DF11: Body = { length: 21.25, W: 1.5, y0: 1.35, roof: 4.0, nose: "streamlined", bogies: coCo(5.7, 1.8, 0.525), exhausts: [0.6], room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 
 const L: Record<string, Liveries> = {
   hxd3d: { redGrey: { title: "Red and grey", loco: bands(HXD3D, "HXD3D 0001", [2.3, "#b5232b"], [2.5, "#f1f1ee"], [4.4, "#9aa0a5"]) } },
   ss1: { greenYellow: { title: "Green, yellow", loco: bands(SS1, "SS1 0001", [2.3, "#2f6b3a"], [2.45, "#f2c31a"], [4.4, "#2f6b3a"]) } },
   ss8: { redWhite: { title: "Red and white", loco: bands(SS8, "SS8 0001", [2.3, "#b5232b"], [4.4, "#f1f1ee"]) } },
   df4: { orangeWhite: { title: "Orange, white", loco: bands(DF4, "DF4 1001", [2.3, "#e8701e"], [2.5, "#f1f1ee"], [4.4, "#e8701e"]) }, green: { title: "Green", loco: bands(DF4, "DF4 0001", [2.3, "#2f6b3a"], [2.45, "#f2c31a"], [4.4, "#2f6b3a"]) } },
-  df11: { redWhite: { title: "Red and white", loco: bands(DF11, "DF11 0001", [2.3, "#b5232b"], [4.4, "#f1f1ee"]) } },
 };
 
 const P = Object.fromEntries(Object.entries(L).map(([k, l]) => [k, liveryParams(l)]));
@@ -57,8 +56,9 @@ export function crSs8(v?: ParamValues): MeshBuilder { return b("ss8", v); }
 export function crSs8Lod(v?: ParamValues): MeshBuilder { return lod("ss8", v); }
 export function crDf4(v?: ParamValues): MeshBuilder { return b("df4", v); }
 export function crDf4Lod(v?: ParamValues): MeshBuilder { return lod("df4", v); }
-export function crDf11(v?: ParamValues): MeshBuilder { return b("df11", v); }
-export function crDf11Lod(v?: ParamValues): MeshBuilder { return lod("df11", v); }
+// the DF11's own measured body (cnDf11.ts), in its one livery, blue and cream (no parameter)
+export function crDf11(): MeshBuilder { return buildDf11(); }
+export function crDf11Lod(): MeshBuilder { return buildDf11Lod(); }
 
 const E = ELECTRIC_LOCO_CATALOG, D = DIESEL_LOCO_CATALOG;
 const d = (id: string, title: string, k: string, build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, weight: number, power: number, maxspeed: number, catalog = E): ProceduralDesign =>
@@ -71,5 +71,5 @@ export const CN_LOCOS: ProceduralDesign[] = [
   d("cr-ss1", "CR SS1 Shaoshan", "ss1", crSs1, crSs1Lod, 138, 3780, 95),
   d("cr-ss8", "CR SS8 Shaoshan", "ss8", crSs8, crSs8Lod, 88, 3600, 170),
   d("cr-df4", "CR DF4 Dongfeng", "df4", crDf4, crDf4Lod, 138, 1985, 100, D),
-  d("cr-df11", "CR DF11 Dongfeng", "df11", crDf11, crDf11Lod, 138, 3040, 170, D),
+  { id: "proc-vehicle-cr-df11", title: "CR DF11 Dongfeng", build: crDf11, buildLod: crDf11Lod, game: locoGame(138, 3040, 170), catalog: D, references: "cr-df11" },
 ];
