@@ -12,7 +12,7 @@ Railway's trains. Every design here is filed under China.
 | id | title | kit | parameters | figures (game) |
 |---|---|---|---|---|
 | `proc-vehicle-cr-cr400af` | Fuxing CR400AF | series, Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`red`, `smart`) | 350 km/h |
-| `proc-vehicle-cr-cr400bf` | Fuxing CR400BF | series, Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`gold`, `red`) | 350 km/h |
+| `proc-vehicle-cr-cr400bf` | Fuxing CR400BF | series, its own cab face (`generator/cnCr400bf.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`gold`, `red`) | 27.35 / 25.7 m cars, 8 cars 208.9 m; 350 km/h |
 | `proc-vehicle-cr-crh380a` | CRH380A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the long nose; 350 km/h |
 | `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge, its own E2 cab face (`generator/cnCrh2a.ts`) | `unit`, `cars` 3 - 8 | 25.7 / 25 m cars, 9.2 m E2 nose; 250 km/h |
 | `proc-vehicle-cr-crh3c` | CRH3C | series, the ICE 3's Velaro cab face (`cnCrh3c.ts`) | `unit`, `cars` 3 - 8 | end 25.675 m, middle 24.775 m, 3.1 m wide (real 3.265 m), 3.89 m high; 350 km/h |
@@ -141,3 +141,38 @@ head-on views scaled on the oval cover). Heights over the rail, d behind the nos
   rule for shorter trains.
 - **Not drawn**: the "Hexie Hao" characters and the CRH logo on the nose and sides (the stroke font has no
   CJK); the later units' crew door in place of the cab side window.
+
+## The CR400BF's body
+
+`generator/cnCr400bf.ts`, measured from the photographs in `assets/cr-cr400bf/` (SOURCES.md) and the
+published figures; heights over the rail, d behind the nose's tip.
+
+- **Lengths.** End car 27.35 m and intermediate car 25.7 m over the couplers (27.09 m and 25.65 m
+  published), eight cars 208.9 m (209.06 m). 17.5 m bogie centres, 920 mm wheels; the leading bogie
+  7.05 m behind the tip, the others 3.85 m in from the body ends. Body 0.5 - 4.05 m, 3.24 m wide in the
+  gauge (3.36 m real); white skirts down to 0.5 m, no underfloor box below them.
+- **The nose** is a cab face joined to the body 9.4 m behind the tip. The coupler hatch is a fat bulb
+  standing out at the tip (`hatchBulb`): half a blunt ellipsoid of rounded-rectangle sections, 1.8 m
+  wide from 0.49 to 1.53 m, its front bowed 1.25 m ahead of its rim, which sinks into the face; the rim
+  and the leaves' joint down its middle are dark seams. The face behind it stands 0.55 m back and rises
+  over the bulb's top in a convex curve (2.0 m at 1.04 m back, 2.6 m at 1.72 m, 3.6 m at 4.55 m, the
+  crown 9.4 m back); its plan is round at every height (elliptic corners 2.0 - 2.7 m deep) - the
+  rounder, fuller "phoenix" head, not the CR400AF's. The distant model's end reaches forward over the
+  hatch to the tip.
+- **The canopy.** Black from a rounded point on the chin (1.7 m) widening as a shield to the lamps
+  (1.0 m half width at 2.1 m, 1.44 m at 2.6 m), then running back on the sides over the cab window to
+  the crown 9.0 m behind the tip; outlined by a narrow border in the livery's colour (0.11 m wider head-on, 0.1 m on the sides), the face below it white. The windscreen glass
+  from 2.12 m (centre) to 3.6 m; a lamp strip and a round lamp at each lower corner of it, a red tail lamp
+  above, the China Railway emblem on the chin, one wiper, a roof lamp.
+- **The side's paint.** A charcoal window band 2.02 - 2.92 m; under it the upper line 1.875 - 1.95 m and
+  the lower line 1.675 - 1.75 m (gold, or red in the `red` livery). The upper line sweeps up from a point
+  2.6 m behind the tip to the band's top at 7.6 m as the "wing", which holds the teardrop cab window
+  (4.75 - 6.9 m, its point low at the front); the band starts behind the wing; the lower line runs on to a
+  point 2.85 m behind the tip.
+- **Windows and doors.** End car: windows 7.82 - 8.98 and 9.51 - 10.71 m (business), the door 11.93 -
+  12.88 m, four windows 1.24 m wide at a 1.95 m pitch from 15.58 m, a blank rear end. Intermediate car:
+  eleven windows 1.25 m wide at 1.956 m from 1.84 m, one door at its rear end (each car has one door a
+  side, paired at alternate joints). Plug doors 0.95 m, 1.28 - 3.2 m, a tall rounded window 0.42 m wide.
+- **Pantographs.** Single arm on the third and the third-from-last car (cars 3 and 6), as the kit's
+  default; the real sets raise one of them in single-set service, the kit raises both.
+
