@@ -56,7 +56,7 @@ wide, so a boiler radius whose saddle would lie on the frame plates' faces (0.69
 | `proc-vehicle-ir-wp` | India | 2'C1' | 1.7 m | none | four axles |
 | `proc-vehicle-ir-wg` | India | 1'D1' | 1.56 m | none | four axles |
 | `proc-vehicle-eir-fairy-queen` | India | 1A1 | 1.83 m | none | two axles |
-| `proc-vehicle-dhr-b-class` | India | B | 0.66 m | none | two axles |
+| `proc-vehicle-dhr-b-class` | India | B | 0.66 m | none | none: a saddle tank engine (`generator/inDhrB.ts`) |
 | `proc-vehicle-cr-qj` | China | 1'E1' | 1.5 m | Wagner | four axles |
 | `proc-vehicle-cr-sy` | China | 1'D1' | 1.37 m | none | four axles |
 | `proc-vehicle-cr-js` | China | 1'D1' | 1.37 m | Wagner | four axles |
