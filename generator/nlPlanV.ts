@@ -24,8 +24,8 @@ import { block } from "./vehicleParts.ts";
 
 const NS_YELLOW = "#ffc917";
 
-/** Where the face meets the body: the cab roof reaches the full height 2.3 m behind the tip. */
-const JOIN = 2.3;
+/** Where the face meets the body: the cab roof reaches the full height 3.4 m behind the tip. */
+const JOIN = 3.4;
 /** The crown, the eaves (the roof's grey from there) and the side's foot over the rail. */
 const C = 3.95;
 const S = 3.32;
@@ -35,21 +35,22 @@ const A = 0.92;
 const W = 1.45;
 
 /**
- * The face's centre line, read from the side views (photo-planv-uitgeest.jpg at about 64 px/m, the
- * close-up photo-mat-64-plan-v-844-1.jpg) and scaled to the head-on photo-441-in-vlissingen.jpg: the
- * chin rounding under from the side's foot, the bulge's front upright through the lamp band
- * (1.25 - 1.65 m), leaning back ever more over the head lamp to the windscreen's foot 0.6 m behind
- * the tip at 2.85 m, the windscreen raked to its head at 3.38 m, the cab roof rounding over to the
- * crown at the join.
+ * The face's centre line, from projective fits along the near side-on photo-planv-uitgeest.jpg and
+ * photo-plan-v-454-te-deventer.jpg (the 26 m car, its windows and doors setting the scale) and the
+ * head-on photo-441-in-vlissingen.jpg for the heights: the chin rounding under from the side's foot,
+ * the bulge's front upright through the lamp band (1.3 - 1.7 m), then the long rounded hood leaning
+ * back ever more past the head lamp to the windscreen's foot 1.0 m behind the tip at 2.92 m, the
+ * windscreen raked to its head 1.5 m behind the tip at 3.44 m, the cab roof rounding over to the crown
+ * at the join.
  */
 const PROFILE: Pt[] = [
-  [B, 0.12], [0.95, 0.05], [1.1, 0.015], [1.3, 0], [1.7, 0], [1.95, 0.05], [2.2, 0.13], [2.45, 0.25], [2.65, 0.37], [2.8, 0.48], [2.9, 0.58],
-  [3.15, 0.66], [3.45, 0.76], [3.56, 0.9], [3.68, 1.12], [3.8, 1.45], [3.88, 1.8], [3.93, 2.05], [C, JOIN],
+  [B, 0.12], [0.95, 0.05], [1.1, 0.015], [1.3, 0], [1.7, 0], [1.95, 0.04], [2.2, 0.12], [2.45, 0.24], [2.65, 0.4], [2.8, 0.6], [2.88, 0.8], [2.92, 1.0],
+  [3.2, 1.25], [3.44, 1.5], [3.56, 1.7], [3.68, 1.98], [3.8, 2.4], [3.88, 2.8], [3.93, 3.1], [C, JOIN],
 ];
 
 /** The plan: the bulge's front flat over about 1.2 m, its corners rounding back 1.5 m into the sides (the lamp band wraps round them); the cab's corners as round, the windscreen's side panes on them. */
-const CORNER: Pt[] = [[B, 0.75], [1.3, 0.85], [1.7, 0.85], [2.45, 0.85], [2.9, 0.88], [3.45, 0.88], [3.68, 0.75], [3.88, 0.45], [C, 0.2]];
-const DEPTH: Pt[] = [[B, 1.15], [1.3, 1.5], [1.7, 1.55], [2.45, 1.5], [2.9, 1.45], [3.45, 1.3], [3.68, 0.95], [3.88, 0.45], [C, 0.05]];
+const CORNER: Pt[] = [[B, 0.75], [1.3, 0.85], [1.7, 0.85], [2.45, 0.85], [2.92, 0.88], [3.44, 0.88], [3.68, 0.75], [3.88, 0.45], [C, 0.2]];
+const DEPTH: Pt[] = [[B, 1.15], [1.3, 1.5], [1.7, 1.6], [2.45, 1.9], [2.92, 2.2], [3.44, 1.8], [3.68, 1.2], [3.88, 0.5], [C, 0.05]];
 const edge = (pts: readonly Pt[], y: number): number => {
   if (y <= pts[0]![0]) return pts[0]![1];
   for (let i = 1; i < pts.length; i++) {
@@ -67,13 +68,13 @@ const SCREEN: readonly [number, number] = [2.92, 3.44];
 /** The coupler's recess: its half width and top (it runs down through the chin to 0.62 m). */
 const RECESS = { hw: 0.82, y0: 0.55, y1: 1.15 };
 
-const ROWS = [...new Set([...PROFILE.map(([y]) => y), 0.95, RECESS.y1, 1.37, 1.63, 2.35, 2.65, 2.84, 2.88, SCREEN[0], SCREEN[1], 3.6])].sort((a, b) => a - b);
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), 0.95, RECESS.y1, 1.37, 1.63, 2.15, 2.45, 2.84, 2.88, SCREEN[0], SCREEN[1], 3.6])].sort((a, b) => a - b);
 
 /** A rectangle [lat0, lat1] x [y0, y1]. */
 const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0], [l1, y0], [l1, y1], [l0, y1]];
 
 export const PLAN_V_FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 1.9, reach: 0.3, first: 3.2, roofFrom: 3.6, bulge: 0.02, tolerance: 0.02, cols: [6, 4, 1, 1],
+  dJoin: JOIN, dSide: 3.2, reach: 0.3, first: 4.3, roofFrom: 3.6, bulge: 0.02, tolerance: 0.02, cols: [6, 4, 1, 1],
   profile: PROFILE, corner: CORNER, cornerDepth: CORNER_DEPTH,
   rows: ROWS,
   // yellow over the dark chin; the lamp band is the livery's sweep (it runs on round the corners)
@@ -86,17 +87,17 @@ export const PLAN_V_FACE: SeriesCabFace = {
   ],
   masks: [
     // the head lamp's oval housing: its dark rim, the yellow inside
-    { lat: [-0.22, 0.22], y: [2.35, 2.65], r: 0.14, mat: "rubber" },
-    { lat: [-0.19, 0.19], y: [2.38, 2.62], r: 0.11, mat: "yellow" },
+    { lat: [-0.22, 0.22], y: [2.15, 2.45], r: 0.14, mat: "rubber" },
+    { lat: [-0.19, 0.19], y: [2.18, 2.42], r: 0.11, mat: "yellow" },
     // the windscreen's rubbers: the centre pane and the side panes on the corners
     { lat: [-0.57, 0.57], y: [SCREEN[0] - 0.03, SCREEN[1] + 0.03], r: 0.09, mat: "rubber" },
-    { lat: [0.63, 1.43], y: [SCREEN[0] + 0.0, SCREEN[1] - 0.01], r: 0.09, mat: "rubber" },
-    { lat: [-1.43, -0.63], y: [SCREEN[0] + 0.0, SCREEN[1] - 0.01], r: 0.09, mat: "rubber" },
+    { lat: [0.63, 1.44], y: [SCREEN[0] + 0.0, SCREEN[1] - 0.01], r: 0.09, mat: "rubber" },
+    { lat: [-1.44, -0.63], y: [SCREEN[0] + 0.0, SCREEN[1] - 0.01], r: 0.09, mat: "rubber" },
   ],
   panes: [
     { lat: [-0.54, 0.54], y: [SCREEN[0], SCREEN[1]], r: 0.07, mat: "screen" },
-    { lat: [0.66, 1.4], y: [SCREEN[0] + 0.03, SCREEN[1] - 0.04], r: 0.07, mat: "screen" },
-    { lat: [-1.4, -0.66], y: [SCREEN[0] + 0.03, SCREEN[1] - 0.04], r: 0.07, mat: "screen" },
+    { lat: [0.66, 1.42], y: [SCREEN[0] + 0.03, SCREEN[1] - 0.04], r: 0.07, mat: "screen" },
+    { lat: [-1.42, -0.66], y: [SCREEN[0] + 0.03, SCREEN[1] - 0.04], r: 0.07, mat: "screen" },
   ],
   decals: [
     // the grille between the head lamps: six slots
@@ -106,29 +107,29 @@ export const PLAN_V_FACE: SeriesCabFace = {
   ],
   lamps: [
     [-0.98, 1.5, 0.1, "lampRed"], [-0.7, 1.5, 0.1, "lampHead"], [0.7, 1.5, 0.1, "lampHead"], [0.98, 1.5, 0.1, "lampRed"],
-    [0, 2.5, 0.085, "lampHead"],
+    [0, 2.3, 0.085, "lampHead"],
   ],
   // the wipers hang from the screen's head on the left and centre panes; the right pane's parks along its foot
   wipers: [[[-0.97, 3.4], [-1.1, 3.02]], [[0.02, 3.42], [0.36, 3.0]], [[1.24, 2.98], [0.75, 2.99]]],
 };
 
 /** The D-shaped corner window on the cab side behind the side pane: its front edge rounding forward over the top. */
-const CORNER_WIN_FRONT: Pt[] = [[2.92, 2.32], [3.01, 2.2], [3.12, 2.13], [3.26, 2.09], [3.38, 2.1], [3.44, 2.16]];
-const CORNER_WIN_BACK: Pt[] = [[2.92, 2.78], [3.44, 2.78]];
+const CORNER_WIN_FRONT: Pt[] = [[2.92, 3.48], [3.01, 3.36], [3.12, 3.29], [3.26, 3.25], [3.38, 3.26], [3.44, 3.32]];
+const CORNER_WIN_BACK: Pt[] = [[2.92, 3.94], [3.44, 3.94]];
 /** Its glass, inside the rubber. */
-const CORNER_GLASS_FRONT: Pt[] = [[2.96, 2.35], [3.03, 2.25], [3.13, 2.18], [3.26, 2.14], [3.36, 2.15], [3.4, 2.2]];
-const CORNER_GLASS_BACK: Pt[] = [[2.96, 2.74], [3.4, 2.74]];
+const CORNER_GLASS_FRONT: Pt[] = [[2.96, 3.51], [3.03, 3.41], [3.13, 3.34], [3.26, 3.3], [3.36, 3.31], [3.4, 3.36]];
+const CORNER_GLASS_BACK: Pt[] = [[2.96, 3.9], [3.4, 3.9]];
 
 /** The layout behind the face, d behind the tip (photo-planv-uitgeest.jpg, photo-plan-v-454-te-deventer.jpg). */
-const CAB_DOOR: readonly [number, number] = [3.2, 3.75];
+const CAB_DOOR: readonly [number, number] = [4.3, 4.85];
 const WIN: ReadonlyArray<readonly [number, number]> = [
-  [4.05, 5.15], [5.4, 6.5],
-  [8.3, 9.45], [9.9, 11.05], [11.5, 12.65], [13.1, 14.25], [14.7, 15.85], [16.25, 16.7],
-  [19.85, 21.0], [21.55, 22.7], [23.25, 24.4],
+  [5.0, 6.15], [6.6, 7.75],
+  [10.1, 11.22], [11.65, 12.77], [13.2, 14.32], [14.75, 15.87], [16.3, 17.42], [17.85, 18.3],
+  [20.9, 22.05], [22.45, 23.6], [24.0, 25.05],
 ];
-const DOORS: ReadonlyArray<readonly [number, number]> = [[6.75, 8.05], [18.2, 19.5]];
-/** The three slanted stripes: each 0.7 m wide, their feet 0.88 m apart from 11.0 m, leaning 0.3 m over their height. */
-const STRIPES = { d: 11.0, w: 0.7, pitch: 0.88, lean: 0.3, y: [A + 0.01, 3.04] as const };
+const DOORS: ReadonlyArray<readonly [number, number]> = [[8.3, 9.6], [19.2, 20.5]];
+/** The three slanted stripes: each 0.7 m wide, their feet 0.88 m apart from 12.3 m, leaning 0.3 m over their height. */
+const STRIPES = { d: 12.3, w: 0.7, pitch: 0.88, lean: 0.3, y: [A + 0.01, 3.04] as const };
 
 /** The NS logo (the two arrows in a hexagon), its strokes in a 1 x 0.62 box, [x, y] corners. */
 const NS_LOGO: Pt[][] = (() => {
@@ -184,11 +185,11 @@ function planVFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, c
     // horizontal rings from the side's foot down to the chin's bottom, its back rising toward the bogie
     const levels: Array<readonly [number, number, number, number, number, number]> = [
       // y, front, half width, corner radius, corner depth, back
-      [B + 0.02, 0.1, 1.36, 0.75, 1.1, 2.35],
-      [0.6, 0.2, 1.3, 0.72, 1.0, 2.25],
-      [0.4, 0.32, 1.12, 0.66, 0.86, 2.0],
-      [0.27, 0.44, 0.88, 0.56, 0.7, 1.6],
-      [0.2, 0.55, 0.62, 0.45, 0.5, 1.15],
+      [B + 0.02, 0.1, 1.36, 0.75, 1.1, 3.05],
+      [0.6, 0.2, 1.3, 0.72, 1.0, 2.9],
+      [0.4, 0.32, 1.12, 0.66, 0.86, 2.55],
+      [0.27, 0.44, 0.88, 0.56, 0.7, 2.0],
+      [0.2, 0.55, 0.62, 0.45, 0.5, 1.4],
     ];
     const ring = (l: (typeof levels)[number]): Ring => {
       const pts = chinRing(l[1], l[2], l[3], l[4], l[5]).map(([d, z]): [number, number] => [X(T(d)), z]);
@@ -255,7 +256,7 @@ function planVFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, c
   m.scope("logo", () => {
     for (const sd of [1, -1]) {
       // under the first window, read from outside: x along the viewer's right
-      const [w, h0, d0] = [0.8, 1.2, T(4.2)];
+      const [w, h0, d0] = [0.8, 1.2, T(5.15)];
       const quads = NS_LOGO.flatMap((p) => strokes(p, 0.1)).map((q) => q.map(([x, y]): Pt => [d0 + (sd * k > 0 ? x : 1 - x) * w, h0 + y * w]));
       sideDecal(m, b, X, sd, "logo", tris(quads.map((q) => (sd * k > 0 ? q : [q[0]!, q[3]!, q[2]!, q[1]!]))), 0.004);
     }
@@ -273,7 +274,7 @@ function planVFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, c
 
   m.scope("roof grilles", () => {
     // two louvred grilles on each roof edge over the first door
-    for (const sd of [1, -1]) for (const [d0, d1] of [[6.2, 7.05], [7.25, 8.1]] as const) {
+    for (const sd of [1, -1]) for (const [d0, d1] of [[7.4, 8.25], [8.45, 9.3]] as const) {
       const [za, zb] = [sd * (W - 0.24), sd * (W - 0.1)];
       blk("grille", d0, d1, S - 0.02, S + 0.24, Math.min(za, zb), Math.max(za, zb));
     }
@@ -326,13 +327,13 @@ export const PLAN_V: ShinkansenSeries = {
   // the cab door's narrow window
   cabWindows: [[T0(CAB_DOOR[0] + 0.17), T0(CAB_DOOR[1] - 0.17), 2.15, 2.8]],
   sidePanels: { end: [{ d: CAB_DOOR, y: [A + 0.05, 3.05], kind: "seam" }] },
-  // 2'Bo' + Bo'2': the trailer bogie under the cab door, the motor bogie 3.75 m from the inner end; 1.0 m wheels
-  bogieCentres: 17.8, endBogies: [T0(4.2), T0(22.0)], wheelR: 0.5, wheelbase: 2.6,
+  // 2'Bo' + Bo'2': the trailer bogie under the cab door (5.0 m behind the tip), the motor bogie 3.75 m from the inner end; 1.0 m wheels
+  bogieCentres: 17.0, endBogies: [T0(5.0), T0(22.0)], wheelR: 0.5, wheelbase: 2.6,
   // one single-arm pantograph over the leading car's motor bogie
   endPantograph: "lead", pantographAt: T0(23.0),
   fittings: planVFittings,
   // the chin under the nose in the distant model
-  lodRoof: { d: [0.35, 2.2], hw: 1.15, y: [0.3, B + 0.01], mat: "skirtG" },
+  lodRoof: { d: [0.35, 2.8], hw: 1.15, y: [0.3, B + 0.01], mat: "skirtG" },
   cars: [2],
   liveries: { yellowGrey: planVLivery("NS yellow, grey", "448", "#2c74c2", true), yellowBlue: planVLivery("NS yellow, blue", "454", "#5ab3e4", false) },
   weight: { end: 52, middle: 52 }, power: 310, maxspeed: 140,
