@@ -1,7 +1,7 @@
 // Indian locomotives. The road diesels on the hood unit kit (usHoodKit.ts),
 // on the frames of their American relatives (usDiesels.ts): the EMD WDP-4D on
-// the SD70ACe's and the GE WDG-4G on the ES44AC's; the ALCO WDM-2 drawn on its
-// own from photographs (inWdm2.ts). The electrics on the box locomotive kit
+// the SD70ACe's; the ALCO WDM-2 (inWdm2.ts) and the GE WDG-4G (inWdg4g.ts)
+// drawn on their own from photographs. The electrics on the box locomotive kit
 // (worldLocoKit.ts): the WAM-4, WAP-4, WAP-7 / WAG-9 and WAP-5; the twin
 // WAG-12B drawn on its own (inWag12b.ts). Broad-gauge bodies on the 3.3 m gauge ("us").
 // See docs/models/india-trains.md.
@@ -14,8 +14,9 @@ import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { enumParam } from "./emuParts.ts";
 import { paint } from "./dieselParts.ts";
 import { buildUsHood, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
-import { ES44_SPEC, SD70_SPEC } from "./usDiesels.ts";
+import { SD70_SPEC } from "./usDiesels.ts";
 import { WDM2_BODY, WDM2_LIVERIES, buildWdm2, wdm2Lod } from "./inWdm2.ts";
+import { buildWdg4g, buildWdg4gLod, type Wdg4gLivery } from "./inWdg4g.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { WAP5_PARAMS, irWap5, irWap5Lod } from "./inWap5.ts";
@@ -44,18 +45,19 @@ export const WDM2_SPEC: UsHoodSpec = WDM2_BODY;
 type HoodLiveries = Record<string, UsLivery>;
 const WDM2: HoodLiveries = WDM2_LIVERIES;
 const WDP4D: HoodLiveries = { blueYellow: irLivery("Blue, yellow", "40002", "#1d3f80", "#f2c31a", 2.6) };
-const WDG4G: HoodLiveries = { redGrey: irLivery("Red, grey", "49001", "#b5232b", "#c9cccd", 2.6) };
+// The WDG-4G is drawn by its own module from photographs (inWdg4g.ts); the key and title stay.
+const WDG4G: Record<string, Wdg4gLivery> = { redGrey: { title: "Red, orange", number: "49095", red: "#cf2a1e", orange: "#ee9c16" } };
 
 const hoodParams = (l: HoodLiveries): ParamSpec[] => [enumParam("livery", "Livery", Object.fromEntries(Object.entries(l).map(([k, v]) => [k, v.title])))];
-const H = { wdm2: hoodParams(WDM2), wdp4d: hoodParams(WDP4D), wdg4g: hoodParams(WDG4G) };
-const hood = (l: HoodLiveries, p: ParamSpec[], v?: ParamValues) => l[resolveParams(p, v).livery!]!;
+const H = { wdm2: hoodParams(WDM2), wdp4d: hoodParams(WDP4D), wdg4g: [enumParam("livery", "Livery", Object.fromEntries(Object.entries(WDG4G).map(([k, v]) => [k, v.title])))] };
+const hood = <T>(l: Record<string, T>, p: ParamSpec[], v?: ParamValues): T => l[resolveParams(p, v).livery!]!;
 
 export function irWdm2(v?: ParamValues): MeshBuilder { return buildWdm2(WDM2_LIVERIES[resolveParams(H.wdm2, v).livery!]!); }
 export function irWdm2Lod(v?: ParamValues): MeshBuilder { return wdm2Lod(WDM2_LIVERIES[resolveParams(H.wdm2, v).livery!]!); }
 export function irWdp4d(v?: ParamValues): MeshBuilder { return buildUsHood(SD70_SPEC, hood(WDP4D, H.wdp4d, v)); }
 export function irWdp4dLod(v?: ParamValues): MeshBuilder { return usHoodLod(SD70_SPEC, hood(WDP4D, H.wdp4d, v)); }
-export function irWdg4g(v?: ParamValues): MeshBuilder { return buildUsHood(ES44_SPEC, hood(WDG4G, H.wdg4g, v)); }
-export function irWdg4gLod(v?: ParamValues): MeshBuilder { return usHoodLod(ES44_SPEC, hood(WDG4G, H.wdg4g, v)); }
+export function irWdg4g(v?: ParamValues): MeshBuilder { return buildWdg4g(hood(WDG4G, H.wdg4g, v)); }
+export function irWdg4gLod(v?: ParamValues): MeshBuilder { return buildWdg4gLod(hood(WDG4G, H.wdg4g, v)); }
 
 // ---------------------------------------------------------------------------
 // The electrics
