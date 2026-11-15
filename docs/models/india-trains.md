@@ -21,7 +21,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-ir-wam4` | IR WAM-4 | box locomotive, flat | `livery` (`blue`, `maroon`) | Co-Co, 18.79 m, 2,700 kW |
 | `proc-vehicle-ir-wap4` | IR WAP-4 | box locomotive, raked | `livery` (`rajdhani`, `shatabdi`) | Co-Co, 18.79 m, 3,800 kW, 140 km/h |
 | `proc-vehicle-ir-wap7` | IR WAP-7 / WAG-9 | box locomotive, raked | `livery` (`redWhite`, `blue`, `wag9`) | Co-Co, 20.56 m, 4,500 kW |
-| `proc-vehicle-ir-wap5` | IR WAP-5 | box locomotive, streamlined | `livery` (`whiteRed`, `gatimaan`) | Bo-Bo, 18.16 m, 4,000 kW, 160 km/h |
+| `proc-vehicle-ir-wap5` | IR WAP-5 | own asymmetric body (`generator/inWap5.ts`): aerodynamic cab 1, flat cab 2 | `livery` (`whiteRed`, `gatimaan`) | Bo-Bo, 18.16 m, 3.14 m wide, bogies 10.2 m apart, 4,000 kW, 160 km/h |
 | `proc-vehicle-ir-wag12b` | IR WAG-12B | box locomotive, the Prima body | - | 35.0 m, eight axles, 9,000 kW |
 | `proc-vehicle-ir-wp` | IR WP | steam | `unit`, `livery` (`black`, `greenYellow`) | 4-6-2, 1.7 m drivers |
 | `proc-vehicle-ir-wg` | IR WG | steam | `unit` | 2-8-2, 1.56 m drivers |
@@ -45,6 +45,7 @@ The catalog had no Indian train before. Every design is filed under India.
 - **Diesels.** The WDM-2, WDP-4D and WDG-4G are drawn on their American relatives'
   bodies (GP9 re-trucked, SD70ACe, ES44AC) in IR paint; the WDP-4D's second cab is left out.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
+- **WAP-5.** Drawn as the later CLW units run (30164): the aerodynamic cab 1 at +x (upright lower nose, windscreens raked about 50 degrees behind wire guards, a raked cab side window) and the flat cab 2 at -x; the ABB and early CLW units with two flat cabs are not drawn. One machine-room window a side, diagonally opposite; side positions follow the 2.434 m cab length, not a side-on photograph (none is free). The Gatimaan scheme (30086) has no free photograph: the white-red stripes in blue with a yellow line. Lettering (WAP5, Bharatiya Rail, the shed) and the centre buffer coupler are left out; the distant model merges the two stripes. References: `assets/ir-wap5/SOURCES.md`.
 - **WP.** The bullet-nosed smokebox front is the generator's plain one.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
 
