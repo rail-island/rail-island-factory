@@ -2,7 +2,8 @@
 // Bo-Bo passenger electric of 170 km/h, measured from the photographs in assets/cr-ss8/
 // (SOURCES.md) and the published figures: 17.516 m over the couplers, a 16.3 m body,
 // 3.1 m wide, 88 t, 1.25 m wheels. Drawn as SS8 0228 of the Guangzhou depot in the class's
-// blue livery: light blue, cream and royal blue with a navy stripe.
+// blue livery: light blue, cream and a steel blue with a dark steel blue stripe (the colours sampled
+// from the photographs of SS8 0077 and 0228: the median of clean patches, lifted for the shade).
 //
 // Its own profile tables on the box locomotive kit (boxLocoKit.ts), not the generic world
 // locomotive: both cab ends alike, the face upright below a crease at 2.4 m and raked back
@@ -102,13 +103,13 @@ export function ss8Spec(): LocoSpec {
   ];
   return {
     palette: {
-      lightBlue: c("#84cbe4"),
-      cream: c("#ece5d0"),
-      royal: c("#2a4fa0"),
-      navy: c("#1b2f78"),
-      panel: c("#1f4f98"),
-      panelSlat: c("#2d5fa6", 0.6),
-      louvre: c("#16263f", 0.8),
+      lightBlue: c("#91c3d2"),
+      cream: c("#ece8df"),
+      royal: c("#466881"),
+      navy: c("#345a7a"),
+      panel: c("#3e6784"),
+      panelSlat: c("#4a7393", 0.6),
+      louvre: c("#1f3346", 0.8),
       roof: { color: "#cdd0ce", roughness: 0.7 },
       underframe: c("#55585b", 0.75),
       housing: c("#4f5458", 0.6),
@@ -118,7 +119,7 @@ export function ss8Spec(): LocoSpec {
       ac: { color: "#b9bcbd", metallic: 0.3, roughness: 0.5 },
       stripeWhite: c("#eeeeea"),
       frame: c("#2c2e31", 0.75),
-      plate: c("#2a4fa0"),
+      plate: c("#466881"),
     },
     y0: Y0,
     tip: TIP,
