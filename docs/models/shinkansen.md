@@ -140,6 +140,9 @@ combinations hashed before and after):
   between two d's (the end car's and an intermediate car's), a block in the distant model; the
   livery's `lodSides` - the distant model's side bands in place of `bands` (the DDZ's,
   `generator/nlDdz.ts`).
+- `cabFaceFrontOnly` - with `single` and a `cabFace`: the face at the front end only, the rear end
+  square - a flat end wall with the gangway frame and the centre coupler a coupling gap behind it,
+  the distant model's rear flat too (the NS DE-I, `generator/nlDe1.ts`; default a face at both ends).
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);

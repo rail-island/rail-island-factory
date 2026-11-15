@@ -17,7 +17,8 @@ const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: 
   { design: DE_UNITS.find((d) => d.id === "proc-vehicle-db-vt98")!, series: VT98, panes: 4, single: true },
   // the Mat '46: the centre pane; the panes beside it are painted fields (their pillars lean), the corner ones painted round onto the cab sides
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-mat46")!, series: MAT46, panes: 1, single: false },
-  { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
+  // the DE-I: the centre pane (the raked side panes and the corner windows are painted fields), its face at the front only
+  { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 1, single: false },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-ratp-mi09")!, series: MI09, panes: 1, single: false, rake: 0.75 },
   { design: IN_UNITS.find((d) => d.id === "proc-vehicle-dmrc-rs1")!, series: DELHI_METRO, panes: 3, single: false },
@@ -63,6 +64,19 @@ describe("series cab faces", () => {
       expect(maxX - foot).toBeLessThan(0.9);
     });
   }
+
+  it("draws the DE-I's face at the front only, the rear end square with its gangway and coupler (cabFaceFrontOnly)", () => {
+    const d = NL_UNITS.find((x) => x.id === "proc-vehicle-ns-de1")!;
+    const tree = ids(d);
+    expect(tree.some((id) => /(^|\/)rear-cab-face(\/|$)/.test(id))).toBe(false);
+    expect(tree.some((id) => /(^|\/)rear-end\/coupler(\/|$)/.test(id))).toBe(true);
+    const { pts } = points(d);
+    // 27.05 m over the couplers, the rear end wall upright: as far back at the waist as under the roof
+    const xs = pts.map((p) => p[0]!);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(26.9);
+    const back = (y0: number, y1: number) => Math.min(...pts.filter((p) => p[1]! >= y0 && p[1]! <= y1 && Math.abs(p[2]!) > 0.8).map((p) => p[0]!));
+    expect(Math.abs(back(1.0, 1.7) - back(2.4, 3.1))).toBeLessThan(0.02);
+  });
 
   it("sets the Picasso's driver in a turret on the roof, off to one side, in the full and the distant model", () => {
     const d = FR_UNITS.find((x) => x.id === "proc-vehicle-sncf-x3800")!;
