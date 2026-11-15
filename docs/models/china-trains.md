@@ -26,7 +26,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, streamlined | - | Bo-Bo, 17.5 m, 3,600 kW, 170 km/h |
 | `proc-vehicle-cr-df4` | CR DF4 Dongfeng | box locomotive, diesel | `livery` (`orangeWhite`, `green`) | Co-Co, 20.5 m, 1,985 kW |
 | `proc-vehicle-cr-df11` | CR DF11 Dongfeng | box locomotive, streamlined, diesel | - | Co-Co, 21.25 m, 3,040 kW, 170 km/h |
-| `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers | `unit` | 2-10-2, 1.5 m drivers |
+| `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers (`generator/cnQj.ts`) | `unit` | 2-10-2, 1.5 m drivers; six-axle tender |
 | `proc-vehicle-cr-sy` | CR SY | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
 | `proc-vehicle-cr-js` | CR JS | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
 | `proc-vehicle-cr-25t-coach` | CR 25-series coach | coach, knuckle couplers | `unit` (`softSleeper`, `hardSeat`), `livery` (`z25t`, `green25b`) | 26.6 m; 160 km/h |
@@ -406,3 +406,43 @@ values keep their keys: `endCar` is the power car (the default), `middleCar` a c
 - **Distant model.** The kit's, with the maroon wedges painted on its sides.
 - **Not drawn.** The small cab-side number and depot lettering, the face panel's grille, the brake
   hoses and sockets.
+
+## The QJ's body
+
+`generator/cnQj.ts`, its own engine and tender `LocoSpec` on the steam kit, drawn from the dimensioned
+works diagram and the photographs in `assets/cr-qj/` (QJ 2204 in China Railways' service livery).
+
+- **Size.** 16.14 m from the front coupler to the drawbar, 29.18 m with the six-axle tender (13.04 m
+  from the drawbar to its rear coupler); axles 1.615 + 2.87 + 4 x 1.6 + 3.05 + 2.205 m as the diagram
+  dimensions them, wheels 0.92 / 1.5 / 1.12 m, the tender's 1.0 m. 3.24 m wide (the real 3.375 m held
+  to the 3.3 m gauge), 4.79 m to the chimney's lip. The closed cab (14.2 - 16.65 m) overhangs the
+  drawbar by half a metre, over the tender's front deck.
+- **Boiler and top.** The boiler on 3.02 m (top 4.15 m), its long smokebox to the deflectors' rear
+  edge, nine white bands and white handrails. Along its top the casing over the mixing feed-water
+  heater, chimney, sand box and steam dome: 0.94 m wide, its top 4.7 m from 1.7 m to 8.7 m, its rear end
+  rounded down to the boiler; the chimney's lip stands on it. Dark safety valves, whistle, turbo-generator
+  and the steam turret ahead of the cab.
+- **Smoke deflectors.** Plates at 1.48 m from the centre line from 0.65 m back to 4.2 m, their foot
+  rising from 1.55 m at the front to 2.5 m at 2.1 m; from 4.05 m their tops curl in over the smokebox on a
+  0.4 m radius through 130 degrees (top 4.45 m), the curl's front corner rounded in side view. Horizontal
+  pressed ribs every 0.2 m, white handrails inside the front edges, in a slightly lighter, glossier sheet.
+- **Front.** The smokebox door with its ring, the headlamp at its top and the black "QJ 2204" plate;
+  under it the red plate (1.94 x 0.7 m) with "QJ", the railway's emblem and "2204" in white (the real
+  plate's "Qianjin" in Chinese characters drawn as QJ: the stroke font has no Chinese characters); the red buffer beam, the knuckle
+  coupler at 0.88 m and the red slatted pilot.
+- **Running board and cab.** The running board on 2.6 m from the deflectors to the cab with a white edge
+  and three pipes under it; the black air reservoir under it over the drivers. The cab's windows as the
+  diagram draws them (the front window, a narrow pair, the door's window), round roof, red number plate
+  low on the side, ladders under the rear corners.
+- **Running gear.** Red spoked drivers and dark disc carrying wheels, all with white tyres; two
+  cylinders 650 mm across over the leading truck driving the third coupled axle (a 720 mm stroke drawn
+  for the real 800 mm: the kit's largest crank that animates without flicker); black frames, the
+  trailing truck's frame and the ash pan rising to the cab.
+- **Tender.** A tall slab-sided box 3.1 m wide, the coal space's sides 3.95 m high over its front 62 %,
+  sloping down to the water tank's deck at 3.3 m with two fillers; red sole bars, the white emblem on
+  each side, white grab rails and a ladder at the rear, a reversing lamp. Two three-axle bogies, axles
+  1.55 m apart and centres 6.2 m apart (measured: no published figure found).
+- **Distant model.** The kit's, the deflectors as flat plates of their side outline, the casing as a
+  long dome; the tender's red sole bars as a red block.
+- **Not drawn.** The pipes along the boiler, the feed pump, the mechanical stoker's engine, the air
+  horns, the Chinese characters and slogans.
