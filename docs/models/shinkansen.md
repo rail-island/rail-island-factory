@@ -131,6 +131,8 @@ combinations hashed before and after):
   series' `cabWindows`; a lone end car is the leading one (the SVT 877's 877 b, `generator/deSvt877.ts`);
   `exhaustInFittings` - a diesel unit's exhaust stacks drawn by the series' `fittings` (the SVT 877's on
   the cab's dome) instead of over each car's middle.
+- `rearEnd.rearPantographD` - the rear end car's pantograph, d behind its tip, in place of
+  `pantographD` (the Mat '54's Bk carries its own over its inner end, `generator/nlMat54.ts`).
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);

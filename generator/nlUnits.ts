@@ -8,6 +8,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { MAT54 } from "./nlMat54.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -57,17 +58,6 @@ export const MAT46: ShinkansenSeries = {
   bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, cars: [2], endPantograph: true,
   liveries: { green: MAT46_GREEN, yellowGrey: nsLivery("yellowGrey", "283") },
   weight: { end: 55, middle: 55 }, power: 280, maxspeed: 120,
-};
-
-export const MAT54: ShinkansenSeries = {
-  endLength: 26.0, midLength: 25.5, W: 1.47, Y: 1.4, S: 3.15, C: 3.9, lean: 0.97, B: 1.0, A: 1.15,
-  // the "dog's head": a short bonnet ahead of the raised cab
-  nose: nose(2.3, 0.4, 2.3, [[0, 2.2], [0.3, 2.45], [1.4, 2.65], [2.0, 3.3], [2.6, 3.75], [3.2, 3.9]], [[0, 2.15], [0.3, 2.35], [1.4, 2.5], [2.2, 3.05], [3.2, 3.15]], [[0, 1.5], [1.0, 1.4]], [[0, 1.3], [0.6, 1.15]], [[0, 1.2], [0.4, 1.0]]),
-  windscreen: [2.0, 2.7, 0.07, 1.1], lamps: [0.4, 2.1],
-  windows: [[1.95, 2.8]], windowW: 1.0, pitch: 1.25, door: [1.2, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, cars: [2, 4],
-  liveries: { green: nsLivery("green", "766"), yellowGrey: nsLivery("yellowGrey", "786") },
-  weight: { end: 50, middle: 45 }, power: 330, maxspeed: 140,
 };
 
 export const PLAN_V: ShinkansenSeries = {

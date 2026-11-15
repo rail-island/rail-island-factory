@@ -238,7 +238,11 @@ export interface ShinkansenSeries {
    * end car takes this layout and these cab side windows (none when omitted) in place of the end car's
    * `layout.end` and `cabWindows`; a lone end car is always the leading one.
    */
-  rearEnd?: { layout: SeriesLayout; cabWindows?: ShinkansenSeries["cabWindows"] };
+  rearEnd?: {
+    layout: SeriesLayout; cabWindows?: ShinkansenSeries["cabWindows"];
+    /** The rear end car's pantograph, d behind its tip, in place of `pantographD` (the Mat '54's Bk: over its inner end, not behind its cab). */
+    rearPantographD?: number;
+  };
   /** A diesel unit's exhaust stacks drawn by the series' own `fittings` (on the cab's dome), not over each car's middle. */
   exhaustInFittings?: boolean;
   /** The side number: d behind the body's centre, its foot and height (default 3 m from the rear, just above the belly). */
@@ -485,7 +489,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
           }
         });
       } else if (pantograph) m.scope("pantograph", () => {
-        const x = X(pantographAt(s, end, tr));
+        const x = X(rearOwn && s.rearEnd!.rearPantographD !== undefined ? s.rearEnd!.rearPantographD - (s.cabFace?.dJoin ?? 0) : pantographAt(s, end, tr));
         const raised = pantograph !== "lowered";
         const cv = s.pantographCover;
         if (cv) {
