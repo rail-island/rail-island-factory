@@ -1,4 +1,5 @@
-// Dutch units on the series kit (shinkansen.ts): the Mat '46 and the Mat '54
+// Dutch units on the series kit (shinkansen.ts), each in its own module (nl*.ts), measured on
+// photographs; this file is their registry: the Mat '46 and the Mat '54
 // "Hondekop", the Plan V, the DE-I "Blauwe Engel" railcar, the ICM "Koploper",
 // the VIRM and DDZ double-deckers, the SGM, SLT, SNG and ICNG, NS's Stadler
 // FLIRT and the Fyra V250. See docs/models/netherlands-trains.md.
@@ -7,21 +8,21 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery } from "./shinkansen.ts";
 import { c } from "./seriesHelpers.ts";
-import { NS_FLIRT } from "./nlFlirt.ts";
+import { MAT46 } from "./nlMat46.ts";
+import { MAT54 } from "./nlMat54.ts";
+import { PLAN_V } from "./nlPlanV.ts";
 import { DE1 } from "./nlDe1.ts";
+import { ICM } from "./nlIcm.ts";
+import { VIRM } from "./nlVirm.ts";
+import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
 import { SGM, sgmGame, sgmSeries } from "./nlSgm.ts";
 import { SLT_SERIES } from "./nlSlt.ts";
-import { PLAN_V } from "./nlPlanV.ts";
-import { MAT54 } from "./nlMat54.ts";
-import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
-import { ICM } from "./nlIcm.ts";
-import { MAT46 } from "./nlMat46.ts";
-import { VIRM } from "./nlVirm.ts";
-import { V250 } from "./nlV250.ts";
-
-export { DE1, MAT46, VIRM };
 import { SNG } from "./nlSng.ts";
 import { ICNG } from "./nlIcng.ts";
+import { NS_FLIRT } from "./nlFlirt.ts";
+import { V250 } from "./nlV250.ts";
+
+export { DE1, MAT46, NS_FLIRT, VIRM };
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -39,7 +40,6 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
 }
 
 
-export { NS_FLIRT };
 
 const P = {
   mat46: seriesParams(MAT46), mat54: seriesParams(MAT54), planV: seriesParams(PLAN_V), de1: seriesParams(DE1), icm: seriesParams(ICM), virm: seriesParams(VIRM),
