@@ -149,6 +149,19 @@ The catalog had no Indian train before. Every design is filed under India.
   the roof; two roof AC packages, sealed gangways, folding steps. Still simplified: the bogies are the
   kit's generic two-axle bogie (not the FIAT frame), the Humsafar's wave graphics are straight bands
   and the Tejas's yellow-to-orange fade is three bands.
+- **BOXN / BCNA wagons** (`generator/inBoxnWagon.ts`, re-exported by `worldWagons.ts`; assets/ir-boxn-wagon/).
+  Drawn from photographs and the published figures. The BOXN: 10.713 m over couplers, 9.84 m body, 3.16 m over
+  the stanchions, 3.233 m high, bogie centres 6.524 m; the side in six panels between seven hat-section
+  stanchions (corner posts wrapping the ends), three pressed ribs a panel, two hinged ladder frames a side
+  (panels 3 and 5 from the left, as photographed), the top chord, the end wall's ribs and two stiffeners, a
+  low coal heap. The BCNA: 15.429 m over couplers, 14.5 m body, the circular-arc roof (eaves 3.72 m, 4.27 m
+  high) over a cant rail, two 2.1 m sliding doors a side centred 3.6 m from the middle (fitted projectively on
+  the Malkajgiri photograph), each with its pressed panel, lock bar and a top track running out toward the end,
+  stanchions only between the doors. Both on CASNUB-22 three-piece bogies (1,000 mm wheels, 2.0 m wheelbase)
+  with centre buffer couplers, in IR wagon brown with white stencils (illustrative numbers ER 82153 and SR
+  70154), yellow plates and the white-red striped upper corners of the ends. Not drawn: the hand brake, the
+  Devanagari stencils, the yellow band some BOXN rakes carry; the stanchions and ribs are painted a shade
+  darker so they read in flat light.
 
 ## Tests
 
