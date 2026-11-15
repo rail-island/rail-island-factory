@@ -27,7 +27,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-ir-wg` | IR WG | steam | `unit` | 2-8-2, 1.56 m drivers |
 | `proc-vehicle-eir-fairy-queen` | Fairy Queen | steam, no valve gear | `unit` | 2-2-2 of 1855 |
 | `proc-vehicle-dhr-b-class` | DHR B class | steam, 610 mm gauge | `unit` | 0-4-0, 0.66 m drivers |
-| `proc-vehicle-ir-lhb-coach` | IR LHB coach | coach, knuckle couplers | `unit` (`ac3`, `chairCar`), `livery` (`rajdhani`, `shatabdi`, `humsafar`, `tejas`) | 24.0 m; 160 km/h |
+| `proc-vehicle-ir-lhb-coach` | IR LHB coach | coach (`generator/inLhbCoach.ts`), knuckle couplers | `unit` (`ac3`, `chairCar`), `livery` (`rajdhani`, `shatabdi`, `humsafar`, `tejas`) | 23.54 m body, 24.0 m over couplers, 3.24 m wide; 160 km/h |
 | `proc-vehicle-ir-icf-coach` | IR ICF coach | coach | `unit` (`sleeper`, `general`), `livery` (`blue`, `maroon`) | 22.3 m; 110 km/h |
 | `proc-vehicle-ir-boxn-wagon` | IR BOXN / BCNA wagon | wagon | `unit` (`open`, `covered`) | 10.71 m and 15.43 m |
 
@@ -47,6 +47,13 @@ The catalog had no Indian train before. Every design is filed under India.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
 - **WP.** The bullet-nosed smokebox front is the generator's plain one.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
+- **LHB coach.** Measured on photographs (`assets/ir-lhb-coach/SOURCES.md`; Tejas 3A side fitted
+  projectively, 1.87 m window pitch): the 3A has nine 1.16 m windows and its louvred toilet window in
+  the end panel beyond the door; the chair car eight 1.38 m windows and a shallow toilet window inside
+  the door. The red and blue liveries' end panels are grey below a diagonal from the door's foot to
+  the roof; two roof AC packages, sealed gangways, folding steps. Still simplified: the bogies are the
+  kit's generic two-axle bogie (not the FIAT frame), the Humsafar's wave graphics are straight bands
+  and the Tejas's yellow-to-orange fade is three bands.
 
 ## Tests
 
