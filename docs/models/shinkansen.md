@@ -176,6 +176,8 @@ combinations hashed before and after):
 - `endGrilles` take `"h"` as a sixth element for horizontal louvres pressed in the side's own
   paint (the X 3800's engine room) instead of vertical slats on black;
 - `lodRoof` - a block on the end car's roof in the distant model (the X 3800's turret);
+  `lodEndPatches` - more such blocks on the end car (a livery's colour over the side bands near the
+  nose: the ICM's yellow ahead of its band's half round; default none);
 - `wheelbase: 0` cars hang each axle in horn guides reaching up into the body over the skirt's
   cut, on leaf springs.
 - `endCrown` - with a cab face, the end car's crown still rising behind the join ([d behind the body's

@@ -245,6 +245,8 @@ export interface ShinkansenSeries {
   numberAt?: readonly [number, number, number];
   /** A block on the end car's roof in the distant model (d span behind the tip, half width, heights, paint): a cab turret's silhouette. */
   lodRoof?: { d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string };
+  /** More blocks on the end car in the distant model, like `lodRoof` (d span behind the tip, half width, heights, paint): a livery's colour over the side bands near the nose (the ICM's yellow ahead of its band's end); never given up for the budget, however short. */
+  lodEndPatches?: ReadonlyArray<{ d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string }>;
   /** A power car of its own among the intermediate cars (the unit value `powerCar`): the train's only pantograph car. */
   powerCar?: SeriesPowerCar;
   /** Fittings of the series' own, drawn in place of the plain underfloor box. */
@@ -801,6 +803,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   const parts: LodPart[] = [
     ...bogieParts(tr.filter((_, i) => trucks[i] !== false).map((d, i) => { const a = lone.find((q) => q.i === i); return [T(X(a ? a.d : d)), a ? s.wheelR + 0.2 : power ? Math.max(...power.axles.map(Math.abs)) + power.wheelR + 0.2 : s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const; }) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
     ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
+    ...(end && s.lodEndPatches ? s.lodEndPatches.map((q): LodPart => { const { optional: _short, ...part } = roofPart(q.mat, T(X(q.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(q.d[1] - (s.cabFace?.dJoin ?? 0))), q.hw, q.hw, q.y[0], q.y[1], section); return part; }) : []),
     ...(pantograph ? [{ ...roofPart("pantograph", T(X(panD)) - 0.8, T(X(panD)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
   ];
   return { body, parts };

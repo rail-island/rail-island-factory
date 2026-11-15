@@ -44,7 +44,10 @@ const PROFILE: Pt[] = [
   [3.85, 0.45], [3.93, 0.65], [3.99, 0.9], [4.02, 1.2], [C, JOIN],
 ];
 
-const ROWS = [...new Set([...PROFILE.map(([y]) => y), 1.12, 1.2, YELLOW[0], 1.36, 1.4, 1.49, 1.64, 1.67, 1.82, 2.89, 3.01, YELLOW[1]])].sort((a, b) => a - b);
+/** The lamp housings' centre, about 40 % up the yellow front. */
+const LAMP_Y = 1.9;
+
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), 1.12, 1.2, YELLOW[0], LAMP_Y - 0.24, LAMP_Y - 0.2, LAMP_Y - 0.16, LAMP_Y, LAMP_Y + 0.16, 3.09, 3.21, YELLOW[1]])].sort((a, b) => a - b);
 
 /** A rectangle [lat0, lat1] x [y0, y1]. */
 const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0], [l1, y0], [l1, y1], [l0, y1]];
@@ -63,13 +66,16 @@ export const ICM_FACE: SeriesCabFace = {
     // the coupler's recess in the chin (open to the track below)
     { mat: "black", pts: [[-0.42, 0.4], [0.42, 0.4], [0.42, 1.12], [0.32, 1.2], [-0.32, 1.2], [-0.42, 1.12]] },
   ],
-  decals: [1, -1].map((sd) => ({ mat: "black", pts: box(sd > 0 ? 0.92 : -1.3, sd > 0 ? 1.3 : -0.92, 1.36, 1.4), fine: 2 })),
+  // the black bar under each lamp housing
+  decals: [1, -1].map((sd) => ({ mat: "black", pts: box(sd > 0 ? 0.96 : -1.34, sd > 0 ? 1.34 : -0.96, LAMP_Y - 0.24, LAMP_Y - 0.2), fine: 2 })),
   panes: [],
-  // the stacked lamps in their black housings on the corners (the headlight over the tail light), the grilles over them
+  // the lamp housings on the corners, wrapping round onto the sides: a black rounded box 0.22 by 0.32 m holding
+  // the headlight over the tail light, the grilles 0.35 m under the yellow's top
   pods: [1, -1].flatMap((sd) => [
-    { lat: sd * 1.1, y: 1.755, w: 0.22, h: 0.17, r: 0.07, proud: 0.02, depth: 0.04, mat: "black", lamps: [[0, 0.065, "lampHead"]] as const },
-    { lat: sd * 1.1, y: 1.565, w: 0.22, h: 0.17, r: 0.07, proud: 0.02, depth: 0.04, mat: "black", lamps: [[0, 0.06, "lampRed"]] as const },
-    { lat: sd * 1.12, y: 2.95, w: 0.26, h: 0.12, r: 0.06, proud: 0.012, depth: 0.03, mat: "black" },
+    { lat: sd * 1.09, y: LAMP_Y, w: 0.24, h: 0.32, r: 0.06, proud: 0.015, depth: 0.04, mat: "black" },
+    { lat: sd * 1.09, y: LAMP_Y + 0.072, w: 0.19, h: 0.135, r: 0.065, proud: 0.035, depth: 0.03, mat: "black", lamps: [[0, 0.064, "lampHead"]] as const },
+    { lat: sd * 1.09, y: LAMP_Y - 0.072, w: 0.19, h: 0.135, r: 0.065, proud: 0.035, depth: 0.03, mat: "black", lamps: [[0, 0.06, "lampRed"]] as const },
+    { lat: sd * 1.12, y: YELLOW[1] - 0.35, w: 0.26, h: 0.12, r: 0.06, proud: 0.012, depth: 0.03, mat: "black" },
   ]),
   // the marker lamp on the cap at the cab's front left
   roofLamp: [-0.72, 3.86, 0.06],
@@ -144,6 +150,14 @@ function icmFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car
       const n = norm([-k * (y1 - y0), -(d1 - d0), 0]);
       m.facets("chinG", [[xa, y0, -hw], [xa, y0, hw], [xb, y1, hw], [xa, y0, -hw], [xb, y1, hw], [xb, y1, -hw]], n);
     });
+    m.scope("coupler", () => {
+      // the Scharfenberg head standing out of the recess, its electric box under it, the yellow-capped fitting beside it
+      const tip = X(-JOIN), k = Math.sign(tip - X(0));
+      const out = (mat: string, a: number, e: number, y0: number, y1: number, z0: number, z1: number) => block(m, mat, Math.min(tip + k * a, tip + k * e), Math.max(tip + k * a, tip + k * e), y0, y1, z0, z1);
+      out("carbon", -0.12, 0.08, 0.93, 1.1, -0.16, 0.16);
+      out("carbon", -0.1, 0.06, 0.8, 0.92, -0.12, 0.12);
+      out("yellow", -0.06, 0.06, 0.97, 1.11, 0.5, 0.64);
+    });
     m.scope("roof grille", () => { for (const sd of [1, -1]) crownPane(m, b, X, sd, "black", [5.0 - JOIN, 6.4 - JOIN], [1.02, 1.24], 0.006); });
     m.scope("handrails", () => {
       for (const sd of [1, -1]) for (const t of [4.12, 5.08]) sidePanel(m, b, X, sd, "frameSilver", t - JOIN - 0.015, t - JOIN + 0.015, 1.55, 2.95, 0.035, 0.03);
@@ -177,7 +191,7 @@ function icmLivery(kind: "yellowBlue" | "yellowGrey"): ShinkansenLivery {
       }),
     }],
     // the gangway door's outline in the front: the two leaves and their rubber frame as built, the closed panel's seam on the ICMm
-    faceFields: (original ? [...outline(0.8, YELLOW[0] + 0.05, YELLOW[1] + 0.02, 0.045), box(-0.012, 0.012, YELLOW[0] + 0.095, YELLOW[1] - 0.025)] : outline(1.0, YELLOW[0], YELLOW[1], 0.02)).map((pts) => ({ mat: "black", pts })),
+    faceFields: (original ? [...outline(0.8, YELLOW[0] + 0.05, YELLOW[1] + 0.02, 0.045), box(-0.012, 0.012, YELLOW[0] + 0.095, YELLOW[1] - 0.025)] : outline(1.0, YELLOW[0], YELLOW[1], 0.008)).map((pts) => ({ mat: "black", pts })),
   };
 }
 
@@ -203,6 +217,8 @@ export const ICM: ShinkansenSeries = {
   // one single-arm pantograph, on the second car's rear half
   onePantograph: true, pantographAt: 17.5,
   lodRoof: { d: [0.8, 3.8], hw: 0.7, y: [3.85, 4.6], mat: LOD_GLASS },
+  // the yellow ahead of the band's end in the distant model (the half round's middle)
+  lodEndPatches: [{ d: [0.4, 2.35], hw: 1.43, y: [2.04, 3.26], mat: "yellow" }],
   fittings: icmFittings,
   cars: [3, 4],
   liveries: { yellowBlue: icmLivery("yellowBlue"), yellowGrey: icmLivery("yellowGrey") },
