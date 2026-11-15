@@ -20,6 +20,7 @@ import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { enumParam } from "./emuParts.ts";
 import { DB_IC } from "./deIcCoach.ts";
+import { NS_ICR } from "./nlIcrCoach.ts";
 import { IR_LHB, lhbCoach, lhbCoachLod } from "./inLhbCoach.ts";
 import { IR_ICF, icfCoach, icfCoachLod } from "./inIcfCoach.ts";
 import { CR_25 } from "./cnCoach25.ts";
@@ -389,18 +390,7 @@ export const CIWL: WorldCoach = {
 // ---------------------------------------------------------------------------
 // The Netherlands: the ICR (Intercity rijtuig)
 
-export const NS_ICR: WorldCoach = {
-  length: 26.4, W: 1.42, Y: 1.4, S: 3.25, C: 4.05, B: 1.0, A: 1.15, rows: [[1.95, 2.85]], doorIn: 0.7, doorW: 0.8, door: [1.2, 3.1],
-  bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5, coupler: "buffers", maxspeed: 160,
-  types: {
-    a: { title: "First class", windows: 11, windowW: 1.35, number: "A 7101", weight: 41 },
-    b: { title: "Second class", windows: 12, windowW: 1.25, number: "B 7201", weight: 40 },
-  },
-  liveries: {
-    yellowGrey: { title: "NS yellow, grey", palette: { yellow: c("#ffc917"), grey: c("#6f757a"), roofG: c("#8f9396", 0.6), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.75, "grey"], [1.75, 9, "yellow"]], roof: "roofG", skirt: "skirtG" },
-    yellowBlue: { title: "NS yellow, blue", palette: { yellow: c("#ffc917"), blue: c("#003082"), roofG: c("#8f9396", 0.6), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.75, "blue"], [1.75, 9, "yellow"]], roof: "roofG", skirt: "skirtG" },
-  },
-};
+export { NS_ICR } from "./nlIcrCoach.ts";
 
 // ---------------------------------------------------------------------------
 // Switzerland: the EW IV, the IC 2000 double-deck coach and the metre-gauge Glacier Express

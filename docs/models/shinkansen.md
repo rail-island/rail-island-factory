@@ -121,7 +121,7 @@ combinations hashed before and after):
   emitted where a turned car draws the stack (`MeshCore.toModel`). Unset, the stack and its smoke
   stay as before.
 - `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
-  reaching this far past the panes and joined over the centre pillar (the ICNG).
+  reaching this far past the panes and joined over the centre pillar (the HST).
 - `arc` - the roof arc's segments (default 8); `couplerY` - the centre coupler's height
   (default 1.0 m, the tube's under its low floor);
 - `cabNose` - with `flatCab`, a short nose under the cab's decals: the end's corners rounded
@@ -137,6 +137,18 @@ combinations hashed before and after):
   series' `cabWindows`; a lone end car is the leading one (the SVT 877's 877 b, `generator/deSvt877.ts`);
   `exhaustInFittings` - a diesel unit's exhaust stacks drawn by the series' `fittings` (the SVT 877's on
   the cab's dome) instead of over each car's middle.
+- `rearEnd.rearPantographD` - the rear end car's pantograph, d behind its tip, in place of
+  `pantographD` (the Mat '54's Bk carries its own over its inner end, `generator/nlMat54.ts`).
+- `leadEnd` - the leading end car's own fields over the series' (its length, bogies, windows,
+  layout, fittings, liveries; a lone end car is the leading one), the rear end car and the
+  intermediate cars keeping the series'; `endMiddleBogies` - further bogies under an end car between
+  its two (Bo'Bo'Bo'); `lowWell` - a double-deck car's well, the belly, skirt top and bottom dropping
+  between two d's (the end car's and an intermediate car's), a block in the distant model; the
+  livery's `lodSides` - the distant model's side bands in place of `bands` (the DDZ's,
+  `generator/nlDdz.ts`).
+- `cabFaceFrontOnly` - with `single` and a `cabFace`: the face at the front end only, the rear end
+  square - a flat end wall with the gangway frame and the centre coupler a coupling gap behind it,
+  the distant model's rear flat too (the NS DE-I, `generator/nlDe1.ts`; default a face at both ends).
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);
@@ -190,6 +202,8 @@ combinations hashed before and after):
 - `endGrilles` take `"h"` as a sixth element for horizontal louvres pressed in the side's own
   paint (the X 3800's engine room) instead of vertical slats on black;
 - `lodRoof` - a block on the end car's roof in the distant model (the X 3800's turret);
+  `lodEndPatches` - more such blocks on the end car (a livery's colour over the side bands near the
+  nose: the ICM's yellow ahead of its band's half round; default none);
 - `wheelbase: 0` cars hang each axle in horn guides reaching up into the body over the skirt's
   cut, on leaf springs.
 - `endCrown` - with a cab face, the end car's crown still rising behind the join ([d behind the body's
@@ -211,6 +225,8 @@ combinations hashed before and after):
   their fronts (the RAe TEE II's twin-lamp pods and its coupler cover), and `texts` - lettering
   on the face, its strokes cut finer so they follow a face curving between the grid's rows (the
   TEE emblem);
+- `windowCornerR` - every window row's frame and glass rounded at this corner radius (the car kit's
+  `cornerR`; default square): the Mat '46's silver-framed windows (`nlMat46.ts`);
 - `cabWindows` take a fifth element, +1 or -1, for a window on one side only (the TEE's cab
   side window on the right, its destination board ahead of the door on the left, behind it on
   the right);
@@ -220,6 +236,12 @@ combinations hashed before and after):
   higher where two interlace), a roof line on insulators between them, louvres on the roof's
   edges, its slot in a train of n cars, its weight and power. It is the train's only pantograph
   car; the other intermediate cars draw none, and the train's power is the power car's.
+- `roofWells` - lowered roofs over the cars' inner end sections (crown, shoulder, ramp, the end car's
+  well at its inner end and an intermediate car's at its front and rear, the slice spacing along them):
+  crown-and-shoulder noses at those ends, the well's sides above its shoulder in the roof's paint (`strips`),
+  the raised pantograph standing on the lowered roof; and a livery's `sideFields` - convex [d, y] polygons
+  painted as decals on the end car's and an intermediate car's sides, colour areas that are not bands (both
+  the VIRM's, `generator/nlVirm.ts`).
 
 A nose end never carries a gangway frame, buffered or not. A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
