@@ -5,8 +5,9 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
-import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flirt } from "./seriesHelpers.ts";
+import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery } from "./shinkansen.ts";
+import { c } from "./seriesHelpers.ts";
+import { NS_FLIRT } from "./nlFlirt.ts";
 import { DE1 } from "./nlDe1.ts";
 import { SGM, sgmGame, sgmSeries } from "./nlSgm.ts";
 import { SLT_SERIES } from "./nlSlt.ts";
@@ -38,10 +39,7 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
 }
 
 
-export const NS_FLIRT: ShinkansenSeries = flirt({
-  liveries: { sprinter: nsLivery("sprinter", "2501") },
-  weight: { end: 42, middle: 32 }, power: 375, maxspeed: 160,
-});
+export { NS_FLIRT };
 
 const P = {
   mat46: seriesParams(MAT46), mat54: seriesParams(MAT54), planV: seriesParams(PLAN_V), de1: seriesParams(DE1), icm: seriesParams(ICM), virm: seriesParams(VIRM),

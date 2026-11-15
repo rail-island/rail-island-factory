@@ -14,6 +14,7 @@ import { BR423 } from "../generator/deBr423";
 import { SVT877 } from "../generator/deSvt877";
 import { MAT46 } from "../generator/nlMat46";
 import { SLT_SERIES } from "../generator/nlSlt";
+import { NS_FLIRT } from "../generator/nlFlirt";
 
 const CASES: Array<[string, ShinkansenSeries]> = [
   ["proc-vehicle-sbb-flirt", SBB_FLIRT],
@@ -21,6 +22,7 @@ const CASES: Array<[string, ShinkansenSeries]> = [
   ["proc-vehicle-drg-svt877", SVT877],
   ["proc-vehicle-ns-mat46", MAT46],
   ["proc-vehicle-ns-slt", SLT_SERIES],
+  ["proc-vehicle-ns-flirt", NS_FLIRT],
 ];
 
 const leaves = (n: TreeNode): LeafNode[] => (isLeaf(n) ? [n] : n.children.flatMap(leaves));
