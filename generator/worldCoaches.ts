@@ -20,6 +20,7 @@ import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { enumParam } from "./emuParts.ts";
 import { DB_IC } from "./deIcCoach.ts";
+import { CR_25 } from "./cnCoach25.ts";
 
 type Band = readonly [number, number, string];
 
@@ -101,6 +102,8 @@ export interface WorldCoach {
   wheelR: number;
   wheelbase: number;
   coupler: "buffers" | "knuckle" | "centre";
+  /** The coupling plane's distance beyond each end wall (default 0.65 m with buffers, else 0.35 m). */
+  gap?: number;
   types: Record<string, CoachType>;
   liveries: Record<string, CoachLivery>;
   maxspeed: number;
@@ -119,7 +122,7 @@ export interface WorldCoach {
 }
 
 const GAP = 0.65;
-const gapOf = (s: WorldCoach) => (s.coupler === "buffers" ? GAP : 0.35);
+const gapOf = (s: WorldCoach) => s.gap ?? (s.coupler === "buffers" ? GAP : 0.35);
 const truck = (s: WorldCoach): BogieSpec => ({
   axles: [-s.wheelbase / 2, s.wheelbase / 2], wheelR: s.wheelR, frameHalf: s.wheelbase / 2 + s.wheelR + 0.15, frameTop: s.wheelR + 0.42, frameBottom: s.wheelR + 0.08,
   frameZ: [0.92, 1.04], primary: "coil", secondary: [-0.4, 0.4], secondaryZ: 1.08, bolster: s.B,
@@ -792,18 +795,7 @@ export const IR_ICF: WorldCoach = {
 // ---------------------------------------------------------------------------
 // China: the 25-series coaches (the 25T Z express and the green 25B)
 
-export const CR_25: WorldCoach = {
-  length: 26.6, W: 1.55, Y: 1.4, S: 3.3, C: 4.25, B: 1.0, A: 1.15, rows: [[1.95, 2.8]], doorIn: 0.6, doorW: 0.8, door: [1.2, 3.1],
-  bogieCentres: 18.0, wheelR: 0.46, wheelbase: 2.5, coupler: "knuckle", maxspeed: 160,
-  types: {
-    softSleeper: { title: "Soft sleeper", windows: 10, windowW: 1.2, number: "RW25T 550001", weight: 52 },
-    hardSeat: { title: "Hard seat", windows: 14, windowW: 1.0, number: "YZ25T 345001", weight: 48 },
-  },
-  liveries: {
-    z25t: { title: "25T white, blue", palette: { white: c("#f1f1ee", 0.4), blue: c("#1d3f80"), roofG: c("#9aa0a5", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.75, "blue"], [1.75, 1.85, "white"], [1.85, 1.92, "blue"], [1.92, 9, "white"]], roof: "roofG", skirt: "skirtG" },
-    green25b: { title: "25B green", palette: { green: c("#1f5d3a"), yellow: c("#f2c31a"), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "green"], [1.85, 1.92, "yellow"], [1.92, 2.86, "green"], [2.86, 2.92, "yellow"], [2.92, 9, "green"]], roof: "roofG", skirt: "skirtG" },
-  },
-};
+export { CR_25 } from "./cnCoach25.ts";
 
 const P = { cr25: coachParams(CR_25), lhb: coachParams(IR_LHB), icf: coachParams(IR_ICF), mk1: coachParams(BR_MK1), ew4: coachParams(SBB_EW4), ic2000: coachParams(SBB_IC2000), glacier: coachParams(GLACIER), nsIcr: coachParams(NS_ICR), dbIc: coachParams(DB_IC), corail: coachParams(SNCF_CORAIL), grandConfort: coachParams(SNCF_GRAND_CONFORT), ciwl: coachParams(CIWL) };
 export function sncfCorail(v?: ParamValues): MeshBuilder { return buildCoach(SNCF_CORAIL, P.corail, v); }
