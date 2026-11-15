@@ -10,6 +10,7 @@ import { resolveParams, type ParamValues, type ProceduralDesign } from "./design
 import { class142, class142Lod, type C142Livery, type C142Unit } from "./brClass142.ts";
 import { class158, class158Lod, type C158Livery, type C158Unit } from "./brClass158.ts";
 import { C390, C390_AVANTI } from "./brClass390.ts";
+import { C800 } from "./brClass800.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, nose } from "./seriesHelpers.ts";
 import { E300 } from "./eurostar373.ts";
@@ -82,16 +83,6 @@ export const IC225: ShinkansenSeries = {
     lner: lv("LNER", "91 111", [1.75, "#c8102e"], [9, "#f1f1ee"]),
   },
   weight: { end: 84, middle: 41 }, power: 4700, maxspeed: 225,
-};
-
-export const C800: ShinkansenSeries = {
-  endLength: 26.0, midLength: 26.0, W: 1.35, Y: 1.3, S: 3.05, C: 3.85, lean: 0.95, B: 0.8, A: 1.0,
-  nose: nose(3.8, 0.2, 2.4, [[0, 1.4], [0.5, 1.95], [1.8, 2.65], [3.2, 3.4], [4.2, 3.85]], [[0, 1.35], [0.5, 1.85], [1.8, 2.45], [3.2, 2.9], [4.2, 3.05]], [[0, 1.3], [1.0, 1.3]], [[0, 1.1], [0.8, 1.0]], [[0, 1.0], [0.4, 0.8]]),
-  windscreen: [1.8, 3.6, 0.07, 1.0], lamps: [0.5, 1.4],
-  windows: [[1.85, 2.65]], windowW: 1.3, pitch: 1.6, door: [1.15, 2.95, 1.85, 2.55], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.43, wheelbase: 2.6, cars: [5, 8],
-  liveries: { gwr: lv("GWR green", "800 001", [9, "#0b4d3a"]), azuma: lv("LNER Azuma", "800 101", [1.1, "#c8102e"], [9, "#f1f1ee"]) },
-  weight: { end: 50, middle: 45 }, power: 700, maxspeed: 200,
 };
 
 export { E300 };
