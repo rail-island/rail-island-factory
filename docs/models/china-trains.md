@@ -18,7 +18,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-crh3c` | CRH3C | series, the ICE 3's Velaro cab face (`cnCrh3c.ts`) | `unit`, `cars` 3 - 8 | end 25.675 m, middle 24.775 m, 3.1 m wide (real 3.265 m), 3.89 m high; 350 km/h |
 | `proc-vehicle-cr-crh5a` | CRH5A | series, its own cab face (`cnCrh5a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the Pendolino snout; 27.6 / 25.0 m, 3.2 m wide; 250 km/h |
 | `proc-vehicle-cr-cr200j` | Fuxing CR200J | series, its power cars' pantographs | `unit`, `cars` 4 - 8, `livery` (`green`, `whiteRed`) | 160 km/h |
-| `proc-vehicle-cr-crh6a` | CRH6A | series | `unit`, `cars` 4 - 8 | 200 km/h |
+| `proc-vehicle-cr-crh6a` | CRH6A | series, its own cab face (`cnCrh6a.ts`), Shinkansen gauge | `unit`, `cars` 4, 8 | the short intercity nose; 25.7 / 25.0 m, 3.86 m high; 5,520 kW, 200 km/h |
 | `proc-vehicle-cr-hxn5` | CR HXN5 | hood unit, the ES44AC's body | - | 4,660 kW, 120 km/h |
 | `proc-vehicle-cr-hxd1` | CR HXD1 | box locomotive | - | 35.2 m, eight axles, 9,600 kW |
 | `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, raked | - | Co-Co, 20.85 m, 7,200 kW, 160 km/h |
@@ -109,3 +109,33 @@ the Shinkansen gauge as it is), the crown 4.05 m and the roof hoods 4.27 m up.
 - **Still differs**: the eight cars come to 205.1 m (the published car lengths), not the quoted 211.5 m;
   the 和谐号 lettering is left out; the distant model's snout is a plain rounded wedge.
 
+
+## The CRH6A's body
+
+`generator/cnCrh6a.ts`, measured from the photographs in `assets/cr-crh6a/` (SOURCES.md; the side-on train
+rectified by a projective fit along its car joints) and the published figures: end car 25.7 m and
+intermediate cars 25.0 m over the couplers (201.4 m for eight), 3.86 m high, 3.3 m wide (drawn 3.24 m so
+that the door frames stay inside the Shinkansen gauge), 0.86 m wheels on a 2.5 m wheelbase.
+
+- **Nose** (a cab face, `CRH6A_FACE`, 4.9 m to the join): short and blunt. The big rounded lower nose (the
+  coupler cover) stands foremost, its front 1.15 m up, its top 2.0 m up 0.5 m back, its seam a thin dark line
+  over the top and down the flanks to 0.5 m; above it the lamp strip; the windscreen from 2.6 m leaning back
+  to about 3.6 m up 2.4 m back, the canopy rounding over to the crown 4.5 m behind the tip. In plan one
+  elliptic corner over the whole half width, reaching full width 3 m back low down.
+- **Face paint**: the dark canopy from the lamp strip over the windscreen to the crown, its lower edge a
+  straight line rising from the strip's ends to the crown 4.6 m back; the lighter windscreen pane with one
+  wiper; the lamp strip with six round headlamps and a thin red tail line under them; the slanted cab side
+  window 3.05 - 4.45 m back, 2.5 - 3.22 m up; the grey skirt carried under the nose to the plough.
+- **Livery** `crh` (the Pearl River Delta sets, CRH6A-0407): white; the black window band 1.96 - 2.92 m from
+  just behind the cab door (its front leaning forward over the door) to the rear of every car; the orange line
+  3.0 - 3.07 m over it, which dives down the nose's flank behind the cab window to a point 1.85 m up, 2.6 m
+  behind the tip; the grey skirt below 1.1 m; the white "CRH" on the band behind the cab door.
+- **Sides**: wide single plug doors 1.3 m by 2.05 m (1.25 - 3.3 m), their tall window from the band's foot
+  to near the door's head; the end car's cab door 5.4 m behind the tip, its passenger doors at 13.35 and
+  20.8 m; the intermediate cars' doors 3.55 m in from each body end, over the bogies (the two-door cars, as
+  most CRH6A). Windows 1.35 m wide about 1.85 m apart in the band, a narrow pane behind the CRH mark.
+- **Running gear and roof**: the end car's bogies 6.0 m (under the cab door) and 22.4 m behind the tip, the
+  intermediate cars' 3.5 m in from the ends; a long low equipment fairing on every roof; single-arm
+  pantographs on the kit's cars (the third and the third from last; the real ones on cars 4 and 6).
+- **Still differs**: the 和谐号 characters are left out; the pantographs stand on the kit's cars; the
+  offered train lengths stay 4 and 8 cars (saved maps); the distant model's nose is a plain rounded wedge.
