@@ -1,7 +1,7 @@
 // The China Railway 25-series coach on the coach kit (worldCoaches.ts): the 25T body (1999 -,
 // 160 km/h), as the soft sleeper RW25T and the hard-seat car YZ25T, in the Z-express white and blue
 // and in the green with yellow lines that the 25B introduced and the 25T now wears. Each side laid out
-// from photographs (assets/cr-25t-coach/SOURCES.md, docs/models/china-trains.md).
+// from photographs (assets/cr-25t-coach/SOURCES.md, docs/models/china-locos.md).
 //
 // Published: body 25.5 m, 26.6 m over the couplers (painted on the car's end), 3.105 m wide, 4.433 m
 // high over the air-conditioning units, bogies 18 m apart; the RW25T 54.5 t and 36 berths, the YZ25T

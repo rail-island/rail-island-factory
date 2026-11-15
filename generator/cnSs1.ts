@@ -20,7 +20,7 @@
 // 20.368 m over the couplers, 19.4 m over the frame, 3.106 m wide (the body drawn
 // 3.0 m, its rim 3.08 m, so the handrails stay in the UIC gauge), the roof 4.14 m above
 // the rail, 1.25 m wheels, three-axle bogies 10.9 m apart
-// of 4.6 m wheelbase (docs/models/china-trains.md).
+// of 4.6 m wheelbase (docs/models/china-locos.md).
 
 import type { MeshBuilder, Ring } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";

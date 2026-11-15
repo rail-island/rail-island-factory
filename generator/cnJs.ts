@@ -13,7 +13,7 @@
 // the smokebox, red wheels with white tyres, white handrails, the cab with three
 // side windows and the open entrance behind them, and the tender's tall tank on
 // red sole bars over two cast two-axle bogies, its front half raised for the coal.
-// See docs/models/china-trains.md.
+// See docs/models/china-locos.md.
 //
 // Every length is in metres along the locomotive from its front coupler face
 // (the tender: from its own front head, where the engine's rear head meets it),

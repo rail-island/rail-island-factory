@@ -20,7 +20,7 @@
 // bottom, the face dark grey round the windscreen with a silver lamp band.
 // Each section carries one single-arm pantograph near its inner end (the rear
 // section's raised, as in most photographs) and a cooler box on the roof.
-// See docs/models/china-trains.md "The HXD1's body".
+// See docs/models/china-locos.md "The HXD1's body".
 
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";

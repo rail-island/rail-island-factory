@@ -17,7 +17,7 @@
 // 22.989 m over the couplers (the face 21.9 m), body 3.0 m wide (real 3.1 m, the
 // handrails kept inside the UIC gauge), 4.1 m high; bogie pivots 11.4 m apart,
 // the bogie's wheelbase 2.0 + 2.35 m (the longer pair inboard), 1.25 m wheels
-// (docs/models/china-trains.md "The HXD3D's body").
+// (docs/models/china-locos.md "The HXD3D's body").
 
 import type { MeshBuilder, Ring } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";

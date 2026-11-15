@@ -3,7 +3,7 @@
 // visor round the windscreen edged in red, the long pointed headlamps and cab side windows, the
 // red sweep rising from the nose into the cab's window band, and the silver body with its black
 // window band over a red stripe. Measured on the line-scan side photograph and the photographs in
-// assets/cr-cr400af/ (SOURCES.md). See docs/models/china-trains.md, "The CR400AF's body".
+// assets/cr-cr400af/ (SOURCES.md). See docs/models/china-units.md, "The CR400AF's body".
 //
 // Heights over the rail, d behind the nose's tip (the coupler cover's front, 1.0 m up). The line
 // scan's scale is 22.6 px/m both ways (its intermediate car 25.65 m between the joints, its body

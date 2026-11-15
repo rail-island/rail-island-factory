@@ -18,7 +18,7 @@
 //
 // Its own LocoSpec on the box locomotive kit (boxLocoKit.ts); the kit is unchanged.
 // Metres, +X toward the No. 2 (cooling) cab, wheel contact at y = 0.
-// See docs/models/china-trains.md.
+// See docs/models/china-locos.md.
 
 import type { Ring } from "./meshBuilder.ts";
 import { MeshBuilder, ngon } from "./meshBuilder.ts";

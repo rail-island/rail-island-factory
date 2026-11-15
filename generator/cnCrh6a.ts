@@ -5,7 +5,7 @@
 // cab side window - and the Pearl River Delta livery of the first sets: white, a black window band
 // from just behind the cab door, a thin orange line over it that dives down the nose's flank, a grey
 // skirt. Wide plug doors, two a side on every car. Matched to the photographs in assets/cr-crh6a/
-// (SOURCES.md). See docs/models/china-trains.md, "The CRH6A's body".
+// (SOURCES.md). See docs/models/china-units.md, "The CRH6A's body".
 //
 // Heights over the rail, d behind the nose's tip (the coupler cover's front, 1.15 m up).
 

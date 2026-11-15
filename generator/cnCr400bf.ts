@@ -3,7 +3,7 @@
 // round nose rising over it, the black canopy round the windscreen outlined in the livery's colour
 // and narrowing to a point on the chin, the lamps at the windscreen's lower corners, the teardrop cab
 // side window in the livery's "wing" - and its measured window and door layout. Narrowed from its
-// real 3.36 m to the Shinkansen gauge's 3.3 m. See docs/models/china-trains.md, "The CR400BF's body".
+// real 3.36 m to the Shinkansen gauge's 3.3 m. See docs/models/china-units.md, "The CR400BF's body".
 //
 // Measured from assets/cr-cr400bf/ (SOURCES.md): the end car near side-on from above on the Yutingqiao
 // bridge (a projective fit along the car through its tip, its coupling plane and the rear windows'

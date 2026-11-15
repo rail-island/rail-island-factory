@@ -11,7 +11,7 @@
 // Boxpok drivers with white tyres, red stars on the cylinders, and the tender: a
 // round-cornered tank, the tall coal box on its middle, the narrowed rear water
 // tank with the reversing lamp on its post, the red frame and beam. See
-// docs/models/china-trains.md ("The SY's body") and docs/models/world-steam.md.
+// docs/models/china-locos.md ("The SY's body") and docs/models/world-steam.md.
 //
 // Every length is in metres along the locomotive from its front coupler face
 // (the tender: from its own front coupling plane), y up from the rail top.

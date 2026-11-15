@@ -2,7 +2,7 @@
 // (shinkansen.ts) with its own cab face (seriesCab.ts): the blunt, rounded Pendolino snout with its
 // bulbous coupler cover, the dark glass canopy reaching back over the cab roof, the slanted lamp
 // lozenges under its lower corners and the "eye" cab side window, matched to the photographs in
-// assets/cr-crh5a/ (SOURCES.md). See docs/models/china-trains.md, "The CRH5A's body".
+// assets/cr-crh5a/ (SOURCES.md). See docs/models/china-units.md, "The CRH5A's body".
 //
 // Heights over the rail, d behind the snout's tip (the coupler cover's front, 1.0 m up).
 

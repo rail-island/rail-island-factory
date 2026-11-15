@@ -21,7 +21,7 @@
 // walls with four vertical posts, the +X end with the hand brake wheel and its step.
 //
 // Both on K6 three-piece bogies (cast side frames with the spring window, the bolster
-// through it) and 17-type knuckle couplers at 0.88 m. See docs/models/china-trains.md
+// through it) and 17-type knuckle couplers at 0.88 m. See docs/models/china-locos.md
 // ("The C70 / P70 wagons' bodies").
 //
 // Metres, +X forward, +Y up, +Z right. A side's features are laid out in u, along the side

@@ -16,7 +16,7 @@
 // of six oval windows above it, the navy stripe along the light blue lower band. The roof: an
 // air conditioner over each cab, a single-arm pantograph behind each (the rear raised), the
 // roof cable between them. The automatic couplers are drawn as the kit's centre coupler at
-// 0.88 m, with no side buffers. See docs/models/china-trains.md.
+// 0.88 m, with no side buffers. See docs/models/china-locos.md.
 
 import type { MeshBuilder, Ring } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";

@@ -7,7 +7,7 @@
 // its foot. The livery: white, a dark window band ending in a rounded point
 // behind the canopy, the blue stripe under it rising along the nose and sweeping
 // down to a point on its flank. Heights above the rail, d behind the tip, lat
-// from the centre line. See docs/models/china-trains.md, "The CRH380A's body".
+// from the centre line. See docs/models/china-units.md, "The CRH380A's body".
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Pt } from "./sliceLoft.ts";

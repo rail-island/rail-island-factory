@@ -6,7 +6,7 @@
 // the machine room's plain sides with one crew door and the louvres along its roof's edges, two
 // single-arm pantographs (the rear one raised), Bo-Bo bogies on 1.25 m wheels. Both noses are one
 // cab face (seriesCab.ts) matched to the photographs in assets/cr-cr200j/ (SOURCES.md).
-// See docs/models/china-trains.md ("The CR200J's body").
+// See docs/models/china-units.md ("The CR200J's body").
 //
 // Heights over the rail, d behind the nose's tip (the bumper's front, 0.85 m up).
 

@@ -12,7 +12,7 @@
 // number) over the red buffer beam and slatted pilot, the knuckle couplers, red
 // drivers with white tyres and white boiler bands; the tender a tall box with
 // the coal space on its front two thirds, red sole bars and the emblem on its
-// sides. See docs/models/world-steam.md and docs/models/china-trains.md.
+// sides. See docs/models/world-steam.md and docs/models/china-locos.md.
 //
 // Every length is in metres along the locomotive from its front coupler face
 // (the tender: from its own front head, where the engine's drawbar ends), y up

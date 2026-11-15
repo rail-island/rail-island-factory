@@ -1,6 +1,6 @@
 // The CRH2A (CSR Sifang, 2007; Kawasaki's Shinkansen E2-1000 built for China Railway) on the
 // series kit (shinkansen.ts), with its own measured E2 nose as a cab face (seriesCab.ts) in place
-// of the generic lofted high-speed nose. See docs/models/china-trains.md, "The CRH2A's body".
+// of the generic lofted high-speed nose. See docs/models/china-units.md, "The CRH2A's body".
 //
 // Measured on assets/cr-crh2a/ (SOURCES.md): photo-crh2a-2377-at-motan-20190420133135.jpg in
 // three-quarter view from the side, rectified by a projective fit along the side through the end

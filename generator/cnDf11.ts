@@ -18,7 +18,7 @@
 // grey roof, grey pilot with the red and white plough plate. The side carries, from the +X
 // cab: cab window, door, window, louvre, large window, louvre, two small grilles, the CR
 // emblem, two windows, three louvres, window, door, cab window (both sides alike).
-// Metres, +X toward cab 1, wheel contact at y = 0. See docs/models/china-trains.md "The DF11's body".
+// Metres, +X toward cab 1, wheel contact at y = 0. See docs/models/china-locos.md "The DF11's body".
 
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";

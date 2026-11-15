@@ -10,7 +10,7 @@
 // number on it, the hood's lower sides a silver-grey panel lettered in red. Chinese automatic
 // couplers are AAR knuckle couplers (type 13), at 880 mm. Drawn here on the hood unit kit's
 // helpers (usHoodKit.ts), so the kit's other designs and the ES44AC are unchanged.
-// Metres, +X toward the cab, wheel contact at y = 0. See docs/models/china-trains.md.
+// Metres, +X toward the cab, wheel contact at y = 0. See docs/models/china-locos.md.
 
 import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
