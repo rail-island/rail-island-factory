@@ -13,7 +13,7 @@ Railway's trains. Every design here is filed under China.
 |---|---|---|---|---|
 | `proc-vehicle-cr-cr400af` | Fuxing CR400AF | series, its own cab face (`generator/cnCr400af.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`red`, `smart`) | 27.6 m and 25.65 m cars, 209 m for eight; 350 km/h |
 | `proc-vehicle-cr-cr400bf` | Fuxing CR400BF | series, its own cab face (`generator/cnCr400bf.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`gold`, `red`) | 27.35 / 25.7 m cars, 8 cars 208.9 m; 350 km/h |
-| `proc-vehicle-cr-crh380a` | CRH380A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the long nose; 350 km/h |
+| `proc-vehicle-cr-crh380a` | CRH380A | series, its own cab face (`generator/cnCrh380a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the 12 m nose; 26.5 m + 25.0 m cars; 350 km/h |
 | `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge, its own E2 cab face (`generator/cnCrh2a.ts`) | `unit`, `cars` 3 - 8 | 25.7 / 25 m cars, 9.2 m E2 nose; 250 km/h |
 | `proc-vehicle-cr-crh3c` | CRH3C | series, the ICE 3's Velaro cab face (`cnCrh3c.ts`) | `unit`, `cars` 3 - 8 | end 25.675 m, middle 24.775 m, 3.1 m wide (real 3.265 m), 3.89 m high; 350 km/h |
 | `proc-vehicle-cr-crh5a` | CRH5A | series, its own cab face (`cnCrh5a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the Pendolino snout; 27.6 / 25.0 m, 3.2 m wide; 250 km/h |
@@ -208,3 +208,36 @@ Chinese units keep the shared `hsr()` nose.
   others; single-arm pantographs on the third and sixth cars (the kit's rule).
 - **Not drawn.** The business saloon's panes in the band on the nose (painted black), the Chinese "Fuxing Hao"
   lettering, the roof's small fittings.
+
+## The CRH380A's body
+
+`generator/cnCrh380a.ts`, measured on the photographs in `assets/cr-crh380a/` (SOURCES.md) and set
+to the published figures: a 26.5 m end car with the 12.0 m nose, 25.0 m intermediate cars, 3.7 m high,
+the 3.38 m body drawn 3.26 m wide; 17.5 m bogie centres, 2.5 m wheelbase, 860 mm wheels, the end car's
+leading bogie 5.35 m behind the tip.
+
+- **The nose** is a cab face (seriesCab.ts) whose depth is a solid of the module's own (`a380Depth`):
+  each section a superellipse round its widest height, its half width, top, bottom and powers smooth
+  (monotone cubic) tables of d, drawn into the body's own section over the last 4 m. The tip is one
+  blunt bullet - the silver coupler cover, as wide and high as the nose there (1.9 m wide at 1.4 m
+  back) and flowing into it, a thin dark seam 1 m behind the tip; the nose then rises in a long line
+  (2.0 m 3 m back, 2.5 m at 6 m, the roof's 3.7 m at the join). The lower flank is narrow below 0.95 m
+  over the leading bogie and flares to the skirt behind it, so the bogie shows under the nose.
+- **The canopy** stands out of the nose's top from 4.2 m behind the tip, 1.7 - 1.9 m wide, its crown
+  3.26 m at 7.3 m and merging into the roof at the join. Its glazing is one dark wrap-around outline
+  under the white hood: the windscreen (one wide pane, a single wiper) and the side windows, cut to the
+  canopy's own walls where they rise from the nose. The almond headlights (light grey covers in a grey
+  rim) lie low on the nose beside the canopy's foot.
+- **The livery** (unit 2670): white, the dark window band 1.97 - 2.95 m holding the windows, the blue
+  stripe 1.72 - 1.85 m under a white gap, a light grey skirt. On the end car the band's foot rises
+  toward the nose and ends in a rounded point 9.7 m behind the tip; the stripe rises with it to a crest
+  9.3 m back and sweeps down the flank to a point 6 m behind the tip. White doors carry the stripe only.
+- **Windows and doors**: one window a seat row (0.8 m on a 1.04 m pitch). The end car has its door
+  only at the front, 14.0 m behind the tip, two sightseeing windows in the band's point ahead of it with
+  the "CRH" mark, and ten windows behind it; the intermediate car has one door, at its rear end, and
+  21 windows.
+- **Pantographs**: single arms on cars 4 and 6 of eight (in shorter trains the third car from the end
+  and the one two ahead of it), only the rear one raised; each stands between four raked side shields
+  on the roof's edges.
+- **Distant model**: the nose from five rows (dome, rising top, canopy) with the windscreen as glass.
+

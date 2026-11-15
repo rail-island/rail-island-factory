@@ -13,6 +13,7 @@ import { CRH5A } from "./cnCrh5a.ts";
 import { CRH2A } from "./cnCrh2a.ts";
 import { CR400BF } from "./cnCr400bf.ts";
 import { CR400AF } from "./cnCr400af.ts";
+import { CRH380A } from "./cnCrh380a.ts";
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#d9dcde", 0.6), skirtG: c("#9aa0a5", 0.7), cabMask: c("#1d1f22", 0.3) };
@@ -23,22 +24,7 @@ const lv = (title: string, number: string, ...list: Array<[number, string]>): Sh
 };
 const WHITE = "#f1f1ee";
 
-/** A long Chinese high-speed nose: its length and the crown's rise. */
-const hsrNose = (len: number, C: number) => nose(len, 0.05, 2.4,
-  [[0, 1.15], [len * 0.1, 1.5], [len * 0.4, 2.15], [len * 0.7, 2.85], [len * 0.92, 3.4], [len * 1.08, C]],
-  [[0, 1.1], [len * 0.1, 1.4], [len * 0.4, 1.95], [len * 0.7, 2.5], [len * 0.92, 2.85], [len * 1.08, 3.0]],
-  [[0, 1.05], [len * 0.25, 1.3], [len * 0.5, 1.45]], [[0, 1.0], [len * 0.25, 1.05]], [[0, 0.98], [0.6, 0.55], [2.0, 0.75]]);
-
-const hsr = (o: { endLength: number; midLength: number; noseLen: number; C: number; liveries: ShinkansenSeries["liveries"]; power: number; maxspeed: number; weight: ShinkansenSeries["weight"] }): ShinkansenSeries => ({
-  endLength: o.endLength, midLength: o.midLength, W: 1.62, Y: 1.45, S: 3.0, C: o.C, lean: 0.96, B: 0.75, A: 1.05,
-  nose: hsrNose(o.noseLen, o.C), windscreen: [o.noseLen * 0.72, o.noseLen * 0.95, 0.07, 1.0], lamps: [o.noseLen * 0.25, 1.5],
-  windows: [[2.0, 2.6]], windowW: 0.9, pitch: 1.04, door: [1.3, 3.05, 1.95, 2.6], doorW: 1.0,
-  bogieCentres: 17.5, wheelR: 0.43, wheelbase: 2.5,
-  liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
-});
-
-export const CRH380A = hsr({ endLength: 26.5, midLength: 25.0, noseLen: 11.5, C: 3.7, power: 1200, maxspeed: 350, weight: { end: 50, middle: 48 },
-  liveries: { crh: lv("CRH blue", "CRH380A-6041", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) } });
+export { CRH380A };
 export { CRH3C };
 
 export { CRH5A };

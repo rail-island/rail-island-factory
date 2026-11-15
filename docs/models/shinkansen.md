@@ -93,6 +93,10 @@ combinations hashed before and after):
   transformer cars, `generator/deIce3.ts`); `pantographCars` - the pantograph cars of an n-car
   train by index from the front where they differ from the rule (the CRH2A's fourth and sixth of
   eight, `generator/cnCrh2a.ts`);
+  `pantographSlots` - the pantograph cars of an n-car
+  train and which are folded, in place of both rules (the CRH380A's cars 4 and 6, only the rear one
+  raised, `generator/cnCrh380a.ts`); `pantographFittings` - fittings drawn round an intermediate
+  car's pantograph (the CRH380A's side shields);
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by
