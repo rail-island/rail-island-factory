@@ -12,6 +12,7 @@ import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { enumParam } from "./emuParts.ts";
 import { buildHxn5, buildHxn5Lod, HXN5_LIVERIES } from "./cnHxn5.ts";
 import { buildSs8, buildSs8Lod } from "./cnSs8.ts";
+import { buildDf4, buildDf4Lod, DF4_LIVERIES } from "./cnDf4.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { crHxd1, crHxd1Lod } from "./cnHxd1.ts";
@@ -35,13 +36,12 @@ const bands = (body: Body, number: string, ...list: Array<[number, string]>): Wo
 
 const HXD3D: Body = { length: 20.85, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked", bogies: coCo(5.6, 1.9, 0.625), pantograph: "singleArm", pantographX: 6.0, room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 
-const DF4: Body = { length: 20.5, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked", bogies: coCo(5.5, 1.8, 0.525), exhausts: [0], room: { kind: "windows", n: 5, y: [2.6, 3.2] } };
+const DF4_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", Object.fromEntries(Object.entries(DF4_LIVERIES).map(([k, l]) => [k, l.title])))];
 const DF11: Body = { length: 21.25, W: 1.5, y0: 1.35, roof: 4.0, nose: "streamlined", bogies: coCo(5.7, 1.8, 0.525), exhausts: [0.6], room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 
 const L: Record<string, Liveries> = {
   hxd3d: { redGrey: { title: "Red and grey", loco: bands(HXD3D, "HXD3D 0001", [2.3, "#b5232b"], [2.5, "#f1f1ee"], [4.4, "#9aa0a5"]) } },
 
-  df4: { orangeWhite: { title: "Orange, white", loco: bands(DF4, "DF4 1001", [2.3, "#e8701e"], [2.5, "#f1f1ee"], [4.4, "#e8701e"]) }, green: { title: "Green", loco: bands(DF4, "DF4 0001", [2.3, "#2f6b3a"], [2.45, "#f2c31a"], [4.4, "#2f6b3a"]) } },
   df11: { redWhite: { title: "Red and white", loco: bands(DF11, "DF11 0001", [2.3, "#b5232b"], [4.4, "#f1f1ee"]) } },
 };
 
@@ -56,8 +56,8 @@ export { crSs1, crSs1Lod };
 // its own profile tables and livery (cnSs8.ts), no livery parameter
 export function crSs8(): MeshBuilder { return buildSs8(); }
 export function crSs8Lod(): MeshBuilder { return buildSs8Lod(); }
-export function crDf4(v?: ParamValues): MeshBuilder { return b("df4", v); }
-export function crDf4Lod(v?: ParamValues): MeshBuilder { return lod("df4", v); }
+export function crDf4(v?: ParamValues): MeshBuilder { return buildDf4(DF4_LIVERIES[resolveParams(DF4_PARAMS, v).livery!]!); }
+export function crDf4Lod(v?: ParamValues): MeshBuilder { return buildDf4Lod(DF4_LIVERIES[resolveParams(DF4_PARAMS, v).livery!]!); }
 export function crDf11(v?: ParamValues): MeshBuilder { return b("df11", v); }
 export function crDf11Lod(v?: ParamValues): MeshBuilder { return lod("df11", v); }
 
@@ -71,6 +71,6 @@ export const CN_LOCOS: ProceduralDesign[] = [
   d("cr-hxd3d", "CR HXD3D", "hxd3d", crHxd3d, crHxd3dLod, 126, 7200, 160),
   { id: "proc-vehicle-cr-ss1", title: "CR SS1 Shaoshan", build: crSs1, buildLod: crSs1Lod, game: locoGame(138, 3780, 90), catalog: E, references: "cr-ss1" },
   { id: "proc-vehicle-cr-ss8", title: "CR SS8 Shaoshan", build: crSs8, buildLod: crSs8Lod, game: locoGame(88, 3600, 170), catalog: E, references: "cr-ss8" },
-  d("cr-df4", "CR DF4 Dongfeng", "df4", crDf4, crDf4Lod, 138, 1985, 100, D),
+  { id: "proc-vehicle-cr-df4", title: "CR DF4 Dongfeng", build: crDf4, buildLod: crDf4Lod, params: DF4_PARAMS, game: locoGame(138, 2430, 100), catalog: D, loadingGauge: "us", references: "cr-df4" },
   d("cr-df11", "CR DF11 Dongfeng", "df11", crDf11, crDf11Lod, 138, 3040, 170, D),
 ];

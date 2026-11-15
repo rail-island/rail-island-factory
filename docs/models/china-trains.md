@@ -24,7 +24,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, its own cab and livery (`generator/cnHxd3d.ts`) | - | Co-Co, 22.99 m, 126 t, 7,200 kW, 160 km/h |
 | `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, its own profile tables (`generator/cnSs1.ts`) | - | Co-Co, 20.368 m, 3,780 kW, 90 km/h |
 | `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, its own profile tables (`cnSs8.ts`) | - | Bo-Bo, 17.516 m, 88 t, 3,600 kW, 170 km/h |
-| `proc-vehicle-cr-df4` | CR DF4 Dongfeng | box locomotive, diesel | `livery` (`orangeWhite`, `green`) | Co-Co, 20.5 m, 1,985 kW |
+| `proc-vehicle-cr-df4` | CR DF4 Dongfeng | its own (`cnDf4.ts`) on the box locomotive kit: the DF4B, US gauge | `livery` (`orangeWhite` "Orange", `green`) | Co-Co, 21.1 m, 138 t, 2,430 kW, 100 km/h |
 | `proc-vehicle-cr-df11` | CR DF11 Dongfeng | box locomotive, streamlined, diesel | - | Co-Co, 21.25 m, 3,040 kW, 170 km/h |
 | `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers | `unit` | 2-10-2, 1.5 m drivers |
 | `proc-vehicle-cr-sy` | CR SY | steam, knuckle couplers | `unit` | 2-8-2, 1.37 m drivers |
@@ -475,3 +475,42 @@ couplers, a 16.3 m body, 3.1 m wide, 88 t, 1.25 m wheels. Drawn as SS8 0228 (Gua
   breaker between them. Bogie centres 8.2 m and a 2.8 m wheelbase (measured; not published).
 - **Distant model.** The kit's: the same profile and bands, the louvre panel as a band along the side.
 
+## The CR DF4 Dongfeng's body
+
+`generator/cnDf4.ts`, its own LocoSpec on the box locomotive kit (unchanged), drawn as the
+common DF4B and measured from the works drawing and the photographs in `assets/cr-df4/`
+(SOURCES.md; units 1787 and 2480 carry the two liveries' numbers).
+
+- **Size.** 21.1 m over the coupler centres, bogie centres 12.0 m, 2 x 1.8 m bogie
+  wheelbase, 1.05 m wheels; the roof's top 4.47 m, the headlight 4.64 m, the radiator's
+  railing 4.86 m. The real body is 3.309 m wide; it is drawn 3.2 m wide so the handrails stay
+  within the US gauge's 3.3 m (`loadingGauge: "us"`, as the HXN5; the UIC gauge's 4.7 m is
+  lower than the DF4's 4.755 m).
+- **Cab ends.** A full-width carbody with a cab at each end. The face leans back 6 cm from
+  the shell's foot (1.15 m) to the windscreens' sill at 2.95 m, the two big windscreens
+  (3.0 - 3.72 m, 1.02 m wide each) 0.24 m more to their head, then the cab roof's brow rises
+  back to the roof 1.0 m behind the foot. In plan the face is flat across the windscreens
+  and its corners round back 0.36 m to the side. On the brow the round headlight housing
+  (0.44 m across) with two horns behind it; a silver twin-lamp box (white outboard, red
+  inboard) either side at 2.27 - 2.47 m; a small grille under the emblem; the number plate
+  on the broad lower band. Below the body the grey apron, the red plough with three rows of
+  slots and the automatic coupler at 0.88 m (drawn as the kit's centre coupler; no buffers).
+- **Livery.** The stripe's "V" on both faces: level with the side stripe (3.03 - 3.15 m) at
+  the corners, falling to its fork at 2.12 m under the CR emblem (a white ring over the
+  rail's section). The broad lower band (1.39 - 1.62 m) wraps round the cab's corners and
+  narrows to the side's lower stripe (1.45 - 1.57 m) 1.45 m behind the face. `green`: dark
+  green, yellow stripes, grey roof, dark running gear (DF4B 1787). `orangeWhite` (kept as
+  the saved key, retitled "Orange": the real livery has no white): orange-red with yellow
+  stripes, light grey roof, apron and running gear (DF4B 2480).
+- **Sides** (from the No. 2, +x, cab; DF4B 9221 by a projective fit; both sides alike, the
+  far side not photographed): the cab's side window (0.55 - 1.2 m behind the face) and door
+  (1.45 - 2.05 m); the cooling room's four louvred panels over four tall louvres (2.4 - 7.4 m;
+  every louvre painted in the body colour, the gaps between its slats a darker shade);
+  two windows over small louvres (8.1 - 10.7 m); the side door (11.05 - 11.6 m); two small
+  low windows (12.2 - 13.7 m); two windows over louvres toward the No. 1 cab (15.05 - 17.2 m);
+  the cab door and window mirrored at the No. 1 end. The running number painted on the cab
+  sides (digits only: the plates' "东风4" characters are not drawn).
+- **Roof.** The radiator frame over the cooling room with its two fan discs and a railing,
+  the two exhaust stacks over the engine and a low box over the No. 1 end.
+- **Distant model.** The kit's box locomotive LOD from the same tables and paint (98
+  triangles); the pilots, lamp boxes and headlights are left out.
