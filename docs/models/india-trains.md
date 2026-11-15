@@ -17,7 +17,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-dmrc-rs1` | Delhi Metro RS1 | series, cab face | `unit`, `cars` 4 - 8 | standard gauge, four doors a side; 80 km/h |
 | `proc-vehicle-ir-wdm2` | IR WDM-2 | hood unit, the GP9's body on six-wheel trucks | `livery` (`maroon`, `blue`) | Co-Co, 1,940 kW, 120 km/h |
 | `proc-vehicle-ir-wdp4d` | IR WDP-4D | hood unit, the SD70ACe's body | - | 3,300 kW, 160 km/h |
-| `proc-vehicle-ir-wdg4g` | IR WDG-4G | hood unit, the ES44AC's body | - | 3,400 kW, 100 km/h |
+| `proc-vehicle-ir-wdg4g` | IR WDG-4G | own module (`inWdg4g.ts`), twin cab | - | Co-Co, 22.57 m, 3,400 kW, 100 km/h |
 | `proc-vehicle-ir-wam4` | IR WAM-4 | box locomotive, flat | `livery` (`blue`, `maroon`) | Co-Co, 18.79 m, 2,700 kW |
 | `proc-vehicle-ir-wap4` | IR WAP-4 | box locomotive, raked | `livery` (`rajdhani`, `shatabdi`) | Co-Co, 18.79 m, 3,800 kW, 140 km/h |
 | `proc-vehicle-ir-wap7` | IR WAP-7 / WAG-9 | box locomotive, raked | `livery` (`redWhite`, `blue`, `wag9`) | Co-Co, 20.56 m, 4,500 kW |
@@ -42,8 +42,16 @@ The catalog had no Indian train before. Every design is filed under India.
 
 - **Broad gauge.** The 1,676 mm stock keeps its bodies (up to 3.25 m wide; the EMUs'
   3.66 m narrowed) on the 3.3 m gauge and the game's standard-gauge wheelsets.
-- **Diesels.** The WDM-2, WDP-4D and WDG-4G are drawn on their American relatives'
-  bodies (GP9 re-trucked, SD70ACe, ES44AC) in IR paint; the WDP-4D's second cab is left out.
+- **Diesels.** The WDM-2 and WDP-4D are drawn on their American relatives'
+  bodies (GP9 re-trucked, SD70ACe) in IR paint; the WDP-4D's second cab is left out.
+- **WDG-4G.** Drawn by its own module (`generator/inWdg4g.ts`) from photographs (`assets/ir-wdg4g/`):
+  two full-width box cabs (2.45 m) with raked, mesh-guarded windscreens and a horn box, the
+  narrow hood between them (louvres behind cab 2, the raised engine room and dynamic brake,
+  three radiator intakes ahead of cab 1), side buffers and a centre buffer coupler, the red and
+  orange diagonal stripes (mirror-symmetric) and the faces' orange lower corners. The livery key
+  `redGrey` and its title "Red, grey" are the earlier drawing's: the class is red and orange.
+  Bogie centres 13.8 m (13.4 m on the side photograph, 14.48 m published); the Devanagari
+  lettering of the right side is not drawn, the left side's "Indian Railways" is in capitals.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
 - **WP.** The bullet-nosed smokebox front is the generator's plain one.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
