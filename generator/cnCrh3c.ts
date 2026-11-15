@@ -166,7 +166,7 @@ function crh3cFittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, 
 
 export const CRH3C: ShinkansenSeries = {
   // 3.265 m wide in China, drawn at the UIC gauge's 3.1 m; 3.89 m high
-  endLength: 25.675, midLength: 24.775, W: 1.55, Y: 1.4, S: 3.15, C: 3.89, lean: 0.95, B: 0.62, A: 1.0,
+  endLength: 25.675, midLength: 24.775, W: 1.53, Y: 1.4, S: 3.15, C: 3.89, lean: 0.95, B: 0.62, A: 1.0,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: CRH3C_FACE,
   endCrown: [[0, 3.84], [1.0, 3.88], [1.5, 3.89]],
   // the window band 2.02 - 2.73 m (black-framed panes, thin pillars); single plug doors with an oval window
