@@ -10,7 +10,7 @@ The catalog had no Indian train before. Every design is filed under India.
 
 | id | title | kit | parameters | figures (game) |
 |---|---|---|---|---|
-| `proc-vehicle-ir-vande-bharat` | Vande Bharat | series | `unit`, `cars` 4 - 8, `livery` (`whiteBlue`, `saffron`) | 23 m cars; 180 km/h |
+| `proc-vehicle-ir-vande-bharat` | Vande Bharat | series, cab face (`inVandeBharat.ts`) | `unit`, `cars` 4, 8, `livery` (`whiteBlue`, `saffron`) | 23 m cars, 3.24 m wide; 180 km/h |
 | `proc-vehicle-ncrtc-namo-bharat` | Namo Bharat | series | `unit`, `cars` 3 - 6 | 180 km/h |
 | `proc-vehicle-ir-mumbai-emu` | Mumbai suburban EMU | series, flat cab | `unit`, `cars` 3 - 6, `livery` (`std`, `alt`) | three wide doors a side; 100 km/h |
 | `proc-vehicle-ir-memu` | IR MEMU | series, flat cab | `unit`, `cars` 4 - 8, `livery` (`std`, `alt`) | 110 km/h |
@@ -33,6 +33,13 @@ The catalog had no Indian train before. Every design is filed under India.
 
 ## Deviations
 
+- **Vande Bharat.** The end car's cab is a cab face (`generator/inVandeBharat.ts`) measured from the
+  photographs in `assets/ir-vande-bharat/`: the bulbous coupler cover with its centre seam, the emblem
+  plate, the slanted lamp slots (head and tail lamp), the windscreen raked about 58 degrees in a black
+  surround with the destination display, the dome lamp; the blue (or saffron) swoosh up the corners into
+  the roof band; the deflector under the nose. Plug doors at both ends of every car, the crew door, big
+  panes; pantographs on the third and third-from-last cars (the transformer trailers). The nose's lengths
+  come from a slightly oblique photo (about 10 % uncertain); the IR roundel is a plain two-colour disc.
 - **Delhi Metro RS1.** The cab is a cab face (the series kit's `cabFace`): flat and raked back over
   the windscreens, its corners rounded, the black glazed field across its top with the two
   windscreens and the emergency door's light, the door's outline below, the red stripe carried
