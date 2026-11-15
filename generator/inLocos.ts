@@ -7,8 +7,6 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
-import { boxLocoLod, buildBoxLoco } from "./boxLocoKit.ts";
-import { c } from "./czElectricKit.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { enumParam } from "./emuParts.ts";
 import { paint } from "./dieselParts.ts";
@@ -16,14 +14,14 @@ import type { UsHoodSpec, UsLivery } from "./usHoodKit.ts";
 import { WDM2_BODY, WDM2_LIVERIES, buildWdm2, wdm2Lod } from "./inWdm2.ts";
 import { buildWdg4g, buildWdg4gLod, type Wdg4gLivery } from "./inWdg4g.ts";
 import { buildWdp4d, buildWdp4dLod } from "./inWdp4d.ts";
-import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
-import type { WorldLoco } from "./worldLocoKit.ts";
+import { locoGame, paramsOf } from "./frLocos.ts";
 import { WAP5_PARAMS, irWap5, irWap5Lod } from "./inWap5.ts";
 import { WAP7_PARAMS, irWap7, irWap7Lod } from "./inWap7.ts";
 import { WAP4_PARAMS, irWap4, irWap4Lod } from "./inWap4.ts";
 // the bundle of a design imports its build functions from the module that lists it (jsModel.ts)
 export { irWap5, irWap5Lod, irWap7, irWap7Lod };
 import { WAG12B_PARAMS, irWag12b, irWag12bLod } from "./inWag12b.ts";
+import { WAM4_PARAMS, irWam4, irWam4Lod } from "./inWam4.ts";
 
 // ---------------------------------------------------------------------------
 // The road diesels
@@ -61,29 +59,8 @@ export function irWdg4gLod(v?: ParamValues): MeshBuilder { return buildWdg4gLod(
 // ---------------------------------------------------------------------------
 // The electrics
 
-type Body = Omit<WorldLoco, "palette" | "side" | "number">;
-const GREY = c("#5a5d60", 0.6);
-const coCo = (pivot: number, base: number, r: number) => [[-pivot, [-base, 0, base], r], [pivot, [-base, 0, base], r]] as const;
-const bands = (body: Body, number: string, ...list: Array<[number, string]>): WorldLoco => {
-  const palette: WorldLoco["palette"] = { grey: GREY };
-  const side: Array<[number, number, string]> = [[1.0, body.y0 + 0.3, "grey"]];
-  let y = body.y0 + 0.3;
-  list.forEach(([top, colour], i) => { palette[`p${i}`] = c(colour); side.push([y, top, `p${i}`]); y = top; });
-  return { ...body, palette, side, number };
-};
-
-const WAM4: Body = { length: 18.79, W: 1.6, y0: 1.35, roof: 4.1, nose: "flat", bogies: coCo(5.3, 1.7, 0.56), pantograph: "diamond", pantographX: 5.4, room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
-
-const L: Record<string, Liveries> = {
-  wam4: { blue: { title: "IR blue", loco: bands(WAM4, "21322", [2.3, "#1d3f80"], [2.5, "#e8dcc0"], [4.5, "#1d3f80"]) }, maroon: { title: "Maroon, cream", loco: bands(WAM4, "20502", [2.3, "#6b1d24"], [2.5, "#e8dcc0"], [4.5, "#6b1d24"]) } },
-};
-
-const P = Object.fromEntries(Object.entries(L).map(([k, l]) => [k, liveryParams(l)]));
-const b = (k: string, v?: ParamValues): MeshBuilder => buildBoxLoco(liverySpec(L[k]!, P[k]!, v));
-const lod = (k: string, v?: ParamValues): MeshBuilder => boxLocoLod(liverySpec(L[k]!, P[k]!, v));
-
-export function irWam4(v?: ParamValues): MeshBuilder { return b("wam4", v); }
-export function irWam4Lod(v?: ParamValues): MeshBuilder { return lod("wam4", v); }
+// each drawn by its own module from photographs (inWam4.ts, inWap4.ts, inWap7.ts, inWap5.ts, inWag12b.ts)
+export { irWam4, irWam4Lod };
 export { irWap4, irWap4Lod };
 export { irWag12b, irWag12bLod };
 
@@ -95,7 +72,7 @@ export const IN_LOCOS: ProceduralDesign[] = [
   d("ir-wdm2", "IR WDM-2", H.wdm2, irWdm2, irWdm2Lod, 112, 1940, 120, D),
   d("ir-wdp4d", "IR WDP-4D", H.wdp4d, irWdp4d, irWdp4dLod, 123, 3300, 135, D),
   d("ir-wdg4g", "IR WDG-4G", H.wdg4g, irWdg4g, irWdg4gLod, 135, 3400, 100, D),
-  d("ir-wam4", "IR WAM-4", P.wam4!, irWam4, irWam4Lod, 113, 2700, 120),
+  d("ir-wam4", "IR WAM-4", WAM4_PARAMS, irWam4, irWam4Lod, 113, 2700, 120),
   d("ir-wap4", "IR WAP-4", WAP4_PARAMS, irWap4, irWap4Lod, 112, 3800, 140),
   d("ir-wap7", "IR WAP-7 / WAG-9", WAP7_PARAMS, irWap7, irWap7Lod, 123, 4500, 140),
   d("ir-wap5", "IR WAP-5", WAP5_PARAMS, irWap5, irWap5Lod, 78, 4000, 160),
