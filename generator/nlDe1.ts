@@ -36,7 +36,7 @@ const TAIL = LENGTH - REACH - 0.25;
 const W = 1.39;
 const C = 3.45;
 const S = 3.24;
-const B = 0.45;
+const B = 0.32;
 const A = 0.88;
 /** The waist band at the cab (and on the face) and the thin red line along the passenger part's foot. */
 const BAND: readonly [number, number] = [A, 1.16];
@@ -51,26 +51,31 @@ const CAB_DOOR: readonly [number, number] = [2.45, 3.25];
 const T = (t: number): number => t - JOIN;
 
 /**
- * The face's centre line (the side views of 41): the silver apron rounding under from 0.42 m back at
+ * The face's centre line (the side views of 41): the tall silver apron rounding under from 0.3 m back at
  * its foot, the face upright from the waist band past the lamps and the windows, leaning back a little
  * in the red band and rounding over into the dome, the crown reached at the join.
  */
 const PROFILE: Pt[] = [
-  [B, 0.42], [0.55, 0.23], [0.68, 0.11], [0.8, 0.045], [A, 0.02], [1.0, 0.005], [BAND[1], 0], [1.7, 0], [WIN[0], 0.01], [WIN[1], 0.04],
+  [B, 0.3], [0.42, 0.17], [0.55, 0.08], [0.7, 0.03], [A, 0.01], [1.0, 0.003], [BAND[1], 0], [1.7, 0], [WIN[0], 0.01], [WIN[1], 0.04],
   [TOP, 0.05], [3.02, 0.08], [S, 0.14], [3.28, 0.3], [3.35, 0.5], [3.41, 0.75], [3.44, 1.0], [C, JOIN],
 ];
 
-/** The plan: a flat front between the corners, which sweep 1.2 m back into the sides (elliptic), less in the dome. */
-const FLAT = 0.3;
+/**
+ * The plan: the front bowed forward across its middle (BULGE back at its edges, a parabola), then the
+ * corners sweeping 1.05 m further back into the sides (elliptic), less in the dome.
+ */
+const FLAT = 0.6;
+const BULGE = 0.09;
 const RADIUS = W - FLAT;
-const DEPTH = 1.2;
-const CORNER_DEPTH: Pt[] = PROFILE.map(([y, d]): Pt => [y, Math.max(0.05, Math.min(DEPTH, JOIN - d - 0.05))]);
+const DEPTH = 1.05;
+const CORNER_DEPTH: Pt[] = PROFILE.map(([y, d]): Pt => [y, Math.max(0.05, Math.min(DEPTH, JOIN - d - BULGE - 0.05))]);
 /** The face's depth behind its tip at a lateral offset, at window height (the plan's ellipse). */
 const planD = (lat: number, y: number): number => {
-  const t = Math.min(1, Math.max(0, (Math.abs(lat) - FLAT) / RADIUS));
   const depth = CORNER_DEPTH.reduce((acc, [yy, dd]) => (yy <= y ? dd : acc), DEPTH);
   const prof = PROFILE.reduce((acc, [yy, dd]) => (yy <= y ? dd : acc), 0);
-  return prof + depth * (1 - Math.sqrt(1 - t * t));
+  if (Math.abs(lat) <= FLAT) return prof + BULGE * (lat / FLAT) ** 2;
+  const t = Math.min(1, (Math.abs(lat) - FLAT) / RADIUS);
+  return prof + BULGE + depth * (1 - Math.sqrt(1 - t * t));
 };
 
 /** The windscreen: the centre pane and the two raked side panes (their outer edges leaning out to the top) in one white surround. */
@@ -89,27 +94,31 @@ const sidePane = (k: number): Pt[] => {
   return [[SIDE_PANE.inner + k, y0], [out(y0), y0], [out(y1), y1], [SIDE_PANE.inner + k, y1]];
 };
 
-/** The red beak: the waist band's point rising between the lamps, its sides curving in to the emblem. */
-const BEAK_HALF: Pt[] = [[0.5, BAND[1] - 0.02], [0.33, 1.18], [0.22, 1.23], [0.14, 1.31], [0.095, 1.43], [0.065, 1.57], [0.035, 1.7], [0, 1.8]];
+/** The red beak: the waist band's point, 0.7 m wide where it leaves the band, rising between the headlights to the emblem's hub, its sides concave. */
+const BEAK_HALF: Pt[] = [[0.6, BAND[1] - 0.02], [0.35, 1.18], [0.24, 1.24], [0.16, 1.33], [0.11, 1.44], [0.075, 1.56], [0.045, 1.67], [0, 1.79]];
 const BEAK: Pt[] = [...BEAK_HALF, ...mirror(BEAK_HALF).slice(1)];
 
 /** The apron's arch round the coupler. */
-const ARCH: Pt[] = [[-0.55, B + 0.02], [0.55, B + 0.02], [0.56, 0.62], [0.47, 0.74], [0.27, 0.82], [0, 0.845], [-0.27, 0.82], [-0.47, 0.74], [-0.56, 0.62]];
+const ARCH: Pt[] = [[-0.55, B + 0.02], [0.55, B + 0.02], [0.56, 0.58], [0.47, 0.71], [0.27, 0.79], [0, 0.815], [-0.27, 0.79], [-0.47, 0.71], [-0.56, 0.58]];
 
-/** The winged NS emblem under the windscreen: each wing in two convex pieces, the hub and its spike. */
-const EMBLEM_Y = 1.88;
+/**
+ * The winged NS emblem just under the panes' foot, 1.04 m across: each wing in three convex pieces tapering
+ * to an upswept point, the raised round hub (0.28 m) with the blue NS medallion in its silver ring.
+ */
+const EMBLEM_Y = 1.9;
 const wing = (sd: number): Array<{ mat: string; pts: Pt[]; fine: number }> => {
   const p = (pts: Pt[]): Pt[] => (sd > 0 ? pts : mirror(pts.map(([l, y]): Pt => [l, y])));
   return [
-    { mat: "emblem", pts: p([[0.07, EMBLEM_Y - 0.075], [0.3, EMBLEM_Y - 0.04], [0.31, EMBLEM_Y + 0.065], [0.07, EMBLEM_Y + 0.085]]), fine: 1 },
-    { mat: "emblem", pts: p([[0.3, EMBLEM_Y - 0.04], [0.56, EMBLEM_Y + 0.02], [0.55, EMBLEM_Y + 0.055], [0.31, EMBLEM_Y + 0.065]]), fine: 1 },
+    { mat: "emblem", pts: p([[0.11, EMBLEM_Y - 0.07], [0.28, EMBLEM_Y - 0.05], [0.28, EMBLEM_Y + 0.09], [0.11, EMBLEM_Y + 0.1]]), fine: 2 },
+    { mat: "emblem", pts: p([[0.28, EMBLEM_Y - 0.05], [0.42, EMBLEM_Y - 0.01], [0.42, EMBLEM_Y + 0.08], [0.28, EMBLEM_Y + 0.09]]), fine: 2 },
+    { mat: "emblem", pts: p([[0.42, EMBLEM_Y - 0.01], [0.52, EMBLEM_Y + 0.06], [0.42, EMBLEM_Y + 0.08]]), fine: 1 },
   ];
 };
 
-const ROWS = [...new Set([...PROFILE.map(([y]) => y), LINE[0], 1.3, 1.5, 1.7, EMBLEM_Y - 0.08, EMBLEM_Y + 0.08, WIN[0] - SURROUND, WIN[1] + SURROUND, 3.1])].sort((a, b) => a - b);
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), LINE[0], 1.3, 1.5, 1.7, 1.6, EMBLEM_Y - 0.1, EMBLEM_Y + 0.1, WIN[0] - SURROUND, WIN[1] + SURROUND, 3.1])].sort((a, b) => a - b);
 
 export const DE1_FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 1.0, reach: REACH, first: CAB_DOOR[0], roofFrom: S + 0.01, bulge: 0.03, tolerance: 0.02, cols: [5, 4, 1, 1], wrap: true,
+  dJoin: JOIN, dSide: 1.0, reach: REACH, first: CAB_DOOR[0], roofFrom: S + 0.01, bulge: BULGE, tolerance: 0.02, cols: [5, 4, 1, 1], wrap: true,
   profile: PROFILE,
   corner: [[B, RADIUS], [C, RADIUS]],
   cornerDepth: CORNER_DEPTH,
@@ -132,12 +141,14 @@ export const DE1_FACE: SeriesCabFace = {
   lodGlass: { hw: 1.1, y: WIN },
   decals: [
     ...wing(1), ...wing(-1),
-    { mat: "emblem", pts: [[-0.065, EMBLEM_Y - 0.07], [0.065, EMBLEM_Y - 0.07], [0.065, EMBLEM_Y + 0.085], [-0.065, EMBLEM_Y + 0.085]], fine: 1 },
-    { mat: "emblem", pts: [[-0.018, EMBLEM_Y - 0.15], [0.018, EMBLEM_Y - 0.15], [0.018, EMBLEM_Y - 0.07], [-0.018, EMBLEM_Y - 0.07]], fine: 1 },
   ],
-  texts: [{ text: "NS", lat: 0, y: EMBLEM_Y - 0.045, h: 0.1, mat: "blue" }],
-  // the headlights in their rings either side of the beak, the two round lamps in the red band
-  pods: [1, -1].map((sd) => ({ lat: sd * 0.62, y: 1.5, w: 0.38, h: 0.38, r: 0.19, proud: 0.025, depth: 0.04, mat: "blue", lamps: [[0, 0.14, "lampHead"]] as const })),
+  pods: [
+    // the emblem's raised hub: the silver ring round the blue NS medallion
+    { lat: 0, y: EMBLEM_Y, w: 0.28, h: 0.28, r: 0.14, proud: 0.02, depth: 0.04, mat: "emblem", lamps: [[0, 0.11, "medallion"]] as const },
+    // the headlights: dark 0.28 m lenses in silver bezels on wide blue rings, either side of the beak
+    ...[1, -1].map((sd) => ({ lat: sd * 0.55, y: 1.6, w: 0.48, h: 0.48, r: 0.24, proud: 0.025, depth: 0.04, mat: "blue", lamps: [[0, 0.18, "lampLens"]] as const })),
+  ],
+  // the two round lamps in the red band
   lamps: [[-0.6, 3.1, 0.075, "lampTop"], [0.6, 3.1, 0.075, "lampTop"]],
   wipers: [[[0.03, WIN[1] - 0.03], [-0.13, 2.38]]],
 };
@@ -241,7 +252,7 @@ function de1Fittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number): vo
 const PALETTE = {
   blue: c("#1f5868", 0.35), red: c("#e2482b", 0.35), silver: c("#b4b2aa", 0.35), white: c("#eef0ed", 0.4), roofG: c("#dadcdb", 0.45), skirtG: c("#b4b2aa", 0.35),
   rubber: c("#e6e8e5", 0.4), seam: c("#173f4a", 0.6), handle: c("#c9ccce", 0.3), emblem: c("#c3c6c8", 0.25), recess: c("#232527", 0.8), skirtRib: c("#8f8d86", 0.5),
-  coupler: c("#c8202a", 0.45), plate: c("#2456a6", 0.4), vent: c("#d3d5d4", 0.45), exhaustPipe: c("#2b2c2e", 0.6), lampTop: { color: "#f3efe4", metallic: 0.1, roughness: 0.2 }, cabMask: c("#1d1f22", 0.3),
+  coupler: c("#c8202a", 0.45), plate: c("#2456a6", 0.4), vent: c("#d3d5d4", 0.45), exhaustPipe: c("#2b2c2e", 0.6), lampTop: { color: "#f3efe4", metallic: 0.1, roughness: 0.2 }, lampLens: { color: "#2c3134", metallic: 0.3, roughness: 0.12, glass: true }, medallion: c("#1d4f86", 0.35), cabMask: c("#1d1f22", 0.3),
 };
 
 /**
