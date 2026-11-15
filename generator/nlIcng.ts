@@ -51,23 +51,28 @@ const PROFILE: Pt[] = [
 const VISOR = [2.62, 3.86] as const;
 const GLASS = [2.74, 3.7] as const;
 /** The lamp housings: the headlight's centre on the corner, low and outside; the housing's tail rising inward to the frame's corner. */
-const LAMP: Pt = [1.08, 2.22];
-const TAIL: Pt = [0.78, 2.28];
+const LAMP: Pt = [1.07, 2.2];
+const TAIL: Pt = [0.59, 2.33];
 /** The coupler's recess in the lower front, 1.4 m wide, over the yellow chin and the dark lip. */
 const RECESS = [0.84, 1.76] as const;
 
 /**
  * The NS logo on the nose's sides (3146: 0.65 m long, 0.27 m high, centred 1.6 m behind the tip at 1.97 m): the
- * outline's two bars and chevrons and the inner Z, as strokes [d0, y0, d1, y1] (d behind the tip) of `LOGO_T` width.
+ * two arrows, point-symmetric: from the left tip up to the top bar, down to the middle line and on to the right tip; from
+ * the right tip down to the bottom bar, up to the middle line and on to the left tip; the free arms of the two tips. Strokes
+ * [u0, v0, u1, v1] across the logo as seen with the nose to the left (u 0 - 1 along the car, v 0 at the top), `LOGO_T` wide.
  */
-const LOGO_D = 1.6, LOGO_Y = 1.97, LOGO_T = 0.045;
-const LOGO: ReadonlyArray<readonly [number, number, number, number]> = [
-  [-0.2, 0.135, 0.2, 0.135], [-0.2, -0.135, 0.2, -0.135],
-  [0.2, 0.135, 0.31, 0], [0.31, 0, 0.2, -0.135], [-0.2, 0.135, -0.31, 0], [-0.31, 0, -0.2, -0.135],
-  [-0.04, 0.05, 0.2, 0.05], [-0.2, -0.05, 0.04, -0.05], [-0.04, -0.05, 0.04, 0.05],
+const LOGO_D = 1.6, LOGO_Y = 1.97, LOGO_T = 0.042, LOGO_W = 0.62, LOGO_H = 0.27;
+const LOGO_UV: ReadonlyArray<readonly [number, number, number, number]> = [
+  [0, 0.5, 0.19, 0], [0.19, 0, 0.44, 0], [0.44, 0, 0.6, 0.5], [0.6, 0.5, 1, 0.5], [0, 0.5, 0.24, 1],
+  [1, 0.5, 0.81, 1], [0.81, 1, 0.56, 1], [0.56, 1, 0.4, 0.5], [0.4, 0.5, 0, 0.5], [1, 0.5, 0.76, 0],
 ];
+/** The strokes [d0, y0, d1, y1] relative to the logo's centre (d behind the tip, y up), on the strokes' centre lines. */
+const LOGO = LOGO_UV.map(([u0, v0, u1, v1]) => [
+  (u0 - 0.5) * (LOGO_W - LOGO_T), (0.5 - v0) * (LOGO_H - LOGO_T), (u1 - 0.5) * (LOGO_W - LOGO_T), (0.5 - v1) * (LOGO_H - LOGO_T),
+] as const);
 /** The logo's strokes as triangles in [d behind the tip, y]: a bar its own height, a slanted stroke its horizontal width. */
-function logoTris(): Pt[] {
+function logoTris(sd: number): Pt[] {
   const out: Pt[] = [];
   for (const [u0, v0, u1, v1] of LOGO) {
     const [d0, y0, d1, y1] = [LOGO_D + u0, LOGO_Y + v0, LOGO_D + u1, LOGO_Y + v1];
@@ -76,11 +81,13 @@ function logoTris(): Pt[] {
       : [[d0 - LOGO_T * 0.75, y0], [d0 + LOGO_T * 0.75, y0], [d1 + LOGO_T * 0.75, y1], [d1 - LOGO_T * 0.75, y1]];
     out.push(q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!);
   }
-  return out;
+  // drawn as seen on the -Z side (the nose to the viewer's left, as on 3146); on the +Z side the nose is to the
+  // viewer's right, so the logo is turned end for end about its centre to read the same way
+  return sd < 0 ? out : out.map(([d, y]): Pt => [2 * LOGO_D - d, y]);
 }
 
 const ROWS = [...new Set([
-  ...PROFILE.map(([y]) => y), 0.72, RECESS[0], RECESS[1], 2.07, LAMP[1], 2.37, 2.45, VISOR[0], 2.67, 2.82,
+  ...PROFILE.map(([y]) => y), 0.72, RECESS[0], RECESS[1], 2.05, LAMP[1], 2.35, VISOR[0], 2.67, 2.82,
   3.45, 3.5, 3.52, 3.66, GLASS[1], VISOR[1], 3.92, 3.98, 4.06
 ])].sort((a, b) => a - b);
 
@@ -125,17 +132,15 @@ export const ICNG_FACE: SeriesCabFace = {
     { mat: "glass", front: [[2.82, 1.3], [3.45, 1.88]], back: [[2.82, 2.28], [3.45, 2.28]] },
   ],
   fields: [
-    // the frame thickening at its lower corners, running down to the lamp housings' tails
-    ...[1, -1].map((sd) => ({ mat: "black", pts: ([[TAIL[0] + 0.04, TAIL[1] + 0.1], [TAIL[0] + 0.22, TAIL[1] + 0.09], [1.24, VISOR[0] + 0.02], [1.24, VISOR[0] + 0.1], [0.98, VISOR[0] + 0.1]] as Pt[]).map(([l, y]): Pt => [sd * l, y]) })),
     // the roof lamp's black surround on the cap
     { mat: "black", pts: [[-0.2, 3.92], [0.2, 3.92], [0.16, 4.06], [-0.16, 4.06]] },
   ],
   // the three vent slots either side of the roof lamp
   decals: [
     ...[1, -1].flatMap((sd) => [0.36, 0.43, 0.5].map((l) => ({ mat: "black", pts: box(sd * l - 0.015, sd * l + 0.015, 3.94, 4.04), fine: 1 }))),
-    // the lamp housings: black teardrops 0.55 m long on the corners, the headlight in the round outer end, the tail
-    // sweeping up and inward to the windscreen frame's corner
-    ...[1, -1].map((sd) => ({ mat: "black", pts: teardrop([sd * LAMP[0], LAMP[1]], 0.14, [sd * TAIL[0], TAIL[1]], 0.12), fine: 3 })),
+    // the lamp housings: solid black teardrops 0.65 m long and 0.3 m tall on the corners (3137), the headlight filling
+    // the round outer end, the body tapering up and inward to a point toward the windscreen's lower corner
+    ...[1, -1].map((sd) => ({ mat: "black", pts: teardrop([sd * LAMP[0], LAMP[1]], 0.15, [sd * TAIL[0], TAIL[1]], 0.015), fine: 3 })),
   ],
   // the windscreen's black frame, 0.12 m round the glass; the coupler's tall recess, its corners rounded
   masks: [
@@ -148,7 +153,7 @@ export const ICNG_FACE: SeriesCabFace = {
     { lat: [-0.62, 0.62], y: [3.5, 3.66], r: 0.03, mat: "display" },
   ],
   // the two lenses in each housing: the headlight in its round end, the tail light up the tail
-  lamps: [1, -1].flatMap((sd) => [[sd * LAMP[0], LAMP[1], 0.11, "lampHead"], [sd * 0.82, 2.28, 0.045, "lampRed"]] as const),
+  lamps: [1, -1].flatMap((sd) => [[sd * LAMP[0], LAMP[1], 0.12, "lampHead"], [sd * 0.78, 2.27, 0.035, "lampRed"]] as const),
   roofLamp: [0, 3.99, 0.06],
   wipers: [[[0.12, 2.8], [0.6, 3.35]]],
 };
@@ -200,7 +205,7 @@ function icngFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, ca
   });
   if (car.end) {
     // the NS logo on the nose's sides (the cab face's sides stand at the body's section)
-    m.scope("logo", () => { for (const sd of [1, -1]) sideDecal(m, b, X, sd, "logo", logoTris().map(([d, y]): Pt => [d - JOIN, y]), 0.006); });
+    m.scope("logo", () => { for (const sd of [1, -1]) sideDecal(m, b, X, sd, "logo", logoTris(sd).map(([d, y]): Pt => [d - JOIN, y]), 0.006); });
     m.scope("cab door", () => {
       // the yellow cab door at the join, its outline and the two silver handrails beside it
       const [d0, d1, y0, y1, k] = [0.02, 0.98, 1.2, 3.42, 0.02];
