@@ -90,7 +90,10 @@ combinations hashed before and after):
   the whole bogie under each joint (`test/loneJacobsCars.test.ts`);
   `onePantograph` - one pantograph only, on the second car; `pantographsBesideEnds` - the two
   pantographs on the second and the next-to-last car, not the third and third from last (the ICE 3's
-  transformer cars, `generator/deIce3.ts`);
+  transformer cars, `generator/deIce3.ts`); `pantographSlots` - the pantograph cars of an n-car
+  train and which are folded, in place of both rules (the CRH380A's cars 4 and 6, only the rear one
+  raised, `generator/cnCrh380a.ts`); `pantographFittings` - fittings drawn round an intermediate
+  car's pantograph (the CRH380A's side shields);
 - `faceLamps`, `faceGrille` - a blunt nose's headlights and grille on its front face, in
   place of the side lamps; `cabPanel` - a warning panel painted over the bands at the
   nose (`cabPanel` paint, the car builder's `field`); `lampPair` - twin headlights side by

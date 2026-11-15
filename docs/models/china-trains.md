@@ -13,7 +13,7 @@ Railway's trains. Every design here is filed under China.
 |---|---|---|---|---|
 | `proc-vehicle-cr-cr400af` | Fuxing CR400AF | series, Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`red`, `smart`) | 350 km/h |
 | `proc-vehicle-cr-cr400bf` | Fuxing CR400BF | series, Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`gold`, `red`) | 350 km/h |
-| `proc-vehicle-cr-crh380a` | CRH380A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the long nose; 350 km/h |
+| `proc-vehicle-cr-crh380a` | CRH380A | series, its own cab face (`generator/cnCrh380a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the 12 m nose; 26.5 m + 25.0 m cars; 350 km/h |
 | `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the E2-derived nose; 250 km/h |
 | `proc-vehicle-cr-crh3c` | CRH3C | series, Velaro body | `unit`, `cars` 3 - 8 | 350 km/h |
 | `proc-vehicle-cr-crh5a` | CRH5A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | 250 km/h |
@@ -44,3 +44,35 @@ Railway's trains. Every design here is filed under China.
 
 `test/worldTrains.test.ts` (all 160 plan designs) and, for each module's first design,
 the catalog sweep.
+
+## The CRH380A's body
+
+`generator/cnCrh380a.ts`, measured on the photographs in `assets/cr-crh380a/` (SOURCES.md) and set
+to the published figures: a 26.5 m end car with the 12.0 m nose, 25.0 m intermediate cars, 3.7 m high,
+the 3.38 m body drawn 3.26 m wide; 17.5 m bogie centres, 2.5 m wheelbase, 860 mm wheels, the end car's
+leading bogie 5.35 m behind the tip.
+
+- **The nose** is a cab face (seriesCab.ts) whose depth is a solid of the module's own (`a380Depth`):
+  a silver coupler dome on the tip (a blunt superellipsoid 1.5 m long, 1.7 m wide, 0.4 - 1.6 m high,
+  a dark seam round it), the nose flaring out of the dome's widest section and rising in a long line
+  (2.1 m 3 m back, 2.5 m at 5.5 m, the roof's 3.7 m at the join), its section the body's scaled and
+  rounded over its top. The lower flank is narrow (0.55 m half width below 0.95 m) over the leading
+  bogie and flares to the skirt behind it, so the bogie shows under the nose as on the train.
+- **The canopy** stands out of the nose's top from 4.2 m behind the tip, 1.7 - 1.9 m wide, its crown
+  3.26 m at 7.3 m and merging into the roof at the join. Its black oval holds the windscreen (one wide
+  pane with rounded corners, a single wiper) and a side window each side; the black is cut to the
+  canopy's own walls where they rise from the nose. The almond headlights lie on the nose beside the
+  canopy's foot.
+- **The livery** (unit 2670): white, the dark window band 1.97 - 2.95 m holding the windows, the blue
+  stripe 1.72 - 1.85 m under a white gap, a light grey skirt. On the end car the band's foot rises
+  toward the nose and ends in a rounded point 9.7 m behind the tip; the stripe rises with it to a crest
+  9.3 m back and sweeps down the flank to a point 6 m behind the tip. White doors carry the stripe only.
+- **Windows and doors**: one window a seat row (0.8 m on a 1.04 m pitch). The end car has its door
+  only at the front, 14.0 m behind the tip, two sightseeing windows in the band's point ahead of it with
+  the "CRH" mark, and ten windows behind it; the intermediate car has one door, at its rear end, and
+  21 windows.
+- **Pantographs**: single arms on cars 4 and 6 of eight (in shorter trains the third car from the end
+  and the one two ahead of it), only the rear one raised; each stands between four raked side shields
+  on the roof's edges.
+- **Distant model**: the nose from five rows (dome, rising top, canopy) with the windscreen as glass.
+
