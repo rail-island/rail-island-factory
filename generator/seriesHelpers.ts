@@ -1,6 +1,6 @@
 // Small helpers for the specs drawn on the series kit (shinkansen.ts): paints,
-// nose tables, a flat cab front and the shared Velaro body (the ICE 3, the CRH3C
-// and the AVE S-103 are one Siemens platform). See docs/models/shinkansen.md, "The series kit".
+// nose tables, a flat cab front and the shared Velaro body (the AVE S-103; the ICE 3
+// and the CRH3C have their own faces). See docs/models/shinkansen.md, "The series kit".
 
 import type { MaterialSpec } from "./meshBuilder.ts";
 import { paint } from "./dieselParts.ts";

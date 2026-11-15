@@ -1,7 +1,7 @@
 // The ICE 3 (DB class 403, and the multi-system 406), drawn on the series kit (shinkansen.ts) with
 // its own cab face (seriesCab.ts): the long, rounded snout and the tinted glass canopy over the cab,
-// matched to the photographs in assets/db-ice3/ (SOURCES.md). The Velaro of the CRH3C and the
-// AVE S-103 (`velaro()` in seriesHelpers.ts) is left as it was. See docs/models/germany-trains.md.
+// matched to the photographs in assets/db-ice3/ (SOURCES.md). The CRH3C (cnCrh3c.ts) reuses this face; the
+// AVE S-103 keeps `velaro()` (seriesHelpers.ts). See docs/models/germany-trains.md.
 //
 // Heights over the rail, d behind the snout's tip (the coupler cover's front, 1.24 m up).
 
