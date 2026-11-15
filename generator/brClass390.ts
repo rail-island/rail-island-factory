@@ -101,12 +101,12 @@ function face390(o: { body: string; yellow: readonly Pt[]; smileLower?: readonly
   };
 }
 
-/** Virgin: the yellow smile under the mask (red below it to the bumper), round the lamps and up beside the mask; the red shield on the cover. */
+/** Virgin: the yellow over the lower face from the mask down to 0.7 m (a narrow red band under it), back along the lower nose side, round the lamps and up beside the mask; the red shield on the cover. */
 const VIRGIN_FACE = face390({
   body: "vRed",
-  yellow: [[1.3, 0.35], [1.6, 0.5], [1.85, 1.0]],
-  smileLower: [[0, 0.8], [0.3, 0.82], [0.5, 0.87], [0.7, 0.97], [0.88, 1.12], [1.0, 1.3]],
-  lodBands: [[0, 0.52, "skirtG"], [0.52, 0.85, "vRed"], [0.85, 1.4, "smile"], [1.4, 3.1, "cabMask"]],
+  yellow: [[0.98, 0.6], [1.2, 1.1], [1.5, 1.3], [1.85, 1.15]],
+  smileLower: [[0, 0.7], [0.4, 0.72], [0.7, 0.8], [0.9, 0.9], [1.0, 0.98]],
+  lodBands: [[0, 0.52, "skirtG"], [0.52, 0.7, "vRed"], [0.7, 1.4, "smile"], [1.4, 3.1, "cabMask"]],
   extra: [{ mat: "vRed", pts: [[-0.11, 1.31], [-0.11, 1.2], [0, 1.08], [0.11, 1.2], [0.11, 1.31]], fine: 1 }],
 });
 
