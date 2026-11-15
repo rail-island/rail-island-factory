@@ -106,8 +106,9 @@ export const BCNA: WorldWagon = { length: 15.43, body: 7.3, half: 1.55, floor: 1
 export const C70: WorldWagon = { length: 13.98, body: 6.5, half: 1.5, floor: 1.15, top: 3.1, centre: 4.6, wheelR: 0.42, colour: "#3d3a37", ink: "#e8e6df", text: "C70", roofRise: 0 };
 export const P70: WorldWagon = { length: 17.0, body: 8.0, half: 1.5, floor: 1.15, top: 3.55, centre: 5.95, wheelR: 0.42, colour: "#3d4a3a", ink: "#e8e6df", text: "P70", roofRise: 0.45 };
 
-export function irBoxnWagon(v?: ParamValues): MeshBuilder { return buildWagon(BOXN, BCNA, v); }
-export function irBoxnWagonLod(v?: ParamValues): MeshBuilder { return buildWagonLod(BOXN, BCNA, v); }
+// the BOXN and BCNA are drawn in their own module (inBoxnWagon.ts); the game bundle imports them from here
+import { irBoxnWagon, irBoxnWagonLod } from "./inBoxnWagon.ts";
+export { irBoxnWagon, irBoxnWagonLod };
 export function crC70Wagon(v?: ParamValues): MeshBuilder { return buildWagon(C70, P70, v); }
 export function crC70WagonLod(v?: ParamValues): MeshBuilder { return buildWagonLod(C70, P70, v); }
 
