@@ -43,13 +43,13 @@ const PANE: [number, number] = [2.0, 2.84];
 const WIN: [number, number] = [2.15, 3.1];
 
 /**
- * The face's centre line (the side photographs, the head-on one at 85 px/m): the silver skirt rounding
- * under from the body's foot 1.0 m back to the tip at 0.9 m (the coupler comes out under it), the
+ * The face's centre line (the side photographs, the head-on one at 85 px/m): the silver apron under the
+ * lower red band, 0.37 m tall, rounding under to the body's foot 0.34 m back (the coupler in front of it), the
  * front upright through the red band and the lamps, leaning back a little at the panes and the red band,
  * then the silver dome falling to the crown 1.35 m behind the tip.
  */
 const PROFILE: Pt[] = [
-  [B, 1.0], [0.45, 0.66], [0.52, 0.45], [0.6, 0.29], [0.68, 0.17], [LOW_RED[0], 0.09], [0.82, 0.035], [0.9, 0], [1.6, 0], [PANE[0], 0.02],
+  [B, 0.34], [0.46, 0.2], [0.55, 0.12], [0.65, 0.075], [LOW_RED[0], 0.04], [0.84, 0.015], [0.9, 0], [1.6, 0], [PANE[0], 0.02],
   [PANE[1], 0.065], [HIGH_RED, 0.07], [3.1, 0.1], [S, 0.16], [3.48, 0.25], [3.6, 0.4], [3.69, 0.6], [3.75, 0.86], [3.79, 1.25], [C, JOIN],
 ];
 
@@ -59,7 +59,26 @@ const CORNER: Pt[] = [[B, 1.22], [S, 1.22], [3.5, 1.0], [3.7, 0.6], [C, 0.1]];
 /** The outer panes' and the cab side windows' edges on the cab's sides, d behind the tip by height (their front edges lean back with the face). */
 const lean = (d: number, y0: number, y1: number, k = 0.06): Pt[] => [[y0, d], [y1, d + k]];
 
-const ROWS = [...new Set([...PROFILE.map(([y]) => y), LOW_RED[1], 1.19, 1.37, 1.55, 1.97, PANE[0] + 0.04, PANE[1] - 0.04, PANE[1] + 0.03, 3.05, 3.13, 3.21])].sort((a, b) => a - b);
+/** A polygon of a rounded rectangle-like quad in [lat, y]: corners cut by c (cheap rounding for a painted field). */
+function chamfered(pts: readonly Pt[], c: number): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i]!, prev = pts[(i + pts.length - 1) % pts.length]!, next = pts[(i + 1) % pts.length]!;
+    const to = (q: Pt): Pt => { const dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy); return [p[0] + (dx / l) * c, p[1] + (dy / l) * c]; };
+    out.push(to(prev), to(next));
+  }
+  return out;
+}
+
+/**
+ * The panes beside the centre one (head-on photograph): each in its own silver frame, a 0.1 m green
+ * pillar between it and the centre pane's frame, its outer pillar leaning out toward the top (the pane
+ * wider at its head), the frame 4 cm wide; for side sd.
+ */
+const SIDE_FRAME = (sd: number): Pt[] => chamfered([[sd * 0.35, PANE[0] - 0.04], [sd * 0.74, PANE[0] - 0.04], [sd * 0.81, PANE[1] + 0.04], [sd * 0.35, PANE[1] + 0.04]], 0.06);
+const SIDE_GLASS = (sd: number): Pt[] => chamfered([[sd * 0.39, PANE[0]], [sd * 0.705, PANE[0]], [sd * 0.77, PANE[1]], [sd * 0.39, PANE[1]]], 0.04);
+
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), LOW_RED[1], 1.24, 1.4, 1.56, PANE[0] - 0.04, PANE[0] + 0.04, PANE[1] - 0.04, PANE[1] + 0.04, 3.04, 3.13, 3.22])].sort((a, b) => a - b);
 
 export const MAT46_FACE: SeriesCabFace = {
   dJoin: JOIN, dSide: 1.0, reach: REACH, first: JOIN, roofFrom: S, bulge: 0.04, tolerance: 0.02, cols: [6, 6, 1, 1], wrap: true,
@@ -71,18 +90,24 @@ export const MAT46_FACE: SeriesCabFace = {
   paint: [
     // the outer panes round the corners back to 0.92 m, then the cab side window 1.02 - 1.42 m behind the
     // tip (the yellow unit's side view): silver frames, glass inside
-    { mat: "rubber", front: lean(0.1, PANE[0] - 0.04, PANE[1] + 0.04), back: lean(0.95, PANE[0] - 0.04, PANE[1] + 0.04, 0) },
-    { mat: "cabGlass", front: lean(0.14, PANE[0], PANE[1]), back: lean(0.91, PANE[0], PANE[1], 0) },
-    { mat: "rubber", front: lean(1.0, PANE[0] - 0.04, PANE[1] + 0.04, 0), back: lean(1.44, PANE[0] - 0.04, PANE[1] + 0.04, 0) },
-    { mat: "cabGlass", front: lean(1.04, PANE[0], PANE[1], 0), back: lean(1.4, PANE[0], PANE[1], 0) },
+    // (a 0.1 m green pillar, leaning out toward the top, between each corner pane and the pane beside the
+    // centre one; another between the corner pane and the cab side window)
+    { mat: "rubber", front: lean(0.145, PANE[0] - 0.04, PANE[1] + 0.04, 0.075), back: lean(0.92, PANE[0] - 0.04, PANE[1] + 0.04, 0) },
+    { mat: "cabGlass", front: lean(0.175, PANE[0], PANE[1], 0.075), back: lean(0.88, PANE[0], PANE[1], 0) },
+    { mat: "rubber", front: lean(1.02, PANE[0] - 0.04, PANE[1] + 0.04, 0), back: lean(1.44, PANE[0] - 0.04, PANE[1] + 0.04, 0) },
+    { mat: "cabGlass", front: lean(1.06, PANE[0], PANE[1], 0), back: lean(1.4, PANE[0], PANE[1], 0) },
   ],
-  // the silver frame round the three front panes
-  masks: [{ lat: [-0.77, 0.77], y: [PANE[0] - 0.04, PANE[1] + 0.04], r: 0.05, mat: "rubber" }],
-  // the centre pane and the two beside it (head-on 0.48 and 0.42 m wide), 5 cm pillars
-  panes: [{ lat: [-0.24, 0.24], y: PANE, r: 0.05 }, { lat: [-0.72, -0.29], y: PANE, r: 0.05 }, { lat: [0.29, 0.72], y: PANE, r: 0.05 }],
-  // the two round headlamps in their rings, 0.51 m either side, 1.37 m up; the two small lamps in the red band
-  pods: [1, -1].map((sd) => ({ lat: sd * 0.51, y: 1.37, w: 0.34, h: 0.34, r: 0.17, proud: 0.03, depth: 0.04, mat: "lampRing", lamps: [[0, 0.13, "lampHead"]] as const })),
-  lamps: [[-0.47, 3.13, 0.065, "lampHead"], [0.47, 3.13, 0.065, "lampHead"]],
+  // the panes beside the centre one: their silver frames and glass, the outer pillars leaning
+  fields: [1, -1].flatMap((sd) => [{ mat: "rubber", pts: SIDE_FRAME(sd) }, { mat: "cabGlass", pts: SIDE_GLASS(sd) }]),
+  // the centre pane (0.42 m wide head-on) in its own rounded silver frame
+  masks: [{ lat: [-0.25, 0.25], y: [PANE[0] - 0.04, PANE[1] + 0.04], r: 0.08, mat: "rubber" }],
+  panes: [{ lat: [-0.21, 0.21], y: PANE, r: 0.05 }],
+  // the two round headlamps, 0.28 m lenses in wide silver rings, 0.51 m either side, 1.4 m up; the two
+  // small lamps in the red band in silver rings 0.18 m across
+  pods: [
+    ...[1, -1].map((sd) => ({ lat: sd * 0.51, y: 1.4, w: 0.42, h: 0.42, r: 0.21, proud: 0.035, depth: 0.04, mat: "frameSilver", lamps: [[0, 0.14, "lampHead"]] as const })),
+    ...[1, -1].map((sd) => ({ lat: sd * 0.47, y: 3.13, w: 0.18, h: 0.18, r: 0.09, proud: 0.02, depth: 0.03, mat: "frameSilver", lamps: [[0, 0.06, "lampHead"]] as const })),
+  ],
   // the wipers on the centre pane and the driver's (left) pane, parked upright from the sill
   wipers: [[[0.04, PANE[0] + 0.06], [-0.04, 2.6]], [[-0.46, PANE[0] + 0.06], [-0.54, 2.6]]],
 };
@@ -140,7 +165,18 @@ function mat46Fittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, 
   m.scope("coupler", () => {
     // the draw bar from under the face, the head's cover reaching the coupling plane
     block(m, "carbon", Math.min(tip - k * 0.7, plane - k * 0.25), Math.max(tip - k * 0.7, plane - k * 0.25), COUPLER_Y - 0.07, COUPLER_Y + 0.07, -0.08, 0.08);
-    block(m, "couplerRed", Math.min(plane - k * 0.36, plane), Math.max(plane - k * 0.36, plane), COUPLER_Y - 0.17, COUPLER_Y + 0.17, -0.2, 0.2);
+    // the head: a rounded body behind a wider face plate, the centring cone standing out of the plate
+    const round = (hw: number, hh: number, r: number): Array<[number, number]> => {
+      const out: Array<[number, number]> = [];
+      for (const [cz, cy, a0] of [[hw - r, -(hh - r), -90], [hw - r, hh - r, 0], [-(hw - r), hh - r, 90], [-(hw - r), -(hh - r), 180]] as const)
+        for (let j = 0; j <= 2; j++) { const a = ((a0 + 45 * j) * Math.PI) / 180; out.push([cz + r * Math.cos(a), COUPLER_Y + cy + r * Math.sin(a)]); }
+      return out;
+    };
+    const at = (u: number) => plane - k * u;
+    const seg = (mat: string, ring: Array<[number, number]>, u0: number, u1: number, ring1 = ring) => (k > 0 ? m.sweep(mat, "x", ring, at(u0), ring1, at(u1)) : m.sweep(mat, "x", ring1, at(u1), ring, at(u0)));
+    seg("couplerRed", round(0.15, 0.15, 0.09), 0.42, 0.12);
+    seg("couplerRed", round(0.19, 0.2, 0.07), 0.12, 0.07);
+    seg("carbon", round(0.07, 0.07, 0.06), 0.07, 0.0, round(0.035, 0.035, 0.03));
   });
 }
 

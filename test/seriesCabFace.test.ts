@@ -15,8 +15,8 @@ import type { ShinkansenSeries } from "../generator/shinkansen.ts";
 const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: number; single: boolean; rake?: number }> = [
   // the VT 98: two big front windows and the two corner windows wrapping round the corners
   { design: DE_UNITS.find((d) => d.id === "proc-vehicle-db-vt98")!, series: VT98, panes: 4, single: true },
-  // the Mat '46: the three front panes; the two outer ones wrapping round the corners are painted on the cab sides
-  { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-mat46")!, series: MAT46, panes: 3, single: false },
+  // the Mat '46: the centre pane; the panes beside it are painted fields (their pillars lean), the corner ones painted round onto the cab sides
+  { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-mat46")!, series: MAT46, panes: 1, single: false },
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-ratp-mi09")!, series: MI09, panes: 1, single: false, rake: 0.75 },
