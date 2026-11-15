@@ -14,6 +14,7 @@ import { CRH2A } from "./cnCrh2a.ts";
 import { CR400BF } from "./cnCr400bf.ts";
 import { CR400AF } from "./cnCr400af.ts";
 import { CRH380A } from "./cnCrh380a.ts";
+import { CRH6A } from "./cnCrh6a.ts";
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#d9dcde", 0.6), skirtG: c("#9aa0a5", 0.7), cabMask: c("#1d1f22", 0.3) };
@@ -40,15 +41,7 @@ export const CR200J: ShinkansenSeries = {
   weight: { end: 85, middle: 47 }, power: 5600, maxspeed: 160,
 };
 
-export const CRH6A: ShinkansenSeries = {
-  endLength: 25.5, midLength: 24.5, W: 1.6, Y: 1.35, S: 3.1, C: 4.0, lean: 0.95, B: 0.8, A: 1.0,
-  nose: nose(3.6, 0.2, 2.4, [[0, 1.5], [0.5, 2.05], [1.8, 2.8], [3.2, 3.55], [4.0, 4.0]], [[0, 1.45], [0.5, 1.95], [1.8, 2.6], [3.2, 3.0], [4.0, 3.1]], [[0, 1.35], [1.0, 1.35]], [[0, 1.15], [0.8, 1.0]], [[0, 1.05], [0.4, 0.8]]),
-  windscreen: [1.6, 3.4, 0.07, 1.15], lamps: [0.5, 1.5],
-  windows: [[1.9, 2.75]], windowW: 1.3, pitch: 1.55, door: [1.2, 3.05, 1.9, 2.65], doorW: 1.3, doorCount: 3,
-  bogieCentres: 17.5, wheelR: 0.46, wheelbase: 2.5, cars: [4, 8],
-  liveries: { crh: lv("CRH red", "CRH6A-0401", [1.7, WHITE], [1.85, "#c8102e"], [9, WHITE]) },
-  weight: { end: 52, middle: 48 }, power: 600, maxspeed: 200,
-};
+export { CRH6A };
 
 const P = { af: seriesParams(CR400AF), bf: seriesParams(CR400BF), a380: seriesParams(CRH380A), c2a: seriesParams(CRH2A), c3c: seriesParams(CRH3C), c5a: seriesParams(CRH5A), j: seriesParams(CR200J), c6a: seriesParams(CRH6A) };
 
