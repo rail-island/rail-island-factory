@@ -14,7 +14,8 @@ import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { enumParam } from "./emuParts.ts";
 import { paint } from "./dieselParts.ts";
 import { buildUsHood, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
-import { ES44_SPEC, GP9_SPEC, SD40_SPEC, SD70_SPEC } from "./usDiesels.ts";
+import { ES44_SPEC, GP9_SPEC, SD40_SPEC } from "./usDiesels.ts";
+import { buildWdp4d, buildWdp4dLod } from "./inWdp4d.ts";
 import { PRIMA_BODY, liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 
@@ -45,8 +46,8 @@ const hood = (l: HoodLiveries, p: ParamSpec[], v?: ParamValues) => l[resolvePara
 
 export function irWdm2(v?: ParamValues): MeshBuilder { return buildUsHood(WDM2_SPEC, hood(WDM2, H.wdm2, v)); }
 export function irWdm2Lod(v?: ParamValues): MeshBuilder { return usHoodLod(WDM2_SPEC, hood(WDM2, H.wdm2, v)); }
-export function irWdp4d(v?: ParamValues): MeshBuilder { return buildUsHood(SD70_SPEC, hood(WDP4D, H.wdp4d, v)); }
-export function irWdp4dLod(v?: ParamValues): MeshBuilder { return usHoodLod(SD70_SPEC, hood(WDP4D, H.wdp4d, v)); }
+export function irWdp4d(v?: ParamValues): MeshBuilder { hood(WDP4D, H.wdp4d, v); return buildWdp4d(); }
+export function irWdp4dLod(v?: ParamValues): MeshBuilder { hood(WDP4D, H.wdp4d, v); return buildWdp4dLod(); }
 export function irWdg4g(v?: ParamValues): MeshBuilder { return buildUsHood(ES44_SPEC, hood(WDG4G, H.wdg4g, v)); }
 export function irWdg4gLod(v?: ParamValues): MeshBuilder { return usHoodLod(ES44_SPEC, hood(WDG4G, H.wdg4g, v)); }
 
@@ -99,7 +100,7 @@ const d = (id: string, title: string, params: ParamSpec[], build: (v?: ParamValu
 
 export const IN_LOCOS: ProceduralDesign[] = [
   d("ir-wdm2", "IR WDM-2", H.wdm2, irWdm2, irWdm2Lod, 112, 1940, 120, D),
-  d("ir-wdp4d", "IR WDP-4D", H.wdp4d, irWdp4d, irWdp4dLod, 121, 3300, 160, D),
+  d("ir-wdp4d", "IR WDP-4D", H.wdp4d, irWdp4d, irWdp4dLod, 123, 3300, 135, D),
   d("ir-wdg4g", "IR WDG-4G", H.wdg4g, irWdg4g, irWdg4gLod, 135, 3400, 100, D),
   d("ir-wam4", "IR WAM-4", P.wam4!, irWam4, irWam4Lod, 113, 2700, 120),
   d("ir-wap4", "IR WAP-4", P.wap4!, irWap4, irWap4Lod, 112, 3800, 140),

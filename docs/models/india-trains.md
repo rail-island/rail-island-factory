@@ -16,7 +16,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-ir-memu` | IR MEMU | series, flat cab | `unit`, `cars` 4 - 8, `livery` (`std`, `alt`) | 110 km/h |
 | `proc-vehicle-dmrc-rs1` | Delhi Metro RS1 | series, cab face | `unit`, `cars` 4 - 8 | standard gauge, four doors a side; 80 km/h |
 | `proc-vehicle-ir-wdm2` | IR WDM-2 | hood unit, the GP9's body on six-wheel trucks | `livery` (`maroon`, `blue`) | Co-Co, 1,940 kW, 120 km/h |
-| `proc-vehicle-ir-wdp4d` | IR WDP-4D | hood unit, the SD70ACe's body | - | 3,300 kW, 160 km/h |
+| `proc-vehicle-ir-wdp4d` | IR WDP-4D | own module (`inWdp4d.ts`), twin cab | - | Co-Co, 21.24 m over buffers, 3,300 kW, 135 km/h |
 | `proc-vehicle-ir-wdg4g` | IR WDG-4G | hood unit, the ES44AC's body | - | 3,400 kW, 100 km/h |
 | `proc-vehicle-ir-wam4` | IR WAM-4 | box locomotive, flat | `livery` (`blue`, `maroon`) | Co-Co, 18.79 m, 2,700 kW |
 | `proc-vehicle-ir-wap4` | IR WAP-4 | box locomotive, raked | `livery` (`rajdhani`, `shatabdi`) | Co-Co, 18.79 m, 3,800 kW, 140 km/h |
@@ -43,7 +43,17 @@ The catalog had no Indian train before. Every design is filed under India.
 - **Broad gauge.** The 1,676 mm stock keeps its bodies (up to 3.25 m wide; the EMUs'
   3.66 m narrowed) on the 3.3 m gauge and the game's standard-gauge wheelsets.
 - **Diesels.** The WDM-2, WDP-4D and WDG-4G are drawn on their American relatives'
-  bodies (GP9 re-trucked, SD70ACe, ES44AC) in IR paint; the WDP-4D's second cab is left out.
+  bodies (GP9 re-trucked, SD70ACe, ES44AC) in IR paint.
+- **WDP-4D.** Drawn on its own (`generator/inWdp4d.ts`, borrowing the hood kit's sweeps and decals) from
+  five photographs (`assets/ir-wdp4d/`): a full-width cab at each end (cab 1 2.19 m, cab 2 1.95 m), the
+  face upright to 2.9 m and raked 0.22 m over the barred screens, the roof arched from the 3.86 m eaves to the
+  4.12 m crown, the twin headlight, marker lamps and the crown lamp under the horn box; the hood flared to the
+  cabs' width over the radiator behind cab 2 (its side grilles under the overhang) and over the equipment
+  section behind cab 1 (two round hatches); side buffers and the centre coupler on deep headstocks; HTSC Co-Co
+  bogies at +-6.35 m (axles 2.06 m apart), measured by a projective fit along 40086's side. 19.964 m over the
+  headstocks, 21.244 m over the buffers, 3.127 m over the walkways. Paint: the yellow-band scheme (blue hood
+  with yellow and white bands, white cabs, the band narrowing to a point on the face, the blue foot band);
+  the side window's guard bars, the flags and the wipers are not drawn.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
 - **WP.** The bullet-nosed smokebox front is the generator's plain one.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
