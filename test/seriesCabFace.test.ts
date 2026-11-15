@@ -19,7 +19,7 @@ const CASES: Array<{ design: ProceduralDesign; series: ShinkansenSeries; panes: 
   { design: NL_UNITS.find((d) => d.id === "proc-vehicle-ns-de1")!, series: DE1, panes: 5, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-sncf-x3800")!, series: X3800, panes: 4, single: true },
   { design: FR_UNITS.find((d) => d.id === "proc-vehicle-ratp-mi09")!, series: MI09, panes: 1, single: false, rake: 0.75 },
-  { design: IN_UNITS.find((d) => d.id === "proc-vehicle-dmrc-rs1")!, series: DELHI_METRO, panes: 3, single: false },
+  { design: IN_UNITS.find((d) => d.id === "proc-vehicle-dmrc-rs1")!, series: DELHI_METRO, panes: 4, single: false },
   // the Talgo III's tail car: no windscreen at all
   { design: ES_UNITS.find((d) => d.id === "proc-vehicle-talgo-iii")!, series: TALGO_III, panes: 0, single: false },
 ];
