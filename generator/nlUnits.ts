@@ -8,6 +8,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { PLAN_V } from "./nlPlanV.ts";
 import { MAT54 } from "./nlMat54.ts";
 import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
 import { ICM } from "./nlIcm.ts";
@@ -46,17 +47,6 @@ const MOUSE_NOSE: SeriesCabFace = {
   panes: [-2, -1, 0, 1, 2].map((k) => ({ lat: [k * 0.535 - 0.235, k * 0.535 + 0.235] as const, y: [2.05, 2.88] as const, r: 0.05 })),
   lamps: [[-0.42, 1.6, 0.13, "lampHead"], [0.42, 1.6, 0.13, "lampHead"]], roofLamp: [0, 3.18, 0.06],
   wipers: [[[-0.6, 2.1], [-0.4, 2.7]], [[0.4, 2.1], [0.6, 2.7]]],
-};
-
-export const PLAN_V: ShinkansenSeries = {
-  endLength: 26.0, midLength: 26.0, W: 1.45, Y: 1.4, S: 3.15, C: 3.9, lean: 0.97, B: 1.0, A: 1.15,
-  nose: nose(0.1, 1, 2, [[0, 3.9]], [[0, 3.15]], [[0, 1.4]], [[0, 1.15]], [[0, 1.0]]),
-  windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.45, 2.0, 2.8, "cabMask", 1.55),
-  windows: [[1.95, 2.8]], windowW: 1.2, pitch: 1.45, door: [1.2, 3.05, 1.95, 2.65], doorW: 1.1, doorCount: 2,
-  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 2.8, cars: [2], endPantograph: true,
-  liveries: { yellowGrey: nsLivery("yellowGrey", "448"), yellowBlue: nsLivery("yellowBlue", "907") },
-  weight: { end: 52, middle: 52 }, power: 310, maxspeed: 140,
 };
 
 /**
