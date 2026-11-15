@@ -20,7 +20,7 @@ const CRH_BLUE = "#1f4f9f";
 
 /** Where the face meets the body: the roof reaches its full 4.05 m there. */
 const JOIN = 7.0;
-/** The body's bottom (the slatted skirts' foot) and the skirts' top. */
+/** The body's bottom (the white skirt panels' foot) and the skirts' top. */
 const B = 0.4;
 const A = 1.15;
 
@@ -36,7 +36,7 @@ const PROFILE: Pt[] = [
 ];
 
 /** The coupler cover: half an ellipsoid on the snout's foot - its centre height, half width and half height, its tip's d and how deep it reaches back. */
-const COVER = { y: 1.0, hw: 0.74, hh: 0.54, d: 0.0, depth: 0.95 };
+const COVER = { y: 0.93, hw: 0.76, hh: 0.52, d: 0.0, depth: 0.95 };
 
 /**
  * The canopy's lower edge on the snout's sides ([y, d]): its foot 2.1 m up on the centre line, nearly
@@ -75,7 +75,7 @@ export const CRH5A_FACE: SeriesCabFace = {
   lod: { profile: PROFILE, corner: [[B, 2.0], [4.05, 2.0]], rows: [B, 0.75, 1.0, 1.5, 2.0, 2.3, 2.7, 3.1, 3.5, 3.85, 4.05], cornerDepth: [[B, 2.6], [2.0, 2.6], [2.7, 4.1], [3.1, 3.7], [3.5, 2.75], [3.85, 1.65], [4.05, 0.05]] },
   lodGlass: { hw: 1.1, y: [2.15, 3.95] },
   paint: [
-    // white below the skirts' top on the snout's sides (the cars' skirts are grey)
+    // white below the skirts' top on the snout's sides
     { mat: "white", front: [[B, -9], [A, -9]], back: [[B, JOIN + 1], [A, JOIN + 1]] },
     // the canopy: one dark glass from its foot over the cab roof, a darker rim round it
     { mat: "cabMask", front: [[2.06, -9], [4.1, -9]], back: GLASS_BACK.map(([y, d]): Pt => [y - 0.05, d + 0.07]), top: 4.1 },
@@ -87,7 +87,10 @@ export const CRH5A_FACE: SeriesCabFace = {
     // the lamp lozenges: a black housing, the lens inside
     { mat: "cabMask", pts: lozenge(1, 1) }, { mat: "cabMask", pts: lozenge(1, -1) },
     { mat: "lampLens", pts: lozenge(0.72, 1) }, { mat: "lampLens", pts: lozenge(0.72, -1) },
+    // the windscreen proper in the canopy's front: a lighter pane inside the dark frame
+    { mat: "screen", pts: [[-0.9, 2.26], [0.9, 2.26], [0.98, 2.36], [0.9, 2.66], [0.7, 2.78], [-0.7, 2.78], [-0.9, 2.66], [-0.98, 2.36]] },
   ],
+  wipers: [[[0.08, 2.3], [0.48, 2.7]], [[-0.62, 2.3], [-0.22, 2.7]]],
   panes: [],
   lamps: [[1.12, 1.86, 0.05, "lampHead"], [-1.12, 1.86, 0.05, "lampHead"], [0.8, 1.66, 0.035, "lampRed"], [-0.8, 1.66, 0.035, "lampRed"]],
 };
@@ -97,8 +100,8 @@ function crhLivery(): ShinkansenLivery {
   return {
     title: "CRH blue", number: "CRH5A-5043",
     palette: {
-      white: c(WHITE), blue: c(CRH_BLUE), roofG: c("#dcdfe1", 0.55), skirtG: c("#b8bdc1", 0.6), cabMask: c("#15181b", 0.3),
-      seam: c("#5b6064", 0.6), lampLens: { color: "#c9d3dc", metallic: 0.3, roughness: 0.1, glass: true }, slat: c("#7d8388", 0.7),
+      white: c(WHITE), blue: c(CRH_BLUE), roofG: c("#dcdfe1", 0.55), skirtG: c("#e7e9e8", 0.55), cabMask: c("#15181b", 0.3),
+      seam: c("#8d9296", 0.6), lampLens: { color: "#c9d3dc", metallic: 0.3, roughness: 0.1, glass: true }, slat: c("#b3b8bc", 0.6), screen: { color: "#3d4d5b", metallic: 0.25, roughness: 0.08, glass: true },
     },
     bands: [[0, 1.82, "white"], [1.82, 1.94, "blue"], [1.94, 9, "white"]],
     roof: "roofG", skirt: "skirtG",
@@ -131,9 +134,11 @@ function outward(m: MeshBuilder, mat: string, c: Vec3, a: Vec3, b: Vec3, e: Vec3
 function coverDome(m: MeshBuilder, X: (d: number) => number): void {
   const xc = X(COVER.d + COVER.depth - JOIN), fwd = Math.sign(X(-1) - X(0));
   const [na, nb] = [7, 18];
+  // the rings from the tip (0) to the rim (na): the last a thin seam, 3 % of the quarter arc
+  const PHI = Array.from({ length: na + 1 }, (_, i) => (Math.PI / 2) * (i < na ? (0.97 * i) / (na - 1) : 1));
   const at = (i: number, j: number): Vec3 => {
     // i: from the tip (0) to the rim (na); j: round the rim
-    const phi = ((Math.PI / 2) * i) / na, th = (2 * Math.PI * j) / nb;
+    const phi = PHI[i]!, th = (2 * Math.PI * j) / nb;
     return [xc + fwd * COVER.depth * Math.cos(phi), COVER.y + COVER.hh * Math.sin(phi) * Math.sin(th), COVER.hw * Math.sin(phi) * Math.cos(th)];
   };
   const ctr: Vec3 = [xc, COVER.y, 0];
@@ -149,7 +154,7 @@ function coverDome(m: MeshBuilder, X: (d: number) => number): void {
   m.scope("slot", () => block(m, "seam", Math.min(xs - fwd * 0.08, xs + fwd * 0.01), Math.max(xs - fwd * 0.08, xs + fwd * 0.01), ys - 0.035, ys + 0.035, -0.13, 0.13));
 }
 
-/** The CRH5A's own fittings: the coupler cover, the underfloor, the slats of the grey skirts between the bogies and the roof's air-conditioning hood. */
+/** The CRH5A's own fittings: the coupler cover, the underfloor, the slats of the white skirt panels between the bogies and the roof's air-conditioning hood. */
 function crh5aFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
   const [t0, t1] = car.trucks as [number, number];
   if (car.end) m.scope("coupler cover", () => coverDome(m, X));

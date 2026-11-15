@@ -52,15 +52,18 @@ published figures: end car 27.6 m and intermediate cars 25.0 m over the couplers
 the Shinkansen gauge as it is), the crown 4.05 m and the roof hoods 4.27 m up.
 
 - **Section.** The Pendolino's wide body: widest 1.55 m up, the sides leaning in to 0.9 of the half width
-  at the 3.2 m shoulder, the grey slatted skirts tucked in below 1.15 m down to 0.4 m.
+  at the 3.2 m shoulder, the white skirt panels (faint light-grey slats between the bogies) tucked in below
+  1.15 m down to 0.4 m; the nose's flanks white to the bottom edge.
 - **Snout** (a cab face, `CRH5A_FACE`, 7.0 m long): upright from the spoiler to 1.5 m, 0.5 m behind the
   tip, rounding over to the canopy's foot (2.1 m up, 1.3 m back), the glass leaning back at about 25
   degrees to the crown 6.4 m back; in plan one elliptic corner over the whole half width, reaching full
   width 2.6 m back low down and further back over the canopy. The **coupler cover** is half an ellipsoid
-  (1.48 m wide, 1.08 m tall, centred 1.0 m up) standing 0.48 m forward of the face, its joint a dark ring,
+  (1.52 m wide, 1.04 m tall, centred 0.93 m up: its foot at the body's bottom, its top at the lamps') standing
+  0.48 m forward of the face, its joint a thin grey seam,
   a slot for the coupler on its foot (`coverDome`, drawn with the end car's fittings).
 - **Paint on the face**: one dark glass canopy from its foot over the cab roof (its lower edge nearly
-  level across the face, then rising along the sides to the crown 6.5 m back), a black rim round it; the
+  level across the face, then rising along the sides to the crown 6.5 m back), a black rim round it, the
+  windscreen proper a lighter pane in its front (2.26 - 2.78 m) with two wipers; the
   "eye" cab side window, a tear 4.0 - 6.3 m back slanting down to the front; two lamp lozenges under the
   canopy's lower corners, rising to the outside (black housing, clear lens, a head and a tail lamp);
   the face is white all round, also below the skirts' top.
