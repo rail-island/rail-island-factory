@@ -333,7 +333,8 @@ common DF4B and measured from the works drawing and the photographs in `assets/c
   stripes, light grey roof, apron and running gear (DF4B 2480).
 - **Sides** (from the No. 2, +x, cab; DF4B 9221 by a projective fit; both sides alike, the
   far side not photographed): the cab's side window (0.55 - 1.2 m behind the face) and door
-  (1.45 - 2.05 m); the cooling room's four louvred panels over four tall louvres (2.4 - 7.4 m);
+  (1.45 - 2.05 m); the cooling room's four louvred panels over four tall louvres (2.4 - 7.4 m;
+  every louvre painted in the body colour, the gaps between its slats a darker shade);
   two windows over small louvres (8.1 - 10.7 m); the side door (11.05 - 11.6 m); two small
   low windows (12.2 - 13.7 m); two windows over louvres toward the No. 1 cab (15.05 - 17.2 m);
   the cab door and window mirrored at the No. 1 end. The running number painted on the cab

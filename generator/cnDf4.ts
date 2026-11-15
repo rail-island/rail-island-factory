@@ -96,13 +96,13 @@ function sideItems(): SideItem[] {
   ];
   // the cooling room: four louvred panels over four tall louvres
   [[2.42, 3.52], [3.76, 4.86], [5.12, 6.15], [6.38, 7.42]].forEach(([d0, d1], i) => {
-    items.push({ kind: "grille", name: `cooling louvre ${i + 1}`, x: at(d0!, d1!), y: UPPER, slats: "v", pitch: 0.14, r: 0.05 });
-    items.push({ kind: "grille", name: `cooling grille ${i + 1}`, x: at(d0!, d1!), y: [1.85, 2.97], slats: "v", pitch: 0.16, r: 0.03 });
+    items.push({ kind: "grille", name: `cooling louvre ${i + 1}`, x: at(d0!, d1!), y: UPPER, slats: "v", pitch: 0.14, r: 0.05, mat: "paint" });
+    items.push({ kind: "grille", name: `cooling grille ${i + 1}`, x: at(d0!, d1!), y: [1.85, 2.97], slats: "v", pitch: 0.16, r: 0.03, mat: "paint" });
   });
   // the machine room's windows with small louvres under them
   [[8.12, 9.07], [9.78, 10.71]].forEach(([d0, d1], i) => {
     items.push({ kind: "window", name: `room window ${i + 1}`, x: at(d0!, d1!), y: UPPER, mat: "rubber", r: 0.07 });
-    items.push({ kind: "grille", name: `room louvre ${i + 1}`, x: at(d0! + 0.05, d1! - 0.05), y: [2.38, 2.89], slats: "v", pitch: 0.14, r: 0.03 });
+    items.push({ kind: "grille", name: `room louvre ${i + 1}`, x: at(d0! + 0.05, d1! - 0.05), y: [2.38, 2.89], slats: "v", pitch: 0.14, r: 0.03, mat: "paint" });
   });
   items.push({ kind: "door", name: "room door", x: at(11.05, 11.62), y: [1.6, 3.8], win: [3.22, 3.72], rails: true });
   // the small low windows behind the door
@@ -111,7 +111,7 @@ function sideItems(): SideItem[] {
   // toward the No. 1 cab: two windows over two louvres
   [[15.05, 15.8], [16.45, 17.2]].forEach(([d0, d1], i) => {
     items.push({ kind: "window", name: `end window ${i + 1}`, x: at(d0!, d1!), y: UPPER, mat: "rubber", r: 0.06 });
-    items.push({ kind: "grille", name: `end louvre ${i + 1}`, x: at(d0!, d1!), y: [2.57, 2.97], slats: "v", pitch: 0.14, r: 0.03 });
+    items.push({ kind: "grille", name: `end louvre ${i + 1}`, x: at(d0!, d1!), y: [2.57, 2.97], slats: "v", pitch: 0.14, r: 0.03, mat: "paint" });
   });
   return items;
 }
@@ -128,6 +128,10 @@ function vArm(s: number): EndItem[] {
     { kind: "paint", name: `v fork ${s > 0 ? "left" : "right"}`, z: [0, 0], y: [0, 0], mat: "stripe", layer: 1, poly: q([[0, 2.12], [0.3, 2.28], [0.3, 2.52], [0, 2.44]]) },
   ].map((it) => ({ ...it, z: span(it.poly!, 0), y: span(it.poly!, 1) }) as EndItem);
 }
+/** A colour darkened by factor k. */
+const shade = (hex: string, k: number): string =>
+  "#" + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, "0")).join("");
+
 const span = (p: Ring, k: 0 | 1): [number, number] => [Math.min(...p.map((v) => v[k])), Math.max(...p.map((v) => v[k]))];
 
 /** The CR emblem in the V's fork: a white ring over the rail's section, its foot on the fork. */
@@ -176,6 +180,8 @@ export function df4Spec(l: Df4Livery): LocoSpec {
   return {
     palette: {
       paint: c(l.body, 0.5),
+      // the louvres are painted in the body colour: the gaps between their slats a darker shade
+      louvre: c(shade(l.body, 0.62), 0.7),
       stripe: c(l.stripe, 0.5),
       roof: { color: l.roof, roughness: 0.7 },
       pilotTop: c(l.pilotTop, 0.6),
@@ -229,7 +235,7 @@ function pilot(m: MeshBuilder, e: number): void {
       for (const s of [-1, 1]) {
         const [z0, z1] = s > 0 ? [0.32, 1.05] : [-1.05, -0.32];
         const [x0, x1] = e > 0 ? [FACE + 0.17, FACE + 0.215] : [-FACE - 0.215, -FACE - 0.17];
-        block(m, "louvre", x0, x1, y, y + 0.07, z0, z1);
+        block(m, "black", x0, x1, y, y + 0.07, z0, z1);
       }
   });
 }
@@ -287,8 +293,8 @@ function radiator(m: MeshBuilder): void {
   m.scope("fans", () => {
     for (const x of FANS) {
       const disc = ngon(14, 0.66, Math.PI / 14, x, 0);
-      m.prism("louvre", disc.map(([a, b]) => [a, b] as [number, number]), top - 0.01, top + 0.012);
-      m.prism("slat", ngon(8, 0.12, Math.PI / 8, x, 0), top + 0.012, top + 0.04);
+      m.prism("black", disc.map(([a, b]) => [a, b] as [number, number]), top - 0.01, top + 0.012);
+      m.prism("steel", ngon(8, 0.12, Math.PI / 8, x, 0), top + 0.012, top + 0.04);
     }
   });
   m.scope("railing", () => {
