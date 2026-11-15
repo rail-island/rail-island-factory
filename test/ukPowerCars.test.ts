@@ -14,22 +14,23 @@ const tris = (id: string, v: Record<string, string> = {}) => {
   return collectTriangles(json, bin);
 };
 
-// [design, spec, bogie centres, the nose tip's x on the lone end car]
-const CASES: Array<[string, ShinkansenSeries, number, number]> = [
-  ["proc-vehicle-br-ic225", IC225, 10.5, IC225.endLength / 2 - 0.65],
-  ["proc-vehicle-br-hst", HST, 10.29, HST.endLength / 2],
-  ["proc-vehicle-eurostar-373", E300, 14.0, E300.endLength / 2],
+// [design, spec, bogie centres, the nose tip's x on the lone end car, the bogies' middle (x)]
+const CASES: Array<[string, ShinkansenSeries, number, number, number]> = [
+  ["proc-vehicle-br-ic225", IC225, 10.5, IC225.endLength / 2 - 0.65, 0],
+  ["proc-vehicle-br-hst", HST, 10.29, HST.endLength / 2, 0],
+  // the TGV power car's front bogie 5.1 m behind its nose, the rear one 3 m from its inner end
+  ["proc-vehicle-eurostar-373", E300, 14.0, E300.endLength / 2 - 0.07, E300.endLength / 2 - 0.07 - 12.1],
 ];
 // the designs whose nose carries the yellow warning panel
 const PANEL = new Set(["proc-vehicle-br-ic225", "proc-vehicle-br-hst"]);
 
 describe("the British power cars", () => {
-  for (const [id, s, centres, tip] of CASES) {
-    it(`${id}: stands on bogies ${centres} m apart under its middle, the leading wheelset well behind the nose`, () => {
+  for (const [id, s, centres, tip, mid] of CASES) {
+    it(`${id}: stands on bogies ${centres} m apart under its body, the leading wheelset well behind the nose`, () => {
       const xs = DESIGNS.get(id)!.build({}).rig!.supports!.map((p) => p.x).sort((a, b) => b - a);
       expect(xs).toHaveLength(2);
       expect(xs[0]! - xs[1]!).toBeCloseTo(centres, 2);
-      expect(Math.abs(xs[0]! + xs[1]!)).toBeLessThan(0.5);
+      expect(Math.abs(xs[0]! + xs[1]! - 2 * mid)).toBeLessThan(0.5);
       expect(tip - (xs[0]! + s.wheelbase / 2)).toBeGreaterThan(2.0);
     });
 
@@ -122,6 +123,24 @@ describe("the British power cars", () => {
       const t = shinkansenTrain(E300, n);
       expect(t.map((x) => x.pantograph)).toEqual(t.map((_, k) => k === n - 1));
     }
+  });
+
+  it("articulates the Eurostar's trailers on Jacobs bogies, the end ones on a motor bogie of their own beside the power car", () => {
+    for (const n of E300.cars!) {
+      const m = DESIGNS.get("proc-vehicle-eurostar-373")!.build({ unit: "train", cars: String(n) });
+      // two bogies a power car, one at each end of the rake beside it, one under every joint between two trailers
+      expect(m.rig!.supports!).toHaveLength(4 + 2 + (n - 3));
+    }
+    // a lone trailer stands on its own two bogies, 3 m inside its ends, under its body
+    const xs = DESIGNS.get("proc-vehicle-eurostar-373")!.build({ unit: "middleCar" }).rig!.supports!.map((p) => p.x);
+    expect(xs).toHaveLength(2);
+    for (const x of xs) expect(Math.abs(x)).toBeCloseTo(E300.midLength / 2 - 0.25 - 3.0, 2);
+  });
+
+  it("draws the Eurostar's trailers lower than its power cars", () => {
+    const top = (v: Record<string, string>) => Math.max(...tris("proc-vehicle-eurostar-373", v).filter((t) => t.material !== "pantograph" && t.material !== "carbon").flatMap((t) => t.p.map((p) => p[1]!)));
+    expect(top({ unit: "middleCar" })).toBeCloseTo(E300.trailerSection!.C, 1);
+    expect(E300.trailerSection!.C).toBeLessThan(E300.C - 0.4);
   });
 
   it("raises a pantograph on the IC225's leading Class 91 only, not on the driving van trailer", () => {

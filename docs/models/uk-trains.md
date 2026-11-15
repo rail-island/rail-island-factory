@@ -1,7 +1,7 @@
 # The United Kingdom's trains
 
 **Covers** - the twenty British designs of the eight-country plan and London Overground's Class 378 Capitalstar (a draft), at their real size on the W6a gauge (`uk`): the InterCity 125 and 225, the Class 800 IET and the Class 390 Pendolino, the Eurostar e300, the Class 158 and the Class 142 Pacer, London's 1938 tube stock; the Class 55 Deltic, 37, 47, 66 and 86; the LNER A4 and A3, the GWR Castle, the LMS Black Five, the BR 9F and Stephenson's Rocket; the BR Mk1 coach. Their kits, figures, deviations and tests.
-**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass142.ts` (the Pacer's cars), `generator/brClass158.ts` (the Class 158's cars), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/ukLocoFronts.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass158.test.ts`, `test/brClass378.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
+**Code** - `generator/ukUnits.ts` (`UK_UNITS`), `generator/brClass800.ts` (the Class 800's cab face, layout and liveries), `generator/eurostar373.ts` (the Eurostar's power car face, sides and liveries), `generator/brClass142.ts` (the Pacer's cars), `generator/brClass158.ts` (the Class 158's cars), `generator/brClass390.ts` (the Class 390's face, layout and liveries), `generator/lu1938Parts.ts`, `generator/ukLocos.ts` (`UK_LOCOS`), `generator/loadingGauge.ts` (`uk`), `generator/worldLocoKit.ts` (the `bonnets` nose), `generator/worldSteamLocos.ts`, `generator/rocket.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/lu1938.test.ts`, `test/ukPowerCars.test.ts`, `test/ukLocoFronts.test.ts`, `test/rocket.test.ts`, `test/brClass142.test.ts`, `test/brClass158.test.ts`, `test/brClass378.test.ts`, `test/brClass390.test.ts`, `assets/br-*/`, `assets/lner-*/`, `assets/gwr-castle/`, `assets/lms-black-five/`, `assets/lu-1938-stock/`, `assets/eurostar-373/`, `assets/rocket/`, `assets/br-class-378/`
 **See also** - [loading-gauge.md](loading-gauge.md), [shinkansen.md](shinkansen.md), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
 The catalog had no British train before; the archived webapp Eurostar is now the
@@ -13,9 +13,9 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 |---|---|---|---|---|
 | `proc-vehicle-br-hst` | InterCity 125 | series, diesel, Mk3 cars | `unit`, `cars` 4 - 8, `livery` (`swallow`, `blueGrey`) | power car 17.79 m, Mk3 23.0 m; 200 km/h |
 | `proc-vehicle-br-ic225` | InterCity 225 | series, Mk4 cars | `unit`, `cars` 4 - 8, `livery` (`intercity`, `lner`) | the Class 91's end; 225 km/h |
-| `proc-vehicle-br-class-800` | Class 800 IET | series | `unit`, `cars` 5 - 8, `livery` (`gwr`, `azuma`) | 26 m cars; 200 km/h |
-| `proc-vehicle-br-class-390` | Class 390 Pendolino | series | `unit`, `cars` 4 - 8, `livery` (`virgin`, `avanti`) | tilting; 225 km/h |
-| `proc-vehicle-eurostar-373` | Eurostar e300 | series | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | 300 km/h |
+| `proc-vehicle-br-class-800` | Class 800 IET | series, its own cab face (`brClass800.ts`) | `unit`, `cars` 5 - 8, `livery` (`gwr`, `azuma`) | driving cars 25.85 m, intermediate 26.0 m, 2.7 m wide; 200 km/h |
+| `proc-vehicle-br-class-390` | Class 390 Pendolino | series, cab face (`brClass390.ts`) | `unit`, `cars` 4 - 8, `livery` (`virgin`, `avanti`) | tilting, 2.73 m wide; end car 24.8 m, middle 23.9 m; 225 km/h |
+| `proc-vehicle-eurostar-373` | Eurostar e300 | series, cab face, Jacobs trailers | `unit`, `cars` 4 - 8, `livery` (`eurostar`, `eurostar2011`) | power car 22.15 m, trailer 18.7 m; 300 km/h |
 | `proc-vehicle-br-class-158` | Class 158 | its own cars on bogies (`brClass158.ts`) | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m, 2.70 m wide; 145 km/h |
 | `proc-vehicle-br-class-142` | Class 142 Pacer | its own two-axle cars (`brClass142.ts`) | `unit`, `livery` (`provincial`, `northern`, `walesTeal`, `provincialBlue`, `metro`, `walesWrap`) | two cars of 15.45 m; 120 km/h |
 | `proc-vehicle-br-class-378` | Class 378 Capitalstar | series, two doors a side | `unit`, `cars` 3 - 5 (4 default) | Electrostar, 2.80 m wide, end car 20.4 m, middle 20.1 m; 2,400 kW a five-car unit; 121 km/h |
@@ -46,11 +46,8 @@ The catalog had no British train before; the archived webapp Eurostar is now the
   third-rail shoes are not drawn. The seats (272 a
   five-car unit, tip-ups included) and the 2,400 kW are shared evenly over the cars.
 
-- **Power cars.** The Eurostar's power cars are drawn as locomotives: bogies 14 m apart
-  under the middle, the cab door and a porthole behind the cab, the machine room's long
-  louvre band, and the pantograph on the power car - raised on the trailing one in a train,
-  none on the trailers (photographs in `assets/eurostar-373/`); the leading power car's
-  folded pantograph is not drawn. The HST's Class 43 is drawn as a locomotive: its long rounded wedge nose
+- **Power cars.** The Eurostar's power cars are locomotives with a cab face (see "The Eurostar
+  e300" below). The HST's Class 43 is drawn as a locomotive: its long rounded wedge nose
   (a broad superellipse plan, the chin bulging over the low valance, the bonnet sloping
   up to the raked windscreen in its black surround, the cab roof rounding into the body
   4.6 m behind the tip), bogies 10.29 m apart under the middle of the body, plain sides
@@ -94,6 +91,46 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 - **1938 Stock.** A metro on the series kit: no collector is drawn (the tube's conductor
   rails are not modelled), nor the shoe gear on the bogies.
 
+## The Eurostar e300
+
+Measured on the photographs in `assets/eurostar-373/` (3104 and 3308 in the original scheme, 3211
+in the blue one) and the published figures there. `eurostar373.ts` holds the series; `ukUnits.ts`
+only registers it.
+
+- **Nose.** A cab face (`E300_FACE`, seriesCab.ts) 4.5 m long: the white bumper bulging to the tip
+  at 1.1 m with its seam over the top and down the corners and the coupler cover's centre seam,
+  the lamp band (two dark lamp housings, head and tail lamps, the perforated grille between them),
+  the long bonnet rising to the canopy's visor at 2.27 m, 2.2 m back, the wrap-round windscreen
+  raked back to 3.2 m, the roof lamp on the canopy and the crown (3.95 m) at the join. The plan is
+  round, the corners' depth growing from the blunt bumper to the bonnet. The dark plough under the
+  bumper is a fitting.
+- **Paint.** The yellow band across the lamps and over the bonnet climbs the canopy's sides and runs
+  on as a line along the cantrail of every car; the dark canopy covers the windscreen and the cab
+  roof; both edges are [y, d] tables (`YELLOW_FOOT`, `CANOPY_FOOT`) shared by the two schemes.
+  `eurostar` (original, 3104): white, a lower yellow band over the dark skirt on the power car and
+  the trailers, "eurostar" in yellow under the three navy waves. `eurostar2011` (the 2011 brand as
+  the refurbished sets carry it, 3211): the nose, its lamps and grille without a dark housing, the
+  plough and the skirts silver-grey, Eurostar blue above a
+  yellow line on both car types, the blue's front edge leaning on the cab side, the white "e" and
+  "EUROSTAR". The interim 2011 logo on the original paint is not drawn.
+- **Power car.** 22.15 m; the front bogie 5.1 m behind the tip (under the machine-room door, as the
+  photographs show; the TGV power car's 14 m bogie centres) and the rear one 3 m from its inner end;
+  outlines of the number hatch and the cab door on the nose's side, the porthole, the machine-room
+  door, then the long grille of three ribbed panels between lighter frames; roof air intakes behind
+  the canopy and over the machine room. Two single-arm pantographs over the rear bogie (25 kV and
+  DC): in a train the trailing power car raises the rear one, the other stays folded, and the
+  leading power car keeps both folded; a lone power car raises one.
+- **Trailers.** 18.7 m, lower than the power car (crown 3.45 m, the series kit's `trailerSection`),
+  one door at the front end and nine windows a side. In a train they ride on Jacobs bogies between
+  each other, and the first and last on a motor bogie of their own 3 m inside the end beside the
+  power car (`jacobsTrailers`); a lone trailer stands on two bogies 3 m inside its ends. The longer
+  end trailers (21.845 m), the bar car and the louvres over the motor bogie are not drawn.
+- **Not drawn.** The running number on the cab side (it is on the body near the inner end, as the
+  kit draws it), the canopy's red pinstripe, the third-rail shoes (removed in 2007).
+
+About 14,400 triangles the original power car, 15,300 the blue one, 7,100 a trailer.
+`test/ukPowerCars.test.ts` checks the bogies, the Jacobs rake and the lower trailers.
+
 ## London 1938 Stock
 
 Measured on the photographs in `assets/lu-1938-stock/` (the South Ealing and Amersham
@@ -134,6 +171,47 @@ Where a front sets the cab back, the cab door and side window move back with it 
 on the side wall. `test/ukLocoFronts.test.ts` checks the bonnets, the rake, the headcode
 boxes and the cab doors in every livery.
 
+## The Class 800 IET
+
+The Hitachi AT300 on the series kit with its own cab face (`brClass800.ts`, `C800`), after the
+photographs and the five-car side drawing in `assets/br-class-800/` (9.73 px/m on a 26 m car for the
+layout; the heights from the photographs):
+
+- **Body.** Driving cars 25.85 m, intermediate cars 26.0 m over the couplers, 2.7 m wide, the crown at
+  3.65 m; the body side down to 1.1 m, the dark skirt and the grey underframe covers with their louvre
+  grilles below it between the bogies.
+- **Nose.** The face meets the body 4.0 m behind the tip (the drawing's cab door at 4.1 m). The yellow
+  coupler cover is a pod standing 0.2 m out of the face (the face's `reshape`), a dark crease round it:
+  head on (the Kentish Town photograph, 270 px/m at the cover) 1.84 m across, two thirds of the face,
+  from the nose's foot to its arched top at 1.86 m. Its yellow front, 1.24 m across under the arch and
+  narrowing to the foot (0.6 of the face head on), lies between flanks about 0.4 m wide either side
+  (LNER red behind a white line, GWR green); the flaps' split is drawn. Above it the yellow panel to the
+  windscreen's foot at 2.3 m, narrower than the windscreen; two stacked lamps in an oval black housing on
+  each flank just under the windscreen's lower corners; the windscreen a trapezoid (1.6 m across at its
+  foot, 1.3 m at its head) raked about 28 degrees to 3.2 m in a black surround, white beside it on the
+  Azuma; one long wiper, the headcode light on the cab roof. The plan is rounded right across and drawn
+  to a point (the flanks a parabola 0.3 m behind the centre line at the corners up to the windscreen's
+  foot), reaching full width about 3 m behind the face low down. The cab side window is raked with the
+  windscreen's side.
+- **Layout.** The driving car: the cab door 4.05 m behind the tip, the operator's panel (GWR / LNER)
+  and the passenger door at 7.45 m, six windows 1.44 m wide 1.92 m apart (the drawing's first-class
+  end), the door 3.0 m from the inner end. An intermediate car: nine windows 1.98 m apart between doors
+  1.8 m in from each body end. Single-leaf doors 0.9 m wide with a narrow window. Bogies 5.0 m in from
+  the coupling planes (16.0 m centres), the leading one 5.0 m behind the tip.
+- **Roof.** The pantograph on each driving car 3.55 m from its inner end, the leading one raised, the
+  rear one folded (endPantograph, trailingLowered: the DPTS and DPTF of the real formation); the long
+  equipment cover on the driving car, two air-conditioning units on each intermediate car.
+- **Liveries.** `gwr` (800 011): dark green, the gold cantrail line running across over the
+  windscreen, black round the cab side window, a silver-grey roof. `azuma` (800 108): white, the grey
+  line under the windows, the red band round the windows between the doors on every car, the red sweep
+  from the lamp up the cab side and back to the passenger door with "LNER" on it, the red lower nose
+  round the cover with its white rim, the black cab roof, the orange cantrail line.
+- **Not drawn.** The 9-car sets' unpowered trailers (every intermediate car carries a generator unit),
+  the doors' grab rails, the pantograph well; the cab roof's black ends at the face's join. The distant model keeps the plain
+  slices (no pod, no point).
+
+About 14,700 (GWR) and 15,500 (Azuma) triangles the driving car, 8,600 - 9,100 an intermediate car.
+
 ## The Class 142 Pacer
 
 The Pacer keeps the series kit's parameters and figures (the `C142` spec in `ukUnits.ts`), but
@@ -169,6 +247,38 @@ its cars are drawn by `brClass142.ts` on the two-axle railcar kit the CD 810 use
 gauge, the budget, no coplanar faces), the three panes, the panel and each axle's spring, damper
 and brakes, the two axles, the coupled unit's sections and supports and
 the distant models' budgets.
+
+## The Class 390 Pendolino
+
+The Pendolino keeps the series kit and its parameters, but its own module (`brClass390.ts`) gives it the
+real face, layout and paint, after the photographs in `assets/br-class-390/` (measurements in its
+`SOURCES.md`):
+
+- **Body.** The tilting section: 2.73 m wide at the belly (1.25 m), the side leaning in to 2.29 m at the
+  shoulder (3.12 m) under a narrow roof to 3.56 m, the grey valance under the side's paint from 1.0 m.
+- **Cab face** (`SeriesCabFace`). The coupler cover's front 0.95 m over the rail at the tip, the face
+  rounding back over the teardrop lamp clusters (1.37 - 1.84 m) to the windscreen's foot at 2.13 m, the
+  windscreen raked about 40 degrees to 3.0 m, the dome to 3.48 m at the join 4.5 m behind the tip and the
+  roof to full height 1.6 m further back; in plan a broad U, 2.3 m wide at the lamps and the windscreen.
+  The black mask with its two grilles, the yellow (Virgin's smile, Avanti's whole lower front) round the
+  corners and up beside the mask to the cab's roof edge, the orange line over the windscreen, the coupler
+  cover's seams, the marker lamp on the dome, two wipers.
+- **Layout.** The cab door with its tall window behind the nose, a door at each end of every car, rounded
+  windows (the kit's `windowCornerRadius`): the leading end car the first-class car's five windows, the
+  rear one in a train the standard car's six (`rearEnd`), the intermediate car eight. Bogies 6.3 and
+  21.3 m behind the tip, 17.1 m apart under the intermediate cars.
+- **Roof.** The end car's housing behind the cab and the intermediate cars' over their front ends, with
+  grilles; the single-arm pantograph on the intermediate cars (the kit's third car and third from last).
+- **Liveries.** `virgin` (2002, 390 013): the red end leaning back behind the cab door to a pale sweep,
+  silver cars with a red band under the dark grey roof. `avanti` (2019, 390 130): dark teal end cars with a
+  darker field round the windows and a white inner end with a coral flash, white intermediate cars with
+  their windows in a dark band and a teal rear quarter behind a coral wedge, the orange cantrail line on
+  every car, the triangle and the name behind the cab. The Avanti livery is a series of its own
+  (`C390_AVANTI`: its face and its paint on the cars); both share the parameters. The distant model shows
+  the colour fields through the livery's `lodSideFields`.
+- **Deviations.** Avanti's intermediate cars alternate teal and white at alternate joints; every
+  intermediate car is drawn as the second car. Virgin's script logo, the name on Avanti's mask and the
+  Avanti lion are not drawn. In a train both pantograph cars raise their pantographs (the kit's rule).
 
 ## The Class 158
 
