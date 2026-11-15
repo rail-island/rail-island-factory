@@ -12,7 +12,7 @@ The catalog had no Indian train before. Every design is filed under India.
 |---|---|---|---|---|
 | `proc-vehicle-ir-vande-bharat` | Vande Bharat | series, cab face (`inVandeBharat.ts`) | `unit`, `cars` 4, 8, `livery` (`whiteBlue`, `saffron`) | 23 m cars, 3.24 m wide; 180 km/h |
 | `proc-vehicle-ncrtc-namo-bharat` | Namo Bharat | series, cab face (`inNamoBharat.ts`) | `unit`, `cars` 3 - 6 | 22.5 m end and 22.0 m cars, 3.2 m wide, three doors a side; 180 km/h |
-| `proc-vehicle-ir-mumbai-emu` | Mumbai suburban EMU | series, flat cab | `unit`, `cars` 3 - 6, `livery` (`std`, `alt`) | three wide doors a side; 100 km/h |
+| `proc-vehicle-ir-mumbai-emu` | Mumbai suburban EMU | series, cab face (`generator/inMumbaiEmu.ts`) | `unit`, `cars` 3 - 6, `livery` (`std`, `alt`) | 20.75 m cars, four wide doorways a side; 100 km/h |
 | `proc-vehicle-ir-memu` | IR MEMU | series, flat cab | `unit`, `cars` 4 - 8, `livery` (`std`, `alt`) | 110 km/h |
 | `proc-vehicle-dmrc-rs1` | Delhi Metro RS1 | series, cab face | `unit`, `cars` 4 - 8 | broad gauge; 21.84 / 21.34 m cars, 3.2 m wide, four double doors a side; 80 km/h |
 | `proc-vehicle-ir-wdm2` | IR WDM-2 | own builder (`inWdm2.ts`) on the hood kit's sweeps | `livery` (`maroon`, `blue`) | Co-Co, 17.12 m, 1,940 kW, 120 km/h |
@@ -62,6 +62,19 @@ The catalog had no Indian train before. Every design is filed under India.
   show Blue and Yellow Line units (the same face); which cars carry the pantograph is not
   photographed (the motor cars next to the driving trailers are assumed). The real stock is broad
   gauge (1,676 mm), drawn like the IR stock below.
+- **Mumbai suburban EMU.** Measured from five photographs of the Siemens and Medha rakes
+  (`assets/ir-mumbai-emu/SOURCES.md`): its own spec in `generator/inMumbaiEmu.ts` with a cab face -
+  upright to the headlamps, raked back 0.34 m to the windscreens' head - two equal windscreens, the
+  twin headlamps in black housings, the twin roof lamp, horns, the driver's roof unit, buffers and a
+  cattle guard; four doorways 1.25 m wide at a 4.75 m pitch on every car (the photographs show four,
+  not three), barred windows in pairs between them, the crew door behind the face, ICF bogies 14.6 m
+  apart and a single arm on the car next to the cab car. The doorways stand open in service: their
+  leaves are painted the dark doorway with a grab pole (`std`), because a model's doors rest shut
+  (docs/models/doors.md); the Medha's (`alt`) are its closed magenta leaves. `std` is the Siemens
+  rakes' silver with the lavender band sweeping down to the yellow face, `alt` Western Railway's
+  Medha white and magenta; the Medha's own face (smaller windscreens, lamps at the band's ends,
+  destination windows) is drawn with the Siemens face.
+
 
 - **Broad gauge.** The 1,676 mm stock keeps its bodies (up to 3.25 m wide; the EMUs'
   3.66 m narrowed) on the 3.3 m gauge and the game's standard-gauge wheelsets.

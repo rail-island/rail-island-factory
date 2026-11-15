@@ -36,13 +36,13 @@ const flatEmu = (o: { number: string; title: string; colours: Array<[number, str
   weight: { end: 58, middle: 46 }, power: o.power, maxspeed: o.maxspeed,
 });
 
-export const MUMBAI_EMU = flatEmu({ number: "SIEMENS 001", title: "Mumbai suburban", colours: [[1.85, "#6a2c8e"], [2.95, "#e8dcc0"], [9, "#6a2c8e"]], second: ["Western Railway", [[1.85, "#b5232b"], [2.95, "#e8dcc0"], [9, "#b5232b"]]], doorCount: 3, doorW: 1.25, power: 920, maxspeed: 100, cars: [3, 6] });
+import { MUMBAI_EMU, buildMumbaiEmu, buildMumbaiEmuLod } from "./inMumbaiEmu.ts"; export { MUMBAI_EMU };
 export const MEMU = flatEmu({ number: "MEMU 001", title: "MEMU maroon", colours: [[1.85, "#6b1d24"], [2.95, "#e8dcc0"], [9, "#6b1d24"]], second: ["MEMU blue", [[1.85, "#1d3f80"], [2.95, "#e8dcc0"], [9, "#1d3f80"]]], doorCount: 2, doorW: 1.0, power: 920, maxspeed: 110, cars: [4, 8] });
 
 const P = { vb: seriesParams(VANDE_BHARAT), nb: seriesParams(NAMO_BHARAT), mumbai: seriesParams(MUMBAI_EMU), memu: seriesParams(MEMU), dmrc: seriesParams(DELHI_METRO) };
 
-export function irMumbaiEmu(v?: ParamValues): MeshBuilder { return buildSeries(MUMBAI_EMU, P.mumbai, v); }
-export function irMumbaiEmuLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MUMBAI_EMU, P.mumbai, v); }
+export function irMumbaiEmu(v?: ParamValues): MeshBuilder { return buildMumbaiEmu(v); }
+export function irMumbaiEmuLod(v?: ParamValues): MeshBuilder { return buildMumbaiEmuLod(v); }
 export function irMemu(v?: ParamValues): MeshBuilder { return buildSeries(MEMU, P.memu, v); }
 export function irMemuLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MEMU, P.memu, v); }
 
