@@ -8,6 +8,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -141,15 +142,6 @@ export const VIRM: ShinkansenSeries = {
   weight: { end: 62, middle: 55 }, power: 330, maxspeed: 160,
 };
 
-export const DDZ: ShinkansenSeries = {
-  ...VIRM,
-  nose: nose(0.1, 1, 2, [[0, 4.6]], [[0, 3.85]], [[0, 1.2]], [[0, 0.95]], [[0, 0.75]]),
-  windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.41, 2.8, 3.55, "cabMask", 1.5),
-  liveries: { yellowBlue: nsLivery("yellowBlue", "7501", 3.85), yellowGrey: nsLivery("yellowGrey", "7301", 3.85) },
-  weight: { end: 64, middle: 50 }, power: 400, maxspeed: 140,
-};
-
 export const SGM: ShinkansenSeries = {
   endLength: 26.1, midLength: 26.1, W: 1.43, Y: 1.4, S: 3.2, C: 4.02, lean: 0.97, B: 1.0, A: 1.15,
   nose: nose(0.1, 1, 2, [[0, 4.02]], [[0, 3.2]], [[0, 1.4]], [[0, 1.15]], [[0, 1.0]]),
@@ -224,8 +216,6 @@ export function nsIcm(v?: ParamValues): MeshBuilder { return buildSeries(ICM, P.
 export function nsIcmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(ICM, P.icm, v); }
 export function nsVirm(v?: ParamValues): MeshBuilder { return buildSeries(VIRM, P.virm, v); }
 export function nsVirmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(VIRM, P.virm, v); }
-export function nsDdz(v?: ParamValues): MeshBuilder { return buildSeries(DDZ, P.ddz, v); }
-export function nsDdzLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(DDZ, P.ddz, v); }
 export function nsSgm(v?: ParamValues): MeshBuilder { return buildSeries(SGM, P.sgm, v); }
 export function nsSgmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(SGM, P.sgm, v); }
 export function nsSlt(v?: ParamValues): MeshBuilder { return buildSeries(SLT, P.slt, v); }

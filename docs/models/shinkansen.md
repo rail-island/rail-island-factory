@@ -131,6 +131,13 @@ combinations hashed before and after):
   series' `cabWindows`; a lone end car is the leading one (the SVT 877's 877 b, `generator/deSvt877.ts`);
   `exhaustInFittings` - a diesel unit's exhaust stacks drawn by the series' `fittings` (the SVT 877's on
   the cab's dome) instead of over each car's middle.
+- `leadEnd` - the leading end car's own fields over the series' (its length, bogies, windows,
+  layout, fittings, liveries; a lone end car is the leading one), the rear end car and the
+  intermediate cars keeping the series'; `endMiddleBogies` - further bogies under an end car between
+  its two (Bo'Bo'Bo'); `lowWell` - a double-deck car's well, the belly, skirt top and bottom dropping
+  between two d's (the end car's and an intermediate car's), a block in the distant model; the
+  livery's `lodSides` - the distant model's side bands in place of `bands` (the DDZ's,
+  `generator/nlDdz.ts`).
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);
