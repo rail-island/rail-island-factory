@@ -115,8 +115,8 @@ by a projective fit over its six equally spaced portholes).
   rounds down from 4.14 m. Two windscreens 2.84 - 3.6 m, a red handrail under each, the roof
   headlight's drum on the roof's front edge, two lamp housings standing 0.13 m out of the face at
   1.78 - 2.1 m (headlight outboard, tail lamp inboard), the number plate on the lower stripe, an
-  automatic coupler (no side buffers) over a red pilot (`SS1_PILOT`): three bent tubes (0.38, 0.55, 0.72 m) hung from the
-  body's foot on posts that run from a deep bottom plate (0.1 - 0.3 m) up into the frame, as on SS1 008
+  automatic coupler (no side buffers) over a red pilot (`SS1_PILOT`): three bent tubes (0.38, 0.55, 0.72 m) under the body (their plan
+  4 cm inside the face's at its foot, the coupler standing ahead of them) hung from the body's foot on posts that run from a deep bottom plate (0.1 - 0.3 m) up into the frame, as on SS1 008
   (`test/cnSs1.test.ts`).
 - **Livery.** Light green upper body (sampled `#8fc48e`), dark green lower body (`#1f4a36`), yellow
   (`#f0a828`) stripes at 1.36 - 1.46 m and 2.45 - 2.57 m round the body. On the face the waist stripe
