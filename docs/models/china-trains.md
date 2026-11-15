@@ -19,7 +19,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-crh5a` | CRH5A | series, its own cab face (`cnCrh5a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the Pendolino snout; 27.6 / 25.0 m, 3.2 m wide; 250 km/h |
 | `proc-vehicle-cr-cr200j` | Fuxing CR200J | series, its power cars' pantographs | `unit`, `cars` 4 - 8, `livery` (`green`, `whiteRed`) | 160 km/h |
 | `proc-vehicle-cr-crh6a` | CRH6A | series | `unit`, `cars` 4 - 8 | 200 km/h |
-| `proc-vehicle-cr-hxn5` | CR HXN5 | hood unit, the ES44AC's body | - | 4,660 kW, 120 km/h |
+| `proc-vehicle-cr-hxn5` | CR HXN5 | its own (`cnHxn5.ts`): GE Evolution hood, full-width Chinese cab | - | 22.295 m, Co-Co, 150 t, 4,660 kW, 120 km/h |
 | `proc-vehicle-cr-hxd1` | CR HXD1 | box locomotive | - | 35.2 m, eight axles, 9,600 kW |
 | `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, raked | - | Co-Co, 20.85 m, 7,200 kW, 160 km/h |
 | `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, flat | - | Co-Co, 20.4 m, 3,780 kW |
@@ -240,4 +240,36 @@ leading bogie 5.35 m behind the tip.
   and the one two ahead of it), only the rear one raised; each stands between four raked side shields
   on the roof's edges.
 - **Distant model**: the nose from five rows (dome, rising top, canopy) with the windscreen as glass.
+
+## The CR HXN5's body
+
+`generator/cnHxn5.ts`, measured from the photographs in `assets/cr-hxn5/` (SOURCES.md; the number is
+HXN5 0433's) and the published figures: 22.295 m over the couplers, 3.119 m wide, 4.775 m high over the
+roof lamps, Co-Co on the GE Evolution's 50 ft 4 in truck centres. It is no longer the ES44AC's body: the
+HXN5 (GE ES59ACi) has the Evolution's frame, hood and radiator but **one full-width Chinese cab** and no
+short hood. The kit's helpers (`usHoodKit.ts`) draw it; no kit or other design changed.
+
+- **Cab.** 2.7 m long (7.9 - 10.62 m), full width: a flat face upright to the waist at 3.35 m, the
+  windscreens' plane raked 0.2 m back to 4.38 m while the sides lean in to 1.36 m, a deep chamfer to the
+  flat roof at 4.62 m; the face's vertical corners cut 0.1 m. Two rounded windscreens (3.40 - 4.35 m) with
+  a broad post and light frames, the four-lamp box on the roof's front edge, a headlight and an amber
+  marker in a dark housing each side at 3.0 m, the CR emblem between. The sliding side window high on
+  the leaning side (8.7 - 10.4 m), a small low window at 9.0 - 9.3 m, doors in the rear wall onto the
+  walkways, the horn on the roof behind.
+- **Front end.** No walkway in front: a ribbed anticlimber under the face (1.18 - 1.65 m) and the deep
+  pilot plate below it with the coupler (an AAR knuckle, as China's type 13 automatic coupler, at
+  0.88 m), hoses, a red marker and yellow grabs.
+- **Hood.** An equipment box (1.6 - 7.9 m, 4.6 m high) with three screened grilles high on each side and a
+  small window ahead of them; the engine hood (to -5.2 m) with its exhaust and door seams; the radiator
+  with its wings flaring to the full width over the rear face, the rear face's four lamps under them,
+  the radiator compartment's louvred doors. Walkways with handrails from the cab's rear wall to the rear
+  platform, side ladders at 5.4 - 5.9 m, corner steps at the rear.
+- **Running gear.** Coil-sprung three-axle trucks, a fuel tank with a louvred cabinet of four doors on
+  its side, two pairs of air reservoirs ahead of the rear truck.
+- **Livery** (`orange` key kept for saved maps, titled "CR green"; one value, not a parameter). CR dark
+  green (sampled `#235843`); a light grey band at 2.10 - 2.65 m across the face, wrapping 0.4 - 0.55 m
+  round the cab's corners with a leaning end, carrying the red "Hexie" characters (simplified strokes)
+  and the number on a white plate; the hood's lower sides (to 4.08 m, from 5.3 m back to the radiator)
+  silver-grey with the characters 0.7 m high and the number in red; the rear face lettered the same,
+  the emblem below. Dark olive-grey frame and pilots, handrails dark with yellow end posts.
 
