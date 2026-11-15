@@ -15,6 +15,7 @@ import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./f
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { crHxd1, crHxd1Lod } from "./cnHxd1.ts";
 import { crHxd3dBody, crHxd3dBodyLod } from "./cnHxd3d.ts";
+import { crSs1, crSs1Lod } from "./cnSs1.ts";
 
 const HXN5_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { orange: "CR green" })];
 export function crHxn5(v?: ParamValues): MeshBuilder { return buildHxn5(HXN5_LIVERIES[resolveParams(HXN5_PARAMS, v).livery!]!); }
@@ -32,14 +33,12 @@ const bands = (body: Body, number: string, ...list: Array<[number, string]>): Wo
 };
 
 const HXD3D: Body = { length: 20.85, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked", bogies: coCo(5.6, 1.9, 0.625), pantograph: "singleArm", pantographX: 6.0, room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
-const SS1: Body = { length: 20.4, W: 1.5, y0: 1.35, roof: 4.0, nose: "flat", bogies: coCo(5.4, 1.75, 0.625), pantograph: "diamond", pantographX: 5.6, room: { kind: "windows", n: 5, y: [2.6, 3.2] } };
 const SS8: Body = { length: 17.5, W: 1.5, y0: 1.35, roof: 4.0, nose: "streamlined", bogies: [[-4.5, [-1.45, 1.45], 0.625], [4.5, [-1.45, 1.45], 0.625]], pantograph: "singleArm", pantographX: 4.6, room: { kind: "grilles", n: 4, y: [2.6, 3.4] } };
 const DF4: Body = { length: 20.5, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked", bogies: coCo(5.5, 1.8, 0.525), exhausts: [0], room: { kind: "windows", n: 5, y: [2.6, 3.2] } };
 const DF11: Body = { length: 21.25, W: 1.5, y0: 1.35, roof: 4.0, nose: "streamlined", bogies: coCo(5.7, 1.8, 0.525), exhausts: [0.6], room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 
 const L: Record<string, Liveries> = {
   hxd3d: { redGrey: { title: "Red and grey", loco: bands(HXD3D, "HXD3D 0001", [2.3, "#b5232b"], [2.5, "#f1f1ee"], [4.4, "#9aa0a5"]) } },
-  ss1: { greenYellow: { title: "Green, yellow", loco: bands(SS1, "SS1 0001", [2.3, "#2f6b3a"], [2.45, "#f2c31a"], [4.4, "#2f6b3a"]) } },
   ss8: { redWhite: { title: "Red and white", loco: bands(SS8, "SS8 0001", [2.3, "#b5232b"], [4.4, "#f1f1ee"]) } },
   df4: { orangeWhite: { title: "Orange, white", loco: bands(DF4, "DF4 1001", [2.3, "#e8701e"], [2.5, "#f1f1ee"], [4.4, "#e8701e"]) }, green: { title: "Green", loco: bands(DF4, "DF4 0001", [2.3, "#2f6b3a"], [2.45, "#f2c31a"], [4.4, "#2f6b3a"]) } },
   df11: { redWhite: { title: "Red and white", loco: bands(DF11, "DF11 0001", [2.3, "#b5232b"], [4.4, "#f1f1ee"]) } },
@@ -52,8 +51,7 @@ const lod = (k: string, v?: ParamValues): MeshBuilder => boxLocoLod(liverySpec(L
 export { crHxd1, crHxd1Lod };
 export function crHxd3d(_v?: ParamValues): MeshBuilder { return crHxd3dBody(); }
 export function crHxd3dLod(_v?: ParamValues): MeshBuilder { return crHxd3dBodyLod(); }
-export function crSs1(v?: ParamValues): MeshBuilder { return b("ss1", v); }
-export function crSs1Lod(v?: ParamValues): MeshBuilder { return lod("ss1", v); }
+export { crSs1, crSs1Lod };
 export function crSs8(v?: ParamValues): MeshBuilder { return b("ss8", v); }
 export function crSs8Lod(v?: ParamValues): MeshBuilder { return lod("ss8", v); }
 export function crDf4(v?: ParamValues): MeshBuilder { return b("df4", v); }
@@ -69,7 +67,7 @@ export const CN_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-cr-hxn5", title: "CR HXN5", build: crHxn5, buildLod: crHxn5Lod, game: locoGame(150, 4660, 120), catalog: D, loadingGauge: "us", references: "cr-hxn5" },
   { id: "proc-vehicle-cr-hxd1", title: "CR HXD1", build: crHxd1, buildLod: crHxd1Lod, game: locoGame(200, 9600, 120), catalog: E, references: "cr-hxd1" },
   d("cr-hxd3d", "CR HXD3D", "hxd3d", crHxd3d, crHxd3dLod, 126, 7200, 160),
-  d("cr-ss1", "CR SS1 Shaoshan", "ss1", crSs1, crSs1Lod, 138, 3780, 95),
+  { id: "proc-vehicle-cr-ss1", title: "CR SS1 Shaoshan", build: crSs1, buildLod: crSs1Lod, game: locoGame(138, 3780, 90), catalog: E, references: "cr-ss1" },
   d("cr-ss8", "CR SS8 Shaoshan", "ss8", crSs8, crSs8Lod, 88, 3600, 170),
   d("cr-df4", "CR DF4 Dongfeng", "df4", crDf4, crDf4Lod, 138, 1985, 100, D),
   d("cr-df11", "CR DF11 Dongfeng", "df11", crDf11, crDf11Lod, 138, 3040, 170, D),
