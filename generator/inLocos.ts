@@ -2,8 +2,8 @@
 // on the frames of their American relatives (usDiesels.ts): the EMD WDP-4D on
 // the SD70ACe's and the GE WDG-4G on the ES44AC's; the ALCO WDM-2 drawn on its
 // own from photographs (inWdm2.ts). The electrics on the box locomotive kit
-// (worldLocoKit.ts): the WAM-4, WAP-4, WAP-7 / WAG-9, WAP-5 and the twin
-// WAG-12B on the Prima body. Broad-gauge bodies on the 3.3 m gauge ("us").
+// (worldLocoKit.ts): the WAM-4, WAP-4, WAP-7 / WAG-9 and WAP-5; the twin
+// WAG-12B drawn on its own (inWag12b.ts). Broad-gauge bodies on the 3.3 m gauge ("us").
 // See docs/models/india-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";

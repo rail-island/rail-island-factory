@@ -74,7 +74,7 @@ interface Livery { title: string; number: string; body: string; face: string; li
  * single livery is not a parameter, so its title is not exported.
  */
 const LIVERIES: Record<string, Livery> = {
-  greyRed: { title: "Grey and red", number: "60185", body: "#1f63c9", face: "#3b98e3", light: "#4ea6ea" },
+  greyRed: { title: "IR blue", number: "60185", body: "#1f63c9", face: "#3b98e3", light: "#4ea6ea" },
 };
 
 export const WAG12B_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", Object.fromEntries(Object.entries(LIVERIES).map(([k, v]) => [k, v.title])))];
@@ -339,9 +339,9 @@ function frontGear(m: MeshBuilder): void {
   m.scope("coupler", () => centreCoupler(m, 1, N - 0.01, HALF - 0.02, HINGE_Y - 0.03, "underframe"));
   m.scope("plough", () => {
     const sec = (x0: number, x1: number, w: number): Ring => [[x1, -w], [x1, w], [x0, w], [x0, -w]];
-    // deep and nearly as wide as the body, its foot reaching forward under the buffers
-    m.loft("face", sec(N - 0.1, N + 0.5, 1.45), 0.14, sec(N - 0.1, N + 0.4, 1.52), 1.0);
-    m.cap("face", sec(N - 0.1, N + 0.5, 1.45), 0.14, false);
+    // under the buffer beam, its face raked back toward the foot, its top behind the buffer heads
+    m.loft("face", sec(N - 0.1, N + 0.15, 1.45), 0.14, sec(N - 0.1, N + 0.42, 1.52), 0.98);
+    m.cap("face", sec(N - 0.1, N + 0.15, 1.45), 0.14, false);
   });
 }
 
@@ -462,7 +462,7 @@ export function irWag12bLod(v?: ParamValues): MeshBuilder {
     parts.push(
       { section: k, draw: (mm) => mm.scope("running gear", () => { for (const xc of [MID - PIVOT, MID + PIVOT]) lodBogie(mm, X(xc), HALF_BASE + WHEEL_R + 0.2, 1.05); }) },
       { section: k, optional: 40, draw: (mm) => mm.scope("frame", () => { const [a, b] = sorted(X(XI), X(N)); lodSideBox(mm, "frame", [[a, 1.05], [b, 1.05], [b, Y0], [a, Y0]], -W + 0.03, W - 0.03); }) },
-      { section: k, optional: 20, draw: (mm) => mm.scope("plough", () => { const [a, b] = sorted(X(N - 0.1), X(N + 0.45)); lodSideBox(mm, "face", [[a, 0.14], [b, 0.14], [b, 1.0], [a, 1.0]], -1.45, 1.45); }) },
+      { section: k, optional: 20, draw: (mm) => mm.scope("plough", () => { const [a, b] = sorted(X(N - 0.1), X(N + 0.3)); lodSideBox(mm, "face", [[a, 0.14], [b, 0.14], [b, 0.98], [a, 0.98]], -1.45, 1.45); }) },
       { section: k, optional: 15, draw: (mm) => mm.scope("air conditioning", () => { const [a, b] = sorted(X(N - 2.05), X(N - 1.0)); lodRoofBox(mm, "ac", a, b, 0.74, 0.7, ROOF - 0.01, ROOF + 0.34); }) },
       {
         section: k, ...(k === 0 ? { optional: 0 } : {}),
