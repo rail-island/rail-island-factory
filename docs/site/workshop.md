@@ -26,6 +26,13 @@ lives in the workshop until somebody confirms it.
   suburban EMU, MEMU and Delhi Metro RS1, the WDM-2, WDP-4D and WDG-4G, the WAM-4, WAP-4,
   WAP-7 / WAG-9, WAP-5 and WAG-12B, the WP, WG, Fairy Queen and DHR B class, the LHB and
   ICF coaches and the BOXN / BCNA wagon (docs/models/india-trains.md).
+  The 20 Chinese trains (2026-11): the Fuxing CR400AF, CR400BF and CR200J, the CRH380A,
+  CRH2A, CRH3C, CRH5A and CRH6A, the HXD1, HXD3D, HXN5, SS1, SS8, DF4 and DF11, the QJ,
+  JS and SY, the 25-series coach and the C70 / P70 wagon (docs/models/china-trains.md).
+  The 20 Dutch trains (2026-11): the Mat '46, Mat '54, Plan V, DE-I, ICM, VIRM, DDZ, SGM,
+  SLT, SNG, ICNG, Flirt and Fyra V250, the 1100, 1200, 1300, 1600 / 1700, 2200 and 3700
+  and the ICR coach (docs/models/netherlands-trains.md). The Chinese and Dutch trams stay
+  drafts.
 - **A new model starts as a draft**: nothing to do when adding one. It reaches the
   game only once confirmed.
 - **Confirming** a model is adding its id to `ids` in `catalogModels.json` (sorted). Do it

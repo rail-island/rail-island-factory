@@ -17,8 +17,9 @@ import { parseView, prepareRows, sectionHeading, sectionRows, viewUrl } from "..
 import { readStoredFacts } from "../generator/buildCache";
 
 const CONFIRMED = "proc-vehicle-cd-150";
-// a Dutch locomotive, added after the Vectron: a draft (the Japanese trains are confirmed)
-const DRAFT = "proc-vehicle-ns-1700";
+// a Spanish locomotive, added after the Vectron: a draft (the Japanese, Chinese and Dutch
+// trains are confirmed)
+const DRAFT = "proc-vehicle-renfe-252";
 
 describe("catalogModels.json", () => {
   it("is sorted, without duplicates, and names only existing models", () => {
