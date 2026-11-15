@@ -14,6 +14,7 @@ import { DRG01_WORLD, drg01Spec } from "./deSteam01.ts";
 import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
 import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
 import { wpLod, wpSpec } from "./inWp.ts";
+import { buildFairyQueen, buildFairyQueenLod } from "./inFairyQueen.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -112,8 +113,10 @@ export function irWp(v?: ParamValues): MeshBuilder { const p = irWpParams(v); re
 export function irWpLod(v?: ParamValues): MeshBuilder { const p = irWpParams(v); return wpLod(p.unit!, p.livery!); }
 export function irWg(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wg", v)); }
 export function irWgLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ir-wg", v)); }
-export function eirFairyQueen(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-eir-fairy-queen", v)); }
-export function eirFairyQueenLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-eir-fairy-queen", v)); }
+// the Fairy Queen is drawn with its own parts (inFairyQueen.ts); its WORLD_STEAM entry gives the title and the parameters
+const fairyQueenUnit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-eir-fairy-queen"]!, v).unit!;
+export function eirFairyQueen(v?: ParamValues): MeshBuilder { return buildFairyQueen(fairyQueenUnit(v)); }
+export function eirFairyQueenLod(v?: ParamValues): MeshBuilder { return buildFairyQueenLod(fairyQueenUnit(v)); }
 export function dhrBClass(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-dhr-b-class", v)); }
 export function dhrBClassLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-dhr-b-class", v)); }
 export function crQj(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-cr-qj", v)); }
