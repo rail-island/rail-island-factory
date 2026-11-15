@@ -41,7 +41,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-br-mk1-coach": 19.66, "proc-vehicle-br-class-378": 20.4,
   "proc-vehicle-ir-wam4": 18.79, "proc-vehicle-ir-wap4": 18.79, "proc-vehicle-ir-wap7": 20.56, "proc-vehicle-ir-wap5": 18.16, "proc-vehicle-ir-wag12b": 35.0,
   "proc-vehicle-ir-lhb-coach": 24.0, "proc-vehicle-ir-icf-coach": 22.3, "proc-vehicle-ir-boxn-wagon": 10.71, "proc-vehicle-cr-c70-wagon": 13.98,
-  "proc-vehicle-cr-hxd1": 35.2, "proc-vehicle-cr-hxd3d": 20.85, "proc-vehicle-cr-ss1": 20.4, "proc-vehicle-cr-ss8": 17.5, "proc-vehicle-cr-df4": 20.5, "proc-vehicle-cr-df11": 21.25,
+  "proc-vehicle-cr-hxd1": 35.2, "proc-vehicle-cr-hxd3d": 22.99, "proc-vehicle-cr-ss1": 20.4, "proc-vehicle-cr-ss8": 17.5, "proc-vehicle-cr-df4": 20.5, "proc-vehicle-cr-df11": 21.25,
   "proc-vehicle-cr-25t-coach": 26.6,
   "proc-vehicle-sbb-ew4-coach": 26.4, "proc-vehicle-sbb-ic2000": 26.8, "proc-vehicle-glacier-express": 18.4,
 };

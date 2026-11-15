@@ -14,6 +14,7 @@ import { buildHxn5, buildHxn5Lod, HXN5_LIVERIES } from "./cnHxn5.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { crHxd1, crHxd1Lod } from "./cnHxd1.ts";
+import { crHxd3dBody, crHxd3dBodyLod } from "./cnHxd3d.ts";
 
 const HXN5_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { orange: "CR green" })];
 export function crHxn5(v?: ParamValues): MeshBuilder { return buildHxn5(HXN5_LIVERIES[resolveParams(HXN5_PARAMS, v).livery!]!); }
@@ -49,8 +50,8 @@ const b = (k: string, v?: ParamValues): MeshBuilder => buildBoxLoco(liverySpec(L
 const lod = (k: string, v?: ParamValues): MeshBuilder => boxLocoLod(liverySpec(L[k]!, P[k]!, v));
 
 export { crHxd1, crHxd1Lod };
-export function crHxd3d(v?: ParamValues): MeshBuilder { return b("hxd3d", v); }
-export function crHxd3dLod(v?: ParamValues): MeshBuilder { return lod("hxd3d", v); }
+export function crHxd3d(_v?: ParamValues): MeshBuilder { return crHxd3dBody(); }
+export function crHxd3dLod(_v?: ParamValues): MeshBuilder { return crHxd3dBodyLod(); }
 export function crSs1(v?: ParamValues): MeshBuilder { return b("ss1", v); }
 export function crSs1Lod(v?: ParamValues): MeshBuilder { return lod("ss1", v); }
 export function crSs8(v?: ParamValues): MeshBuilder { return b("ss8", v); }
