@@ -2120,11 +2120,13 @@
       },
       "proc-vehicle-dhr-b-class?formation=with tender": {
         "id": 9104,
-        "size": 4
+        "size": 4,
+        "retired": true
       },
       "proc-vehicle-dhr-b-class?unit=tender": {
         "id": 9100,
-        "size": 4
+        "size": 4,
+        "retired": true
       },
       "proc-vehicle-dmrc-rs1?": {
         "id": 9350,

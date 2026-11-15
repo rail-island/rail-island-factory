@@ -34,7 +34,7 @@ radiator. Measures and sources are in each `assets/<name>/SOURCES.md`; the
 The GP9 is drawn by its own module from photographs (`assets/emd-gp9/SOURCES.md`): the
 measures along the body come from a near side-on photograph of UP 211 scaled by the
 published truck centres, so `GP9_BODY` differs from `GP9_SPEC` in `usDiesels.ts`, which
-keeps the first kit-drawn measures the WDM-2 (`inLocos.ts`) is built on. It reuses the
+keeps the first kit-drawn measures (the WDM-2 once rode them; it is now drawn by `inWdm2.ts`). It reuses the
 kit's painted sweeps, decals, lettering, coupler and distant model, and adds:
 
 - **Hoods** with a 0.08 m roof edge and **rounded vertical end corners** (0.15 m, `roundedEnd`);
@@ -60,7 +60,7 @@ kit's painted sweeps, decals, lettering, coupler and distant model, and adds:
 
 The GP9, SD40-2 and ES44AC are drawn by the kit; the SD70ACe has its own builder
 (next section) that borrows the kit's painted sweeps, decals, lettering and coupler.
-`SD70_SPEC` stays in `usDiesels.ts` for the kit's Indian WDP4D (`inLocos.ts`).
+`SD70_SPEC` stays in `usDiesels.ts` for the SD70 liveries; the Indian WDP-4D is drawn on its own (`inWdp4d.ts`).
 
 One builder, `buildUsHood(spec, livery)`, draws every unit from a `UsHoodSpec`
 (measures) and a `UsLivery` (paint), +X toward the short hood (the F end):
@@ -88,7 +88,7 @@ One builder, `buildUsHood(spec, livery)`, draws every unit from a `UsHoodSpec`
 The SD40-2 is measured from photographs (the near-orthographic BN 7812 side view at
 52.6 px/m, NS 6155, UP 3741, CR 6469; `assets/emd-sd40-2/SOURCES.md`) and drawn by
 its own module with the kit's helpers (`paintedSweep`, decals, coupler, the
-distant model); `SD40_SPEC` stays in `usDiesels.ts` for the WDM-2's trucks. From the
+distant model); `SD40_SPEC` stays in `usDiesels.ts` (the WDM-2 no longer uses it). From the
 rear: a 1.5 m rear platform; the long hood (x -8.35 m, 4.5 m high) with two radiator
 grille panels a side under three 48 in fans, the exhaust, the dynamic brake grille
 in a shallow box high on the side under two fans, 15 engine room doors; the raised
