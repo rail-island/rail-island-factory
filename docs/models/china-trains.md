@@ -14,7 +14,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-cr400af` | Fuxing CR400AF | series, Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`red`, `smart`) | 350 km/h |
 | `proc-vehicle-cr-cr400bf` | Fuxing CR400BF | series, Shinkansen gauge | `unit`, `cars` 3 - 8, `livery` (`gold`, `red`) | 350 km/h |
 | `proc-vehicle-cr-crh380a` | CRH380A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the long nose; 350 km/h |
-| `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the E2-derived nose; 250 km/h |
+| `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge, its own E2 cab face (`generator/cnCrh2a.ts`) | `unit`, `cars` 3 - 8 | 25.7 / 25 m cars, 9.2 m E2 nose; 250 km/h |
 | `proc-vehicle-cr-crh3c` | CRH3C | series, the ICE 3's Velaro cab face (`cnCrh3c.ts`) | `unit`, `cars` 3 - 8 | end 25.675 m, middle 24.775 m, 3.1 m wide (real 3.265 m), 3.89 m high; 350 km/h |
 | `proc-vehicle-cr-crh5a` | CRH5A | series, its own cab face (`cnCrh5a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the Pendolino snout; 27.6 / 25.0 m, 3.2 m wide; 250 km/h |
 | `proc-vehicle-cr-cr200j` | Fuxing CR200J | series, its power cars' pantographs | `unit`, `cars` 4 - 8, `livery` (`green`, `whiteRed`) | 160 km/h |
@@ -109,3 +109,35 @@ the Shinkansen gauge as it is), the crown 4.05 m and the roof hoods 4.27 m up.
 - **Still differs**: the eight cars come to 205.1 m (the published car lengths), not the quoted 211.5 m;
   the 和谐号 lettering is left out; the distant model's snout is a plain rounded wedge.
 
+## The CRH2A's body
+
+`generator/cnCrh2a.ts`, measured on `assets/cr-crh2a/` (SOURCES.md; every photograph oblique, lengths
+from a projective fit along the side of CRH2A-2377 through the car joints, heights from the near
+head-on views scaled on the oval cover). Heights over the rail, d behind the nose's tip.
+
+- **Cars.** End car 25.7 m, intermediate cars 25.0 m over the couplers; 3.7 m high; drawn 3.27 m wide in
+  the Shinkansen gauge (3.38 m real). Bogie centres 17.5 m: the end car's leading bogie 4.45 m behind
+  the tip, under the nose.
+- **The nose** (the E2-1000's) is a cab face joining the body 9.2 m back: the oval coupler cover
+  standing forward at 1.05 m (0.78 m tall, 1.9 m wide, split down its middle), the skirt set back under
+  it and ending ahead of the leading wheels (a fitting); the bonnet rising to the canopy's foot about
+  2 m back, the canopy's raked windscreen to 3.15 m, the roof reaching 3.7 m at the join. In plan the
+  lower snout is broad (full width about 4 m back), the upper nose round the canopy up to 0.42 m
+  narrower than the body each side, flaring out to it at the join.
+- **The canopy**: grey-blue glass in a dark rim, its foot painted CRH blue - 0.16 m thick at the centre,
+  thinning back along its sides to the tail about 5 m behind the tip; the headlights (four) in a light
+  strip inside the top of the glass; two wipers.
+- **The livery**: white; the blue band 1.80 - 1.96 m just under the windows; on the end car it dips
+  from the door to a point 1.54 m up, 6.3 m behind the tip, under the cab's side window (6.2 - 7.0 m,
+  its top edge sloping down toward the front). Running number CRH2A-2377.
+- **Windows and doors**: large windows, one per two rows of seats, 1.5 m wide and 1.9 m apart, sills
+  2.0 m, heads 2.68 m. End car: the passenger door right behind the nose (9.45 - 10.35 m, a narrow
+  window high in the leaf), six windows from 10.9 m and a narrow one at the rear, a small window high
+  over the first; no rear door. Intermediate car: a door near each end (2.2 m and 21.95 m in), nine
+  windows between them.
+- **Roof**: on the end car a row of ten light equipment covers in a grey trough, from the door back to
+  2 m from the inner end. The single-arm pantographs stand on the E2-1000's dish-shaped cover, on the
+  fourth and sixth of eight cars (the third and fifth from the leading end; `pantographCars`), the kit's
+  rule for shorter trains.
+- **Not drawn**: the "Hexie Hao" characters and the CRH logo on the nose and sides (the stroke font has no
+  CJK); the later units' crew door in place of the cab side window.

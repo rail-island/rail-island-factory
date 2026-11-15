@@ -10,6 +10,7 @@ import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type Shinkanse
 import { c, nose } from "./seriesHelpers.ts";
 import { CRH3C } from "./cnCrh3c.ts";
 import { CRH5A } from "./cnCrh5a.ts";
+import { CRH2A } from "./cnCrh2a.ts";
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#d9dcde", 0.6), skirtG: c("#9aa0a5", 0.7), cabMask: c("#1d1f22", 0.3) };
@@ -40,8 +41,6 @@ export const CR400BF = hsr({ endLength: 27.2, midLength: 25.0, noseLen: 9.5, C: 
   liveries: { gold: lv("Fuxing gold", "CR400BF-5001", [1.7, WHITE], [1.85, "#c9a55a"], [9, WHITE]), red: lv("Fuxing red", "CR400BF-5033", [1.7, WHITE], [1.85, "#c8102e"], [9, WHITE]) } });
 export const CRH380A = hsr({ endLength: 26.5, midLength: 25.0, noseLen: 11.5, C: 3.7, power: 1200, maxspeed: 350, weight: { end: 50, middle: 48 },
   liveries: { crh: lv("CRH blue", "CRH380A-6041", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) } });
-export const CRH2A = hsr({ endLength: 25.7, midLength: 25.0, noseLen: 7.0, C: 3.7, power: 1050, maxspeed: 250, weight: { end: 46, middle: 44 },
-  liveries: { crh: lv("CRH blue", "CRH2A-2001", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) } });
 export { CRH3C };
 
 export { CRH5A };

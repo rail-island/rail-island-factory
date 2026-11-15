@@ -159,6 +159,8 @@ export interface ShinkansenSeries {
   onePantograph?: boolean;
   /** The two pantographs on the cars next to the end cars, the second and the next-to-last (default the third and the third from last; the ICE 3's transformer cars). */
   pantographsBesideEnds?: boolean;
+  /** The pantograph cars of an n-car train by index from the front, where they differ from the rule (undefined keeps it): the CRH2A's fourth and sixth of eight. */
+  pantographCars?: (n: number) => readonly number[] | undefined;
   /**
    * Jacobs bogies: the cars' inner ends share one bogie centred on each joint (the end car's leading
    * bogie at `endBogies[0]`, else bogieCentres ahead of the joint). A lone car keeps, at each inner end,
@@ -709,7 +711,8 @@ export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[
       return out;
     });
   }
-  const pan = (k: number) => (unwired(s) ? false : s.onePantograph && !s.endPantograph ? k === 1 : s.endPantograph === "lead" ? k === 0 : s.endPantograph === "trail" ? k === n - 1 : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : s.pantographsBesideEnds ? k === 1 || k === n - 2 : k === 2 || k === n - 3);
+  const own = s.pantographCars?.(n);
+  const pan = (k: number) => (unwired(s) ? false : own ? own.includes(k) : s.onePantograph && !s.endPantograph ? k === 1 : s.endPantograph === "lead" ? k === 0 : s.endPantograph === "trail" ? k === n - 1 : s.endPantograph ? k === 0 || k === n - 1 : n <= 3 ? k === 1 : s.pantographsBesideEnds ? k === 1 || k === n - 2 : k === 2 || k === n - 3);
   const total = 2 * s.endLength + (n - 2) * s.midLength;
   let hi = total / 2;
   return Array.from({ length: n }, (_, k) => {
