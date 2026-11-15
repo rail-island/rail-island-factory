@@ -13,6 +13,7 @@ import { enumParam } from "./emuParts.ts";
 import { WAGON_CATALOG } from "./wagons.ts";
 import type { LodBand, LodPart } from "./lodKit.ts";
 import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
+import { buildCnC70, buildCnC70Lod } from "./cnC70.ts";
 
 const COUPLER_Y = 0.88;
 
@@ -103,15 +104,14 @@ export const wagonGame = (open: number, covered: number, maxspeed: number): Game
 const BROWN = "#5a2e22";
 export const BOXN: WorldWagon = { length: 10.71, body: 4.9, half: 1.5, floor: 1.25, top: 3.2, centre: 3.3, wheelR: 0.5, colour: BROWN, ink: "#e8e6df", text: "BOXNHL", roofRise: 0 };
 export const BCNA: WorldWagon = { length: 15.43, body: 7.3, half: 1.55, floor: 1.25, top: 3.6, centre: 5.15, wheelR: 0.5, colour: BROWN, ink: "#e8e6df", text: "BCNA", roofRise: 0.4 };
-export const C70: WorldWagon = { length: 13.98, body: 6.5, half: 1.5, floor: 1.15, top: 3.1, centre: 4.6, wheelR: 0.42, colour: "#3d3a37", ink: "#e8e6df", text: "C70", roofRise: 0 };
-export const P70: WorldWagon = { length: 17.0, body: 8.0, half: 1.5, floor: 1.15, top: 3.55, centre: 5.95, wheelR: 0.42, colour: "#3d4a3a", ink: "#e8e6df", text: "P70", roofRise: 0.45 };
 
 export function irBoxnWagon(v?: ParamValues): MeshBuilder { return buildWagon(BOXN, BCNA, v); }
 export function irBoxnWagonLod(v?: ParamValues): MeshBuilder { return buildWagonLod(BOXN, BCNA, v); }
-export function crC70Wagon(v?: ParamValues): MeshBuilder { return buildWagon(C70, P70, v); }
-export function crC70WagonLod(v?: ParamValues): MeshBuilder { return buildWagonLod(C70, P70, v); }
+// the C70 and P70 have their own measured bodies (cnC70.ts)
+export function crC70Wagon(v?: ParamValues): MeshBuilder { return buildCnC70(v); }
+export function crC70WagonLod(v?: ParamValues): MeshBuilder { return buildCnC70Lod(v); }
 
 export const WORLD_WAGONS: ProceduralDesign[] = [
   { id: "proc-vehicle-ir-boxn-wagon", title: "IR BOXN / BCNA wagon", build: irBoxnWagon, buildLod: irBoxnWagonLod, params: WAGON_PARAMS, game: wagonGame(22, 27, 100), catalog: WAGON_CATALOG, loadingGauge: "us", references: "ir-boxn-wagon" },
-  { id: "proc-vehicle-cr-c70-wagon", title: "CR C70 / P70 wagon", build: crC70Wagon, buildLod: crC70WagonLod, params: WAGON_PARAMS, game: wagonGame(24, 24, 120), catalog: WAGON_CATALOG, references: "cr-c70-wagon" },
+  { id: "proc-vehicle-cr-c70-wagon", title: "CR C70 / P70 wagon", build: crC70Wagon, buildLod: crC70WagonLod, params: WAGON_PARAMS, game: wagonGame(24, 24, 120), catalog: WAGON_CATALOG, loadingGauge: "us", references: "cr-c70-wagon" },
 ];
