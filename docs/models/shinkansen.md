@@ -208,6 +208,8 @@ combinations hashed before and after):
   their fronts (the RAe TEE II's twin-lamp pods and its coupler cover), and `texts` - lettering
   on the face, its strokes cut finer so they follow a face curving between the grid's rows (the
   TEE emblem);
+- `windowCornerR` - every window row's frame and glass rounded at this corner radius (the car kit's
+  `cornerR`; default square): the Mat '46's silver-framed windows (`nlMat46.ts`);
 - `cabWindows` take a fifth element, +1 or -1, for a window on one side only (the TEE's cab
   side window on the right, its destination board ahead of the door on the left, behind it on
   the right);
