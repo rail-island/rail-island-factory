@@ -12,6 +12,7 @@ import { CRH3C } from "./cnCrh3c.ts";
 import { CRH5A } from "./cnCrh5a.ts";
 import { CRH2A } from "./cnCrh2a.ts";
 import { CR400BF } from "./cnCr400bf.ts";
+import { CR400AF } from "./cnCr400af.ts";
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#d9dcde", 0.6), skirtG: c("#9aa0a5", 0.7), cabMask: c("#1d1f22", 0.3) };
@@ -36,8 +37,6 @@ const hsr = (o: { endLength: number; midLength: number; noseLen: number; C: numb
   liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
 });
 
-export const CR400AF = hsr({ endLength: 27.2, midLength: 25.0, noseLen: 9.0, C: 4.05, power: 1250, maxspeed: 350, weight: { end: 52, middle: 50 },
-  liveries: { red: lv("Fuxing red", "CR400AF-2001", [1.7, WHITE], [1.85, "#c8102e"], [9, WHITE]), smart: lv("Fuxing gold", "CR400AF-C-2214", [1.7, WHITE], [1.85, "#c9a55a"], [9, WHITE]) } });
 export const CRH380A = hsr({ endLength: 26.5, midLength: 25.0, noseLen: 11.5, C: 3.7, power: 1200, maxspeed: 350, weight: { end: 50, middle: 48 },
   liveries: { crh: lv("CRH blue", "CRH380A-6041", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) } });
 export { CRH3C };
