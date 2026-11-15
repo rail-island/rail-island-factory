@@ -11,6 +11,7 @@ import type { SeriesCabFace } from "./seriesCab.ts";
 import { MAT54 } from "./nlMat54.ts";
 import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
 import { ICM } from "./nlIcm.ts";
+import { ICNG } from "./nlIcng.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -150,17 +151,6 @@ export const SNG: ShinkansenSeries = {
   cars: [3, 4],
   liveries: { sprinter: nsLivery("sprinter", "2301") },
   weight: { end: 42, middle: 34 }, power: 360, maxspeed: 160,
-};
-
-export const ICNG: ShinkansenSeries = {
-  endLength: 23.6, midLength: 18.4, W: 1.41, Y: 1.3, S: 3.2, C: 4.1, lean: 0.95, B: 0.65, A: 0.85,
-  // the Coradia Stream's long, smooth nose: its lower front rounded in plan and in profile to a small tip
-  nose: nose(3.0, 0.14, 2.2, [[0, 1.6], [0.15, 1.85], [0.5, 2.45], [1.0, 2.9], [1.8, 3.5], [3.2, 4.1]], [[0, 1.55], [0.15, 1.78], [0.5, 2.3], [1.0, 2.65], [1.8, 3.0], [3.2, 3.2]], [[0, 1.3], [1.0, 1.3]], [[0, 1.15], [0.15, 1.02], [0.45, 0.92], [0.9, 0.85]], [[0, 1.1], [0.12, 0.92], [0.35, 0.72], [0.6, 0.65]]),
-  windscreen: [1.0, 2.8, 0.07, 1.15], windscreenMask: 0.18, lamps: [0.3, 1.35],
-  windows: [[1.55, 2.7]], windowW: 1.6, pitch: 1.85, door: [1.0, 3.0, 1.55, 2.6], doorW: 1.3,
-  bogieCentres: 13.0, wheelR: 0.43, wheelbase: 2.5, cars: [5, 8],
-  liveries: { yellowBlue: nsLivery("yellowBlue", "3101") },
-  weight: { end: 48, middle: 38 }, power: 400, maxspeed: 200,
 };
 
 export const NS_FLIRT: ShinkansenSeries = flirt({

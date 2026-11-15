@@ -115,7 +115,7 @@ combinations hashed before and after):
   emitted where a turned car draws the stack (`MeshCore.toModel`). Unset, the stack and its smoke
   stay as before.
 - `windscreenMask` - a black band (`cabMask`) round a nose's windscreen, under its rubber,
-  reaching this far past the panes and joined over the centre pillar (the ICNG).
+  reaching this far past the panes and joined over the centre pillar (the HST).
 - `arc` - the roof arc's segments (default 8); `couplerY` - the centre coupler's height
   (default 1.0 m, the tube's under its low floor);
 - `cabNose` - with `flatCab`, a short nose under the cab's decals: the end's corners rounded
