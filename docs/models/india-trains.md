@@ -28,7 +28,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-eir-fairy-queen` | Fairy Queen | steam, no valve gear | `unit` | 2-2-2 of 1855 |
 | `proc-vehicle-dhr-b-class` | DHR B class | steam, 610 mm gauge | `unit` | 0-4-0, 0.66 m drivers |
 | `proc-vehicle-ir-lhb-coach` | IR LHB coach | coach (`generator/inLhbCoach.ts`), knuckle couplers | `unit` (`ac3`, `chairCar`), `livery` (`rajdhani`, `shatabdi`, `humsafar`, `tejas`) | 23.54 m body, 24.0 m over couplers, 3.24 m wide; 160 km/h |
-| `proc-vehicle-ir-icf-coach` | IR ICF coach | coach | `unit` (`sleeper`, `general`), `livery` (`blue`, `maroon`) | 22.3 m; 110 km/h |
+| `proc-vehicle-ir-icf-coach` | IR ICF coach | coach (`generator/inIcfCoach.ts`), side buffers and screw coupling | `unit` (`sleeper`, `general`), `livery` (`blue`, `maroon`) | 21.337 m body, 22.3 m over buffers, 3.21 m wide; 110 km/h |
 | `proc-vehicle-ir-boxn-wagon` | IR BOXN / BCNA wagon | wagon | `unit` (`open`, `covered`) | 10.71 m and 15.43 m |
 
 ## Deviations
@@ -149,6 +149,19 @@ The catalog had no Indian train before. Every design is filed under India.
   the roof; two roof AC packages, sealed gangways, folding steps. Still simplified: the bogies are the
   kit's generic two-axle bogie (not the FIAT frame), the Humsafar's wave graphics are straight bands
   and the Tejas's yellow-to-orange fade is three bands.
+- **ICF coach.** Measured on photographs (`assets/ir-icf-coach/SOURCES.md`; SL NR 05281 fitted
+  projectively, 0.91 m window pitch, about 200 px/m on the Saurashtra Mail side): 18 round-cornered
+  0.66 m by 0.61 m windows a side, the first centred 2.93 m from each end, with horizontal bars (five on
+  the sleeper, six on the general coach) and louvred aluminium shutters let down in most of the
+  sleeper's windows (stowed in the head of the general coach's open ones); the frosted, vertically barred
+  toilet window 0.18-0.86 m from each end, the door 1.52-2.28 m with grab rails and three hanging steps.
+  The blue livery's pale band runs 2.0-2.82 m over the windows, the toilet windows and the doors; the
+  maroon is one colour; both carry the silver roof with a water-tank hatch on each slope over the doors,
+  the yellow stripe down each end's corner, a route board, the running number and class name, the IR
+  roundel. The ICF bogies (14.783 m apart, 2.896 m wheelbase, 915 mm wheels) are the kit's generic coil
+  bogie; the body is 3.21 m wide (published 3.25 m) so the door grab rails stay in the 3.3 m gauge. The
+  door window is plain glass (the photographs show a louvred shutter in it), the lettering is English
+  only, and the later CBC-fitted coaches are not drawn.
 
 ## Tests
 

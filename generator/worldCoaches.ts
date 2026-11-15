@@ -21,6 +21,7 @@ import { COACH_CATALOG } from "./csdCoaches.ts";
 import { enumParam } from "./emuParts.ts";
 import { DB_IC } from "./deIcCoach.ts";
 import { IR_LHB, lhbCoach, lhbCoachLod } from "./inLhbCoach.ts";
+import { IR_ICF, icfCoach, icfCoachLod } from "./inIcfCoach.ts";
 
 type Band = readonly [number, number, string];
 
@@ -764,18 +765,7 @@ export const BR_MK1: WorldCoach = {
 
 export { IR_LHB } from "./inLhbCoach.ts";
 
-export const IR_ICF: WorldCoach = {
-  length: 22.3, W: 1.6, Y: 1.4, S: 3.3, C: 4.03, B: 1.0, A: 1.15, rows: [[1.9, 2.7]], doorIn: 0.55, doorW: 0.75, door: [1.2, 3.05],
-  bogieCentres: 14.9, wheelR: 0.46, wheelbase: 2.9, coupler: "buffers", maxspeed: 110,
-  types: {
-    sleeper: { title: "Sleeper class", windows: 12, windowW: 1.1, number: "SL 98201", weight: 48 },
-    general: { title: "General class", windows: 13, windowW: 1.0, number: "GS 04555", weight: 46 },
-  },
-  liveries: {
-    blue: { title: "IR blue", palette: { blue: c("#1d3f80"), roofG: c("#3a3d40", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 9, "blue"]], roof: "roofG", skirt: "skirtG" },
-    maroon: { title: "Maroon", palette: { maroon: c("#6b1d24"), roofG: c("#3a3d40", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 9, "maroon"]], roof: "roofG", skirt: "skirtG" },
-  },
-};
+export { IR_ICF } from "./inIcfCoach.ts";
 
 // ---------------------------------------------------------------------------
 // China: the 25-series coaches (the 25T Z express and the green 25B)
@@ -810,8 +800,8 @@ export function brMk1(v?: ParamValues): MeshBuilder { return buildCoach(BR_MK1, 
 export function brMk1Lod(v?: ParamValues): MeshBuilder { return buildCoachLod(BR_MK1, P.mk1, v); }
 export function irLhbCoach(v?: ParamValues): MeshBuilder { return lhbCoach(P.lhb, v); }
 export function irLhbCoachLod(v?: ParamValues): MeshBuilder { return lhbCoachLod(P.lhb, v); }
-export function irIcfCoach(v?: ParamValues): MeshBuilder { return buildCoach(IR_ICF, P.icf, v); }
-export function irIcfCoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(IR_ICF, P.icf, v); }
+export function irIcfCoach(v?: ParamValues): MeshBuilder { return icfCoach(P.icf, v); }
+export function irIcfCoachLod(v?: ParamValues): MeshBuilder { return icfCoachLod(P.icf, v); }
 export function cr25Coach(v?: ParamValues): MeshBuilder { return buildCoach(CR_25, P.cr25, v); }
 export function cr25CoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(CR_25, P.cr25, v); }
 export function ciwlCar(v?: ParamValues): MeshBuilder { return buildCoach(CIWL, P.ciwl, v); }
