@@ -9,6 +9,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, nose } from "./seriesHelpers.ts";
 import { CRH3C } from "./cnCrh3c.ts";
+import { CRH5A } from "./cnCrh5a.ts";
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#d9dcde", 0.6), skirtG: c("#9aa0a5", 0.7), cabMask: c("#1d1f22", 0.3) };
@@ -43,16 +44,7 @@ export const CRH2A = hsr({ endLength: 25.7, midLength: 25.0, noseLen: 7.0, C: 3.
   liveries: { crh: lv("CRH blue", "CRH2A-2001", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) } });
 export { CRH3C };
 
-export const CRH5A: ShinkansenSeries = {
-  endLength: 27.6, midLength: 25.0, W: 1.6, Y: 1.4, S: 3.0, C: 4.0, lean: 0.93, B: 0.8, A: 1.05,
-  // the Pendolino-derived nose
-  nose: nose(4.2, 0.12, 2.3, [[0, 1.4], [0.5, 1.95], [2.0, 2.7], [3.6, 3.45], [4.6, 4.0]], [[0, 1.35], [0.5, 1.85], [2.0, 2.5], [3.6, 2.9], [4.6, 3.0]], [[0, 1.3], [1.2, 1.4]], [[0, 1.1], [1.0, 1.05]], [[0, 1.05], [0.5, 0.8]]),
-  windscreen: [2.4, 4.1, 0.07, 1.05], lamps: [0.6, 1.5],
-  windows: [[1.95, 2.7]], windowW: 1.1, pitch: 1.3, door: [1.3, 3.05, 1.95, 2.6], doorW: 0.9,
-  bogieCentres: 19.0, wheelR: 0.45, wheelbase: 2.7,
-  liveries: { crh: lv("CRH blue", "CRH5A-5001", [1.75, WHITE], [1.9, "#1d3f80"], [9, WHITE]) },
-  weight: { end: 55, middle: 50 }, power: 1100, maxspeed: 250,
-};
+export { CRH5A };
 
 export const CR200J: ShinkansenSeries = {
   endLength: 19.4, midLength: 25.5, W: 1.55, Y: 1.4, S: 3.3, C: 4.3, lean: 0.97, B: 0.9, A: 1.1,

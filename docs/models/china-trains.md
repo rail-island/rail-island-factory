@@ -16,7 +16,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-crh380a` | CRH380A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the long nose; 350 km/h |
 | `proc-vehicle-cr-crh2a` | CRH2A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | the E2-derived nose; 250 km/h |
 | `proc-vehicle-cr-crh3c` | CRH3C | series, the ICE 3's Velaro cab face (`cnCrh3c.ts`) | `unit`, `cars` 3 - 8 | end 25.675 m, middle 24.775 m, 3.1 m wide (real 3.265 m), 3.89 m high; 350 km/h |
-| `proc-vehicle-cr-crh5a` | CRH5A | series, Shinkansen gauge | `unit`, `cars` 3 - 8 | 250 km/h |
+| `proc-vehicle-cr-crh5a` | CRH5A | series, its own cab face (`cnCrh5a.ts`), Shinkansen gauge | `unit`, `cars` 3 - 8 | the Pendolino snout; 27.6 / 25.0 m, 3.2 m wide; 250 km/h |
 | `proc-vehicle-cr-cr200j` | Fuxing CR200J | series, its power cars' pantographs | `unit`, `cars` 4 - 8, `livery` (`green`, `whiteRed`) | 160 km/h |
 | `proc-vehicle-cr-crh6a` | CRH6A | series | `unit`, `cars` 4 - 8 | 200 km/h |
 | `proc-vehicle-cr-hxn5` | CR HXN5 | hood unit, the ES44AC's body | - | 4,660 kW, 120 km/h |
@@ -73,3 +73,39 @@ shared `velaro()` body is no longer used by it (the AVE S-103 keeps it).
   second and third cars), the windows between.
 - **Roof.** Two low air-conditioning units on the rear half of the end car; the single-arm
   pantographs on low fairings on the second and next-to-last cars.
+
+## The CRH5A's body
+
+`generator/cnCrh5a.ts`, measured from the photographs in `assets/cr-crh5a/` (SOURCES.md) and the
+published figures: end car 27.6 m and intermediate cars 25.0 m over the couplers, 3.2 m wide (inside
+the Shinkansen gauge as it is), the crown 4.05 m and the roof hoods 4.27 m up.
+
+- **Section.** The Pendolino's wide body: widest 1.55 m up, the sides leaning in to 0.9 of the half width
+  at the 3.2 m shoulder, the white skirt panels (faint light-grey slats between the bogies) tucked in below
+  1.15 m down to 0.4 m; the nose's flanks white to the bottom edge.
+- **Snout** (a cab face, `CRH5A_FACE`, 7.0 m long): upright from the spoiler to 1.5 m, 0.5 m behind the
+  tip, rounding over to the canopy's foot (2.1 m up, 1.3 m back), the glass leaning back at about 25
+  degrees to the crown 6.4 m back; in plan one elliptic corner over the whole half width, reaching full
+  width 2.6 m back low down and further back over the canopy. The **coupler cover** is half an ellipsoid
+  (1.52 m wide, 1.04 m tall, centred 0.93 m up: its foot at the body's bottom, its top at the lamps') standing
+  0.48 m forward of the face, its joint a thin grey seam,
+  a slot for the coupler on its foot (`coverDome`, drawn with the end car's fittings).
+- **Paint on the face**: one dark glass canopy from its foot over the cab roof (its lower edge nearly
+  level across the face, then rising along the sides to the crown 6.5 m back), a black rim round it, the
+  windscreen proper a lighter pane in its front (2.26 - 2.78 m) with two wipers; the
+  "eye" cab side window, a tear 4.0 - 6.3 m back slanting down to the front; two lamp lozenges under the
+  canopy's lower corners, rising to the outside (black housing, clear lens, a head and a tail lamp);
+  the face is white all round, also below the skirts' top.
+- **Livery** `crh`: white, the blue band 1.82 - 1.94 m just under the windows, dipping and thinning to a
+  point 3.0 m behind the tip, 1.66 m up; "CRH" ahead of the first door; number CRH5A-5043 (photographed).
+- **Sides**: single plug doors 0.85 m wide with a narrow window, one at each end of every car (the end
+  car's first 7.35 m behind the tip); windows 1.2 m by 0.76 m (1.98 - 2.74 m), about 1.9 m apart, with a
+  narrow pane by the first door: seven on the end car, eight on an intermediate car, whose rear 4.5 m are
+  blank (toilets) but for a small square window by each door.
+- **Running gear and roof**: bogies 19.0 m apart, 2.7 m wheelbase, 0.89 m wheels, the end car's leading
+  one 5.6 m behind the tip; an air-conditioning hood with side grilles near one end of every car; a
+  single-arm pantograph on the intermediate (Tp) cars, 17 m behind the car's front, raised on the third car
+  and the third from last (the kit's rule, as the Mc M Tp M T Tp M Mc formation).
+- **Still differs**: the eight cars come to 205.1 m (the published car lengths), not the quoted 211.5 m;
+  the 和谐号 lettering is left out; the distant model's snout is a plain rounded wedge.
+
