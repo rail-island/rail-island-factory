@@ -1,7 +1,7 @@
 # China's locomotives, coach and wagons: bodies
 
 **Covers** - how each of China's locomotives, its coach and its wagons is drawn, measured from photographs and drawings: the HXN5, HXD1, HXD3D, SS1, SS8, DF4 and DF11, the QJ, SY and JS steam engines, the 25-series coach and the C70 / P70 wagons.
-**Code** - `generator/cnHxn5.ts`, `generator/cnHxd1.ts`, `generator/cnHxd3d.ts`, `generator/cnSs1.ts`, `generator/cnSs8.ts`, `generator/cnDf4.ts`, `generator/cnDf11.ts`, `generator/cnLocos.ts` (`CN_LOCOS`), `generator/cnQj.ts`, `generator/cnSy.ts`, `generator/cnJs.ts`, `generator/worldSteamLocos.ts`, `generator/cnCoach25.ts`, `generator/worldCoaches.ts`, `generator/cnC70.ts`, `generator/worldWagons.ts`, `test/cnJs.test.ts`, `assets/cr-*/`
+**Code** - `generator/cnHxn5.ts`, `generator/cnHxd1.ts`, `generator/cnHxd3d.ts`, `generator/cnSs1.ts`, `generator/cnSs8.ts`, `generator/cnDf4.ts`, `generator/cnDf11.ts`, `generator/cnLocos.ts` (`CN_LOCOS`), `generator/cnQj.ts`, `generator/cnSy.ts`, `generator/cnJs.ts`, `generator/worldSteamLocos.ts`, `generator/cnCoach25.ts`, `generator/worldCoaches.ts`, `generator/cnC70.ts`, `generator/worldWagons.ts`, `test/cnJs.test.ts`, `test/cnSs1.test.ts`, `assets/cr-*/`
 **See also** - [china-trains.md](china-trains.md) (the designs, deviations, tests), [china-units.md](china-units.md) (the multiple units), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md), [world-wagons.md](world-wagons.md)
 
 ## The CR HXN5's body
@@ -115,7 +115,9 @@ by a projective fit over its six equally spaced portholes).
   rounds down from 4.14 m. Two windscreens 2.84 - 3.6 m, a red handrail under each, the roof
   headlight's drum on the roof's front edge, two lamp housings standing 0.13 m out of the face at
   1.78 - 2.1 m (headlight outboard, tail lamp inboard), the number plate on the lower stripe, an
-  automatic coupler (no side buffers) over a red pilot of three bent tubes on a bottom plate.
+  automatic coupler (no side buffers) over a red pilot (`SS1_PILOT`): three bent tubes (0.38, 0.55, 0.72 m) hung from the
+  body's foot on posts that run from a deep bottom plate (0.1 - 0.3 m) up into the frame, as on SS1 008
+  (`test/cnSs1.test.ts`).
 - **Livery.** Light green upper body (sampled `#8fc48e`), dark green lower body (`#1f4a36`), yellow
   (`#f0a828`) stripes at 1.36 - 1.46 m and 2.45 - 2.57 m round the body. On the face the waist stripe
   becomes a vee from the corners to a point at 1.72 m, light green inside it, holding the red CR

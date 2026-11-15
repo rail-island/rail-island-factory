@@ -221,23 +221,32 @@ function faceRails(m: MeshBuilder, e: number): void {
   });
 }
 
-/** The tubular pilot under the end: three bent red tubes from the frame round to the coupler, on a bottom plate. */
+/**
+ * The tubular pilot under the end (SS1 008): three bent red tubes hung from the body's foot, the top
+ * one just under it, round from the frame's corner to the centre line, on a deep red bottom plate;
+ * posts at the corner, the bend and near the middle run from the plate up into the frame.
+ */
+export const SS1_PILOT = { tubes: [0.38, 0.55, 0.72], plate: [0.1, 0.3] as const, postTop: Y0 + 0.04 };
 function pilot(m: MeshBuilder, e: number): void {
   m.scope("pilot", () => {
     // the plan of a tube: [x, |z|] from the frame's corner round to the centre line
     const plan = [[N - 0.45, 1.3], [N - 0.1, 1.24], [N + 0.12, 0.95], [N + 0.24, 0.45], [N + 0.27, 0]] as const;
-    for (const [i, y] of [0.2, 0.34, 0.48].entries()) {
-      const k = 0.02 * i;
+    const P = SS1_PILOT;
+    for (const [i, y] of P.tubes.entries()) {
+      // the lower tubes stand a little further out, as the bent pilot leans forward to its plate
+      const k = 0.02 * (P.tubes.length - 1 - i);
       for (const s of [-1, 1])
         for (let j = 1; j < plan.length; j++) {
           const [a, b] = [plan[j - 1]!, plan[j]!];
-          m.rod("red", [e * (a[0] - k), y, s * a[1]], [e * (b[0] - k), y, s * b[1]], 0.03, 6, j === 1);
+          m.rod("red", [e * (a[0] + k), y, s * a[1]], [e * (b[0] + k), y, s * b[1]], 0.03, 6, j === 1);
         }
     }
-    const ring: Ring = [...plan.map(([x, z]) => [x + 0.02, -z] as [number, number]), ...[...plan].reverse().slice(1).map(([x, z]) => [x + 0.02, z] as [number, number])]
+    // the bottom plate: a deep flat bar under the tubes' plan, standing a little ahead of them
+    const ring: Ring = [...plan.map(([x, z]) => [x + 0.06, -z] as [number, number]), ...[...plan].reverse().slice(1).map(([x, z]) => [x + 0.06, z] as [number, number])]
       .map(([x, z]) => [e * x, e * z] as [number, number]);
-    m.prism("red", ring, 0.1, 0.17);
-    for (const s of [-1, 1]) for (const [x, z] of [plan[1]!, plan[3]!]) m.rod("red", [e * x, 0.17, s * z], [e * x, 0.48, s * z], 0.025, 6, false);
+    m.prism("red", ring, P.plate[0], P.plate[1]);
+    // the posts from the plate up through the tubes into the frame (whose foot is the body's, 0.82 m)
+    for (const s of [-1, 1]) for (const [x, z] of [plan[0]!, plan[2]!, plan[3]!]) m.rod("red", [e * (x + 0.02), P.plate[1], s * z], [e * (x + 0.02), P.postTop, s * z], 0.03, 6, false);
   });
 }
 
