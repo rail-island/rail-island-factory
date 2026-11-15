@@ -20,12 +20,13 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ShinkansenLivery, ShinkansenSeries } from "./shinkansen.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import { c, NO_NOSE } from "./seriesHelpers.ts";
-import { sidePanel, type SliceBody } from "./sliceBody.ts";
+import { sideDecal, sidePanel, type SliceBody } from "./sliceBody.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { block } from "./vehicleParts.ts";
 
 const NS_YELLOW = "#ffc917";
-const NS_BLUE = "#003082";
+/** NS blue as the photographs show it in daylight (3146, 3114, 3137; NS's own #003082 reads darker than any of them). */
+const NS_BLUE = "#2340a0";
 
 /** Where the face meets the body: the cap reaches the crown 2.4 m behind the tip, at the cab door's front. */
 const JOIN = 2.4;
@@ -46,21 +47,57 @@ const PROFILE: Pt[] = [
   [2.65, 0.57], [2.8, 0.8], [3.1, 1.16], [3.4, 1.5], [3.7, 1.85], [3.85, 2.03], [4.0, 2.19], [4.12, 2.31], [C, JOIN],
 ];
 
-/** The visor: its foot on the front and its top under the cap; the windscreen inside it. */
-const VISOR = [2.56, 3.86] as const;
+/** The visor: the windscreen's black frame, its foot and its top under the cap; the windscreen inside it. */
+const VISOR = [2.62, 3.86] as const;
 const GLASS = [2.74, 3.7] as const;
-/** The lamp housings' centre. */
-const LAMP_Y = 2.14;
-/** The coupler's recess in the lower front. */
-const RECESS = [0.94, 1.72] as const;
+/** The lamp housings: the headlight's centre on the corner, low and outside; the housing's tail rising inward to the frame's corner. */
+const LAMP: Pt = [1.08, 2.22];
+const TAIL: Pt = [0.78, 2.28];
+/** The coupler's recess in the lower front, 1.4 m wide, over the yellow chin and the dark lip. */
+const RECESS = [0.84, 1.76] as const;
+
+/**
+ * The NS logo on the nose's sides (3146: 0.65 m long, 0.27 m high, centred 1.6 m behind the tip at 1.97 m): the
+ * outline's two bars and chevrons and the inner Z, as strokes [d0, y0, d1, y1] (d behind the tip) of `LOGO_T` width.
+ */
+const LOGO_D = 1.6, LOGO_Y = 1.97, LOGO_T = 0.045;
+const LOGO: ReadonlyArray<readonly [number, number, number, number]> = [
+  [-0.2, 0.135, 0.2, 0.135], [-0.2, -0.135, 0.2, -0.135],
+  [0.2, 0.135, 0.31, 0], [0.31, 0, 0.2, -0.135], [-0.2, 0.135, -0.31, 0], [-0.31, 0, -0.2, -0.135],
+  [-0.04, 0.05, 0.2, 0.05], [-0.2, -0.05, 0.04, -0.05], [-0.04, -0.05, 0.04, 0.05],
+];
+/** The logo's strokes as triangles in [d behind the tip, y]: a bar its own height, a slanted stroke its horizontal width. */
+function logoTris(): Pt[] {
+  const out: Pt[] = [];
+  for (const [u0, v0, u1, v1] of LOGO) {
+    const [d0, y0, d1, y1] = [LOGO_D + u0, LOGO_Y + v0, LOGO_D + u1, LOGO_Y + v1];
+    const q: Pt[] = Math.abs(y1 - y0) < 1e-6
+      ? [[Math.min(d0, d1), y0 - LOGO_T / 2], [Math.max(d0, d1), y0 - LOGO_T / 2], [Math.max(d0, d1), y0 + LOGO_T / 2], [Math.min(d0, d1), y0 + LOGO_T / 2]]
+      : [[d0 - LOGO_T * 0.75, y0], [d0 + LOGO_T * 0.75, y0], [d1 + LOGO_T * 0.75, y1], [d1 - LOGO_T * 0.75, y1]];
+    out.push(q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!);
+  }
+  return out;
+}
 
 const ROWS = [...new Set([
-  ...PROFILE.map(([y]) => y), 0.72, RECESS[0], RECESS[1], LAMP_Y - 0.135, LAMP_Y, LAMP_Y + 0.135, 2.32, 2.38, 2.54, VISOR[0], 2.67, 2.82,
-  3.45, 3.5, 3.52, 3.66, GLASS[1], VISOR[1], 3.92, 3.98, 4.06,
+  ...PROFILE.map(([y]) => y), 0.72, RECESS[0], RECESS[1], 2.07, LAMP[1], 2.37, 2.45, VISOR[0], 2.67, 2.82,
+  3.45, 3.5, 3.52, 3.66, GLASS[1], VISOR[1], 3.92, 3.98, 4.06
 ])].sort((a, b) => a - b);
 
-/** An ellipse round (lat, y), half axes a and b, as a convex polygon. */
-const oval = (lat: number, y: number, a: number, b: number): Pt[] => Array.from({ length: 16 }, (_, k): Pt => [lat + a * Math.cos((Math.PI * k) / 8), y + b * Math.sin((Math.PI * k) / 8)]);
+/** The convex hull of two circles (lat, y, r), as a polygon: a teardrop. */
+function teardrop([la, ya]: Pt, ra: number, [lb, yb]: Pt, rb: number): Pt[] {
+  const pts: Pt[] = [];
+  for (let k = 0; k < 24; k++) {
+    const a = (2 * Math.PI * k) / 24;
+    pts.push([la + ra * Math.cos(a), ya + ra * Math.sin(a)], [lb + rb * Math.cos(a), yb + rb * Math.sin(a)]);
+  }
+  // the hull (monotone chain), counter-clockwise
+  const s = [...pts].sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+  const cross = (o: Pt, p: Pt, q: Pt) => (p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0]);
+  const half = (list: Pt[]) => { const h: Pt[] = []; for (const p of list) { while (h.length >= 2 && cross(h[h.length - 2]!, h[h.length - 1]!, p) <= 1e-12) h.pop(); h.push(p); } h.pop(); return h; };
+  return [...half(s), ...half([...s].reverse())];
+}
+
 /** A rectangle [lat0, lat1] x [y0, y1]. */
 const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0], [l1, y0], [l1, y1], [l0, y1]];
 
@@ -79,38 +116,39 @@ export const ICNG_FACE: SeriesCabFace = {
   paint: [
     // the cab sides yellow up to the cap (over the side's bands)
     { mat: "yellow", front: [[FOOT, -1], [4.3, -1]], back: [[FOOT, 9], [4.3, 9]] },
-    // the black visor: under the cap on the front, wrapping round the corners and back along the cab sides to the join,
-    // its top falling from the cap's edge to 3.52 m at the join
-    { mat: "black", front: [[VISOR[0], -1], [VISOR[1], -1]], back: [[VISOR[0], 0.62], [2.67, JOIN + 0.05], [3.52, JOIN + 0.05], [3.75, 2.08], [VISOR[1], 2.05]] },
+    // the visor round the corners beyond the windscreen's frame and back along the cab sides to the join (the side
+    // window's surround), its top falling from the cap's edge to 3.52 m at the join
+    { mat: "black", front: [[VISOR[0], 1.0], [3.0, 1.45], [3.4, 1.85], [3.6, 2.05]], back: [[VISOR[0], JOIN + 0.05], [3.52, JOIN + 0.05], [3.6, 2.3]] },
     // the dark skirt carried up round the lower front's corners to 1.0 m along the nose's sides
     { mat: "skirtG", front: [[0.4, -1], [0.75, -1], [0.78, 0.1], [0.98, 0.85], [FOOT, 1.0]], back: [[0.4, 9], [FOOT, 9]] },
     // the cab's side window in the visor, its front edge raked with the windscreen
     { mat: "glass", front: [[2.82, 1.3], [3.45, 1.88]], back: [[2.82, 2.28], [3.45, 2.28]] },
   ],
   fields: [
-    // the coupler's recess, its bottom corners rounded
-    { mat: "black", pts: [[-0.78, RECESS[0] + 0.08], [-0.72, RECESS[0]], [0.72, RECESS[0]], [0.78, RECESS[0] + 0.08], [0.78, RECESS[1]], [-0.78, RECESS[1]]] },
-    // the visor's foot dipping to the lamp housings at the corners
-    { mat: "black", pts: [[-1.45, 2.32], [-1.0, 2.38], [-0.55, 2.54], [0.55, 2.54], [1.0, 2.38], [1.45, 2.32], [1.45, 2.6], [-1.45, 2.6]] },
+    // the frame thickening at its lower corners, running down to the lamp housings' tails
+    ...[1, -1].map((sd) => ({ mat: "black", pts: ([[TAIL[0] + 0.04, TAIL[1] + 0.1], [TAIL[0] + 0.22, TAIL[1] + 0.09], [1.24, VISOR[0] + 0.02], [1.24, VISOR[0] + 0.1], [0.98, VISOR[0] + 0.1]] as Pt[]).map(([l, y]): Pt => [sd * l, y]) })),
     // the roof lamp's black surround on the cap
     { mat: "black", pts: [[-0.2, 3.92], [0.2, 3.92], [0.16, 4.06], [-0.16, 4.06]] },
   ],
   // the three vent slots either side of the roof lamp
   decals: [
     ...[1, -1].flatMap((sd) => [0.36, 0.43, 0.5].map((l) => ({ mat: "black", pts: box(sd * l - 0.015, sd * l + 0.015, 3.94, 4.04), fine: 1 }))),
-    // the lamp housings' black ovals, laid on the corners' curve
-    ...[1, -1].map((sd) => ({ mat: "black", pts: oval(sd * 1.06, LAMP_Y, 0.33, 0.155), fine: 3 })),
+    // the lamp housings: black teardrops 0.55 m long on the corners, the headlight in the round outer end, the tail
+    // sweeping up and inward to the windscreen frame's corner
+    ...[1, -1].map((sd) => ({ mat: "black", pts: teardrop([sd * LAMP[0], LAMP[1]], 0.14, [sd * TAIL[0], TAIL[1]], 0.12), fine: 3 })),
+  ],
+  // the windscreen's black frame, 0.12 m round the glass; the coupler's tall recess, its corners rounded
+  masks: [
+    { lat: [-1.24, 1.24], y: [VISOR[0], VISOR[1]], r: 0.18, mat: "black" },
+    { lat: [-0.7, 0.7], y: [RECESS[0], RECESS[1]], r: 0.15, mat: "black" },
   ],
   panes: [
     { lat: [-1.12, 1.12], y: [GLASS[0], GLASS[1]], r: 0.12 },
     // the destination display at the windscreen's head
     { lat: [-0.62, 0.62], y: [3.5, 3.66], r: 0.03, mat: "display" },
   ],
-  // the oval lamp housings on the corners, the headlight in their outer half, the tail light inside
-  pods: [1, -1].map((sd) => ({
-    lat: sd * 1.06, y: LAMP_Y, w: 0.44, h: 0.22, r: 0.11, proud: 0.025, depth: 0.05, mat: "black",
-    lamps: [[sd * 0.07, 0.1, "lampHead"], [-sd * 0.15, 0.04, "lampRed"]] as const,
-  })),
+  // the two lenses in each housing: the headlight in its round end, the tail light up the tail
+  lamps: [1, -1].flatMap((sd) => [[sd * LAMP[0], LAMP[1], 0.11, "lampHead"], [sd * 0.82, 2.28, 0.045, "lampRed"]] as const),
   roofLamp: [0, 3.99, 0.06],
   wipers: [[[0.12, 2.8], [0.6, 3.35]]],
 };
@@ -119,7 +157,7 @@ export const ICNG_FACE: SeriesCabFace = {
 const ICNG_YELLOW_BLUE: ShinkansenLivery = {
   title: "NS yellow, blue", number: "3146",
   palette: {
-    yellow: c(NS_YELLOW), blue: c(NS_BLUE), navy: c("#0d1c46"), black: c("#141618", 0.3), skirtG: c("#3b3f44", 0.7), roofG: c("#7d8286", 0.6),
+    yellow: c(NS_YELLOW), blue: c(NS_BLUE), navy: c("#13265e"), logo: c("#003082"), black: c("#141618", 0.3), skirtG: c("#3b3f44", 0.7), roofG: c("#7d8286", 0.6),
     cabMask: c("#1d1f22", 0.3), display: { color: "#1b1d1f", metallic: 0.2, roughness: 0.15, glass: true }, acGrey: c("#8d9296", 0.55), grille: c("#2e3134", 0.7),
   },
   // measured on 3146 and 3114: the dark skirt, yellow, the blue window band, a yellow line, the blue cantrail band, the grey roof
@@ -161,6 +199,8 @@ function icngFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, ca
     } else m.scope("air conditioning", () => at("acGrey", car.length / 2 - 1.7, car.length / 2 + 1.7, C - 0.06, C + 0.26, 0.8));
   });
   if (car.end) {
+    // the NS logo on the nose's sides (the cab face's sides stand at the body's section)
+    m.scope("logo", () => { for (const sd of [1, -1]) sideDecal(m, b, X, sd, "logo", logoTris().map(([d, y]): Pt => [d - JOIN, y]), 0.006); });
     m.scope("cab door", () => {
       // the yellow cab door at the join, its outline and the two silver handrails beside it
       const [d0, d1, y0, y1, k] = [0.02, 0.98, 1.2, 3.42, 0.02];
