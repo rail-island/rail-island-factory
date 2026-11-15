@@ -992,7 +992,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-ns-mat46": series(1949, 76, 76, ELRL, { cars: 2, liveries: ["yellowGrey"] }),
   "proc-vehicle-ns-mat54": series(1957, 64, 80, ELRL, { cars: 4, liveries: ["yellowGrey"] }),
   "proc-vehicle-ns-plan-v": series(1966, 72, 72, ELRL, { cars: 2, liveries: ["yellowBlue"] }),
-  "proc-vehicle-ns-de1": series(1954, 64, 64, RAIL, { single: true }),
+  "proc-vehicle-ns-de1": series(1954, 73, 73, RAIL, { single: true }), // 8 + 65 seats (nl.wikipedia "Blauwe Engel")
   "proc-vehicle-ns-icm": series(1977, 64, 80, ELRL, { cars: 4, liveries: ["yellowGrey"] }),
   "proc-vehicle-ns-virm": series(1994, 100, 140, ELRL, { cars: 6, liveries: ["yellowGrey"] }),
   "proc-vehicle-ns-ddz": series(1992, 110, 140, ELRL, { cars: 4, liveries: ["yellowGrey"] }),

@@ -131,6 +131,9 @@ combinations hashed before and after):
   series' `cabWindows`; a lone end car is the leading one (the SVT 877's 877 b, `generator/deSvt877.ts`);
   `exhaustInFittings` - a diesel unit's exhaust stacks drawn by the series' `fittings` (the SVT 877's on
   the cab's dome) instead of over each car's middle.
+- `cabFaceFrontOnly` - with `single` and a `cabFace`: the face at the front end only, the rear end
+  square - a flat end wall with the gangway frame and the centre coupler a coupling gap behind it,
+  the distant model's rear flat too (the NS DE-I, `generator/nlDe1.ts`; default a face at both ends).
 - `noseCab` - an upright cab on the nose's flat front face: its panes and lamps drawn there
   as a flat cab's are, in place of the crown's windscreen and headlights, and a gangway
   door's outline (the Class 378);

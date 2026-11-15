@@ -8,6 +8,9 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { DE1 } from "./nlDe1.ts";
+
+export { DE1 };
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -79,45 +82,6 @@ export const PLAN_V: ShinkansenSeries = {
   bogieCentres: 18.0, wheelR: 0.5, wheelbase: 2.8, cars: [2], endPantograph: true,
   liveries: { yellowGrey: nsLivery("yellowGrey", "448"), yellowBlue: nsLivery("yellowBlue", "907") },
   weight: { end: 52, middle: 52 }, power: 310, maxspeed: 140,
-};
-
-/**
- * The DE-I's petrol blue, read from photo-soestduinen-nsm-de1-41-...jpg: the silver skirt and roof,
- * the orange-red waist band rising to a point under the winged emblem on the front, the red
- * band over the front's windows wrapping round the cab.
- */
-const DE1_BLUE: ShinkansenLivery = {
-  title: "Blue Angel", number: "DE 41",
-  palette: { blue: c("#1e5566"), red: c("#e0452b"), silver: c("#b6babd", 0.35), roofG: c("#c4c7c9", 0.45), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) },
-  bands: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 9, "blue"]],
-  front: [[0, 1.22, "silver"], [1.22, 1.36, "red"], [1.36, 2.96, "blue"], [2.96, 9, "red"]],
-  roof: "roofG", skirt: "skirtG",
-};
-
-/** The Blauwe Engel's end: the Mat '46's rounded nose, the red beak and the emblem between the lamps, white window frames. */
-const ANGEL_NOSE: SeriesCabFace = {
-  ...MOUSE_NOSE, wrap: true, cols: [5, 3, 1, 1], tolerance: 0.02,
-  // square-cornered panes and surround: rounded ones refine the whole grid past the budget of a car with two ends
-  masks: [{ lat: [-1.37, 1.37], y: [2.0, 2.93], r: 0, mat: "white" }],
-  panes: MOUSE_NOSE.panes.map((p) => ({ ...p, r: 0 })),
-  decals: [
-    // the beak: the waist band's point rising between the lamps
-    { mat: "red", pts: [[-0.95, 1.3], [0.95, 1.3], [0, 1.86]] },
-    // the winged wheel: its wings and hub
-    { mat: "silver", pts: [[-0.36, 2.0], [-0.06, 1.9], [-0.06, 1.95], [-0.3, 2.03]] },
-    { mat: "silver", pts: [[0.06, 1.9], [0.36, 2.0], [0.3, 2.03], [0.06, 1.95]] },
-    { mat: "silver", pts: [[-0.05, 1.86], [0.05, 1.86], [0.05, 1.98], [-0.05, 1.98]] },
-  ],
-  lamps: [[-0.5, 1.68, 0.12, "lampHead"], [0.5, 1.68, 0.12, "lampHead"]], roofLamp: [0, 3.16, 0.06],
-};
-
-export const DE1: ShinkansenSeries = {
-  endLength: 26.0, midLength: 26.0, W: 1.45, Y: 1.4, S: 3.15, C: 3.85, lean: 0.97, B: 1.0, A: 1.15,
-  nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: ANGEL_NOSE,
-  windows: [[1.95, 2.8]], windowW: 1.0, pitch: 1.25, door: [1.2, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.5, wheelbase: 3.0, traction: "diesel", single: true,
-  liveries: { blue: DE1_BLUE },
-  weight: { end: 64, middle: 64 }, power: 300, maxspeed: 120,
 };
 
 export const ICM: ShinkansenSeries = {
