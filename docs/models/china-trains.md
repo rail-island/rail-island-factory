@@ -53,16 +53,17 @@ the 3.38 m body drawn 3.26 m wide; 17.5 m bogie centres, 2.5 m wheelbase, 860 mm
 leading bogie 5.35 m behind the tip.
 
 - **The nose** is a cab face (seriesCab.ts) whose depth is a solid of the module's own (`a380Depth`):
-  a silver coupler dome on the tip (a blunt superellipsoid 1.5 m long, 1.7 m wide, 0.4 - 1.6 m high,
-  a dark seam round it), the nose flaring out of the dome's widest section and rising in a long line
-  (2.1 m 3 m back, 2.5 m at 5.5 m, the roof's 3.7 m at the join), its section the body's scaled and
-  rounded over its top. The lower flank is narrow (0.55 m half width below 0.95 m) over the leading
-  bogie and flares to the skirt behind it, so the bogie shows under the nose as on the train.
+  each section a superellipse round its widest height, its half width, top, bottom and powers smooth
+  (monotone cubic) tables of d, drawn into the body's own section over the last 4 m. The tip is one
+  blunt bullet - the silver coupler cover, as wide and high as the nose there (1.9 m wide at 1.4 m
+  back) and flowing into it, a thin dark seam 1 m behind the tip; the nose then rises in a long line
+  (2.0 m 3 m back, 2.5 m at 6 m, the roof's 3.7 m at the join). The lower flank is narrow below 0.95 m
+  over the leading bogie and flares to the skirt behind it, so the bogie shows under the nose.
 - **The canopy** stands out of the nose's top from 4.2 m behind the tip, 1.7 - 1.9 m wide, its crown
-  3.26 m at 7.3 m and merging into the roof at the join. Its black oval holds the windscreen (one wide
-  pane with rounded corners, a single wiper) and a side window each side; the black is cut to the
-  canopy's own walls where they rise from the nose. The almond headlights lie on the nose beside the
-  canopy's foot.
+  3.26 m at 7.3 m and merging into the roof at the join. Its glazing is one dark wrap-around outline
+  under the white hood: the windscreen (one wide pane, a single wiper) and the side windows, cut to the
+  canopy's own walls where they rise from the nose. The almond headlights (light grey covers in a grey
+  rim) lie low on the nose beside the canopy's foot.
 - **The livery** (unit 2670): white, the dark window band 1.97 - 2.95 m holding the windows, the blue
   stripe 1.72 - 1.85 m under a white gap, a light grey skirt. On the end car the band's foot rises
   toward the nose and ends in a rounded point 9.7 m behind the tip; the stripe rises with it to a crest

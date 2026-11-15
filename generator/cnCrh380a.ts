@@ -30,45 +30,75 @@ function sideHalf(y: number): number {
   return W * (1 - (1 - LEAN) * Math.min(1, (y - Y) / (S - Y)));
 }
 
-/** The coupler dome: an ellipsoid half on the tip, its centre DOME_D behind it at DOME_Y; half width and half height. */
-const [DOME_D, DOME_Y, DOME_W, DOME_H] = [1.5, 1.0, 0.85, 0.6];
-/** The dome's blunt front: its profile a superellipse of this power (2 an ellipse). */
-const DOME_P = 2.6;
-/** The seam's ring at this fraction of the dome's outline seen head on, and its depth there (the silver ends under it). */
-const SEAM_K = 0.95;
-const DOME_SEAM_D = Math.round(DOME_D * (1 - Math.pow(1 - Math.pow(SEAM_K * SEAM_K, DOME_P / 2), 1 / DOME_P)) * 1e4) / 1e4;
+/** A smooth (monotone cubic, C1) interpolation through a table [x, v], held past its ends: no kinks for the grid to show as creases. */
+function smooth(t: Tab): (x: number) => number {
+  const n = t.length, xs = t.map((p) => p[0]), vs = t.map((p) => p[1]);
+  const dl = xs.slice(1).map((x, i) => (vs[i + 1]! - vs[i]!) / (x - xs[i]!));
+  const m = xs.map((_, i) => {
+    if (i === 0) return dl[0]!;
+    if (i === n - 1) return dl[n - 2]!;
+    const [a, b] = [dl[i - 1]!, dl[i]!];
+    if (a * b <= 0) return 0;
+    const [h0, h1] = [xs[i]! - xs[i - 1]!, xs[i + 1]! - xs[i]!];
+    return (3 * (h0 + h1)) / ((2 * h1 + h0) / a + (h1 + 2 * h0) / b);
+  });
+  return (x) => {
+    if (x <= xs[0]!) return vs[0]!;
+    if (x >= xs[n - 1]!) return vs[n - 1]!;
+    let i = 0;
+    while (x > xs[i + 1]!) i++;
+    const h = xs[i + 1]! - xs[i]!, s = (x - xs[i]!) / h;
+    const [h00, h10, h01, h11] = [2 * s ** 3 - 3 * s * s + 1, s ** 3 - 2 * s * s + s, -2 * s ** 3 + 3 * s * s, s ** 3 - s * s];
+    return h00 * vs[i]! + h10 * h * m[i]! + h01 * vs[i + 1]! + h11 * h * m[i + 1]!;
+  };
+}
 
-/** The nose behind the dome, by d: its lateral scale of the body's section, the side wall's top and the centre line's top. */
-const SX: Tab = [[1.5, 0.57], [2.2, 0.72], [3.0, 0.81], [4.0, 0.87], [5.0, 0.91], [6.5, 0.95], [8.0, 0.975], [10.0, 0.99], [12.0, 1.0]];
-const HS: Tab = [[1.5, 1.05], [2.2, 1.35], [3.0, 1.6], [5.0, 1.95], [7.0, 2.1], [9.0, 2.35], [10.5, 2.6], [11.4, 2.82], [11.8, 2.95], [12.0, 3.0]];
-const H0: Tab = [[1.5, 1.62], [2.2, 1.92], [3.0, 2.1], [3.5, 2.24], [4.5, 2.39], [5.5, 2.48], [6.5, 2.64], [7.5, 2.82], [8.5, 3.0], [9.5, 3.18], [10.5, 3.38], [11.2, 3.55], [11.7, 3.66], [12.0, 3.7]];
+/**
+ * The nose's section by d: a superellipse round its widest height (half width, top, bottom, the
+ * widest height, the upper and lower powers), the tip a blunt bullet - the coupler cover, as wide and
+ * high as the nose there and flowing into it - drawn into the body's own section over the last 4 m.
+ */
+const NA = smooth([[0, 0], [0.08, 0.36], [0.25, 0.6], [0.5, 0.76], [0.9, 0.88], [1.4, 0.96], [2.0, 1.04], [3.0, 1.16], [4.5, 1.3], [6.0, 1.42], [8.0, 1.53], [10.0, 1.6], [12.0, W]]);
+const NT = smooth([[0, 1.08], [0.08, 1.28], [0.25, 1.4], [0.5, 1.5], [0.9, 1.59], [1.4, 1.68], [2.0, 1.82], [3.0, 2.04], [4.0, 2.22], [5.0, 2.38], [6.0, 2.53], [7.0, 2.7], [8.0, 2.88], [9.0, 3.07], [10.0, 3.27], [11.0, 3.5], [11.6, 3.64], [12.0, C]]);
+const NB = smooth([[0, 1.08], [0.08, 0.88], [0.25, 0.74], [0.5, 0.64], [0.9, 0.56], [1.4, 0.5], [2.0, 0.42], [3.0, 0.3], [12.0, 0.3]]);
+const YC = smooth([[0, 1.08], [1.4, 1.08], [3.0, 1.2], [5.0, 1.35], [8.0, 1.45], [12.0, Y]]);
+const NTE = smooth([[0, 2.3], [1.4, 2.3], [3.0, 2.15], [6.0, 2.05], [12.0, 2.0]]);
+const NBE = smooth([[0, 2.3], [1.4, 2.4], [3.0, 3.0], [6.0, 5.0], [12.0, 6.0]]);
+/** The tip's height (the coupler cover's centre) for the distant model. */
+const TIP_Y = 1.08;
 /** The canopy, by d: its crown, its half width and how far its rounded top drops to its walls. */
-const HB: Tab = [[4.2, 2.3], [4.6, 2.55], [5.2, 2.8], [5.8, 3.0], [6.5, 3.15], [7.3, 3.26], [8.2, 3.34], [9.2, 3.42], [10.2, 3.5], [11.2, 3.62], [12.0, 3.7]];
-const WB: Tab = [[4.2, 0.0], [4.4, 0.45], [4.8, 0.65], [5.4, 0.78], [6.2, 0.86], [7.5, 0.92], [9.0, 0.97], [10.2, 1.05], [11.0, 1.18], [12.0, 1.3]];
-const DROP: Tab = [[4.2, 0.2], [4.8, 0.32], [6.0, 0.45], [7.5, 0.52], [9.0, 0.56], [10.5, 0.6], [12.0, 0.7]];
-/** The lower flank over the leading bogie: narrow below BOGIE_TOP from the dome back to BOGIE_END, flaring out to the body behind it. */
-const [BOGIE_TOP, BOGIE_HW, BOGIE_END, FLARE_END] = [0.95, 0.55, 7.25, 7.9];
+const HB = smooth([[4.2, 2.3], [4.6, 2.55], [5.2, 2.8], [5.8, 3.0], [6.5, 3.15], [7.3, 3.26], [8.2, 3.34], [9.2, 3.42], [10.2, 3.5], [11.2, 3.62], [12.0, 3.7]]);
+const WB = smooth([[4.2, 0.0], [4.4, 0.45], [4.8, 0.65], [5.4, 0.78], [6.2, 0.86], [7.5, 0.92], [9.0, 0.97], [10.2, 1.05], [11.0, 1.18], [12.0, 1.3]]);
+const DROP = smooth([[4.2, 0.2], [4.8, 0.32], [6.0, 0.45], [7.5, 0.52], [9.0, 0.56], [10.5, 0.6], [12.0, 0.7]]);
+const CANOPY_D = 4.2;
+/** The lower flank over the leading bogie: narrow below BOGIE_TOP from BOGIE_START back to BOGIE_END, flaring out to the body behind it. */
+const [BOGIE_TOP, BOGIE_HW, BOGIE_START, BOGIE_END, FLARE_END] = [0.95, 0.55, 2.0, 7.25, 7.9];
+/** The coupler cover's seam, d behind the tip: the silver ahead of it. */
+const SEAM_D = 1.0;
 
-/** The dome's widest section at height y (its half width there, 0 off it). */
-const domeEq = (y: number) => DOME_W * Math.sqrt(Math.max(0, 1 - ((y - DOME_Y) / DOME_H) ** 2));
-/** Behind the dome the nose grows out of the dome's widest section, over BLEND metres. */
-const BLEND = 0.4;
+/** The body's own section's half width at height y. */
+const bodyHalf0 = (y: number) => (y <= S ? sideHalf(y) : y < C ? W * LEAN * Math.sqrt(1 - ((y - S) / (C - S)) ** 2) : 0);
 
-/** The nose's half width at d and height y: the nose's section (the body's, scaled and rounded over its top) or the canopy's, whichever is wider. */
+/** The superellipse section's half width at d and height y (0 off it). */
+function superHalf(d: number, y: number): number {
+  const [a, top, bot, yc] = [NA(d), NT(d), NB(d), YC(d)];
+  const [u, n] = y >= yc ? [(y - yc) / Math.max(1e-6, top - yc), NTE(d)] : [(yc - y) / Math.max(1e-6, yc - bot), NBE(d)];
+  return u >= 1 ? 0 : a * Math.pow(1 - Math.pow(u, n), 1 / n);
+}
+
+/** The nose's half width at d and height y: its section (drawn into the body's toward the join) or the canopy's, whichever is wider. */
 function halfAt(d: number, y: number): number {
-  let w = 0;
-  if (d >= DOME_D) {
-    const [sx, hs, h0] = [at(SX, d), at(HS, d), at(H0, d)];
-    if (y <= hs) w = sx * sideHalf(y);
-    else if (y < h0) w = sx * sideHalf(hs) * Math.sqrt(1 - ((y - hs) / (h0 - hs)) ** 2);
-    if (y < BOGIE_TOP && d < FLARE_END) w = Math.min(w, d <= BOGIE_END ? BOGIE_HW : BOGIE_HW + (w - BOGIE_HW) * ((d - BOGIE_END) / (FLARE_END - BOGIE_END)));
-    // the dome's section carried back and blended into the nose's (no lip at the seam)
-    const t = Math.min(1, (d - DOME_D) / BLEND), k = 1 - (1 - t) * (1 - t);
-    const e = domeEq(y);
-    if (e > 0) w = Math.max(e, e + (w - e) * k);
+  let w = superHalf(d, y);
+  if (w > 0 && d > 8) {
+    const t = Math.min(1, (d - 8) / 4), s = t * t * (3 - 2 * t);
+    w += (bodyHalf0(y) - w) * s;
   }
-  if (d >= HB[0]![0]) {
-    const [hb, wb, dr] = [at(HB, d), at(WB, d), at(DROP, d)];
+  if (y < BOGIE_TOP && d > BOGIE_START && d < FLARE_END) {
+    const cut = Math.max(BOGIE_HW, superHalf(BOGIE_START, y));
+    w = Math.min(w, d <= BOGIE_END ? cut : cut + (w - cut) * ((d - BOGIE_END) / (FLARE_END - BOGIE_END)));
+  }
+  if (d >= CANOPY_D) {
+    const [hb, wb, dr] = [HB(d), WB(d), DROP(d)];
     const y0 = hb - dr;
     const cw = y <= y0 ? wb : y < hb ? wb * Math.sqrt(1 - ((y - y0) / dr) ** 2) : 0;
     w = Math.max(w, cw);
@@ -80,39 +110,32 @@ function halfAt(d: number, y: number): number {
 function sectionDepth(lat: number, y: number): number {
   if (halfAt(JOIN, y) <= lat) return JOIN;
   let [a, b] = [0, JOIN];
-  for (let i = 0; i < 22; i++) { const m = (a + b) / 2; if (halfAt(m, y) > lat) b = m; else a = m; }
+  for (let i = 0; i < 24; i++) { const m = (a + b) / 2; if (halfAt(m, y) > lat) b = m; else a = m; }
   return b;
 }
 
-/** The dome's depth at (lat, y), or Infinity off it. */
-function domeDepth(lat: number, y: number): number {
-  const q = (lat / DOME_W) ** 2 + ((y - DOME_Y) / DOME_H) ** 2;
-  return q >= 1 ? Infinity : DOME_D * (1 - Math.pow(1 - Math.pow(q, DOME_P / 2), 1 / DOME_P));
-}
-
-/** The surface's depth at (lat, y): the dome's front or the nose's, whichever is further forward; cached (the grid asks each point many times). */
+/** The surface's depth at (lat, y); cached (the grid asks each point many times). */
 const DEPTH = new Map<number, Map<number, number>>();
 export function a380Depth(lat: number, y: number): number {
   let row = DEPTH.get(y);
   if (!row) DEPTH.set(y, (row = new Map()));
   let v = row.get(lat);
-  if (v === undefined) { v = Math.round(Math.min(domeDepth(lat, y), sectionDepth(lat, y)) * 1e5) / 1e5; row.set(lat, v); }
+  if (v === undefined) { v = Math.round(sectionDepth(lat, y) * 1e5) / 1e5; row.set(lat, v); }
   return v;
 }
 
-/** The grid's rows (the shape's and the paint's heights): dense over the dome, the bogie's fender and the canopy. */
-const ROWS = [0.5, 0.58, 0.7, 0.8, 0.86, 0.9, 0.95, 1.02, 1.12, 1.24, 1.36, 1.46, 1.55, 1.62, 1.68, 1.75, 1.85, 1.92, 2.0, 2.08, 2.16, 2.24, 2.32, 2.4, 2.48, 2.56, 2.64, 2.72, 2.8, 2.88, 2.96, 3.04, 3.12, 3.2, 3.28, 3.36, 3.44, 3.52, 3.6, 3.66, 3.7];
+/** The grid's rows (the shape's and the paint's heights): dense over the tip, the bogie's fender and the canopy. */
+const ROWS = [0.5, 0.62, 0.74, 0.86, 0.9, 0.95, 1.01, 1.08, 1.18, 1.4, 1.52, 1.64, 1.76, 1.88, 2.0, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.66, 3.7];
 const PROFILE: Pt[] = ROWS.map((y): Pt => [y, a380Depth(0, y)]);
 
 /** The nose's own top (without the canopy) at d and lat: where the canopy's wall stands out of it. */
 function noseTop(d: number, lat: number): number {
-  const [sx, hs, h0] = [at(SX, d), at(HS, d), at(H0, d)];
-  const w = sx * sideHalf(hs);
-  return lat >= w ? hs : hs + (h0 - hs) * Math.sqrt(1 - (lat / w) ** 2);
+  const [a, top, yc, n] = [NA(d), NT(d), YC(d), NTE(d)];
+  return lat >= a ? yc : yc + (top - yc) * Math.pow(1 - Math.pow(lat / a, n), 1 / n);
 }
 
 /** The valley where the canopy's wall meets the nose's top, by d. */
-const valley = (d: number) => noseTop(d, at(WB, d));
+const valley = (d: number) => noseTop(d, WB(d));
 
 /**
  * A paint's back edge [y, d] cut to the canopy: at each height no further back than where the valley
@@ -120,11 +143,26 @@ const valley = (d: number) => noseTop(d, at(WB, d));
  */
 function onCanopy(back: Pt[], gap: number): Pt[] {
   const [y0, y1] = [back[0]![0], back[back.length - 1]![0]];
-  return Array.from({ length: 17 }, (_, i): Pt => {
-    const y = y0 + ((y1 - y0) * i) / 16;
+  return Array.from({ length: 7 }, (_, i): Pt => {
+    const y = y0 + ((y1 - y0) * i) / 6;
     let dv = 12;
     for (let d = 4.6; d <= 12; d += 0.02) if (valley(d) > y - gap) { dv = d; break; }
     return [Math.round(y * 1e4) / 1e4, Math.round(Math.min(edgeAt(back, y), dv) * 1e4) / 1e4];
+  });
+}
+
+/** The coupler cover's seam seen head on: a thin dark line round the nose's section SEAM_D behind the tip, short bars [lat, y]. */
+function seam(): Array<{ mat: string; pts: Pt[]; fine: number }> {
+  const [a, top, bot, yc, nt, nb] = [NA(SEAM_D), NT(SEAM_D), NB(SEAM_D), YC(SEAM_D), NTE(SEAM_D), NBE(SEAM_D)];
+  const [t, n] = [0.009, 40];
+  const o = (th: number, e: number): Pt => {
+    const c = Math.cos(th), s = Math.sin(th), up = s >= 0, pw = up ? nt : nb, h = up ? top - yc : yc - bot;
+    const k = (v: number) => Math.sign(v) * Math.pow(Math.abs(v), 2 / pw);
+    return [Math.round((a + e) * k(c) * 1e4) / 1e4, Math.round((yc + (h + e) * k(s)) * 1e4) / 1e4];
+  };
+  return Array.from({ length: n }, (_, i) => {
+    const [p, q] = [(2 * Math.PI * i) / n, (2 * Math.PI * (i + 1)) / n];
+    return { mat: "seam", pts: [o(p, -t - 0.012), o(q, -t - 0.012), o(q, t - 0.012), o(p, t - 0.012)], fine: 2 };
   });
 }
 
@@ -134,9 +172,9 @@ const mirror = (half: Pt[]): Pt[] => [...half, ...half.slice(1, -1).reverse().ma
 const SCREEN: Pt[] = mirror([[0, 2.5], [0.42, 2.5], [0.56, 2.53], [0.63, 2.6], [0.66, 2.72], [0.66, 2.92], [0.62, 3.04], [0.52, 3.11], [0.3, 3.15], [0, 3.16]]);
 /** An almond headlight on viewer's side sd, beside the canopy's foot: its inner end low and pointed, the outer end high and round. */
 const lamp = (sd: number, grow: number): Pt[] =>
-  ([[0.8, 2.42], [0.92, 2.29], [1.08, 2.19], [1.26, 2.15], [1.4, 2.18], [1.45, 2.26], [1.38, 2.36], [1.2, 2.43], [0.98, 2.46]] as Pt[]).map(([l, y]): Pt => {
-    const [cl, cy] = [1.12, 2.31];
-    return [sd * (cl + (l - cl) * (1 + grow)), cy + (y - cy) * (1 + grow * 2.2)];
+  ([[0.66, 2.36], [0.8, 2.27], [0.98, 2.18], [1.16, 2.11], [1.3, 2.09], [1.36, 2.13], [1.3, 2.2], [1.12, 2.28], [0.92, 2.35], [0.75, 2.4]] as Pt[]).map(([l, y]): Pt => {
+    const [cl, cy] = [1.0, 2.24];
+    return [sd * (cl + (l - cl) * (1 + grow)), cy + (y - cy) * (1 + grow * 3)];
   });
 
 /** A line of paint along a centre line [d, y] of a thickness [d, t] (t 0 at a pointed end), as a sweep's front and back edges by height; `up` the line rising toward its rear, else falling. */
@@ -163,7 +201,7 @@ const NOSE_WINDOWS: ReadonlyArray<{ front: Pt[]; back: Pt[] }> = [
 ];
 
 const A380_FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 11.0, first: JOIN + 2.0, reach: 0, roofFrom: 9, cols: [6, 9, 1, 2], tolerance: 0.05,
+  dJoin: JOIN, dSide: 11.0, first: JOIN + 2.0, reach: 0, roofFrom: 9, cols: [6, 9, 1, 2], tolerance: 0.07,
   // the plan: the face's columns across the centre, the corners out to the body's side (the depth is a380Depth's)
   profile: PROFILE, corner: [[B, 1.0], [C, 1.0]], cornerDepth: [[B, 1.0], [C, 1.0]], rows: ROWS,
   reshape: (lat, y) => a380Depth(lat, y),
@@ -173,17 +211,16 @@ const A380_FACE: SeriesCabFace = {
     { mat: "white", front: [[B - 0.1, -9], [A, -9]], back: [[B - 0.1, FLARE_END], [A, FLARE_END]], top: A },
     { mat: "skirtG", front: [[B - 0.1, FLARE_END - 0.7], [A - 0.02, FLARE_END - 0.7]], back: [[B - 0.1, 99], [A - 0.02, 99]], top: A - 0.02 },
     // the coupler dome's seam and its silver
-    { mat: "dome", front: [[B - 0.1, -9], [DOME_Y + DOME_H + 0.1, -9]], back: [[B - 0.1, DOME_SEAM_D], [DOME_Y + DOME_H + 0.1, DOME_SEAM_D]], top: DOME_Y + DOME_H + 0.1 },
+    { mat: "dome", front: [[B - 0.1, -9], [2.0, -9]], back: [[B - 0.1, SEAM_D - 0.01], [2.0, SEAM_D - 0.01]], top: 2.0 },
     // the canopy's black oval round its glass, then the side windows in it
     { mat: "cabMask", front: [[2.42, -9], [3.2, -9]], back: onCanopy([[2.42, 5.2], [2.5, 6.6], [2.6, 8.0], [2.75, 9.0], [2.95, 9.5], [3.2, 9.7]], 0), top: 3.2, lat: 1.1 },
-    { mat: "cabGlass", front: [[2.6, 6.6], [3.02, 6.9]], back: onCanopy([[2.6, 8.6], [2.75, 9.0], [3.02, 9.2]], 0.07), top: 3.02, lat: 1.1 },
   ],
-  decals: domeSeam(),
+  decals: seam(),
   fields: [
     { mat: "screenGlass", pts: SCREEN },
-    { mat: "cabMask", pts: lamp(1, 0.12) }, { mat: "cabMask", pts: lamp(-1, 0.12) },
+    { mat: "lampRim", pts: lamp(1, 0.07) }, { mat: "lampRim", pts: lamp(-1, 0.07) },
     { mat: "lampCover", pts: lamp(1, 0) }, { mat: "lampCover", pts: lamp(-1, 0) },
-    { mat: "lampHead", pts: lamp(1, -0.45) }, { mat: "lampHead", pts: lamp(-1, -0.45) },
+    { mat: "lampHead", pts: lamp(1, -0.5) }, { mat: "lampHead", pts: lamp(-1, -0.5) },
   ],
   panes: [], lodGlass: { hw: 0.62, y: [2.5, 3.12] },
   wipers: Array.from({ length: 5 }, (_, i): [Pt, Pt] => {
@@ -191,26 +228,16 @@ const A380_FACE: SeriesCabFace = {
     return [p(i / 5), p((i + 1) / 5)];
   }),
   // the distant model's nose: the dome, the long rising top and the canopy, on few rows
-  lod: { profile: [[B, 1.9], [DOME_Y, 0], [1.7, 1.6], [2.5, 4.9], [3.25, 7.8], [C, JOIN]], corner: [[B, 1.4], [C, 1.2]], cornerDepth: [[B, 6.5], [DOME_Y, 5.5], [1.7, 5.5], [2.5, 4.5], [3.25, 3.0], [C, 0.02]], rows: [B, DOME_Y, 1.7, 2.5, 3.25, C] },
+  lod: { profile: [[B, 1.9], [TIP_Y, 0], [1.7, 1.6], [2.5, 4.9], [3.25, 7.8], [C, JOIN]], corner: [[B, 1.4], [C, 1.2]], cornerDepth: [[B, 6.5], [TIP_Y, 5.5], [1.7, 5.5], [2.5, 4.5], [3.25, 3.0], [C, 0.02]], rows: [B, TIP_Y, 1.7, 2.5, 3.25, C] },
 };
-
-/** The seam round the dome where it meets the nose: a thin dark ring seen head on, short bars [lat, y]. */
-function domeSeam(): Array<{ mat: string; pts: Pt[]; fine: number }> {
-  const [t, n, k] = [0.016, 32, SEAM_K];
-  return Array.from({ length: n }, (_, i) => {
-    const [p, q] = [(2 * Math.PI * i) / n, (2 * Math.PI * (i + 1)) / n];
-    const o = (th: number, e: number): Pt => [Math.round((DOME_W * k + e) * Math.cos(th) * 1e4) / 1e4, Math.round((DOME_Y + (DOME_H * k + e) * Math.sin(th)) * 1e4) / 1e4];
-    return { mat: "seam", pts: [o(p, -t), o(q, -t), o(q, t), o(p, t)], fine: 2 };
-  });
-}
 
 const WHITE = "#f1f2f0";
 export const CRH380A_LIVERY: ShinkansenLivery = {
   title: "CRH blue", number: "CRH380A-2670",
   palette: {
     white: c(WHITE), blue: c("#1d47a5", 0.4), dark: c("#24282d", 0.3), roofG: c("#e8eae9", 0.55), skirtG: c("#8f969c", 0.7),
-    cabMask: c("#15171a", 0.3), dome: c("#b9bec3", 0.25), seam: c("#3b3f44", 0.5), lampCover: { color: "#9aa7b3", metallic: 0.3, roughness: 0.1, glass: true },
-    screenGlass: { color: "#4a6170", metallic: 0.4, roughness: 0.08, glass: true },
+    cabMask: { color: "#16191c", metallic: 0.3, roughness: 0.15, glass: true }, dome: c("#b9bec3", 0.25), seam: c("#3b3f44", 0.5), lampCover: { color: "#d3d8dc", metallic: 0.3, roughness: 0.12, glass: true }, lampRim: c("#5d646a", 0.35),
+    screenGlass: { color: "#34444f", metallic: 0.4, roughness: 0.08, glass: true },
   },
   // white, the blue stripe, a white gap and the dark window band up to the shoulder
   bands: [[0, 1.72, "white"], [1.72, 1.85, "blue"], [1.85, 1.97, "white"], [1.97, 2.95, "dark"], [2.95, 9, "white"]],
