@@ -23,7 +23,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-hxd1` | CR HXD1 | its own twin-section body (`generator/cnHxd1.ts`), two articulated sections | - | 2 x 17.611 m Bo'Bo', 3.1 m wide (real 3.247 m), 9,600 kW, 120 km/h |
 | `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, its own cab and livery (`generator/cnHxd3d.ts`) | - | Co-Co, 22.99 m, 126 t, 7,200 kW, 160 km/h |
 | `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, its own profile tables (`generator/cnSs1.ts`) | - | Co-Co, 20.368 m, 3,780 kW, 90 km/h |
-| `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, streamlined | - | Bo-Bo, 17.5 m, 3,600 kW, 170 km/h |
+| `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, its own profile tables (`cnSs8.ts`) | - | Bo-Bo, 17.516 m, 88 t, 3,600 kW, 170 km/h |
 | `proc-vehicle-cr-df4` | CR DF4 Dongfeng | box locomotive, diesel | `livery` (`orangeWhite`, `green`) | Co-Co, 20.5 m, 1,985 kW |
 | `proc-vehicle-cr-df11` | CR DF11 Dongfeng | box locomotive, streamlined, diesel | - | Co-Co, 21.25 m, 3,040 kW, 170 km/h |
 | `proc-vehicle-cr-qj` | CR QJ | steam, knuckle couplers | `unit` | 2-10-2, 1.5 m drivers |
@@ -444,4 +444,34 @@ by a projective fit over its six equally spaced portholes).
   bottoms, the axle boxes and the springs) and the main reservoirs between the bogies.
 - **Distant model.** The same profiles without the rim, the waist stripe kept and the lower one
   left out, the resistor housings, the bogie blocks and the raised pantograph (100 triangles).
+
+## The SS8's body
+
+`generator/cnSs8.ts`, its own profile tables on the box locomotive kit (no generic world-locomotive nose),
+measured from the photographs in `assets/cr-ss8/` (SOURCES.md) and the published figures: 17.516 m over the
+couplers, a 16.3 m body, 3.1 m wide, 88 t, 1.25 m wheels. Drawn as SS8 0228 (Guangzhou depot).
+
+- **Ends.** Both alike: the face upright below a crease at 2.4 m, raked 0.45 m back to the roof's
+  shoulder at 3.75 m and rounding to the 4.08 m roof, slightly bowed in plan, its corners swept 0.45 m back.
+  Two separate windscreens in white rims (0.2 - 1.26 m from the middle, 2.70 - 3.46 m high), the round
+  headlight in a light blue pod on the face's top edge, the lamp housings low in the face (headlight outboard,
+  red lamp inboard, 1.64 - 1.96 m), the CR emblem on the chevron, the number on the steel blue lower face, the train supply
+  sockets beside the coupler.
+- **Skirt and couplers.** The side's foot is at 0.9 m (over the upper half of the wheels); over the last
+  2.45 m of each end the skirt drops to 0.45 m at the face, the red and white striped plough below it. The
+  automatic couplers are drawn as the kit's centre coupler at 0.88 m; there are no side buffers.
+- **Livery.** The class's blue livery (no red and white SS8 was found), sampled from SS8 0077 and 0228 (the
+  median of clean patches, lifted for the shade): steel blue `#466881` to 1.45 m, light blue `#91c3d2` to
+  2.0 m with a dark steel blue stripe `#345a7a` at 1.66 - 1.78 m, cream `#ece8df` above, a light grey roof. The face: light blue above a cream
+  chevron (2.48 m at the corners, a V down to 2.12 m) that runs down between the light blue lamp pockets to
+  1.47 m. The cab sides light blue above 2.5 m with the red number on the cream below; a light blue band slants
+  back from the roof's shoulder over the door to the lower bands.
+- **Sides.** The raked cab side window (its front edge following the face), the cab door 1.85 - 2.45 m behind
+  the tip, the steel blue louvre panel (`#3e6784`, 2.0 - 3.17 m, its ends slanting back toward the top) with vertical
+  louvres, six oval windows above it, not evenly spaced (-4.45, -2.4, -0.5, 0.55, 2.4, 4.25 m, the other side
+  turned), grey equipment boxes between the bogies.
+- **Roof.** An air conditioner over each cab (1.55 - 2.95 m behind the tip, its louvred end toward the cab), a
+  single-arm pantograph behind each at 4.4 m from the middle (the rear raised), the roof cable and the main
+  breaker between them. Bogie centres 8.2 m and a 2.8 m wheelbase (measured; not published).
+- **Distant model.** The kit's: the same profile and bands, the louvre panel as a band along the side.
 

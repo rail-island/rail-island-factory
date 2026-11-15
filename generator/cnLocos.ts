@@ -11,6 +11,7 @@ import { c } from "./czElectricKit.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { enumParam } from "./emuParts.ts";
 import { buildHxn5, buildHxn5Lod, HXN5_LIVERIES } from "./cnHxn5.ts";
+import { buildSs8, buildSs8Lod } from "./cnSs8.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { crHxd1, crHxd1Lod } from "./cnHxd1.ts";
@@ -33,13 +34,13 @@ const bands = (body: Body, number: string, ...list: Array<[number, string]>): Wo
 };
 
 const HXD3D: Body = { length: 20.85, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked", bogies: coCo(5.6, 1.9, 0.625), pantograph: "singleArm", pantographX: 6.0, room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
-const SS8: Body = { length: 17.5, W: 1.5, y0: 1.35, roof: 4.0, nose: "streamlined", bogies: [[-4.5, [-1.45, 1.45], 0.625], [4.5, [-1.45, 1.45], 0.625]], pantograph: "singleArm", pantographX: 4.6, room: { kind: "grilles", n: 4, y: [2.6, 3.4] } };
+
 const DF4: Body = { length: 20.5, W: 1.5, y0: 1.35, roof: 4.0, nose: "raked", bogies: coCo(5.5, 1.8, 0.525), exhausts: [0], room: { kind: "windows", n: 5, y: [2.6, 3.2] } };
 const DF11: Body = { length: 21.25, W: 1.5, y0: 1.35, roof: 4.0, nose: "streamlined", bogies: coCo(5.7, 1.8, 0.525), exhausts: [0.6], room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 
 const L: Record<string, Liveries> = {
   hxd3d: { redGrey: { title: "Red and grey", loco: bands(HXD3D, "HXD3D 0001", [2.3, "#b5232b"], [2.5, "#f1f1ee"], [4.4, "#9aa0a5"]) } },
-  ss8: { redWhite: { title: "Red and white", loco: bands(SS8, "SS8 0001", [2.3, "#b5232b"], [4.4, "#f1f1ee"]) } },
+
   df4: { orangeWhite: { title: "Orange, white", loco: bands(DF4, "DF4 1001", [2.3, "#e8701e"], [2.5, "#f1f1ee"], [4.4, "#e8701e"]) }, green: { title: "Green", loco: bands(DF4, "DF4 0001", [2.3, "#2f6b3a"], [2.45, "#f2c31a"], [4.4, "#2f6b3a"]) } },
   df11: { redWhite: { title: "Red and white", loco: bands(DF11, "DF11 0001", [2.3, "#b5232b"], [4.4, "#f1f1ee"]) } },
 };
@@ -52,8 +53,9 @@ export { crHxd1, crHxd1Lod };
 export function crHxd3d(_v?: ParamValues): MeshBuilder { return crHxd3dBody(); }
 export function crHxd3dLod(_v?: ParamValues): MeshBuilder { return crHxd3dBodyLod(); }
 export { crSs1, crSs1Lod };
-export function crSs8(v?: ParamValues): MeshBuilder { return b("ss8", v); }
-export function crSs8Lod(v?: ParamValues): MeshBuilder { return lod("ss8", v); }
+// its own profile tables and livery (cnSs8.ts), no livery parameter
+export function crSs8(): MeshBuilder { return buildSs8(); }
+export function crSs8Lod(): MeshBuilder { return buildSs8Lod(); }
 export function crDf4(v?: ParamValues): MeshBuilder { return b("df4", v); }
 export function crDf4Lod(v?: ParamValues): MeshBuilder { return lod("df4", v); }
 export function crDf11(v?: ParamValues): MeshBuilder { return b("df11", v); }
@@ -68,7 +70,7 @@ export const CN_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-cr-hxd1", title: "CR HXD1", build: crHxd1, buildLod: crHxd1Lod, game: locoGame(200, 9600, 120), catalog: E, references: "cr-hxd1" },
   d("cr-hxd3d", "CR HXD3D", "hxd3d", crHxd3d, crHxd3dLod, 126, 7200, 160),
   { id: "proc-vehicle-cr-ss1", title: "CR SS1 Shaoshan", build: crSs1, buildLod: crSs1Lod, game: locoGame(138, 3780, 90), catalog: E, references: "cr-ss1" },
-  d("cr-ss8", "CR SS8 Shaoshan", "ss8", crSs8, crSs8Lod, 88, 3600, 170),
+  { id: "proc-vehicle-cr-ss8", title: "CR SS8 Shaoshan", build: crSs8, buildLod: crSs8Lod, game: locoGame(88, 3600, 170), catalog: E, references: "cr-ss8" },
   d("cr-df4", "CR DF4 Dongfeng", "df4", crDf4, crDf4Lod, 138, 1985, 100, D),
   d("cr-df11", "CR DF11 Dongfeng", "df11", crDf11, crDf11Lod, 138, 3040, 170, D),
 ];
