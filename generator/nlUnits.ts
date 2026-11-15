@@ -16,6 +16,7 @@ import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
 import { ICM } from "./nlIcm.ts";
 import { MAT46 } from "./nlMat46.ts";
 import { VIRM } from "./nlVirm.ts";
+import { V250 } from "./nlV250.ts";
 
 export { DE1, MAT46, VIRM };
 import { SNG } from "./nlSng.ts";
@@ -51,17 +52,6 @@ export const NS_FLIRT: ShinkansenSeries = flirt({
   liveries: { sprinter: nsLivery("sprinter", "2501") },
   weight: { end: 42, middle: 32 }, power: 375, maxspeed: 160,
 });
-
-export const V250: ShinkansenSeries = {
-  endLength: 27.15, midLength: 26.0, W: 1.45, Y: 1.4, S: 3.1, C: 4.08, lean: 0.95, B: 0.8, A: 1.05,
-  // the Fyra's long sloping nose, the windscreen far back
-  nose: nose(6.0, 0.08, 2.4, [[0, 1.2], [0.6, 1.6], [2.4, 2.3], [4.2, 3.0], [5.8, 3.7], [7.0, 4.08]], [[0, 1.15], [0.6, 1.5], [2.4, 2.1], [4.2, 2.65], [5.8, 2.95], [7.0, 3.1]], [[0, 1.1], [1.5, 1.3], [3.0, 1.4]], [[0, 1.05], [1.5, 1.05]], [[0, 1.0], [0.6, 0.6], [2.0, 0.8]]),
-  windscreen: [4.0, 5.9, 0.07, 1.05], lamps: [1.4, 1.45],
-  windows: [[1.95, 2.75]], windowW: 1.3, pitch: 1.6, door: [1.3, 3.1, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.46, wheelbase: 2.7,
-  liveries: { fyra: nsLivery("fyra", "4801", 3.1) },
-  weight: { end: 55, middle: 52 }, power: 680, maxspeed: 250,
-};
 
 const P = {
   mat46: seriesParams(MAT46), mat54: seriesParams(MAT54), planV: seriesParams(PLAN_V), de1: seriesParams(DE1), icm: seriesParams(ICM), virm: seriesParams(VIRM),
