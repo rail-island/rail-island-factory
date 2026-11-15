@@ -23,7 +23,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-ir-wap7` | IR WAP-7 / WAG-9 | box locomotive, raked | `livery` (`redWhite`, `blue`, `wag9`) | Co-Co, 20.56 m, 4,500 kW |
 | `proc-vehicle-ir-wap5` | IR WAP-5 | box locomotive, streamlined | `livery` (`whiteRed`, `gatimaan`) | Bo-Bo, 18.16 m, 4,000 kW, 160 km/h |
 | `proc-vehicle-ir-wag12b` | IR WAG-12B | box locomotive, the Prima body | - | 35.0 m, eight axles, 9,000 kW |
-| `proc-vehicle-ir-wp` | IR WP | steam | `unit`, `livery` (`black`, `greenYellow`) | 4-6-2, 1.7 m drivers |
+| `proc-vehicle-ir-wp` | IR WP | steam | `unit`, `livery` (`black`, `greenYellow`) | 4-6-2, 1.702 m drivers, bullet nose; 13.75 + 9.85 m (`generator/inWp.ts`) |
 | `proc-vehicle-ir-wg` | IR WG | steam | `unit` | 2-8-2, 1.56 m drivers |
 | `proc-vehicle-eir-fairy-queen` | Fairy Queen | steam, no valve gear | `unit` | 2-2-2 of 1855 |
 | `proc-vehicle-dhr-b-class` | DHR B class | steam, 610 mm gauge | `unit` | 0-4-0, 0.66 m drivers |
@@ -45,7 +45,7 @@ The catalog had no Indian train before. Every design is filed under India.
 - **Diesels.** The WDM-2, WDP-4D and WDG-4G are drawn on their American relatives'
   bodies (GP9 re-trucked, SD70ACe, ES44AC) in IR paint; the WDP-4D's second cab is left out.
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
-- **WP.** The bullet-nosed smokebox front is the generator's plain one.
+- **WP.** Drawn from its own spec (`generator/inWp.ts`) on the steam kit: the bullet nose with its star and headlamp, the running board's S sweep and the cab are measured from three-quarter photographs (no side-on photo on Commons). The tender is a plain high box; the sweep plates are narrower than the real fenders.
 - **DHR B class.** The saddle-tank engine is drawn with the generator's small tender.
 
 ## Tests

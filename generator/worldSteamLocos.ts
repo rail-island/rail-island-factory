@@ -13,6 +13,7 @@ import { steamEngineSpec, steamTenderSpec, type WorldSteam } from "./steamWorld.
 import { DRG01_WORLD, drg01Spec } from "./deSteam01.ts";
 import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
 import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
+import { wpLod, wpSpec } from "./inWp.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -47,7 +48,8 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-br-9f": { base: { ...UK, title: "BR 9F", lead: 1, coupled: 5, trail: 0, leadD: 1.0, coupledD: 1.52, trailD: 0, boilerR: 0.88, deflectors: "wagner", domes: 1, belpaire: true, palette: { paint: "#1d1e20", wheel: "#1d1e20", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.4, axles: 3, d: 1.0 }, number: "92203" },
     liveries: { brBlack: { title: "BR black", palette: { paint: "#1d1e20", wheel: "#1d1e20", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "92203" }, eveningStar: { title: "Evening Star", palette: { paint: "#1f4d2e", wheel: "#1f4d2e", frame: "#1d1e20", smokebox: "#1c1d22" }, number: "92220 EVENING STAR" } } },
   "proc-vehicle-rocket": { base: { ...UK, title: "Stephenson's Rocket", lead: 0, coupled: 1, trail: 1, leadD: 0, coupledD: 1.435, trailD: 0.76, boilerR: 0.5, deflectors: "none", domes: 0, noValveGear: true, noCab: true, palette: { paint: "#e6b422", wheel: "#e6b422", frame: "#1d1e20", smokebox: "#1c1d22" }, tender: { length: 4.2, axles: 2, d: 0.9 }, number: "ROCKET" } },
-  "proc-vehicle-ir-wp": { base: { ...IR, title: "IR WP", lead: 2, coupled: 3, trail: 1, leadD: 0.92, coupledD: 1.7, trailD: 1.1, boilerR: 0.92, deflectors: "none", domes: 2, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 9.9, axles: 4, d: 1.0 }, number: "7200" },
+  // the WP is drawn from its own spec (inWp.ts); this entry gives the title, the measures and the livery keys
+  "proc-vehicle-ir-wp": { base: { ...IR, title: "IR WP", lead: 2, coupled: 3, trail: 1, leadD: 1.092, coupledD: 1.702, trailD: 1.092, boilerR: 0.92, deflectors: "none", domes: 1, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 9.85, axles: 4, d: 0.95 }, number: "7200" },
     liveries: { black: { title: "Black", palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "7200" }, greenYellow: { title: "Green, yellow", palette: { paint: "#2f6b3a", wheel: "#a51a1f", frame: "#d9b54a", smokebox: "#1c1d22" }, number: "7161" } } },
   "proc-vehicle-ir-wg": { base: { ...IR, title: "IR WG", lead: 1, coupled: 4, trail: 1, leadD: 1.0, coupledD: 1.56, trailD: 1.1, boilerR: 0.92, deflectors: "none", domes: 2, palette: { paint: "#1d1e20", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 9.6, axles: 4, d: 1.0 }, number: "10560" } },
   "proc-vehicle-eir-fairy-queen": { base: { ...IR, title: "Fairy Queen", lead: 1, coupled: 1, trail: 1, leadD: 1.0, coupledD: 1.83, trailD: 1.0, boilerR: 0.6, deflectors: "none", domes: 1, noValveGear: true, palette: { paint: "#2f5e3a", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 5.2, axles: 2, d: 1.0 }, number: "22 EIR" } },
@@ -105,8 +107,9 @@ export function br9fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worl
 // the Rocket has its own parts (rocket.ts); its WORLD_STEAM entry gives the title and the parameters
 export function rocket(v?: ParamValues): MeshBuilder { const p = resolveParams(PARAMS["proc-vehicle-rocket"]!, v); return buildRocket(p.unit!, p.version as RocketVersion); }
 export function rocketLod(v?: ParamValues): MeshBuilder { const p = resolveParams(PARAMS["proc-vehicle-rocket"]!, v); return buildRocketLod(p.unit!, p.version as RocketVersion); }
-export function irWp(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wp", v)); }
-export function irWpLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ir-wp", v)); }
+const irWpParams = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-ir-wp"]!, v);
+export function irWp(v?: ParamValues): MeshBuilder { const p = irWpParams(v); return buildLoco(wpSpec(p.unit!, p.livery!)); }
+export function irWpLod(v?: ParamValues): MeshBuilder { const p = irWpParams(v); return wpLod(p.unit!, p.livery!); }
 export function irWg(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-ir-wg", v)); }
 export function irWgLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-ir-wg", v)); }
 export function eirFairyQueen(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-eir-fairy-queen", v)); }
