@@ -60,7 +60,7 @@ kit's painted sweeps, decals, lettering, coupler and distant model, and adds:
 
 The GP9, SD40-2 and ES44AC are drawn by the kit; the SD70ACe has its own builder
 (next section) that borrows the kit's painted sweeps, decals, lettering and coupler.
-`SD70_SPEC` stays in `usDiesels.ts` for the kit's Indian WDP4D (`inLocos.ts`).
+`SD70_SPEC` stays in `usDiesels.ts` for the SD70 liveries; the Indian WDP-4D is drawn on its own (`inWdp4d.ts`).
 
 One builder, `buildUsHood(spec, livery)`, draws every unit from a `UsHoodSpec`
 (measures) and a `UsLivery` (paint), +X toward the short hood (the F end):

@@ -1,7 +1,6 @@
 // Indian locomotives. The road diesels on the hood unit kit (usHoodKit.ts),
-// on the frames of their American relatives (usDiesels.ts): the EMD WDP-4D on
-// the SD70ACe's; the ALCO WDM-2 (inWdm2.ts) and the GE WDG-4G (inWdg4g.ts)
-// drawn on their own from photographs. The electrics on the box locomotive kit
+// each drawn on its own from photographs: the ALCO WDM-2 (inWdm2.ts), the EMD
+// WDP-4D (inWdp4d.ts) and the GE WDG-4G (inWdg4g.ts). The electrics on the box locomotive kit
 // (worldLocoKit.ts): the WAM-4, WAP-4, WAP-7 / WAG-9 and WAP-5; the twin
 // WAG-12B drawn on its own (inWag12b.ts). Broad-gauge bodies on the 3.3 m gauge ("us").
 // See docs/models/india-trains.md.
@@ -13,10 +12,10 @@ import { c } from "./czElectricKit.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { enumParam } from "./emuParts.ts";
 import { paint } from "./dieselParts.ts";
-import { buildUsHood, usHoodLod, type UsHoodSpec, type UsLivery } from "./usHoodKit.ts";
-import { SD70_SPEC } from "./usDiesels.ts";
+import type { UsHoodSpec, UsLivery } from "./usHoodKit.ts";
 import { WDM2_BODY, WDM2_LIVERIES, buildWdm2, wdm2Lod } from "./inWdm2.ts";
 import { buildWdg4g, buildWdg4gLod, type Wdg4gLivery } from "./inWdg4g.ts";
+import { buildWdp4d, buildWdp4dLod } from "./inWdp4d.ts";
 import { liveryParams, liverySpec, locoGame, paramsOf, type Liveries } from "./frLocos.ts";
 import type { WorldLoco } from "./worldLocoKit.ts";
 import { WAP5_PARAMS, irWap5, irWap5Lod } from "./inWap5.ts";
@@ -54,8 +53,8 @@ const hood = <T>(l: Record<string, T>, p: ParamSpec[], v?: ParamValues): T => l[
 
 export function irWdm2(v?: ParamValues): MeshBuilder { return buildWdm2(WDM2_LIVERIES[resolveParams(H.wdm2, v).livery!]!); }
 export function irWdm2Lod(v?: ParamValues): MeshBuilder { return wdm2Lod(WDM2_LIVERIES[resolveParams(H.wdm2, v).livery!]!); }
-export function irWdp4d(v?: ParamValues): MeshBuilder { return buildUsHood(SD70_SPEC, hood(WDP4D, H.wdp4d, v)); }
-export function irWdp4dLod(v?: ParamValues): MeshBuilder { return usHoodLod(SD70_SPEC, hood(WDP4D, H.wdp4d, v)); }
+export function irWdp4d(v?: ParamValues): MeshBuilder { hood(WDP4D, H.wdp4d, v); return buildWdp4d(); }
+export function irWdp4dLod(v?: ParamValues): MeshBuilder { hood(WDP4D, H.wdp4d, v); return buildWdp4dLod(); }
 export function irWdg4g(v?: ParamValues): MeshBuilder { return buildWdg4g(hood(WDG4G, H.wdg4g, v)); }
 export function irWdg4gLod(v?: ParamValues): MeshBuilder { return buildWdg4gLod(hood(WDG4G, H.wdg4g, v)); }
 
@@ -94,7 +93,7 @@ const d = (id: string, title: string, params: ParamSpec[], build: (v?: ParamValu
 
 export const IN_LOCOS: ProceduralDesign[] = [
   d("ir-wdm2", "IR WDM-2", H.wdm2, irWdm2, irWdm2Lod, 112, 1940, 120, D),
-  d("ir-wdp4d", "IR WDP-4D", H.wdp4d, irWdp4d, irWdp4dLod, 121, 3300, 160, D),
+  d("ir-wdp4d", "IR WDP-4D", H.wdp4d, irWdp4d, irWdp4dLod, 123, 3300, 135, D),
   d("ir-wdg4g", "IR WDG-4G", H.wdg4g, irWdg4g, irWdg4gLod, 135, 3400, 100, D),
   d("ir-wam4", "IR WAM-4", P.wam4!, irWam4, irWam4Lod, 113, 2700, 120),
   d("ir-wap4", "IR WAP-4", WAP4_PARAMS, irWap4, irWap4Lod, 112, 3800, 140),

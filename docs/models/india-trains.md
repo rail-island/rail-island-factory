@@ -16,7 +16,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-ir-memu` | IR MEMU | series, flat cab | `unit`, `cars` 4 - 8, `livery` (`std`, `alt`) | 110 km/h |
 | `proc-vehicle-dmrc-rs1` | Delhi Metro RS1 | series, cab face | `unit`, `cars` 4 - 8 | broad gauge; 21.84 / 21.34 m cars, 3.2 m wide, four double doors a side; 80 km/h |
 | `proc-vehicle-ir-wdm2` | IR WDM-2 | own builder (`inWdm2.ts`) on the hood kit's sweeps | `livery` (`maroon`, `blue`) | Co-Co, 17.12 m, 1,940 kW, 120 km/h |
-| `proc-vehicle-ir-wdp4d` | IR WDP-4D | hood unit, the SD70ACe's body | - | 3,300 kW, 160 km/h |
+| `proc-vehicle-ir-wdp4d` | IR WDP-4D | own module (`inWdp4d.ts`), twin cab | - | Co-Co, 21.24 m over buffers, 3,300 kW, 135 km/h |
 | `proc-vehicle-ir-wdg4g` | IR WDG-4G | own module (`inWdg4g.ts`), twin cab | - | Co-Co, 22.57 m, 3,400 kW, 100 km/h |
 | `proc-vehicle-ir-wam4` | IR WAM-4 | box locomotive, flat | `livery` (`blue`, `maroon`) | Co-Co, 18.79 m, 2,700 kW |
 | `proc-vehicle-ir-wap4` | IR WAP-4 | box locomotive kit, its own tables (`inWap4.ts`) | `livery` (`rajdhani`, `shatabdi`) | Co-Co, 18.79 m, 3.18 m wide, bogie centres 11.0 m, 3,800 kW, 140 km/h |
@@ -126,6 +126,16 @@ The catalog had no Indian train before. Every design is filed under India.
   have their own deep side frames with journal boxes and coil springs; the cab roofs stand 0.2 m over the hood.
   Bogie centres 13.8 m (13.4 m on the side photograph, 14.48 m published); the Devanagari
   lettering of the right side is not drawn, the left side's "Indian Railways" is in capitals.
+- **WDP-4D.** Drawn on its own (`generator/inWdp4d.ts`, borrowing the hood kit's sweeps and decals) from
+  five photographs (`assets/ir-wdp4d/`): a full-width cab at each end (cab 1 2.19 m, cab 2 1.95 m), the
+  face upright to 2.9 m and raked 0.22 m over the barred screens, the roof arched from the 3.86 m eaves to the
+  4.12 m crown, the twin headlight, marker lamps and the crown lamp under the horn box; the hood flared to the
+  cabs' width over the radiator behind cab 2 (its side grilles under the overhang) and over the equipment
+  section behind cab 1 (two round hatches); side buffers and the centre coupler on deep headstocks; HTSC Co-Co (cast side frames, a pair of coils on each journal box)
+  bogies at +-6.35 m (axles 2.06 m apart), measured by a projective fit along 40086's side. 19.964 m over the
+  headstocks, 21.244 m over the buffers, 3.127 m over the walkways. Paint: the yellow-band scheme (blue hood
+  with yellow and white bands, white cabs, the band narrowing to a point on the face, the blue foot band);
+  the face's upright corners rounded (0.16 m), a wiper on each screen; the flags, the roof air conditioner and the GSM-R aerial are not drawn, and the buffer heads are the shared 0.4 m ones (IR's are about 0.45 m).
 - **WAG-12B.** One 35 m body on eight axles; its two sections' joint is not drawn.
 - **WAP-5.** Drawn as the later CLW units run (30164): the aerodynamic cab 1 at +x (the lower nose bulging 0.25 m ahead of the headstock and rounded in plan, windscreens raked about 50 degrees behind wire guards, a raked cab side window) and the flat cab 2 at -x, both over an open-bar cowcatcher; the ABB and early CLW units with two flat cabs are not drawn. One machine-room window a side, diagonally opposite; side positions follow the 2.434 m cab length, not a side-on photograph (none is free). The Gatimaan scheme (30086) has no free photograph: the white-red stripes in blue with a yellow line. Lettering (WAP5, Bharatiya Rail, the shed) and the centre buffer coupler are left out; the distant model merges the two stripes. References: `assets/ir-wap5/SOURCES.md`.
 - **WAG-12B** (`generator/inWag12b.ts`, assets/ir-wag12b/). Drawn from photographs of 60051, 60185, 60222 and 60227: two single-cab Bo-Bo sections back to back, each a section of an articulated vehicle (`articulate`, tramKit.ts) hinged at the coupling plane, the 1.0 m gap between the flat light-blue inner ends covered by the narrow black duct the photographs show, the roof jumper over it; 38.4 m over couplers, 3.2 m wide, bogie pivots 10.2 m per section, wheels 1,250 mm, a single-arm pantograph per section 4.5 m from the joint (the rear section's raised). The cab: the face raked 0.42 m to the windscreens' head, its corners chamfered, the black mask with its vee-shaped lower edge, two guarded windscreens, the light-blue nose block with the twin headlamps, the lamp pods, buffers and centre coupler, the light-blue plough raked back under the buffer beam, the air-conditioning unit with headlamp and horn on the cab roof. Every photographed unit is blue (mid-blue body, light-blue face and chevrons), so the single livery keeps its key `greyRed` but is painted blue and titled "IR blue". The Hindi lettering is drawn as a Devanagari-like headline with stems, not real glyphs; the machine-room roof is one hatch box.
