@@ -8,6 +8,9 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { irVandeBharat, irVandeBharatLod, VANDE_BHARAT } from "./inVandeBharat.ts";
+
+export { irVandeBharat, irVandeBharatLod, VANDE_BHARAT };
 
 const lv = (title: string, number: string, ...list: Array<[number, string]>): ShinkansenLivery => {
   const palette: ShinkansenLivery["palette"] = { roofG: c("#9aa0a5", 0.6), skirtG: c("#2a2c2f", 0.75), cabMask: c("#1d1f22", 0.3) };
@@ -15,17 +18,6 @@ const lv = (title: string, number: string, ...list: Array<[number, string]>): Sh
   let y = 0;
   list.forEach(([top, colour], i) => { palette[`b${i}`] = c(colour); bands.push([y, top, `b${i}`]); y = top; });
   return { title, number, palette, bands, roof: "roofG", skirt: "skirtG" };
-};
-
-export const VANDE_BHARAT: ShinkansenSeries = {
-  endLength: 23.0, midLength: 23.0, W: 1.62, Y: 1.35, S: 3.25, C: 4.0, lean: 0.95, B: 0.85, A: 1.05,
-  // the aerodynamic nose of Train 18
-  nose: nose(3.6, 0.15, 2.4, [[0, 1.5], [0.5, 2.05], [1.8, 2.85], [3.2, 3.55], [4.0, 4.0]], [[0, 1.45], [0.5, 1.95], [1.8, 2.65], [3.2, 3.1], [4.0, 3.25]], [[0, 1.35], [1.0, 1.35]], [[0, 1.15], [0.8, 1.05]], [[0, 1.05], [0.4, 0.85]]),
-  windscreen: [1.6, 3.4, 0.07, 1.15], lamps: [0.5, 1.5],
-  windows: [[1.95, 2.8]], windowW: 1.5, pitch: 1.8, door: [1.25, 3.05, 1.95, 2.65], doorW: 1.0,
-  bogieCentres: 14.9, wheelR: 0.46, wheelbase: 2.56, cars: [4, 8],
-  liveries: { whiteBlue: lv("White and blue", "22436", [1.1, "#1d3f80"], [1.75, "#f1f1ee"], [1.85, "#1d3f80"], [9, "#f1f1ee"]), saffron: lv("Saffron, grey", "20901", [1.1, "#4d5257"], [1.75, "#f1f1ee"], [1.9, "#f08a24"], [9, "#e9ebec"]) },
-  weight: { end: 52, middle: 50 }, power: 1100, maxspeed: 180,
 };
 
 export const NAMO_BHARAT: ShinkansenSeries = {
@@ -87,8 +79,6 @@ export const DELHI_METRO: ShinkansenSeries = {
 
 const P = { vb: seriesParams(VANDE_BHARAT), nb: seriesParams(NAMO_BHARAT), mumbai: seriesParams(MUMBAI_EMU), memu: seriesParams(MEMU), dmrc: seriesParams(DELHI_METRO) };
 
-export function irVandeBharat(v?: ParamValues): MeshBuilder { return buildSeries(VANDE_BHARAT, P.vb, v); }
-export function irVandeBharatLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(VANDE_BHARAT, P.vb, v); }
 export function ncrtcNamoBharat(v?: ParamValues): MeshBuilder { return buildSeries(NAMO_BHARAT, P.nb, v); }
 export function ncrtcNamoBharatLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(NAMO_BHARAT, P.nb, v); }
 export function irMumbaiEmu(v?: ParamValues): MeshBuilder { return buildSeries(MUMBAI_EMU, P.mumbai, v); }
