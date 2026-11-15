@@ -215,7 +215,7 @@ file is the authority.
 | `sncf-corail-coach` | SNCF Corail coach | train RAIL | 1975 | 58 PASS | 49 / 12 | 3 | - |
 | `sncf-grand-confort` | SNCF Grand Confort | train RAIL | 1970 | 48 PASS | 46 / 11 | 3 | - |
 | `ciwl-car` | Wagons-Lits car | train RAIL | 1929 | 28 PASS | 33 / 9 | 3 | - |
-| `ns-mat46` | NS Mat '46 | train ELRL | 1949 | 76 PASS | 70 / 28 | 2 | 2 cars |
+| `ns-mat46` | NS Mat '46 | train ELRL | 1949 | 62 PASS | 73 / 28 | 2 | 2 cars |
 | `ns-mat54` | NS Mat '54 Hondekop | train ELRL | 1957 | 64 PASS | 72 / 27 | 3 | 4 cars |
 | `ns-plan-v` | NS Plan V | train ELRL | 1966 | 72 PASS | 74 / 28 | 2 | 2 cars |
 | `ns-de1` | NS DE-I Blauwe Engel | train RAIL | 1954 | 64 PASS | 68 / 27 | 1 | - |

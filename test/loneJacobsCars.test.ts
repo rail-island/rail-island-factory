@@ -12,11 +12,13 @@ import { loneJointAxles, type ShinkansenSeries } from "../generator/shinkansen";
 import { SBB_FLIRT } from "../generator/chUnits";
 import { BR423 } from "../generator/deBr423";
 import { SVT877 } from "../generator/deSvt877";
+import { MAT46 } from "../generator/nlMat46";
 
 const CASES: Array<[string, ShinkansenSeries]> = [
   ["proc-vehicle-sbb-flirt", SBB_FLIRT],
   ["proc-vehicle-db-423", BR423],
   ["proc-vehicle-drg-svt877", SVT877],
+  ["proc-vehicle-ns-mat46", MAT46],
 ];
 
 const leaves = (n: TreeNode): LeafNode[] => (isLeaf(n) ? [n] : n.children.flatMap(leaves));
