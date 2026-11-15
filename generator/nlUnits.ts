@@ -9,6 +9,7 @@ import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type Shinkanse
 import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import { MAT54 } from "./nlMat54.ts";
+import { SNG } from "./nlSng.ts";
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";
@@ -159,15 +160,6 @@ export const SLT: ShinkansenSeries = {
   bogieCentres: 11.5, wheelR: 0.42, wheelbase: 2.3, cars: [4, 6],
   liveries: { sprinter: nsLivery("sprinter", "2401") },
   weight: { end: 40, middle: 32 }, power: 380, maxspeed: 160,
-};
-
-export const SNG: ShinkansenSeries = {
-  ...SLT,
-  endLength: 18.4, midLength: 16.6,
-  nose: nose(1.6, 0.4, 2.4, [[0, 2.6], [0.4, 3.25], [1.2, 3.8], [1.8, 4.0]], [[0, 2.5], [0.4, 3.0], [1.2, 3.2]], [[0, 1.25], [0.8, 1.25]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
-  cars: [3, 4],
-  liveries: { sprinter: nsLivery("sprinter", "2301") },
-  weight: { end: 42, middle: 34 }, power: 360, maxspeed: 160,
 };
 
 export const ICNG: ShinkansenSeries = {
