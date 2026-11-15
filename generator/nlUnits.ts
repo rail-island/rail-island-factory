@@ -6,7 +6,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, flirt, nose, NO_NOSE } from "./seriesHelpers.ts";
+import { c, flatCab, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import { PLAN_V } from "./nlPlanV.ts";
 import { MAT54 } from "./nlMat54.ts";
@@ -14,6 +14,7 @@ import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
 import { ICM } from "./nlIcm.ts";
 import { MAT46 } from "./nlMat46.ts";
 import { VIRM } from "./nlVirm.ts";
+import { NS_FLIRT } from "./nlFlirt.ts";
 
 export { MAT46, VIRM };
 
@@ -129,10 +130,7 @@ export const ICNG: ShinkansenSeries = {
   weight: { end: 48, middle: 38 }, power: 400, maxspeed: 200,
 };
 
-export const NS_FLIRT: ShinkansenSeries = flirt({
-  liveries: { sprinter: nsLivery("sprinter", "2501") },
-  weight: { end: 42, middle: 32 }, power: 375, maxspeed: 160,
-});
+export { NS_FLIRT };
 
 export const V250: ShinkansenSeries = {
   endLength: 27.15, midLength: 26.0, W: 1.45, Y: 1.4, S: 3.1, C: 4.08, lean: 0.95, B: 0.8, A: 1.05,
