@@ -20,7 +20,7 @@ Railway's trains. Every design here is filed under China.
 | `proc-vehicle-cr-cr200j` | Fuxing CR200J | series, its power cars' pantographs | `unit`, `cars` 4 - 8, `livery` (`green`, `whiteRed`) | 160 km/h |
 | `proc-vehicle-cr-crh6a` | CRH6A | series | `unit`, `cars` 4 - 8 | 200 km/h |
 | `proc-vehicle-cr-hxn5` | CR HXN5 | hood unit, the ES44AC's body | - | 4,660 kW, 120 km/h |
-| `proc-vehicle-cr-hxd1` | CR HXD1 | box locomotive | - | 35.2 m, eight axles, 9,600 kW |
+| `proc-vehicle-cr-hxd1` | CR HXD1 | its own twin-section body (`generator/cnHxd1.ts`), two articulated sections | - | 2 x 17.611 m Bo'Bo', 3.1 m wide (real 3.247 m), 9,600 kW, 120 km/h |
 | `proc-vehicle-cr-hxd3d` | CR HXD3D | box locomotive, raked | - | Co-Co, 20.85 m, 7,200 kW, 160 km/h |
 | `proc-vehicle-cr-ss1` | CR SS1 Shaoshan | box locomotive, flat | - | Co-Co, 20.4 m, 3,780 kW |
 | `proc-vehicle-cr-ss8` | CR SS8 Shaoshan | box locomotive, streamlined | - | Bo-Bo, 17.5 m, 3,600 kW, 170 km/h |
@@ -37,7 +37,7 @@ Railway's trains. Every design here is filed under China.
 - **Width.** The high-speed trains' 3.36 - 3.38 m bodies are narrowed to the Shinkansen
   gauge's 3.3 m, as the Shinkansen are.
 - **Couplers.** The box locomotives carry the kit's buffers; China's are automatic couplers.
-- **HXD1.** One 35.2 m body on eight axles; its two sections' joint is not drawn.
+- **HXD1.** Drawn in its original blue and silver livery under the plan's `red` livery key (the class never ran in red); the model has one livery and no parameter.
 - **CR200J.** The power cars are the series kit's end cars, with windows.
 
 ## Tests
@@ -176,3 +176,34 @@ published figures; heights over the rail, d behind the nose's tip.
 - **Pantographs.** Single arm on the third and the third-from-last car (cars 3 and 6), as the kit's
   default; the real sets raise one of them in single-set service, the kit raises both.
 
+## The HXD1's body
+
+`generator/cnHxd1.ts`, measured from the photographs in `assets/cr-hxd1/` (SOURCES.md; units
+0016, 0026, 0151, 0290 in the original livery, 1454 and 1912 for the cab's shape and the right
+side) and the published figures.
+
+- **Two sections.** Two identical single-cab Bo'Bo' sections of 17.611 m over the couplers
+  (35.222 m), coupled back to back: one articulated vehicle of two sections hinged at the coupler
+  plane between them, a grey gangway bellows over the 0.61 m between their flat inner ends, a
+  knuckle coupler at each cab (the automatic coupler, no buffers). Each section stands on its own
+  two bogies, 9.0 m apart, 2.8 m wheelbase, 1.25 m wheels.
+- **Cab.** The EuroSprinter (ES64F4) cab: the face upright to the waist (2.78 m) with rounded
+  corners, the two-pane windscreen raked back 0.46 m to 3.66 m, chamfers beside it narrowing the
+  face toward the roof, the roof cap sloping back to the 4.15 m roof over the rectangular top
+  headlight. The silver lamp band (1.54 - 2.22 m) holds two housings (head lamp outboard, tail
+  lamp inboard), the red "Hexie" characters and the number; the CR emblem above it; dark grey
+  round the windscreens and on the roof cap, the corners blue; a grey skirt with yellow and black
+  stripes below.
+- **Sides.** A small cab side window and the cab door behind it, handrails beside the door and on
+  the cab corner; otherwise plain machine-room walls, the louvres (two pairs a side) on the roof's
+  sloped shoulders (3.38 - 3.92 m). The body is drawn 2.96 m wide so the handrails stay in the
+  3.1 m gauge.
+- **Livery.** Dark blue, a dark grey band along the bottom (1.0 - 1.38 m); on each side a silver
+  trapezoid narrower at the top (its ends leaning in 1.05 m), from 5.3 m behind the cab's coupler
+  to 1.25 m before the inner end (at the foot), holding the red characters and the running number HXD1 0016 - read
+  from the cab rearward on the left side, toward the cab on the right.
+- **Roof.** A cooler box with two fan grilles behind the middle, a single-arm pantograph 1.5 m
+  from each section's inner end (the rear section's raised, as in most photographs), its
+  roof line and the main breaker.
+- **Distant model.** Both sections with their noses, the silver trapezoid as a band, the bogies,
+  frame, transformer, cooler boxes and pantographs, 196 triangles of 200.
