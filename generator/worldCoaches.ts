@@ -20,6 +20,7 @@ import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { enumParam } from "./emuParts.ts";
 import { DB_IC } from "./deIcCoach.ts";
+import { IR_LHB, lhbCoach, lhbCoachLod } from "./inLhbCoach.ts";
 
 type Band = readonly [number, number, string];
 
@@ -761,20 +762,7 @@ export const BR_MK1: WorldCoach = {
 // ---------------------------------------------------------------------------
 // India: the LHB and ICF coaches, broad-gauge bodies on the 3.3 m gauge
 
-export const IR_LHB: WorldCoach = {
-  length: 24.0, W: 1.6, Y: 1.4, S: 3.3, C: 4.03, B: 1.0, A: 1.15, rows: [[1.95, 2.8]], doorIn: 0.6, doorW: 0.8, door: [1.2, 3.1],
-  bogieCentres: 14.9, wheelR: 0.46, wheelbase: 2.56, coupler: "knuckle", maxspeed: 160,
-  types: {
-    ac3: { title: "AC three-tier", windows: 8, windowW: 1.6, number: "3A 211303", weight: 47 },
-    chairCar: { title: "AC chair car", windows: 12, windowW: 1.25, number: "CC 211251", weight: 45 },
-  },
-  liveries: {
-    rajdhani: { title: "Rajdhani", palette: { red: c("#b5232b"), cream: c("#e8dcc0"), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "red"], [1.85, 2.9, "cream"], [2.9, 9, "red"]], roof: "roofG", skirt: "skirtG" },
-    shatabdi: { title: "Shatabdi", palette: { blue: c("#1d3f80"), cream: c("#e8dcc0"), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "blue"], [1.85, 2.9, "cream"], [2.9, 9, "blue"]], roof: "roofG", skirt: "skirtG" },
-    humsafar: { title: "Humsafar", palette: { blue: c("#1d3f80"), orange: c("#f08a24"), white: c("#f1f1ee", 0.4), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "blue"], [1.85, 1.95, "orange"], [1.95, 9, "white"]], roof: "roofG", skirt: "skirtG" },
-    tejas: { title: "Tejas", palette: { gold: c("#c9a55a", 0.35), maroon: c("#6b1d24"), roofG: c("#7d8084", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "maroon"], [1.85, 9, "gold"]], roof: "roofG", skirt: "skirtG" },
-  },
-};
+export { IR_LHB } from "./inLhbCoach.ts";
 
 export const IR_ICF: WorldCoach = {
   length: 22.3, W: 1.6, Y: 1.4, S: 3.3, C: 4.03, B: 1.0, A: 1.15, rows: [[1.9, 2.7]], doorIn: 0.55, doorW: 0.75, door: [1.2, 3.05],
@@ -820,8 +808,8 @@ export function glacierExpress(v?: ParamValues): MeshBuilder { return buildCoach
 export function glacierExpressLod(v?: ParamValues): MeshBuilder { return buildCoachLod(GLACIER, P.glacier, v); }
 export function brMk1(v?: ParamValues): MeshBuilder { return buildCoach(BR_MK1, P.mk1, v); }
 export function brMk1Lod(v?: ParamValues): MeshBuilder { return buildCoachLod(BR_MK1, P.mk1, v); }
-export function irLhbCoach(v?: ParamValues): MeshBuilder { return buildCoach(IR_LHB, P.lhb, v); }
-export function irLhbCoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(IR_LHB, P.lhb, v); }
+export function irLhbCoach(v?: ParamValues): MeshBuilder { return lhbCoach(P.lhb, v); }
+export function irLhbCoachLod(v?: ParamValues): MeshBuilder { return lhbCoachLod(P.lhb, v); }
 export function irIcfCoach(v?: ParamValues): MeshBuilder { return buildCoach(IR_ICF, P.icf, v); }
 export function irIcfCoachLod(v?: ParamValues): MeshBuilder { return buildCoachLod(IR_ICF, P.icf, v); }
 export function cr25Coach(v?: ParamValues): MeshBuilder { return buildCoach(CR_25, P.cr25, v); }
