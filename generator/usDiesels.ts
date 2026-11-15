@@ -216,7 +216,7 @@ export function emdSd40Lod(params?: ParamValues): MeshBuilder {
   return sd40_2Lod(SD40_2_PAINT[resolveParams(SD40_PARAMS, params).livery!]!);
 }
 // The ES44AC is drawn in detail by its own module (geEs44ac.ts); ES44_SPEC stays the
-// kit's ES44 frame for the designs built on it (the HXN5, the WDG-4G).
+// kit's ES44 frame for the designs built on it (the WDG-4G; the HXN5 has its own, cnHxn5.ts).
 const es44Livery = (v?: ParamValues) => ES44AC_LIVERIES[resolveParams(ES44_PARAMS, v).livery!]!;
 export function geEs44ac(params?: ParamValues): MeshBuilder {
   return buildEs44ac(es44Livery(params));

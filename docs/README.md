@@ -57,6 +57,8 @@
 | [models/uk-trains.md](models/uk-trains.md) | the British designs on the W6a gauge: InterCity 125 and 225, Class 800, 390, e300, 158, 142 and the 1938 tube stock, the Class 55, 37, 47, 66 and 86, the A4, A3, Castle, Black Five, 9F and Rocket, the Mk1 coach |
 | [models/india-trains.md](models/india-trains.md) | the Indian designs: Vande Bharat, Namo Bharat, Mumbai EMU, MEMU and Delhi Metro, the WDM-2, WDP-4D and WDG-4G, the WAM-4, WAP-4, WAP-7, WAP-5 and WAG-12B, the WP, WG, Fairy Queen and DHR B class, the LHB and ICF coaches, the BOXN wagons |
 | [models/china-trains.md](models/china-trains.md) | the Chinese designs: CR400AF, CR400BF, CRH380A, CRH2A, CRH3C, CRH5A, CR200J and CRH6A, the HXN5, HXD1, HXD3D, SS1, SS8, DF4 and DF11, the QJ, SY and JS, the 25-series coaches, the C70 wagons |
+| [models/china-units.md](models/china-units.md) | the bodies of China's multiple units (CR400AF, CR400BF, CRH380A, CRH2A, CRH3C, CRH5A, CR200J, CRH6A), measured from photographs |
+| [models/china-locos.md](models/china-locos.md) | the bodies of China's locomotives, steam engines, 25-series coach and C70 / P70 wagons, measured from photographs |
 | [models/world-wagons.md](models/world-wagons.md) | the freight wagon generator (open and covered, knuckle couplers) and the plan's wagons |
 | [models/world-locos.md](models/world-locos.md) | box locomotives stated in a few measures for the box locomotive kit: nose types, pantographs or exhausts, the skin items |
 | [models/world-steam.md](models/world-steam.md) | the parametric steam generator (wheel arrangement, boiler, deflectors, couplers, tenders) and the plan's steam designs |

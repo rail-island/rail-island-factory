@@ -22,6 +22,10 @@ lives in the workshop until somebody confirms it.
   the 01, 52 and P 8, and the Intercity coach (docs/models/germany-trains.md).
   The 3 British trains of the detail pass (2026-11): the Class 390 Pendolino, the Class 800
   IET and the Eurostar e300 (docs/models/uk-trains.md).
+  The 20 Indian trains of the detail pass (2026-11): the Vande Bharat, Namo Bharat, Mumbai
+  suburban EMU, MEMU and Delhi Metro RS1, the WDM-2, WDP-4D and WDG-4G, the WAM-4, WAP-4,
+  WAP-7 / WAG-9, WAP-5 and WAG-12B, the WP, WG, Fairy Queen and DHR B class, the LHB and
+  ICF coaches and the BOXN / BCNA wagon (docs/models/india-trains.md).
 - **A new model starts as a draft**: nothing to do when adding one. It reaches the
   game only once confirmed.
 - **Confirming** a model is adding its id to `ids` in `catalogModels.json` (sorted). Do it
