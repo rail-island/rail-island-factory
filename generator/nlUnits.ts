@@ -39,8 +39,6 @@ export function nsLivery(kind: "yellowBlue" | "yellowGrey" | "green" | "fyra" | 
   }
 }
 
-
-
 const P = {
   mat46: seriesParams(MAT46), mat54: seriesParams(MAT54), planV: seriesParams(PLAN_V), de1: seriesParams(DE1), icm: seriesParams(ICM), virm: seriesParams(VIRM),
   ddz: seriesParams(DDZ), sgm: seriesParams(SGM), slt: seriesParams(SLT_SERIES), sng: seriesParams(SNG), icng: seriesParams(ICNG), flirt: seriesParams(NS_FLIRT), v250: seriesParams(V250),
