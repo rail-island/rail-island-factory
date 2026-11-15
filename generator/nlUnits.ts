@@ -8,6 +8,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, flirt, nose } from "./seriesHelpers.ts";
 import { DE1 } from "./nlDe1.ts";
+import { SLT_SERIES } from "./nlSlt.ts";
 import { PLAN_V } from "./nlPlanV.ts";
 import { MAT54 } from "./nlMat54.ts";
 import { DDZ, nsDdz, nsDdzLod } from "./nlDdz.ts";
@@ -92,7 +93,7 @@ export const V250: ShinkansenSeries = {
 
 const P = {
   mat46: seriesParams(MAT46), mat54: seriesParams(MAT54), planV: seriesParams(PLAN_V), de1: seriesParams(DE1), icm: seriesParams(ICM), virm: seriesParams(VIRM),
-  ddz: seriesParams(DDZ), sgm: seriesParams(SGM), slt: seriesParams(SLT), sng: seriesParams(SNG), icng: seriesParams(ICNG), flirt: seriesParams(NS_FLIRT), v250: seriesParams(V250),
+  ddz: seriesParams(DDZ), sgm: seriesParams(SGM), slt: seriesParams(SLT_SERIES), sng: seriesParams(SNG), icng: seriesParams(ICNG), flirt: seriesParams(NS_FLIRT), v250: seriesParams(V250),
 };
 
 export function nsMat46(v?: ParamValues): MeshBuilder { return buildSeries(MAT46, P.mat46, v); }
@@ -109,8 +110,8 @@ export function nsVirm(v?: ParamValues): MeshBuilder { return buildSeries(VIRM, 
 export function nsVirmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(VIRM, P.virm, v); }
 export function nsSgm(v?: ParamValues): MeshBuilder { return buildSeries(SGM, P.sgm, v); }
 export function nsSgmLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(SGM, P.sgm, v); }
-export function nsSlt(v?: ParamValues): MeshBuilder { return buildSeries(SLT, P.slt, v); }
-export function nsSltLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(SLT, P.slt, v); }
+export function nsSlt(v?: ParamValues): MeshBuilder { return buildSeries(SLT_SERIES, P.slt, v); }
+export function nsSltLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(SLT_SERIES, P.slt, v); }
 export function nsSng(v?: ParamValues): MeshBuilder { return buildSeries(SNG, P.sng, v); }
 export function nsSngLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(SNG, P.sng, v); }
 export function nsIcng(v?: ParamValues): MeshBuilder { return buildSeries(ICNG, P.icng, v); }
@@ -129,7 +130,7 @@ export const NL_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-ns-virm", "NS VIRM", VIRM, P.virm, nsVirm, nsVirmLod, "ns-virm", "uic"),
   seriesDesign("proc-vehicle-ns-ddz", "NS DDZ", DDZ, P.ddz, nsDdz, nsDdzLod, "ns-ddz", "uic"),
   seriesDesign("proc-vehicle-ns-sgm", "NS SGM Sprinter", SGM, P.sgm, nsSgm, nsSgmLod, "ns-sgm", "uic"),
-  seriesDesign("proc-vehicle-ns-slt", "NS SLT", SLT, P.slt, nsSlt, nsSltLod, "ns-slt", "uic"),
+  seriesDesign("proc-vehicle-ns-slt", "NS SLT", SLT_SERIES, P.slt, nsSlt, nsSltLod, "ns-slt", "uic"),
   seriesDesign("proc-vehicle-ns-sng", "NS SNG", SNG, P.sng, nsSng, nsSngLod, "ns-sng", "uic"),
   seriesDesign("proc-vehicle-ns-icng", "NS ICNG", ICNG, P.icng, nsIcng, nsIcngLod, "ns-icng", "uic"),
   seriesDesign("proc-vehicle-ns-flirt", "NS Flirt", NS_FLIRT, P.flirt, nsFlirt, nsFlirtLod, "ns-flirt", "uic"),
