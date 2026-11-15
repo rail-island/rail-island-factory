@@ -22,7 +22,7 @@ import { ICNG } from "./nlIcng.ts";
 import { NS_FLIRT } from "./nlFlirt.ts";
 import { V250 } from "./nlV250.ts";
 
-export { DE1, MAT46, NS_FLIRT, VIRM };
+export { DE1, MAT46, NS_FLIRT, VIRM, nsDdz, nsDdzLod };
 
 const NS_YELLOW = "#ffc917";
 const NS_BLUE = "#003082";

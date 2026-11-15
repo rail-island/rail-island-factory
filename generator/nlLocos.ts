@@ -13,7 +13,8 @@ import { NS1300_PARAMS, ns1300, ns1300Lod } from "./nl1300.ts";
 import { NS2200_PARAMS, ns2200, ns2200Lod } from "./nl2200.ts";
 import { NS1200_PARAMS, ns1200, ns1200Lod } from "./nl1200.ts";
 
-export { ns1300, ns1300Lod };
+// the JS model bundles import each design's build functions from this registry (jsModel.ts)
+export { ns1100, ns1100Lod, ns1200, ns1200Lod, ns1300, ns1300Lod, ns1700, ns1700Lod, ns2200, ns2200Lod };
 
 const E = ELECTRIC_LOCO_CATALOG;
 export const NL_LOCOS: ProceduralDesign[] = [

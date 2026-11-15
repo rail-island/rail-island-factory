@@ -32,7 +32,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-sncf-cc6500": 20.19, "proc-vehicle-sncf-cc40100": 22.03, "proc-vehicle-sncf-bb22200": 17.48, "proc-vehicle-sncf-cc7100": 18.92,
   "proc-vehicle-sncf-bb9200": 16.2, "proc-vehicle-sncf-bb27000": 19.52, "proc-vehicle-sncf-bb67400": 17.09, "proc-vehicle-sncf-cc72000": 20.19,
   "proc-vehicle-sncf-corail-coach": 26.4, "proc-vehicle-sncf-grand-confort": 24.5, "proc-vehicle-ciwl-car": 23.45, "proc-vehicle-sncf-x3800": 21.85, "proc-vehicle-sncf-x73500": 28.9,
-  "proc-vehicle-ns-1700": 17.48, "proc-vehicle-ns-1100": 12.93, "proc-vehicle-ns-1300": 18.95, "proc-vehicle-ns-1200": 18.08, "proc-vehicle-ns-2200": 14.01,
+  "proc-vehicle-ns-1700": 17.64, "proc-vehicle-ns-1100": 12.98, "proc-vehicle-ns-1300": 18.95, "proc-vehicle-ns-1200": 18.086, "proc-vehicle-ns-2200": 14.01,
   "proc-vehicle-ns-icr-coach": 26.4, "proc-vehicle-ns-de1": 27.05,
   "proc-vehicle-sbb-re460": 18.5, "proc-vehicle-sbb-re420": 15.41, "proc-vehicle-sbb-re620": 19.31, "proc-vehicle-sbb-ae66": 18.4, "proc-vehicle-sbb-ce68": 19.46,
   "proc-vehicle-sbb-ae814": 34.0, "proc-vehicle-rhb-ge443": 16.0, "proc-vehicle-rhb-ge66": 13.3, "proc-vehicle-mgb-hge442": 14.776, "proc-vehicle-sbb-roter-pfeil": 22.4,
