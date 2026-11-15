@@ -1,7 +1,7 @@
 # India's trains
 
 **Covers** - the twenty Indian designs of the eight-country plan: the Vande Bharat, the Namo Bharat (RRTS), the Mumbai suburban EMU and the MEMU, the Delhi Metro RS1; the WDM-2, WDP-4D and WDG-4G diesels; the WAM-4, WAP-4, WAP-7 / WAG-9, WAP-5 and WAG-12B electrics; the WP, WG, Fairy Queen and Darjeeling B class steam engines; the LHB and ICF coaches; the BOXN / BCNA wagons. Their kits, figures, deviations and tests.
-**Code** - `generator/inUnits.ts` (`IN_UNITS`), `generator/inLocos.ts` (`IN_LOCOS`), `generator/inDelhiMetro.ts`,  `generator/inWdm2.ts`, `generator/inWap7.ts`, `generator/inWap5.ts`, `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `generator/worldWagons.ts`, `test/worldTrains.test.ts`, `assets/ir-*/`, `assets/eir-fairy-queen/`, `assets/dhr-b-class/`, `assets/ncrtc-namo-bharat/`, `assets/dmrc-rs1/`
+**Code** - `generator/inUnits.ts` (`IN_UNITS`), `generator/inLocos.ts` (`IN_LOCOS`), `generator/inWap4.ts`,  `generator/inDelhiMetro.ts`,  `generator/inWdm2.ts`, `generator/inWap7.ts`, `generator/inWap5.ts`, `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `generator/worldWagons.ts`, `test/worldTrains.test.ts`, `assets/ir-*/`, `assets/eir-fairy-queen/`, `assets/dhr-b-class/`, `assets/ncrtc-namo-bharat/`, `assets/dmrc-rs1/`
 **See also** - [us-diesels.md](us-diesels.md) (the hood specs the diesels ride on), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md), [world-wagons.md](world-wagons.md), [loading-gauge.md](loading-gauge.md)
 
 The catalog had no Indian train before. Every design is filed under India.
@@ -19,7 +19,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-ir-wdp4d` | IR WDP-4D | hood unit, the SD70ACe's body | - | 3,300 kW, 160 km/h |
 | `proc-vehicle-ir-wdg4g` | IR WDG-4G | hood unit, the ES44AC's body | - | 3,400 kW, 100 km/h |
 | `proc-vehicle-ir-wam4` | IR WAM-4 | box locomotive, flat | `livery` (`blue`, `maroon`) | Co-Co, 18.79 m, 2,700 kW |
-| `proc-vehicle-ir-wap4` | IR WAP-4 | box locomotive, raked | `livery` (`rajdhani`, `shatabdi`) | Co-Co, 18.79 m, 3,800 kW, 140 km/h |
+| `proc-vehicle-ir-wap4` | IR WAP-4 | box locomotive kit, its own tables (`inWap4.ts`) | `livery` (`rajdhani`, `shatabdi`) | Co-Co, 18.79 m, 3.18 m wide, bogie centres 11.0 m, 3,800 kW, 140 km/h |
 | `proc-vehicle-ir-wap7` | IR WAP-7 / WAG-9 | box locomotive kit, its own tables (`inWap7.ts`) | `livery` (`redWhite`, `blue`, `wag9`) | Co-Co, 20.56 m, 3.15 m wide, bogie centres 11.5 m, 4,500 kW |
 | `proc-vehicle-ir-wap5` | IR WAP-5 | own asymmetric body (`generator/inWap5.ts`): aerodynamic cab 1, flat cab 2 | `livery` (`whiteRed`, `gatimaan`) | Bo-Bo, 18.16 m, 3.14 m wide, bogies 10.2 m apart, 4,000 kW, 160 km/h |
 | `proc-vehicle-ir-wag12b` | IR WAG-12B | box locomotive, the Prima body | - | 35.0 m, eight axles, 9,000 kW |
@@ -88,6 +88,22 @@ The catalog had no Indian train before. Every design is filed under India.
   outer ones). No exactly side-on photograph was found, so the lengths come from a
   projective fit on a three-quarter view; the sand boxes and the number's lozenge outline
   are not drawn. The `blue` scheme follows a WDM-3A of the same body.
+- **WAP-4.** Drawn on the box locomotive kit from its own profile tables and items
+  (`generator/inWap4.ts`), measured on the photographs of `assets/ir-wap4/` (SOURCES.md): the face
+  upright to the lamps and leaning 0.3 m back to the windscreens' head, its corners rounded 0.3 m
+  back, the cab roof rounding back to 0.75 m; two windscreens behind stone guards, the twin
+  headlight pod and horns on the face's top, white-over-red marker lamps in dark housings, the
+  shed emblem between the yellow lightning bolts, the flag, the hoses, the beam lip and the mesh
+  plough; eleven bays of small rounded windows over louvres a side, the cab door near each end (a
+  small window ahead of it at one end, the other side point-symmetric - not checked against a
+  photograph), the grey roof cants over the machine room with the cabs' sides rising to the cab
+  roof, two single-arm pantographs 4.2 m from the middle with the roof line on post insulators.
+  `rajdhani` is the red body with the yellow waist stripe (Arakkonam 22829); `shatabdi` is
+  Arakkonam's dark blue with the pale yellow upper part (22726, photographed only at the face: the
+  sides follow the face's boundary at 2.95 m). The bogies are hidden in the side photograph:
+  centres 11.0 m and axles 1.9 m apart are estimates. The room windows are glass laid on the skin
+  and the side and front numbers painted; "WAP-4", the shed letters and "INDIAN RAILWAYS" are not
+  drawn; the distant model leaves out the roof hatches to keep the stripe.
 - **WAP-7 / WAG-9.** Drawn on the box locomotive kit from its own profile tables and items
   (`generator/inWap7.ts`), measured on the photographs of `assets/ir-wap7/` (SOURCES.md): the
   face leaning 0.4 m back to the windscreens' head under a hipped cab roof, two windscreens behind
