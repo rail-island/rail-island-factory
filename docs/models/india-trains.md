@@ -13,7 +13,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | `proc-vehicle-ir-vande-bharat` | Vande Bharat | series, cab face (`inVandeBharat.ts`) | `unit`, `cars` 4, 8, `livery` (`whiteBlue`, `saffron`) | 23 m cars, 3.24 m wide; 180 km/h |
 | `proc-vehicle-ncrtc-namo-bharat` | Namo Bharat | series, cab face (`inNamoBharat.ts`) | `unit`, `cars` 3 - 6 | 22.5 m end and 22.0 m cars, 3.2 m wide, three doors a side; 180 km/h |
 | `proc-vehicle-ir-mumbai-emu` | Mumbai suburban EMU | series, cab face (`generator/inMumbaiEmu.ts`) | `unit`, `cars` 3 - 6, `livery` (`std`, `alt`) | 20.75 m cars, four wide doorways a side; 100 km/h |
-| `proc-vehicle-ir-memu` | IR MEMU | series, flat cab | `unit`, `cars` 4 - 8, `livery` (`std`, `alt`) | 110 km/h |
+| `proc-vehicle-ir-memu` | IR MEMU | series, cab face (`generator/inMemu.ts`) | `unit`, `cars` 4 - 8, `livery` (`std`, `alt`) | 21.3 m cars, buffers; pantograph on the motor coaches; 110 km/h |
 | `proc-vehicle-dmrc-rs1` | Delhi Metro RS1 | series, cab face | `unit`, `cars` 4 - 8 | broad gauge; 21.84 / 21.34 m cars, 3.2 m wide, four double doors a side; 80 km/h |
 | `proc-vehicle-ir-wdm2` | IR WDM-2 | own builder (`inWdm2.ts`) on the hood kit's sweeps | `livery` (`maroon`, `blue`) | Co-Co, 17.12 m, 1,940 kW, 120 km/h |
 | `proc-vehicle-ir-wdp4d` | IR WDP-4D | own module (`inWdp4d.ts`), twin cab | - | Co-Co, 21.24 m over buffers, 3,300 kW, 135 km/h |
@@ -75,6 +75,15 @@ The catalog had no Indian train before. Every design is filed under India.
   Medha white and magenta; the Medha's own face (smaller windscreens, lamps at the band's ends,
   destination windows) is drawn with the Siemens face.
 
+
+- **MEMU** (`generator/inMemu.ts`, `assets/ir-memu/SOURCES.md`). Its own spec and cab face: the flat
+  ICF front rounding into the roof, the twin headlights' housing on the dome, the spot lamp, two
+  windscreens behind bar grilles with the destination boxes over them, hood box, flasher, horns, side
+  buffers and cattle guard. The blue livery is the Southern Railway's photographed face (red V on the
+  blue lower front); the maroon one, of which no photograph was found, is the same scheme in maroon on
+  the Northern Railway's face (cream V). The motor coaches at both ends raise a single-arm pantograph
+  4 m from their inner ends; the trailers' two doors a side and the motor coach's second door are
+  placed by rule, not measured (no side-on photograph of a whole car).
 
 - **Broad gauge.** The 1,676 mm stock keeps its bodies (up to 3.25 m wide; the EMUs'
   3.66 m narrowed) on the 3.3 m gauge and the game's standard-gauge wheelsets.
