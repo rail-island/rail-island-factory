@@ -4,7 +4,7 @@
 `build(THREE)` returns a `THREE.Group`; how it is bundled, what it contains, how it relates to the build's
 in-memory GLB, and the measured sizes.
 **Code** - `generator/jsModel.ts`, `generator/threeBuilder.ts`, `generator/meshCore.ts`, `generator/passengerHints.ts`,
-`generator/generate.ts` (`generateJsModels`), `test/jsModel.test.ts`
+`generator/generate.ts` (`generateJsModels`), `generator/buildCaches.ts`, `test/jsModel.test.ts`
 **See also** - [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
 [../site/catalog-site.md](../site/catalog-site.md)
 
@@ -87,6 +87,8 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
   `maxTriangleBudget` (10,000). Currently every tree supplies it. It is optional,
   does not change the default `build` or its boolean LOD argument, and sets
   `group.userData.lod` to `"max"`. The site advertises it with `maxDetail: true`.
+- **Build caches.** A design whose code keeps caches between builds (a cab face's skins and scans,
+  [shinkansen.md](shinkansen.md)) also exports `releaseCaches()`, which empties them; see "Build caches" below.
 - **The same triangles.** The positions and normals equal the GLB's, not an approximation: it is the same
   algorithm running on the same geometry code.
 
@@ -109,6 +111,17 @@ no-ops. Output is minified ES2022 with a one-line banner, deterministic, and rew
 `pnpm build:models` writes it after the thumbnails (`generateJsModels`) and deletes the file of a dropped design.
 
 A design must therefore stay free of Node-only imports and of anything that differs between runs.
+
+### Build caches
+
+A module-level cache that speeds up building many combinations of one design is made with
+`buildCache()` (`generator/buildCaches.ts`), never a bare `new Map()`. Every bundle is bundled once with an
+esbuild metafile; when `buildCaches.ts` reached its output, it is bundled again with
+`export { releaseCaches } from "./buildCaches.ts"` (and a banner sentence saying so). Any other bundle is
+unchanged. `releaseCaches()` empties every cache the module keeps; later builds work the entries out afresh,
+to the same bytes. A host that imports design after design in one process - the game's asset build, which can
+never unload a module - calls it when it is done with a design. Held to the end, the 84 bundles with cab faces
+each kept up to 48 skins and scans, about 2 GB in all, and ran the game's CI build out of memory.
 
 ## Sizes
 
@@ -133,7 +146,8 @@ trusts the factory's build.
 The catalog sweep (`test/catalogSweep.ts`) loads each design's bundle, builds it with the real three.js and compares every triangle
 (world space, per material), the colours, the clips and the rig with the design's GLB, and checks the file has no import
 and no Node API and is smaller than the equivalent full-detail and LOD GLBs together. `test/jsModel.test.ts` checks that a bundle
-is deterministic, that the recorder and GLB writer are absent, and that `generateJsModels` writes, skips and prunes.
+is deterministic, that the recorder and GLB writer are absent, that only a bundle with build caches exports
+`releaseCaches`, and that `generateJsModels` writes, skips and prunes.
 
 ## Low level of detail
 

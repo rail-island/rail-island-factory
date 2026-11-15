@@ -147,4 +147,19 @@ describe("cab face skin replay", () => {
       }
     }
   });
+
+  // A host building design after design in one process (the game's asset build) empties
+  // the caches once a design is done; held to the end, every bundle's ran it out of memory.
+  it("releaseCaches empties the skin and scan caches, and a rebuild draws the same bytes", async () => {
+    const { E6, buildSeries, seriesParams } = await import("../generator/shinkansen.ts");
+    const { cachedEntries, releaseCaches } = await import("../generator/buildCaches.ts");
+    const params = seriesParams(E6);
+    const v = { unit: "train", cars: "3" };
+    const first = buildSeries(E6, params, v).toGlb("release");
+    expect(cachedEntries()).toBeGreaterThan(0);
+    releaseCaches();
+    expect(cachedEntries()).toBe(0);
+    const again = buildSeries(E6, params, v).toGlb("release");
+    expect(Buffer.from(again).equals(Buffer.from(first))).toBe(true);
+  });
 });

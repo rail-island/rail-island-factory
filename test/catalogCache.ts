@@ -40,6 +40,8 @@ export interface JsModule {
   lodTriangleBudget: number;
   pose?: (root: THREE.Object3D, pose: { steer: number; bend: number[] }) => void;
   renderJoint?: (root: THREE.Object3D, i: number) => void;
+  /** Empties the caches the module keeps between builds (generator/buildCaches.ts), when it keeps any. */
+  releaseCaches?: () => void;
 }
 
 const BUILT = new Map<string, Built>();

@@ -48,7 +48,9 @@ builds with the same end and tip: the bytes are the same (test/seriesCabFace.tes
 replay"). Which layer covers which heights in each column (`NoseScan`, cabNose.ts `shared`) depends on
 neither the end nor the tip, so a face drawn at another place along a train (every train length) reuses
 that scan and only maps its points afresh. Both caches keep their 48 most recent entries, and a scan drops
-its sample points once its first skin is drawn, so a build of every combination stays in memory. A face
+its sample points once its first skin is drawn, so a build of every combination stays in memory. Both are
+build caches (`generator/buildCaches.ts`): the design's JS model exports `releaseCaches()`, which empties
+them, for a host that builds many designs in one process ([js-format.md](js-format.md), "Build caches"). A face
 spec copied or made per build misses the caches and is worked out afresh. The scan's queries carry no
 model point (only drawing needs one), and the N700S's `reshape` caches its height lookups by (lat, y).
 

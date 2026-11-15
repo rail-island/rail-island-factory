@@ -13,6 +13,7 @@ import { CabNose, inRoundRect, NOSE_HOLE, type NoseLayer, type NoseQuery, type N
 import { strokeText, strokeWidth } from "./strokeFont.ts";
 import { noseEnd, type UnitEnd } from "./lodUnits.ts";
 import { LOD_GLASS, type LodBand } from "./lodKit.ts";
+import { buildCache } from "./buildCaches.ts";
 
 /** A rounded rectangle on the face: lateral span (viewer's right positive, seen from ahead), heights, corner radius. */
 export interface FaceRect {
@@ -242,11 +243,12 @@ type Vec3 = [number, number, number];
  * The face's scan by body section and paint, shared by its skins at every end and tip (cabNose.ts
  * NoseScan). Both caches keep the most recently used entries only (a build of every combination of
  * every design would otherwise hold every skin it drew), and a scan keeps only its intervals once
- * its first skin is drawn: the later skins ask the same intervals.
+ * its first skin is drawn: the later skins ask the same intervals. Both are build caches
+ * (buildCaches.ts): the model's bundle exports releaseCaches(), which empties them.
  */
 const CACHE_SIZE = 48;
-const SKINS = new Map<string, Skin>();
-const SCANS = new Map<string, NoseScan>();
+const SKINS = buildCache<string, Skin>();
+const SCANS = buildCache<string, NoseScan>();
 const FACE_IDS = new WeakMap<SeriesCabFace, number>();
 let faceCount = 0;
 const faceId = (f: SeriesCabFace): number => {
