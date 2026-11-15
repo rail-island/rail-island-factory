@@ -11,7 +11,7 @@ The catalog had no Indian train before. Every design is filed under India.
 | id | title | kit | parameters | figures (game) |
 |---|---|---|---|---|
 | `proc-vehicle-ir-vande-bharat` | Vande Bharat | series | `unit`, `cars` 4 - 8, `livery` (`whiteBlue`, `saffron`) | 23 m cars; 180 km/h |
-| `proc-vehicle-ncrtc-namo-bharat` | Namo Bharat | series | `unit`, `cars` 3 - 6 | 180 km/h |
+| `proc-vehicle-ncrtc-namo-bharat` | Namo Bharat | series, cab face (`inNamoBharat.ts`) | `unit`, `cars` 3 - 6 | 22.5 m end and 22.0 m cars, 3.2 m wide, three doors a side; 180 km/h |
 | `proc-vehicle-ir-mumbai-emu` | Mumbai suburban EMU | series, flat cab | `unit`, `cars` 3 - 6, `livery` (`std`, `alt`) | three wide doors a side; 100 km/h |
 | `proc-vehicle-ir-memu` | IR MEMU | series, flat cab | `unit`, `cars` 4 - 8, `livery` (`std`, `alt`) | 110 km/h |
 | `proc-vehicle-dmrc-rs1` | Delhi Metro RS1 | series, cab face | `unit`, `cars` 4 - 8 | standard gauge, four doors a side; 80 km/h |
@@ -33,6 +33,16 @@ The catalog had no Indian train before. Every design is filed under India.
 
 ## Deviations
 
+- **Namo Bharat.** Its own module, `generator/inNamoBharat.ts`, the cab a cab face read from three
+  front three-quarter photographs (`assets/ncrtc-namo-bharat/SOURCES.md`): the rounded bumper standing
+  out at the bottom with the NCRTC lettering, the black windscreen from the lamps at 2.2 m to the crown,
+  narrowing upward, the round headlights in black pockets at its lower corners, the amber destination
+  display; the plan tapers in deep elliptic corners. Silver body, the windows in a dark band over a thin
+  red line, the red triangle on each cab side from the crew door down to a point behind the lamps
+  (`test/namoBharat.test.ts`). No free side-on photograph exists (the NCRTC/PIB ones are GODL-India):
+  the nose length (4.3 m) and window heights are estimated, every car has three doors a side (the
+  premium car's two are not drawn), the pantograph's car follows the kit's rule, the roof equipment
+  is not drawn and the distant model leaves the red triangle out.
 - **Delhi Metro RS1.** The cab is a cab face (the series kit's `cabFace`): flat and raked back over
   the windscreens, its corners rounded, the black glazed field across its top with the two
   windscreens and the emergency door's light, the door's outline below, the red stripe carried

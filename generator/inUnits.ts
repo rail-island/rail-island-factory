@@ -28,15 +28,9 @@ export const VANDE_BHARAT: ShinkansenSeries = {
   weight: { end: 52, middle: 50 }, power: 1100, maxspeed: 180,
 };
 
-export const NAMO_BHARAT: ShinkansenSeries = {
-  endLength: 22.5, midLength: 22.0, W: 1.6, Y: 1.3, S: 3.25, C: 4.0, lean: 0.95, B: 0.72, A: 0.9,
-  nose: nose(2.6, 0.25, 2.4, [[0, 1.9], [0.4, 2.6], [1.5, 3.4], [2.8, 4.0]], [[0, 1.8], [0.4, 2.45], [1.5, 3.05], [2.8, 3.25]], [[0, 1.3], [0.8, 1.3]], [[0, 1.0], [0.6, 0.9]], [[0, 0.9], [0.3, 0.7]]),
-  windscreen: [0.8, 2.4, 0.07, 1.2], lamps: [0.2, 1.4],
-  windows: [[1.6, 2.7]], windowW: 1.5, pitch: 1.8, door: [1.05, 3.0, 1.6, 2.6], doorW: 1.4, doorCount: 3,
-  bogieCentres: 15.0, wheelR: 0.43, wheelbase: 2.5, cars: [3, 6],
-  liveries: { namoBharat: lv("Namo Bharat", "RRTS 001", [1.1, "#3a3d40"], [1.25, "#f08a24"], [9, "#d9dcde"]) },
-  weight: { end: 45, middle: 42 }, power: 900, maxspeed: 180,
-};
+// the Namo Bharat lives in its own module (its cab face and livery)
+import { NAMO_BHARAT, ncrtcNamoBharat, ncrtcNamoBharatLod } from "./inNamoBharat.ts";
+export { NAMO_BHARAT, ncrtcNamoBharat, ncrtcNamoBharatLod };
 
 const flatEmu = (o: { number: string; title: string; colours: Array<[number, string]>; second?: [string, Array<[number, string]>]; doorCount: number; doorW: number; power: number; maxspeed: number; cars: readonly number[] }): ShinkansenSeries => ({
   endLength: 21.2, midLength: 21.0, W: 1.62, Y: 1.35, S: 3.3, C: 4.0, lean: 0.98, B: 1.0, A: 1.15,
@@ -89,8 +83,6 @@ const P = { vb: seriesParams(VANDE_BHARAT), nb: seriesParams(NAMO_BHARAT), mumba
 
 export function irVandeBharat(v?: ParamValues): MeshBuilder { return buildSeries(VANDE_BHARAT, P.vb, v); }
 export function irVandeBharatLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(VANDE_BHARAT, P.vb, v); }
-export function ncrtcNamoBharat(v?: ParamValues): MeshBuilder { return buildSeries(NAMO_BHARAT, P.nb, v); }
-export function ncrtcNamoBharatLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(NAMO_BHARAT, P.nb, v); }
 export function irMumbaiEmu(v?: ParamValues): MeshBuilder { return buildSeries(MUMBAI_EMU, P.mumbai, v); }
 export function irMumbaiEmuLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MUMBAI_EMU, P.mumbai, v); }
 export function irMemu(v?: ParamValues): MeshBuilder { return buildSeries(MEMU, P.memu, v); }
