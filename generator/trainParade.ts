@@ -23,10 +23,22 @@ export interface TrainCarSpec {
   turned?: boolean;
 }
 
-/** One train as the list writes it: its cars, or a model's named OpenTTD formation. */
+/** A model's named OpenTTD formation (generator/openttdTable.ts), standing for its cars. */
+export interface FormationRef {
+  model: string;
+  name: string;
+}
+
+/**
+ * One train as the list writes it: its cars, or a model's named OpenTTD
+ * formation. A car list may also hold a formation, which stands for its cars
+ * there (a steam locomotive "with tender", then the coaches).
+ */
 export type TrainSpec =
-  | { id: string; cars: TrainCarSpec[] }
-  | { id: string; formation: { model: string; name: string } };
+  | { id: string; cars: (TrainCarSpec | { formation: FormationRef })[] }
+  | { id: string; formation: FormationRef };
+
+const HORSES_2: ParamValues = { animal: "horse", team: "2" };
 
 /**
  * The parade's trains. Ids are the trains' names in trains.json (stable, but
@@ -82,6 +94,78 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
       { model: "proc-vehicle-bmo-double-deck-coach", params: { livery: "cdBlue" } },
     ],
   },
+  // steam: every locomotive and tender runs with its rods and valve gear moving
+  {
+    id: "lner-a4-express",
+    cars: [
+      { formation: { model: "proc-vehicle-lner-a4", name: "with tender" } },
+      { model: "proc-vehicle-br-mk1-coach" },
+      { model: "proc-vehicle-br-mk1-coach" },
+      { model: "proc-vehicle-br-mk1-coach" },
+      { model: "proc-vehicle-br-mk1-coach" },
+    ],
+  },
+  {
+    id: "big-boy-freight",
+    cars: [
+      { formation: { model: "proc-vehicle-up-big-boy", name: "with tender" } },
+      { model: "proc-vehicle-us-boxcar", params: { livery: "boxcarRed" } },
+      { model: "proc-vehicle-us-boxcar", params: { livery: "boxcarRed" } },
+      { model: "proc-vehicle-us-boxcar", params: { livery: "railbox" } },
+      { model: "proc-vehicle-us-caboose", params: { livery: "unionPacific" } },
+    ],
+  },
+  {
+    id: "american-440",
+    cars: [
+      { formation: { model: "proc-vehicle-american-440", name: "with tender" } },
+      { model: "proc-vehicle-us-boxcar", params: { livery: "boxcarRed" } },
+      { model: "proc-vehicle-us-caboose", params: { livery: "santaFe" } },
+    ],
+  },
+  {
+    id: "jnr-c62-blue-train",
+    cars: [
+      { formation: { model: "proc-vehicle-jnr-c62", name: "with tender" } },
+      { model: "proc-vehicle-blue-train-24", params: { unit: "sleeper" } },
+      { model: "proc-vehicle-blue-train-24", params: { unit: "dining" } },
+      { model: "proc-vehicle-blue-train-24", params: { unit: "sleeper" } },
+    ],
+  },
+  {
+    id: "cr-qj-coal",
+    cars: [
+      { formation: { model: "proc-vehicle-cr-qj", name: "with tender" } },
+      { model: "proc-vehicle-cr-c70-wagon" },
+      { model: "proc-vehicle-cr-c70-wagon" },
+      { model: "proc-vehicle-cr-c70-wagon" },
+      { model: "proc-vehicle-cr-c70-wagon" },
+    ],
+  },
+  { id: "shinkansen-e5", formation: { model: "proc-vehicle-shinkansen-e5", name: "8 cars" } },
+  { id: "db-ice3", formation: { model: "proc-vehicle-db-ice3", name: "8 cars" } },
+  { id: "pioneer-zephyr", formation: { model: "proc-vehicle-pioneer-zephyr", name: "3 cars" } },
+  { id: "metro-81-71", formation: { model: "proc-vehicle-metro-81-71", name: "5 cars" } },
+  { id: "lu-1938-stock", formation: { model: "proc-vehicle-lu-1938-stock", name: "7 cars" } },
+  // trams
+  { id: "tatra-t3-pair", cars: [{ model: "proc-vehicle-tatra-t3" }, { model: "proc-vehicle-tatra-t3" }] },
+  { id: "siemens-combino", cars: [{ model: "proc-vehicle-siemens-combino", params: { length: "7", livery: "amsterdam" } }] },
+  { id: "pcc-streamliner", cars: [{ model: "proc-vehicle-pcc-streamliner", params: { livery: "toronto" } }] },
+  { id: "hong-kong-tram", cars: [{ model: "proc-vehicle-hong-kong-tram" }] },
+  // buses, on the road
+  { id: "ikarus-280", cars: [{ model: "proc-vehicle-ikarus-280", params: { livery: "bkv" } }] },
+  { id: "new-routemaster", cars: [{ model: "proc-vehicle-new-routemaster" }] },
+  { id: "curitiba-biarticulado", cars: [{ model: "proc-vehicle-curitiba-biarticulado" }] },
+  // horse-drawn: the team walks with the vehicle
+  { id: "horse-tram", cars: [{ model: "proc-vehicle-animal-tram-double-deck", params: HORSES_2 }] },
+  {
+    id: "budweis-horse-railway",
+    cars: [
+      { model: "proc-vehicle-animal-rail-budweis-coach", params: HORSES_2 },
+      { model: "proc-vehicle-animal-rail-budweis-wagon", params: { team: "none" } },
+    ],
+  },
+  { id: "stagecoach", cars: [{ model: "proc-vehicle-animal-bus-stagecoach", params: HORSES_2 }] },
 ];
 
 /** What a train needs to know about one model. */
@@ -113,9 +197,9 @@ export function carKey(car: TrainCar): string {
   return `${car.model}${values}${car.turned ? "--turned" : ""}`;
 }
 
-/** The image file of a car, or of its section `section` (0 from the nose) when it is drawn in several. */
-export function carImageName(car: TrainCar, section?: number): string {
-  return `${carKey(car)}${section === undefined ? "" : `--section-${section}`}.png`;
+/** The base of a car's image file name, or of its section `section` (0 from the nose) when it is drawn in several; the writer adds a content hash and the extension. */
+export function carImageBase(car: TrainCar, section?: number): string {
+  return `${carKey(car)}${section === undefined ? "" : `--section-${section}`}`;
 }
 
 /**
@@ -154,32 +238,60 @@ function nonDefault(specs: readonly ParamSpec[], params: ParamValues, where: str
  * offers. Throws on the first fault, naming the train and car, so a bad list
  * fails the build.
  */
-export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { id: string; cars: TrainCar[] }[] {
+export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { id: string; ground: Ground; cars: TrainCar[] }[] {
   const ids = new Set<string>();
   return list.map((train) => {
     if (!/^[a-z0-9-]+$/.test(train.id)) throw new Error(`train "${train.id}": id must be lower-case letters, digits and dashes`);
     if (ids.has(train.id)) throw new Error(`train "${train.id}" listed twice`);
     ids.add(train.id);
-    let specs: TrainCarSpec[];
-    if ("formation" in train) {
-      const info = ctx.model(train.formation.model);
-      const f = info?.openttd?.formations?.find((x) => x.name === train.formation.name);
-      if (!f) throw new Error(`train "${train.id}": ${train.formation.model} has no formation "${train.formation.name}"`);
-      specs = f.cars.map((c) => ({ model: train.formation.model, params: c.params, turned: c.turned }));
-    } else {
-      specs = train.cars;
-    }
+    const expand = (ref: FormationRef): TrainCarSpec[] => {
+      const f = ctx.model(ref.model)?.openttd?.formations?.find((x) => x.name === ref.name);
+      if (!f) throw new Error(`train "${train.id}": ${ref.model} has no formation "${ref.name}"`);
+      return f.cars.map((c) => ({ model: ref.model, params: c.params, turned: c.turned }));
+    };
+    const specs: TrainCarSpec[] =
+      "formation" in train ? expand(train.formation) : train.cars.flatMap((c) => ("formation" in c ? expand(c.formation) : [c]));
     if (specs.length === 0) throw new Error(`train "${train.id}": no cars`);
+    const categories: string[] = [];
     const cars = specs.map((c, i) => {
       const where = `train "${train.id}", car ${i + 1} (${c.model})`;
       const info = ctx.model(c.model);
       if (!info) throw new Error(`${where}: no such model`);
       if (!ctx.confirmed(c.model)) throw new Error(`${where}: a workshop draft, not a confirmed model`);
       if (!ctx.isSideView(info.category)) throw new Error(`${where}: a ${info.category} model has no side view`);
+      categories.push(info.category);
       return { model: c.model, params: nonDefault(info.params ?? [], c.params ?? {}, where), turned: c.turned === true };
     });
-    return { id: train.id, cars };
+    return { id: train.id, ground: trainGround(categories), cars };
   });
+}
+
+/**
+ * The moving part of an animated car's image: a sprite of `frames` frames stacked
+ * top to bottom, each the rectangle (`x`, `y`, `w`, `h` pixels of the image) that
+ * changes over one cycle - the wheels and rods, a team's legs. The still image has
+ * that rectangle cleared, so the sprite drawn over it is the whole picture.
+ */
+export interface SpriteRect {
+  image: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** What a car's images are: its length, one still image per section, and its animation. */
+export interface CarImages {
+  /** The car's built length along X, metres (buffers and couplers included). */
+  lengthM: number;
+  /** One image name per section (carSections(lengthM)), relative to the trains folder. */
+  images: string[];
+  /** Per section, its sprite when something in it moves, else null; absent for a car without animation. */
+  sprites?: (SpriteRect | null)[];
+  /** Frames in each sprite, one cycle of the car's moving parts. */
+  frames?: number;
+  /** Metres the car travels in that cycle (one wheel turn, one stride). */
+  cycleM?: number;
 }
 
 /** One image of a train, as trains.json carries it: a car, or one section of a car drawn in several. */
@@ -192,54 +304,138 @@ export interface PlacedCar extends TrainCar {
   offsetM: number;
   /** The image's width in metres: the car's length and both margins. */
   widthM: number;
+  /**
+   * An animated car's moving part, drawn over `image`: a sprite of `frames` frames
+   * stacked top to bottom, each `widthM` by `heightM`, placed `xM`, `yM` metres from
+   * the image's top-left corner - one cycle of its moving parts (wheels and rods, a
+   * team's legs) over `cycleM` metres travelled. A client shows frame
+   * floor(frac(distance / cycleM) * frames) as the car moves, so nothing slides.
+   */
+  sprite?: { image: string; xM: number; yM: number; widthM: number; heightM: number; frames: number; cycleM: number };
 }
 
 /**
  * Lay a train's cars end to end, nose first, couplers touching: each car's length
- * is its built length along X (`lengthM`, buffers and couplers included), and its
- * image spans that plus `marginM` at each end, so neighbouring images overlap by
- * twice the margin (transparent pixels between cars; the same pixels twice between
- * the sections of one car, so no seam shows). A car longer than SECTION_MAX_M is
+ * is its built length along X (buffers and couplers included), and its image spans
+ * that plus `marginM` at each end, so neighbouring images overlap by twice the
+ * margin (transparent pixels between cars; the same pixels twice between the
+ * sections of one car, so no seam shows). A car longer than SECTION_MAX_M is
  * placed as its sections (`carSections`).
  */
-export function layOutTrain(cars: readonly TrainCar[], lengthM: (car: TrainCar) => number, marginM: number): PlacedCar[] {
+export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => CarImages, marginM: number, pxPerM: number): PlacedCar[] {
   let at = 0;
   return cars.flatMap((car) => {
-    const length = lengthM(car);
-    if (!(length > 0)) throw new Error(`${carKey(car)}: no length`);
-    const sections = carSections(length);
-    const placed = sections.map(([s0, s1], i): PlacedCar => ({
-      ...car,
-      ...(sections.length > 1 ? { section: i } : {}),
-      image: `trains/${carImageName(car, sections.length > 1 ? i : undefined)}`,
-      offsetM: round(at + s0 - marginM),
-      widthM: round(s1 - s0 + 2 * marginM),
-    }));
-    at += length;
+    const c = info(car);
+    if (!(c.lengthM > 0)) throw new Error(`${carKey(car)}: no length`);
+    const sections = carSections(c.lengthM);
+    if (sections.length !== c.images.length) throw new Error(`${carKey(car)}: ${c.images.length} images for ${sections.length} sections`);
+    const placed = sections.map(([s0, s1], i): PlacedCar => {
+      const sp = c.sprites?.[i];
+      return {
+        ...car,
+        ...(sections.length > 1 ? { section: i } : {}),
+        image: `trains/${c.images[i]}`,
+        offsetM: round(at + s0 - marginM),
+        widthM: round(s1 - s0 + 2 * marginM),
+        ...(sp && c.frames && c.cycleM
+          ? {
+              sprite: {
+                image: `trains/${sp.image}`,
+                xM: round(sp.x / pxPerM),
+                yM: round(sp.y / pxPerM),
+                widthM: round(sp.w / pxPerM),
+                heightM: round(sp.h / pxPerM),
+                frames: c.frames,
+                cycleM: c.cycleM,
+              },
+            }
+          : {}),
+      };
+    });
+    at += c.lengthM;
     return placed;
   });
 }
 
-/** What the parade's caption counts: the confirmed rail vehicles and their variants. */
-export interface FleetStats {
-  /** Confirmed models in the Rail vehicles category. */
-  models: number;
-  /**
-   * Their variants: per model, every distinct value of every parameter added up
-   * (not their combinations), leaving out `cars` (how many cars a whole train has)
-   * and the site's preview fixtures; a model with no other parameter is 1.
-   */
+/** Where a train runs: on rails, or on the road (every car a road vehicle). */
+export type Ground = "rail" | "road";
+
+/** A train's ground from its cars' catalog categories. */
+export function trainGround(categories: readonly string[]): Ground {
+  return categories.length > 0 && categories.every((c) => c === "Road vehicles") ? "road" : "rail";
+}
+
+/**
+ * The kinds of vehicle the parade's caption counts, in the order it shows them.
+ * Every confirmed vehicle falls in exactly one (`vehicleType`): a horse-drawn tram,
+ * railway car or coach is horse-drawn, not a tram, train or bus.
+ */
+export const VEHICLE_TYPES = ["trains", "trams", "buses", "trucks", "horseDrawn", "ships", "aircraft", "cableCars"] as const;
+export type VehicleType = (typeof VEHICLE_TYPES)[number];
+
+/** A model's kind of vehicle from its catalog fields; undefined for anything that is not a vehicle. */
+export function vehicleType(category: string, group: string, traction?: string): VehicleType | undefined {
+  if (traction === "animal") return "horseDrawn";
+  switch (category) {
+    case "Rail vehicles":
+      return group === "tram" ? "trams" : "trains";
+    case "Road vehicles":
+      return group === "bus" ? "buses" : "trucks";
+    case "Ships":
+      return "ships";
+    case "Aircraft":
+      return "aircraft";
+    case "Cable car":
+      return "cableCars";
+    default:
+      return undefined;
+  }
+}
+
+/** What the parade's caption counts: confirmed models per kind of vehicle, and all their variants. */
+export interface FleetCounts {
+  /** Confirmed models of each kind, every kind present (0 when none). */
+  types: Record<VehicleType, number>;
+  /** Their variants together, counted as modelVariants does. */
   variants: number;
 }
 
-/** The variants a model counts for in FleetStats. */
+/** The variants a model counts for: every distinct value of every parameter added up (not combinations), without `cars` and preview fixtures; 1 with none. */
 export function modelVariants(params: readonly ParamSpec[] = []): number {
   const counted = params.filter((p) => p.name !== "cars" && !p.preview);
   return counted.length ? counted.reduce((n, p) => n + p.values.length, 0) : 1;
 }
 
-/** FleetStats over the confirmed models (`models`: id, category, parameters). */
-export function fleetStats(models: Iterable<{ id: string; category: string; params?: readonly ParamSpec[] }>, confirmed: (id: string) => boolean): FleetStats {
+/** A model as the counts read it. */
+export interface CountedModel {
+  id: string;
+  category: string;
+  group: string;
+  traction?: string;
+  params?: readonly ParamSpec[];
+}
+
+/** FleetCounts over the confirmed vehicles of `models`. */
+export function fleetCounts(models: Iterable<CountedModel>, confirmed: (id: string) => boolean): FleetCounts {
+  const types = Object.fromEntries(VEHICLE_TYPES.map((t) => [t, 0])) as Record<VehicleType, number>;
+  let variants = 0;
+  for (const m of models) {
+    const type = vehicleType(m.category, m.group, m.traction);
+    if (!type || !confirmed(m.id)) continue;
+    types[type]++;
+    variants += modelVariants(m.params);
+  }
+  return { types, variants };
+}
+
+/** The earlier caption's counts: confirmed Rail vehicles and their variants (kept in trains.json for clients that still read it). */
+export interface FleetStats {
+  models: number;
+  variants: number;
+}
+
+/** FleetStats over the confirmed models. */
+export function fleetStats(models: Iterable<CountedModel>, confirmed: (id: string) => boolean): FleetStats {
   let count = 0;
   let variants = 0;
   for (const m of models) {
@@ -259,10 +455,12 @@ export interface TrainsFile {
   version: 1;
   /** Pixels per metre of every image. */
   pxPerM: number;
-  /** Every image's height in metres, and where the rail sits: `-bottomM` metres above the bottom edge. */
+  /** Every image's (and every sprite frame's) height in metres, and where the rail sits: `-bottomM` metres above the bottom edge. */
   heightM: number;
   bottomM: number;
-  /** The fleet the caption under the parade names (FleetStats). */
+  /** The caption's counts: every kind of vehicle the factory makes, and all their variants. */
+  fleet: FleetCounts;
+  /** Deprecated: the first caption's rail-only counts, until no client reads them. */
   stats: FleetStats;
-  trains: { id: string; lengthM: number; cars: PlacedCar[] }[];
+  trains: { id: string; ground: Ground; lengthM: number; cars: PlacedCar[] }[];
 }

@@ -139,6 +139,14 @@ parameter values (except from number of coaches in full train). It is not count 
 combinations. Make only english variant, other languages will have marked english text."
 So `trains.json` carries the counts and the hero shows one caption under the track,
 English in every locale until translated (marked `untranslated`).
+Later again (a follow-up): "make train images incremental and serve them as WebP. Make
+steam locomotives (and other, which requires animation) animated (webp sprite). Also
+extend vehicle count - add some trams, buses, horse powered. 30 vehicle chains at sum.
+Extend message ... Available in Rail Island: <Train image> 272, <Bus Image>: 44,
+Variants: 1354. Make it in all languages." Asked then: road vehicles run on the same
+line with the rails fading into a road edge; the caption shows "all vehicle types
+provided by factory"; every distance-driven animation is animated. The images are
+still rendered at build time, now incrementally, and still not committed.
 
 ### This spec touches both repositories. Where should it be committed?
 | Option | What it means |

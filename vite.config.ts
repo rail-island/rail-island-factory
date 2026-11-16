@@ -72,10 +72,15 @@ function sitePages(): Plugin {
  * Cloudflare's response headers for the assets-only Worker (`_headers` at the
  * root of dist/; wrangler reads it and does not serve it). trains.json is read by
  * railisland.com's own script in the browser, so it allows any origin; its
- * images are plain <img> loads and need nothing (docs/site/train-parade.md).
+ * images are plain <img> loads and need no CORS, but each name carries a hash of
+ * everything that shapes it, so they are cached for a year
+ * (docs/site/train-parade.md).
  */
 export const ASSET_HEADERS = `/trains.json
   Access-Control-Allow-Origin: *
+
+/trains/*
+  Cache-Control: public, max-age=31536000, immutable
 `;
 
 function assetHeaders(): Plugin {
