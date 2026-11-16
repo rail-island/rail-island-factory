@@ -30,13 +30,13 @@ import { parseGlb } from "./glbParse.ts";
 import { poseGlb } from "./glbPose.ts";
 import type { Tri, Vec3 } from "./glbTriangles.ts";
 import { dot, norm, triBounds } from "./glbTriangles.ts";
-import type { AnimationClipSpec } from "./meshCore.ts";
+import type { AnimationClipSpec, Emitter } from "./meshCore.ts";
 import { OPENTTD_TABLE } from "./openttdTable.ts";
 import { paradePage } from "./paradePage.ts";
 import { SIDE_BOTTOM_M, SIDE_MARGIN_M, SIDE_PX_PER_M, SIDE_TOP_M, rasterize, readTriangles, sideFrame } from "./renderGlbThumb.ts";
 import {
   TRAIN_PARADE, carImageBase, carKey, carSections, fleetCounts, layOutTrain, PARADE_IMAGE_DIR, resolveTrains,
-  type CarImages, type CountedModel, type SpriteRect, type TrainCar, type TrainContext, type TrainSpec, type ParadeFile,
+  type CarEmitter, type CarImages, type CountedModel, type SpriteRect, type TrainCar, type TrainContext, type TrainSpec, type ParadeFile,
 } from "./trainParade.ts";
 
 const CONFIRMED = new Set<string>(
@@ -246,7 +246,47 @@ export async function renderCar(car: TrainCar, base: (section?: number) => strin
     sprites.push(rect ? { image: `${name}--frames.webp`, ...rect, pitch: rect.h + SPRITE_GAP_PX } : null);
   }
   const animated = cycle && sprites.some(Boolean);
-  return { lengthM, images, ...(animated ? { sprites, frames: cycle.frames, cycleM: cycle.cycleM } : {}), files };
+  const emitters = carEmitters(model.emitters(), car.turned, design.catalog?.traction, max[0], sections);
+  return {
+    lengthM,
+    images,
+    ...(animated ? { sprites, frames: cycle.frames, cycleM: cycle.cycleM } : {}),
+    ...(emitters.some((e) => e.length) ? { emitters } : {}),
+    files,
+  };
+}
+
+/**
+ * The car's smoke emitters on its images, per section: every `smoke` mouth of a
+ * steam or diesel vehicle (its chimney, its exhausts), metres from the top-left corner of the image
+ * of the section it stands in. A turned car's mouths are turned with its
+ * triangles (x to -x), so they sit where its turned image shows them. `noseX` is
+ * the car's front end along X as drawn (turned already), `sections` its sections
+ * from the nose (carSections).
+ */
+export function carEmitters(
+  all: readonly Pick<Emitter, "kind" | "at">[],
+  turned: boolean,
+  traction: string | undefined,
+  noseX: number,
+  sections: readonly (readonly [number, number])[],
+): CarEmitter[][] {
+  const out: CarEmitter[][] = sections.map(() => []);
+  // only what drives the train smokes: a caboose's stove or a coach's heater does not
+  if (traction !== "steam" && traction !== "diesel") return out;
+  const kind: CarEmitter["kind"] = traction;
+  const max = noseX;
+  for (const e of all) {
+    if (e.kind !== "smoke") continue;
+    const x = turned ? -e.at[0] : e.at[0];
+    const fromNose = max - x;
+    let i = sections.findIndex(([s0, s1]) => fromNose >= s0 && fromNose <= s1);
+    if (i < 0) i = fromNose < 0 ? 0 : sections.length - 1;
+    // a section's image spans [max - s1, max - s0] (a car drawn whole: [min, max]), its margin beyond
+    const right = sections.length > 1 ? max - sections[i]![0] : max;
+    out[i]!.push({ kind, xM: Math.round((right + SIDE_MARGIN_M - x) * 1000) / 1000, yM: Math.round((SIDE_TOP_M - e.at[1]) * 1000) / 1000 });
+  }
+  return out;
 }
 
 /**
@@ -408,7 +448,15 @@ export async function writeParade(
     trains: trains.map((t) => {
       const cars = layOutTrain(t.cars, (c) => byCar.get(carKey(c))!, SIDE_MARGIN_M, SIDE_PX_PER_M);
       const last = cars[cars.length - 1]!;
-      return { id: t.id, ground: t.ground, category: t.category, lengthM: Math.round((last.offsetM + last.widthM - SIDE_MARGIN_M) * 1000) / 1000, cars };
+      return {
+        id: t.id,
+        ground: t.ground,
+        category: t.category,
+        speedMps: t.speedMps,
+        ...(t.wireM !== undefined ? { wireM: t.wireM } : {}),
+        lengthM: Math.round((last.offsetM + last.widthM - SIDE_MARGIN_M) * 1000) / 1000,
+        cars,
+      };
     }),
   };
   fs.writeFileSync(path.join(dir, "parade.json"), JSON.stringify(file, null, 1) + "\n");

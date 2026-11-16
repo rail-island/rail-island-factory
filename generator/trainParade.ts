@@ -12,6 +12,7 @@
 // from the rest of the factory is passed in (`TrainContext`), so the tests can
 // check it with small fixtures.
 
+import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "./collector.ts";
 import type { OpenttdProperties, ParamSpec, ParamValues } from "./design.ts";
 
 /** One car as the list writes it. */
@@ -52,6 +53,7 @@ export const TRAIN_CATEGORIES = {
   metro: "Metro",
   tram: "Tram",
   bus: "Bus",
+  truck: "Truck",
   horse: "Horse-drawn",
 } as const;
 export type TrainCategory = keyof typeof TRAIN_CATEGORIES;
@@ -59,7 +61,7 @@ export type TrainCategory = keyof typeof TRAIN_CATEGORIES;
 /** A train's category from its lead vehicle's catalog fields. */
 export function trainCategory(lead: { category: string; group?: string; traction?: string }): TrainCategory {
   if (lead.traction === "animal") return "horse";
-  if (lead.category === "Road vehicles") return "bus";
+  if (lead.category === "Road vehicles") return lead.group === "truck" ? "truck" : "bus";
   switch (lead.group) {
     case "tram":
       return "tram";
@@ -70,6 +72,39 @@ export function trainCategory(lead: { category: string; group?: string; traction
     default:
       return lead.traction === "steam" ? "steamLoco" : lead.traction === "diesel" ? "dieselLoco" : "electricLoco";
   }
+}
+
+/**
+ * How fast a chain of each category runs across railisland.com, in metres of the
+ * model per second (the site multiplies by its pixels per metre). A fixed table,
+ * not the vehicles' own top speeds: the strip is a few hundred pixels wide, and
+ * every chain must stay on screen long enough to be seen.
+ */
+export const PARADE_SPEED_MPS: Record<TrainCategory, number> = {
+  electricUnit: 22,
+  dieselUnit: 20,
+  electricLoco: 20,
+  dieselLoco: 17,
+  steamLoco: 16,
+  metro: 18,
+  tram: 12,
+  bus: 13,
+  truck: 14,
+  horse: 6,
+};
+
+/**
+ * The height of the wire a chain runs under, metres over the railhead, or
+ * undefined for none: the game's contact wire over an electric railway vehicle,
+ * its trolley wire over an electric tram. Read from the first powered car (the
+ * first that states a traction); a horse or cable tram, a metro (third rail), a
+ * diesel, a steam engine and every road vehicle run without one.
+ */
+export function trainWire(cars: readonly Pick<TrainModelInfo, "category" | "group" | "traction">[]): number | undefined {
+  const powered = cars.find((c) => c.traction !== undefined && c.traction !== "none");
+  if (!powered || powered.category !== "Rail vehicles" || powered.traction !== "electric") return undefined;
+  if (powered.group === "metro") return undefined;
+  return powered.group === "tram" ? TRAM_COLLECTOR_TOP : RAIL_COLLECTOR_TOP;
 }
 
 const HORSES_2: ParamValues = { animal: "horse", team: "2" };
@@ -200,6 +235,351 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
     ],
   },
   { id: "stagecoach", cars: [{ model: "proc-vehicle-animal-bus-stagecoach", params: HORSES_2 }] },
+  // ---- grown from thirty to a hundred (docs/specs/2026-11-16-parade-scenery-catenary.md):
+  // electric units
+  { id: "br-class-390", formation: { model: "proc-vehicle-br-class-390", name: "8 cars" } },
+  { id: "eurostar-373", formation: { model: "proc-vehicle-eurostar-373", name: "8 cars" } },
+  { id: "sbb-giruno", formation: { model: "proc-vehicle-sbb-giruno", name: "8 cars" } },
+  { id: "ns-virm", formation: { model: "proc-vehicle-ns-virm", name: "6 cars" } },
+  { id: "cd-471", formation: { model: "proc-vehicle-cd-471", name: "3 cars" } },
+  { id: "shinkansen-n700s", formation: { model: "proc-vehicle-shinkansen-n700s", name: "8 cars" } },
+  { id: "cr-cr400af", formation: { model: "proc-vehicle-cr-cr400af", name: "8 cars" } },
+  { id: "db-ice4", formation: { model: "proc-vehicle-db-ice4", name: "8 cars" } },
+  { id: "jnr-485", formation: { model: "proc-vehicle-jnr-485", name: "6 cars" } },
+  { id: "odakyu-gse", formation: { model: "proc-vehicle-odakyu-gse", name: "6 cars" } },
+  { id: "ns-mat54", formation: { model: "proc-vehicle-ns-mat54", name: "4 cars" } },
+  { id: "sbb-rae-tee", formation: { model: "proc-vehicle-sbb-rae-tee", name: "6 cars" } },
+  { id: "ir-vande-bharat", formation: { model: "proc-vehicle-ir-vande-bharat", name: "8 cars" } },
+  { id: "tgv-pse", formation: { model: "proc-vehicle-tgv", name: "power cars, 6 trailers" } },
+  // electric locomotives: passenger
+  {
+    id: "sbb-re460-ic2000",
+    cars: [
+      { model: "proc-vehicle-sbb-re460" },
+      { model: "proc-vehicle-sbb-ic2000", params: { unit: "a" } },
+      { model: "proc-vehicle-sbb-ic2000", params: { unit: "b" } },
+      { model: "proc-vehicle-sbb-ic2000", params: { unit: "b" } },
+    ],
+  },
+  {
+    id: "db-103-tee",
+    cars: [
+      { model: "proc-vehicle-db-103", params: { livery: "tee" } },
+      { model: "proc-vehicle-db-ic-coach", params: { unit: "avmz", livery: "tee" } },
+      { model: "proc-vehicle-db-ic-coach", params: { unit: "avmz", livery: "tee" } },
+      { model: "proc-vehicle-db-ic-coach", params: { unit: "bpmz", livery: "tee" } },
+    ],
+  },
+  {
+    id: "ir-wap7-rajdhani",
+    cars: [
+      { model: "proc-vehicle-ir-wap7" },
+      { model: "proc-vehicle-ir-lhb-coach", params: { unit: "ac3", livery: "rajdhani" } },
+      { model: "proc-vehicle-ir-lhb-coach", params: { unit: "ac3", livery: "rajdhani" } },
+      { model: "proc-vehicle-ir-lhb-coach", params: { unit: "chairCar", livery: "rajdhani" } },
+    ],
+  },
+  {
+    id: "rhb-glacier-express",
+    cars: [
+      { model: "proc-vehicle-rhb-ge443" },
+      { model: "proc-vehicle-glacier-express", params: { unit: "first" } },
+      { model: "proc-vehicle-glacier-express", params: { unit: "second" } },
+      { model: "proc-vehicle-glacier-express", params: { unit: "second" } },
+    ],
+  },
+  {
+    id: "cd-163-regiojet",
+    cars: [
+      { model: "proc-vehicle-cd-163", params: { livery: "regiojet" } },
+      { model: "proc-vehicle-uic-z-coach", params: { variant: "firstClass", operator: "regiojet" } },
+      { model: "proc-vehicle-uic-z-coach", params: { variant: "secondClass", operator: "regiojet" } },
+      { model: "proc-vehicle-uic-z-coach", params: { variant: "secondClass", operator: "regiojet" } },
+    ],
+  },
+  {
+    id: "ns-1700-icr",
+    cars: [
+      { model: "proc-vehicle-ns-1700" },
+      { model: "proc-vehicle-ns-icr-coach", params: { unit: "a" } },
+      { model: "proc-vehicle-ns-icr-coach", params: { unit: "b" } },
+      { model: "proc-vehicle-ns-icr-coach", params: { unit: "b" } },
+    ],
+  },
+  {
+    id: "obb-1012-uic-z",
+    cars: [
+      { model: "proc-vehicle-obb-1012" },
+      { model: "proc-vehicle-uic-z-coach", params: { variant: "firstClass", operator: "obb" } },
+      { model: "proc-vehicle-uic-z-coach", params: { variant: "restaurant", operator: "obb" } },
+      { model: "proc-vehicle-uic-z-coach", params: { variant: "secondClass", operator: "obb" } },
+    ],
+  },
+  {
+    id: "db-111-double-deck",
+    cars: [{ model: "proc-vehicle-db-111" }, { formation: { model: "proc-vehicle-db-dosto", name: "3 coaches, driving trailer" } }],
+  },
+  {
+    id: "db-143-s-bahn",
+    cars: [
+      { model: "proc-vehicle-dr-243", params: { livery: "db143" } },
+      { formation: { model: "proc-vehicle-dr-sbahn-berlin", name: "4 coaches, driving trailer" } },
+    ],
+  },
+  // electric locomotives: freight
+  {
+    id: "sbb-krokodil-freight",
+    cars: [
+      { model: "proc-vehicle-sbb-ce68" },
+      { model: "proc-vehicle-habis-sliding-wall-wagon" },
+      { model: "proc-vehicle-eas-open-wagon", params: { cargo: "wood" } },
+      { model: "proc-vehicle-rah-tank-wagon" },
+      { model: "proc-vehicle-habis-sliding-wall-wagon", params: { livery: "tw2" } },
+    ],
+  },
+  {
+    id: "prr-gg1-freight",
+    cars: [
+      { model: "proc-vehicle-prr-gg1", params: { livery: "tuscan" } },
+      { model: "proc-vehicle-us-boxcar" },
+      { model: "proc-vehicle-us-boxcar", params: { livery: "railbox" } },
+      { model: "proc-vehicle-us-caboose", params: { livery: "unionPacific" } },
+    ],
+  },
+  {
+    id: "cd-230-hoppers",
+    cars: [
+      { model: "proc-vehicle-cd-230" },
+      { model: "proc-vehicle-falls-hopper-wagon" },
+      { model: "proc-vehicle-falls-hopper-wagon" },
+      { model: "proc-vehicle-falls-hopper-wagon", params: { livery: "viamont" } },
+      { model: "proc-vehicle-faccs-hopper-wagon" },
+    ],
+  },
+  {
+    id: "jnr-ef66-containers",
+    cars: [
+      { model: "proc-vehicle-jnr-ef66", params: { livery: "jrFreight" } },
+      { model: "proc-vehicle-sqns-container-wagon", params: { cargo: "maersk" } },
+      { model: "proc-vehicle-sqns-container-wagon", params: { cargo: "maersk" } },
+      { model: "proc-vehicle-sqns-container-wagon", params: { cargo: "maersk" } },
+    ],
+  },
+  {
+    id: "cr-hxd1-coal",
+    cars: [
+      { model: "proc-vehicle-cr-hxd1" },
+      { model: "proc-vehicle-cr-c70-wagon" },
+      { model: "proc-vehicle-cr-c70-wagon", params: { unit: "covered" } },
+      { model: "proc-vehicle-cr-c70-wagon" },
+      { model: "proc-vehicle-cr-c70-wagon" },
+    ],
+  },
+  // diesel locomotives: passenger
+  {
+    id: "deltic-express",
+    cars: [
+      { model: "proc-vehicle-br-class-55" },
+      { model: "proc-vehicle-br-mk1-coach" },
+      { model: "proc-vehicle-br-mk1-coach" },
+      { model: "proc-vehicle-br-mk1-coach", params: { unit: "bsk" } },
+    ],
+  },
+  {
+    id: "db-218-intercity",
+    cars: [
+      { model: "proc-vehicle-db-218", params: { livery: "orientRed" } },
+      { model: "proc-vehicle-db-ic-coach", params: { unit: "avmz", livery: "intercity" } },
+      { model: "proc-vehicle-db-ic-coach", params: { unit: "bpmz", livery: "intercity" } },
+      { model: "proc-vehicle-db-ic-coach", params: { unit: "bpmz", livery: "intercity" } },
+    ],
+  },
+  {
+    id: "genesis-superliner",
+    cars: [
+      { model: "proc-vehicle-ge-p42dc" },
+      { model: "proc-vehicle-amtrak-superliner", params: { unit: "sleeper" } },
+      { model: "proc-vehicle-amtrak-superliner" },
+      { model: "proc-vehicle-amtrak-superliner" },
+    ],
+  },
+  {
+    id: "cd-754-brejlovec",
+    cars: [
+      { model: "proc-vehicle-cd-750", params: { livery: "cd754" } },
+      { model: "proc-vehicle-cd-y-coach", params: { variant: "bcc" } },
+      { model: "proc-vehicle-cd-y-coach", params: { variant: "bcc" } },
+      { model: "proc-vehicle-cd-y-coach", params: { variant: "bnb" } },
+    ],
+  },
+  {
+    id: "cr-df4-express",
+    cars: [
+      { model: "proc-vehicle-cr-df4" },
+      { model: "proc-vehicle-cr-25t-coach", params: { unit: "hardSeat", livery: "green25b" } },
+      { model: "proc-vehicle-cr-25t-coach", params: { unit: "hardSeat", livery: "green25b" } },
+      { model: "proc-vehicle-cr-25t-coach", params: { livery: "green25b" } },
+    ],
+  },
+  {
+    id: "ir-wdm2-mail",
+    cars: [
+      { model: "proc-vehicle-ir-wdm2" },
+      { model: "proc-vehicle-ir-icf-coach", params: { unit: "general" } },
+      { model: "proc-vehicle-ir-icf-coach" },
+      { model: "proc-vehicle-ir-icf-coach" },
+    ],
+  },
+  {
+    id: "dd51-hokutosei",
+    cars: [
+      { model: "proc-vehicle-jnr-dd51", params: { livery: "hokutosei" } },
+      { model: "proc-vehicle-blue-train-24", params: { unit: "sleeper" } },
+      { model: "proc-vehicle-blue-train-24", params: { unit: "dining" } },
+      { model: "proc-vehicle-blue-train-24", params: { unit: "sleeper" } },
+    ],
+  },
+  // diesel locomotives: freight
+  {
+    id: "class-66-coal",
+    cars: [
+      { model: "proc-vehicle-br-class-66" },
+      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "coal" } },
+      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "coal" } },
+      { model: "proc-vehicle-raj-hopper-wagon" },
+      { model: "proc-vehicle-raj-hopper-wagon" },
+    ],
+  },
+  {
+    id: "emd-f7-freight",
+    cars: [
+      { formation: { model: "proc-vehicle-emd-f7", name: "A-B" } },
+      { model: "proc-vehicle-us-boxcar" },
+      { model: "proc-vehicle-us-boxcar" },
+      { model: "proc-vehicle-us-caboose" },
+    ],
+  },
+  {
+    id: "es44ac-double-stack",
+    cars: [
+      { model: "proc-vehicle-ge-es44ac" },
+      { model: "proc-vehicle-us-well-car", params: { cargo: "double" } },
+      { model: "proc-vehicle-us-well-car", params: { cargo: "double" } },
+      { model: "proc-vehicle-us-well-car", params: { cargo: "double" } },
+    ],
+  },
+  {
+    id: "cd-742-hoppers",
+    cars: [
+      { model: "proc-vehicle-cd-742" },
+      { model: "proc-vehicle-wap-hopper-wagon" },
+      { model: "proc-vehicle-wap-hopper-wagon" },
+      { model: "proc-vehicle-hadgs-hopper-wagon" },
+    ],
+  },
+  // diesel units
+  { id: "br-hst", formation: { model: "proc-vehicle-br-hst", name: "8 cars" } },
+  { id: "db-628", formation: { model: "proc-vehicle-db-628", name: "with n-coaches" } },
+  { id: "class-142-pacer", formation: { model: "proc-vehicle-br-class-142", name: "2 cars" } },
+  { id: "fliegender-hamburger", formation: { model: "proc-vehicle-drg-svt877", name: "2 cars" } },
+  { id: "mav-mdmot", formation: { model: "proc-vehicle-mav-mdmot", name: "4 cars" } },
+  { id: "csd-m131-hurvinek", formation: { model: "proc-vehicle-csd-m131", name: "with trailer" } },
+  { id: "jr-kiha40", cars: [{ model: "proc-vehicle-jr-kiha40" }] },
+  // steam
+  {
+    id: "drg-01-express",
+    cars: [
+      { formation: { model: "proc-vehicle-drg-01", name: "with tender" } },
+      { model: "proc-vehicle-csd-be31" },
+      { model: "proc-vehicle-csd-be31" },
+      { model: "proc-vehicle-csd-bi20" },
+    ],
+  },
+  {
+    id: "gwr-castle",
+    cars: [
+      { formation: { model: "proc-vehicle-gwr-castle", name: "with tender" } },
+      { model: "proc-vehicle-br-mk1-coach", params: { livery: "maroon" } },
+      { model: "proc-vehicle-br-mk1-coach", params: { livery: "maroon" } },
+      { model: "proc-vehicle-br-mk1-coach", params: { unit: "bsk", livery: "maroon" } },
+    ],
+  },
+  {
+    id: "lner-a3",
+    cars: [
+      { formation: { model: "proc-vehicle-lner-a3", name: "with tender" } },
+      { model: "proc-vehicle-br-mk1-coach" },
+      { model: "proc-vehicle-br-mk1-coach" },
+      { model: "proc-vehicle-br-mk1-coach" },
+    ],
+  },
+  {
+    id: "csd-475-1",
+    cars: [
+      { formation: { model: "proc-vehicle-csd-475-1", name: "with tender" } },
+      { model: "proc-vehicle-csd-classic-green-coach", params: { variant: "classB" } },
+      { model: "proc-vehicle-csd-classic-green-coach", params: { variant: "classB" } },
+      { model: "proc-vehicle-csd-classic-green-coach", params: { variant: "classB" } },
+    ],
+  },
+  {
+    id: "ir-wp-express",
+    cars: [
+      { formation: { model: "proc-vehicle-ir-wp", name: "with tender" } },
+      { model: "proc-vehicle-ir-icf-coach", params: { livery: "maroon" } },
+      { model: "proc-vehicle-ir-icf-coach", params: { unit: "general", livery: "maroon" } },
+      { model: "proc-vehicle-ir-icf-coach", params: { unit: "general", livery: "maroon" } },
+    ],
+  },
+  { id: "rocket", formation: { model: "proc-vehicle-rocket", name: "with tender" } },
+  {
+    id: "nyc-hudson-freight",
+    cars: [
+      { formation: { model: "proc-vehicle-nyc-hudson", name: "with tender" } },
+      { model: "proc-vehicle-us-boxcar" },
+      { model: "proc-vehicle-us-boxcar" },
+      { model: "proc-vehicle-us-caboose" },
+    ],
+  },
+  {
+    id: "dr-52-freight",
+    cars: [
+      { formation: { model: "proc-vehicle-dr-52", name: "with tender" } },
+      { model: "proc-vehicle-eas-open-wagon", params: { cargo: "wood" } },
+      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "coal" } },
+      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "sand" } },
+      { model: "proc-vehicle-legacy-covered-wagon" },
+    ],
+  },
+  // metro
+  {
+    id: "nyc-r160",
+    cars: [
+      { model: "proc-vehicle-nyc-r160" },
+      { model: "proc-vehicle-nyc-r160", params: { unit: "trailer" } },
+      { model: "proc-vehicle-nyc-r160", params: { unit: "trailer" } },
+      { model: "proc-vehicle-nyc-r160", turned: true },
+    ],
+  },
+  // trams
+  { id: "skoda-15t", cars: [{ model: "proc-vehicle-skoda-15t" }] },
+  { id: "tatra-kt8", cars: [{ model: "proc-vehicle-tatra-kt8" }] },
+  { id: "alstom-citadis", cars: [{ model: "proc-vehicle-alstom-citadis", params: { livery: "dublin" } }] },
+  { id: "blackpool-balloon", cars: [{ model: "proc-vehicle-blackpool-balloon" }] },
+  // buses
+  { id: "skoda-706-rto", cars: [{ model: "proc-vehicle-skoda-706-rto" }] },
+  { id: "karosa-sm11", cars: [{ model: "proc-vehicle-karosa-sm11" }] },
+  { id: "bristol-lodekka", cars: [{ model: "proc-vehicle-bristol-lodekka" }] },
+  { id: "mb-o345-g", cars: [{ model: "proc-vehicle-mb-o345-g" }] },
+  { id: "neoplan-skyliner", cars: [{ model: "proc-vehicle-neoplan-skyliner" }] },
+  { id: "gm-scenicruiser", cars: [{ model: "proc-vehicle-gm-scenicruiser" }] },
+  // horse-drawn
+  { id: "paris-omnibus", cars: [{ model: "proc-vehicle-animal-bus-paris-omnibus", params: HORSES_2 }] },
+  // trucks
+  { id: "tatra-815-tipper", cars: [{ model: "proc-vehicle-tatra-815-tipper" }] },
+  { id: "praga-rv", cars: [{ model: "proc-vehicle-praga-rv" }] },
+  { id: "cistern-semi-truck", cars: [{ model: "proc-vehicle-cistern-semi-truck" }] },
+  { id: "mercedes-atego", cars: [{ model: "proc-vehicle-mercedes-atego-1224" }] },
 ];
 
 /** What a train needs to know about one model. */
@@ -275,7 +655,17 @@ function nonDefault(specs: readonly ParamSpec[], params: ParamValues, where: str
  * offers. Throws on the first fault, naming the train and car, so a bad list
  * fails the build.
  */
-export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { id: string; ground: Ground; category: TrainCategory; cars: TrainCar[] }[] {
+/** A train resolved: its ground, category, speed, the wire it runs under (if any) and its cars. */
+export interface ResolvedTrain {
+  id: string;
+  ground: Ground;
+  category: TrainCategory;
+  speedMps: number;
+  wireM?: number;
+  cars: TrainCar[];
+}
+
+export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): ResolvedTrain[] {
   const ids = new Set<string>();
   return list.map((train) => {
     if (!/^[a-z0-9-]+$/.test(train.id)) throw new Error(`train "${train.id}": id must be lower-case letters, digits and dashes`);
@@ -290,6 +680,7 @@ export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { 
       "formation" in train ? expand(train.formation) : train.cars.flatMap((c) => ("formation" in c ? expand(c.formation) : [c]));
     if (specs.length === 0) throw new Error(`train "${train.id}": no cars`);
     const categories: string[] = [];
+    const infos: TrainModelInfo[] = [];
     let lead: TrainModelInfo | undefined;
     const cars = specs.map((c, i) => {
       const where = `train "${train.id}", car ${i + 1} (${c.model})`;
@@ -298,11 +689,14 @@ export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { 
       if (!ctx.confirmed(c.model)) throw new Error(`${where}: a workshop draft, not a confirmed model`);
       if (!ctx.isSideView(info.category)) throw new Error(`${where}: a ${info.category} model has no side view`);
       categories.push(info.category);
+      infos.push(info);
       lead ??= info;
       return { model: c.model, params: nonDefault(info.params ?? [], c.params ?? {}, where), turned: c.turned === true };
     });
     if (train.category && !(train.category in TRAIN_CATEGORIES)) throw new Error(`train "${train.id}": no category "${train.category}"`);
-    return { id: train.id, ground: trainGround(categories), category: train.category ?? trainCategory(lead!), cars };
+    const category = train.category ?? trainCategory(lead!);
+    const wireM = trainWire(infos);
+    return { id: train.id, ground: trainGround(categories), category, speedMps: PARADE_SPEED_MPS[category], ...(wireM !== undefined ? { wireM } : {}), cars };
   });
 }
 
@@ -334,6 +728,18 @@ export interface CarImages {
   frames?: number;
   /** Metres the car travels in that cycle (one wheel turn, one stride). */
   cycleM?: number;
+  /** Per section, the exhaust mouths its image shows (absent for a car with none). */
+  emitters?: CarEmitter[][];
+}
+
+/**
+ * An exhaust mouth on a car's image: a steam locomotive's chimney (`steam`) or a
+ * diesel's exhaust (`diesel`), `xM`, `yM` metres from the image's top-left corner.
+ */
+export interface CarEmitter {
+  kind: "steam" | "diesel";
+  xM: number;
+  yM: number;
 }
 
 /** One image of a train, as parade.json carries it: a car, or one section of a car drawn in several. */
@@ -355,6 +761,8 @@ export interface PlacedCar extends TrainCar {
    * frames) as the car moves, so nothing slides.
    */
   sprite?: { image: string; xM: number; yM: number; widthM: number; heightM: number; pitchM: number; frames: number; cycleM: number };
+  /** The exhaust mouths on this image, where a client starts its smoke (steam puffs, diesel haze). */
+  emitters?: CarEmitter[];
 }
 
 /**
@@ -374,6 +782,7 @@ export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => 
     if (sections.length !== c.images.length) throw new Error(`${carKey(car)}: ${c.images.length} images for ${sections.length} sections`);
     const placed = sections.map(([s0, s1], i): PlacedCar => {
       const sp = c.sprites?.[i];
+      const em = c.emitters?.[i];
       return {
         ...car,
         ...(sections.length > 1 ? { section: i } : {}),
@@ -394,6 +803,7 @@ export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => 
               },
             }
           : {}),
+        ...(em && em.length ? { emitters: em } : {}),
       };
     });
     at += c.lengthM;
@@ -492,7 +902,12 @@ export interface ParadeFile {
   bottomM: number;
   /** The caption's counts: every kind of vehicle the factory makes, and all their variants. */
   fleet: FleetCounts;
-  trains: { id: string; ground: Ground; category: TrainCategory; lengthM: number; cars: PlacedCar[] }[];
+  /**
+   * Every chain: `speedMps` is how fast it runs (metres of the model per second),
+   * `wireM` the height of the overhead wire it runs under over the rail, absent
+   * for none.
+   */
+  trains: { id: string; ground: Ground; category: TrainCategory; speedMps: number; wireM?: number; lengthM: number; cars: PlacedCar[] }[];
 }
 
 /**

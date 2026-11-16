@@ -1,8 +1,8 @@
 # The train parade
 
-**Covers** - the hand-picked vehicle chains railisland.com drives across its landing page: the list (trains, trams, buses, horse-drawn vehicles), how a formation or a hand-composed train resolves and is checked, each chain's category and the play order that spreads them, the overview page at `/parade/`, the cars rendered at build time as lossless WebP (turned cars, a whole articulated train in sections, the moving parts of an animated car as a sprite), the incremental cache, the fleet counts the caption under it names, `parade.json` and its headers.
+**Covers** - the hand-picked vehicle chains railisland.com drives across its landing page: the list (trains, trams, buses, trucks, horse-drawn vehicles), each chain's speed and the overhead wire it runs under, every car's exhaust mouths, how a formation or a hand-composed train resolves and is checked, each chain's category and the play order that spreads them, the overview page at `/parade/`, the cars rendered at build time as lossless WebP (turned cars, a whole articulated train in sections, the moving parts of an animated car as a sprite), the incremental cache, the fleet counts the caption under it names, `parade.json` and its headers.
 **Code** - `generator/trainParade.ts`, `generator/writeParade.ts`, `generator/paradePage.ts`, `generator/renderGlbThumb.ts` (`rasterize`, `sideFrame`), `generator/glbPose.ts` (`poseGlb`), `vite.config.ts` (`ASSET_HEADERS`), `test/trainParade.test.ts`
-**See also** - [../models/export.md](../models/export.md), [../models/animation.md](../models/animation.md) (the distance-driven clips), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md) (formations), [../specs/2026-11-15-hero-train-parade.md](../specs/2026-11-15-hero-train-parade.md)
+**See also** - [../models/export.md](../models/export.md), [../models/animation.md](../models/animation.md) (the distance-driven clips), [../models/emitters.md](../models/emitters.md) (the exhaust mouths), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md) (formations), [../specs/2026-11-15-hero-train-parade.md](../specs/2026-11-15-hero-train-parade.md)
 
 ## What it is
 
@@ -17,11 +17,17 @@ order that spreads the categories (`playOrder`, below); railisland.com's
 `?parade=<id>` plays one chain only, for checking it, and
 `https://factory.railisland.com/parade/` lists every chain with its id.
 
+The site also draws the scenery the file asks for: the overhead line over a chain
+with a `wireM`, smoke from every car's `emitters`, each chain at its `speedMps`
+([../specs/2026-11-16-parade-scenery-catenary.md](../specs/2026-11-16-parade-scenery-catenary.md)).
+
 ## The list
 
-`TRAIN_PARADE` in `generator/trainParade.ts`, edited by hand: thirty chains today -
-high-speed and regional units, locomotives with coaches or wagons, five steam
-engines with their tenders, metros, trams, buses and three horse-drawn vehicles. A
+`TRAIN_PARADE` in `generator/trainParade.ts`, edited by hand: a hundred chains
+today - 22 electric units, 16 electric and 12 diesel locomotives with their
+trains (about a quarter of the locomotive chains freight), 8 diesel units, 14
+steam engines with their tenders and trains, 8 trams, 3 metros, 9 buses, 4 trucks
+and 4 horse-drawn vehicles. The test pins that mix; change it there on purpose. A
 train has an `id` (lower-case, digits, dashes; unique) and either:
 
 - `cars`: its cars nose first, each `{ model, params?, turned? }` or
@@ -40,8 +46,9 @@ other on rails.
 
 Every chain has a **category** (`TRAIN_CATEGORIES`): `electricUnit`, `dieselUnit`,
 `electricLoco`, `dieselLoco`, `steamLoco` (a locomotive and its train), `metro`,
-`tram`, `bus` and `horse`. `trainCategory` derives it from the lead vehicle's
-catalog fields - traction `animal` is `horse`, a Road vehicle `bus`, the groups
+`tram`, `bus`, `truck` and `horse`. `trainCategory` derives it from the lead vehicle's
+catalog fields - traction `animal` is `horse`, a Road vehicle in group `truck` a
+`truck`, any other Road vehicle `bus`, the groups
 `tram` and `metro` themselves, a `unit` an electric or diesel unit by traction,
 anything else a locomotive by traction - unless the list states one
 (`category` on the train; an unknown one fails the build).
@@ -51,10 +58,34 @@ chains are shuffled and spread evenly over the round (the k-th of n gets the key
 (k + offset) / n, one random offset per category; sorting by key interleaves them),
 then a chain whose category repeats its predecessor's - or, first in a round, the
 last chain played - is swapped with the nearest one that fits, ahead or, at the
-end of the round, behind. With today's thirty chains (eight electric units, six
-steam trains, four trams, three buses, three horse-drawn, two electric
-locomotives, two metros, one diesel unit, one diesel locomotive) no two of one
-category ever play in a row (tested over 2,000 rounds). The function is
+end of the round, behind. With today's hundred chains (mix above) no two of one
+category ever play in a row (tested over 2,000 rounds).
+
+## Speed and the overhead wire
+
+Every chain carries `speedMps`, from the fixed table `PARADE_SPEED_MPS` by
+category (horse-drawn 6, tram 12, bus 13, truck 14, steam 16, diesel locomotive
+17, metro 18, diesel unit and electric locomotive 20, electric unit 22 metres of
+model per second) - not the vehicles' own top speeds: the strip is a few hundred
+pixels wide and every chain must stay on screen long enough to be seen.
+
+`wireM` (`trainWire`) is the height of the wire the chain runs under, read from
+its first powered car (the first that states a traction): an electric railway
+vehicle runs under the game's contact wire (`RAIL_COLLECTOR_TOP`, 5.88 m), an
+electric tram under its trolley wire (`TRAM_COLLECTOR_TOP`, 5.5 m,
+`generator/collector.ts`), so the pantographs touch it. A metro (third rail), a
+horse or cable tram, a diesel, a steam engine and every road vehicle have none,
+and the field is absent.
+
+## Exhausts
+
+A car's `emitters` are its `smoke` mouths ([../models/emitters.md](../models/emitters.md))
+placed on its image (`carEmitters`): `xM`, `yM` metres from the image's top-left
+corner, in the section they stand in, turned with a turned car. Only a car whose
+traction is `steam` (kind `steam`: the chimney) or `diesel` (kind `diesel`: its
+exhausts) carries them - a caboose's stove pipe or an electric's does not smoke.
+railisland.com puffs steam four times per turn of the driving wheels (`cycleM / 4`)
+and gives a diesel a faint haze. The function is
 self-contained: the overview page embeds its source, and railisland.com's
 `TrainParade.astro` carries a copy - keep them in step.
 
@@ -146,7 +177,7 @@ rendered (length, image names, sprite rectangles, frames, cycle) -
 `export/.parade-keys.json`. A car whose hash
 is there with all its files is not built at all. The deploy restores the last
 export (its `actions/cache` step), so a deploy that changed no listed design
-renders nothing (about 2 s; all thirty chains from cold take about 80 s). Files
+renders nothing (about 2 s; all hundred chains from cold take about 4 minutes). Files
 no car uses any more are deleted. A design with no build-cache key is always
 rendered, under a random name.
 
@@ -181,12 +212,15 @@ no other parameter counts 1.
 | `trains[].id` | the train's id from the list |
 | `trains[].ground` | `rail` or `road` |
 | `trains[].category` | its category (above) |
+| `trains[].speedMps` | how fast it runs, metres of the model per second (above) |
+| `trains[].wireM` | the overhead wire's height over the rail, metres; absent for none (above) |
 | `trains[].lengthM` | from the first car's nose to the last car's tail, metres |
 | `trains[].cars[].model`, `.params`, `.turned` | the car: model id, non-default values, running backwards |
 | `trains[].cars[].section` | for a car drawn in sections, which one (0 from its nose); absent otherwise. Each section is its own entry, placed like a car |
 | `trains[].cars[].image` | its still image, relative to parade.json (`parade/img/...`) |
 | `trains[].cars[].offsetM` | metres from the train's nose to the image's left edge |
 | `trains[].cars[].widthM` | the image's width in metres: the car's length and the 0.3 m margins |
+| `trains[].cars[].emitters` | a steam or diesel car's exhaust mouths on this image: `kind` (`steam`, `diesel`), `xM`, `yM` from its top-left corner, metres; absent for none |
 | `trains[].cars[].sprite` | an animated car's moving part: `image` (the frames, relative to parade.json), `xM`, `yM` (its top-left corner from the still image's, metres), `widthM`, `heightM` (one frame), `pitchM` (from one frame's top to the next's, the gap included), `frames`, `cycleM` (metres travelled per loop) |
 
 Cars are laid end to end with couplers touching: each car's length is its built

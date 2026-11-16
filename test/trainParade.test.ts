@@ -10,15 +10,16 @@ import { PNG } from "pngjs";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import type { ParamSpec } from "../generator/design.ts";
-import { designGlb } from "../generator/generate.ts";
+import { DESIGNS, designGlb } from "../generator/generate.ts";
 import type { Tri } from "../generator/glbTriangles.ts";
 import { triBounds } from "../generator/glbTriangles.ts";
 import { SIDE_MARGIN_M, SIDE_PX_PER_M, readTriangles, renderGlbSideThumb } from "../generator/renderGlbThumb.ts";
 import {
   SECTION_MAX_M, TRAIN_PARADE, VEHICLE_TYPES, carImageBase, carSections, fleetCounts, layOutTrain, modelVariants, resolveTrains,
-  trainGround, trainCategory, playOrder, vehicleType, PARADE_IMAGE_DIR, TRAIN_CATEGORIES, type CarImages, type TrainContext, type TrainSpec,
+  trainGround, trainCategory, trainWire, playOrder, PARADE_SPEED_MPS, vehicleType, PARADE_IMAGE_DIR, TRAIN_CATEGORIES, type CarImages, type TrainContext, type TrainSpec,
 } from "../generator/trainParade.ts";
-import { FACTORY_TRAIN_CONTEXT, changedMask, changedRect, renderCar, renderSide, spriteCycle, turnedRound, writeParade } from "../generator/writeParade.ts";
+import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "../generator/collector.ts";
+import { FACTORY_TRAIN_CONTEXT, carEmitters, changedMask, changedRect, renderCar, renderSide, spriteCycle, turnedRound, writeParade } from "../generator/writeParade.ts";
 import { paradePage } from "../generator/paradePage.ts";
 
 const LIVERY: ParamSpec = { name: "livery", title: "Livery", default: "red", values: [{ value: "red", title: "Red" }, { value: "blue", title: "Blue" }] };
@@ -46,10 +47,30 @@ const fixture: TrainContext = {
 };
 
 describe("train list", () => {
-  it("resolves all thirty trains of the parade against the factory", () => {
+  it("resolves all hundred trains of the parade against the factory", () => {
     const trains = resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT);
-    expect(trains.length).toBe(30);
-    expect(trains.filter((t) => t.ground === "road").map((t) => t.id).sort()).toEqual(["curitiba-biarticulado", "ikarus-280", "new-routemaster", "stagecoach"]);
+    expect(trains.length).toBe(100);
+    expect(trains.filter((t) => t.ground === "road").map((t) => t.id).sort()).toEqual([
+      "bristol-lodekka", "cistern-semi-truck", "curitiba-biarticulado", "gm-scenicruiser", "ikarus-280", "karosa-sm11", "mb-o345-g",
+      "mercedes-atego", "neoplan-skyliner", "new-routemaster", "paris-omnibus", "praga-rv", "skoda-706-rto", "stagecoach", "tatra-815-tipper",
+    ]);
+  });
+
+  it("aims at the spec's mix of categories", () => {
+    const count: Record<string, number> = {};
+    for (const t of resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT)) count[t.category] = (count[t.category] ?? 0) + 1;
+    expect(count).toEqual({ electricUnit: 22, electricLoco: 16, dieselLoco: 12, dieselUnit: 8, steamLoco: 14, tram: 8, metro: 3, bus: 9, horse: 4, truck: 4 });
+  });
+
+  it("gives every chain its category's speed and a wire only where it runs under one", () => {
+    const trains = resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT);
+    for (const t of trains) expect(t.speedMps).toBe(PARADE_SPEED_MPS[t.category]);
+    const wire = (id: string) => trains.find((t) => t.id === id)!.wireM;
+    expect(wire("db-ice3")).toBe(RAIL_COLLECTOR_TOP);
+    expect(wire("cd-150-express")).toBe(RAIL_COLLECTOR_TOP);
+    expect(wire("pcc-streamliner")).toBe(TRAM_COLLECTOR_TOP);
+    for (const id of ["metro-81-71", "nyc-r160", "horse-tram", "csd-498-1-express", "br-hst", "us-freight", "ikarus-280", "praga-rv"]) expect(wire(id)).toBeUndefined();
+    for (const t of trains) if (t.category === "electricUnit" || t.category === "electricLoco") expect(t.wireM).toBe(RAIL_COLLECTOR_TOP);
   });
 
   it("expands a formation, alone or inside a car list, keeps turned and drops default values", () => {
@@ -143,6 +164,37 @@ describe("layout", () => {
       32,
     );
     expect(car!.sprite).toEqual({ image: `${PARADE_IMAGE_DIR}/loco--frames.webp`, xM: 2, yM: 3, widthM: 10, heightM: 2, pitchM: 2.125, frames: 12, cycleM: 5.75 });
+  });
+
+  it("places a car's smoke mouths on its image, turned with it and in the section they stand in", () => {
+    const at = (x: number, y: number) => ({ kind: "smoke" as const, at: [x, y, 0] as [number, number, number] });
+    // a 10 m car from x = -5 to 5, drawn whole: its nose (x = 5) at the image's left margin
+    const [whole] = carEmitters([at(3, 4.5), { kind: "steam", at: [0, 4, 0] }], false, "steam", 5, [[0, 10]]);
+    expect(whole).toEqual([{ kind: "steam", xM: SIDE_MARGIN_M + 2, yM: 6 - 4.5 }]);
+    // turned: the mouth at x = 3 is now at -3, 8 m behind the nose
+    const [turned] = carEmitters([at(3, 4.5)], true, "diesel", 5, [[0, 10]]);
+    expect(turned).toEqual([{ kind: "diesel", xM: SIDE_MARGIN_M + 8, yM: 1.5 }]);
+    // a 60 m car in two sections of 30 m: a mouth 40 m behind the nose is 10 m into the second image
+    const parts = carEmitters([at(-10, 4)], false, "diesel", 30, [[0, 30], [30, 60]]);
+    expect(parts).toEqual([[], [{ kind: "diesel", xM: SIDE_MARGIN_M + 10, yM: 2 }]]);
+    // only steam and diesel vehicles smoke: not a caboose's stove pipe, not an electric
+    expect(carEmitters([at(3, 4.5)], false, undefined, 5, [[0, 10]])).toEqual([[]]);
+    expect(carEmitters([at(3, 4.5)], false, "electric", 5, [[0, 10]])).toEqual([[]]);
+  });
+
+  it("finds a steam locomotive's chimney near the top of its image, towards the nose", () => {
+    const design = DESIGNS.get("proc-vehicle-lner-a4")!;
+    const model = design.build({});
+    const tris = readTriangles(designGlb("proc-vehicle-lner-a4"));
+    const { min, max } = triBounds(tris);
+    const [em] = carEmitters(model.emitters(), false, design.catalog?.traction, max[0], carSections(max[0] - min[0]));
+    expect(em!.length).toBeGreaterThan(0);
+    for (const e of em!) {
+      expect(e.kind).toBe("steam");
+      expect(e.yM).toBeGreaterThan(0);
+      expect(e.yM).toBeLessThan(2.5);
+      expect(e.xM).toBeLessThan((max[0] - min[0]) / 2);
+    }
   });
 
   it("turns a car round about the vertical axis", () => {
@@ -284,8 +336,26 @@ describe("categories and play order", () => {
     expect(trainCategory({ category: "Rail vehicles", group: "metro" })).toBe("metro");
     expect(trainCategory({ category: "Rail vehicles", group: "tram", traction: "electric" })).toBe("tram");
     expect(trainCategory({ category: "Road vehicles", group: "bus" })).toBe("bus");
+    expect(trainCategory({ category: "Road vehicles", group: "truck" })).toBe("truck");
     expect(trainCategory({ category: "Rail vehicles", group: "tram", traction: "animal" })).toBe("horse");
     expect(trainCategory({ category: "Road vehicles", group: "bus", traction: "animal" })).toBe("horse");
+  });
+
+  it("hangs a wire over electric railway vehicles and trams only, from the first powered car", () => {
+    const rail = (group: string, traction?: string) => ({ category: "Rail vehicles", group, ...(traction ? { traction } : {}) });
+    expect(trainWire([rail("loco", "electric"), rail("coach")])).toBe(RAIL_COLLECTOR_TOP);
+    expect(trainWire([rail("coach"), rail("unit", "electric")])).toBe(RAIL_COLLECTOR_TOP);
+    expect(trainWire([rail("tram", "electric")])).toBe(TRAM_COLLECTOR_TOP);
+    expect(trainWire([rail("tram", "animal")])).toBeUndefined();
+    expect(trainWire([rail("tram", "cable")])).toBeUndefined();
+    expect(trainWire([rail("metro", "electric")])).toBeUndefined();
+    expect(trainWire([rail("loco", "diesel"), rail("unit", "electric")])).toBeUndefined();
+    expect(trainWire([rail("coach")])).toBeUndefined();
+    expect(trainWire([{ category: "Road vehicles", group: "bus", traction: "electric" }])).toBeUndefined();
+  });
+
+  it("has a speed for every category", () => {
+    for (const k of Object.keys(TRAIN_CATEGORIES)) expect(PARADE_SPEED_MPS[k as keyof typeof PARADE_SPEED_MPS]).toBeGreaterThan(0);
   });
 
   it("gives every chain of the parade a known category, and the list states none it does not know", () => {
@@ -332,8 +402,8 @@ describe("overview page", () => {
     version: 1 as const, pxPerM: 32, heightM: 6.3, bottomM: -0.3,
     fleet: { types: { trains: 2, trams: 0, buses: 0, trucks: 0, horseDrawn: 0, ships: 0, aircraft: 0, cableCars: 0 }, variants: 3 },
     trains: [
-      { id: "steam-<one>", ground: "rail" as const, category: "steamLoco" as const, lengthM: 20, cars: [] },
-      { id: "unit-two", ground: "rail" as const, category: "electricUnit" as const, lengthM: 40, cars: [] },
+      { id: "steam-<one>", ground: "rail" as const, category: "steamLoco" as const, speedMps: 16, lengthM: 20, cars: [] },
+      { id: "unit-two", ground: "rail" as const, category: "electricUnit" as const, speedMps: 22, wireM: 5.88, lengthM: 40, cars: [] },
     ],
   };
   const html = paradePage(file);
@@ -407,6 +477,10 @@ describe("writeParade", () => {
       // the overview page sits beside it and lists the chain
       expect(fs.readFileSync(path.join(dir, "parade", "index.html"), "utf8")).toContain('"pair"');
       expect(file.trains[0]!.category).toBe("electricLoco");
+      expect(file.trains[0]!.speedMps).toBe(PARADE_SPEED_MPS.electricLoco);
+      expect(file.trains[0]!.wireM).toBe(RAIL_COLLECTOR_TOP);
+      // an electric locomotive has no exhaust
+      expect(file.trains[0]!.cars.some((c) => c.emitters)).toBe(false);
       // nothing changed: nothing is rendered again, and the file is the same
       const second = await writeParade(list, dir);
       expect([second.rendered, second.reused]).toEqual([0, 2]);

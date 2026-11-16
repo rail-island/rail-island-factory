@@ -146,11 +146,14 @@ function picture(train) {
 function row(train, n) {
   const link = el("a", { href: site + "/?parade=" + encodeURIComponent(train.id), target: "_blank", rel: "noopener" }, "Show on railisland.com");
   const animated = train.cars.some((c) => c.sprite) ? ", animated" : "";
+  const wire = train.wireM ? ", under a wire at " + train.wireM + " m" : "";
+  const smoke = train.cars.some((c) => c.emitters && c.emitters.length) ? ", smokes" : "";
+  const speed = train.speedMps ? ", " + train.speedMps + " m/s" : "";
   const head = el("div", { class: "head" },
     el("span", { class: "num" }, n + "."),
     el("code", { class: "id" }, train.id),
     el("span", {}, categories[train.category] || train.category),
-    el("span", { class: "meta" }, train.lengthM.toFixed(1) + " m, " + train.cars.length + " image(s), " + (train.ground === "road" ? "on the road" : "on rails") + animated),
+    el("span", { class: "meta" }, train.lengthM.toFixed(1) + " m, " + train.cars.length + " image(s), " + (train.ground === "road" ? "on the road" : "on rails") + wire + animated + smoke + speed),
     link);
   return el("section", { class: "chain", id: train.id }, head, picture(train));
 }
