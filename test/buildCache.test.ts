@@ -8,9 +8,11 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { BUILD_CACHE_DIR, BuildCache, CACHE_VERSION, PIPELINE, SourceGraph, paramsKey, readStoredFacts, type DesignFacts } from "../generator/buildCache";
-import { DESIGNS, designKeys, designSource, generateJsModels, generateModels } from "../generator/generate";
+import { DESIGNS, catalogFields, designKeys, designSource, generateJsModels, generateModels } from "../generator/generate";
 import type { ProceduralDesign } from "../generator/design";
 import { isDraft } from "../generator/workshop";
+import { cardKey, readCardKeys } from "../generator/cards";
+import { isSideViewCategory } from "../generator/catalog";
 
 const GENERATOR = path.resolve(__dirname, "../generator");
 const ALL = [...DESIGNS.values()];
@@ -29,6 +31,16 @@ describe("the committed build cache", () => {
     expect(stale.length, `${stale.length} designs changed since build-cache/ was written - ${hint}: ${stale.slice(0, 20).join(", ")}`).toBe(0);
     expect(extra, `build-cache/ holds designs that no longer exist - ${hint}`).toEqual([]);
     expect(thumbs, `build-cache/thumbs/ must hold exactly the confirmed models' thumbnails - ${hint}`).toEqual(confirmed);
+  });
+
+  it("holds a fresh link-preview card for every confirmed road and rail vehicle (cards.ts)", () => {
+    const hint = "run `pnpm build:models` and commit build-cache/ (docs/site/seo-pages.md)";
+    const sideView = ALL.filter((d) => !isDraft(d.id) && isSideViewCategory(catalogFields(d).category)).map((d) => d.id).sort();
+    const cards = fs.readdirSync(path.join(BUILD_CACHE_DIR, "cards")).filter((n) => n.endsWith(".jpg")).map((n) => n.slice(0, -4)).sort();
+    expect(cards, `build-cache/cards/ must hold exactly the confirmed road and rail vehicles' cards - ${hint}`).toEqual(sideView);
+    const keys = readCardKeys(BUILD_CACHE_DIR);
+    const stale = sideView.filter((id) => KEYS.get(id) && keys[id] !== cardKey(KEYS.get(id)!));
+    expect(stale, `cards rendered for an older model - ${hint}`).toEqual([]);
   });
 });
 

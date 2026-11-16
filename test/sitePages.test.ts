@@ -157,6 +157,17 @@ describe("sitePages", () => {
     expect(home).toEqual(expect.arrayContaining(["/openttd/", "/country/czechia/", "/maker/skoda/"]));
   });
 
+  it("names a rendered JPEG card with its type", () => {
+    const files = sitePages(SHELL, RECORDS, () => null, (r) => `cards/${r.id}.jpg`);
+    const html = files.get("model/proc-vehicle-cd-163/index.html")!;
+    expect(attr(html, /<meta property="og:image" content="([^"]*)"/)).toBe("https://factory.railisland.com/cards/proc-vehicle-cd-163.jpg");
+    expect(attr(html, /<meta property="og:image:type" content="([^"]*)"/)).toBe("image/jpeg");
+    // the card is the page's picture too, and the structured data's first
+    expect(html).toContain('<img class="factory-static__thumb" src="/cards/proc-vehicle-cd-163.jpg" alt="CD 163 - 3D model of an electric locomotive" width="1200" height="630" />');
+    const model = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]!))[1];
+    expect(model.image).toEqual(["https://factory.railisland.com/cards/proc-vehicle-cd-163.jpg", "https://factory.railisland.com/thumbs/proc-vehicle-cd-163.png"]);
+  });
+
   it("uses a composed 1200 x 630 card as the link preview when the build made one", () => {
     const files = sitePages(SHELL, RECORDS, () => null, (r) => (r.id === "proc-vehicle-cd-163" ? `og/${r.id}.png` : null));
     const html = files.get("model/proc-vehicle-cd-163/index.html")!;

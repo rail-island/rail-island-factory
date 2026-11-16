@@ -179,6 +179,7 @@ import { catalogOpenttd, openttdFeatureOf, openttdPartCount } from "./openttd.ts
 import { idsOf } from "./openttdIds.ts";
 import { OPENTTD_TABLE } from "./openttdTable.ts";
 import { yearOf } from "./yearTable.ts";
+import { generateCards } from "./cards.ts";
 import { isDraft, unknownCatalogIds } from "./workshop.ts";
 import { linkTableProblems } from "./linkTable.ts";
 import { JS_DIR, bundleDesign, bundleFlags, gzipSize, writeIfChanged, type BundleFlags } from "./jsModel.ts";
@@ -858,6 +859,11 @@ export async function buildExport(
   fs.writeFileSync(path.join(dir, CHARACTERS_META_FILE), `${JSON.stringify(exportCharacterMeta(chosen(CHARACTER_DESIGNS), bounds), null, 2)}\n`);
   // the woods types and the tree species they draw from (woodsExport.ts); only a whole export has them
   if (designs.length === DESIGNS.size) await generateWoods(dir);
+  // the road and rail vehicles' link-preview cards (cards.ts): a three-quarter view for the site's pages
+  if (designs.length === DESIGNS.size) {
+    const wanted = models.filter((m) => m.side && !isDraft(m.id)).map((m) => ({ id: m.id, key: m.key }));
+    await generateCards(dir, cacheDirFor(dir), wanted, (id) => designGlb(id));
+  }
   // the set registry and its landed modules (sets/setsExport.ts), and the exported
   // text in every language (text.ts); likewise only a whole export has them
   if (designs.length === DESIGNS.size) {

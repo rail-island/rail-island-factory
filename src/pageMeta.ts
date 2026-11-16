@@ -182,7 +182,7 @@ export function kindNoun(r: CatalogRecord): string {
 }
 
 /** "a" or "an" before a word. */
-function article(word: string): string {
+export function article(word: string): string {
   return /^[aeiou]/i.test(word) ? "an" : "a";
 }
 
@@ -191,6 +191,12 @@ export function namedKind(r: CatalogRecord): string {
   const noun = kindNoun(r);
   const last = noun.split(" ").at(-1)!.toLowerCase();
   return r.title.toLowerCase().includes(last) ? r.title : `${r.title} ${noun}`;
+}
+
+/** A model's picture's alt text: "CD 163 - 3D model of an electric locomotive". */
+export function imageAlt(r: CatalogRecord): string {
+  const noun = kindNoun(r);
+  return `${r.title} - 3D model of ${article(noun)} ${noun}`;
 }
 
 /** The year a model entered service as the page shows it: "1984", or "c. 1950" for an estimate. */

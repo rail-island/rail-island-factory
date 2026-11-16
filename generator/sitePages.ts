@@ -12,7 +12,7 @@
 // pure function of the shell and the catalog, so its output is deterministic:
 // sorted pages and links, no timestamps, no lastmod.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { CatalogRecord, ModelCatalog } from "./catalog.ts";
 import { GROUPS, OPENTTD_PATH, chipSlug, countryPath, formatNumber, groupOf, isOpenttdVehicle, level2Of, level3Of, makerPath, modelPath, shownId, type ChipPath } from "../src/catalogQuery.ts";
@@ -28,6 +28,7 @@ import {
   countryMeta,
   groupLabel,
   homeMeta,
+  imageAlt,
   kindNoun,
   makerMeta,
   modelFacts,
@@ -46,7 +47,11 @@ export type ThumbSize = (r: CatalogRecord) => { width: number; height: number } 
 /** Link previews need an image at least this big on both sides (Facebook's minimum); smaller ones keep the site's. */
 export const MIN_PREVIEW_PX = 200;
 
-/** A model's own link-preview image (ogImages.ts), when the build composed one: its site-relative URL, 1200 x 630. */
+/**
+ * A model's own link-preview image, 1200 x 630, when the build has one: its
+ * site-relative URL - a road or rail vehicle's rendered card (cards/<id>.jpg,
+ * cards.ts) or the thumbnail composed onto a card (og/<id>.png, ogImages.ts).
+ */
 export type OgImage = (r: CatalogRecord) => string | null;
 
 /** The size of a composed link-preview image, the large card's 1.91:1. */
@@ -136,7 +141,7 @@ function metaTag(attr: "name" | "property", key: string): RegExp {
 interface Head {
   meta: PageMeta;
   /** The link-preview image, when the page has its own. */
-  image?: { url: string; width: number; height: number; alt: string };
+  image?: { url: string; width: number; height: number; alt: string; type?: string };
   ld: unknown[];
   noindex?: boolean;
 }
@@ -160,6 +165,7 @@ function withHead(shell: string, head: Head): string {
     html = setAttr(html, metaTag("property", "og:image:width"), String(i.width), "og:image:width");
     html = setAttr(html, metaTag("property", "og:image:height"), String(i.height), "og:image:height");
     html = setAttr(html, metaTag("property", "og:image:alt"), i.alt, "og:image:alt");
+    html = setAttr(html, metaTag("property", "og:image:type"), i.type ?? "image/png", "og:image:type");
     html = setAttr(html, metaTag("name", "twitter:image"), i.url, "twitter:image");
   }
   const extra = [head.noindex ? `<meta name="robots" content="noindex" />` : "", ...head.ld.map(jsonLd)].filter(Boolean).join("\n    ");
@@ -212,6 +218,7 @@ function modelBody(
   byMaker: readonly CatalogRecord[],
   thumb: { width: number; height: number } | null,
   listed: (path: string) => boolean,
+  card: string | null = null,
 ): string {
   const id = shownId(r);
   // the real-world facts first, linked where their page exists, then the model's own figures
@@ -243,7 +250,12 @@ function modelBody(
     `<div class="factory-static">${crumbsHtml([...crumbs, { label: r.title, path: meta.path }])}` +
     `<h1>${escapeHtml(meta.heading)}</h1>` +
     // a draft has no thumbnail file: the app renders it in the browser
-    (r.draft ? "" : `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(`${r.title} - 3D model of ${kindNoun(r)}`)}"${size} />`) +
+    // the three-quarter card where the build rendered one (a road or rail vehicle), else the thumbnail
+    (r.draft
+      ? ""
+      : card?.startsWith("cards/")
+        ? `<img class="factory-static__thumb" src="/${escapeHtml(card)}" alt="${escapeHtml(imageAlt(r))}" width="${OG_SIZE.width}" height="${OG_SIZE.height}" />`
+        : `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(imageAlt(r))}"${size} />`) +
     (r.blurb ? `<p>${escapeHtml(r.blurb)}</p>` : "") +
     `<p>${escapeHtml(modelSummary(r))}</p>${openttd}<dl>${facts}</dl>${params}${links}${maker}${more}</div>`
   );
@@ -298,14 +310,14 @@ function byName(records: readonly CatalogRecord[], nameOf: (r: CatalogRecord) =>
 }
 
 /** The structured data of a model page: a schema.org 3DModel. */
-function modelLd(r: CatalogRecord, meta: PageMeta, image: string | null): Record<string, unknown> {
+function modelLd(r: CatalogRecord, meta: PageMeta, images: readonly string[]): Record<string, unknown> {
   const model: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "3DModel",
     name: r.title,
     description: meta.description,
     url: `${SITE_URL}${meta.path}`,
-    ...(image ? { image } : {}),
+    ...(images.length === 1 ? { image: images[0] } : images.length > 1 ? { image: [...images] } : {}),
     isPartOf: { "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/` },
     isAccessibleForFree: true,
     keywords: [kindNoun(r), r.maker, r.country, isOpenttdVehicle(r) ? "OpenTTD" : undefined, "3D model", r.license].filter(Boolean).join(", "),
@@ -427,14 +439,16 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
     const thumbUrl = `${SITE_URL}/${r.thumbUrl}`;
     // the link preview: the composed 1200 x 630 card, else the thumbnail when big enough, else the site's
     const og = r.draft ? null : ogImage(r);
-    const alt = `${r.title} - 3D model of ${kindNoun(r)}`;
+    const alt = imageAlt(r);
     const image = og
-      ? { url: `${SITE_URL}/${og}`, ...OG_SIZE, alt }
+      ? { url: `${SITE_URL}/${og}`, ...OG_SIZE, alt, type: og.endsWith(".jpg") ? "image/jpeg" : "image/png" }
       : size && size.width >= MIN_PREVIEW_PX && size.height >= MIN_PREVIEW_PX
         ? { url: thumbUrl, ...size, alt }
         : undefined;
-    const ld = [breadcrumbLd([...crumbs, { label: r.title, path: meta.path }]), modelLd(r, meta, r.draft ? null : thumbUrl)];
-    files.set(`${meta.path.slice(1)}index.html`, withBody(withHead(shell, { meta, image, ld, noindex: r.draft }), modelBody(r, meta, crumbs, siblings, byMaker, size, isListed)));
+    // the structured data's pictures: the card first (a search result shows the first it can use), then the thumbnail
+    const pictures = r.draft ? [] : [...(og ? [`${SITE_URL}/${og}`] : []), thumbUrl];
+    const ld = [breadcrumbLd([...crumbs, { label: r.title, path: meta.path }]), modelLd(r, meta, pictures)];
+    files.set(`${meta.path.slice(1)}index.html`, withBody(withHead(shell, { meta, image, ld, noindex: r.draft }), modelBody(r, meta, crumbs, siblings, byMaker, size, isListed, og)));
     if (!r.draft) urls.push(meta.path);
   }
 
@@ -470,8 +484,10 @@ export async function writeSitePages(dist: string): Promise<number> {
     }
   };
   const { writeOgImages, ogPath } = await import("./ogImages.ts");
-  const cards = await writeOgImages(dist, catalog.records);
-  const files = sitePages(shell, catalog.records, thumbSize, (r) => (cards.has(r.id) ? ogPath(r.id) : null));
+  // a road or rail vehicle's rendered card where the export has one (cards.ts), else a card composed from the thumbnail
+  const rendered = (id: string) => existsSync(join(dist, "cards", `${id}.jpg`));
+  const cards = await writeOgImages(dist, catalog.records.filter((r) => !rendered(r.id)));
+  const files = sitePages(shell, catalog.records, thumbSize, (r) => (rendered(r.id) ? `cards/${r.id}.jpg` : cards.has(r.id) ? ogPath(r.id) : null));
   for (const [path, content] of files) {
     const out = join(dist, path);
     mkdirSync(dirname(out), { recursive: true });

@@ -1,8 +1,9 @@
-// The model pages' link-preview cards (docs/site/seo-pages.md, "Link previews"): each
-// confirmed model's thumbnail set on the site's dark background at 1200 x 630, the
-// large card's 1.91:1, so a shared link shows the whole model instead of a crop of
-// a long side view. Written by the build into dist/og/<id>.png; nothing is
-// committed. Node-only (sharp), run by the `site-pages` Vite plugin before the pages.
+// The link-preview cards of the models that have no rendered one (docs/site/seo-pages.md,
+// "Link previews"): a building's, a ship's or an aircraft's three-quarter thumbnail set
+// on the site's dark background at 1200 x 630, the large card's 1.91:1. A road or rail
+// vehicle, whose thumbnail is a side view, has a three-quarter card rendered by the
+// model build instead (cards.ts). Written by the site build into dist/og/<id>.png;
+// nothing is committed. Node-only (sharp), run by the `site-pages` Vite plugin.
 
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";

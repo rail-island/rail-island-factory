@@ -1,7 +1,7 @@
 # Prerendered pages (search engines and link previews)
 
 **Covers** - the site's page URLs (`/`, `/model/<id>/`, `/category/...`, `/country/<slug>/`, `/maker/<slug>/`, `/openttd/`), the static page the build writes for each (head, content, JSON-LD, link-preview card), the model's real-world facts (year, maker, country, blurb) on the page and in the app, `sitemap.xml`, `robots.txt`, `404.html`, the in-app links and the document head the app keeps in step.
-**Code** - `generator/sitePages.ts`, `generator/ogImages.ts`, `generator/makerTable.ts`, `generator/blurbTable.ts`, `generator/yearTable.ts`, `src/pageMeta.ts`, `src/Link.tsx`, `src/catalogQuery.ts` (`parseView`, `viewUrl`, `chipSlug`), `src/App.tsx`, `src/ModelDetail.tsx` (the About block), `vite.config.ts` (`site-pages`), `wrangler.jsonc`, `test/sitePages.test.ts`, `test/catalogQuery.test.ts`, `test/siteMeta.test.ts`, `test/siteFacts.test.ts`
+**Code** - `generator/sitePages.ts`, `generator/ogImages.ts`, `generator/renderCard.ts`, `generator/cards.ts`, `generator/makerTable.ts`, `generator/blurbTable.ts`, `generator/yearTable.ts`, `src/pageMeta.ts`, `src/Link.tsx`, `src/catalogQuery.ts` (`parseView`, `viewUrl`, `chipSlug`), `src/App.tsx`, `src/ModelDetail.tsx` (the About block), `vite.config.ts` (`site-pages`), `wrangler.jsonc`, `test/sitePages.test.ts`, `test/catalogQuery.test.ts`, `test/siteMeta.test.ts`, `test/siteFacts.test.ts`
 **See also** - [workshop.md](workshop.md) (drafts: own page, `noindex`, not listed), [catalog-site.md](catalog-site.md), [../guide/deploy.md](../guide/deploy.md), [../models/export.md](../models/export.md), spec [../specs/2026-11-04-seo-prerendered-pages.md](../specs/2026-11-04-seo-prerendered-pages.md)
 
 The site is a client-rendered Solid app. A crawler, or a link preview that does not run
@@ -56,7 +56,7 @@ then writes:
 | `category/.../index.html` | one per group, and one per l2 or l3 value where that chip row offers a choice (more than one value, as the site's chip rows do). Lists the subcategories and every model at or below it |
 | `country/<slug>/index.html`, `maker/<slug>/index.html` | one per country and maker with two confirmed models or more (`MIN_LIST_PAGE`): the introduction, the makers (or countries) that have a page, every model by group |
 | `openttd/index.html` | the OpenTTD page: what the site offers a player and how to install a GRF (`OPENTTD_INTRO`), the countries, every vehicle OpenTTD can hold by group |
-| `og/<id>.png` | each confirmed model's link-preview card (below) |
+| `og/<id>.png` | the link-preview card of each confirmed model without a rendered one (below) |
 | `model/<id>/index.html` | one per record (previews included) |
 | `404.html` | the shell with `noindex`; what Cloudflare answers for any other path |
 | `sitemap.xml` | every page above, home first, no `lastmod` |
@@ -75,12 +75,31 @@ URL segment, and on a slug collision (chips, countries or makers).
 
 ### Link previews
 
-Before the pages, `writeOgImages` (`generator/ogImages.ts`, sharp) composes a card per
-confirmed model: its thumbnail, scaled to fit inside a 48 px margin, centred on the
-site's background (#101e29) at 1200 x 630 - the large card's 1.91:1, so a long side
-view is not cropped. The model page names it as `og:image` and `twitter:image` with
-its size; a model without a thumbnail file falls back to the thumbnail rule below.
-The cards are written into `dist/og/` only, never committed.
+Every confirmed model has a card at 1200 x 630 - the large card's 1.91:1 - on the
+site's background (#101e29), which a search result, a shared link and the
+structured data show:
+
+- **A road or rail vehicle** gets a rendered three-quarter view: its thumbnail is the
+  side view, right for drawing a train to scale and chaining its cars, but a search
+  result shows a model better in three dimensions, as an aircraft's or a building's
+  thumbnail already does. `renderGlbCard` (`generator/renderCard.ts`) draws the
+  default build with the thumbnail's software rasterizer from ahead of the nose (+x),
+  raised and on the +z side (a bus's door side), lower and more from the front than
+  the thumbnail's corner view, and fits the box to 90% of the width or 82% of the
+  height, centred. `pnpm build:models` renders the cards on a whole export
+  (`generateCards`, `generator/cards.ts`), keeps them as JPEG (quality 80, about 30 KB)
+  in `build-cache/cards/` under the design's key and `CARD_VERSION` - bump it when the
+  card's look changes - and copies them to `export/cards/`, which the site serves at
+  `/cards/<id>.jpg`. `test/buildCache.test.ts` holds the committed cards to the
+  confirmed road and rail vehicles and their current keys.
+- **Any other model** gets its three-quarter thumbnail composed onto a card by the
+  site build (`writeOgImages`, `generator/ogImages.ts`, sharp): scaled to fit inside
+  a 48 px margin and centred, written into `dist/og/<id>.png` only.
+
+The model page names its card as `og:image` and `twitter:image` with its size and
+type, puts it first in the 3DModel's `image` list (then the thumbnail), and shows a
+rendered card as its prerendered picture. A model without either falls back to the
+thumbnail rule below.
 
 ### Each page
 
