@@ -6,7 +6,7 @@
 
 The catalog already had the DB 111, 212 and 628, the Dosto, the ICE 1, the DR 243,
 the Berlin S-Bahn coach, the VT 18.16 and the Vectron; none is repeated here. Every
-design is filed under Germany (`generator/countryTable.ts`).
+design is filed under Germany (`generator/factTable.ts`).
 
 ## The designs
 
@@ -35,7 +35,7 @@ design is filed under Germany (`generator/countryTable.ts`).
 
 The figures are the published ones (each `assets/<name>/SOURCES.md`): Wikipedia's
 articles on each class, cited there, and the works drawings where one was found.
-Seats are in `generator/openttdTable.ts`, the years in service in `generator/yearTable.ts`, and both in
+Seats are in `generator/openttdTable.ts`, the years in service in `generator/factTable.ts`, and both in
 [openttd-figures.md](openttd-figures.md).
 
 ## The detail pass (2026-11)

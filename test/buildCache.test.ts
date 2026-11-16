@@ -78,7 +78,7 @@ describe("the cache's files", () => {
 describe("a design's key", () => {
   it("reads no table the site or the game's meta files change for other reasons", () => {
     // confirming a model, a web link, a sound, an OpenTTD figure, a year, a maker, a blurb or a translation must re-key no model
-    const outside = /(^|\/)(generate|workshop|catalog|linkTable|soundTable|openttdTable|openttdIds|text|countryTable|makerTable|blurbTable|yearTable)\.(ts|json)$|catalogModels\.json$/;
+    const outside = /(^|\/)(generate|workshop|catalog|linkTable|soundTable|openttdTable|openttdIds|text|factTable)\.(ts|json)$|catalogModels\.json$/;
     const graph = GRAPH;
     const modules = [...new Set(ALL.map((d) => designSource(d.id)))];
     const roots = [PIPELINE.map((f) => path.join(GENERATOR, f)), ...modules.map((m) => [path.join(GENERATOR, m)])];

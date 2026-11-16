@@ -263,7 +263,7 @@ propeller.
   1,350 ft/min), a transit height (150 m for the light H145 and Bell 206, 300 m for the
   S-92 and Mi-8) and the pad class their D-value fits (small: H145 13.6 m, Bell 206
   12.1 m; large: S-92 20.9 m, Mi-8 25.4 m).
-- OpenTTD (`worldAircraftTable` in openttdTable.ts, the year in `yearTable.ts`): typical seats
+- OpenTTD (`worldAircraftTable` in openttdTable.ts, the year in `factTable.ts`): typical seats
   (every aircraft is refittable to passengers), the freighters' payload in tonnes of goods
   (An-124, An-225, L-100, Dreamlifter, Beluga XL, the 747-8F variant), and presets of the
   other liveries, lengths and gear. The GRF encoder writes the helicopters

@@ -8,9 +8,9 @@
 //
 // The figures are real-world, researched from the designs' references and
 // published data; "approx." marks an entry with a figure that is an estimate (a
-// seat count taken from a sister type, or its year, which yearTable.ts marks too).
+// seat count taken from a sister type, or its year, which factTable.ts marks too).
 // The year a vehicle entered service is not an OpenTTD fact: it is in
-// yearTable.ts, which the export reads. Each family's doc
+// factTable.ts, which the export reads. Each family's doc
 // lists its figures. The table is keyed by model id and put on the designs by
 // generate.ts, so the source modules - and their JS models - stay as they are.
 

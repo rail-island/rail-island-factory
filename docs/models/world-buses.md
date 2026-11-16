@@ -98,7 +98,7 @@ not in the LOD; their base is.
 
 ## OpenTTD and sounds
 
-Every bus has its year in `yearTable.ts` and its entry in `openttdTable.ts` (`pax`: capacity, presets:
+Every bus has its year in `factTable.ts` and its entry in `openttdTable.ts` (`pax`: capacity, presets:
 the defaults and each length or livery variant worth exporting) and its ids in
 `openttdIds.json` (`pnpm openttd:ids`). Capacities are seats plus standing room as the
 makers state them, marked approx. where taken from a sister type. A bus 12 m long or longer

@@ -40,12 +40,9 @@ export type ExportedGame = Omit<GameProperties, "city" | "variants" | "helipad">
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "./collector.ts";
 import { checkDesignSounds, declaredSounds, defaultValues, shipHullStuds, withSounds } from "./soundMapping.ts";
 import type { SoundMapping, SoundOverride } from "./soundTable.ts";
-import { countryName, countryOf } from "./countryTable.ts";
+import { blurbOf, countryName, countryOf, makerOf, yearOf } from "./factTable.ts";
 import { isDraft } from "./workshop.ts";
 import { linksOf, type ModelLink } from "./linkTable.ts";
-import { makerOf } from "./makerTable.ts";
-import { blurbOf } from "./blurbTable.ts";
-import { yearOf } from "./yearTable.ts";
 import { LINE_COUNTS, LINE_PREVIEW_ID, LINE_STATIONS, lineCabinValue, lineStationValue } from "./cableCarLineIds.ts";
 
 /** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
@@ -291,13 +288,13 @@ export interface CatalogRecord extends MetaEntry {
    */
   openttd?: OpenttdProperties;
   /**
-   * The English name of the country the model comes from (countryTable.ts), for
+   * The English name of the country the model comes from (factTable.ts), for
    * the site's country chips only -- not part of the game's meta.
    * Absent for a model that names none.
    */
   country?: string;
   /**
-   * The year the type entered service (yearTable.ts): shown on the model page, and
+   * The year the type entered service (factTable.ts): shown on the model page, and
    * the OpenTTD export's introduction year. Absent for a model that states none.
    */
   year?: number;
@@ -305,9 +302,9 @@ export interface CatalogRecord extends MetaEntry {
   yearApprox?: true;
   /** The variants that entered service in another year than the default build. */
   yearVariants?: Array<{ params: ParamValues; year: number }>;
-  /** Who built the type (makerTable.ts), for the model page and the maker pages. Absent when unknown. */
+  /** Who built the type (factTable.ts), for the model page and the maker pages. Absent when unknown. */
   maker?: string;
-  /** A short English text about the real thing the model shows (blurbTable.ts), for the site only. */
+  /** A short English text about the real thing the model shows (factTable.ts), for the site only. */
   blurb?: string;
   /**
    * Set by `pnpm dev` (devExport.ts) on a record whose figures - the counts, the
@@ -550,7 +547,7 @@ const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
 /** Rounded to the millimetre, so float noise does not reach the listing. */
 const mm = (v: number): number => Math.round(v * 1000) / 1000;
 
-/** A record's year fields, from yearTable.ts. */
+/** A record's year fields, from factTable.ts. */
 function yearFields(id: string): Pick<CatalogRecord, "year" | "yearApprox" | "yearVariants"> {
   const y = yearOf(id);
   if (!y) return {};

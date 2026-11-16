@@ -92,7 +92,7 @@ export function defaultOpenttdFields(r: Pick<CatalogRecord, "category" | "group"
 
 /**
  * The year a variant entered service, as the export's introduction year: the
- * record's own year (generator/yearTable.ts, not an OpenTTD field), a variant's
+ * record's own year (generator/factTable.ts, not an OpenTTD field), a variant's
  * where it states one; a category default when the model states none.
  */
 export function introYear(r: Pick<CatalogRecord, "traction" | "year" | "yearVariants">, params: Record<string, string>): number {

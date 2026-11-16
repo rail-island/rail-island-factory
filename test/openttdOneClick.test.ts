@@ -111,7 +111,7 @@ describe("the balance formula and the catalog's block", () => {
     const d = DESIGNS.get("proc-vehicle-cd-163")!;
     const o = catalogOpenttd(d, catalogFields(d))!;
     expect(o).toMatchObject({ vehicleLife: 40, railType: "ELRL", capacity: 0, cargo: "PASS", costFactor: 131, runningCostFactor: 80, modelLife: 40 });
-    // the CD 362: its lower power makes it cheaper; its own year is in yearTable.ts, not here
+    // the CD 362: its lower power makes it cheaper; its own year is in factTable.ts, not here
     expect(o.variants!.find((v) => v.params.livery === "cd362")).toMatchObject({ costFactor: 125 });
     expect("introYear" in o).toBe(false);
     expect(o.presets![0]).toEqual({});

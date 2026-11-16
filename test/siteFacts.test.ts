@@ -1,14 +1,9 @@
-// The site-only facts tables (docs/site/seo-pages.md, "Facts"): the year in service
-// (yearTable.ts, which the OpenTTD export reads), the maker (makerTable.ts) and the
-// blurb (blurbTable.ts), and the text the pages build from them (src/pageMeta.ts).
+// The text the pages build from a model's facts (src/pageMeta.ts, docs/site/seo-pages.md):
+// what a model is, its fact list, its summary and its description. The facts table
+// itself is test/factTable.test.ts's.
 
 import { describe, expect, it } from "vitest";
 import type { CatalogRecord } from "../generator/catalog";
-import { DESIGNS } from "../generator/generate";
-import { BLURBS } from "../generator/blurbTable";
-import { MAKER_ENTRIES } from "../generator/makerTable";
-import { OPENTTD_TABLE } from "../generator/openttdTable";
-import { YEAR_OF } from "../generator/yearTable";
 import { kindNoun, modelFacts, modelMeta, modelSummary, namedKind } from "../src/pageMeta";
 
 function rec(extra: Partial<CatalogRecord>): CatalogRecord {
@@ -19,41 +14,6 @@ function rec(extra: Partial<CatalogRecord>): CatalogRecord {
     ...extra,
   };
 }
-
-describe("the year table", () => {
-  it("names only designs that exist, with plausible years", () => {
-    for (const [id, y] of YEAR_OF) {
-      expect(DESIGNS.has(id), id).toBe(true);
-      expect(Number.isInteger(y.year) && y.year > 0 && y.year <= 2100, id).toBe(true);
-      for (const v of y.variants ?? []) expect(Object.keys(v.params).length, id).toBeGreaterThan(0);
-    }
-  });
-
-  it("gives every vehicle OpenTTD can hold its year, and the OpenTTD table states none", () => {
-    for (const [id, o] of Object.entries(OPENTTD_TABLE)) {
-      expect(YEAR_OF.has(id), id).toBe(true);
-      expect("introYear" in o, id).toBe(false);
-      for (const v of o.variants ?? []) expect("introYear" in v, id).toBe(false);
-    }
-  });
-});
-
-describe("the maker and blurb tables", () => {
-  it("name only designs that exist, each once", () => {
-    const seen = new Set<string>();
-    for (const [id, maker] of MAKER_ENTRIES) {
-      expect(DESIGNS.has(id), id).toBe(true);
-      expect(seen.has(id), `${id} is listed twice`).toBe(false);
-      expect(maker).toMatch(/^[\x20-\x7e]+$/);
-      seen.add(id);
-    }
-    for (const [id, text] of Object.entries(BLURBS)) {
-      expect(DESIGNS.has(id), id).toBe(true);
-      expect(text).toMatch(/^[\x20-\x7e]+$/);
-      expect(text.length, id).toBeLessThan(400);
-    }
-  });
-});
 
 describe("the model text", () => {
   it("says what a model is in plain words", () => {

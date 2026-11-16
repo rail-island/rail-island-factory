@@ -1,7 +1,7 @@
 # Prerendered pages (search engines and link previews)
 
 **Covers** - the site's page URLs (`/`, `/model/<id>/`, `/category/...`, `/country/<slug>/`, `/maker/<slug>/`, `/openttd/`), the static page the build writes for each (head, content, JSON-LD, link-preview card), the model's real-world facts (year, maker, country, blurb) on the page and in the app, `sitemap.xml`, `robots.txt`, `404.html`, the in-app links and the document head the app keeps in step.
-**Code** - `generator/sitePages.ts`, `generator/ogImages.ts`, `generator/renderCard.ts`, `generator/cards.ts`, `generator/makerTable.ts`, `generator/blurbTable.ts`, `generator/yearTable.ts`, `src/pageMeta.ts`, `src/Link.tsx`, `src/catalogQuery.ts` (`parseView`, `viewUrl`, `chipSlug`), `src/App.tsx`, `src/ModelDetail.tsx` (the About block), `vite.config.ts` (`site-pages`), `wrangler.jsonc`, `test/sitePages.test.ts`, `test/catalogQuery.test.ts`, `test/siteMeta.test.ts`, `test/siteFacts.test.ts`
+**Code** - `generator/sitePages.ts`, `generator/ogImages.ts`, `generator/renderCard.ts`, `generator/cards.ts`, `generator/factTable.ts`, `src/pageMeta.ts`, `src/Link.tsx`, `src/catalogQuery.ts` (`parseView`, `viewUrl`, `chipSlug`), `src/App.tsx`, `src/ModelDetail.tsx` (the About block), `vite.config.ts` (`site-pages`), `wrangler.jsonc`, `test/sitePages.test.ts`, `test/catalogQuery.test.ts`, `test/siteMeta.test.ts`, `test/siteFacts.test.ts`, `test/factTable.test.ts`
 **See also** - [workshop.md](workshop.md) (drafts: own page, `noindex`, not listed), [catalog-site.md](catalog-site.md), [../guide/deploy.md](../guide/deploy.md), [../models/export.md](../models/export.md), spec [../specs/2026-11-04-seo-prerendered-pages.md](../specs/2026-11-04-seo-prerendered-pages.md)
 
 The site is a client-rendered Solid app. A crawler, or a link preview that does not run
@@ -18,8 +18,8 @@ The app replaces that markup when it mounts.
 | `/category/<group>/` | a first-row chip (`train`, `moto`, `building`, ... - `GROUPS` in `catalogQuery.ts`) |
 | `/category/<group>/<l2>/` | a second-row chip, where the group's second row offers a choice |
 | `/category/<group>/<l2>/<l3>/` | a third-row chip (a locomotive's or unit's traction) |
-| `/country/<slug>/` | every model from one country (`country`, countryTable.ts), when it has two or more |
-| `/maker/<slug>/` | every model of one maker (`maker`, makerTable.ts), when it has two or more |
+| `/country/<slug>/` | every model from one country (`country`, factTable.ts), when it has two or more |
+| `/maker/<slug>/` | every model of one maker (`maker`, factTable.ts), when it has two or more |
 | `/openttd/` | every vehicle OpenTTD can hold, with an introduction for OpenTTD players |
 
 The l2 and l3 segments are the chip values' slugs (`chipSlug`): camelCase split, lower
@@ -158,23 +158,26 @@ examples:
 
 ### Facts
 
-The real-world facts come from tables kept apart from the designs, like
-countryTable.ts, so stating one never changes a model's JS bytes or its cache key,
-and none is part of the game's meta. The catalog record carries them:
+The real-world facts live in one table, `generator/factTable.ts`: one entry per
+model, keyed by its id, every field optional. It is kept apart from the designs, so
+stating a fact never changes a model's JS bytes or its build-cache key, and none is
+part of the game's meta. The catalog record carries them:
 
-| Field | Table | What |
+| Table field | Record field | What |
 |---|---|---|
-| `year`, `yearApprox`, `yearVariants` | `generator/yearTable.ts` | the year the type entered service, whether it is an estimate, and each variant's that differs; the OpenTTD export's introduction year too ([openttd-export.md](openttd-export.md)) |
-| `maker` | `generator/makerTable.ts` | who built the type; none for a type several works built in turn, a generic model, or anything uncertain |
-| `country` | `generator/countryTable.ts` | [catalog-site.md](catalog-site.md), "Country" |
-| `blurb` | `generator/blurbTable.ts` | one to three English sentences about the real thing: its history and what it is known for. Optional; site-only text, so not translated ([../models/text.md](../models/text.md) covers the game's) |
+| `country` | `country` (its English name, `COUNTRY_NAMES`) | the railway or operator a rail vehicle is drawn for, the maker of a road vehicle or an aircraft ([catalog-site.md](catalog-site.md), "Country") |
+| `maker` | `maker` | who built the type; none for a type several works built in turn, a generic model, or anything uncertain |
+| `year`, `approx`, `yearVariants` | `year`, `yearApprox`, `yearVariants` | the year the type entered service, whether it is an estimate, and each variant's that differs; the OpenTTD export's introduction year too ([openttd-export.md](openttd-export.md)) |
+| `blurb` | `blurb` | one to three English sentences about the real thing: its history and what it is known for, researched against Wikipedia (the model's own links first) and stating only what the source confirms. Site-only text, so not translated ([../models/text.md](../models/text.md) covers the game's) |
 
 `modelFacts` lists, in order, the facts a record states: In service from (the year,
 "c. 1950" for an estimate), Maker and Country (with their page's path), Top speed,
 Power and Weight (from the game properties, when above zero), and OpenTTD (the
-OpenTTD page) for a confirmed vehicle OpenTTD can hold. `test/siteFacts.test.ts`
-holds every table to existing designs, the maker table to one entry per model, and
-every vehicle in openttdTable.ts to a year.
+OpenTTD page) for a confirmed vehicle OpenTTD can hold. `test/factTable.test.ts`
+holds the table to existing designs and known country codes, every rail vehicle and
+tram but the generic wagons to a country, every vehicle in openttdTable.ts to a year,
+and every confirmed vehicle to a blurb; `test/siteFacts.test.ts` checks the text built
+from them.
 
 The home page's title and description are `index.html`'s own. `test/siteMeta.test.ts`
 keeps the two in step.

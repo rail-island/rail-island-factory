@@ -122,7 +122,7 @@ design, so no source module - and none of its JS models - changes for it. Its
 figures are listed in [../models/openttd-figures.md](../models/openttd-figures.md).
 
 The year a vehicle entered service is **not** in the block: it is a real-world fact
-of its own, stated in `generator/yearTable.ts` (with each variant's year that
+of its own, stated in `generator/factTable.ts` (with each variant's year that
 differs) and carried on the catalog record as `year`, `yearApprox` and
 `yearVariants`, which the model page shows too ([seo-pages.md](seo-pages.md)). The
 export reads it as the introduction date (1 January): `introYear` in

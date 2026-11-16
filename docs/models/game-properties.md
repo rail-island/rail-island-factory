@@ -181,7 +181,7 @@ design: the facts the GRF export needs beyond these figures - capacity, cargo, r
 one-click download exports and any formations of its cars; costs, lives and
 reliability decay are derived from the figures here unless stated. The year it
 entered service, which the export takes as its introduction year, is a fact of its
-own in `generator/yearTable.ts`. The build fails
+own in `generator/factTable.ts`. The build fails
 without the facts and presets (`checkOpenttdDesign`); the block reaches only
 `catalog.json`, resolved. See [../site/openttd-export.md](../site/openttd-export.md)
 and every vehicle's figures in [openttd-figures.md](openttd-figures.md).

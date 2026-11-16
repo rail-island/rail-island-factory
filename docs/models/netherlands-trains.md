@@ -4,7 +4,7 @@
 **Code** - `generator/nlUnits.ts` (`NL_UNITS`, `nsLivery`, the units' registry), `generator/nlLocos.ts` (`NL_LOCOS`, the locomotives' registry), one module per vehicle: `generator/nlMat46.ts`, `nlMat54.ts`, `nlPlanV.ts`, `nlDe1.ts`, `nlIcm.ts`, `nlVirm.ts`, `nlDdz.ts`, `nlSgm.ts`, `nlSlt.ts`, `nlSng.ts`, `nlIcng.ts`, `nlFlirt.ts`, `nlV250.ts`, `nl1700.ts`, `nl1100.ts`, `nl1300.ts`, `nl1200.ts`, `nl2200.ts`, `nl3700.ts`, `nlIcrCoach.ts`; `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/loneJacobsCars.test.ts`, `test/seriesCabFace.test.ts`, `assets/ns-*/`
 **See also** - [shinkansen.md](shinkansen.md) (the series kit), [germany-trains.md](germany-trains.md) (the same pass for Germany), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md)
 
-Every design is filed under the Netherlands (`generator/countryTable.ts`).
+Every design is filed under the Netherlands (`generator/factTable.ts`).
 
 ## The designs
 

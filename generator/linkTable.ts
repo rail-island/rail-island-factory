@@ -4,7 +4,7 @@
 // The site shows them on the model page's Sources tab; they are not part of the
 // game's meta.
 //
-// Kept apart from the designs on purpose, like countryTable.ts: a design module is
+// Kept apart from the designs on purpose, like factTable.ts: a design module is
 // bundled into each of its models' JS files, so a field stated there would rewrite
 // every model of that module. No `node:` imports.
 

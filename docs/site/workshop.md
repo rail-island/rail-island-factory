@@ -39,7 +39,7 @@ lives in the workshop until somebody confirms it.
   only when the user confirms the model. A shipped (confirmed) id is never removed: the
   game's saved maps hold it.
 
-The list is kept apart from the designs, like `countryTable.ts`: a design module is
+The list is kept apart from the designs, like `factTable.ts`: a design module is
 bundled into each of its models' JS files, so a flag stated there would rewrite them.
 The build fails when the list names a model that does not exist.
 

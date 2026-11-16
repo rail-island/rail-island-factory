@@ -5,7 +5,7 @@
 **See also** - [shinkansen.md](shinkansen.md) (the series kit), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md), [netherlands-trains.md](netherlands-trains.md) (the bodies' Dutch sisters), [tgv-duplex.md](tgv-duplex.md)
 
 The catalog already had the TGV (PSE, Atlantique) and the TGV Duplex; neither is
-repeated. Every design is filed under France (`generator/countryTable.ts`).
+repeated. Every design is filed under France (`generator/factTable.ts`).
 
 ## The designs
 

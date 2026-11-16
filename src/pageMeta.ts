@@ -251,7 +251,7 @@ function offer(r: CatalogRecord): string {
 
 /**
  * The model page's summary, generated from its facts: what it is, where it is from,
- * who built it and when, then the model itself. Shown under the blurb (blurbTable.ts)
+ * who built it and when, then the model itself. Shown under the blurb (factTable.ts)
  * on the model page and in its prerendered text.
  */
 export function modelSummary(r: CatalogRecord): string {

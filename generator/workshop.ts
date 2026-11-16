@@ -4,7 +4,7 @@
 // under Workshop, and no meta file the game imports carries it, so a new model
 // reaches the game only once it is confirmed.
 //
-// Kept apart from the designs on purpose, like countryTable.ts: a design module is
+// Kept apart from the designs on purpose, like factTable.ts: a design module is
 // bundled into each of its models' JS files, so a flag stated there would rewrite
 // every model of that module. No `node:` imports.
 

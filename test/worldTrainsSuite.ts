@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import { DESIGNS, designSource } from "../generator/generate";
-import { COUNTRY_OF } from "../generator/countryTable";
+import { countryOf } from "../generator/factTable";
 import { loadingGaugeOf } from "../generator/loadingGauge";
 import { glbStats } from "../generator/glbStats";
 import { findCoplanarOverlaps } from "../generator/coplanar";
@@ -73,7 +73,7 @@ describe("the eight countries' trains", () => {
     expect(FAMILIES.length).toBe(161);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
-      expect(COUNTRY_OF.get(d.id), d.id).toBe(COUNTRY[prefix]);
+      expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);
     }
   });
 
