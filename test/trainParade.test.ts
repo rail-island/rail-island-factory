@@ -1,7 +1,8 @@
 // The train parade (docs/site/train-parade.md): the list resolves against the
 // real factory, a bad entry fails, cars are laid end to end, a turned car is
 // drawn nose right, moving parts become sprites, the fleet is counted, the images
-// are reused while nothing changed, and trains.json matches what was written.
+// are reused while nothing changed, parade.json matches what was written, the
+// play order spreads the categories, and the overview page lists every chain.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -14,12 +15,16 @@ import type { Tri } from "../generator/glbTriangles.ts";
 import { triBounds } from "../generator/glbTriangles.ts";
 import { SIDE_MARGIN_M, SIDE_PX_PER_M, readTriangles, renderGlbSideThumb } from "../generator/renderGlbThumb.ts";
 import {
-  SECTION_MAX_M, TRAIN_PARADE, VEHICLE_TYPES, carImageBase, carSections, fleetCounts, fleetStats, layOutTrain, modelVariants, resolveTrains,
-  trainGround, vehicleType, type CarImages, type TrainContext, type TrainSpec,
+  SECTION_MAX_M, TRAIN_PARADE, VEHICLE_TYPES, carImageBase, carSections, fleetCounts, layOutTrain, modelVariants, resolveTrains,
+  trainGround, trainCategory, playOrder, vehicleType, PARADE_IMAGE_DIR, TRAIN_CATEGORIES, type CarImages, type TrainContext, type TrainSpec,
 } from "../generator/trainParade.ts";
-import { FACTORY_TRAIN_CONTEXT, changedMask, changedRect, renderCar, renderSide, spriteCycle, turnedRound, writeTrains } from "../generator/writeTrains.ts";
+import { FACTORY_TRAIN_CONTEXT, changedMask, changedRect, renderCar, renderSide, spriteCycle, turnedRound, writeParade } from "../generator/writeParade.ts";
+import { paradePage } from "../generator/paradePage.ts";
 
 const LIVERY: ParamSpec = { name: "livery", title: "Livery", default: "red", values: [{ value: "red", title: "Red" }, { value: "blue", title: "Blue" }] };
+
+// a seeded random, so a failure repeats
+const seeded = (seed: number) => () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
 
 const fixture: TrainContext = {
   model(id) {
@@ -101,9 +106,9 @@ describe("layout", () => {
     const len: Record<string, number> = { a: 20, b: 26.4 };
     const placed = layOutTrain(cars, (c) => still(len[c.model]!, c.model + (c.turned ? "-t" : "")), 0.3, 32);
     expect(placed.map((c) => [c.offsetM, c.widthM, c.image])).toEqual([
-      [-0.3, 20.6, "trains/a.webp"],
-      [19.7, 27, "trains/b.webp"],
-      [46.1, 20.6, "trains/a-t.webp"],
+      [-0.3, 20.6, `${PARADE_IMAGE_DIR}/a.webp`],
+      [19.7, 27, `${PARADE_IMAGE_DIR}/b.webp`],
+      [46.1, 20.6, `${PARADE_IMAGE_DIR}/a-t.webp`],
     ]);
   });
 
@@ -123,10 +128,10 @@ describe("layout", () => {
     const len: Record<string, number> = { train: 100, coach: 20 };
     const placed = layOutTrain(cars, (c) => still(len[c.model]!, c.model), 0.3, 32);
     expect(placed.map((c) => [c.section, c.offsetM, c.widthM, c.image])).toEqual([
-      [0, -0.3, 33.933, "trains/train--section-0.webp"],
-      [1, 33.033, 33.934, "trains/train--section-1.webp"],
-      [2, 66.367, 33.933, "trains/train--section-2.webp"],
-      [undefined, 99.7, 20.6, "trains/coach.webp"],
+      [0, -0.3, 33.933, `${PARADE_IMAGE_DIR}/train--section-0.webp`],
+      [1, 33.033, 33.934, `${PARADE_IMAGE_DIR}/train--section-1.webp`],
+      [2, 66.367, 33.933, `${PARADE_IMAGE_DIR}/train--section-2.webp`],
+      [undefined, 99.7, 20.6, `${PARADE_IMAGE_DIR}/coach.webp`],
     ]);
   });
 
@@ -137,7 +142,7 @@ describe("layout", () => {
       0.3,
       32,
     );
-    expect(car!.sprite).toEqual({ image: "trains/loco--frames.webp", xM: 2, yM: 3, widthM: 10, heightM: 2, pitchM: 2.125, frames: 12, cycleM: 5.75 });
+    expect(car!.sprite).toEqual({ image: `${PARADE_IMAGE_DIR}/loco--frames.webp`, xM: 2, yM: 3, widthM: 10, heightM: 2, pitchM: 2.125, frames: 12, cycleM: 5.75 });
   });
 
   it("turns a car round about the vertical axis", () => {
@@ -229,15 +234,6 @@ describe("fleet counts", () => {
     expect(Object.keys(counts.types)).toEqual([...VEHICLE_TYPES]);
     expect(counts.variants).toBe(3 + 1 + 11);
   });
-
-  it("keeps the first caption's rail-only counts", () => {
-    const stats = fleetStats([
-      { id: "a", category: "Rail vehicles", group: "loco", params: [spec("livery", 3)] },
-      { id: "b", category: "Rail vehicles", group: "tram" },
-      { id: "c", category: "Road vehicles", group: "bus", params: [spec("livery", 3)] },
-    ], () => true);
-    expect(stats).toEqual({ models: 2, variants: 4 });
-  });
 });
 
 describe("renderCar", () => {
@@ -278,7 +274,92 @@ describe("renderCar", () => {
   });
 });
 
-describe("writeTrains", () => {
+describe("categories and play order", () => {
+  it("derives a chain's category from its lead vehicle", () => {
+    expect(trainCategory({ category: "Rail vehicles", group: "unit", traction: "electric" })).toBe("electricUnit");
+    expect(trainCategory({ category: "Rail vehicles", group: "unit", traction: "diesel" })).toBe("dieselUnit");
+    expect(trainCategory({ category: "Rail vehicles", group: "loco", traction: "electric" })).toBe("electricLoco");
+    expect(trainCategory({ category: "Rail vehicles", group: "loco", traction: "diesel" })).toBe("dieselLoco");
+    expect(trainCategory({ category: "Rail vehicles", group: "loco", traction: "steam" })).toBe("steamLoco");
+    expect(trainCategory({ category: "Rail vehicles", group: "metro" })).toBe("metro");
+    expect(trainCategory({ category: "Rail vehicles", group: "tram", traction: "electric" })).toBe("tram");
+    expect(trainCategory({ category: "Road vehicles", group: "bus" })).toBe("bus");
+    expect(trainCategory({ category: "Rail vehicles", group: "tram", traction: "animal" })).toBe("horse");
+    expect(trainCategory({ category: "Road vehicles", group: "bus", traction: "animal" })).toBe("horse");
+  });
+
+  it("gives every chain of the parade a known category, and the list states none it does not know", () => {
+    const trains = resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT);
+    for (const t of trains) expect(Object.keys(TRAIN_CATEGORIES)).toContain(t.category);
+    expect(() => resolveTrains([{ id: "a", category: "rocket" as never, cars: [{ model: "loco" }] }], fixture)).toThrow(/no category/);
+  });
+
+  it("plays every chain once per round, never two of one category in a row, across rounds too", () => {
+    const trains = resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT).map((t) => ({ id: t.id, category: t.category }));
+    let last: { id: string; category: string } | null = null;
+    for (let round = 0; round < 2000; round++) {
+      const order: { id: string; category: string }[] = playOrder(trains, last, seeded(round + 1));
+      expect(order.map((t) => t.id).sort()).toEqual(trains.map((t) => t.id).sort());
+      if (last) expect(order[0]!.category).not.toBe(last.category);
+      for (let i = 1; i < order.length; i++) expect(order[i]!.category).not.toBe(order[i - 1]!.category);
+      last = order[order.length - 1]!;
+    }
+  });
+
+  it("spreads a category evenly over the round", () => {
+    const trains = [
+      ...Array.from({ length: 8 }, (_, i) => ({ id: `u${i}`, category: "unit" })),
+      ...Array.from({ length: 24 }, (_, i) => ({ id: `o${i}`, category: `other${i % 8}` })),
+    ];
+    for (let round = 0; round < 200; round++) {
+      const order = playOrder(trains, null, seeded(round + 7));
+      const at = order.flatMap((t, i) => (t.category === "unit" ? [i] : []));
+      // eight in thirty-two: one about every four, never bunched into one half
+      expect(at.filter((i) => i < 16).length).toBeGreaterThanOrEqual(3);
+      expect(at.filter((i) => i >= 16).length).toBeGreaterThanOrEqual(3);
+      for (let k = 1; k < at.length; k++) expect(at[k]! - at[k - 1]!).toBeLessThanOrEqual(8);
+    }
+  });
+
+  it("falls back to an order with neighbours of one category only when the list leaves no other", () => {
+    const order = playOrder([{ id: "a", category: "x" }, { id: "b", category: "x" }], null, seeded(3));
+    expect(order.map((t) => t.id).sort()).toEqual(["a", "b"]);
+  });
+});
+
+describe("overview page", () => {
+  const file = {
+    version: 1 as const, pxPerM: 32, heightM: 6.3, bottomM: -0.3,
+    fleet: { types: { trains: 2, trams: 0, buses: 0, trucks: 0, horseDrawn: 0, ships: 0, aircraft: 0, cableCars: 0 }, variants: 3 },
+    trains: [
+      { id: "steam-<one>", ground: "rail" as const, category: "steamLoco" as const, lengthM: 20, cars: [] },
+      { id: "unit-two", ground: "rail" as const, category: "electricUnit" as const, lengthM: 40, cars: [] },
+    ],
+  };
+  const html = paradePage(file);
+
+  it("lists every chain with its id and a link that opens it alone on railisland.com", () => {
+    expect(html).toContain('"unit-two"');
+    expect(html).toContain("/?parade=");
+    expect(html).toContain('<meta name="robots" content="noindex">');
+    // the data cannot close its script element
+    expect(html).not.toContain("steam-<one>");
+    expect(html).toContain("steam-\\u003cone>");
+  });
+
+  it("offers list order, shuffle and sort by category", () => {
+    for (const order of ["list", "shuffle", "category"]) expect(html).toContain(`data-order="${order}"`);
+  });
+
+  it("embeds a play order the browser can run", () => {
+    const script = html.match(/const __name = \(f\) => f;\nconst playOrder = ([\s\S]*?);\nconst \{ file, categories, site \}/)![1]!;
+    const run = new Function("const __name = (f) => f; return " + script)() as typeof playOrder;
+    const order = run(file.trains, null, seeded(1));
+    expect(order.map((t) => t.id).sort()).toEqual(["steam-<one>", "unit-two"]);
+  });
+});
+
+describe("writeParade", () => {
   it("draws a car exactly as the side thumbnail does", () => {
     const glb = designGlb("proc-vehicle-cd-150");
     const thumb = renderGlbSideThumb(glb).png;
@@ -287,22 +368,22 @@ describe("writeTrains", () => {
     expect(Buffer.from(own.data).equals(Buffer.from(thumb.data))).toBe(true);
   });
 
-  it("renders each distinct car once, animates its wheels, reuses it next time and writes trains.json to match", async () => {
+  it("renders each distinct car once, animates its wheels, reuses it next time and writes parade.json and its overview page to match", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "trains-"));
     try {
       const list: TrainSpec[] = [{
         id: "pair",
         cars: [{ model: "proc-vehicle-cd-150" }, { model: "proc-vehicle-cd-150", turned: true }, { model: "proc-vehicle-cd-150" }],
       }];
-      const first = await writeTrains(list, dir);
+      const first = await writeParade(list, dir);
       const file = first.file;
       expect([first.rendered, first.reused]).toEqual([2, 0]);
       expect(file.pxPerM).toBe(SIDE_PX_PER_M);
       expect(file.fleet.types.trains).toBeGreaterThan(100);
       expect(file.fleet.variants).toBeGreaterThan(Object.values(file.fleet.types).reduce((a, b) => a + b, 0));
-      expect(JSON.parse(fs.readFileSync(path.join(dir, "trains.json"), "utf8"))).toEqual(file);
+      expect(JSON.parse(fs.readFileSync(path.join(dir, "parade.json"), "utf8"))).toEqual(file);
       // two cars, each a still image and a sprite of its spoked wheels
-      expect(fs.readdirSync(path.join(dir, "trains")).length).toBe(4);
+      expect(fs.readdirSync(path.join(dir, "parade", "img")).length).toBe(4);
       const [a, b, c] = file.trains[0]!.cars;
       expect(a!.offsetM).toBe(-SIDE_MARGIN_M);
       expect(b!.offsetM).toBeCloseTo(a!.offsetM + a!.widthM - 2 * SIDE_MARGIN_M, 3);
@@ -323,13 +404,16 @@ describe("writeTrains", () => {
         expect(sp.yM + sp.heightM).toBeLessThanOrEqual(file.heightM);
         expect(sp.yM).toBeGreaterThan(file.heightM / 2);
       }
+      // the overview page sits beside it and lists the chain
+      expect(fs.readFileSync(path.join(dir, "parade", "index.html"), "utf8")).toContain('"pair"');
+      expect(file.trains[0]!.category).toBe("electricLoco");
       // nothing changed: nothing is rendered again, and the file is the same
-      const second = await writeTrains(list, dir);
+      const second = await writeParade(list, dir);
       expect([second.rendered, second.reused]).toEqual([0, 2]);
       expect(second.file).toEqual(file);
       // a car no train uses any more is deleted
-      await writeTrains([{ id: "one", cars: [{ model: "proc-vehicle-cd-150" }] }], dir);
-      expect(fs.readdirSync(path.join(dir, "trains")).length).toBe(2);
+      await writeParade([{ id: "one", cars: [{ model: "proc-vehicle-cd-150" }] }], dir);
+      expect(fs.readdirSync(path.join(dir, "parade", "img")).length).toBe(2);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

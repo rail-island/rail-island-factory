@@ -113,6 +113,19 @@ The spec asked for a new branch per feature; this session may only push its own 
    (`pitchM`), and the site draws each animated car into one canvas at device
    resolution. Measured at 2.75x against a flattened reference over four sub-pixel
    offsets: largest difference 59-73 (was 135-190), mean 0.8-1.0.
+6. **Play order, categories, overview page, renamed contract.**
+   - Every chain has a category (electric / diesel unit, electric / diesel / steam
+     locomotive and train, metro, tram, bus, horse-drawn), derived from its lead vehicle.
+   - The site plays every chain once per round (`playOrder`): each category spread
+     evenly over the round, never two of one category in a row, across rounds too
+     (tested over 2,000 rounds). `?parade=<id>` on railisland.com plays one chain only;
+     an unknown id plays the normal parade.
+   - `factory.railisland.com/parade/` lists every chain (id, category, length, picture,
+     a link to it alone on railisland.com) in List order, Shuffle (one round from the
+     same `playOrder`, embedded) or Sort by category; `noindex`.
+   - The contract is renamed: `parade.json` (was `trains.json`), images under
+     `/parade/img/` (was `/trains/`), `pnpm build:parade`, `writeParade.ts`; the
+     deprecated `stats` is gone. The site reads `PARADE_URL` (`PUBLIC_PARADE_URL`).
 
 ## How to test
 
@@ -143,7 +156,10 @@ The spec asked for a new branch per feature; this session may only push its own 
    its name) and "Variants: 1,103", in the page's language on every locale.
 6. Narrow the window to a phone width (390 px): the strip shrinks to 56 px, the chips wrap
    into rows, the page does not scroll sideways.
-7. Run `pnpm build:trains` twice in the factory: the second run renders 0 cars and reuses all.
+7. Run `pnpm build:parade` twice in the factory: the second run renders 0 cars and reuses all.
+8. Open `/?parade=stagecoach`: only the stagecoach runs, over and over; `/?parade=nope` plays
+   the normal parade. Open the factory's `/parade/` page: thirty chains; Shuffle shows a
+   round with no two neighbours of one category; Sort by category groups them under nine headings.
 
 **Also worth trying.**
 - Emulate `prefers-reduced-motion: reduce`: one train stands still, centred if it fits.

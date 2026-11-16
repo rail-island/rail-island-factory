@@ -19,8 +19,8 @@ status (the app, marked `noindex`).
 
 The build emits `dist/_headers` (`ASSET_HEADERS` in `vite.config.ts`), which
 wrangler applies to the responses and does not serve: it allows any origin on
-`/trains.json`, which railisland.com reads in the browser, and caches the parade's
-images under `/trains/` for a year, immutable - their names carry a hash of what
+`/parade.json`, which railisland.com reads in the browser, and caches the parade's
+images under `/parade/img/` for a year, immutable - their names carry a hash of what
 shapes them ([../site/train-parade.md](../site/train-parade.md)).
 
 There is one environment. The site is public and has no sign-in.

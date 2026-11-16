@@ -4,8 +4,8 @@
 // A train is its cars, nose first; a car is a confirmed road or rail model with
 // parameter values, turned round or not. A train either lists its cars or names
 // one of its model's OpenTTD formations (generator/openttdTable.ts), which stands
-// for that formation's cars. writeTrains.ts renders every distinct car at build
-// time into export/trains/ and writes export/trains.json; nothing here is
+// for that formation's cars. writeParade.ts renders every distinct car at build
+// time into export/parade/img/ and writes export/parade.json; nothing here is
 // committed output.
 //
 // This module is pure: no rendering, no file system. Everything a train needs
@@ -35,13 +35,47 @@ export interface FormationRef {
  * there (a steam locomotive "with tender", then the coaches).
  */
 export type TrainSpec =
-  | { id: string; cars: (TrainCarSpec | { formation: FormationRef })[] }
-  | { id: string; formation: FormationRef };
+  | { id: string; category?: TrainCategory; cars: (TrainCarSpec | { formation: FormationRef })[] }
+  | { id: string; category?: TrainCategory; formation: FormationRef };
+
+/**
+ * What kind of chain a train is, for the website's play order (it spreads the
+ * kinds evenly, never two of one kind in a row) and the overview page's sorting.
+ * Derived from the lead vehicle (`trainCategory`) unless the list states one.
+ */
+export const TRAIN_CATEGORIES = {
+  electricUnit: "Electric unit",
+  dieselUnit: "Diesel unit",
+  electricLoco: "Electric locomotive + train",
+  dieselLoco: "Diesel locomotive + train",
+  steamLoco: "Steam locomotive + train",
+  metro: "Metro",
+  tram: "Tram",
+  bus: "Bus",
+  horse: "Horse-drawn",
+} as const;
+export type TrainCategory = keyof typeof TRAIN_CATEGORIES;
+
+/** A train's category from its lead vehicle's catalog fields. */
+export function trainCategory(lead: { category: string; group?: string; traction?: string }): TrainCategory {
+  if (lead.traction === "animal") return "horse";
+  if (lead.category === "Road vehicles") return "bus";
+  switch (lead.group) {
+    case "tram":
+      return "tram";
+    case "metro":
+      return "metro";
+    case "unit":
+      return lead.traction === "diesel" ? "dieselUnit" : "electricUnit";
+    default:
+      return lead.traction === "steam" ? "steamLoco" : lead.traction === "diesel" ? "dieselLoco" : "electricLoco";
+  }
+}
 
 const HORSES_2: ParamValues = { animal: "horse", team: "2" };
 
 /**
- * The parade's trains. Ids are the trains' names in trains.json (stable, but
+ * The parade's trains. Ids are the trains' names in parade.json (and the value of railisland.com's `?parade=`) (stable, but
  * nothing stores them). Formations come from openttdTable.ts; the hand-composed
  * trains are locomotives with the factory's own coaches and wagons.
  */
@@ -172,6 +206,9 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
 export interface TrainModelInfo {
   /** The catalog category ("Rail vehicles", "Road vehicles"): only side-view categories may run. */
   category: string;
+  /** The catalog group ("unit", "loco", "tram", ...) and traction, for the train's category. */
+  group?: string;
+  traction?: string;
   params?: readonly ParamSpec[];
   openttd?: OpenttdProperties;
 }
@@ -238,7 +275,7 @@ function nonDefault(specs: readonly ParamSpec[], params: ParamValues, where: str
  * offers. Throws on the first fault, naming the train and car, so a bad list
  * fails the build.
  */
-export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { id: string; ground: Ground; cars: TrainCar[] }[] {
+export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { id: string; ground: Ground; category: TrainCategory; cars: TrainCar[] }[] {
   const ids = new Set<string>();
   return list.map((train) => {
     if (!/^[a-z0-9-]+$/.test(train.id)) throw new Error(`train "${train.id}": id must be lower-case letters, digits and dashes`);
@@ -253,6 +290,7 @@ export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { 
       "formation" in train ? expand(train.formation) : train.cars.flatMap((c) => ("formation" in c ? expand(c.formation) : [c]));
     if (specs.length === 0) throw new Error(`train "${train.id}": no cars`);
     const categories: string[] = [];
+    let lead: TrainModelInfo | undefined;
     const cars = specs.map((c, i) => {
       const where = `train "${train.id}", car ${i + 1} (${c.model})`;
       const info = ctx.model(c.model);
@@ -260,9 +298,11 @@ export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): { 
       if (!ctx.confirmed(c.model)) throw new Error(`${where}: a workshop draft, not a confirmed model`);
       if (!ctx.isSideView(info.category)) throw new Error(`${where}: a ${info.category} model has no side view`);
       categories.push(info.category);
+      lead ??= info;
       return { model: c.model, params: nonDefault(info.params ?? [], c.params ?? {}, where), turned: c.turned === true };
     });
-    return { id: train.id, ground: trainGround(categories), cars };
+    if (train.category && !(train.category in TRAIN_CATEGORIES)) throw new Error(`train "${train.id}": no category "${train.category}"`);
+    return { id: train.id, ground: trainGround(categories), category: train.category ?? trainCategory(lead!), cars };
   });
 }
 
@@ -296,11 +336,11 @@ export interface CarImages {
   cycleM?: number;
 }
 
-/** One image of a train, as trains.json carries it: a car, or one section of a car drawn in several. */
+/** One image of a train, as parade.json carries it: a car, or one section of a car drawn in several. */
 export interface PlacedCar extends TrainCar {
   /** The section of the car, 0 from its nose; absent for a car drawn whole. */
   section?: number;
-  /** The image, relative to trains.json. */
+  /** The image, relative to parade.json. */
   image: string;
   /** Metres from the train's nose to the image's left edge (negative: the first car's margin). */
   offsetM: number;
@@ -337,13 +377,13 @@ export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => 
       return {
         ...car,
         ...(sections.length > 1 ? { section: i } : {}),
-        image: `trains/${c.images[i]}`,
+        image: `${PARADE_IMAGE_DIR}/${c.images[i]}`,
         offsetM: round(at + s0 - marginM),
         widthM: round(s1 - s0 + 2 * marginM),
         ...(sp && c.frames && c.cycleM
           ? {
               sprite: {
-                image: `trains/${sp.image}`,
+                image: `${PARADE_IMAGE_DIR}/${sp.image}`,
                 xM: round(sp.x / pxPerM),
                 yM: round(sp.y / pxPerM),
                 widthM: round(sp.w / pxPerM),
@@ -432,30 +472,18 @@ export function fleetCounts(models: Iterable<CountedModel>, confirmed: (id: stri
   return { types, variants };
 }
 
-/** The earlier caption's counts: confirmed Rail vehicles and their variants (kept in trains.json for clients that still read it). */
-export interface FleetStats {
-  models: number;
-  variants: number;
-}
-
-/** FleetStats over the confirmed models. */
-export function fleetStats(models: Iterable<CountedModel>, confirmed: (id: string) => boolean): FleetStats {
-  let count = 0;
-  let variants = 0;
-  for (const m of models) {
-    if (m.category !== "Rail vehicles" || !confirmed(m.id)) continue;
-    count++;
-    variants += modelVariants(m.params);
-  }
-  return { models: count, variants };
-}
-
 function round(v: number): number {
   return Math.round(v * 1000) / 1000;
 }
 
-/** export/trains.json (docs/site/train-parade.md). */
-export interface TrainsFile {
+/** railisland.com, where the parade runs; its `?parade=<id>` plays one chain only. */
+export const RAILISLAND_URL = "https://railisland.com";
+
+/** Where the parade's images are, relative to parade.json (and to the export folder). */
+export const PARADE_IMAGE_DIR = "parade/img";
+
+/** export/parade.json, served at factory.railisland.com/parade.json (docs/site/train-parade.md). */
+export interface ParadeFile {
   version: 1;
   /** Pixels per metre of every image. */
   pxPerM: number;
@@ -464,7 +492,81 @@ export interface TrainsFile {
   bottomM: number;
   /** The caption's counts: every kind of vehicle the factory makes, and all their variants. */
   fleet: FleetCounts;
-  /** Deprecated: the first caption's rail-only counts, until no client reads them. */
-  stats: FleetStats;
-  trains: { id: string; ground: Ground; lengthM: number; cars: PlacedCar[] }[];
+  trains: { id: string; ground: Ground; category: TrainCategory; lengthM: number; cars: PlacedCar[] }[];
+}
+
+/**
+ * One round of the parade: every train once, in an order that spreads each
+ * category evenly over the round and never puts two of one category next to each
+ * other (nor first a train of `after`'s category, the last one played), as far as
+ * the list allows.
+ *
+ * Each category's trains are shuffled and given evenly spaced keys over the round
+ * ((k + offset) / n, one random offset per category); sorting by key interleaves
+ * the categories regularly. A train whose category repeats its predecessor's is
+ * then swapped with the next one of another category.
+ *
+ * Self-contained on purpose: the overview page (paradePage.ts) embeds its source,
+ * and railisland.com's TrainParade.astro carries a copy - keep the three in step.
+ */
+export function playOrder<T extends { id: string; category: string }>(
+  trains: readonly T[],
+  after: { category: string } | null = null,
+  random: () => number = Math.random,
+): T[] {
+  const groups = new Map<string, T[]>();
+  for (const t of trains) {
+    const g = groups.get(t.category);
+    if (g) g.push(t);
+    else groups.set(t.category, [t]);
+  }
+  const keyed: { t: T; key: number }[] = [];
+  for (const g of groups.values()) {
+    for (let i = g.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      const x = g[i]!;
+      g[i] = g[j]!;
+      g[j] = x;
+    }
+    const offset = random();
+    g.forEach((t, k) => keyed.push({ t, key: (k + offset) / g.length + random() * 1e-6 }));
+  }
+  keyed.sort((a, b) => a.key - b.key);
+  const out = keyed.map((k) => k.t);
+  for (let i = 0; i < out.length; i++) {
+    const prev = i === 0 ? (after ? after.category : null) : out[i - 1]!.category;
+    if (out[i]!.category !== prev) continue;
+    // the nearest later train of another category, preferably one that does not
+    // then sit next to its own kind where it came from
+    let pick = -1;
+    for (let k = i + 1; k < out.length; k++) {
+      if (out[k]!.category === prev) continue;
+      if (pick < 0) pick = k;
+      const left = out[k - 1]!.category;
+      const right = k + 1 < out.length ? out[k + 1]!.category : null;
+      if (left !== out[i]!.category && right !== out[i]!.category) {
+        pick = k;
+        break;
+      }
+    }
+    if (pick < 0) {
+      // none left ahead (the end of the round): an earlier train that fits here,
+      // whose place this one fits in turn
+      const cat = (k: number) => (k < 0 ? (after ? after.category : null) : k < out.length ? out[k]!.category : null);
+      for (let k = i - 2; k >= 0; k--) {
+        const here = out[i]!.category;
+        const there = out[k]!.category;
+        if (there === prev || there === cat(i + 1)) continue;
+        if (here === cat(k - 1) || here === cat(k + 1)) continue;
+        pick = k;
+        break;
+      }
+    }
+    if (pick >= 0) {
+      const x = out[i]!;
+      out[i] = out[pick]!;
+      out[pick] = x;
+    }
+  }
+  return out;
 }

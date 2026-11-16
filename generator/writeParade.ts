@@ -1,6 +1,6 @@
 // Render the train parade (trainParade.ts) into the export: one lossless WebP per
-// distinct car (or section of a long car) in export/trains/, and
-// export/trains.json, which railisland.com reads in the browser
+// distinct car (or section of a long car) in export/parade/img/, and
+// export/parade.json, which railisland.com reads in the browser
 // (docs/site/train-parade.md). Part of `pnpm build`, after build:models.
 //
 // A car with distance-driven animation clips (a steam locomotive's running gear,
@@ -9,12 +9,12 @@
 //
 // Incremental: every image's name carries a hash of what shapes it - the design's
 // build-cache key (its sources and the renderer, buildCache.ts), the car's values,
-// turned, and this file - and export/.trains-keys.json keeps what each hash
+// turned, and this file - and export/.parade-keys.json keeps what each hash
 // rendered (length, images, frames). An image whose hash is already there is not
 // rendered again; the deploy restores the last export, so a deploy that changed no
 // listed design renders nothing. Images no train uses any more are deleted.
 //
-//   pnpm build:trains
+//   pnpm build:parade
 
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -32,10 +32,11 @@ import type { Tri, Vec3 } from "./glbTriangles.ts";
 import { dot, norm, triBounds } from "./glbTriangles.ts";
 import type { AnimationClipSpec } from "./meshCore.ts";
 import { OPENTTD_TABLE } from "./openttdTable.ts";
+import { paradePage } from "./paradePage.ts";
 import { SIDE_BOTTOM_M, SIDE_MARGIN_M, SIDE_PX_PER_M, SIDE_TOP_M, rasterize, readTriangles, sideFrame } from "./renderGlbThumb.ts";
 import {
-  TRAIN_PARADE, carImageBase, carKey, carSections, fleetCounts, fleetStats, layOutTrain, resolveTrains,
-  type CarImages, type CountedModel, type SpriteRect, type TrainCar, type TrainContext, type TrainSpec, type TrainsFile,
+  TRAIN_PARADE, carImageBase, carKey, carSections, fleetCounts, layOutTrain, PARADE_IMAGE_DIR, resolveTrains,
+  type CarImages, type CountedModel, type SpriteRect, type TrainCar, type TrainContext, type TrainSpec, type ParadeFile,
 } from "./trainParade.ts";
 
 const CONFIRMED = new Set<string>(
@@ -47,7 +48,7 @@ export const FACTORY_TRAIN_CONTEXT: TrainContext = {
   model(id) {
     const d = DESIGNS.get(id);
     if (!d || !d.catalog) return undefined;
-    return { category: d.catalog.category, params: d.params, openttd: d.openttd ?? OPENTTD_TABLE[id] };
+    return { category: d.catalog.category, group: d.catalog.group, traction: d.catalog.traction, params: d.params, openttd: d.openttd ?? OPENTTD_TABLE[id] };
   },
   confirmed: (id) => CONFIRMED.has(id),
   isSideView: isSideViewCategory,
@@ -339,7 +340,7 @@ export function carHash(car: TrainCar): string | null {
   return crypto.createHash("sha256").update(JSON.stringify({ key, model: car.model, params, turned: car.turned, writer: SELF })).digest("hex").slice(0, 12);
 }
 
-/** export/.trains-keys.json: what each car hash rendered. */
+/** export/.parade-keys.json: what each car hash rendered. */
 interface TrainsKeys {
   version: 1;
   cars: Record<string, CarImages>;
@@ -347,17 +348,17 @@ interface TrainsKeys {
 
 /**
  * Resolve `list`, render every distinct car whose images are not already in
- * `<dir>/trains/` under its hash, delete the images no car uses, and write
- * `<dir>/trains.json`. Returns the file and how many cars were rendered and reused.
+ * `<dir>/parade/img/` under its hash, delete the images no car uses, and write
+ * `<dir>/parade.json` and the overview page `<dir>/parade/index.html`. Returns the file and how many cars were rendered and reused.
  */
-export async function writeTrains(
+export async function writeParade(
   list: readonly TrainSpec[] = TRAIN_PARADE,
   dir = EXPORT_DIR,
   log: (s: string) => void = () => {},
-): Promise<{ file: TrainsFile; rendered: number; reused: number }> {
+): Promise<{ file: ParadeFile; rendered: number; reused: number }> {
   const trains = resolveTrains(list, FACTORY_TRAIN_CONTEXT);
-  const outDir = path.join(dir, "trains");
-  const keysPath = path.join(dir, ".trains-keys.json");
+  const outDir = path.join(dir, ...PARADE_IMAGE_DIR.split("/"));
+  const keysPath = path.join(dir, ".parade-keys.json");
   fs.mkdirSync(outDir, { recursive: true });
   let old: TrainsKeys = { version: 1, cars: {} };
   try {
@@ -398,31 +399,35 @@ export async function writeTrains(
   fs.writeFileSync(keysPath, JSON.stringify(keys, null, 1) + "\n");
 
   const models = countedModels();
-  const file: TrainsFile = {
+  const file: ParadeFile = {
     version: 1,
     pxPerM: SIDE_PX_PER_M,
     heightM: Math.round((SIDE_TOP_M - SIDE_BOTTOM_M) * 1000) / 1000,
     bottomM: SIDE_BOTTOM_M,
     fleet: fleetCounts(models, FACTORY_TRAIN_CONTEXT.confirmed),
-    stats: fleetStats(models, FACTORY_TRAIN_CONTEXT.confirmed),
     trains: trains.map((t) => {
       const cars = layOutTrain(t.cars, (c) => byCar.get(carKey(c))!, SIDE_MARGIN_M, SIDE_PX_PER_M);
       const last = cars[cars.length - 1]!;
-      return { id: t.id, ground: t.ground, lengthM: Math.round((last.offsetM + last.widthM - SIDE_MARGIN_M) * 1000) / 1000, cars };
+      return { id: t.id, ground: t.ground, category: t.category, lengthM: Math.round((last.offsetM + last.widthM - SIDE_MARGIN_M) * 1000) / 1000, cars };
     }),
   };
-  fs.writeFileSync(path.join(dir, "trains.json"), JSON.stringify(file, null, 1) + "\n");
+  fs.writeFileSync(path.join(dir, "parade.json"), JSON.stringify(file, null, 1) + "\n");
+  fs.writeFileSync(path.join(dir, "parade", "index.html"), paradePage(file));
+  // the files of the parade's first contract, if an old export still has them
+  fs.rmSync(path.join(dir, "trains"), { recursive: true, force: true });
+  fs.rmSync(path.join(dir, "trains.json"), { force: true });
+  fs.rmSync(path.join(dir, ".trains-keys.json"), { force: true });
   return { file, rendered, reused };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const started = Date.now();
   console.log("train parade:");
-  const { file, rendered, reused } = await writeTrains(TRAIN_PARADE, EXPORT_DIR, console.log);
+  const { file, rendered, reused } = await writeParade(TRAIN_PARADE, EXPORT_DIR, console.log);
   const images = new Set(file.trains.flatMap((t) => t.cars.map((c) => c.image))).size;
   const types = Object.entries(file.fleet.types).map(([k, n]) => `${k} ${n}`).join(", ");
   console.log(`fleet: ${types}; ${file.fleet.variants} variants`);
   console.log(
-    `wrote export/trains.json: ${file.trains.length} trains, ${images} images (${rendered} cars rendered, ${reused} reused), ${((Date.now() - started) / 1000).toFixed(1)} s`,
+    `wrote export/parade.json and export/parade/index.html: ${file.trains.length} trains, ${images} images (${rendered} cars rendered, ${reused} reused), ${((Date.now() - started) / 1000).toFixed(1)} s`,
   );
 }
