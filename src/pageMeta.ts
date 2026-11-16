@@ -279,7 +279,10 @@ export function modelMeta(r: CatalogRecord, _tree?: CategoryTree): PageMeta {
     const from = k.country && r.country ? ` from ${r.country}` : "";
     const by = k.maker && r.maker ? ` by ${r.maker}` : "";
     const year = k.year && r.year !== undefined ? ` (${r.yearApprox ? "c. " : ""}${r.year})` : "";
-    return `${free} of the ${r.title}, ${article(noun)} ${noun}${from}${by}${year}.`;
+    // "the Eiffel Tower, a tower" says nothing: the kind only where the title does not name it
+    const kind = namedKind(r) === r.title ? "" : `, ${article(noun)} ${noun}`;
+    const rest = `${from}${by}${year}`;
+    return `${free} of the ${r.title}${kind}${kind ? rest : rest ? `,${rest}` : ""}.`;
   });
   const candidates = [...leads.map((l) => `${l} ${offer(r)}`), ...leads.map((l) => `${l} ${shortOffer}`), leads.at(-1)!];
   const fitting = candidates.find((c) => c.length <= DESCRIPTION_MAX);
@@ -297,9 +300,9 @@ function kindsPhrase(records: readonly CatalogRecord[], most = 3): string {
   return labels.length > 1 ? `${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}` : (labels[0] ?? "models");
 }
 
-/** The first few titles of a list, as a phrase. */
+/** A few titles of a list, as a phrase: the models with a blurb (the best known) first, then the list's order. */
 function sampleTitles(records: readonly CatalogRecord[], n = 4): string {
-  return records
+  return [...records.filter((r) => r.blurb), ...records.filter((r) => !r.blurb)]
     .slice(0, n)
     .map((r) => r.title)
     .join(", ");

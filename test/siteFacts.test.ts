@@ -90,5 +90,8 @@ describe("the model text", () => {
     const long = rec({ title: "Very Long Name Of A Locomotive Class 12345 / 67890", year: 1984, maker: "Chittaranjan Locomotive Works", country: "United Kingdom" });
     expect(modelMeta(long).description.length).toBeLessThanOrEqual(160);
     expect(modelMeta(long).title).not.toContain("|");
+    // a title that names its kind is not followed by it again
+    const tower = rec({ title: "Eiffel Tower", category: "Towers", group: "towers", traction: undefined, country: "France" });
+    expect(modelMeta(tower).description).toBe("Free CC0 3D model of the Eiffel Tower, from France. View it in 3D and download it as GLB.");
   });
 });

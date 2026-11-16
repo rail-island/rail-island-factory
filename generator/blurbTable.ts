@@ -23,7 +23,7 @@ export const BLURBS: Readonly<Record<string, string>> = {
   "proc-vehicle-cd-810":
     "Class 810 is a two-axle diesel railcar built by Vagonka Studenka from 1975; several hundred of them served Czechoslovak branch lines.",
   "proc-vehicle-tatra-t3":
-    "The Tatra T3 is a four-axle tram built by CKD Tatra in Prague from 1960. With about 14,000 cars built it is one of the most numerous tram types in the world, and it still runs in Prague, Brno, Ostrava and many cities of the former Eastern Bloc.",
+    "The Tatra T3 is a four-axle tram built by CKD Tatra in Prague. With about 14,000 cars built it is one of the most numerous tram types in the world, and it still runs in Prague, Brno, Ostrava and many cities of the former Eastern Bloc.",
   "proc-vehicle-tatra-kt4":
     "The Tatra KT4 is a two-section articulated tram built by CKD Tatra from 1974, light and short enough for narrow, hilly streets; most were delivered to East Germany and the Soviet Union.",
   "proc-vehicle-tatra-kt8":
