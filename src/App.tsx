@@ -10,7 +10,7 @@
 // docs/site/seo-pages.md).
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, NO_CHIPS, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
+import { COLUMNS, GROUPS, NO_CHIPS, OPENTTD_PATH, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
 import { SITE_URL, categoryMeta, categoryTree, countryMeta, homeMeta, listIntro, makerMeta, modelMeta, openttdMeta, type PageMeta } from "./pageMeta";
 import { Link } from "./Link";
 import type { ModelCatalog } from "../generator/catalog.ts";
@@ -408,6 +408,11 @@ export function App() {
         </Switch>
       </main>
       <footer class="factory-footer">
+        {/* the site's own OpenTTD page (docs/site/seo-pages.md): every vehicle a GRF can hold */}
+        <Link href={OPENTTD_PATH} onNavigate={() => goPath(OPENTTD_PATH)}>
+          Vehicles for OpenTTD
+        </Link>
+        <span aria-hidden="true">&middot;</span>
         <a href={HOME_URL} target="_blank" rel="noopener">
           www.railisland.com
         </a>

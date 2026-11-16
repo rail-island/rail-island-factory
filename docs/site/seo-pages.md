@@ -198,7 +198,8 @@ keeps the two in step.
   the blurb, the facts with the maker, country and OpenTTD links, and the summary - and
   a country, maker or OpenTTD page opens its list with the page's heading, its
   introduction (`listIntro`: the description, or the OpenTTD page's own paragraphs)
-  and a link back to every model.
+  and a link back to every model. The footer links the OpenTTD page on every page
+  ("Vehicles for OpenTTD").
 
 ## Hosting
 
