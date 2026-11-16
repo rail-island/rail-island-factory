@@ -45,9 +45,17 @@ describe("resolveVehicle", () => {
   });
 
   it("lets the declared block and its variant win, and the game variant set the running figures", () => {
-    const r = rec({ openttd: { introYear: 1984, vehicleLife: 40, variants: [{ params: { livery: "red" }, introYear: 1990 }] } });
-    expect(resolveVehicle(r, {})).toMatchObject({ introYear: 1984, vehicleLife: 40, speed: 120 });
-    expect(resolveVehicle(r, { livery: "red" })).toMatchObject({ introYear: 1990, vehicleLife: 40, speed: 140, name: "Loco X (Red)" });
+    const r = rec({ openttd: { vehicleLife: 40, variants: [{ params: { livery: "red" }, capacity: 5 }] } });
+    expect(resolveVehicle(r, {})).toMatchObject({ vehicleLife: 40, capacity: 0, speed: 120 });
+    expect(resolveVehicle(r, { livery: "red" })).toMatchObject({ vehicleLife: 40, capacity: 5, speed: 140, name: "Loco X (Red)" });
+  });
+
+  it("takes the introduction year from the record's own year in service, not from the OpenTTD block", () => {
+    const r = rec({ year: 1984, yearVariants: [{ params: { livery: "red" }, year: 1990 }] });
+    expect(resolveVehicle(r, {}).introYear).toBe(1984);
+    expect(resolveVehicle(r, { livery: "red" }).introYear).toBe(1990);
+    // no year stated: the category default
+    expect(resolveVehicle(rec({}), {}).introYear).toBe(1960);
   });
 
   it("knows trams, small aircraft and refuses what OpenTTD cannot hold", () => {
@@ -279,11 +287,11 @@ describe("checkOpenttdProperties", () => {
 
   it("accepts a valid block and no block", () => {
     expect(() => checkOpenttdProperties(design(undefined), true)).not.toThrow();
-    expect(() => checkOpenttdProperties(design({ introYear: 1984, cargo: "PASS", climates: ["arctic"], refitClasses: ["bulk"], variants: [{ params: { livery: "b" }, capacity: 10 }] }), true)).not.toThrow();
+    expect(() => checkOpenttdProperties(design({ cargo: "PASS", climates: ["arctic"], refitClasses: ["bulk"], variants: [{ params: { livery: "b" }, capacity: 10 }] }), true)).not.toThrow();
   });
 
   it("refuses a building's block, bad figures, labels and variants", () => {
-    expect(() => checkOpenttdProperties(design({ introYear: 1984 }), false)).toThrow(/vehicles only/);
+    expect(() => checkOpenttdProperties(design({ capacity: 10 }), false)).toThrow(/vehicles only/);
     expect(() => checkOpenttdProperties(design({ vehicleLife: 300 }), true)).toThrow(/vehicleLife/);
     expect(() => checkOpenttdProperties(design({ costFactor: 1.5 }), true)).toThrow(/costFactor/);
     expect(() => checkOpenttdProperties(design({ cargo: "PASSENGERS" }), true)).toThrow(/cargo/);

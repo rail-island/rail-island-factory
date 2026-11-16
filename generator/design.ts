@@ -185,8 +185,6 @@ export type OpenttdCargoClass = (typeof OPENTTD_CARGO_CLASSES)[number];
 
 /** The OpenTTD figures one design or variant may state; each is optional. */
 export interface OpenttdFields {
-  /** Year the vehicle is introduced. */
-  introYear?: number;
   /** Years a single vehicle lasts before it is old (1..255). */
   vehicleLife?: number;
   /** Years the model is offered for (1..255). */
@@ -260,13 +258,13 @@ export interface OpenttdIdBlock {
 }
 
 /** The facts every vehicle the GRF can hold states (OpenttdRequired); the balance figures are derived. */
-export const OPENTTD_REQUIRED_FACTS = ["introYear", "capacity", "cargo", "refitClasses", "climates"] as const;
+export const OPENTTD_REQUIRED_FACTS = ["capacity", "cargo", "refitClasses", "climates"] as const;
 
 /** The most parts a formation may have in OpenTTD (the export's cap, properties.ts MAX_PARTS). */
 export const OPENTTD_MAX_PARTS = 32;
 
 const OPENTTD_RANGES: Record<string, [number, number]> = {
-  introYear: [1, 5000000], vehicleLife: [1, 255], modelLife: [1, 255], reliabilityDecay: [0, 255],
+  vehicleLife: [1, 255], modelLife: [1, 255], reliabilityDecay: [0, 255],
   costFactor: [0, 255], runningCostFactor: [0, 255], capacity: [0, 65535],
 };
 const OPENTTD_CLIMATES: readonly string[] = ["temperate", "arctic", "tropical", "toyland"];

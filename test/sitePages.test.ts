@@ -22,13 +22,18 @@ function rec(id: string, title: string, extra: Partial<CatalogRecord> = {}): Cat
 }
 
 const RECORDS: CatalogRecord[] = [
-  rec("proc-vehicle-cd-163", "CD 163", { params: [{ name: "livery", title: "Livery", default: "a", values: [{ value: "a", title: "Original" }, { value: "b", title: "Blue" }] }] }),
-  rec("proc-vehicle-cd-150", "CD 150"),
+  rec("proc-vehicle-cd-163", "CD 163", {
+    params: [{ name: "livery", title: "Livery", default: "a", values: [{ value: "a", title: "Original" }, { value: "b", title: "Blue" }] }],
+    country: "Czechia", maker: "Skoda", year: 1984, blurb: "A Czech electric locomotive.",
+    game: { weight: 85, power: 3480, maxspeed: 120, accel: null },
+    links: [{ title: "Wikipedia: CD Class 163", url: "https://en.wikipedia.org/wiki/CD_Class_163" }],
+  }),
+  rec("proc-vehicle-cd-150", "CD 150", { country: "Czechia", maker: "Skoda", year: 1978, yearApprox: true }),
   rec("proc-vehicle-t478", "T 478", { traction: "diesel" }),
   rec("proc-vehicle-coach", "Coach <B&\"1\">", { group: "coach", traction: undefined }),
   rec("proc-building-pagoda", "Pagoda", { category: "Panel houses", group: "residential" }),
   rec("proc-building-tower", "Tower", { category: "Commercial", group: "skyscraper_c" }),
-  rec("proc-vehicle-a380", "Airbus A380", { category: "Aircraft", group: "aircraft", traction: undefined }),
+  rec("proc-vehicle-a380", "Airbus A380", { category: "Aircraft", group: "aircraft", traction: undefined, maker: "Airbus", country: "France" }),
 ];
 
 const FILES = sitePages(SHELL, RECORDS, (r) => (r.id === "proc-vehicle-a380" ? { width: 512, height: 512 } : { width: 288, height: 120 }));
@@ -60,6 +65,9 @@ describe("sitePages", () => {
       "category/building/index.html",
       "category/building/commercial/index.html",
       "category/building/panel-houses/index.html",
+      "country/czechia/index.html",
+      "maker/skoda/index.html",
+      "openttd/index.html",
       "model/proc-building-pagoda/index.html",
       "model/proc-building-tower/index.html",
       "model/proc-vehicle-a380/index.html",
@@ -108,9 +116,78 @@ describe("sitePages", () => {
     expect(html).toContain("<h1>CD 163</h1>");
     expect(html).toContain("Original, Blue");
     expect(html).toContain("1,234");
-    expect(attr(html, /<meta name="description" content="([^"]*)"/)).toContain("Trains &gt; Locomotive &gt; Electric");
+    expect(attr(html, /<meta name="description" content="([^"]*)"/)).toBe(
+      "Free CC0 3D model of the CD 163, an electric locomotive from Czechia by Skoda (1984). View it in 3D and download it as GLB or as an OpenTTD GRF.",
+    );
+    expect(attr(html, /<title>([^<]*)<\/title>/)).toBe("CD 163 electric locomotive - free 3D model | Rail Island Factory");
     // the content goes after the loading line, inside #root
     expect(html).toMatch(/<div id="root"><p class="factory-boot" id="factory-boot">[^<]*<\/p><div class="factory-static">/);
+  });
+
+  it("shows the blurb, the summary and the real-world facts, linked to their pages", () => {
+    const html = page("model/proc-vehicle-cd-163/index.html");
+    expect(html).toContain("<p>A Czech electric locomotive.</p>");
+    expect(html).toContain("The CD 163 is an electric locomotive from Czechia built by Skoda, in service from 1984.");
+    expect(html).toContain("<dt>In service from</dt><dd>1984</dd>");
+    expect(html).toContain('<dt>Maker</dt><dd><a href="/maker/skoda/">Skoda</a></dd>');
+    expect(html).toContain('<dt>Country</dt><dd><a href="/country/czechia/">Czechia</a></dd>');
+    expect(html).toContain("<dt>Top speed</dt><dd>120 km/h</dd>");
+    expect(html).toContain('<a href="/openttd/">');
+    expect(html).toContain('<h2>More by <a href="/maker/skoda/">Skoda</a></h2>');
+    // an estimated year, and a maker or country with one model only: no page, so no link
+    expect(page("model/proc-vehicle-cd-150/index.html")).toContain("<dt>In service from</dt><dd>c. 1978</dd>");
+    const a380 = page("model/proc-vehicle-a380/index.html");
+    expect(a380).toContain("<dt>Maker</dt><dd>Airbus</dd>");
+    expect(hrefs(a380)).not.toContain("/maker/airbus/");
+  });
+
+  it("writes a page per country and maker with two models or more, and the OpenTTD page", () => {
+    const czechia = page("country/czechia/index.html");
+    expect(attr(czechia, /<title>([^<]*)<\/title>/)).toBe("Czechia: 2 free 3D models of trains | Rail Island Factory");
+    expect(czechia).toContain("<h1>3D models from Czechia</h1>");
+    expect(hrefs(czechia)).toEqual(expect.arrayContaining(["/model/proc-vehicle-cd-150/", "/model/proc-vehicle-cd-163/", "/maker/skoda/"]));
+    expect(page("maker/skoda/index.html")).toContain("<h1>3D models by Skoda</h1>");
+    expect(FILES.has("country/france/index.html")).toBe(false);
+    const ottd = page("openttd/index.html");
+    expect(ottd).toContain("<h1>Vehicles for OpenTTD</h1>");
+    // the vehicles OpenTTD can hold, and nothing else
+    expect(hrefs(ottd)).toEqual(expect.arrayContaining(["/model/proc-vehicle-a380/", "/model/proc-vehicle-t478/"]));
+    expect(hrefs(ottd)).not.toContain("/model/proc-building-pagoda/");
+    const home = hrefs(page("index.html"));
+    expect(home).toEqual(expect.arrayContaining(["/openttd/", "/country/czechia/", "/maker/skoda/"]));
+  });
+
+  it("names a rendered JPEG card with its type", () => {
+    const files = sitePages(SHELL, RECORDS, () => null, (r) => `cards/${r.id}.jpg`);
+    const html = files.get("model/proc-vehicle-cd-163/index.html")!;
+    expect(attr(html, /<meta property="og:image" content="([^"]*)"/)).toBe("https://factory.railisland.com/cards/proc-vehicle-cd-163.jpg");
+    expect(attr(html, /<meta property="og:image:type" content="([^"]*)"/)).toBe("image/jpeg");
+    // the card is the page's picture too, and the structured data's first
+    expect(html).toContain('<img class="factory-static__thumb" src="/cards/proc-vehicle-cd-163.jpg" alt="CD 163 - 3D model of an electric locomotive" width="1200" height="630" />');
+    const model = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]!))[1];
+    expect(model.image).toEqual(["https://factory.railisland.com/cards/proc-vehicle-cd-163.jpg", "https://factory.railisland.com/thumbs/proc-vehicle-cd-163.png"]);
+  });
+
+  it("uses a composed 1200 x 630 card as the link preview when the build made one", () => {
+    const files = sitePages(SHELL, RECORDS, () => null, (r) => (r.id === "proc-vehicle-cd-163" ? `og/${r.id}.png` : null));
+    const html = files.get("model/proc-vehicle-cd-163/index.html")!;
+    expect(attr(html, /<meta property="og:image" content="([^"]*)"/)).toBe("https://factory.railisland.com/og/proc-vehicle-cd-163.png");
+    expect(attr(html, /<meta property="og:image:width" content="([^"]*)"/)).toBe("1200");
+    expect(attr(html, /<meta property="og:image:height" content="([^"]*)"/)).toBe("630");
+    expect(attr(html, /<meta name="twitter:image" content="([^"]*)"/)).toBe("https://factory.railisland.com/og/proc-vehicle-cd-163.png");
+  });
+
+  it("describes the model's real type in its JSON-LD: maker, country, encyclopedia page, licence URL", () => {
+    const html = page("model/proc-vehicle-cd-163/index.html");
+    const model = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]!))[1];
+    expect(model).toMatchObject({
+      "@type": "3DModel",
+      isAccessibleForFree: true,
+      license: "https://creativecommons.org/publicdomain/zero/1.0/",
+      author: { "@type": "Organization", name: "Rail Island" },
+      countryOfOrigin: { "@type": "Country", name: "Czechia" },
+      about: { name: "CD 163", description: "A Czech electric locomotive.", sameAs: ["https://en.wikipedia.org/wiki/CD_Class_163"], manufacturer: { name: "Skoda" } },
+    });
   });
 
   it("writes valid JSON-LD: a breadcrumb and a 3DModel", () => {

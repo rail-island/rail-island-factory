@@ -8,7 +8,7 @@ sounds, OpenTTD, references, deviations and tests. The former horse tram is the 
 `buildAnimalVehicleLod`, `animalVehicleDesign`), `generator/animalTrams.ts`,
 `generator/animalRail.ts`, `generator/animalBuses.ts`, `generator/draftAnimals.ts` (the team),
 `generator/rig.ts` (`VehicleRig.team`), `generator/soundMapping.ts` (`teamSounds`),
-`generator/openttdTable.ts`, `generator/countryTable.ts`, `test/animalDrawn.test.ts`
+`generator/openttdTable.ts`, `generator/factTable.ts`, `test/animalDrawn.test.ts`
 **See also** - [draft-animals.md](draft-animals.md), [vehicle-rig.md](vehicle-rig.md),
 [sounds.md](sounds.md), [world-trams.md](world-trams.md), [buses.md](buses.md); in the game,
 `docs/gameplay/trams.md`, `docs/gameplay/trains.md`, `docs/gameplay/buses.md`

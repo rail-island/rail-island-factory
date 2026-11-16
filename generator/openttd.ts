@@ -5,6 +5,7 @@
 // the site only reads them; and its ids from the committed id table
 // (openttdIds.ts). No node: imports; the site imports only its types.
 
+import { yearOf } from "./factTable.ts";
 import { idsOf } from "./openttdIds.ts";
 import {
   resolveParams, type CatalogFields, type OpenttdFields, type OpenttdProperties, type OpenttdVariant,
@@ -149,6 +150,8 @@ export function catalogOpenttd(design: ProceduralDesign, fields: CatalogFields):
     selections.push(params);
   };
   for (const v of ottd.variants ?? []) add(v.params);
+  // a variant with a year of its own (factTable.ts) is a selection the export resolves too: its running figures may differ
+  for (const v of yearOf(design.id)?.variants ?? []) add(v.params);
   for (const p of ottd.presets ?? []) add(p);
   for (const f of ottd.formations ?? []) for (const c of f.cars) add(c.params);
   const variants: OpenttdVariant[] = [];

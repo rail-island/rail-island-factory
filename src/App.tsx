@@ -10,8 +10,8 @@
 // docs/site/seo-pages.md).
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, NO_CHIPS, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
-import { SITE_URL, categoryMeta, categoryTree, homeMeta, modelMeta, type PageMeta } from "./pageMeta";
+import { COLUMNS, GROUPS, NO_CHIPS, OPENTTD_PATH, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
+import { SITE_URL, categoryMeta, categoryTree, countryMeta, homeMeta, listIntro, makerMeta, modelMeta, openttdMeta, type PageMeta } from "./pageMeta";
 import { Link } from "./Link";
 import type { ModelCatalog } from "../generator/catalog.ts";
 import { ModelTable } from "./ModelTable";
@@ -159,6 +159,23 @@ export function App() {
   // The document head follows the page: its title, description and canonical URL
   // are the prerendered page's (pageMeta.ts), so a shared link and a crawler agree.
   const tree = createMemo(() => categoryTree(rows() ?? []));
+  // the page a list is when it is a country's, a maker's or the OpenTTD page: its head and its introduction
+  const listPage = createMemo((): PageMeta | null => {
+    const v = view();
+    const all = sectionRows(rows() ?? [], "catalog");
+    if (v.model || v.group || v.section === "workshop" || !all.length) return null;
+    const sorted = (f: { maker?: string | null; country?: string | null; openttd?: boolean }) => queryRows(all, "", "title", "asc", { ...NO_CHIPS, ...f });
+    if (v.maker) {
+      const rs = sorted({ maker: v.maker });
+      return rs[0]?.maker ? makerMeta(rs[0].maker, rs) : null;
+    }
+    if (v.country) {
+      const rs = sorted({ country: v.country });
+      return rs[0]?.country ? countryMeta(rs[0].country, rs) : null;
+    }
+    if (v.openttd) return openttdMeta(sorted({ openttd: true }));
+    return null;
+  });
   const meta = createMemo((): PageMeta => {
     const v = view();
     const all = rows();
@@ -166,9 +183,15 @@ export function App() {
     const record = open();
     if (record) return modelMeta(record, tree());
     if (v.group) return categoryMeta(v, tree(), queryRows(all, "", "title", "asc", v));
-    return homeMeta();
+    return listPage() ?? homeMeta();
   });
   createEffect(() => applyMeta(meta()));
+  /** Open the page at a site path (a fact's link: a maker's, a country's or the OpenTTD page), as a new history entry. */
+  const goPath = (path: string) => {
+    const next = parseView("", path);
+    show(next);
+    history.pushState(null, "", viewUrl(next));
+  };
 
   // `pnpm dev` lists every model unmeasured (generator/devExport.ts): measure them
   // from their JS models in the browser, the open model first, then as listed.
@@ -260,10 +283,22 @@ export function App() {
                 onParams={(params) => update({ params, node: null })}
                 exported={hasEntry(exportState().entries, entryFor(record(), view().params))}
                 onAddExport={() => setExportState(addEntry(exportState(), entryFor(record(), view().params)))}
+                onGo={goPath}
               />
             )}
           </Match>
           <Match when={true}>
+            <Show when={listPage()}>
+              {(page) => (
+                <section class="factory-intro" aria-label={page().heading}>
+                  <h2 class="factory-intro__title">{page().heading}</h2>
+                  <For each={listIntro(page())}>{(p) => <p>{p}</p>}</For>
+                  <Link class="factory-link" href="/" onNavigate={() => goPath("/")}>
+                    Show every model
+                  </Link>
+                </section>
+              )}
+            </Show>
             <div class="factory-toolbar">
               <div class="factory-sections" role="group" aria-label="Section">
                 <For each={["catalog", "workshop"] as const}>
@@ -373,6 +408,11 @@ export function App() {
         </Switch>
       </main>
       <footer class="factory-footer">
+        {/* the site's own OpenTTD page (docs/site/seo-pages.md): every vehicle a GRF can hold */}
+        <Link href={OPENTTD_PATH} onNavigate={() => goPath(OPENTTD_PATH)}>
+          Vehicles for OpenTTD
+        </Link>
+        <span aria-hidden="true">&middot;</span>
         <a href={HOME_URL} target="_blank" rel="noopener">
           www.railisland.com
         </a>

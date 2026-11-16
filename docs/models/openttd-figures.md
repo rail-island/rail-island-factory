@@ -1,7 +1,7 @@
 # OpenTTD figures
 
-**Covers** - every vehicle a GRF can hold, with the OpenTTD facts it states (introduction year, capacity, cargo, rail type), the balance figures the formula derives from them, how many presets the one-click download exports and the formations it offers; which figures are estimates.
-**Code** - `generator/openttdTable.ts` (the facts, presets and formations), `generator/openttd.ts` (`deriveBalance`, `catalogOpenttd`)
+**Covers** - every vehicle a GRF can hold, with the OpenTTD facts it states (capacity, cargo, rail type) and its year in service (the export's introduction year), the balance figures the formula derives from them, how many presets the one-click download exports and the formations it offers; which figures are estimates.
+**Code** - `generator/openttdTable.ts` (the facts, presets and formations), `generator/factTable.ts` (the years in service), `generator/openttd.ts` (`deriveBalance`, `catalogOpenttd`)
 **See also** - [../site/openttd-export.md](../site/openttd-export.md), [game-properties.md](game-properties.md), [vehicles.md](vehicles.md)
 
 The figures are real-world ones, researched from each design's references and
@@ -17,8 +17,10 @@ Costs are the purchase and running cost factors the balance formula gives at the
 default variant ([../site/openttd-export.md](../site/openttd-export.md), "The
 balance formula"); the CD 163 / 363 states a longer vehicle life of its own.
 
-The table is the state of `generator/openttdTable.ts` when it was written; that
-file is the authority.
+The table is the state of `generator/openttdTable.ts` and `generator/factTable.ts`
+when it was written; those files are the authority. The Year column comes from
+`factTable.ts`, where a year marked * is `approx`; the year is not an OpenTTD
+field but the vehicle's own, which the export reads ([../site/openttd-export.md](../site/openttd-export.md)).
 
 | Model | Title | OpenTTD type | Year | Capacity | Costs | Presets | Formations |
 |---|---|---|---|---|---|---|---|
@@ -44,29 +46,29 @@ file is the authority.
 | `ua-open-wagon` | Ua Open Wagon | train RAIL | 1970* | 50 COAL | 39 / 11 | 1 | - |
 | `eas-open-wagon` | Eas Open Wagon | train RAIL | 1970 | 55 COAL | 37 / 12 | 1 | - |
 | `raj-hopper-wagon` | Raj Hopper Wagon | train RAIL | 1980* | 55 COAL | 37 / 12 | 1 | - |
-| `rah-tank-wagon` | Rah Tank Wagon | train RAIL | 1975* | 60 OIL_ | 40 / 13 | 1 | - |
-| `csd-433-0` | CSD 433.0 | train RAIL | 1909* | 0 PASS | 45 / 20 | 2 | - |
+| `rah-tank-wagon` | Rah Tank Wagon | train RAIL | 1964* | 60 OIL_ | 40 / 13 | 1 | - |
+| `csd-433-0` | CSD 433.0 | train RAIL | 1948 | 0 PASS | 45 / 20 | 2 | - |
 | `csd-456-0` | CSD 456.0 | train RAIL | 1925* | 0 PASS | 79 / 41 | 1 | - |
 | `csd-475-1` | CSD 475.1 | train RAIL | 1947 | 0 PASS | 84 / 45 | 2 | with tender |
 | `csd-477-0` | CSD 477.0 | train RAIL | 1951 | 0 PASS | 79 / 41 | 1 | - |
 | `csd-498-1` | CSD 498.1 | train RAIL | 1954 | 0 PASS | 74 / 34 | 2 | with tender |
 | `csd-556-0` | CSD 556.0 | train RAIL | 1951 | 0 PASS | 74 / 40 | 2 | with tender |
 | `csd-636` | CSD 636 Mallet | train RAIL | 1921* | 0 PASS | 85 / 52 | 2 | with tender |
-| `csd-386` | CSD 386 Streamlined | train RAIL | 1934* | 0 PASS | 70 / 32 | 2 | with tender |
-| `csd-m112` | CSD M 112.0 Steam Railcar | train RAIL | 1905* | 40 PASS | 48 / 19 | 1 | - |
+| `csd-386` | CSD 386 Streamlined | train RAIL | 1937 | 0 PASS | 70 / 32 | 2 | with tender |
+| `csd-m112` | CSD M 112.0 Steam Railcar | train RAIL | 1880 | 40 PASS | 48 / 19 | 1 | - |
 | `cd-110` | CD 110 / 111 / 210 | train ELRL | 1971 | 0 PASS | 56 / 26 | 4 | - |
 | `cd-130` | CD 123 / 130 | train ELRL | 1977 | 0 PASS | 91 / 51 | 2 | - |
 | `cd-140` | CD 140 bobina | train ELRL | 1953 | 0 PASS | 95 / 51 | 1 | - |
-| `cd-169` | CD 169 | train ELRL | 2014* | 0 PASS | 152 / 90 | 1 | - |
+| `cd-169` | CD 169 | train ELRL | 1987 | 0 PASS | 152 / 90 | 1 | - |
 | `sqns-container-wagon` | Sqns Container Wagon | train RAIL | 2005 | 60 GOOD | 42 / 13 | 1 | - |
-| `pao-flat-wagon` | Pao Flat Wagon | train RAIL | 1970* | 50 STEL | 39 / 11 | 1 | - |
+| `pao-flat-wagon` | Pao Flat Wagon | train RAIL | 1950* | 50 STEL | 39 / 11 | 1 | - |
 | `habis-sliding-wall-wagon` | Habis Sliding-Wall Wagon | train RAIL | 1985 | 60 GOOD | 46 / 13 | 2 | - |
 | `hadgs-hopper-wagon` | Hadgs Covered Hopper Wagon | train RAIL | 1975* | 55 GRAI | 40 / 12 | 1 | - |
 | `faccs-hopper-wagon` | Faccs Hopper Wagon | train RAIL | 1985* | 55 COAL | 37 / 12 | 2 | - |
 | `falls-hopper-wagon` | Falls Hopper Wagon | train RAIL | 1980* | 60 COAL | 39 / 13 | 3 | - |
 | `wap-hopper-wagon` | Wap Hopper Wagon | train RAIL | 1960* | 60 COAL | 39 / 13 | 1 | - |
 | `cd-180` | CD 180 / 181 / 182 | train ELRL | 1961 | 0 PASS | 108 / 66 | 4 | - |
-| `dnt-184-5` | DNT 184.5 | train ELRL | 1967* | 0 PASS | 170 / 114 | 2 | - |
+| `dnt-184-5` | DNT 184.5 | train ELRL | 1994 | 0 PASS | 170 / 114 | 2 | - |
 | `db-111` | DB 111 | train ELRL | 1974 | 0 PASS | 121 / 71 | 3 | - |
 | `dr-243` | DR 243 / DB 143 / 112 | train ELRL | 1984 | 0 PASS | 137 / 84 | 4 | - |
 | `obb-1012` | OBB 1012 | train ELRL | 1996 | 0 PASS | 152 / 90 | 1 | - |
@@ -148,11 +150,11 @@ file is the authority.
 | `cd-843` | CD 843 / 943 / 043 | train RAIL | 1995 | 64 PASS | 67 / 29 | 4 | 3 cars |
 | `csd-m131` | CSD M 131.1 Hurvinek | train RAIL | 1948 | 48 PASS | 52 / 21 | 2 | with trailer |
 | `csd-m240` | CSD M 240.0 Singrovka | train RAIL | 1963 | 64 PASS | 56 / 26 | 1 | - |
-| `csd-m296` | CSD M 296.1 / CD 853 / 854 | train RAIL | 1981* | 64 PASS | 75 / 33 | 4 | - |
+| `csd-m296` | CSD M 296.1 / CD 853 / 854 | train RAIL | 1968 | 64 PASS | 75 / 33 | 4 | - |
 | `db-628` | DB 628 | train RAIL | 1986 | 64 PASS | 67 / 29 | 5 | with n-coaches |
 | `jr-kiha40` | JR KiHa 40 | train RAIL | 1977 | 66 PASS | 62 / 26 | 3 | - |
 | `dr-vt1816` | DR VT 18.16 Delfin | train RAIL | 1964 | 48 PASS | 82 / 33 | 4 | 4 cars |
-| `mav-mdmot` | MAV MDmot | train RAIL | 1966* | 40 PASS | 65 / 28 | 4 | 4 cars |
+| `mav-mdmot` | MAV MDmot | train RAIL | 1970 | 40 PASS | 65 / 28 | 4 | 4 cars |
 | `ice-1` | ICE 1 | train ELRL | 1991 | 0 PASS | 255 / 202 | 3 | power cars, 6 coaches |
 | `tgv` | TGV | train ELRL | 1981 | 0 PASS | 157 / 75 | 4 | power cars, 6 trailers |
 | `shinkansen-0` | Shinkansen 0 series | train ELRL | 1964 | 75 PASS | 101 / 37 | 7 | 8 cars |

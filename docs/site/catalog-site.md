@@ -3,13 +3,13 @@
 **Covers** - the Solid site that lists every model the factory builds: its data,
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview (its passenger view on structure pages included), and the URL state.
-**Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `generator/airframeKinds.ts`, `generator/countryTable.ts`, `src/ModelTable.tsx`,
+**Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `generator/airframeKinds.ts`, `generator/factTable.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerLine.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/Link.tsx`, `src/VariantThumb.tsx`, `src/SoundsPanel.tsx`, `src/modelSounds.ts`, `src/soundAudition.ts`, `test/modelSounds.test.ts`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/countryTable.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
+`test/catalogQuery.test.ts`, `test/factTable.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
 **See also** - [workshop.md](workshop.md) (the catalog and the workshop, web links), [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md), [seo-pages.md](seo-pages.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -75,7 +75,8 @@ Crawlers need an absolute URL, which Vite does not rewrite, so the
 image's size in step. After a change, re-scrape the page with Facebook's Sharing
 Debugger, as its previews are cached.
 
-A footer under the catalog links to www.railisland.com (`HOME_URL`) and to the
+A footer under every page links to the site's OpenTTD page (`/openttd/`,
+[seo-pages.md](seo-pages.md)), to www.railisland.com (`HOME_URL`) and to the
 factory's GitHub repository (`REPO_URL`).
 
 ## Data
@@ -237,7 +238,7 @@ names get its label (`loco` reads Locomotive); any other reads as itself.
 **Country.** A last chip row, set off by a dashed rule, filters by the country
 a model comes from: the railway or operator a rail vehicle is drawn for, the
 maker of a road vehicle or an aircraft, the country of a ship or a cable car
-(`generator/countryTable.ts`, keyed by model id; the world fleet's take its list's
+(`generator/factTable.ts`, keyed by model id; the world fleet's take its list's
 origin column, docs/models/world-fleet.md; a generic model - the legacy wagons,
 the older ships and cabins, an unbranded truck, the fleet's generic types and
 Airbus's multinational types - names none). It is a filter beside the three rows, not a level under them: it
@@ -246,12 +247,14 @@ path, sorted by name, appears only when that path holds more than one country
 (or one is picked), and keeps its pick while the chips above change. The table
 lives apart from the designs, like the sound table, so tagging a model never
 changes its JS bytes; the catalog record carries the country's English name
-(`country`), which the model page lists as its Country, and it is not part of
-the game's meta. `test/countryTable.test.ts` holds every rail vehicle and tram
+(`country`), which the model page lists as its Country (a link to the country's
+page, [seo-pages.md](seo-pages.md)), and it is not part of the game's meta. A
+country of its own, with no chips picked, is a page of its own: `/country/<slug>/`
+(an old `/?country=` link moves there); under a chip it stays `?country=<slug>`. `test/factTable.test.ts` holds every rail vehicle and tram
 but the generic wagons to a country.
 
 **Search** matches every whitespace-separated word, case-insensitively, against
-title, id, category, pool, traction, country, author, license and source, and against
+title, id, category, pool, traction, country, maker, author, license and source, and against
 every parameter value's title and token - so `green cream` finds the CD 749
 Bardotka, whose `livery` parameter draws it.
 

@@ -225,7 +225,7 @@ first). The sections are the full rig's.
   `variant` the Xcient's diesel tractor or fuel cell rigid.
 - `game`: weight in tonnes (gross, a combination's), power in kW, top speed in km/h, from
   the makers' figures; variants where a body changes the weight.
-- OpenTTD (`openttdTable.ts`): the introduction year, the payload; cargo and refits follow
+- OpenTTD (`openttdTable.ts`): the payload, the year being `factTable.ts`'s; cargo and refits follow
   the body - a tank `OIL_`/liquid, a tipper or dump `COAL`/bulk, a log truck `WOOD`, a flatbed
   or low loader `STEL`, a box or curtain `GOOD`/piece, covered, express, a reefer with the
   refrigerated class; fire engines, the ladder, the crane and the sweeper carry nothing

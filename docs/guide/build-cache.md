@@ -34,6 +34,7 @@ All of it is a pure function of the design's code and data, so it is kept.
 |---|---|
 | `build-cache/facts/<id>.json` | a design's facts under its key, a file per design: triangles, `glbStats`, rig, side-view frame, rider seat, an aeroplane's boarding door, the JS bundle's switches (`BundleFlags`: rigged, surfaces, passenger hints, interior) and the extents measured for the legacy table and the OpenTTD formations, by parameter values |
 | `build-cache/thumbs/<id>.png` | a confirmed model's thumbnail (no draft's: the site draws those in the browser, [../site/workshop.md](../site/workshop.md)) |
+| `build-cache/cards/<id>.jpg`, `build-cache/cards/index.json` | a confirmed road or rail vehicle's link-preview card and the key each was rendered for (`cards.ts`, [../site/seo-pages.md](../site/seo-pages.md)): its design's key and `CARD_VERSION`, so a card is rendered again only when its model changed or the card's look did. A whole export only; copied to `export/cards/` |
 
 A design's facts are written only once it passed the checks, so a cached design
 needs no check again. The source trees (200 MB of JSON) and the JS models are not
@@ -62,8 +63,7 @@ committed: they are rewritten from a build or kept in the export (below).
 
 `generate.ts` is not part of any key, and neither is a table the site or the game's
 meta files change for other reasons (`catalogModels.json`, `linkTable.ts`,
-`soundTable.ts`, `openttdTable.ts`, `openttdIds.json`, `countryTable.ts`, the
-phrasebooks): adding a family, confirming a model or adding a link re-keys no model.
+`soundTable.ts`, `openttdTable.ts`, `openttdIds.json`, `factTable.ts`, the phrasebooks): adding a family, confirming a model or adding a link re-keys no model.
 `test/buildCache.test.ts` checks that. A change in a shared kit re-keys exactly the
 designs whose modules import it; a change in a `PIPELINE` file re-keys every design.
 
