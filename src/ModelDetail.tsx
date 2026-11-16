@@ -42,6 +42,7 @@ import { SoundsPanel } from "./SoundsPanel";
 import { download } from "./download";
 import type { ExportProgress } from "./exportRun";
 import { openttdFeature } from "./openttd/properties";
+import { modelFacts, modelSummary } from "./pageMeta";
 
 // three and OrbitControls arrive only once somebody opens a model.
 const ModelViewer = lazy(() => import("./ModelViewer").then((m) => ({ default: m.ModelViewer })));
@@ -81,6 +82,8 @@ export function ModelDetail(props: {
   exported: boolean;
   /** Add the variant on screen (the chosen parameter values) to the export list. */
   onAddExport: () => void;
+  /** Open another page of the site by its path (a fact's link: the maker's, the country's, the OpenTTD page). */
+  onGo: (path: string) => void;
 }) {
   // Keep the chosen level while stepping between models. Unsupported Max detail
   // falls back to full; unsupported coarse detail falls back to low.
@@ -232,6 +235,31 @@ export function ModelDetail(props: {
             Workshop draft
           </span>
         </Show>
+        {/* what the model shows: the blurb, the real-world facts (linked to their pages) and the generated summary; the prerendered page carries the same */}
+        <section class="factory-about" aria-label="About this model">
+          <Show when={props.record.blurb}>{(b) => <p class="factory-about__blurb">{b()}</p>}</Show>
+          <Show when={modelFacts(props.record).length > 0}>
+            <dl class="factory-about__facts">
+              <For each={modelFacts(props.record)}>
+                {(f) => (
+                  <div class="factory-spec">
+                    <dt>{f.label}</dt>
+                    <dd>
+                      <Show when={f.path} fallback={f.value}>
+                        {(path) => (
+                          <Link class="factory-link" href={path()} onNavigate={() => props.onGo(path())}>
+                            {f.value}
+                          </Link>
+                        )}
+                      </Show>
+                    </dd>
+                  </div>
+                )}
+              </For>
+            </dl>
+          </Show>
+          <p class="factory-muted factory-about__summary">{modelSummary(props.record)}</p>
+        </section>
         {/* a site preview (proc-preview-*) is a drawing of what the game builds, not a model to take away */}
         <Show when={!props.record.id.startsWith("proc-preview-")}>
           <button type="button" class="factory-btn factory-detail__export" disabled={props.exported} onClick={() => props.onAddExport()}>

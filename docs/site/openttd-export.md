@@ -121,9 +121,17 @@ Every vehicle a GRF can hold (rail, tram, road, ship, aircraft) states its
 design, so no source module - and none of its JS models - changes for it. Its
 figures are listed in [../models/openttd-figures.md](../models/openttd-figures.md).
 
+The year a vehicle entered service is **not** in the block: it is a real-world fact
+of its own, stated in `generator/yearTable.ts` (with each variant's year that
+differs) and carried on the catalog record as `year`, `yearApprox` and
+`yearVariants`, which the model page shows too ([seo-pages.md](seo-pages.md)). The
+export reads it as the introduction date (1 January): `introYear` in
+`src/openttd/properties.ts` takes the variant's year, else the record's, else the
+category default (1900 for steam, 1960 otherwise). `checkOpenttdDesign` fails a
+vehicle a GRF can hold that has no year.
+
 | Field | Range | What |
 |---|---|---|
-| `introYear` | year | **required**: the year it entered service (1 January) |
 | `capacity` | 0..65535 | **required**: seats (with standing room for a metro, tram or city bus), a freight vehicle's payload in tonnes, a tank's in kilolitres; in units of `cargo` |
 | `cargo` | 4-letter label | **required**: PASS, MAIL, GOOD, COAL, OIL_, STEL, WOOD, GRAI, ... |
 | `refitClasses` | list | **required** (may be empty): passengers, mail, express, armoured, bulk, piece, liquid, refrigerated, hazardous, covered |
@@ -132,7 +140,7 @@ figures are listed in [../models/openttd-figures.md](../models/openttd-figures.m
 | `costFactor`, `runningCostFactor` | 0..255 | derived (below) unless stated |
 | `vehicleLife`, `modelLife` | 1..255 years | derived unless stated |
 | `reliabilityDecay` | 0..255 | derived unless stated |
-| `variants` | list | `{ params, ...fields }`: a selection's own figures (a livery's year, a class's seats), as `game.variants` |
+| `variants` | list | `{ params, ...fields }`: a selection's own figures (a class's seats, a body's cargo), as `game.variants` |
 | `presets` | list | **required**: the selections the one-click download exports, `{}` (the default) first |
 | `formations` | list | `{ name, cars: [{ params, turned? }] }`: fixed formations of the design's own cars |
 

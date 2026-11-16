@@ -178,6 +178,7 @@ import { glbStats, type GlbStats } from "./glbStats.ts";
 import { catalogOpenttd, openttdFeatureOf, openttdPartCount } from "./openttd.ts";
 import { idsOf } from "./openttdIds.ts";
 import { OPENTTD_TABLE } from "./openttdTable.ts";
+import { yearOf } from "./yearTable.ts";
 import { isDraft, unknownCatalogIds } from "./workshop.ts";
 import { linkTableProblems } from "./linkTable.ts";
 import { JS_DIR, bundleDesign, bundleFlags, gzipSize, writeIfChanged, type BundleFlags } from "./jsModel.ts";
@@ -428,6 +429,10 @@ export function checkOpenttdDesign(
   const vehicle = VEHICLE_IDS.has(design.id);
   const feature = vehicle ? openttdFeatureOf(catalogFields(design)) : null;
   checkOpenttdProperties(design, vehicle, feature);
+  // the export's introduction year is the vehicle's own year in service, not an OpenTTD field
+  if (feature && !yearOf(design.id)) {
+    throw new Error(`${design.id}: states no year in service - add it to generator/yearTable.ts (docs/site/openttd-export.md)`);
+  }
   if (feature && !idsOf(design, feature)) {
     throw new Error(`${design.id}: generator/openttdIds.json gives it no OpenTTD ids, or a retired one - run \`pnpm openttd:ids\` and commit the file (docs/site/openttd-export.md)`);
   }

@@ -15,17 +15,25 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { CatalogRecord, ModelCatalog } from "./catalog.ts";
-import { GROUPS, chipSlug, formatNumber, groupOf, level2Of, level3Of, modelPath, shownId, type ChipPath } from "../src/catalogQuery.ts";
+import { GROUPS, OPENTTD_PATH, chipSlug, countryPath, formatNumber, groupOf, isOpenttdVehicle, level2Of, level3Of, makerPath, modelPath, shownId, type ChipPath } from "../src/catalogQuery.ts";
 import {
+  LICENSE_URLS,
+  OPENTTD_INTRO,
   SITE_NAME,
   SITE_URL,
   categoryCrumbs,
   categoryMeta,
   categoryOf,
   categoryTree,
+  countryMeta,
   groupLabel,
   homeMeta,
+  kindNoun,
+  makerMeta,
+  modelFacts,
   modelMeta,
+  modelSummary,
+  openttdMeta,
   sizeText,
   type CategoryTree,
   type Crumb,
@@ -37,6 +45,15 @@ export type ThumbSize = (r: CatalogRecord) => { width: number; height: number } 
 
 /** Link previews need an image at least this big on both sides (Facebook's minimum); smaller ones keep the site's. */
 export const MIN_PREVIEW_PX = 200;
+
+/** A model's own link-preview image (ogImages.ts), when the build composed one: its site-relative URL, 1200 x 630. */
+export type OgImage = (r: CatalogRecord) => string | null;
+
+/** The size of a composed link-preview image, the large card's 1.91:1. */
+export const OG_SIZE = { width: 1200, height: 630 } as const;
+
+/** A country or maker gets a page of its own from this many confirmed models: one model is the model's page already. */
+export const MIN_LIST_PAGE = 2;
 
 /** What the build writes: dist-relative file path -> content, in a fixed order. */
 export type SiteFiles = Map<string, string>;
@@ -187,9 +204,22 @@ function isUrl(s: string): boolean {
   return /^https?:\/\//.test(s);
 }
 
-function modelBody(r: CatalogRecord, meta: PageMeta, crumbs: readonly Crumb[], siblings: readonly CatalogRecord[], thumb: { width: number; height: number } | null): string {
+function modelBody(
+  r: CatalogRecord,
+  meta: PageMeta,
+  crumbs: readonly Crumb[],
+  siblings: readonly CatalogRecord[],
+  byMaker: readonly CatalogRecord[],
+  thumb: { width: number; height: number } | null,
+  listed: (path: string) => boolean,
+): string {
   const id = shownId(r);
+  // the real-world facts first, linked where their page exists, then the model's own figures
+  const real = modelFacts(r)
+    .map((f) => fact(f.label, f.path && listed(f.path) ? link(f.path, f.value) : escapeHtml(f.value)))
+    .join("");
   const facts = [
+    real,
     id ? fact("Id", `<code>${escapeHtml(id)}</code>`) : "",
     fact("Category", crumbs.slice(1).map((c) => link(c.path, c.label)).join(" &rsaquo; ")),
     fact("Size (width x depth x height)", escapeHtml(sizeText(r))),
@@ -197,22 +227,33 @@ function modelBody(r: CatalogRecord, meta: PageMeta, crumbs: readonly Crumb[], s
     fact("Vertices", escapeHtml(formatNumber(r.vertices))),
     fact("Materials", escapeHtml(formatNumber(r.materials))),
     r.author ? fact("Author", escapeHtml(r.author)) : "",
-    r.license ? fact("License", escapeHtml(r.license)) : "",
+    r.license ? fact("License", LICENSE_URLS[r.license] ? `<a href="${escapeHtml(LICENSE_URLS[r.license]!)}" rel="license noopener">${escapeHtml(r.license)}</a>` : escapeHtml(r.license)) : "",
     r.source ? fact("Source", isUrl(r.source) ? `<a href="${escapeHtml(r.source)}" rel="noopener">${escapeHtml(r.source)}</a>` : escapeHtml(r.source)) : "",
   ].join("");
   const params = r.params?.length
     ? `<h2>Variants</h2><dl>${r.params.map((p) => fact(p.title, escapeHtml(p.values.map((v) => v.title).join(", ")))).join("")}</dl>`
     : "";
+  const links = r.links?.length ? `<h2>Sources</h2><ul>${r.links.map((l) => `<li><a href="${escapeHtml(l.url)}" rel="noopener">${escapeHtml(l.title)}</a></li>`).join("")}</ul>` : "";
   const size = thumb ? ` width="${thumb.width}" height="${thumb.height}"` : "";
   const last = crumbs[crumbs.length - 1]!;
   const more = siblings.length ? `<h2>More in ${link(last.path, last.label)}</h2>${modelList(siblings)}` : "";
+  const maker = r.maker && byMaker.length && listed(makerPath(r.maker)) ? `<h2>More by ${link(makerPath(r.maker), r.maker)}</h2>${modelList(byMaker)}` : "";
+  const openttd = isOpenttdVehicle(r) && !r.draft ? `<p>Play it in OpenTTD: ${link(OPENTTD_PATH, "free OpenTTD vehicles")}.</p>` : "";
   return (
     `<div class="factory-static">${crumbsHtml([...crumbs, { label: r.title, path: meta.path }])}` +
     `<h1>${escapeHtml(meta.heading)}</h1>` +
     // a draft has no thumbnail file: the app renders it in the browser
-    (r.draft ? "" : `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(`${r.title} - 3D model`)}"${size} />`) +
-    `<p>${escapeHtml(meta.description)}</p><dl>${facts}</dl>${params}${more}</div>`
+    (r.draft ? "" : `<img class="factory-static__thumb" src="/${escapeHtml(r.thumbUrl)}" alt="${escapeHtml(`${r.title} - 3D model of ${kindNoun(r)}`)}"${size} />`) +
+    (r.blurb ? `<p>${escapeHtml(r.blurb)}</p>` : "") +
+    `<p>${escapeHtml(modelSummary(r))}</p>${openttd}<dl>${facts}</dl>${params}${links}${maker}${more}</div>`
   );
+}
+
+/** A list page of its own (a country, a maker, the OpenTTD page): heading, introduction, then its models by group. */
+function listBody(meta: PageMeta, crumbs: readonly Crumb[], intro: readonly string[], records: readonly CatalogRecord[], extra = ""): string {
+  const groups = GROUPS.map((g) => ({ g, rs: records.filter((r) => groupOf(r) === g.id) })).filter((x) => x.rs.length);
+  const lists = groups.map(({ g, rs }) => `<h2>${escapeHtml(g.label)} (${rs.length})</h2>${modelList(rs)}`).join("");
+  return `<div class="factory-static">${crumbsHtml(crumbs)}<h1>${escapeHtml(meta.heading)}</h1>${intro.map((p) => `<p>${escapeHtml(p)}</p>`).join("")}${extra}${lists}</div>`;
 }
 
 function categoryBody(page: CategoryPage, meta: PageMeta, crumbs: readonly Crumb[], children: readonly { path: string; label: string; count: number }[]): string {
@@ -225,16 +266,69 @@ function categoryBody(page: CategoryPage, meta: PageMeta, crumbs: readonly Crumb
   );
 }
 
-function homeBody(meta: PageMeta, groups: readonly { path: string; label: string; records: CatalogRecord[] }[]): string {
+type Named = { path: string; label: string; count: number };
+
+function namedList(items: readonly Named[]): string {
+  return `<ul>${items.map((c) => `<li>${link(c.path, c.label)} (${c.count})</li>`).join("")}</ul>`;
+}
+
+function homeBody(meta: PageMeta, groups: readonly { path: string; label: string; records: CatalogRecord[] }[], countries: readonly Named[], makers: readonly Named[], openttd: number): string {
   const nav = `<ul>${groups.map((g) => `<li>${link(g.path, g.label)} (${g.records.length})</li>`).join("")}</ul>`;
+  const ottd = openttd ? `<p>${link(OPENTTD_PATH, `${openttd} vehicles for OpenTTD`)}: download a NewGRF in one click or build your own set.</p>` : "";
+  const by = (countries.length ? `<h2>By country</h2>${namedList(countries)}` : "") + (makers.length ? `<h2>By maker</h2>${namedList(makers)}` : "");
   const lists = groups.map((g) => `<h2>${link(g.path, g.label)}</h2>${modelList(g.records)}`).join("");
-  return `<div class="factory-static"><h1>${escapeHtml(meta.heading)}</h1><p>${escapeHtml(meta.description)}</p>${nav}${lists}</div>`;
+  return `<div class="factory-static"><h1>${escapeHtml(meta.heading)}</h1><p>${escapeHtml(meta.description)}</p>${ottd}${nav}${by}${lists}</div>`;
 }
 
 // ------------------------------------------------------------- the pages
 
+/** Records grouped by a name (a country, a maker), the names sorted, each list by title; only names with `min` records or more. */
+function byName(records: readonly CatalogRecord[], nameOf: (r: CatalogRecord) => string | undefined, min: number): Array<[string, CatalogRecord[]]> {
+  const map = new Map<string, CatalogRecord[]>();
+  for (const r of records) {
+    const n = nameOf(r);
+    if (n === undefined) continue;
+    if (!map.has(n)) map.set(n, []);
+    map.get(n)!.push(r);
+  }
+  return [...map]
+    .filter(([, rs]) => rs.length >= min)
+    .sort((a, b) => collator.compare(a[0], b[0]) || (a[0] < b[0] ? -1 : 1))
+    .map(([n, rs]) => [n, [...rs].sort(byTitle)]);
+}
+
+/** The structured data of a model page: a schema.org 3DModel. */
+function modelLd(r: CatalogRecord, meta: PageMeta, image: string | null): Record<string, unknown> {
+  const model: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "3DModel",
+    name: r.title,
+    description: meta.description,
+    url: `${SITE_URL}${meta.path}`,
+    ...(image ? { image } : {}),
+    isPartOf: { "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/` },
+    isAccessibleForFree: true,
+    keywords: [kindNoun(r), r.maker, r.country, isOpenttdVehicle(r) ? "OpenTTD" : undefined, "3D model", r.license].filter(Boolean).join(", "),
+  };
+  // the factory's own models name it as an organisation; a contributor stays a person
+  if (r.author) model.author = r.author.startsWith("Rail Island") ? { "@type": "Organization", name: "Rail Island", url: "https://www.railisland.com" } : { "@type": "Person", name: r.author };
+  if (r.license) model.license = LICENSE_URLS[r.license] ?? r.license;
+  if (r.country) model.countryOfOrigin = { "@type": "Country", name: r.country };
+  // what the model shows: the real type, with its encyclopedia pages
+  const sameAs = (r.links ?? []).map((l) => l.url).filter((u) => /wikipedia\.org\//.test(u));
+  model.about = {
+    "@type": "Thing",
+    name: r.title,
+    ...(r.blurb ? { description: r.blurb } : {}),
+    ...(sameAs.length ? { sameAs } : {}),
+  };
+  if (r.year !== undefined) (model.about as Record<string, unknown>).temporalCoverage = String(r.year);
+  if (r.maker) (model.about as Record<string, unknown>).manufacturer = { "@type": "Organization", name: r.maker };
+  return model;
+}
+
 /** Every file the build adds to dist/, from the app shell (dist/index.html as Vite wrote it) and the catalog. */
-export function sitePages(shell: string, records: readonly CatalogRecord[], thumbSize: ThumbSize = () => null): SiteFiles {
+export function sitePages(shell: string, records: readonly CatalogRecord[], thumbSize: ThumbSize = () => null, ogImage: OgImage = () => null): SiteFiles {
   const files: SiteFiles = new Map();
   // the home and category pages list the catalog only; a workshop draft has its own
   // page, kept out of the index and the sitemap (docs/site/workshop.md)
@@ -245,6 +339,22 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
   const sorted = [...records].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (let i = 1; i < sorted.length; i++) if (sorted[i]!.id === sorted[i - 1]!.id) throw new Error(`site pages: two records share the id ${sorted[i]!.id}`);
   const urls: string[] = [];
+  // the country and maker pages: a name with two models or more; a slug collision is a build error
+  const countries = byName(published, (r) => r.country, MIN_LIST_PAGE);
+  const makers = byName(published, (r) => r.maker, MIN_LIST_PAGE);
+  for (const [what, list] of [["country", countries], ["maker", makers]] as const) {
+    const seen = new Map<string, string>();
+    for (const [name] of list) {
+      const slug = chipSlug(name);
+      if (!slug) throw new Error(`site pages: the ${what} "${name}" has an empty URL slug`);
+      if (seen.has(slug)) throw new Error(`site pages: the ${what}s "${seen.get(slug)}" and "${name}" share the URL slug "${slug}"`);
+      seen.set(slug, name);
+    }
+  }
+  const openttd = published.filter(isOpenttdVehicle).sort(byTitle);
+  const listed = new Set<string>([...countries.map(([n]) => countryPath(n)), ...makers.map(([n]) => makerPath(n)), ...(openttd.length ? [OPENTTD_PATH] : [])]);
+  const isListed = (path: string) => listed.has(path);
+  const named = (list: Array<[string, CatalogRecord[]]>, pathOf: (n: string) => string) => list.map(([n, rs]) => ({ path: pathOf(n), label: n, count: rs.length }));
 
   // the home page
   const home = homeMeta();
@@ -252,7 +362,7 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
     .filter((c) => c.chips.l2 === null)
     .map((c) => ({ path: categoryCrumbs(c.chips, tree)[1]!.path, label: groupLabel(c.chips.group!), records: c.records }));
   const website = { "@context": "https://schema.org", "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/`, description: home.description };
-  files.set("index.html", withBody(withHead(shell, { meta: home, ld: [website] }), homeBody(home, groups)));
+  files.set("index.html", withBody(withHead(shell, { meta: home, ld: [website] }), homeBody(home, groups, named(countries, countryPath), named(makers, makerPath), openttd.length)));
   urls.push("/");
 
   // the category pages
@@ -274,9 +384,35 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
     urls.push(meta.path);
   }
 
+  // the country, maker and OpenTTD pages
+  const listPage = (meta: PageMeta, intro: readonly string[], rs: readonly CatalogRecord[], extra = "") => {
+    const crumbs: Crumb[] = [{ label: SITE_NAME, path: "/" }, { label: meta.heading, path: meta.path }];
+    const ld = [
+      breadcrumbLd(crumbs),
+      { "@context": "https://schema.org", "@type": "CollectionPage", name: meta.heading, url: `${SITE_URL}${meta.path}`, description: meta.description },
+    ];
+    files.set(`${meta.path.slice(1)}index.html`, withBody(withHead(shell, { meta, ld }), listBody(meta, crumbs, intro, rs, extra)));
+    urls.push(meta.path);
+  };
+  for (const [name, rs] of countries) {
+    const meta = countryMeta(name, rs);
+    const makersHere = byName(rs, (r) => r.maker, 1).filter(([m]) => isListed(makerPath(m)));
+    listPage(meta, [meta.description], rs, makersHere.length ? `<h2>Makers</h2>${namedList(named(makersHere, makerPath))}` : "");
+  }
+  for (const [name, rs] of makers) {
+    const meta = makerMeta(name, rs);
+    const countriesHere = byName(rs, (r) => r.country, 1).filter(([c]) => isListed(countryPath(c)));
+    listPage(meta, [meta.description], rs, countriesHere.length ? `<h2>Countries</h2>${namedList(named(countriesHere, countryPath))}` : "");
+  }
+  if (openttd.length) {
+    const ottdCountries = byName(openttd, (r) => r.country, 1).filter(([c]) => isListed(countryPath(c)));
+    listPage(openttdMeta(openttd), OPENTTD_INTRO, openttd, ottdCountries.length ? `<h2>By country</h2>${namedList(named(ottdCountries, countryPath))}` : "");
+  }
+
   // the model pages
   const deepest = new Map<string, CatalogRecord[]>();
   for (const page of categories) deepest.set(categoryCrumbs(page.chips, tree).at(-1)!.path, page.records);
+  const makerRecords = new Map(makers);
   for (const r of sorted) {
     if (!ID_SHAPE.test(r.id)) throw new Error(`site pages: the model id "${r.id}" is not a plain URL segment`);
     // a draft's breadcrumb stops at its group, the deepest catalog page sure to exist
@@ -286,21 +422,19 @@ export function sitePages(shell: string, records: readonly CatalogRecord[], thum
     const draftChips: ChipPath = published.some((o) => groupOf(o) === group) ? { group, l2: null, l3: null } : { group: null, l2: null, l3: null };
     const crumbs = categoryCrumbs(r.draft ? draftChips : categoryOf(r, tree), tree);
     const siblings = r.draft ? [] : (deepest.get(crumbs.at(-1)!.path) ?? []).filter((o) => o.id !== r.id);
+    const byMaker = r.draft || !r.maker ? [] : (makerRecords.get(r.maker) ?? []).filter((o) => o.id !== r.id);
     const size = r.draft ? null : thumbSize(r);
-    const imageUrl = `${SITE_URL}/${r.thumbUrl}`;
-    const image = size && size.width >= MIN_PREVIEW_PX && size.height >= MIN_PREVIEW_PX ? { url: imageUrl, ...size, alt: `${r.title} - 3D model` } : undefined;
-    const model: Record<string, unknown> = {
-      "@context": "https://schema.org",
-      "@type": "3DModel",
-      name: r.title,
-      description: meta.description,
-      url: `${SITE_URL}${meta.path}`,
-      ...(r.draft ? {} : { image: imageUrl }),
-      isPartOf: { "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/` },
-    };
-    if (r.author) model.author = { "@type": "Person", name: r.author };
-    if (r.license) model.license = r.license;
-    files.set(`${meta.path.slice(1)}index.html`, withBody(withHead(shell, { meta, image, ld: [breadcrumbLd([...crumbs, { label: r.title, path: meta.path }]), model], noindex: r.draft }), modelBody(r, meta, crumbs, siblings, size)));
+    const thumbUrl = `${SITE_URL}/${r.thumbUrl}`;
+    // the link preview: the composed 1200 x 630 card, else the thumbnail when big enough, else the site's
+    const og = r.draft ? null : ogImage(r);
+    const alt = `${r.title} - 3D model of ${kindNoun(r)}`;
+    const image = og
+      ? { url: `${SITE_URL}/${og}`, ...OG_SIZE, alt }
+      : size && size.width >= MIN_PREVIEW_PX && size.height >= MIN_PREVIEW_PX
+        ? { url: thumbUrl, ...size, alt }
+        : undefined;
+    const ld = [breadcrumbLd([...crumbs, { label: r.title, path: meta.path }]), modelLd(r, meta, r.draft ? null : thumbUrl)];
+    files.set(`${meta.path.slice(1)}index.html`, withBody(withHead(shell, { meta, image, ld, noindex: r.draft }), modelBody(r, meta, crumbs, siblings, byMaker, size, isListed)));
     if (!r.draft) urls.push(meta.path);
   }
 
@@ -320,8 +454,12 @@ export function pngSize(bytes: Uint8Array): { width: number; height: number } | 
   return { width: view.getUint32(16), height: view.getUint32(20) };
 }
 
-/** Write the prerendered pages into a built dist/ (the `site-pages` plugin in vite.config.ts). */
-export function writeSitePages(dist: string): number {
+/**
+ * Write the prerendered pages into a built dist/ (the `site-pages` plugin in
+ * vite.config.ts): first the model pages' link-preview cards (ogImages.ts), then
+ * the pages that name them.
+ */
+export async function writeSitePages(dist: string): Promise<number> {
   const shell = readFileSync(join(dist, "index.html"), "utf8");
   const catalog = JSON.parse(readFileSync(join(dist, "catalog.json"), "utf8")) as ModelCatalog;
   const thumbSize: ThumbSize = (r) => {
@@ -331,11 +469,13 @@ export function writeSitePages(dist: string): number {
       return null;
     }
   };
-  const files = sitePages(shell, catalog.records, thumbSize);
+  const { writeOgImages, ogPath } = await import("./ogImages.ts");
+  const cards = await writeOgImages(dist, catalog.records);
+  const files = sitePages(shell, catalog.records, thumbSize, (r) => (cards.has(r.id) ? ogPath(r.id) : null));
   for (const [path, content] of files) {
     const out = join(dist, path);
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, content);
   }
-  return files.size;
+  return files.size + cards.size;
 }

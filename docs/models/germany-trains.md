@@ -35,7 +35,7 @@ design is filed under Germany (`generator/countryTable.ts`).
 
 The figures are the published ones (each `assets/<name>/SOURCES.md`): Wikipedia's
 articles on each class, cited there, and the works drawings where one was found.
-Seats and introduction years are in `generator/openttdTable.ts` and
+Seats are in `generator/openttdTable.ts`, the years in service in `generator/yearTable.ts`, and both in
 [openttd-figures.md](openttd-figures.md).
 
 ## The detail pass (2026-11)

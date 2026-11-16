@@ -215,7 +215,7 @@ section, the wheels, no joint.
 
 ## OpenTTD and sounds
 
-Every bus has its entry in `openttdTable.ts` (`pax`: introduction year, capacity, presets: the
+Every bus has its year in `yearTable.ts` and its entry in `openttdTable.ts` (`pax`: capacity, presets: the
 default and each other livery or colour) and its ids in `openttdIds.json` (`pnpm
 openttd:ids`); capacities are seats plus standing room as the makers state them, marked
 approx. where estimated (the camello's 300 is the commonly reported load). In `soundTable.ts`:

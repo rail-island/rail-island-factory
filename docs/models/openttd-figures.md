@@ -1,7 +1,7 @@
 # OpenTTD figures
 
-**Covers** - every vehicle a GRF can hold, with the OpenTTD facts it states (introduction year, capacity, cargo, rail type), the balance figures the formula derives from them, how many presets the one-click download exports and the formations it offers; which figures are estimates.
-**Code** - `generator/openttdTable.ts` (the facts, presets and formations), `generator/openttd.ts` (`deriveBalance`, `catalogOpenttd`)
+**Covers** - every vehicle a GRF can hold, with the OpenTTD facts it states (capacity, cargo, rail type) and its year in service (the export's introduction year), the balance figures the formula derives from them, how many presets the one-click download exports and the formations it offers; which figures are estimates.
+**Code** - `generator/openttdTable.ts` (the facts, presets and formations), `generator/yearTable.ts` (the years in service), `generator/openttd.ts` (`deriveBalance`, `catalogOpenttd`)
 **See also** - [../site/openttd-export.md](../site/openttd-export.md), [game-properties.md](game-properties.md), [vehicles.md](vehicles.md)
 
 The figures are real-world ones, researched from each design's references and
@@ -17,8 +17,10 @@ Costs are the purchase and running cost factors the balance formula gives at the
 default variant ([../site/openttd-export.md](../site/openttd-export.md), "The
 balance formula"); the CD 163 / 363 states a longer vehicle life of its own.
 
-The table is the state of `generator/openttdTable.ts` when it was written; that
-file is the authority.
+The table is the state of `generator/openttdTable.ts` and `generator/yearTable.ts`
+when it was written; those files are the authority. The Year column comes from
+`yearTable.ts`, where a year marked * is `approx`; the year is not an OpenTTD
+field but the vehicle's own, which the export reads ([../site/openttd-export.md](../site/openttd-export.md)).
 
 | Model | Title | OpenTTD type | Year | Capacity | Costs | Presets | Formations |
 |---|---|---|---|---|---|---|---|

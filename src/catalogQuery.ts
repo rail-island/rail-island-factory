@@ -9,6 +9,7 @@
 
 import type { CatalogRecord, Scenery } from "../generator/catalog.ts";
 import { soundIdsOf } from "./modelSounds";
+import { openttdFeature } from "./openttd/properties";
 
 export type { CatalogRecord, Scenery };
 
@@ -80,7 +81,7 @@ export function prepareRows(records: readonly CatalogRecord[]): Row[] {
   return records.map((r) => ({
     ...r,
     hay: [
-      r.title, r.id, r.gameId ?? "", r.category, r.group, r.traction ?? "", r.country ?? "", r.author, r.license, r.source,
+      r.title, r.id, r.gameId ?? "", r.category, r.group, r.traction ?? "", r.country ?? "", r.maker ?? "", r.author, r.license, r.source,
       ...soundIdsOf(r.game),
       ...(r.params ?? []).flatMap((p) => p.values.flatMap((v) => [v.title, v.value])),
     ].join(" ").toLowerCase(),
@@ -116,7 +117,18 @@ export function compareRows(a: Row, b: Row, col: Column, dir: SortDir): number {
 
 export function queryRows(rows: readonly Row[], q: string, sort: string, dir: SortDir, path: ChipPath & CountryPick = NO_CHIPS): Row[] {
   const col = column(sort) ?? column(DEFAULT_SORT)!;
-  return rows.filter((r) => onPath(r, path) && inCountry(r, path.country ?? null) && matches(r, q)).sort((a, b) => compareRows(a, b, col, dir));
+  return rows
+    .filter((r) => onPath(r, path) && inCountry(r, path.country ?? null) && byMaker(r, path.maker ?? null) && (!path.openttd || isOpenttdVehicle(r)) && matches(r, q))
+    .sort((a, b) => compareRows(a, b, col, dir));
+}
+
+/** Whether a model is a vehicle OpenTTD can hold: the one-click GRF download and the OpenTTD page list it. */
+export function isOpenttdVehicle(r: Pick<CatalogRecord, "category" | "group">): boolean {
+  return openttdFeature(r) !== null;
+}
+
+function byMaker(r: CatalogRecord, maker: string | null): boolean {
+  return maker === null || (r.maker !== undefined && chipMatches(r.maker, maker));
 }
 
 // ------------------------------------------------------------- the country chips
@@ -130,6 +142,10 @@ export function queryRows(rows: readonly Row[], q: string, sort: string, dir: So
 export interface CountryPick {
   /** A country's chip slug ("united-kingdom"), or null for every country. */
   country?: string | null;
+  /** A maker's slug ("skoda"), or null for every maker: the maker page's filter (`/maker/<slug>/`). */
+  maker?: string | null;
+  /** Only the vehicles OpenTTD can hold: the OpenTTD page's filter (`/openttd/`). */
+  openttd?: boolean;
 }
 
 function inCountry(r: CatalogRecord, country: string | null): boolean {
@@ -407,6 +423,10 @@ export interface ViewState extends ChipPath {
   params: Record<string, string>;
   /** The country chip's pick as a slug (`?country=<slug>`), or null for every country. */
   country: string | null;
+  /** The maker page's maker as a slug (`/maker/<slug>/`), or null. */
+  maker: string | null;
+  /** Whether the list holds only the vehicles OpenTTD can hold (`/openttd/`). */
+  openttd: boolean;
   /** Which models the list shows: the confirmed catalog, or the workshop's drafts (`?section=workshop`). */
   section: Section;
 }
@@ -440,9 +460,22 @@ export type Stage = "3d" | "openttd";
 
 const DETAIL_TABS: readonly DetailTab[] = ["specs", "source", "references"];
 
-/** The path prefixes of a model page and a category page. */
+/** The path prefixes of a model page, a category page, a country page and a maker page, and the OpenTTD page's path. */
 export const MODEL_PATH = "/model/";
 export const CATEGORY_PATH = "/category/";
+export const COUNTRY_PATH = "/country/";
+export const MAKER_PATH = "/maker/";
+export const OPENTTD_PATH = "/openttd/";
+
+/** The page of a country's models, by its English name or slug. */
+export function countryPath(country: string): string {
+  return `${COUNTRY_PATH}${chipSlug(country)}/`;
+}
+
+/** The page of a maker's models, by its name or slug. */
+export function makerPath(maker: string): string {
+  return `${MAKER_PATH}${chipSlug(maker)}/`;
+}
 
 /**
  * A chip value as a URL segment: camelCase split, lower case, anything but letters
@@ -484,7 +517,9 @@ export function parseView(search: string, pathname = "/"): ViewState {
   const group = rawGroup !== null && GROUP_IDS.has(rawGroup) ? rawGroup : null;
   const l2 = group !== null ? readChip(chips[1] ?? null) : null;
   const l3 = l2 !== null ? readChip(chips[2] ?? null) : null;
-  const country = readChip(p.get("country"));
+  const country = route.country ?? readChip(p.get("country"));
+  const maker = route.maker ?? readChip(p.get("maker"));
+  const openttd = route.openttd ?? p.get("openttd") === "1";
   return {
     q: p.get("q") ?? "",
     layout: p.get("view") === "thumbs" ? "thumbs" : "table",
@@ -499,12 +534,14 @@ export function parseView(search: string, pathname = "/"): ViewState {
     stage,
     params,
     country,
+    maker,
+    openttd,
     section: p.get("section") === "workshop" ? "workshop" : "catalog",
   };
 }
 
-/** A model or category path's parts; neither for `/` or any other path. */
-function parsePath(pathname: string): { model?: string; chips?: (string | null)[] } {
+/** A model, category, country, maker or OpenTTD path's parts; none for `/` or any other path. */
+function parsePath(pathname: string): { model?: string; chips?: (string | null)[]; country?: string | null; maker?: string | null; openttd?: boolean } {
   const parts = pathname.split("/").filter((s) => s !== "");
   let decoded: string[];
   try {
@@ -514,6 +551,9 @@ function parsePath(pathname: string): { model?: string; chips?: (string | null)[
   }
   if (`/${decoded[0]}/` === MODEL_PATH && decoded.length === 2) return { model: decoded[1]! };
   if (`/${decoded[0]}/` === CATEGORY_PATH && decoded.length >= 2 && decoded.length <= 4) return { chips: decoded.slice(1) };
+  if (`/${decoded[0]}/` === COUNTRY_PATH && decoded.length === 2) return { country: readChip(decoded[1]!) };
+  if (`/${decoded[0]}/` === MAKER_PATH && decoded.length === 2) return { maker: readChip(decoded[1]!) };
+  if (`/${decoded[0]}/` === OPENTTD_PATH && decoded.length === 1) return { openttd: true };
   return {};
 }
 
@@ -539,9 +579,18 @@ export function modelPath(id: string): string {
   return `${MODEL_PATH}${encodeURIComponent(id)}/`;
 }
 
-/** The page a view is: its model's, else its chips' category, else `/`. */
+/**
+ * The page a view is: its model's, else its chips' category, else its maker's, its
+ * country's or the OpenTTD page, else `/`. The filters that are not the page stay
+ * in the query (serializeView).
+ */
 export function viewPath(v: ViewState): string {
-  return v.model ? modelPath(v.model) : categoryPath(v);
+  if (v.model) return modelPath(v.model);
+  if (v.group) return categoryPath(v);
+  if (v.maker) return makerPath(v.maker);
+  if (v.country) return countryPath(v.country);
+  if (v.openttd) return OPENTTD_PATH;
+  return "/";
 }
 
 /**
@@ -559,7 +608,10 @@ export function serializeView(v: ViewState): string {
       if (v.l3) p.set("sub2", chipSlug(v.l3));
     }
   }
-  if (v.country) p.set("country", chipSlug(v.country));
+  const path = viewPath(v);
+  if (v.country && path !== countryPath(v.country)) p.set("country", chipSlug(v.country));
+  if (v.maker && path !== makerPath(v.maker)) p.set("maker", chipSlug(v.maker));
+  if (v.openttd && path !== OPENTTD_PATH) p.set("openttd", "1");
   if (v.section === "workshop") p.set("section", "workshop");
   if (v.sort !== DEFAULT_SORT) p.set("sort", v.sort);
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);

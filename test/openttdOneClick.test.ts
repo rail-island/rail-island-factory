@@ -63,7 +63,7 @@ describe("checkOpenttdProperties: presets and formations", () => {
     ],
     openttd,
   });
-  const facts = { introYear: 1990, capacity: 60, cargo: "PASS", refitClasses: ["passengers" as const], climates: ["temperate" as const] };
+  const facts = { capacity: 60, cargo: "PASS", refitClasses: ["passengers" as const], climates: ["temperate" as const] };
 
   it("asks the facts and presets of a vehicle OpenTTD can hold", () => {
     expect(() => checkOpenttdProperties(design(undefined), true, "road")).toThrow(/missing/);
@@ -110,14 +110,15 @@ describe("the balance formula and the catalog's block", () => {
   it("resolves every field, and the variants whose figures differ", () => {
     const d = DESIGNS.get("proc-vehicle-cd-163")!;
     const o = catalogOpenttd(d, catalogFields(d))!;
-    expect(o).toMatchObject({ introYear: 1984, vehicleLife: 40, railType: "ELRL", capacity: 0, cargo: "PASS", costFactor: 131, runningCostFactor: 80, modelLife: 40 });
-    // the CD 362: its own year, and its lower power makes it cheaper
-    expect(o.variants!.find((v) => v.params.livery === "cd362")).toMatchObject({ introYear: 1990, costFactor: 125 });
+    expect(o).toMatchObject({ vehicleLife: 40, railType: "ELRL", capacity: 0, cargo: "PASS", costFactor: 131, runningCostFactor: 80, modelLife: 40 });
+    // the CD 362: its lower power makes it cheaper; its own year is in yearTable.ts, not here
+    expect(o.variants!.find((v) => v.params.livery === "cd362")).toMatchObject({ costFactor: 125 });
+    expect("introYear" in o).toBe(false);
     expect(o.presets![0]).toEqual({});
     const bus = DESIGNS.get("proc-vehicle-karosa-short")!;
     const ob = catalogOpenttd(bus, catalogFields(bus))!;
     expect("railType" in ob).toBe(false);
-    expect(ob.variants!.find((v) => v.params.variant === "lc735")).toMatchObject({ introYear: 1983, capacity: 47 });
+    expect(ob.variants!.find((v) => v.params.variant === "lc735")).toMatchObject({ capacity: 47 });
     const tgv = DESIGNS.get("proc-vehicle-tgv-duplex")!;
     expect(catalogOpenttd(tgv, catalogFields(tgv))!.formations![0]!.cars.at(-1)).toEqual({ params: {}, turned: true });
   });

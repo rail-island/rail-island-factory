@@ -61,8 +61,8 @@ function sitePages(): Plugin {
     configResolved(config) {
       outDir = config.build.outDir;
     },
-    closeBundle() {
-      const n = writeSitePages(outDir);
+    async closeBundle() {
+      const n = await writeSitePages(outDir);
       this.info(`site pages: ${n} files`);
     },
   };

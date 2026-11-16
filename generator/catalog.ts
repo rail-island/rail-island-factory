@@ -43,6 +43,9 @@ import type { SoundMapping, SoundOverride } from "./soundTable.ts";
 import { countryName, countryOf } from "./countryTable.ts";
 import { isDraft } from "./workshop.ts";
 import { linksOf, type ModelLink } from "./linkTable.ts";
+import { makerOf } from "./makerTable.ts";
+import { blurbOf } from "./blurbTable.ts";
+import { yearOf } from "./yearTable.ts";
 import { LINE_COUNTS, LINE_PREVIEW_ID, LINE_STATIONS, lineCabinValue, lineStationValue } from "./cableCarLineIds.ts";
 
 /** What a side-view thumbnail spans, in metres (renderGlbThumb.ts SideFrame). */
@@ -294,6 +297,19 @@ export interface CatalogRecord extends MetaEntry {
    */
   country?: string;
   /**
+   * The year the type entered service (yearTable.ts): shown on the model page, and
+   * the OpenTTD export's introduction year. Absent for a model that states none.
+   */
+  year?: number;
+  /** Set when `year` is an estimate. */
+  yearApprox?: true;
+  /** The variants that entered service in another year than the default build. */
+  yearVariants?: Array<{ params: ParamValues; year: number }>;
+  /** Who built the type (makerTable.ts), for the model page and the maker pages. Absent when unknown. */
+  maker?: string;
+  /** A short English text about the real thing the model shows (blurbTable.ts), for the site only. */
+  blurb?: string;
+  /**
    * Set by `pnpm dev` (devExport.ts) on a record whose figures - the counts, the
    * box, the JS sizes and hash, the rig and the side frame - are not measured
    * yet: the site measures them from the JS model (src/devMeasure.ts) and drops
@@ -534,6 +550,17 @@ const r4 = (v: number): number => Math.round(v * 1e4) / 1e4;
 /** Rounded to the millimetre, so float noise does not reach the listing. */
 const mm = (v: number): number => Math.round(v * 1000) / 1000;
 
+/** A record's year fields, from yearTable.ts. */
+function yearFields(id: string): Pick<CatalogRecord, "year" | "yearApprox" | "yearVariants"> {
+  const y = yearOf(id);
+  if (!y) return {};
+  return {
+    year: y.year,
+    ...(y.approx ? { yearApprox: true as const } : {}),
+    ...(y.variants?.length ? { yearVariants: y.variants.map((v) => ({ params: { ...v.params }, year: v.year })) } : {}),
+  };
+}
+
 export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: ReferenceImage[] = [], openttd?: OpenttdProperties): CatalogRecord {
   const scenery = sceneryOf(entry);
   return {
@@ -555,6 +582,9 @@ export function catalogRecord(entry: MetaEntry, facts: BuiltFacts, references: R
     ...(scenery ? { scenery } : {}),
     ...(openttd ? { openttd: JSON.parse(JSON.stringify(openttd)) as OpenttdProperties } : {}),
     ...(countryOf(entry.id) ? { country: countryName(countryOf(entry.id)!) } : {}),
+    ...yearFields(entry.id),
+    ...(makerOf(entry.id) ? { maker: makerOf(entry.id)! } : {}),
+    ...(blurbOf(entry.id) ? { blurb: blurbOf(entry.id)! } : {}),
     ...(linksOf(entry.id).length ? { links: linksOf(entry.id).map((l) => ({ ...l })) } : {}),
     ...(isDraft(entry.id) ? { draft: true as const } : {}),
   };

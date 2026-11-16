@@ -64,7 +64,6 @@ const ALL_BUT_TOYLAND: OpenttdClimate[] = ["temperate", "arctic", "tropical"];
 export function defaultOpenttdFields(r: Pick<CatalogRecord, "category" | "group" | "traction">): Required<OpenttdFields> {
   const feature = openttdFeature(r);
   const base: Required<OpenttdFields> = {
-    introYear: r.traction === "steam" ? 1900 : 1960,
     vehicleLife: 30,
     modelLife: 60,
     reliabilityDecay: 20,
@@ -89,6 +88,16 @@ export function defaultOpenttdFields(r: Pick<CatalogRecord, "category" | "group"
   if (feature === "ship") return { ...base, costFactor: 150, runningCostFactor: 120, capacity: 300 };
   if (feature === "aircraft") return { ...base, costFactor: 180, runningCostFactor: 150, vehicleLife: 25, capacity: 150 };
   return { ...base, ...(per[r.group] ?? {}) };
+}
+
+/**
+ * The year a variant entered service, as the export's introduction year: the
+ * record's own year (generator/yearTable.ts, not an OpenTTD field), a variant's
+ * where it states one; a category default when the model states none.
+ */
+export function introYear(r: Pick<CatalogRecord, "traction" | "year" | "yearVariants">, params: Record<string, string>): number {
+  const variant = r.yearVariants?.find((v) => sameSelection(v.params, params));
+  return variant?.year ?? r.year ?? (r.traction === "steam" ? 1900 : 1960);
 }
 
 /** The non-default selection `params` matches exactly (a variant's `params`). */
@@ -140,6 +149,7 @@ export function resolveVehicle(r: CatalogRecord, params: Record<string, string>)
   return {
     feature,
     name: variantName(r, params),
+    introYear: introYear(r, params),
     ...fields,
     climates: [...fields.climates],
     refitClasses: [...fields.refitClasses],

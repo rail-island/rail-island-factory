@@ -246,12 +246,14 @@ path, sorted by name, appears only when that path holds more than one country
 (or one is picked), and keeps its pick while the chips above change. The table
 lives apart from the designs, like the sound table, so tagging a model never
 changes its JS bytes; the catalog record carries the country's English name
-(`country`), which the model page lists as its Country, and it is not part of
-the game's meta. `test/countryTable.test.ts` holds every rail vehicle and tram
+(`country`), which the model page lists as its Country (a link to the country's
+page, [seo-pages.md](seo-pages.md)), and it is not part of the game's meta. A
+country of its own, with no chips picked, is a page of its own: `/country/<slug>/`
+(an old `/?country=` link moves there); under a chip it stays `?country=<slug>`. `test/countryTable.test.ts` holds every rail vehicle and tram
 but the generic wagons to a country.
 
 **Search** matches every whitespace-separated word, case-insensitively, against
-title, id, category, pool, traction, country, author, license and source, and against
+title, id, category, pool, traction, country, maker, author, license and source, and against
 every parameter value's title and token - so `green cream` finds the CD 749
 Bardotka, whose `livery` parameter draws it.
 

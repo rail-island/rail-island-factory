@@ -62,8 +62,8 @@ committed: they are rewritten from a build or kept in the export (below).
 
 `generate.ts` is not part of any key, and neither is a table the site or the game's
 meta files change for other reasons (`catalogModels.json`, `linkTable.ts`,
-`soundTable.ts`, `openttdTable.ts`, `openttdIds.json`, `countryTable.ts`, the
-phrasebooks): adding a family, confirming a model or adding a link re-keys no model.
+`soundTable.ts`, `openttdTable.ts`, `openttdIds.json`, `countryTable.ts`,
+`yearTable.ts`, `makerTable.ts`, `blurbTable.ts`, the phrasebooks): adding a family, confirming a model or adding a link re-keys no model.
 `test/buildCache.test.ts` checks that. A change in a shared kit re-keys exactly the
 designs whose modules import it; a change in a `PIPELINE` file re-keys every design.
 
