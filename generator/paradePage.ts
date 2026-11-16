@@ -81,20 +81,63 @@ function el(tag, attrs, ...children) {
   return e;
 }
 
-// One chain at PX_PER_M: every car's still image, an animated car's sprite at its first frame over it.
+// Animated cars on the page: each a canvas with its still image and the current
+// frame of its sprite drawn into it, as railisland.com draws them (two images laid
+// on each other would be snapped to device pixels separately and shimmer).
+const SPEED_MPS = 22; // the site's speed, in metres of the model per second
+const movers = [];
+function load(src) {
+  return new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
+}
+function animated(car, h) {
+  const sp = car.sprite;
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = el("canvas", { style: "position:absolute;inset:0;width:100%;height:100%" });
+  canvas.width = Math.max(1, Math.round(car.widthM * PX_PER_M * dpr));
+  canvas.height = Math.max(1, Math.round(h * dpr));
+  Promise.all([load("/" + car.image), load("/" + sp.image)]).then(([still, sheet]) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.imageSmoothingQuality = "high";
+    const k = canvas.width / car.widthM; // canvas pixels per metre
+    movers.push({
+      canvas, ctx, still, sheet, shown: -1, frames: sp.frames, cycleM: sp.cycleM,
+      frameH: Math.round(sp.heightM * file.pxPerM), pitch: Math.round((sp.pitchM ?? sp.heightM) * file.pxPerM),
+      dx: sp.xM * k, dy: sp.yM * k, dw: sp.widthM * k, dh: sp.heightM * k,
+    });
+  }, () => {});
+  return canvas;
+}
+function draw(m, frame) {
+  m.shown = frame;
+  m.ctx.clearRect(0, 0, m.canvas.width, m.canvas.height);
+  m.ctx.drawImage(m.still, 0, 0, m.canvas.width, m.canvas.height);
+  m.ctx.drawImage(m.sheet, 0, frame * m.pitch, m.sheet.naturalWidth, m.frameH, m.dx, m.dy, m.dw, m.dh);
+}
+// the wheels turn as if the train ran at the site's speed (it stands still here)
+function tick(now) {
+  const distance = (now / 1000) * SPEED_MPS;
+  for (let i = movers.length - 1; i >= 0; i--) {
+    const m = movers[i];
+    if (!m.canvas.isConnected) { movers.splice(i, 1); continue; }
+    const cycle = distance / m.cycleM;
+    const frame = Math.floor((cycle - Math.floor(cycle)) * m.frames) % m.frames;
+    if (frame !== m.shown) draw(m, frame);
+  }
+  requestAnimationFrame(tick);
+}
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) requestAnimationFrame(tick);
+else setInterval(() => movers.forEach((m) => m.shown < 0 && draw(m, 0)), 500);
+
+// One chain at PX_PER_M: every car's still image; an animated car as a canvas whose wheels and legs move.
 function picture(train) {
   const h = file.heightM * PX_PER_M;
   const box = el("div", { class: "train", style: "height:" + h + "px;width:" + (train.lengthM + 1) * PX_PER_M + "px" });
   box.append(el("div", { class: "rail", style: "bottom:" + -file.bottomM * PX_PER_M + "px" }));
   for (const car of train.cars) {
     const c = el("div", { style: "left:" + (car.offsetM + 0.5) * PX_PER_M + "px;width:" + car.widthM * PX_PER_M + "px;height:" + h + "px" });
-    c.append(el("img", { src: "/" + car.image, alt: "", loading: "lazy", style: "inset:0;width:100%;height:100%" }));
-    const sp = car.sprite;
-    if (sp) {
-      const win = el("div", { style: "overflow:hidden;left:" + sp.xM * PX_PER_M + "px;top:" + sp.yM * PX_PER_M + "px;width:" + sp.widthM * PX_PER_M + "px;height:" + sp.heightM * PX_PER_M + "px" });
-      win.append(el("img", { src: "/" + sp.image, alt: "", loading: "lazy", style: "left:0;top:0;width:" + sp.widthM * PX_PER_M + "px" }));
-      c.append(win);
-    }
+    if (car.sprite && car.sprite.frames > 1) c.append(animated(car, h));
+    else c.append(el("img", { src: "/" + car.image, alt: "", loading: "lazy", style: "inset:0;width:100%;height:100%" }));
     box.append(c);
   }
   return el("div", { class: "strip" }, box);

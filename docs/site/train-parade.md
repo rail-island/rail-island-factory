@@ -65,8 +65,9 @@ self-contained: the overview page embeds its source, and railisland.com's
 a route of the catalog app, with the data inlined. It lists every chain - its
 number, its id (the value of railisland.com's `?parade=`), its category, length,
 images, rails or road, whether it is animated, a link that opens it alone on
-railisland.com, and its picture at 8 px per metre (an animated car at its first
-frame) - in **List order** (`TRAIN_PARADE`), **Shuffle** (one round from
+its picture at 8 px per metre (an animated car drawn into a canvas, still image and
+current frame together as railisland.com draws it, its wheels and legs moving as if
+the train ran at the site's speed) - in **List order** (`TRAIN_PARADE`), **Shuffle** (one round from
 `playOrder`, exactly as the site makes it) or **Sort by category** (under a heading
 per category). It is marked `noindex`: a tool for checking the chains, not a page
 for search.
