@@ -278,6 +278,8 @@ export interface SpriteRect {
   y: number;
   w: number;
   h: number;
+  /** Pixels from one frame's top to the next's: `h` and the transparent gap between frames. */
+  pitch: number;
 }
 
 /** What a car's images are: its length, one still image per section, and its animation. */
@@ -306,12 +308,13 @@ export interface PlacedCar extends TrainCar {
   widthM: number;
   /**
    * An animated car's moving part, drawn over `image`: a sprite of `frames` frames
-   * stacked top to bottom, each `widthM` by `heightM`, placed `xM`, `yM` metres from
-   * the image's top-left corner - one cycle of its moving parts (wheels and rods, a
-   * team's legs) over `cycleM` metres travelled. A client shows frame
-   * floor(frac(distance / cycleM) * frames) as the car moves, so nothing slides.
+   * stacked top to bottom `pitchM` apart (each `heightM` tall, then a transparent
+   * gap), each `widthM` wide, placed `xM`, `yM` metres from the image's top-left
+   * corner - one cycle of its moving parts (wheels and rods, a team's legs) over
+   * `cycleM` metres travelled. A client shows frame floor(frac(distance / cycleM) *
+   * frames) as the car moves, so nothing slides.
    */
-  sprite?: { image: string; xM: number; yM: number; widthM: number; heightM: number; frames: number; cycleM: number };
+  sprite?: { image: string; xM: number; yM: number; widthM: number; heightM: number; pitchM: number; frames: number; cycleM: number };
 }
 
 /**
@@ -345,6 +348,7 @@ export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => 
                 yM: round(sp.y / pxPerM),
                 widthM: round(sp.w / pxPerM),
                 heightM: round(sp.h / pxPerM),
+                pitchM: round(sp.pitch / pxPerM),
                 frames: c.frames,
                 cycleM: c.cycleM,
               },

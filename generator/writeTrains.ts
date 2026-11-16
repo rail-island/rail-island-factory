@@ -76,6 +76,14 @@ export const FRAMES_PER_CYCLE = 12;
 export const MIN_FRAMES_PER_CLIP = 8;
 /** The most frames one sprite holds. */
 export const MAX_FRAMES = 16;
+/** Unchanged pixels round a sprite's moving pixels: a client's frame step may land up to half a screen pixel off. */
+export const SPRITE_MARGIN_PX = 4;
+/**
+ * Transparent rows between two frames of a sprite sheet: scaled down on screen, a
+ * frame's edge would otherwise pick up its neighbour's first row (a line under the
+ * wheels); with the gap it blends with nothing, and the still image shows there.
+ */
+export const SPRITE_GAP_PX = 4;
 
 /**
  * The side view of `tris` (renderGlbSideThumb's, for triangles already read and
@@ -200,19 +208,41 @@ export async function renderCar(car: TrainCar, base: (section?: number) => strin
     if (sideFrame(range[0], range[1]).pxPerM !== SIDE_PX_PER_M) throw new Error(`${carKey(car)}: too long for the parade's scale`);
     const pngs = frames.map((tris) => renderSide(tris, range));
     const name = base(sections.length > 1 ? i : undefined);
-    const still = pngs[0]!;
-    const rect = pngs.length > 1 ? changedRect(pngs) : null;
+    // a copy: clearing the moving pixels in frame 0 itself emptied the sprite's
+    // first frame, so every animated car lost its wheels and legs once per cycle
+    const still = new PNG({ width: pngs[0]!.width, height: pngs[0]!.height });
+    pngs[0]!.data.copy(still.data);
+    const rect = pngs.length > 1 ? changedRect(pngs, SPRITE_MARGIN_PX) : null;
     if (rect) {
-      // the still image with the moving rectangle cleared, and the rectangle's frames
+      // Two layers that must add up to each frame without a seam once both are
+      // scaled down on screen and the train moves by fractions of a pixel
+      // (clearing the whole rectangle from the still drew a seam at its edge that
+      // flickered): the still keeps every pixel but the moving ones (a pixel wider
+      // each way); the sprite holds the moving pixels and, round them, the
+      // unchanged pixels that are fully opaque - drawn twice they look the same,
+      // so the two layers overlap there instead of meeting at an edge. Unchanged
+      // pixels that are partly transparent (outlines) come from the still alone,
+      // as twice they would darken.
       const { x, y, w, h } = rect;
-      for (let row = y; row < y + h; row++) still.data.fill(0, (row * still.width + x) * 4, (row * still.width + x + w) * 4);
-      const sheet = new PNG({ width: w, height: h * pngs.length });
-      pngs.forEach((p, f) => PNG.bitblt(p, sheet, x, y, w, h, 0, f * h));
+      const moving = changedMask(pngs);
+      for (let i = 0; i < moving.length; i++) if (moving[i]) still.data.fill(0, i * 4, i * 4 + 4);
+      const pitch = h + SPRITE_GAP_PX;
+      const sheet = new PNG({ width: w, height: pitch * pngs.length - SPRITE_GAP_PX });
+      sheet.data.fill(0);
+      pngs.forEach((p, f) => {
+        for (let row = 0; row < h; row++) {
+          for (let col = 0; col < w; col++) {
+            const i = (y + row) * p.width + (x + col);
+            if (!moving[i] && p.data[i * 4 + 3] !== 255) continue;
+            p.data.copy(sheet.data, ((f * pitch + row) * w + col) * 4, i * 4, i * 4 + 4);
+          }
+        }
+      });
       files.push({ name: `${name}--frames.webp`, bytes: await webp(sheet, true) });
     }
     images.push(`${name}.webp`);
     files.push({ name: `${name}.webp`, bytes: await webp(still) });
-    sprites.push(rect ? { image: `${name}--frames.webp`, ...rect } : null);
+    sprites.push(rect ? { image: `${name}--frames.webp`, ...rect, pitch: rect.h + SPRITE_GAP_PX } : null);
   }
   const animated = cycle && sprites.some(Boolean);
   return { lengthM, images, ...(animated ? { sprites, frames: cycle.frames, cycleM: cycle.cycleM } : {}), files };
@@ -232,8 +262,40 @@ async function webp(png: PNG, orLossy = false): Promise<Buffer> {
   return lossy.length < lossless.length ? lossy : lossless;
 }
 
-/** The smallest rectangle outside which every frame equals the first, a pixel wider each way; null when none differs. */
-export function changedRect(frames: readonly PNG[]): { x: number; y: number; w: number; h: number } | null {
+/** Per pixel of the frames, whether it differs from the first in any frame, grown by a pixel each way (8-neighbourhood). */
+export function changedMask(frames: readonly PNG[]): Uint8Array {
+  const { width, height } = frames[0]!;
+  const first = frames[0]!.data;
+  const diff = new Uint8Array(width * height);
+  for (const f of frames.slice(1)) {
+    const d = f.data;
+    for (let i = 0; i < diff.length; i++) {
+      const o = i * 4;
+      if (d[o] !== first[o] || d[o + 1] !== first[o + 1] || d[o + 2] !== first[o + 2] || d[o + 3] !== first[o + 3]) diff[i] = 1;
+    }
+  }
+  const out = new Uint8Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (!diff[y * width + x]) continue;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx, yy = y + dy;
+          if (xx >= 0 && yy >= 0 && xx < width && yy < height) out[yy * width + xx] = 1;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * The smallest rectangle outside which every frame equals the first, `pad` pixels
+ * wider each way (within the image); null when none differs. The margin is pixels
+ * every frame shares, so a client that lands a frame a fraction of a pixel off
+ * shows the same picture at its edge.
+ */
+export function changedRect(frames: readonly PNG[], pad = 1): { x: number; y: number; w: number; h: number } | null {
   const { width, height } = frames[0]!;
   const first = frames[0]!.data;
   let x0 = width, y0 = height, x1 = -1, y1 = -1;
@@ -251,10 +313,10 @@ export function changedRect(frames: readonly PNG[]): { x: number; y: number; w: 
     }
   }
   if (x1 < 0) return null;
-  x0 = Math.max(0, x0 - 1);
-  y0 = Math.max(0, y0 - 1);
-  x1 = Math.min(width - 1, x1 + 1);
-  y1 = Math.min(height - 1, y1 + 1);
+  x0 = Math.max(0, x0 - pad);
+  y0 = Math.max(0, y0 - pad);
+  x1 = Math.min(width - 1, x1 + pad);
+  y1 = Math.min(height - 1, y1 + pad);
   return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
 

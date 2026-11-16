@@ -76,14 +76,26 @@ cycle of them:
   sample of each, through `poseGlb`). A turned car runs its clips backwards, so its
   wheels turn the same way on screen as every other car's;
 - **the sprite**: the frames differ only where something moves, so only that
-  rectangle is stored (`changedRect`, a pixel wider than any change): the car's
-  still image with the rectangle cleared, and `<name>--frames.webp`, the
-  rectangle's frames stacked top to bottom. The sprite sheet is also tried as
+  rectangle is stored (`changedRect`, 4 pixels wider than any change,
+  `SPRITE_MARGIN_PX`) as `<name>--frames.webp`: the rectangle's frames stacked top
+  to bottom with 4 transparent rows between them (`SPRITE_GAP_PX`), so a frame's
+  edge, scaled down on screen, never picks up its neighbour's. It is drawn over the
+  car's still image, which has **only the moving pixels** cleared (`changedMask`, a
+  pixel wider each way). The sprite holds those pixels and, round them, only the
+  unchanged pixels that are fully opaque: where the two layers overlap they show
+  the same opaque picture, so there is no seam to flicker as the train moves by
+  fractions of a pixel, and the partly transparent outline pixels come from the
+  still alone, so none is drawn twice. The still is a copy of frame 0 - clearing
+  frame 0 itself once emptied every sprite's first frame, and every animated car
+  lost its wheels and legs once per cycle (the test draws them back together). The sprite sheet is also tried as
   lossy WebP (quality 85, exact alpha) and kept that way when smaller - a team's
   shaded legs over many frames, where it saves about half.
 
 A client shows frame `floor(frac(distance / cycleM) * frames)` for the distance
-the train has travelled, so wheels and legs move exactly with the ground.
+the train has travelled, so wheels and legs move exactly with the ground. It
+should draw the still and the frame into one picture (railisland.com uses a canvas
+at device resolution): laid on each other as two scaled images, the browser snaps
+each to whole pixels on its own and the moving parts shimmer against the body.
 
 ### Incremental
 
@@ -135,7 +147,7 @@ no other parameter counts 1.
 | `trains[].cars[].image` | its still image, relative to trains.json |
 | `trains[].cars[].offsetM` | metres from the train's nose to the image's left edge |
 | `trains[].cars[].widthM` | the image's width in metres: the car's length and the 0.3 m margins |
-| `trains[].cars[].sprite` | an animated car's moving part: `image` (the frames, relative to trains.json), `xM`, `yM` (its top-left corner from the still image's, metres), `widthM`, `heightM` (one frame), `frames`, `cycleM` (metres travelled per loop) |
+| `trains[].cars[].sprite` | an animated car's moving part: `image` (the frames, relative to trains.json), `xM`, `yM` (its top-left corner from the still image's, metres), `widthM`, `heightM` (one frame), `pitchM` (from one frame's top to the next's, the gap included), `frames`, `cycleM` (metres travelled per loop) |
 
 Cars are laid end to end with couplers touching: each car's length is its built
 extent along X, buffers and couplers included. Neighbouring images overlap by the

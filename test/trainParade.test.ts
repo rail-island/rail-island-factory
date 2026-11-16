@@ -17,7 +17,7 @@ import {
   SECTION_MAX_M, TRAIN_PARADE, VEHICLE_TYPES, carImageBase, carSections, fleetCounts, fleetStats, layOutTrain, modelVariants, resolveTrains,
   trainGround, vehicleType, type CarImages, type TrainContext, type TrainSpec,
 } from "../generator/trainParade.ts";
-import { FACTORY_TRAIN_CONTEXT, changedRect, renderSide, spriteCycle, turnedRound, writeTrains } from "../generator/writeTrains.ts";
+import { FACTORY_TRAIN_CONTEXT, changedMask, changedRect, renderCar, renderSide, spriteCycle, turnedRound, writeTrains } from "../generator/writeTrains.ts";
 
 const LIVERY: ParamSpec = { name: "livery", title: "Livery", default: "red", values: [{ value: "red", title: "Red" }, { value: "blue", title: "Blue" }] };
 
@@ -133,11 +133,11 @@ describe("layout", () => {
   it("places an animated car's sprite in metres over its image", () => {
     const [car] = layOutTrain(
       [{ model: "loco", params: {}, turned: false }],
-      () => ({ lengthM: 20, images: ["loco.webp"], sprites: [{ image: "loco--frames.webp", x: 64, y: 96, w: 320, h: 64 }], frames: 12, cycleM: 5.75 }),
+      () => ({ lengthM: 20, images: ["loco.webp"], sprites: [{ image: "loco--frames.webp", x: 64, y: 96, w: 320, h: 64, pitch: 68 }], frames: 12, cycleM: 5.75 }),
       0.3,
       32,
     );
-    expect(car!.sprite).toEqual({ image: "trains/loco--frames.webp", xM: 2, yM: 3, widthM: 10, heightM: 2, frames: 12, cycleM: 5.75 });
+    expect(car!.sprite).toEqual({ image: "trains/loco--frames.webp", xM: 2, yM: 3, widthM: 10, heightM: 2, pitchM: 2.125, frames: 12, cycleM: 5.75 });
   });
 
   it("turns a car round about the vertical axis", () => {
@@ -168,6 +168,25 @@ describe("animation", () => {
     expect(changedRect([frame(), frame()])).toBeNull();
     expect(changedRect([frame(), frame([3, 4]), frame([6, 5])])).toEqual({ x: 2, y: 3, w: 6, h: 4 });
     expect(changedRect([frame(), frame([0, 0])])).toEqual({ x: 0, y: 0, w: 2, h: 2 });
+  });
+
+  // Regression: clearing the whole rectangle from the still image left a seam at its
+  // edge that flickered as the train moved; only the moving pixels are cleared now.
+  it("marks only the pixels that move, a pixel wider each way", () => {
+    const frame = (dot?: [number, number]) => {
+      const p = new PNG({ width: 10, height: 8 });
+      p.data.fill(0);
+      if (dot) p.data.fill(255, (dot[1] * 10 + dot[0]) * 4, (dot[1] * 10 + dot[0]) * 4 + 4);
+      return p;
+    };
+    const mask = changedMask([frame(), frame([3, 4]), frame([6, 5])]);
+    const marked = [...mask.keys()].filter((i) => mask[i]).map((i) => [i % 10, Math.floor(i / 10)]);
+    expect(marked.length).toBe(18);
+    expect(marked).toContainEqual([2, 3]);
+    expect(marked).toContainEqual([7, 6]);
+    // inside the changed rectangle, but away from both moving pixels: kept
+    expect(mask[3 * 10 + 7]).toBe(0);
+    expect(mask[6 * 10 + 2]).toBe(0);
   });
 });
 
@@ -221,6 +240,44 @@ describe("fleet counts", () => {
   });
 });
 
+describe("renderCar", () => {
+  // Regression: the still image was frame 0 itself, so clearing its moving pixels
+  // emptied the sprite's first frame - every animated car blinked once per cycle.
+  it("draws every frame of an animated car whole: still and sprite frame together are the car", async () => {
+    const car = { model: "proc-vehicle-csd-498-1", params: {}, turned: false };
+    const r = await renderCar(car, () => "loco");
+    const sp = r.sprites![0]!;
+    const decode = async (name: string) => {
+      const { data, info } = await sharp(r.files.find((f) => f.name === name)!.bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      return { data, width: info.width, height: info.height };
+    };
+    const still = await decode(r.images[0]!);
+    const sheet = await decode(sp.image);
+    const rest = renderSide(readTriangles(designGlb(car.model)));
+    expect([still.width, still.height]).toEqual([rest.width, rest.height]);
+    expect(sp.pitch).toBeGreaterThan(sp.h);
+    expect(sheet.height).toBe(sp.pitch * r.frames! - (sp.pitch - sp.h));
+    // the gap between frames is transparent
+    for (let col = 0; col < sp.w; col++) expect(sheet.data[((sp.h + 1) * sp.w + col) * 4 + 3]).toBe(0);
+    // frame 0 over the still, compared with the car drawn at rest
+    let missing = 0;
+    let opaque = 0;
+    for (let row = 0; row < sp.h; row++) {
+      for (let col = 0; col < sp.w; col++) {
+        const i = ((sp.y + row) * rest.width + (sp.x + col)) * 4;
+        const a = sheet.data[(row * sp.w + col) * 4 + 3]! / 255;
+        const covered = a + (still.data[i + 3]! / 255) * (1 - a);
+        if (rest.data[i + 3] === 255) {
+          opaque++;
+          if (covered < 0.9) missing++;
+        }
+      }
+    }
+    expect(opaque).toBeGreaterThan(1000);
+    expect(missing).toBe(0);
+  });
+});
+
 describe("writeTrains", () => {
   it("draws a car exactly as the side thumbnail does", () => {
     const glb = designGlb("proc-vehicle-cd-150");
@@ -259,7 +316,9 @@ describe("writeTrains", () => {
         expect(sp.frames).toBeGreaterThanOrEqual(12);
         expect(sp.cycleM).toBeGreaterThan(0);
         const sheet = await sharp(path.join(dir, sp.image)).metadata();
-        expect([sheet.width, sheet.height]).toEqual([Math.round(sp.widthM * SIDE_PX_PER_M), Math.round(sp.heightM * SIDE_PX_PER_M) * sp.frames]);
+        const h = Math.round(sp.heightM * SIDE_PX_PER_M);
+        const pitch = Math.round(sp.pitchM * SIDE_PX_PER_M);
+        expect([sheet.width, sheet.height]).toEqual([Math.round(sp.widthM * SIDE_PX_PER_M), pitch * sp.frames - (pitch - h)]);
         // the wheels are low on the car, inside its image
         expect(sp.yM + sp.heightM).toBeLessThanOrEqual(file.heightM);
         expect(sp.yM).toBeGreaterThan(file.heightM / 2);

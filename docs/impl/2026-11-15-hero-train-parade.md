@@ -102,6 +102,17 @@ The spec asked for a new branch per feature; this session may only push its own 
      every number in a fixed-width slot so filling it moves nothing.
    - The fallback fonts are now measured in the browser over the hero copy of all
      eleven Latin-script locales (kerning included).
+5. **No blinking.** Animated cars blinked as they moved (seen on Android). Two causes:
+   the sprite's first frame was empty - the still image was frame 0 itself and had its
+   moving part cleared before the sheet was cut, so every animated car lost its wheels,
+   rods or horses once per cycle (now a copy; a regression test draws still and frame 0
+   back into the whole car); and the still and the sprite, two scaled images, were
+   snapped to device pixels separately, so the moving parts shimmered against the body.
+   Now the still keeps everything but the moving pixels, the sprite holds those and the
+   fully opaque pixels round them, frames have 4 transparent rows between them
+   (`pitchM`), and the site draws each animated car into one canvas at device
+   resolution. Measured at 2.75x against a flattened reference over four sub-pixel
+   offsets: largest difference 59-73 (was 135-190), mean 0.8-1.0.
 
 ## How to test
 
