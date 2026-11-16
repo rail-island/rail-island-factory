@@ -16,7 +16,7 @@ import { triBounds } from "../generator/glbTriangles.ts";
 import { SIDE_MARGIN_M, SIDE_PX_PER_M, readTriangles, renderGlbSideThumb } from "../generator/renderGlbThumb.ts";
 import {
   SECTION_MAX_M, TRAIN_PARADE, VEHICLE_TYPES, carImageBase, carSections, fleetCounts, layOutTrain, modelVariants, resolveTrains,
-  trainGround, trainCategory, trainWire, playOrder, PARADE_SPEED_MPS, vehicleType, PARADE_IMAGE_DIR, TRAIN_CATEGORIES, type CarImages, type TrainContext, type TrainSpec,
+  trainGround, trainCategory, trainWire, playOrder, PARADE_OPENING, PARADE_SPEED_MPS, vehicleType, PARADE_IMAGE_DIR, TRAIN_CATEGORIES, type CarImages, type TrainContext, type TrainSpec,
 } from "../generator/trainParade.ts";
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "../generator/collector.ts";
 import { FACTORY_TRAIN_CONTEXT, carEmitters, changedMask, changedRect, renderCar, renderSide, spriteCycle, turnedRound, writeParade } from "../generator/writeParade.ts";
@@ -364,11 +364,43 @@ describe("categories and play order", () => {
     expect(() => resolveTrains([{ id: "a", category: "rocket" as never, cars: [{ model: "loco" }] }], fixture)).toThrow(/no category/);
   });
 
+  it("opens the first round with the set categories in order, no horse-drawn chain before the tenth", () => {
+    const trains = resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT).map((t) => ({ id: t.id, category: t.category }));
+    expect(PARADE_OPENING.categories).toEqual(["electricLoco", "steamLoco", "electricUnit", "dieselLoco", "dieselUnit"]);
+    expect(PARADE_OPENING.notBefore).toEqual({ horse: 9 });
+    const firsts = new Set<string>();
+    for (let round = 0; round < 2000; round++) {
+      const order = playOrder(trains, null, seeded(round + 11), PARADE_OPENING);
+      expect(order.map((t) => t.id).sort()).toEqual(trains.map((t) => t.id).sort());
+      expect(order.slice(0, 5).map((t) => t.category)).toEqual(PARADE_OPENING.categories);
+      expect(order.findIndex((t) => t.category === "horse")).toBeGreaterThanOrEqual(9);
+      for (let i = 1; i < order.length; i++) expect(order[i]!.category).not.toBe(order[i - 1]!.category);
+      firsts.add(order[0]!.id);
+    }
+    // the opening chain is picked at random among its category
+    expect(firsts.size).toBe(trains.filter((t) => t.category === "electricLoco").length);
+  });
+
+  it("skips an opening category the list lacks and still keeps a held-back one late", () => {
+    const trains = [
+      ...Array.from({ length: 6 }, (_, i) => ({ id: `a${i}`, category: "a" })),
+      ...Array.from({ length: 6 }, (_, i) => ({ id: `b${i}`, category: "b" })),
+      ...Array.from({ length: 3 }, (_, i) => ({ id: `h${i}`, category: "h" })),
+    ];
+    for (let round = 0; round < 300; round++) {
+      const order = playOrder(trains, null, seeded(round + 3), { categories: ["b", "missing", "a"], notBefore: { h: 6 } });
+      expect(order.slice(0, 2).map((t) => t.category)).toEqual(["b", "a"]);
+      expect(order.findIndex((t) => t.category === "h")).toBeGreaterThanOrEqual(6);
+      for (let i = 1; i < order.length; i++) expect(order[i]!.category).not.toBe(order[i - 1]!.category);
+    }
+  });
+
   it("plays every chain once per round, never two of one category in a row, across rounds too", () => {
     const trains = resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT).map((t) => ({ id: t.id, category: t.category }));
     let last: { id: string; category: string } | null = null;
     for (let round = 0; round < 2000; round++) {
-      const order: { id: string; category: string }[] = playOrder(trains, last, seeded(round + 1));
+      // the first round opens as PARADE_OPENING says; every later one is the plain spread
+      const order: { id: string; category: string }[] = playOrder(trains, last, seeded(round + 1), round === 0 ? PARADE_OPENING : null);
       expect(order.map((t) => t.id).sort()).toEqual(trains.map((t) => t.id).sort());
       if (last) expect(order[0]!.category).not.toBe(last.category);
       for (let i = 1; i < order.length; i++) expect(order[i]!.category).not.toBe(order[i - 1]!.category);
@@ -401,6 +433,7 @@ describe("overview page", () => {
   const file = {
     version: 1 as const, pxPerM: 32, heightM: 6.3, bottomM: -0.3,
     fleet: { types: { trains: 2, trams: 0, buses: 0, trucks: 0, horseDrawn: 0, ships: 0, aircraft: 0, cableCars: 0 }, variants: 3 },
+    opening: PARADE_OPENING,
     trains: [
       { id: "steam-<one>", ground: "rail" as const, category: "steamLoco" as const, speedMps: 16, lengthM: 20, cars: [] },
       { id: "unit-two", ground: "rail" as const, category: "electricUnit" as const, speedMps: 22, wireM: 5.88, lengthM: 40, cars: [] },
@@ -478,6 +511,7 @@ describe("writeParade", () => {
       expect(fs.readFileSync(path.join(dir, "parade", "index.html"), "utf8")).toContain('"pair"');
       expect(file.trains[0]!.category).toBe("electricLoco");
       expect(file.trains[0]!.speedMps).toBe(PARADE_SPEED_MPS.electricLoco);
+      expect(file.opening).toEqual(PARADE_OPENING);
       expect(file.trains[0]!.wireM).toBe(RAIL_COLLECTOR_TOP);
       // an electric locomotive has no exhaust
       expect(file.trains[0]!.cars.some((c) => c.emitters)).toBe(false);

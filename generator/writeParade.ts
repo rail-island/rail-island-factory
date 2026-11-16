@@ -35,7 +35,7 @@ import { OPENTTD_TABLE } from "./openttdTable.ts";
 import { paradePage } from "./paradePage.ts";
 import { SIDE_BOTTOM_M, SIDE_MARGIN_M, SIDE_PX_PER_M, SIDE_TOP_M, rasterize, readTriangles, sideFrame } from "./renderGlbThumb.ts";
 import {
-  TRAIN_PARADE, carImageBase, carKey, carSections, fleetCounts, layOutTrain, PARADE_IMAGE_DIR, resolveTrains,
+  PARADE_OPENING, TRAIN_PARADE, carImageBase, carKey, carSections, fleetCounts, layOutTrain, PARADE_IMAGE_DIR, resolveTrains,
   type CarEmitter, type CarImages, type CountedModel, type SpriteRect, type TrainCar, type TrainContext, type TrainSpec, type ParadeFile,
 } from "./trainParade.ts";
 
@@ -445,6 +445,7 @@ export async function writeParade(
     heightM: Math.round((SIDE_TOP_M - SIDE_BOTTOM_M) * 1000) / 1000,
     bottomM: SIDE_BOTTOM_M,
     fleet: fleetCounts(models, FACTORY_TRAIN_CONTEXT.confirmed),
+    opening: PARADE_OPENING,
     trains: trains.map((t) => {
       const cars = layOutTrain(t.cars, (c) => byCar.get(carKey(c))!, SIDE_MARGIN_M, SIDE_PX_PER_M);
       const last = cars[cars.length - 1]!;

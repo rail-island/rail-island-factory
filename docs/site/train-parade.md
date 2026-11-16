@@ -61,6 +61,17 @@ last chain played - is swapped with the nearest one that fits, ahead or, at the
 end of the round, behind. With today's hundred chains (mix above) no two of one
 category ever play in a row (tested over 2,000 rounds).
 
+**The opening.** The first round a visitor sees opens as `PARADE_OPENING` says,
+written into parade.json as `opening`: its first five chains are, in order, an
+electric locomotive and its train, a steam train, an electric unit, a diesel
+locomotive and its train, and a diesel unit - each picked at random within its
+category - and no horse-drawn chain runs before the tenth (`notBefore: { horse: 9
+}`, an index). `playOrder` takes it as its fourth argument: the opening chains go
+first, a held-back category is spread over the places from its index on and
+never swapped to an earlier one, and the no-repeat rule still holds. Only the
+first round passes it; every later round is the plain spread. The overview page's
+Shuffle shows such a first round.
+
 ## Speed and the overhead wire
 
 Every chain carries `speedMps`, from the fixed table `PARADE_SPEED_MPS` by
@@ -209,6 +220,7 @@ no other parameter counts 1.
 | `heightM`, `bottomM` | every image's height in metres (6.3) and its bottom edge relative to the rail or road (-0.3) |
 | `fleet.types` | confirmed vehicles per kind, every kind present (above) |
 | `fleet.variants` | all their variants (above) |
+| `opening` | how the first round opens: `categories` (its first chains' categories, in order) and `notBefore` (category to the first index it may take) (above) |
 | `trains[].id` | the train's id from the list |
 | `trains[].ground` | `rail` or `road` |
 | `trains[].category` | its category (above) |

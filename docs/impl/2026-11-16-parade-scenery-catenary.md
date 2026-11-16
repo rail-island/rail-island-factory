@@ -51,12 +51,24 @@ Area: rail-island-factory (parade list, parade.json, overview page); web-railisl
   export (`PUBLIC_PARADE_URL`) at 1280 px and 390 px: LNER A4 (steam puffs), ICE 3
   (catenary, pantographs on the wire), PCC (tram wire), Tatra 815 (road), DF4.
 
+## Follow-up changes
+
+1. **A fixed opening for the parade.** The first round now starts with an
+   electric locomotive and train, a steam train, an electric unit, a diesel
+   locomotive and train and a diesel unit, in that order, and no horse-drawn chain
+   runs before the tenth. The factory owns the rule (`PARADE_OPENING`, written to
+   parade.json as `opening`) and `playOrder` takes it as an optional fourth
+   argument; the site passes it for its first round only, so later rounds are the
+   plain spread. Tested over 2,000 seeded first rounds; checked in a browser (six
+   loads, each opened with an electric locomotive chain).
+
 ## How to test
 
 **Automated coverage.** `pnpm exec vitest run test/trainParade.test.ts` in the
 factory: list size and category mix, road chains, speed per category, `trainWire`
 cases (electric loco/unit, tram, horse and cable tram, metro, diesel lead, road),
-`carEmitters` (whole, turned, sectioned, non-smoking tractions), a real LNER A4
+`carEmitters` (whole, turned, sectioned, non-smoking tractions), the opening of the
+first round (order, random pick, horse-drawn not before the tenth), a real LNER A4
 chimney, `writeParade` writing speed and wire. No E2E framework exists in the
 site repository; the steps below replace it.
 
@@ -81,6 +93,11 @@ site repository; the steps below replace it.
 6. Scroll the hero out of view and back, and switch tabs: the train, the smoke and
    the hills stop while hidden and continue from where they were.
 7. Resize to 390 px: no portals, both sides fade, no droppers on the wire.
+
+8. Reload `/` a few times and watch the first five chains: electric locomotive
+   and train, steam train, electric unit, diesel locomotive and train, diesel
+   unit; no horse-drawn chain among the first nine. The factory overview page's
+   Shuffle shows the same opening.
 
 **Also worth trying.**
 - With the production parade.json (no `PUBLIC_PARADE_URL`) before the factory
@@ -125,3 +142,6 @@ Nothing - the spec is implemented in full.
 - The parade has a hundred chains instead of thirty, now including trucks and more
   freight trains, and each kind runs at its own speed.
 - The parade pauses while it is scrolled out of view.
+- The parade always opens with an electric locomotive and its train, then a steam
+  train, an electric unit, a diesel locomotive and its train and a diesel unit;
+  horse-drawn vehicles come later.

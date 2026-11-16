@@ -902,6 +902,8 @@ export interface ParadeFile {
   bottomM: number;
   /** The caption's counts: every kind of vehicle the factory makes, and all their variants. */
   fleet: FleetCounts;
+  /** How the first round opens (PARADE_OPENING): a client passes it to playOrder for its first round only. */
+  opening: ParadeOpening;
   /**
    * Every chain: `speedMps` is how fast it runs (metres of the model per second),
    * `wireM` the height of the overhead wire it runs under over the rail, absent
@@ -909,6 +911,23 @@ export interface ParadeFile {
    */
   trains: { id: string; ground: Ground; category: TrainCategory; speedMps: number; wireM?: number; lengthM: number; cars: PlacedCar[] }[];
 }
+
+/**
+ * How the parade opens - the first round a visitor sees after the page loads:
+ * `categories` are the first chains' categories, in order (an electric locomotive
+ * and its train, then a steam train, ...), and `notBefore` keeps a category out
+ * of the round's first places (horse-drawn: not before the tenth chain, index 9).
+ * Later rounds follow the plain spread order.
+ */
+export interface ParadeOpening {
+  categories: string[];
+  notBefore: Record<string, number>;
+}
+
+export const PARADE_OPENING: ParadeOpening = {
+  categories: ["electricLoco", "steamLoco", "electricUnit", "dieselLoco", "dieselUnit"],
+  notBefore: { horse: 9 },
+};
 
 /**
  * One round of the parade: every train once, in an order that spreads each
@@ -921,6 +940,11 @@ export interface ParadeFile {
  * the categories regularly. A train whose category repeats its predecessor's is
  * then swapped with the next one of another category.
  *
+ * With `opening` (the first round only): a random train of each of its
+ * `categories` opens the round in that order (a category the list lacks is
+ * skipped), and a category in `notBefore` is spread over the places from its
+ * index on only, and never swapped to an earlier one.
+ *
  * Self-contained on purpose: the overview page (paradePage.ts) embeds its source,
  * and railisland.com's TrainParade.astro carries a copy - keep the three in step.
  */
@@ -928,9 +952,23 @@ export function playOrder<T extends { id: string; category: string }>(
   trains: readonly T[],
   after: { category: string } | null = null,
   random: () => number = Math.random,
+  opening: { categories: readonly string[]; notBefore: Readonly<Record<string, number>> } | null = null,
 ): T[] {
+  const pool = [...trains];
+  const head: T[] = [];
+  for (const cat of opening ? opening.categories : []) {
+    const options = pool.filter((t) => t.category === cat);
+    if (!options.length) continue;
+    const pick = options[Math.floor(random() * options.length)]!;
+    pool.splice(pool.indexOf(pick), 1);
+    head.push(pick);
+  }
+  const start = head.length;
+  const last = start ? head[start - 1]! : after;
+  // the first place (in the rest of the round) a train may take
+  const earliest = (t: T) => Math.max(0, (opening ? opening.notBefore[t.category] ?? 0 : 0) - start);
   const groups = new Map<string, T[]>();
-  for (const t of trains) {
+  for (const t of pool) {
     const g = groups.get(t.category);
     if (g) g.push(t);
     else groups.set(t.category, [t]);
@@ -944,18 +982,29 @@ export function playOrder<T extends { id: string; category: string }>(
       g[j] = x;
     }
     const offset = random();
-    g.forEach((t, k) => keyed.push({ t, key: (k + offset) / g.length + random() * 1e-6 }));
+    // a category held back is spread over the places it may take (and moved there below)
+    const lo = pool.length ? Math.min(1, earliest(g[0]!) / pool.length) : 0;
+    g.forEach((t, k) => keyed.push({ t, key: lo + ((k + offset) / g.length) * (1 - lo) + random() * 1e-6 }));
   }
   keyed.sort((a, b) => a.key - b.key);
   const out = keyed.map((k) => k.t);
+  // a train held back that the keys still put too early moves to its first allowed place
+  for (let i = 0; i < out.length; ) {
+    const e = Math.min(earliest(out[i]!), out.length - 1);
+    if (e <= i) {
+      i++;
+      continue;
+    }
+    out.splice(e, 0, out.splice(i, 1)[0]!);
+  }
   for (let i = 0; i < out.length; i++) {
-    const prev = i === 0 ? (after ? after.category : null) : out[i - 1]!.category;
+    const prev = i === 0 ? (last ? last.category : null) : out[i - 1]!.category;
     if (out[i]!.category !== prev) continue;
-    // the nearest later train of another category, preferably one that does not
-    // then sit next to its own kind where it came from
+    // the nearest later train of another category that may stand here, preferably
+    // one that does not then sit next to its own kind where it came from
     let pick = -1;
     for (let k = i + 1; k < out.length; k++) {
-      if (out[k]!.category === prev) continue;
+      if (out[k]!.category === prev || earliest(out[k]!) > i) continue;
       if (pick < 0) pick = k;
       const left = out[k - 1]!.category;
       const right = k + 1 < out.length ? out[k + 1]!.category : null;
@@ -967,12 +1016,13 @@ export function playOrder<T extends { id: string; category: string }>(
     if (pick < 0) {
       // none left ahead (the end of the round): an earlier train that fits here,
       // whose place this one fits in turn
-      const cat = (k: number) => (k < 0 ? (after ? after.category : null) : k < out.length ? out[k]!.category : null);
+      const cat = (k: number) => (k < 0 ? (last ? last.category : null) : k < out.length ? out[k]!.category : null);
       for (let k = i - 2; k >= 0; k--) {
         const here = out[i]!.category;
         const there = out[k]!.category;
         if (there === prev || there === cat(i + 1)) continue;
         if (here === cat(k - 1) || here === cat(k + 1)) continue;
+        if (earliest(out[i]!) > k) continue;
         pick = k;
         break;
       }
@@ -983,5 +1033,5 @@ export function playOrder<T extends { id: string; category: string }>(
       out[pick] = x;
     }
   }
-  return out;
+  return head.concat(out);
 }

@@ -161,7 +161,7 @@ function row(train, n) {
 function show(order) {
   main.replaceChildren();
   let list = file.trains;
-  if (order === "shuffle") list = playOrder(file.trains);
+  if (order === "shuffle") list = playOrder(file.trains, null, Math.random, file.opening || null);
   if (order === "category") {
     for (const key of Object.keys(categories)) {
       const some = file.trains.filter((t) => t.category === key);
