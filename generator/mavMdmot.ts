@@ -21,11 +21,15 @@ import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { blockX, DMU_CATALOG, enumParam, slopePanel } from "./emuParts.ts";
-import { bOf, sideBox, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
-import { LOD_GLASS } from "./lodKit.ts";
-import { bogieParts, coachBody, fitUnit, roofPart, sideGlass, underPart } from "./lodUnits.ts";
+import { bOf, coupledTrain, sideBox, unitBogie, type CoupledJoint, type PxBox, type SideMap } from "./unitParts.ts";
+import { LOD_GLASS, type LodPart, type LodSections } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, roofPart, shiftBody, sideGlass, turnBody, underPart, type UnitBody } from "./lodUnits.ts";
 
 export type MdmotUnit = "motorCar" | "trailerAx" | "trailerBx" | "drivingTrailer";
+
+/** The full train's car counts: the motor car and the driving trailer, up to six trailers between them. */
+export const MDMOT_MIN_CARS = 2;
+export const MDMOT_MAX_CARS = 8;
 
 export const MDMOT_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -33,7 +37,13 @@ export const MDMOT_PARAMS: readonly ParamSpec[] = [
     trailerAx: "Ax",
     trailerBx: "Bx",
     drivingTrailer: "Driving trailer",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: MDMOT_MAX_CARS - MDMOT_MIN_CARS + 1 }, (_, i) => [String(i + MDMOT_MIN_CARS), `${i + MDMOT_MIN_CARS} cars`]))),
+    default: "4",
+    when: { name: "unit", values: ["train"] },
+  },
 ];
 
 /** The published width 2.85 m. */
@@ -283,11 +293,19 @@ function volumesMdmot(L: CarLayout): Volume[] {
   return [body, ...L.cabs.map((cab): Volume => ({ name: "nose", section: L.section, plan: ascPlan(cab.plan.map(([x, h]): Pt => [x, h * L.kZ])), top: asc(cab.top), bottom: asc(cab.bottom), bands: NOSE_BANDS }))];
 }
 
-/** A car of the MAV MDmot set. */
+/** A car of the MAV MDmot set, or the full train. */
 export function mavMdmot(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(MDMOT_PARAMS, params).unit as MdmotUnit;
+  const p = resolveParams(MDMOT_PARAMS, params);
+  if (p.unit === "train") return train(Number(p.cars));
+  const unit = p.unit as MdmotUnit;
+  const c = new Coach(PALETTE, LAYOUTS[unit].length / 2);
+  drawCar(c, unit, []);
+  return c.m;
+}
+
+/** A car into the coach's builder, facing +X and centred on x = 0 of its frame; the gangway frames at the ends `covered` (+1, -1) stay under a train's bellows. */
+function drawCar(c: Coach, unit: MdmotUnit, covered: readonly number[]): void {
   const L = LAYOUTS[unit];
-  const c = new Coach(PALETTE, L.length / 2);
   const m = c.m;
   const B = (x: number) => bOf(L.map, x);
   const [body, ...noses] = volumesMdmot(L);
@@ -299,7 +317,7 @@ export function mavMdmot(params?: ParamValues): MeshBuilder {
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, s));
   });
   L.cabs.forEach((cab, i) => m.scope(i === 0 ? "front end" : "rear end", () => cabEnd(c, L, cab)));
-  for (const e of L.gangways) m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, L, e));
+  for (const e of L.gangways) m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, L, e, !covered.includes(e)));
   m.scope("buffers", () => {
     for (const e of [1, -1]) {
       const ends = [B(L.beams.front), B(L.beams.rear)];
@@ -327,6 +345,88 @@ export function mavMdmot(params?: ParamValues): MeshBuilder {
       }
     });
   });
+}
+
+// --- the full train -------------------------------------------------------------------------
+
+/** One car of a train: its span lo..hi over the buffers (model x) and whether it is turned. */
+export interface MdmotSlot {
+  car: MdmotUnit;
+  lo: number;
+  hi: number;
+  turned: boolean;
+}
+
+/**
+ * The cars of a train of `n`, front first: the motor car, the trailers, the
+ * driving trailer turned at the rear (its cab at -X). The trailers are Bx cars
+ * and the Ax last, ahead of the driving trailer: the four-car set MDmot, Bx, Ax,
+ * Btx (82.38 m); a three-car train runs with the Ax alone, a two-car train with
+ * the driving trailer alone. Centred on x = 0.
+ */
+export function mdmotTrain(n: number): MdmotSlot[] {
+  if (!Number.isInteger(n) || n < 2) throw new Error(`an MDmot train of ${n} cars`);
+  const middle: MdmotUnit[] = n === 2 ? [] : [...Array.from({ length: n - 3 }, (): MdmotUnit => "trailerBx"), "trailerAx"];
+  const cars: MdmotUnit[] = ["motorCar", ...middle, "drivingTrailer"];
+  let hi = cars.reduce((t, car) => t + LAYOUTS[car].length, 0) / 2;
+  return cars.map((car, k) => {
+    const slot: MdmotSlot = { car, lo: hi - LAYOUTS[car].length, hi, turned: k === n - 1 };
+    hi = slot.lo;
+    return slot;
+  });
+}
+
+/** Whether a slot has a gangway at its end facing +X (front) or -X. */
+const gangwayAt = (s: MdmotSlot, front: boolean): boolean => LAYOUTS[s.car].gangways.includes((front ? 1 : -1) * (s.turned ? -1 : 1));
+/** Two cars meet with their gangways under one bellows where both have one at the joint. */
+const gangwayJoint = (slots: readonly MdmotSlot[], k: number): boolean => gangwayAt(slots[k]!, false) && gangwayAt(slots[k + 1]!, true);
+
+/** The buffers' height, where the cars hinge. */
+const COUPLER_Y = 1.04;
+/** Between two gangway ends the bellows spans the end walls, 0.70 m behind the buffer faces. */
+const WALL = 0.7;
+const GANGWAY_BELLOWS: Array<[number, number]> = [[-0.8, 1.3], [0.8, 1.3], [0.8, 3.7], [-0.8, 3.7]];
+/** Where a cab is coupled, a small bellows round the screw couplings. */
+const COUPLER_BELLOWS: Array<[number, number]> = [[-0.2, 0.9], [0.2, 0.9], [0.2, 1.15], [-0.2, 1.15]];
+const MAX_BEND_DEG = 10;
+
+function trainJoints(slots: readonly MdmotSlot[]): CoupledJoint[] {
+  return slots.slice(0, -1).map((s, k) => {
+    const g = gangwayJoint(slots, k);
+    const d = g ? WALL : 0.3;
+    return { front: s.lo + d, rear: s.lo - d, profile: g ? GANGWAY_BELLOWS : COUPLER_BELLOWS };
+  });
+}
+
+/** The ends of slot k (+1 its own +X end, before turning) whose gangway is under a bellows. */
+function coveredEnds(slots: readonly MdmotSlot[], k: number): number[] {
+  const s = slots[k]!;
+  const out: number[] = [];
+  // the train's front (+X) side of the slot is the car's own +X end unless turned
+  if (k > 0 && gangwayJoint(slots, k - 1)) out.push(s.turned ? -1 : 1);
+  if (k < slots.length - 1 && gangwayJoint(slots, k)) out.push(s.turned ? 1 : -1);
+  return out;
+}
+
+/**
+ * The train as one articulated vehicle: each car a section hinged at the buffer
+ * plane ahead of it on its own two bogies, a bellows between two gangway ends
+ * (their gangway frames left out), a small one round the couplings where a cab
+ * is coupled.
+ */
+function train(n: number): MeshBuilder {
+  const slots = mdmotTrain(n);
+  const m = new Coach({ ...PALETTE, bellows: { color: "#1c1c1e", roughness: 0.95 } }, 0).m;
+  const draws = slots.map((s, k) => () =>
+    m.scope(`car ${k + 1}`, () => {
+      const cx = (s.lo + s.hi) / 2;
+      const c = new Coach({}, LAYOUTS[s.car].length / 2, m);
+      const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => drawCar(c, s.car, coveredEnds(slots, k)));
+      if (s.turned) m.turned(cx, draw);
+      else draw();
+    }),
+  );
+  coupledTrain(m, draws, slots.slice(0, -1).map((s) => s.lo), COUPLER_Y, trainJoints(slots), MAX_BEND_DEG);
   return m;
 }
 
@@ -435,13 +535,13 @@ function cabEnd(c: Coach, L: CarLayout, cab: CarLayout["cabs"][number]): void {
 }
 
 /** A gangway end: the bellows, the end door and the tail lamps (x_both of Ax/Bx, x_inc of Btx). */
-function gangwayEnd(c: Coach, v: Volume, L: CarLayout, e: number): void {
+function gangwayEnd(c: Coach, v: Volume, L: CarLayout, e: number, frame: boolean): void {
   const m = c.m;
   const wall = e > 0 ? v.plan[v.plan.length - 1]![0] : v.plan[0]![0];
   const face = e > 0 ? L.length - 0.25 : 0.25;
   const X = (b: number) => c.X(b);
   const gz = (u: number) => (1.5 - u / 10) * K_Z_TRAILER;
-  m.scope("gangway", () => {
+  if (frame) m.scope("gangway", () => {
     const [a, b] = [X(wall) - e * 0.02, X(face)].sort((p, q) => p - q) as [number, number];
     for (const z of [-1, 1]) block(m, "rubber", a, b, fy(28), fy(5), ...side(z, 0.42, 0.95));
     block(m, "rubber", a, b, fy(7), fy(5), -0.42, 0.42);
@@ -485,7 +585,14 @@ function motorRoof(c: Coach, L: CarLayout): void {
  * underframe equipment.
  */
 export function mavMdmotLod(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(MDMOT_PARAMS, params).unit as MdmotUnit;
+  const p = resolveParams(MDMOT_PARAMS, params);
+  if (p.unit === "train") return trainLod(Number(p.cars));
+  const { body, parts } = carLod(p.unit as MdmotUnit);
+  return fitUnit({ palette: PALETTE, bodies: [body], parts }, 100);
+}
+
+/** A car's distant body and parts, facing +X, centred on x = 0. */
+function carLod(unit: MdmotUnit): { body: UnitBody; parts: LodPart[] } {
   const L = LAYOUTS[unit];
   const centre = L.length / 2;
   const X = (x: number) => bOf(L.map, x) - centre;
@@ -497,16 +604,52 @@ export function mavMdmotLod(params?: ParamValues): MeshBuilder {
   const ends = (e: number) => (L.cabs.some((c) => (X(c.x0) + X(c.x1)) * e > 0) ? screen : undefined);
   const [fw, rw] = [ends(1), ends(-1)];
   const shell = coachBody(vols.map(place), { y0: motor ? 0.9 * K_Y : 1.0 * K_Y, main: 0, windows: sideGlass(glass, 0.6), ...(fw ? { frontWindows: fw } : {}), ...(rw ? { rearWindows: rw } : {}) });
-  return fitUnit({
-    palette: PALETTE,
-    bodies: [shell],
+  return {
+    body: shell,
     parts: [
       ...bogieParts(L.bogies.x.map((x) => [X(x), L.bogies.wb / 2 + 0.46 + 0.2] as const), shell.y0),
       motor ? underPart(-1.4, 1.4, 0.35, shell.y0, 0.9) : underPart(-2.6, 3.0, 0.45, shell.y0, 1.25),
       // the motor car's roof hump over the radiators
       ...(motor ? [{ ...roofPart("roof", X(6.3), X(4.6), 0.6 * K_Z_MOTOR, 0.6 * K_Z_MOTOR, 3.45 * K_Y, 3.8 * K_Y), optional: undefined }] : []),
     ],
-  }, 100);
+  };
+}
+
+/** The distant model's budget: 100 triangles a car, 500 for the longest trains. */
+export const MDMOT_LOD = 500;
+
+/**
+ * The train for distant views: each car's distant model moved to its place
+ * (the driving trailer turned) as its own section, the gangway ends under a
+ * bellows left open, the joints as in the full model; 100 triangles a car, 500
+ * at most, the trailers' bogies given up first.
+ */
+function trainLod(n: number): MeshBuilder {
+  const slots = mdmotTrain(n);
+  const bodies: UnitBody[] = [];
+  const parts: LodPart[] = [];
+  slots.forEach((s, k) => {
+    const one = carLod(s.car);
+    const cx = (s.lo + s.hi) / 2;
+    let b = shiftBody(one.body, cx);
+    if (s.turned) b = turnBody(b, cx);
+    const hideFront = k > 0 && gangwayJoint(slots, k - 1);
+    const hideRear = k < n - 1 && gangwayJoint(slots, k);
+    bodies.push({ ...b, section: k, front: { ...b.front, ...(hideFront ? { hidden: true } : {}) }, rear: { ...b.rear, ...(hideRear ? { hidden: true } : {}) } });
+    const place = (draw: (m: MeshBuilder) => void) => (m: MeshBuilder) => {
+      const at = () => m.moved(([x, y, z]) => [x + cx, y, z], () => draw(m));
+      return s.turned ? m.turned(cx, at) : at();
+    };
+    const middle = k > 0 && k < n - 1;
+    one.parts.forEach((part, i) => parts.push({ ...part, section: k, draw: place(part.draw), ...(middle && i < 2 ? { optional: 5 } : {}) }));
+  });
+  const joints = trainJoints(slots);
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, COUPLER_Y, 0])),
+    joints: joints.map((j, i) => ({ sections: [i, i + 1] as [number, number], front: j.front, rear: j.rear, profile: j.profile })),
+    maxBendDeg: MAX_BEND_DEG,
+  };
+  return fitUnit({ palette: PALETTE, bodies, parts, sections }, Math.min(MDMOT_LOD, 100 * n));
 }
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
@@ -519,11 +662,17 @@ const MAV_MDMOT_GAME: GameProperties = {
     { params: { unit: "trailerAx" }, power: 0 },
     { params: { unit: "trailerBx" }, power: 0 },
     { params: { unit: "drivingTrailer" }, power: 100 },
+    // the full trains: every car the design's 41 t, the motor car's 590 kW
+    ...Array.from({ length: MDMOT_MAX_CARS - MDMOT_MIN_CARS + 1 }, (_, i) => {
+      const n = i + MDMOT_MIN_CARS;
+      const params: ParamValues = n === 4 ? { unit: "train" } : { cars: String(n), unit: "train" };
+      return { params, weight: 41 * mdmotTrain(n).length, power: 590 * mdmotTrain(n).filter((s) => s.car === "motorCar").length };
+    }),
   ],
 };
 
 export const MDMOT_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-mav-mdmot", game: MAV_MDMOT_GAME, title: "MAV MDmot", build: mavMdmot, buildLod: mavMdmotLod, params: MDMOT_PARAMS, catalog: DMU_CATALOG, references: "mav-mdmot" },
+  { id: "proc-vehicle-mav-mdmot", game: MAV_MDMOT_GAME, title: "MAV MDmot", build: mavMdmot, buildLod: mavMdmotLod, lodTriangles: MDMOT_LOD, params: MDMOT_PARAMS, catalog: DMU_CATALOG, references: "mav-mdmot" },
 ];
 
 export { LAYOUTS as MDMOT_LAYOUTS };

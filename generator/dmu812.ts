@@ -1,6 +1,8 @@
 // The CD 812 "Esmeralda" (the one CD 810 Pars nova rebuilt in 2001 with
 // laminate cab noses) and its 912 driving trailer: one design `veh-cd-812`
-// whose `unit` picks the motor car (812 613-8) or the driving trailer (912 001-5).
+// whose `unit` picks the motor car (812 613-8), the driving trailer (912 001-5)
+// or the full train (`cars` 2 .. 8, cd812Train): 812 + 912 pairs, coupled cab to
+// cab, an odd train ending in a second 812.
 //
 // The bodies' sides follow the native vlakosimdb XML and BMPs in
 // assets/cd-812/native (db/train/dmu/812/cd_812.613 and cd_912.001): windows,
@@ -27,23 +29,36 @@ import {
   Car, DMU_CATALOG, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tractionNumber, underBoxes,
   DMU_PALETTE, type CarFrame, type PxBox, type SideItem,
 } from "./dmuKit.ts";
-import { LOD_GLASS } from "./lodKit.ts";
-import { axleParts, dmuBody, fitUnit, noseEnd, roofPart } from "./lodUnits.ts";
+import { LOD_GLASS, type LodPart, type LodSections } from "./lodKit.ts";
+import { axleParts, dmuBody, fitUnit, noseEnd, roofPart, shiftBody, turnBody, type UnitBody } from "./lodUnits.ts";
+import { articulate } from "./tramKit.ts";
 
-export type Cd812Unit = "motorCar" | "drivingTrailer";
+export type Cd812Unit = "motorCar" | "drivingTrailer" | "train";
+/** One car of the unit (every value of `unit` but the full train). */
+export type Cd812Car = Exclude<Cd812Unit, "train">;
+
+/** The full train's car counts: one 812 + 912 pair up to four. */
+export const CD812_MIN_CARS = 2;
+export const CD812_MAX_CARS = 8;
 
 export const CD812_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
     motorCar: "Motor car",
     drivingTrailer: "Driving trailer",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: CD812_MAX_CARS - CD812_MIN_CARS + 1 }, (_, i) => [String(i + CD812_MIN_CARS), `${i + CD812_MIN_CARS} cars`]))),
+    default: "2",
+    when: { name: "unit", values: ["train"] },
+  },
 ];
 
 /** The published 812 length over the buffers (14.47 m) over the XML's 15.0 m. */
 export const K812 = 14.47 / 15.0;
 
 /** The running numbers, both photographed (assets/cd-812/PHOTOS.md). */
-export function cd812Number(unit: Cd812Unit): string {
+export function cd812Number(unit: Cd812Car): string {
   return unit === "motorCar" ? tractionNumber("812", "613") : tractionNumber("912", "001");
 }
 
@@ -230,9 +245,10 @@ const BODY_812: Volume = {
   bands: [[0.5, SKIRT_TOP, "skirtGrey"], [SKIRT_TOP, LINE_TOP, "greyLine"], [LINE_TOP, WHITE_TOP, "white"], [WHITE_TOP, 3.7, "green"]],
 };
 
-function esmeralda(unit: Cd812Unit): MeshBuilder {
+/** One car centred on x = 0, into its own builder or into `into` (a train's, placed by its frame). */
+function esmeralda(unit: Cd812Car, into?: MeshBuilder): MeshBuilder {
   const trailer = unit === "drivingTrailer";
-  const car = new Car(PALETTE, FRAME_812);
+  const car = new Car(PALETTE, FRAME_812, into);
   const m = car.m;
   const L = trailer ? LAYOUT_912 : LAYOUT_812;
   // the passenger doors swing inward through doorways, a leaf per window (doors.ts)
@@ -281,9 +297,63 @@ function esmeralda(unit: Cd812Unit): MeshBuilder {
   return m;
 }
 
+/** The length over the buffers (m): a car's span between its coupling planes. */
+export const LOB_812 = 14.47;
+/** From the coupling plane (the buffers' faces) back to the nose tip. */
+const GAP_812 = LOB_812 / 2 - X_TIP;
+/** The buffers' height: the hinge between two cars. */
+const BUFFER_Y = 1.03;
+/** The bend a joint allows between two cars. */
+const MAX_BEND_812 = 15;
+/**
+ * The connection between two noses coupled cab to cab (z, y): the cars have no
+ * gangway, so the joint is only the low bundle of hoses and cables between the
+ * aprons, under the screw coupling.
+ */
+const HOSES_812: Array<[number, number]> = [[-0.25, 0.62], [0.25, 0.62], [0.25, 0.9], [-0.25, 0.9]];
+
+/**
+ * The cars of a train of `n`, front first: 812 + 912 pairs (the 912 driving
+ * trailer runs with its motor car), an odd train ending in one more 812 (a
+ * second railcar coupled on for traffic). Each with its span lo..hi over the
+ * coupling planes, the train centred on x = 0, the last car turned.
+ */
+export function cd812Train(n: number): Array<{ car: Cd812Car; lo: number; hi: number; turned: boolean }> {
+  let hi = (n * LOB_812) / 2;
+  return Array.from({ length: n }, (_, i) => {
+    const lo = hi - LOB_812;
+    const out = { car: (i % 2 === 0 ? "motorCar" : "drivingTrailer") as Cd812Car, lo, hi, turned: i === n - 1 && n > 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/** Runs `fn` with a car centred on x = 0 placed at cx, turned end for end when `turned`. */
+function placed<T>(m: MeshBuilder, cx: number, turned: boolean, fn: () => T): T {
+  const at = () => m.moved(([x, y, z]) => [x + cx, y, z], fn);
+  return turned ? m.turned(cx, at) : at();
+}
+
+/**
+ * The whole train as one articulated vehicle: each car a section (articulate,
+ * tramKit.ts) hinged at the coupling plane ahead of it on its own two axles, the
+ * hose bundle as the joint between the noses.
+ */
+function train812(n: number): MeshBuilder {
+  const cars = cd812Train(n);
+  const m = new Car({ ...PALETTE, bellows: c("#26272a", 0.95) }, FRAME_812).m;
+  const sections = cars.map((t, k) => {
+    const cx = (t.lo + t.hi) / 2;
+    return { x0: t.lo + GAP_812, x1: t.hi - GAP_812, draw: () => m.scope(`car ${k + 1}`, () => placed(m, cx, t.turned, () => esmeralda(t.car, m))) };
+  });
+  articulate({ m }, sections, BUFFER_Y, { profile: HOSES_812, folds: 2, depth: 0.02 }, MAX_BEND_812, cars.slice(0, -1).map((t) => t.lo));
+  return m;
+}
+
 export function cd812(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD812_PARAMS, params);
-  return esmeralda(p.unit as Cd812Unit);
+  if (p.unit === "train") return train812(Number(p.cars));
+  return esmeralda(p.unit as Cd812Car);
 }
 
 /**
@@ -294,34 +364,70 @@ export function cd812(params?: ParamValues): MeshBuilder {
  * two axles and the motor car's cooler.
  */
 export function cd812Lod(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(CD812_PARAMS, params).unit as Cd812Unit;
+  const p = resolveParams(CD812_PARAMS, params);
+  if (p.unit === "train") return train812Lod(Number(p.cars));
+  const { body, parts } = carLod(p.unit as Cd812Car);
+  return fitUnit({ palette: { ...DMU_PALETTE, ...PALETTE }, bodies: [body], parts }, 100);
+}
+
+/** One car's distant body and parts, centred on x = 0. */
+function carLod(unit: Cd812Car): { body: UnitBody; parts: LodPart[] } {
   const face: Array<[number, number, string]> = [[0.5, SKIRT_TOP, "skirtGrey"], [SKIRT_TOP, LINE_TOP, "greyLine"], [LINE_TOP, 1.32, "white"], [1.32, MASK.cy - MASK.hy, "green"], [MASK.cy - MASK.hy, 3.7, "silver"]];
   const screen = [{ u: [-WS.half, WS.half] as const, y: [2.26, WS.top(0.8)] as const, mat: LOD_GLASS }];
   const nose = (e: number) => noseEnd({ e, xTip: X_TIP, profile: PROFILE, half: HALF, corner: CORNER, bulge: 0.04, rows: ROWS }, face, screen);
   const X = (x: number) => (x - FRAME_812.centre) * K812;
   const L = unit === "drivingTrailer" ? LAYOUT_912 : LAYOUT_812;
   const body = dmuBody(FRAME_812, BODY_812, { y0: 0.5, items: L.windows, front: nose(1), rear: nose(-1) });
-  return fitUnit({
-    palette: { ...DMU_PALETTE, ...PALETTE },
-    bodies: [body],
+  return {
+    body,
     parts: [
       axleParts([[X(3.35), 0.42], [X(11.6), 0.42]], 0.5),
       ...(unit === "motorCar" ? [roofPart("grey", X(8.4), X(10.0), 0.6, 0.6, 3.68, 3.8)] : []),
     ],
-  }, 100);
+  };
+}
+
+/** A train's distant model: the cars' bodies and parts as its sections, the hose bundles as joints; 100 triangles a car, 500 at most (the longest trains). */
+function train812Lod(n: number): MeshBuilder {
+  const cars = cd812Train(n);
+  const built = cars.map((t, k) => {
+    const cx = (t.lo + t.hi) / 2;
+    const { body, parts } = carLod(t.car);
+    const placedBody = t.turned ? turnBody(shiftBody(body, cx), cx) : shiftBody(body, cx);
+    return {
+      body: { ...placedBody, section: k },
+      parts: parts.map((part): LodPart => ({ ...part, section: k, draw: (m) => placed(m, cx, t.turned, () => part.draw(m)) })),
+    };
+  });
+  const sections: LodSections = {
+    pivots: cars.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [cars[i - 1]!.lo, BUFFER_Y, 0])),
+    joints: cars.slice(0, -1).map((t, i) => ({ sections: [i, i + 1] as [number, number], front: t.lo + GAP_812, rear: cars[i + 1]!.hi - GAP_812, profile: HOSES_812 })),
+    maxBendDeg: MAX_BEND_812,
+  };
+  return fitUnit({ palette: { ...DMU_PALETTE, ...PALETTE }, bodies: built.map((b) => b.body), parts: built.flatMap((b) => b.parts), sections }, Math.min(500, 100 * n));
 }
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+/** The cars' figures: the 812's 20.7 t and 240 kW, the 912 driving trailer's the same weight, unpowered. */
+const CAR_812: Record<Cd812Car, { weight: number; power: number }> = { motorCar: { weight: 20.7, power: 240 }, drivingTrailer: { weight: 20.7, power: 0 } };
+
 const CD_812_GAME: GameProperties = {
-  weight: 20.7,
-  power: 240,
+  weight: CAR_812.motorCar.weight,
+  power: CAR_812.motorCar.power,
   maxspeed: 80,
   accel: null,
   variants: [
     { params: { unit: "drivingTrailer" }, power: 0 },
+    // every train length: its cars' weights added up, its motor cars' power (the default two cars named by the unit alone)
+    ...Array.from({ length: CD812_MAX_CARS - CD812_MIN_CARS + 1 }, (_, i) => {
+      const n = i + CD812_MIN_CARS;
+      const cars = cd812Train(n);
+      const params: ParamValues = n === 2 ? { unit: "train" } : { cars: String(n), unit: "train" };
+      return { params, weight: Math.round(cars.reduce((t, c) => t + CAR_812[c.car].weight, 0) * 10) / 10, power: cars.reduce((t, c) => t + CAR_812[c.car].power, 0) };
+    }),
   ],
 };
 
 export const DMU812_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-812", game: CD_812_GAME, title: "CD 812 / 912 Esmeralda", build: cd812, buildLod: cd812Lod, params: CD812_PARAMS, catalog: DMU_CATALOG, references: "cd-812" },
+  { id: "proc-vehicle-cd-812", game: CD_812_GAME, title: "CD 812 / 912 Esmeralda", build: cd812, buildLod: cd812Lod, lodTriangles: 500, params: CD812_PARAMS, catalog: DMU_CATALOG, references: "cd-812" },
 ];

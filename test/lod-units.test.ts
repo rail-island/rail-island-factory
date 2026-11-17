@@ -8,6 +8,7 @@ import { LOD_GLASS } from '../generator/lodKit';
 import { MeshBuilder } from '../generator/meshBuilder';
 import { fitUnit, sideGlass, type UnitBody } from '../generator/lodUnits';
 import { sample } from './catalogCache';
+import { TGV_SET_LOD } from '../generator/tgv';
 
 // The dedicated LODs of the multiple units and railcars (lodUnits.ts, docs/models/lod.md).
 const UNITS = ['cd-810', 'cd-812', 'cd-843', 'csd-m131', 'csd-m240', 'csd-m296', 'db-628', 'cd-451', 'cd-460', 'cd-470', 'cd-471', 'cd-680', 'ice-1', 'tgv', 'jr-kiha40', 'dr-vt1816', 'shinkansen-0', 'mtr-m-train', 'tgv-duplex', 'mav-mdmot', 'metro-81-71'];
@@ -16,6 +17,7 @@ const faces = (m: MeshBuilder) => {
   const { json, bin } = parseGlb(m.toGlb('lod'));
   return collectTriangles(json, bin);
 };
+
 
 describe('unit LODs', () => {
   for (const id of UNITS) {
@@ -27,8 +29,9 @@ describe('unit LODs', () => {
         const n = m.triangleCount();
         // an articulated set gets 100 a car, its budget (300, the longest trains 500) at most; a single car 100
         // (a train of fixed length, the MTR's Disneyland train, counts its sections)
-        const cars = v.unit === 'set' || v.unit === 'train' ? Number(v.cars) : (m.rig?.sections?.length ?? 1);
-        const budget = Math.min(lodBudget(d), 100 * cars);
+        const cars = v.unit === 'set' || v.unit === 'train' ? Number(v.cars ?? v.trainCars) : (m.rig?.sections?.length ?? 1);
+        // the TGV's lone trailer set keeps its 300 (TGV_SET_LOD); its full train has the design's 500
+        const budget = Math.min(lodBudget(d), v.unit === 'set' ? TGV_SET_LOD : Infinity, 100 * cars);
         expect(n).toBeLessThanOrEqual(budget);
         // at least 70 % (a plain trailer, the MDmot's, shows all it has in 70)
         expect(n).toBeGreaterThanOrEqual(budget * 0.7);

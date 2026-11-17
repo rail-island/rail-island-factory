@@ -1,7 +1,9 @@
 // The CD 460 (CSD EM 488.0), the Studenka electric unit of 1971-1978 for the
 // Ostrava region: one design `veh-cd-460` whose `unit` picks the 460 motor car
 // with its cab (default) or the intermediate trailer (CD class 063, vlakosimdb's
-// "CD 060"), and whose `livery` picks the paint and running number: the CD grey
+// "CD 060") or the full train (`train`, `cars` 2 .. 8, four by default; up to
+// five cars one unit as the 460s ran, a longer train two units coupled cab to
+// cab; cd460Train, emuClassicTrain.ts), and whose `livery` picks the paint and running number: the CD grey
 // and blue (460 071), the vlakosimdb units 460 003 and 460 007 in the same
 // paint, the CSD cream and green (460 045) and CD's current blue (460 016, read
 // from a photograph).
@@ -21,8 +23,9 @@ import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { diamond } from "./czElectricKit.ts";
-import { LOD_GLASS } from "./lodKit.ts";
-import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shifted, sideGlass, underPart } from "./lodUnits.ts";
+import { LOD_GLASS, type LodPart, type LodSections } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shiftBody, shifted, sideGlass, turnBody, underPart, type UnitBody } from "./lodUnits.ts";
+import { articulateTrain, classicTrain, coupledCabs, lodBudget, sectionSpans, TRAIN_PALETTE, type ClassicSlot } from "./emuClassicTrain.ts";
 import { EMU_CATALOG, enumParam, slopePanel, tractionNumber, blockX } from "./emuParts.ts";
 import { wordmarkAt, type Wordmark } from "./letters.ts";
 import type { Vec3 } from "./meshCore.ts";
@@ -31,11 +34,24 @@ import { bOf, CLASSIC_PALETTE, emuBogie, endBuffers, frontNumber, gangwayEnd, le
 export type Unit460 = "motorCar" | "trailer";
 export type Livery460 = "cd" | "cd003" | "cd007" | "csd" | "cdBlue";
 
+/** The full train's lengths: two motor cars back to back up to eight cars; four by default. */
+export const CD460_MIN_CARS = 2;
+export const CD460_MAX_CARS = 8;
+export const CD460_DEFAULT_CARS = 4;
+/** The prototype's unit: motor car, three trailers, motor car; a longer train is two units. */
+export const CD460_UNIT_CARS = 5;
+
 export const CD460_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
     motorCar: "Motor car",
     trailer: "Trailer",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: CD460_MAX_CARS - CD460_MIN_CARS + 1 }, (_, i) => [String(i + CD460_MIN_CARS), `${i + CD460_MIN_CARS} cars`]))),
+    default: String(CD460_DEFAULT_CARS),
+    when: { name: "unit", values: ["train"] },
+  },
   enumParam("livery", "Livery", {
     cd: "460 071",
     cd003: "460 003",
@@ -156,7 +172,49 @@ const faceAt = (y: number): Pt => [0.6 - (0.3 * (y - 1.8)) / 1.8, y];
 /** A car of the CD 460 set. */
 export function cd460(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD460_PARAMS, params);
+  if (p.unit === "train") return train460(p.livery as Livery460, Number(p.cars));
   return car(p.unit as Unit460, p.livery as Livery460);
+}
+
+/**
+ * The cars of a train of `n`, front first (emuClassicTrain.ts): up to five cars
+ * (the prototype's unit) one unit - a motor car leading, its trailers, a motor
+ * car turned (two cars: the motor cars back to back); six to eight cars two
+ * units coupled cab to cab, the longer one in front (6: 3 + 3, 7: 4 + 3, 8: 4 + 4).
+ * Each car's span over its coupling planes, the train centred on x = 0.
+ */
+export function cd460Train(n: number): ClassicSlot[] {
+  if (n < CD460_MIN_CARS || n > CD460_MAX_CARS) throw new Error(`a CD 460 train has ${CD460_MIN_CARS} to ${CD460_MAX_CARS} cars, not ${n}`);
+  return classicTrain(n, CD460_UNIT_CARS, length460);
+}
+
+/** The bellows between two cars' gangways (z, y), and the short joint over two coupled cabs' screw coupling. */
+const TRAIN_BELLOWS: Array<[number, number]> = [[-0.75, 1.5], [0.75, 1.5], [0.75, 3.2], [-0.75, 3.2]];
+const COUPLER_JOINT: Array<[number, number]> = [[-0.15, 0.8], [0.15, 0.8], [0.15, 1.1], [-0.15, 1.1]];
+/** The gangway's face 0.2 m off the end wall; a coupled cab's section stops 0.15 m short of its buffers' plane. */
+const GANGWAY = 0.2;
+const CAB_JOINT = 0.15;
+const HINGE_Y = 0.95;
+const MAX_BEND_DEG = 10;
+
+/**
+ * The whole train as one articulated vehicle (emuClassicTrain.ts): each car a
+ * section hinged at the coupling plane ahead of it, on its own two bogies, drawn
+ * as the lone car is (without its gangway frames) and moved to its place, the
+ * rear motor car of a unit turned; a bellows over each gangway, a coupler joint
+ * between coupled cabs.
+ */
+function train460(livery: Livery460, n: number): MeshBuilder {
+  const slots = cd460Train(n);
+  const m = new Coach({ ...PALETTE, ...PAINTS[livery].palette, ...TRAIN_PALETTE }, 0).m;
+  const spans = sectionSpans(slots, GANGWAY, CAB_JOINT);
+  const sections = slots.map((s, k) => {
+    const cx = (s.lo + s.hi) / 2;
+    const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => car(s.car, livery, m));
+    return { x0: spans[k]![0], x1: spans[k]![1], draw: () => m.scope(`car ${k + 1}`, () => (s.turned ? m.turned(cx, draw) : draw())) };
+  });
+  articulateTrain(m, slots, sections, HINGE_Y, TRAIN_BELLOWS, COUPLER_JOINT, MAX_BEND_DEG);
+  return m;
 }
 
 /** A car's volumes: the body and, on the motor car, the cab above the windscreen's foot and the lower front. */
@@ -206,10 +264,11 @@ function volumes460(motor: boolean, paint: Paint): { body: Volume; cabUpper: Vol
 const WINDOWS_460: PxBox[] = [[42, 19, 55, 30], [117, 19, 130, 30], [134, 19, 147, 30], [151, 19, 164, 30], [168, 19, 181, 30], [185, 19, 198, 30], [202, 19, 215, 30], [219, 19, 226, 30]];
 const WINDOWS_060: PxBox[] = [[19, 19, 26, 30], [30, 19, 43, 30], [47, 19, 60, 30], [64, 19, 77, 30], [81, 19, 94, 30], [98, 19, 111, 30], [134, 19, 147, 30], [151, 19, 164, 30], [168, 19, 181, 30], [185, 19, 198, 30], [202, 19, 215, 30], [219, 19, 226, 30]];
 
-function car(unit: Unit460, livery: Livery460): MeshBuilder {
+/** A car, centred between its coupling faces; into `train` (a train's builder) without its gangway frames. */
+function car(unit: Unit460, livery: Livery460, train?: MeshBuilder): MeshBuilder {
   const paint = PAINTS[livery];
   const [rear, front] = FACES[unit];
-  const c = new Coach({ ...PALETTE, ...paint.palette }, (rear + front) / 2);
+  const c = new Coach({ ...PALETTE, ...paint.palette }, (rear + front) / 2, train);
   const m = c.m;
   const X = (x: number) => c.X(bOf(F, x));
   const motor = unit === "motorCar";
@@ -227,7 +286,7 @@ function car(unit: Unit460, livery: Livery460): MeshBuilder {
   if (motor) m.scope("cab", () => cab(c, cabUpper, cabLower, number, paint));
   for (const e of motor ? [-1] : [-1, 1])
     m.scope(e > 0 ? "front end" : "rear end", () =>
-      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2, door: { x0: -0.6, x1: 0.6, y0: 1.6, y1: 3.1 }, doorPaint: paint.endDoor ?? "doorRed", couplerY: 0.95, markerY: 1.4, markerZ: 1.0 }),
+      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2, door: { x0: -0.6, x1: 0.6, y0: 1.6, y1: 3.1 }, doorPaint: paint.endDoor ?? "doorRed", couplerY: 0.95, markerY: 1.4, markerZ: 1.0, ...(train ? { frame: false } : {}) }),
     );
   m.scope("underframe", () => {
     if (motor) {
@@ -389,30 +448,60 @@ function cab(c: Coach, upper: Volume, lower: Volume, number: string, paint: Pain
  */
 export function cd460Lod(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD460_PARAMS, params);
-  const unit = p.unit as Unit460;
   const paint = PAINTS[p.livery as Livery460];
+  const palette = { ...PALETTE, ...paint.palette };
+  if (p.unit !== "train") {
+    const { body, parts } = carLod(p.unit as Unit460, paint, 0, false);
+    return fitUnit({ palette, bodies: [body], parts }, 100);
+  }
+  // the train: each car's distant model moved to its place (the rear motor car of
+  // a unit turned), its gangway ends hidden under the bellows; 100 triangles a car, 300 at most
+  // up to five cars, 500 for the longest (two units: their shells and joints need more)
+  const slots = cd460Train(Number(p.cars));
+  const built = slots.map((s, k) => carLod(s.car, paint, (s.lo + s.hi) / 2, s.turned, k));
+  const spans = sectionSpans(slots, GANGWAY, CAB_JOINT);
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, HINGE_Y, 0])),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: spans[i]![0], rear: spans[i + 1]![1], profile: coupledCabs(slots, i) ? COUPLER_JOINT : TRAIN_BELLOWS })),
+    maxBendDeg: MAX_BEND_DEG,
+  };
+  return fitUnit({ palette, bodies: built.map((c) => c.body), parts: built.flatMap((c) => c.parts), sections }, lodBudget(slots.length));
+}
+
+/**
+ * One car's distant model, its centre at model x `cx`, turned about it when
+ * `turned`; in a train (`section` given) its gangway ends hidden and only the
+ * raised (inner) pantograph drawn.
+ */
+function carLod(unit: Unit460, paint: Paint, cx: number, turned: boolean, section?: number): { body: UnitBody; parts: LodPart[] } {
   const motor = unit === "motorCar";
   const [rear, front] = FACES[unit];
   const centre = (rear + front) / 2;
-  const X = (x: number) => bOf(F, x) - centre;
+  const P = (x: number) => (turned ? cx - x : cx + x);
+  const X = (x: number) => P(bOf(F, x) - centre);
   const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
   const { body, cabUpper, cabLower } = volumes460(motor, paint);
   const windows = sideGlass(shifted((motor ? WINDOWS_460 : WINDOWS_060).map((b) => sb(F, b)), centre), 0.6);
-  const shell = coachBody(motor ? [place(body), place(cabUpper), place(cabLower)] : [place(body)], {
+  let shell = coachBody(motor ? [place(body), place(cabUpper), place(cabLower)] : [place(body)], {
     y0: 0.9, main: 0, windows, ...(motor ? { frontWindows: [{ u: [-0.92, 0.92], y: [2.28, 3.12], mat: LOD_GLASS }] } : {}),
   });
-  return fitUnit({
-    palette: { ...PALETTE, ...paint.palette },
-    bodies: [shell],
+  if (section !== undefined) {
+    shell = shiftBody({ ...shell, section, rear: { ...shell.rear, hidden: true }, ...(motor ? {} : { front: { ...shell.front, hidden: true } }) }, cx);
+    if (turned) shell = turnBody(shell, cx);
+  }
+  return {
+    body: shell,
     parts: [
-      ...bogieParts((motor ? [3.6, 21.1] : [3.6, 20.85]).map((x) => [X(x), 1.25 + (motor ? 0.5 : 0.45) + 0.2] as const), 0.9),
+      // in a train a trailer's bogies give way first: from afar the body hides them
+      ...bogieParts((motor ? [3.6, 21.1] : [3.6, 20.85]).map((x) => [X(x), 1.25 + (motor ? 0.5 : 0.45) + 0.2, section] as const), 0.9).map((part) => (!motor && section !== undefined ? { ...part, optional: 5 } : part)),
       ...(motor ? [
-        underPart(X(18.9), X(5.9), 0.2, 0.9, 1.45, 50, undefined, "skirt"),
-        roofPart("roofBox", X(12.8), X(8.7), 0.5, 0.4, 3.9, 4.5),
-        ...pantographParts([X(21.1), X(3.7)], 4.0, 4.25),
+        underPart(X(18.9), X(5.9), 0.2, 0.9, 1.45, 50, section, "skirt"),
+        roofPart("roofBox", X(12.8), X(8.7), 0.5, 0.4, 3.9, 4.5, section),
+        // the lone car's raised pantograph is the one at the lowest x, the inner one; a train's car draws that one alone
+        ...(section === undefined ? pantographParts([X(21.1), X(3.7)], 4.0, 4.25) : pantographParts([X(21.1)], 4.0, 4.25, { section })),
       ] : []),
     ],
-  }, 100);
+  };
 }
 
 /** A car's source mapping and the body x of its centre, for the comparison. */
@@ -420,6 +509,18 @@ export const frame460 = (unit: Unit460): { F: CarFrame; centre: number } => ({ F
 
 /** Every car and livery, for the tests. */
 export const CARS_460: ReadonlyArray<[Unit460, Livery460]> = (["motorCar", "trailer"] as const).flatMap((u) => (["cd", "cd003", "cd007", "csd", "cdBlue"] as const).map((l): [Unit460, Livery460] => [u, l]));
+
+/** A train's figures: 40 t a car, 1000 kW a motor car. */
+const CAR_460: Record<Unit460, { weight: number; power: number }> = { motorCar: { weight: 40, power: 1000 }, trailer: { weight: 40, power: 0 } };
+
+/** Every train length in a livery (the default four cars named by the unit alone), its cars added up. */
+const trainVariants460 = (livery: Livery460) =>
+  Array.from({ length: CD460_MAX_CARS - CD460_MIN_CARS + 1 }, (_, i) => {
+    const n = i + CD460_MIN_CARS;
+    const cars = cd460Train(n);
+    const params: ParamValues = { ...(n === CD460_DEFAULT_CARS ? {} : { cars: String(n) }), ...(livery === "cd" ? {} : { livery }), unit: "train" };
+    return { params, weight: cars.reduce((t, c) => t + CAR_460[c.car].weight, 0), power: cars.reduce((t, c) => t + CAR_460[c.car].power, 0), ...(livery === "csd" ? { maxspeed: 110 } : {}) };
+  });
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const CD_460_GAME: GameProperties = {
@@ -434,7 +535,8 @@ const CD_460_GAME: GameProperties = {
     { params: { livery: "csd", unit: "trailer" }, power: 0, maxspeed: 110 },
     { params: { unit: "trailer" }, power: 0 },
     { params: { livery: "cdBlue", unit: "trailer" }, power: 0 },
+    ...(["cd", "cd003", "cd007", "csd", "cdBlue"] as const).flatMap(trainVariants460),
   ],
 };
 
-export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", game: CD_460_GAME, title: "CD 460", build: cd460, buildLod: cd460Lod, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];
+export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", game: CD_460_GAME, title: "CD 460", build: cd460, buildLod: cd460Lod, lodTriangles: 500, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];

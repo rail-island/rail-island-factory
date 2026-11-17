@@ -35,7 +35,8 @@ export const S100: ShinkansenSeries = {
   // the TGV Atlantique's nose
   nose: HSR_NOSE, windscreen: [3.6, 5.4, 0.07, 1.05], lamps: [1.3, 1.45],
   windows: [[1.95, 2.7]], windowW: 1.1, pitch: 1.4, door: [1.3, 3.0, 1.95, 2.6], doorW: 0.8,
-  bogieCentres: 11.2, wheelR: 0.46, wheelbase: 3.0,
+  // power cars at the ends: the shortest train has a trailer between them
+  bogieCentres: 11.2, wheelR: 0.46, wheelbase: 3.0, minCars: 3,
   liveries: { ave: esLivery("ave", "100 001"), avlo: esLivery("avlo", "100 025") },
   weight: { end: 68, middle: 44 }, power: 1100, maxspeed: 300,
 };

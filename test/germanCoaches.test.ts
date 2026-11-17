@@ -57,7 +57,7 @@ describe("German coaches transferred from vlakosimdb", () => {
     }
     // the n-Wagen is no design of its own: the 628's coach cars, three per livery
     expect(DESIGNS.has("proc-vehicle-db-n-wagen")).toBe(false);
-    expect(paramCombinations(design("proc-vehicle-db-628").params).filter((c) => c.unit !== "motorCar")).toHaveLength(6);
+    expect(paramCombinations(design("proc-vehicle-db-628").params).filter((c) => c.unit !== "motorCar" && c.unit !== "train")).toHaveLength(6);
     expect(N_WAGEN_PARAMS.map((p) => [p.name, p.default])).toEqual([["variant", "bn"], ["livery", "vr"]]);
     expect(design("proc-vehicle-db-dosto").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "secondClass", ["firstClass", "secondClass", "drivingTrailer"]]]);
     expect(design("proc-vehicle-dr-sbahn-berlin").params!.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["variant", "coach", ["coach", "drivingTrailer"]]]);

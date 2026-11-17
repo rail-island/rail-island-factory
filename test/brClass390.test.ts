@@ -16,7 +16,7 @@ describe("Class 390", () => {
   it("keeps its parameters and liveries", () => {
     expect((design.params ?? []).map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "endCar", ["endCar", "middleCar", "train"]],
-      ["cars", "4", ["4", "6", "8"]],
+      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
       ["livery", "virgin", ["virgin", "avanti"]],
     ]);
   });

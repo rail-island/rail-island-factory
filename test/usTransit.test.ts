@@ -1,7 +1,7 @@
 // The North American passenger cars, urban rail and freight cars
 // (generator/usTransit.ts, usFreight.ts). See docs/models/us-transit.md and us-freight.md.
 import { describe, expect, it } from "vitest";
-import { CTA_LENGTH, R160_LENGTH, RDC_LENGTH, US_TRANSIT } from "../generator/usTransit";
+import { CTA_LENGTH, R160_LENGTH, R160_LOD, R160_MAX_CARS, R160_MIN_CARS, RDC_LENGTH, US_TRANSIT, r160Train } from "../generator/usTransit";
 import { PIONEER_ZEPHYR, ZEPHYR_LENGTH, pioneerZephyr, zephyrTrain } from "../generator/pioneerZephyr";
 import { BOXCAR_LENGTH, CABLE_CAR_LENGTH, CABLE_CAR_LENGTHS, CABOOSE_LENGTH, cableCar, US_FREIGHT, WELL_LENGTH, wellCar } from "../generator/usFreight";
 import { LOADING_GAUGES, loadingGaugeOf } from "../generator/loadingGauge";
@@ -44,7 +44,7 @@ describe("the US passenger cars, urban rail and freight cars", () => {
         const glb = m.toGlb(d.id);
         const s = glbStats(glb);
         // a car within the rail budget's cap; the Zephyr's three-car train adds its cars up
-        expect(s.triangles).toBeLessThanOrEqual(v.unit === "train" ? 3 * 16000 : 25000);
+        expect(s.triangles).toBeLessThanOrEqual(v.unit === "train" ? (v.cars ? Number(v.cars) : 3) * 16000 : 25000);
         expect(s.min[1]).toBeCloseTo(0, 2);
         expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(g.width);
         expect(s.max[1]).toBeLessThanOrEqual(g.height);
@@ -66,6 +66,60 @@ describe("the US passenger cars, urban rail and freight cars", () => {
     expect(m.rig!.supports!.filter((s) => s.sections.length === 2)).toHaveLength(2);
     const s = glbStats(m.toGlb("z"));
     expect(s.max[0] - s.min[0]).toBeCloseTo(zephyrTrain().reduce((t, c) => t + ZEPHYR_LENGTH[c.car], 0), 1);
+  });
+
+  it("lays out the R160 train of 2 .. 8 cars: a cab car at each end, the rear one turned, trailers between, centred and touching", () => {
+    expect(r160Train(2).map((s) => [s.car, s.turned])).toEqual([["cabCar", false], ["cabCar", true]]);
+    expect(r160Train(4).map((s) => [s.car, s.turned])).toEqual([["cabCar", false], ["trailer", false], ["trailer", false], ["cabCar", true]]);
+    for (let n = R160_MIN_CARS; n <= R160_MAX_CARS; n++) {
+      const slots = r160Train(n);
+      expect(slots.map((s) => s.car)).toEqual(["cabCar", ...Array<string>(n - 2).fill("trailer"), "cabCar"]);
+      expect(slots.filter((s) => s.turned).map((s) => slots.indexOf(s))).toEqual([n - 1]);
+      expect(slots[0]!.hi + slots[n - 1]!.lo).toBeCloseTo(0, 9);
+      slots.forEach((s, i) => {
+        expect(s.hi - s.lo).toBeCloseTo(R160_LENGTH, 9);
+        if (i) expect(s.hi).toBeCloseTo(slots[i - 1]!.lo, 9);
+      });
+    }
+    expect(() => r160Train(1)).toThrow();
+    expect(() => r160Train(9)).toThrow();
+  });
+
+  it.each([2, 3, 4, 8])("builds the %i-car R160 train as one articulated vehicle: a section a car, a joint a gap, two trucks a car", (n) => {
+    const d = US_TRANSIT.find((x) => x.id === "proc-vehicle-nyc-r160")!;
+    const m = d.build({ unit: "train", cars: String(n) });
+    const rig = m.rig!;
+    expect(rig.sections!).toHaveLength(n);
+    expect(rig.joints!).toHaveLength(n - 1);
+    expect(rig.supports!).toHaveLength(2 * n);
+    for (let k = 0; k < n; k++) expect(rig.supports!.filter((s) => s.sections.length === 1 && s.sections[0] === k)).toHaveLength(2);
+    const slots = r160Train(n);
+    rig.joints!.forEach((j, i) => {
+      expect(rig.sections![i + 1]!.pivot[0]).toBeCloseTo(slots[i]!.lo, 9);
+      expect(j.front - j.rear).toBeCloseTo(0.5, 6);
+    });
+    const glb = m.toGlb(d.id);
+    const s = glbStats(glb);
+    expect(s.max[0] - s.min[0]).toBeCloseTo(n * R160_LENGTH, 1);
+    expect(s.max[0] + s.min[0]).toBeCloseTo(0, 2);
+    expect(s.triangles).toBeLessThanOrEqual(16000 * n);
+    expect(Buffer.from(d.build({ unit: "train", cars: String(n) }).toGlb(d.id)).equals(Buffer.from(glb))).toBe(true);
+    const lod = buildLodModel(d, { unit: "train", cars: String(n) });
+    expect(lod.triangleCount()).toBeLessThanOrEqual(Math.min(R160_LOD, 100 * n));
+    expect(lod.rig!.sections!).toHaveLength(n);
+    expect(lod.rig!.joints!).toHaveLength(n - 1);
+    // the cab at each end of the train: the black cab end outward at both ends
+    const tris = readTriangles(glb).filter((t) => t.material === "cabGlass" || t.material === "lampHead");
+    const xs = tris.flatMap((t) => t.p.map((p) => p[0]));
+    expect(Math.max(...xs)).toBeGreaterThan(n * R160_LENGTH / 2 - 0.5);
+    expect(Math.min(...xs)).toBeLessThan(-n * R160_LENGTH / 2 + 0.5);
+  });
+
+  it("states the R160 train's weight and power: the cars summed, every car motored", () => {
+    const v = US_TRANSIT.find((x) => x.id === "proc-vehicle-nyc-r160")!.game!.variants!;
+    expect(v.find((x) => x.params.unit === "train" && !x.params.cars)).toMatchObject({ weight: 148, power: 1380 });
+    expect(v.find((x) => x.params.unit === "train" && x.params.cars === "2")).toMatchObject({ weight: 76, power: 690 });
+    expect(v.filter((x) => x.params.unit === "train")).toHaveLength(R160_MAX_CARS - R160_MIN_CARS + 1);
   });
 
   it("gives each RDC cab end its door outline and a headlight housing with twin lamps", () => {

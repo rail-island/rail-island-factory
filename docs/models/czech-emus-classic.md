@@ -1,7 +1,7 @@
 # Older Czech electric units
 
-**Covers** - the parametric `veh-cd-451` (CD 451 "zabotlam": motor car, trailer; two liveries), `veh-cd-460` (CD 460: motor car, trailer; five liveries) and `veh-cd-470` (CD 470 double-deck prototype: motor car, trailer) from vlakosimdb, and CD's current blue on the 451 and 460 from photographs: what each parameter value builds, the shared kit, the scales from the XML to the published dimensions, the measured comparison and the tests.
-**Code** - `generator/emu451.ts`, `generator/emu460.ts`, `generator/emu470.ts`, `generator/emuClassicKit.ts`, `generator/letters.ts` (the 460's wordmark), `generator/emuParts.ts`, `generator/emuComparison.ts`, `generator/emuReport.ts`, `generator/csdCoachParts.ts` (the body builder), `test/czechEmusClassic.test.ts`, `assets/cd-451/`, `assets/cd-460/`, `assets/cd-470/`
+**Covers** - the parametric `veh-cd-451` (CD 451 "zabotlam": motor car, trailer, the full train of 2 to 8 cars; two liveries), `veh-cd-460` (CD 460: motor car, trailer, the full train of 2 to 8 cars; five liveries) and `veh-cd-470` (CD 470 double-deck prototype: motor car, trailer, the full train of 2 to 8 cars) from vlakosimdb, and CD's current blue on the 451 and 460 from photographs: what each parameter value builds, the shared kit, the scales from the XML to the published dimensions, the measured comparison and the tests.
+**Code** - `generator/emu451.ts`, `generator/emu460.ts`, `generator/emu470.ts`, `generator/emuClassicKit.ts`, `generator/emuClassicTrain.ts` (the 451's and 460's full train), `generator/letters.ts` (the 460's wordmark), `generator/emuParts.ts`, `generator/emuComparison.ts`, `generator/emuReport.ts`, `generator/csdCoachParts.ts` (the body builder), `test/czechEmusClassic.test.ts`, `test/cd470Train.test.ts`, `assets/cd-451/`, `assets/cd-460/`, `assets/cd-470/`
 **See also** - [czech-emus.md](czech-emus.md) (the CD 471 and 680, the shared EMU parts), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [CD 451 sources](../../assets/cd-451/SOURCES.md), [CD 460 sources](../../assets/cd-460/SOURCES.md), [CD 470 sources](../../assets/cd-470/SOURCES.md)
 
 ## The designs
@@ -14,10 +14,14 @@ facing +X - a motor car with its cab at +X - centred between its coupling faces.
 |---|---|---|---|---|
 | `veh-cd-451` "CD 451 Zabotlam" | `unit` | `motorCar` (default) | cd 451/cd_451 | motor car 451: the raked nose with its lamp pods, roof ventilator, one diamond pantograph |
 | | | `trailer` | cd 451/cd_051 | trailer 051 |
+| | | `train` | - | the full train, see [the 451's and 460's full trains](#the-451s-and-460s-full-trains) |
+| | `cars` (only with `train`) | `2` .. `8`, `4` (default) | - | its length in vehicles |
 | | `livery` | `cd` (default) | cd_451, cd_051 | the BMPs' CD blue and grey, red doors, 451 032 |
 | | | `cdBlue` | - (photograph) | CD's current blue (Najbrt), 451 056, see [CD blue](#cd-blue-najbrt) |
 | `veh-cd-460` "CD 460" | `unit` | `motorCar` (default) | cd 460/cd_460 and its liveries | motor car 460: the leaning windscreen, two diamond pantographs, buffers |
 | | | `trailer` | cd 460/cd_060, csd 460/csd_060.045 | trailer, CD class 063 (vlakosimdb "CD 060") |
+| | | `train` | - | the full train, see [the 451's and 460's full trains](#the-451s-and-460s-full-trains) |
+| | `cars` (only with `train`) | `2` .. `8`, `4` (default) | - | its length in vehicles |
 | | `livery` | `cd` (default) | cd_460, cd_060 | CD grey and blue, 460 071, inner pantograph raised |
 | | | `cd003` | cd_460,003-4 (trailer: cd_060) | the same paint, 460 003, inner pantograph raised |
 | | | `cd007` | cd_460,007-4 (trailer: cd_060) | the same paint, 460 007, cab pantograph raised |
@@ -25,6 +29,8 @@ facing +X - a motor car with its cab at +X - centred between its coupling faces.
 | | | `cdBlue` | - (photograph) | CD's current blue (Najbrt), 460 016, inner pantograph raised, see [CD blue](#cd-blue-najbrt) |
 | `veh-cd-470` "CD 470" | `unit` | `motorCar` (default) | cd 470/cd_470 | single-deck motor car 470, dark green and yellow (the set 470 001/002) |
 | | | `trailer` | cd 470/cd_070 | double-deck trailer 070 |
+| | | `train` | - | the full train, see [the 470's full train](#the-full-train) |
+| | `cars` (only with `train`) | `2` .. `8`, `4` (default) | - | its length in vehicles |
 
 The CD 460 liveries are paint and data: one body and layout (the cd BMPs'), the
 band colours, the door paint, the emblem, the running number and which of the two
@@ -110,6 +116,51 @@ double-deck body to 4.7 m with nine upper and seven lower windows between the do
 and the intermediate-level windows over the bogies. Every end has rectangular buffers.
 Lengths are scaled to the published 132 m of the five-car set (`K_X = 1.0776`).
 
+### The full train
+
+`unit` `train` builds the whole set, `cars` 2 to 8 vehicles long (4 by default; the
+prototype ran five). `cd470Train(n)` lays it out front to back: a motor car at each
+end, the rear one turned (its cab facing -X), n - 2 trailers between them - the two
+motor cars alone for 2 cars. Each car is a section (`articulate`, `tramKit.ts`)
+hinged at the coupling plane ahead of it at buffer height (1.0 m), drawn by the lone
+car's own builder into the train's (`motorCar(m)`, `trailer(m)`), on its own two
+bogies; a bellows joint covers each gap between the end walls round the end door,
+and inside the train the cars leave out their gangway frames (`GangwayOpts.frame`)
+but keep their buffers and screw couplings. The train is centred on x = 0. The
+distant model is the cars' (`lodCar`) placed and turned the same way, the inner ends
+hidden under the bellows, one raised pantograph a motor car, 100 triangles a car and
+500 at most (`lodTriangles: 500`). The game's figures add the cars up: 70 t and
+1,000 kW a motor car, 55 t a trailer (the four-car train 250 t, 2,000 kW). The
+OpenTTD presets stay single cars.
+
+## The 451's and 460's full trains
+
+`unit` `train` builds the whole train, `cars` 2 to 8 vehicles long, 4 by default
+(the 451's basic unit; the 460's ran five, four is the default's cap).
+`cd451Train(n)` and `cd460Train(n)` lay it out front to back with
+`emuClassicTrain.ts` (`classicUnits`, `classicTrain`): a unit is a motor car with its
+cab leading, its trailers and a motor car turned (its cab facing -X); two cars are
+the two motor cars back to back. Up to the prototype's unit (4 cars on the 451, 5 on
+the 460) the train is one unit; a longer one is two units coupled cab to cab, as the
+units ran in multiple, as even as can be with the longer in front (451: 5 = 3 + 2,
+6 = 3 + 3, 7 = 4 + 3, 8 = 4 + 4; 460: 6 = 3 + 3, 7 = 4 + 3, 8 = 4 + 4), so the motor
+cars keep up with the trailers. Each car is a section (`articulateTrain`, tramKit's
+`articulate` with a joint of its own between coupled cabs) hinged at the coupling
+plane ahead of it (0.85 m on the 451, 0.95 m on the 460), drawn by the lone car's
+own builder into the train's builder and moved to its place, on its own two bogies;
+a bellows covers each gangway between the end walls, and a short coupler joint
+(0.3 m, round the couplers at their height) the two coupled cabs. Inside the train
+the cars leave out their gangway frames (`GangwayOpts.frame`) and keep their
+couplers and buffers; the lone cars are unchanged. The train is centred on x = 0
+(the 451's four cars 95.29 m, the 460's 98 m). The distant model is each car's
+(`carLod`) placed and turned the same way, its gangway ends hidden under the
+bellows, a 460 motor car with its inner (raised) pantograph alone, the trailers'
+bogies given up first: 100 triangles a car, 300 at most up to five cars and 500 for
+the two-unit trains (`lodTriangles: 500`). The game's figures add the cars up: the
+451 59 t and 660 kW a motor car, 40 t a trailer (the four-car train 198 t, 1,320 kW);
+the 460 40 t a car and 1,000 kW a motor car, every train length repeated per
+livery (the CSD one at 110 km/h). The OpenTTD presets stay single cars.
+
 ## Measured comparison
 
 `emuComparison.ts` measures the default car of each design against native pixel
@@ -127,7 +178,7 @@ panes (held on the flat face where the BMP wraps them onto the chamfer).
 ## Tests
 
 `test/czechEmusClassic.test.ts`: every combination stands on the rail, centred,
-within 3.1 m, 16,000 triangles and the 4.7 m fixed envelope; the sets' published
+within 3.1 m, 16,000 triangles and the 4.7 m fixed envelope (the single cars); the sets' published
 lengths (95.29, 122.5 and 132 m) from the cars', the bodies' heights, widths and low
 floors, the bogie pivots and wheelbases; the 451's single raised pantograph over the
 inner bogie and its coupler at +X; the 460's two pantographs with exactly one raised
@@ -136,5 +187,14 @@ sharing one body; the CD blue 451 and 460 on their unchanged bodies, the 460's e
 wordmark near the inner end, read after the emblem on both sides; the 470's raised rear and folded cab pantograph, its raised inner
 roof, its two rows of trailer windows and buffers at every end; the running numbers'
 check digits; and a few landmarks of each default car within their pixel tolerances.
+`test/cd470Train.test.ts`: the 470's formation of every length, the 2-, 4- and 8-car
+trains' sections, hinges, joints and supports, their length and budget, the turned
+rear motor car, no gangway frames inside the train (the lone cars keep theirs),
+deterministic bytes, the distant model of every length and the trains' game figures.
+The same file's full-train block: the units and the 451's and 460's formation of
+every length, each train's sections, hinges, joints and supports, its length,
+centring and budget (16,000 a car), no coplanar faces up to three cars, the turned
+rear motor cars and the coupler joint of a two-unit train, deterministic bytes, the
+distant model of every length and every length's game figures in every livery.
 `test/czechEmus.test.ts` checks every landmark of every transferred car;
 The catalog sweep (`test/catalogSweep.ts`) covers every design generically.

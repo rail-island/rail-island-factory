@@ -9,7 +9,7 @@
 | id | title | parameters (default first) | over couplers | triangles |
 |---|---|---|---|---|
 | `proc-vehicle-budd-rdc` | Budd RDC | `variant`: `rdc1` (all coach), `rdc2` (a baggage section) | 25.91 m | 13,350 - 13,850 |
-| `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer` | 18.35 m | 10,200 - 10,700 |
+| `proc-vehicle-nyc-r160` | NYC Subway R160 | `unit`: `cabCar`, `trailer`, `train` (Full train); `cars` (train only): `2` .. `8` (default `4`) | 18.35 m a car | 10,200 - 10,700 a car |
 | `proc-vehicle-cta-5000` | Chicago 'L' 5000-series | fixed | 14.63 m | about 9,300 |
 
 All on the US loading gauge ([loading-gauge.md](loading-gauge.md)): the RDC is a
@@ -90,6 +90,15 @@ trucks a Jacobs bogie replaces.
   ribbed anticlimber at the floor and the boxes beside the centre coupler. The distant model
   keeps the cab end's black field over 1.3 m and its windscreen, the three windows, the roof
   shrouds, the trucks and the underfloor block.
+  **The full train** (`unit` `train`, `r160Train(n)`): `cars` 2 to 8 (default 4), a cab car at
+  each end - the rear one turned - and trailers between (none in the two-car train). One
+  articulated vehicle (`articulate`, tramKit.ts): each car a section hinged at the coupling plane
+  ahead of it, a bellows over the 0.5 m gap between the end walls, each car on its own two trucks,
+  the train centred on x = 0. The cars are the lone cars' drawing (`drawCar`) moved to their
+  places and turned; the inner ends keep their doors, barriers and couplers. Its distant model is
+  100 triangles a car up to 500 (`lodTriangles: 500`), the inner ends hidden under the bellows and
+  the trailers' trucks given up first. Every car is motored: the train weighs the cars summed
+  (38 t a cab car, 36 t a trailer) and has 345 kW a car. The OpenTTD presets leave the train out.
 - **5000-series** - a married-pair car measured on the photographs in `assets/cta-5000/` (SOURCES.md:
   the face at 211 px/m, the sides by projective fits over the doors and the car's ends). Bare stainless,
   no stripes: fluted panels under the windows (1.08 - 1.88 m, plain beside the doors and at the ends), a
@@ -129,4 +138,5 @@ supports; the distant models; the Zephyr's three sections on four supports with 
 Jacobs bogies, which the same test file checks with the other US cars; the 5000-series' plain
 stainless sides, its face's sign and the two sides' own windows behind the cab; the R160's door and
 window layout, its cab side window, the cab end's lamps, fields and route sign and the
-inner ends' barriers). The doors, cabins and rail supports are also checked by the generic suites.
+inner ends' barriers; the R160 train's formation for every length, its sections, joints, hinges
+and supports, its length, budget, bytes, cab ends and distant model, and its weight and power). The doors, cabins and rail supports are also checked by the generic suites.

@@ -10,7 +10,7 @@
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { MeshBuilder as Builder } from "./meshBuilder.ts";
-import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { bogieGeometry, buffers, coupling, exhaust, extrude, horn, paint, type BogieSpec } from "./dieselParts.ts";
 import { block, side } from "./vehicleParts.ts";
 import { add, mul, type Pt } from "./sliceLoft.ts";
@@ -23,8 +23,9 @@ import { decalX, knuckleCoupler } from "./usHoodKit.ts";
 import { centreCoupler, enumParam } from "./emuParts.ts";
 import { METRO_CATALOG } from "./metro.ts";
 import { RAIL_CATALOG, coil } from "./cd163.ts";
-import { LOD_GLASS, type LodBand } from "./lodKit.ts";
-import { bogieParts, fitUnit, roofPart, underPart, type UnitBody } from "./lodUnits.ts";
+import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
+import { bogieParts, fitUnit, roofPart, turnBody, underPart, type UnitBody } from "./lodUnits.ts";
+import { articulate } from "./tramKit.ts";
 
 const ft = (feet: number, inches = 0) => Math.round((feet * 0.3048 + inches * 0.0254) * 1000) / 1000;
 type Band = readonly [number, number, string];
@@ -651,7 +652,17 @@ export function buddRdcLod(params?: ParamValues): MeshBuilder {
 // Subway and 'L' cars
 
 export type MetroCar = "cabCar" | "trailer";
-export const R160_PARAMS: readonly ParamSpec[] = [enumParam("unit", "Car", { cabCar: "Cab car", trailer: "Trailer" })];
+/** The R160's full train: a cab car at each end, 0 .. 6 trailers between. */
+export const R160_MIN_CARS = 2;
+export const R160_MAX_CARS = 8;
+export const R160_PARAMS: readonly ParamSpec[] = [
+  enumParam("unit", "Car", { cabCar: "Cab car", trailer: "Trailer", train: "Full train" }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: R160_MAX_CARS - R160_MIN_CARS + 1 }, (_, i) => [String(i + R160_MIN_CARS), `${i + R160_MIN_CARS} cars`]))),
+    default: "4",
+    when: { name: "unit", values: ["train"] },
+  },
+];
 export const R160_LENGTH = ft(60, 2.5);
 export const CTA_LENGTH = ft(48);
 const METRO_PAL = { ss: paint("#c3c7ca", 0.3), ssDark: paint("#9a9ea1", 0.4), mask: paint("#1c1d1f", 0.4), ctaRed: paint("#c8102e"), ctaBlue: paint("#00a1de"), under: paint("#2a2c2f", 0.85) };
@@ -1058,19 +1069,25 @@ function r160InnerEnd(m: MeshBuilder, e: number, face: number): void {
 
 /** The LOD: the body with its cab end's black field and windscreen, the trucks, the roof shrouds and the underfloor equipment. */
 function r160Lod(u: MetroCar): MeshBuilder {
-  const c = r160Def(u), L = R160_BODY, X = (d: number) => R160_LENGTH / 2 - R160_GAP - d;
-  const body = carLodBody(c, X), top = c.spec.C;
+  const { body, parts } = r160LodCar(u, (d: number) => R160_LENGTH / 2 - R160_GAP - d);
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...R160_PAL }, bodies: [body], parts }, 100);
+}
+
+/** A car's LOD body and parts, X its body's map to model x; `section` its section in a train. */
+function r160LodCar(u: MetroCar, X: (d: number) => number, section?: number): { body: UnitBody; parts: LodPart[] } {
+  const c = r160Def(u), L = R160_BODY;
+  const body = carLodBody(c, X, section), top = c.spec.C;
   const flat = (end: UnitBody["front"]): UnitBody["front"] => ({ ...end, setback: [[c.spec.B, 0.1], [top, 0.1]] });
   const windows = R160_WIN.c.map((cc) => ({ u: [X(L / 2 + cc + R160_WIN.w / 2 - 0.04), X(L / 2 + cc - R160_WIN.w / 2 + 0.04)] as const, y: [R160_WIN.y[0] + 0.04, R160_WIN.y[1] - 0.04] as const, mat: LOD_GLASS }));
   const front = u === "cabCar"
     ? { ...flat(body.front), paint: [[c.spec.B, 1.3, "ss"], [1.3, top, "mask"]] as LodBand[], windows: [{ u: [R160_CAB.screen[0], R160_CAB.screen[1]] as const, y: [R160_CAB.screen[2], R160_CAB.screen[3]] as const, mat: LOD_GLASS }] }
     : flat(body.front);
   const parts = [
-    ...bogieParts(R160_TRUCK_D.map((d) => [X(d), 1.3] as const), c.spec.B),
-    ...[[R160_AC.d[0], R160_AC.d[1]], [L - R160_AC.d[1], L - R160_AC.d[0]]].map(([a, e]) => roofPart("ss", X(a!), X(e!), R160_AC.foot, R160_AC.half, 3.55, R160_AC.top)),
-    underPart(X(3.3), X(L - 3.3), 0.45, 0.95, 1.2),
+    ...bogieParts(R160_TRUCK_D.map((d) => [X(d), 1.3, section] as const), c.spec.B),
+    ...[[R160_AC.d[0], R160_AC.d[1]], [L - R160_AC.d[1], L - R160_AC.d[0]]].map(([a, e]) => roofPart("ss", X(a!), X(e!), R160_AC.foot, R160_AC.half, 3.55, R160_AC.top, section)),
+    underPart(X(3.3), X(L - 3.3), 0.45, 0.95, 1.2, undefined, section),
   ];
-  return fitUnit({ palette: { ...CARBODY_PALETTE, ...R160_PAL }, bodies: [{ ...body, front, rear: flat(body.rear), windows }], parts }, 100);
+  return { body: { ...body, front, rear: flat(body.rear), windows }, parts };
 }
 
 function ctaDef(): CarDef {
@@ -1338,13 +1355,102 @@ function ctaPlainFace(m: MeshBuilder, face: number): void {
 }
 
 export function nycR160(params?: ParamValues): MeshBuilder {
-  const u = resolveParams(R160_PARAMS, params).unit as MetroCar;
+  const p = resolveParams(R160_PARAMS, params);
+  if (p.unit === "train") return r160TrainModel(Number(p.cars));
+  const u = p.unit as MetroCar;
   const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...R160_PAL });
   drawCar(m, r160Def(u), (d) => R160_LENGTH / 2 - R160_GAP - d);
   return m;
 }
 export function nycR160Lod(params?: ParamValues): MeshBuilder {
-  return r160Lod(resolveParams(R160_PARAMS, params).unit as MetroCar);
+  const p = resolveParams(R160_PARAMS, params);
+  if (p.unit === "train") return r160TrainLod(Number(p.cars));
+  return r160Lod(p.unit as MetroCar);
+}
+
+// The R160's full train: one articulated vehicle, each car a section hinged at the coupling
+// plane ahead of it, a bellows over each gap, every car on its own two trucks
+
+/** A car of a train: its span lo..hi over its coupling planes (model x) and whether it is turned. */
+export interface R160Slot {
+  car: MetroCar;
+  lo: number;
+  hi: number;
+  turned: boolean;
+}
+
+/**
+ * The cars of an R160 train of `n`, front first: a cab car at each end, the
+ * rear one turned, trailers between them (none in the two-car train). Each with
+ * its span over its coupling planes, the train centred on x = 0.
+ */
+export function r160Train(n: number): R160Slot[] {
+  if (!Number.isInteger(n) || n < R160_MIN_CARS || n > R160_MAX_CARS) throw new Error(`an R160 train of ${n} cars`);
+  return Array.from({ length: n }, (_, i): R160Slot => {
+    const hi = (n * R160_LENGTH) / 2 - i * R160_LENGTH;
+    return { car: i === 0 || i === n - 1 ? "cabCar" : "trailer", lo: hi - R160_LENGTH, hi, turned: i === n - 1 };
+  });
+}
+
+/** The bellows over a gap between two cars: round the end door, inside the safety barriers. */
+const R160_BELLOWS: Array<[number, number]> = [[-0.5, 1.15], [0.5, 1.15], [0.5, 3.15], [-0.5, 3.15]];
+const R160_MAX_BEND = 10;
+/** The distant model's cap: 100 triangles a car up to five cars. */
+export const R160_LOD = 500;
+const R160_COUPLER_Y = 0.82;
+
+/** A slot's end walls in the train: x0 (rear) and x1 (front). */
+const r160Walls = (slot: R160Slot): [number, number] => [slot.lo + R160_GAP, slot.hi - R160_GAP];
+
+function r160TrainModel(n: number): MeshBuilder {
+  const slots = r160Train(n);
+  const m = new Builder({ ...INTERIOR_PALETTE, ...CARBODY_PALETTE, ...R160_PAL });
+  const sections = slots.map((slot, k) => {
+    const cx = (slot.lo + slot.hi) / 2;
+    const [x0, x1] = r160Walls(slot);
+    return {
+      x0,
+      x1,
+      draw: () => m.scope(`car ${k + 1}`, () => {
+        // the car drawn about its own centre (its ends' details assume it), moved to its place and turned about it
+        const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => drawCar(m, r160Def(slot.car), (d) => R160_LENGTH / 2 - R160_GAP - d));
+        if (slot.turned) m.turned(cx, draw);
+        else draw();
+      }),
+    };
+  });
+  articulate({ m }, sections, R160_COUPLER_Y, { profile: R160_BELLOWS, folds: 3, depth: 0.03 }, R160_MAX_BEND, slots.slice(0, -1).map((slot) => slot.lo));
+  return m;
+}
+
+function r160TrainLod(n: number): MeshBuilder {
+  const slots = r160Train(n);
+  const built = slots.map((slot, k) => {
+    const cx = (slot.lo + slot.hi) / 2;
+    const { body, parts } = r160LodCar(slot.car, (d) => cx + R160_LENGTH / 2 - R160_GAP - d, k);
+    // the inner ends (a cab car's rear, a trailer's both) under the bellows, before a turn
+    const hidden: UnitBody = { ...body, rear: { ...body.rear, hidden: true }, ...(slot.car === "trailer" ? { front: { ...body.front, hidden: true } } : {}) };
+    // the trailers' trucks give way first
+    return { body: slot.turned ? turnBody(hidden, cx) : hidden, parts: slot.car === "trailer" ? parts.map((part) => ({ ...part, optional: part.optional ?? 5 })) : parts };
+  });
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, R160_COUPLER_Y, 0])),
+    joints: slots.slice(0, -1).map((slot, i) => ({ sections: [i, i + 1] as [number, number], front: r160Walls(slot)[0], rear: r160Walls(slots[i + 1]!)[1], profile: R160_BELLOWS })),
+    maxBendDeg: R160_MAX_BEND,
+    material: "bellows",
+  };
+  return fitUnit({ palette: { ...CARBODY_PALETTE, ...R160_PAL }, bodies: built.map((c) => c.body), parts: built.flatMap((c) => c.parts), sections }, Math.min(R160_LOD, 100 * n));
+}
+
+/** Every car is motored: the cab car 38 t, a trailer 36 t, 345 kW each; a train their sums. */
+const R160_WEIGHT: Record<MetroCar, number> = { cabCar: 38, trailer: 36 };
+const R160_POWER = 345;
+function r160Game(): GameProperties {
+  const variants: NonNullable<GameProperties["variants"]> = [{ params: { unit: "trailer" }, weight: R160_WEIGHT.trailer }];
+  for (let n = R160_MIN_CARS; n <= R160_MAX_CARS; n++)
+    // the default four cars are named by the unit alone
+    variants.push({ params: { ...(n === 4 ? {} : { cars: String(n) }), unit: "train" }, weight: r160Train(n).reduce((t, slot) => t + R160_WEIGHT[slot.car], 0), power: n * R160_POWER });
+  return { weight: R160_WEIGHT.cabCar, power: R160_POWER, maxspeed: 89, accel: null, variants };
 }
 const ctaX = (d: number) => CTA_LENGTH / 2 - 0.25 - d;
 export function cta5000(): MeshBuilder {
@@ -1367,6 +1473,6 @@ const UNIT_CATALOG = { ...RAIL_CATALOG, group: "unit" };
 
 export const US_TRANSIT: ProceduralDesign[] = [
   { id: "proc-vehicle-budd-rdc", title: "Budd RDC", build: buddRdc, buildLod: buddRdcLod, params: RDC_PARAMS, game: { weight: 54, power: 410, maxspeed: 137, accel: null }, catalog: { ...UNIT_CATALOG, traction: "diesel" }, loadingGauge: "us", references: "budd-rdc" },
-  { id: "proc-vehicle-nyc-r160", title: "NYC Subway R160", build: nycR160, buildLod: nycR160Lod, params: R160_PARAMS, game: { weight: 38, power: 345, maxspeed: 89, accel: null, variants: [{ params: { unit: "trailer" }, weight: 36 }] }, catalog: METRO_CATALOG, loadingGauge: "us", references: "nyc-r160" },
+  { id: "proc-vehicle-nyc-r160", title: "NYC Subway R160", build: nycR160, buildLod: nycR160Lod, lodTriangles: R160_LOD, params: R160_PARAMS, game: r160Game(), catalog: METRO_CATALOG, loadingGauge: "us", references: "nyc-r160" },
   { id: "proc-vehicle-cta-5000", title: "Chicago 'L' 5000-series", build: cta5000, buildLod: cta5000Lod, game: { weight: 30, power: 320, maxspeed: 89, accel: null }, catalog: METRO_CATALOG, loadingGauge: "us", references: "cta-5000" },
 ];

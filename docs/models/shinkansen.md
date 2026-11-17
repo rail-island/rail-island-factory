@@ -18,8 +18,9 @@
 
 Each design's `unit` is the end car (the default: the car with the nose, a motor car),
 `middleCar` (raising its single-arm pantograph to the game's wire) or `train` with `cars`
-3 - 8 (default 4): an end car at each end, the rear one turned, the second and next-to-last
-cars raising their pantographs (the middle one of three; `shinkansenTrain`); each car a section
+2 - 8 (default 4): an end car at each end, the rear one turned, the second and next-to-last
+cars raising their pantographs (the middle one of three, the rear end car of two;
+`shinkansenTrain`); each car a section
 of an articulated set (`articulate`), bellows between them. All are electric units
 (`EMU_CATALOG`) on the Shinkansen gauge ([loading-gauge.md](loading-gauge.md)): narrowed from
 their real 3.35 - 3.38 m to 3.24 - 3.28 m; the E6 keeps its 2.945 m.
@@ -63,7 +64,13 @@ combinations hashed before and after):
 
 - `traction: "diesel"` - no pantograph, a roof exhaust over each car's middle, filed with
   the DMUs;
-- `cars` - the train lengths offered (default 3 - 8); a unit of two cars has no middle car;
+- `cars` - the prototype's train lengths (default 3 - 8): they set the default `cars` (4 when
+  listed, else the shortest), and the series offers every length from its shortest sensible
+  train up to eight, odd counts included (`carsOf`): two end cars back to back (`minSeriesCars`;
+  with no intermediate car the rear end car raises the pantograph), three where the end cars
+  need a car between them (a `powerCar`, a `leadCar`, locomotive ends - `endSides`,
+  `jacobsTrailers`, `endPantograph` `lead` or `trail` - or unpowered coaches). A unit of two
+  cars (every listed length two or less) has no middle car and keeps its own lengths;
 - `single` - one double-ended railcar, its nose (or flat cab) at both ends, no car choice;
 - `endPantograph` - the end cars raise the pantographs (a short unit without middle motor cars);
   `"lead"` only the leading end car (a locomotive and its driving trailer, the IC225),
@@ -449,6 +456,14 @@ a deck and the two-leaf hatch at its rear end (`sidePanels`). The leading bogie 
 nose (`lod` with `cornerDepth`) without the face's glass, so that the line stays within its 100 triangles.
 Deviations: the hollow beside the head is shallower than the real one (the nose's doors need the flat side
 from 8 m back); every intermediate car is the E455 type; the roof's raised covers are not drawn.
+
+## An end car in another design's train
+
+`drawSeriesEndCar` draws the lone end car (`unit` `endCar`) into another design's builder,
+byte for byte as `buildSeries` draws it, centred between its coupling planes facing +X, for
+the caller to move and turn into its place; `seriesEndCarPalette` gives its materials,
+`seriesEndCarLod` its distant model in a section and `SERIES_GAP` its inner wall's inset.
+The ICE 2's train uses them for its driving trailer (deIce2.ts, germany-trains.md).
 
 ## Deviations
 

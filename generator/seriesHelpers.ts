@@ -78,8 +78,8 @@ export function talgo(o: Pick<ShinkansenSeries, "liveries" | "weight" | "power" 
     endLength: o.endLength ?? 20.0, midLength: 13.14, W: 1.47, Y: 1.25, S: 2.95, C: o.C ?? 3.4, lean: 0.95, B: 0.75, A: 0.9,
     nose: o.nose, windscreen: o.windscreen, lamps: o.lamps,
     windows: [[1.55, 2.45]], windowW: 1.1, pitch: 1.4, door: [0.95, 2.85, 1.55, 2.45], doorW: 0.8,
-    // the power cars at the ends raise the pantographs; the Talgo coaches between them none
-    bogieCentres: 5.6, wheelR: 0.4, wheelbase: 0, cars: o.cars ?? [4, 8], endPantograph: true, ...(o.traction ? { traction: o.traction } : {}),
+    // the power cars at the ends raise the pantographs; the Talgo coaches between them none (at least one)
+    bogieCentres: 5.6, wheelR: 0.4, wheelbase: 0, cars: o.cars ?? [4, 8], minCars: 3, endPantograph: true, ...(o.traction ? { traction: o.traction } : {}),
     liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
   };
 }

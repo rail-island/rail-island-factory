@@ -2,7 +2,9 @@
 // 1995-97) and the cars it runs with: the 943 driving trailer and the 043
 // trailer. One design `veh-cd-843` whose `unit` picks the car: the 843 motor car
 // with a cab at each end (default), the 943 driving trailer (cab at +X, gangway
-// at -X) or the 043 trailer (gangways at both ends); `livery` paints every car in
+// at -X), the 043 trailer (gangways at both ends) or the full train (`cars`
+// 2 .. 8, cd843Train: the 843 leading, 043 trailers, the 943 driving trailer at
+// the rear up to four cars, a second 843 from five); `livery` paints every car in
 // vlakosimdb's red and cream (default) or CD's current blue, read from photographs.
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/cd-843/native
@@ -24,11 +26,18 @@ import {
   Car, DMU_CATALOG, buffersBoth, cdSideLogo, clipY, endItems, endMarks, enumParam, exhaust, sideEmblem, sideItems, sideNumber, tankX, tractionNumber, underBoxes,
   DMU_PALETTE, type CarFrame, type EndItem, type PxBox, type SideItem,
 } from "./dmuKit.ts";
-import { lodSideBox } from "./lodKit.ts";
+import { lodSideBox, type LodPart, type LodSections } from "./lodKit.ts";
 import type { Vec3 } from "./meshCore.ts";
-import { bogieParts, dmuBody, fitUnit, roofPart, underPart } from "./lodUnits.ts";
+import { bogieParts, dmuBody, fitUnit, roofPart, shiftBody, turnBody, underPart, type UnitBody } from "./lodUnits.ts";
+import { articulate } from "./tramKit.ts";
 
-export type Cd843Unit = "motorCar" | "drivingTrailer" | "trailer";
+export type Cd843Unit = "motorCar" | "drivingTrailer" | "trailer" | "train";
+/** One car of the family (every value of `unit` but the full train). */
+export type Cd843Car = Exclude<Cd843Unit, "train">;
+
+/** The full train's car counts. */
+export const CD843_MIN_CARS = 2;
+export const CD843_MAX_CARS = 8;
 /** The paint of every car: vlakosimdb's red and cream (default) or CD's current blue (the Najbrt scheme). */
 export type Cd843Livery = "red" | "cdBlue";
 
@@ -37,7 +46,13 @@ export const CD843_PARAMS: readonly ParamSpec[] = [
     motorCar: "Motor car",
     drivingTrailer: "Driving trailer",
     trailer: "Trailer",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: CD843_MAX_CARS - CD843_MIN_CARS + 1 }, (_, i) => [String(i + CD843_MIN_CARS), `${i + CD843_MIN_CARS} cars`]))),
+    default: "3",
+    when: { name: "unit", values: ["train"] },
+  },
   enumParam("livery", "Livery", {
     red: "Red and cream",
     cdBlue: "CD 843 blue",
@@ -49,7 +64,7 @@ export const BODY_843 = 24.1;
 export const LOB_843 = 25.2;
 
 /** The running numbers: 843 024 and 943 002 are photographed (assets/cd-843/PHOTOS.md); 043 001 is the first of the class. */
-export function cd843Number(unit: Cd843Unit, livery: Cd843Livery = "red"): string {
+export function cd843Number(unit: Cd843Car, livery: Cd843Livery = "red"): string {
   if (livery === "cdBlue") return tractionNumber(...BLUE_NUMBERS[unit]);
   return unit === "motorCar" ? tractionNumber("843", "024") : unit === "drivingTrailer" ? tractionNumber("943", "002") : tractionNumber("043", "001");
 }
@@ -58,7 +73,7 @@ export function cd843Number(unit: Cd843Unit, livery: Cd843Livery = "red"): strin
  * The blue cars' numbers, after their photographs (assets/cd-843/SOURCES.md): 843 007 and 943 010
  * (lettered 80-29 010); the trailer's "...29 007" is read as 043 007.
  */
-const BLUE_NUMBERS: Record<Cd843Unit, [string, string]> = { motorCar: ["843", "007"], drivingTrailer: ["943", "010"], trailer: ["043", "007"] };
+const BLUE_NUMBERS: Record<Cd843Car, [string, string]> = { motorCar: ["843", "007"], drivingTrailer: ["943", "010"], trailer: ["043", "007"] };
 
 const c = (color: string, roughness = 0.5): MaterialSpec => ({ color, roughness });
 const PALETTE: Record<string, MaterialSpec> = {
@@ -132,7 +147,7 @@ interface Layout {
 }
 
 /** A row offset: the 943/043 canvases are 6 m tall, the 843's 5 m - the same heights sit 10 rows lower. */
-const LAYOUTS: Record<Cd843Unit, Layout> = {
+const LAYOUTS: Record<Cd843Car, Layout> = {
   motorCar: {
     key: "cd_843", kx: 1, x0: 0, x1: 24.1, sideH: 5, frontH: 5, cabs: [-1, 1], motor: true,
     windows: [
@@ -253,12 +268,17 @@ function shut843(d: { door: PxBox }): boolean {
 
 export function cd843(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD843_PARAMS, params);
-  const unit = p.unit as Cd843Unit;
   const livery = p.livery as Cd843Livery;
+  if (p.unit === "train") return train843(Number(p.cars), livery);
+  return car843(p.unit as Cd843Car, livery);
+}
+
+/** One car centred on x = 0, into its own builder or into `into` (a train's, placed by its frame). */
+function car843(unit: Cd843Car, livery: Cd843Livery, into?: MeshBuilder): MeshBuilder {
   const paint = PAINTS[livery];
   const L = LAYOUTS[unit];
   const centre = (L.x0 + L.x1) / 2;
-  const car = new Car(paint.palette, frame843(L));
+  const car = new Car(paint.palette, frame843(L), into);
   const m = car.m;
   const xs = (b: number) => L.x0 + (b / BODY_843) * (L.x1 - L.x0); // body metres -> source x
   // the passenger doors open through doorways, so an open one shows the interior (doors.ts)
@@ -433,17 +453,23 @@ function blueHood(car: Car, e: number, L: Layout): void {
  */
 export function cd843Lod(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD843_PARAMS, params);
-  const unit = p.unit as Cd843Unit;
-  const paint = PAINTS[p.livery as Cd843Livery];
+  const livery = p.livery as Cd843Livery;
+  if (p.unit === "train") return train843Lod(Number(p.cars), livery);
+  const { body, parts } = carLod(p.unit as Cd843Car, livery);
+  return fitUnit({ palette: { ...DMU_PALETTE, ...PAINTS[livery].palette }, bodies: [body], parts }, 100);
+}
+
+/** One car's distant body and parts, centred on x = 0. */
+function carLod(unit: Cd843Car, livery: Cd843Livery): { body: UnitBody; parts: LodPart[] } {
+  const paint = PAINTS[livery];
   const L = LAYOUTS[unit];
   const f = frame843(L);
   const X = (x: number) => (x - f.centre) * L.kx;
   const xs = (b: number) => L.x0 + (b / BODY_843) * (L.x1 - L.x0);
   const body = dmuBody(f, body843(L, paint.bands), { items: L.windows, cabs: L.cabs, cabItems: cabFront(L.frontH, paint.front(L.motor)) });
   const half = 1.2 + (L.motor ? 0.46 : 0.42) + 0.2;
-  return fitUnit({
-    palette: { ...DMU_PALETTE, ...paint.palette },
-    bodies: [body],
+  return {
+    body,
     parts: [
       ...bogieParts([[-8.6, half], [8.6, half]], 0.8),
       L.motor ? underPart(X(5.6), X(18.5), 0.3, 0.8, 1.15) : underPart(X(xs(9.0)), X(xs(15.6)), 0.4, 0.8, 1.0),
@@ -454,23 +480,113 @@ export function cd843Lod(params?: ParamValues): MeshBuilder {
       }) })),
       roofPart("roofGrey", X(xs(11.2)), X(xs(12.9)), 0.6, 0.6, 3.86, 4.08),
     ],
-  }, 100);
+  };
 }
 
-export const CD843_UNITS: readonly Cd843Unit[] = ["motorCar", "drivingTrailer", "trailer"];
+export const CD843_UNITS: readonly Cd843Car[] = ["motorCar", "drivingTrailer", "trailer"];
+
+// ---------------------------------------------------------------------------
+// The full train
+
+/** Half the body (end wall to end wall) and the coupling plane (the buffers' faces) beyond it. */
+const HALF_BODY_843 = BODY_843 / 2;
+const GAP_843 = (LOB_843 - BODY_843) / 2;
+/** The buffers' height: the hinge between two cars. */
+const BUFFER_Y_843 = 1.05;
+/** The bend a joint allows between two cars. */
+const MAX_BEND_843 = 12;
+/**
+ * The bellows between two end doors (z, y): every car of the family has one, the
+ * cab ends their door between the windscreens, the trailers' ends their gangway.
+ */
+const BELLOWS_843: Array<[number, number]> = [[-0.5, 1.15], [0.5, 1.15], [0.5, 3.15], [-0.5, 3.15]];
+
+/**
+ * The cars of a train of `n`, front first: the 843 motor car leading, 043
+ * trailers behind it and the 943 driving trailer at the rear up to four cars
+ * (843 + 943, 843 + 043 + 943, 843 + 043 + 043 + 943: one 423 kW motor car); from
+ * five cars a second 843 at the rear instead, the trailers between the two motor
+ * cars. Each with its span lo..hi over the coupling planes, the train centred on
+ * x = 0, the last car turned.
+ */
+export function cd843Train(n: number): Array<{ car: Cd843Car; lo: number; hi: number; turned: boolean }> {
+  const last: Cd843Car = n <= 4 ? "drivingTrailer" : "motorCar";
+  const cars: Cd843Car[] = ["motorCar", ...Array.from({ length: n - 2 }, (): Cd843Car => "trailer"), last];
+  let hi = (n * LOB_843) / 2;
+  return cars.map((car, i) => {
+    const lo = hi - LOB_843;
+    const out = { car, lo, hi, turned: i === n - 1 && n > 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/** Runs `fn` with a car centred on x = 0 placed at cx, turned end for end when `turned`. */
+function placed<T>(m: MeshBuilder, cx: number, turned: boolean, fn: () => T): T {
+  const at = () => m.moved(([x, y, z]) => [x + cx, y, z], fn);
+  return turned ? m.turned(cx, at) : at();
+}
+
+/**
+ * The whole train as one articulated vehicle: each car a section (articulate,
+ * tramKit.ts) hinged at the coupling plane ahead of it on its own two bogies, a
+ * bellows between the end doors over each gap; the buffers meet at the planes.
+ */
+function train843(n: number, livery: Cd843Livery): MeshBuilder {
+  const cars = cd843Train(n);
+  const m = new Car({ ...PAINTS[livery].palette, bellows: c("#26272a", 0.95) }, frame843(LAYOUTS.motorCar)).m;
+  const sections = cars.map((t, k) => {
+    const cx = (t.lo + t.hi) / 2;
+    return { x0: cx - HALF_BODY_843, x1: cx + HALF_BODY_843, draw: () => m.scope(`car ${k + 1}`, () => placed(m, cx, t.turned, () => car843(t.car, livery, m))) };
+  });
+  articulate({ m }, sections, BUFFER_Y_843, { profile: BELLOWS_843, folds: 4, depth: 0.03 }, MAX_BEND_843, cars.slice(0, -1).map((t) => t.lo));
+  return m;
+}
+
+/** A train's distant model: the cars' bodies and parts as its sections, a plain bellows over each gap; 100 triangles a car, 500 at most. */
+function train843Lod(n: number, livery: Cd843Livery): MeshBuilder {
+  const cars = cd843Train(n);
+  const built = cars.map((t, k) => {
+    const cx = (t.lo + t.hi) / 2;
+    const { body, parts } = carLod(t.car, livery);
+    const at = t.turned ? turnBody(shiftBody(body, cx), cx) : shiftBody(body, cx);
+    return {
+      body: { ...at, section: k },
+      parts: parts.map((part): LodPart => ({ ...part, section: k, draw: (m) => placed(m, cx, t.turned, () => part.draw(m)) })),
+    };
+  });
+  const sections: LodSections = {
+    pivots: cars.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [cars[i - 1]!.lo, BUFFER_Y_843, 0])),
+    joints: cars.slice(0, -1).map((t, i) => ({ sections: [i, i + 1] as [number, number], front: t.lo + GAP_843, rear: cars[i + 1]!.hi - GAP_843, profile: BELLOWS_843 })),
+    maxBendDeg: MAX_BEND_843,
+  };
+  return fitUnit({ palette: { ...DMU_PALETTE, ...PAINTS[livery].palette }, bodies: built.map((b) => b.body), parts: built.flatMap((b) => b.parts), sections }, Math.min(500, 100 * n));
+}
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+/** The cars' figures: the 843's 56 t and 423 kW, a trailer's 25 t; the trailers run 120 km/h, a train the motor car's 100. */
+const CAR_843: Record<Cd843Car, { weight: number; power: number }> = { motorCar: { weight: 56, power: 423 }, drivingTrailer: { weight: 25, power: 0 }, trailer: { weight: 25, power: 0 } };
+
 const CD_843_GAME: GameProperties = {
-  weight: 56,
-  power: 423,
+  weight: CAR_843.motorCar.weight,
+  power: CAR_843.motorCar.power,
   maxspeed: 100,
   accel: null,
-  // variants match the selection exactly: the trailers' figures again in every other livery
-  variants: [undefined, "cdBlue"].flatMap((livery) => (["drivingTrailer", "trailer"] as const).map((unit) => ({
-    params: { unit, ...(livery ? { livery } : {}) }, weight: 25, power: 0, maxspeed: 120,
-  }))),
+  // variants match the selection exactly: the trailers' and the trains' figures again in every other livery
+  variants: [undefined, "cdBlue"].flatMap((livery) => [
+    ...(["drivingTrailer", "trailer"] as const).map((unit) => ({
+      params: { unit, ...(livery ? { livery } : {}) }, weight: 25, power: 0, maxspeed: 120,
+    })),
+    // every train length: its cars' weights added up, its motor cars' power (the default three cars named by the unit alone)
+    ...Array.from({ length: CD843_MAX_CARS - CD843_MIN_CARS + 1 }, (_, i) => {
+      const n = i + CD843_MIN_CARS;
+      const cars = cd843Train(n);
+      const params: ParamValues = { ...(n === 3 ? {} : { cars: String(n) }), unit: "train", ...(livery ? { livery } : {}) };
+      return { params, weight: cars.reduce((t, c) => t + CAR_843[c.car].weight, 0), power: cars.reduce((t, c) => t + CAR_843[c.car].power, 0) };
+    }),
+  ]),
 };
 
 export const DMU843_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-843", game: CD_843_GAME, title: "CD 843 / 943 / 043", build: cd843, buildLod: cd843Lod, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
+  { id: "proc-vehicle-cd-843", game: CD_843_GAME, title: "CD 843 / 943 / 043", build: cd843, buildLod: cd843Lod, lodTriangles: 500, params: CD843_PARAMS, catalog: DMU_CATALOG, references: "cd-843" },
 ];

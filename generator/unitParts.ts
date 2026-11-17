@@ -11,6 +11,7 @@ import { sectionHalf, type Box, type Coach, type Pt, type Volume } from "./csdCo
 import { strokeText } from "./strokeFont.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { block, side } from "./vehicleParts.ts";
+import { drawJoint, type JointRig, type SectionRig, type VehicleRig } from "./rig.ts";
 
 /** A native pixel box [left, top, right, bottom], pixel edges, origin top left. */
 export type PxBox = [number, number, number, number];
@@ -158,4 +159,29 @@ export function spacedLetters(c: Coach, v: Volume, s: number, text: string, b: B
   // the ink's left end at the box's left edge as seen from outside: low x on the +z side, high x on the -z side
   const u0 = s > 0 ? c.X(b.x0) - lo : c.X(b.x1) + lo;
   c.m.facets(mat, strokeText(text, u0, b.y0 + stroke / 2, h, w, 0.2 * w, s < 0, stroke).map(([u, vv]): Vec3 => [u, vv, z]), [0, 0, s]);
+}
+
+/** The bellows between two cars of a coupled train (`coupledTrain`). */
+export interface CoupledJoint {
+  /** Model x of the bellows' front and rear faces (front > rear). */
+  front: number;
+  rear: number;
+  /** The bellows' cross-section (z, y): a gangway's, or a small one round the couplers where no gangway meets. */
+  profile: Array<[number, number]>;
+}
+
+/**
+ * A train of single cars as one articulated vehicle (like tramKit's `articulate`,
+ * each joint with its own cross-section): car i is the section `section<i>`, drawn
+ * by `draws[i]`, hinged at `hinges[i - 1]` (the coupling plane ahead of it) at
+ * height `hingeY`; `joints[i]` is the bellows between car i and car i + 1.
+ */
+export function coupledTrain(m: MeshBuilder, draws: ReadonlyArray<() => void>, hinges: readonly number[], hingeY: number, joints: readonly CoupledJoint[], maxBendDeg: number): VehicleRig {
+  const sections: SectionRig[] = draws.map((_, i) => ({ node: `section${i}`, pivot: i === 0 ? [0, 0, 0] : [hinges[i - 1]!, hingeY, 0] }));
+  draws.forEach((draw, i) => m.part(sections[i]!.node, sections[i]!.pivot as Vec3, draw));
+  const rigJoints: JointRig[] = joints.map((j, i) => ({ node: `joint${i}`, sections: [i, i + 1], front: j.front, rear: j.rear, profile: j.profile, folds: 4, depth: 0.03, material: "bellows" }));
+  for (const j of rigJoints) m.part(j.node, [0, 0, 0], () => m.scope("bellows", () => drawJoint(m, j, sections)));
+  const rig: VehicleRig = { sections, joints: rigJoints, maxBendDeg };
+  m.rig = rig;
+  return rig;
 }

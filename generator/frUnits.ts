@@ -27,7 +27,8 @@ export const TGV_M: ShinkansenSeries = {
   nose: nose(6.5, 0.12, 2.5, [[0, 1.3], [0.6, 1.7], [2.6, 2.4], [4.6, 3.2], [6.2, 3.95], [7.4, 4.32]], [[0, 1.25], [0.6, 1.6], [2.6, 2.25], [4.6, 2.95], [6.2, 3.6], [7.4, 3.9]], [[0, 1.2], [1.5, 1.2]], [[0, 1.05], [1.5, 0.95]], [[0, 1.0], [0.6, 0.55], [2.0, 0.7]]),
   windscreen: [4.4, 6.3, 0.07, 1.05], lamps: [1.6, 1.5],
   windows: DD_ROWS, windowW: 1.2, pitch: 1.5, door: [1.1, 3.05, 1.8, 2.6], doorW: 0.95,
-  bogieCentres: 14.0, wheelR: 0.46, wheelbase: 2.5,
+  // the end cars are power cars: the shortest train has a trailer between them
+  bogieCentres: 14.0, wheelR: 0.46, wheelbase: 2.5, minCars: 3,
   liveries: {
     inoui: livery("TGV inOui", "310 001", { body: "#f1f1ee", grey: "#4d5257", red: "#c8102e" }, [[0, 1.05, "grey"], [1.05, 1.12, "red"], [1.12, 9, "body"]]),
     ouigo: livery("Ouigo", "310 051", { body: "#f1f1ee", blue: "#0096d6", pink: "#e6007e" }, [[0, 1.05, "blue"], [1.05, 1.12, "pink"], [1.12, 9, "body"]]),

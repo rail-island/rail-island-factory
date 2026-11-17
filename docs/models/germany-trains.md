@@ -1,7 +1,7 @@
 # Germany's trains
 
 **Covers** - the twenty German designs of the eight-country plan: the ICE 3, ICE 4, ICE T and ICE 2, the S-Bahn BR 423, the Desiro 642, the RegioShuttle 650, the Uerdingen railbus VT 98 and the Fliegender Hamburger; the BR 103, 101, 120, E 18, E 94, V 200 and 218 locomotives; the 01, 52 and Prussian P 8 steam engines; the Intercity coaches. Their modules, figures, the detail pass that matched each to its photographs, deviations and tests.
-**Code** - `generator/deUnits.ts` (`DE_UNITS`, the units' registry), `generator/deLocos.ts` (`DE_LOCOS`, the locomotives' registry), one module per vehicle: `generator/deIce3.ts`, `deIce4.ts`, `deIceT.ts`, `deBr423.ts`, `deBr642.ts`, `deBr650.ts`, `deVt98.ts`, `deSvt877.ts`, `deIce2.ts`, `deBr103.ts`, `deBr101.ts`, `deBr120.ts`, `deE18.ts`, `deE94.ts`, `deV200.ts`, `deBr218.ts`, `deSteam01.ts`, `deSteam52.ts`, `deSteamP8.ts`, `deIcCoach.ts`; `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/deE18.test.ts`, `assets/db-*/`, `assets/drg-*/`, `assets/dr-52/`, `assets/kpev-p8/`
+**Code** - `generator/deUnits.ts` (`DE_UNITS`, the units' registry), `generator/deLocos.ts` (`DE_LOCOS`, the locomotives' registry), one module per vehicle: `generator/deIce3.ts`, `deIce4.ts`, `deIceT.ts`, `deBr423.ts`, `deBr642.ts`, `deBr650.ts`, `deVt98.ts`, `deSvt877.ts`, `deIce2.ts`, `deBr103.ts`, `deBr101.ts`, `deBr120.ts`, `deE18.ts`, `deE94.ts`, `deV200.ts`, `deBr218.ts`, `deSteam01.ts`, `deSteam52.ts`, `deSteamP8.ts`, `deIcCoach.ts`; `generator/worldSteamLocos.ts`, `generator/worldCoaches.ts`, `test/worldTrains.test.ts`, `test/deE18.test.ts`, `test/iceTrains.test.ts`, `assets/db-*/`, `assets/drg-*/`, `assets/dr-52/`, `assets/kpev-p8/`
 **See also** - [shinkansen.md](shinkansen.md) (the series kit), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [steam-locomotives.md](steam-locomotives.md), [world-coaches.md](world-coaches.md), [foreign-units.md](foreign-units.md) (the ICE 1), [mainline-electrics.md](mainline-electrics.md)
 
 The catalog already had the DB 111, 212 and 628, the Dosto, the ICE 1, the DR 243,
@@ -12,11 +12,11 @@ design is filed under Germany (`generator/factTable.ts`).
 
 | id | title | built on | parameters (default first) | figures (game) |
 |---|---|---|---|---|
-| `proc-vehicle-db-ice3` | ICE 3 | series, own cab face (`deIce3.ts`) | `unit`, `cars` 3 - 8, `livery` (`dbIce`, `nsInternational`) | end 25.675 m, middle 24.775 m, 3.89 m high; 330 km/h |
+| `proc-vehicle-db-ice3` | ICE 3 | series, own cab face (`deIce3.ts`) | `unit`, `cars` 2 - 8, `livery` (`dbIce`, `nsInternational`) | end 25.675 m, middle 24.775 m, 3.89 m high; 330 km/h |
 | `proc-vehicle-db-ice4` | ICE 4 | series, cab face (`deIce4.ts`) | `unit`, `cars`, `livery` (`dbIce`, `greenStripe`) | 29.106 / 28.75 m; 250 km/h |
 | `proc-vehicle-db-ice-t` | ICE T | series, cab face, tilting section (`deIceT.ts`) | `unit`, `cars`, `livery` (`dbIce`, `obb`) | 27.45 / 25.9 m, bogie centres 19.0 m; the end cars' pantographs; 230 km/h |
-| `proc-vehicle-db-ice2` | ICE 2 | ICE 1 builder (`ice2` option) + series cab face (`deIce2.ts`) | `unit` (`powerCar`, `coach`, `drivingTrailer`) | power car and coaches in the ICE 2's paint, a 26.40 m driving trailer with the 402's face; 280 km/h |
-| `proc-vehicle-db-423` | DB 423 | series, cab face, Jacobs (`deBr423.ts`) | `unit`, `cars` 4, `livery` (`sBahn`) | Bo'(Bo')(2')(Bo')Bo', end cars 18.24 m to the joint, middle cars 15.46 m, 67.4 m; one pantograph; 140 km/h |
+| `proc-vehicle-db-ice2` | ICE 2 | ICE 1 builder (`ice2` option) + series cab face (`deIce2.ts`) | `unit` (`powerCar`, `coach`, `drivingTrailer`, `train`), `cars` (`2` .. `8`, `4`, with `train`) | power car and coaches in the ICE 2's paint, a 26.40 m driving trailer with the 402's face, the full push-pull train; 280 km/h |
+| `proc-vehicle-db-423` | DB 423 | series, cab face, Jacobs (`deBr423.ts`) | `unit`, `cars` 2 - 8, `livery` (`sBahn`) | Bo'(Bo')(2')(Bo')Bo', end cars 18.24 m to the joint, middle cars 15.46 m, 67.4 m; one pantograph; 140 km/h |
 | `proc-vehicle-db-642` | DB 642 Desiro | series, diesel, cab face, Jacobs (`deBr642.ts`) | `unit` (`endCar`, `train`), `cars` 2, `livery` (`dbRegio`, `erzgebirgsbahn`) | B'2'B', two cars, 41.7 m, 2 x 275 kW; 120 km/h |
 | `proc-vehicle-db-650` | RegioShuttle RS1 | series, diesel, single, cab face (`deBr650.ts`) | `livery` (`dbRegio`, `odeg`) | 25.5 m over buffers, 2.9 m wide; 120 km/h |
 | `proc-vehicle-db-vt98` | Uerdingen railbus VT 98 | series, diesel, single, cab face (`deVt98.ts`) | `livery` (`dbRed`, `orientRed`) | 13.95 m over buffers, 2.92 m wide, two axles 6 m apart; 90 km/h |
@@ -111,7 +111,17 @@ window, `bufferBeam`, a window row's `glass` and the doors' `glassInward`
   (2.56 - 3.34 m), upper lamp, paired head and tail lamps with the slatted grille, the
   bulging split flap with the stripe across it sweeping up the flanks, the raked cab side
   window, the grey ICE, one door and nine 1.5 m panes; 26.40 m from the published 205.36 m
-  half train.
+  half train. The full train (`unit: train`, `cars` 2 .. 8, default 4) is
+  `dbIce2Train(n)`: the power car leading, `n - 2` coaches and the driving trailer turned
+  at the rear; two cars (power car and driving trailer) are the shortest push-pull set
+  that runs, eight the published half train (205.36 m). One articulated vehicle on the
+  ICE 1's train builder (`iceArticulated`, foreign-units.md): each car its lone drawing
+  moved into place - the driving trailer through the series kit's `drawSeriesEndCar`,
+  byte for byte the lone car, its inner end's diaphragm and coupler kept under the
+  bellows - a section a car on its own bogies, hinged on the coupling planes. The train's
+  palette is the driving trailer's with the ICE 1 cars' over it where both name a
+  material. Game figures: a variant per length, the cars' weights added up and the power
+  car's 4,800 kW; the distant model 100 triangles a car, 500 at most.
 
 ### Locomotives
 
@@ -209,4 +219,6 @@ window, `bufferBeam`, a window row's `glass` and the doors' `glassInward`
 `test/worldTrains.test.ts` holds every new design to its country, to its loading
 gauge's width, to the triangle budget and to its published length; the catalog
 sweep (`test/catalogSweep.ts`) runs every per-design check on the defaults and a
-sampled combination. `test/deE18.test.ts` holds the E 18's turning units on a curve.
+sampled combination. `test/iceTrains.test.ts` holds the ICE 2's full train: its formations,
+sections, joints and supports, length, budgets, distant model, game figures and the driving
+trailer drawn byte for byte as the lone car. `test/deE18.test.ts` holds the E 18's turning units on a curve.

@@ -1,6 +1,9 @@
 // The later Shinkansen series (generator/shinkansen.ts). See docs/models/shinkansen.md.
 import { describe, expect, it } from "vitest";
-import { SHINKANSEN_DESIGNS, SHINKANSEN_SERIES, shinkansenTrain } from "../generator/shinkansen";
+import { carsOf, minSeriesCars, SHINKANSEN_DESIGNS, SHINKANSEN_SERIES, shinkansenTrain } from "../generator/shinkansen";
+import { TGV_M } from "../generator/frUnits";
+import { S100 } from "../generator/esUnits";
+import { HST } from "../generator/ukUnits";
 import { LOADING_GAUGES } from "../generator/loadingGauge";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { glbStats } from "../generator/glbStats";
@@ -10,7 +13,7 @@ import { readTriangles } from "../generator/renderGlbThumb";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 
 describe("the later Shinkansen", () => {
-  it("are seven series on the Shinkansen gauge, each an end car, a middle car and a train of 3 - 8", () => {
+  it("are seven series on the Shinkansen gauge, each an end car, a middle car and a train of 2 - 8", () => {
     expect(SHINKANSEN_DESIGNS.map((d) => d.id)).toEqual(Object.keys(SHINKANSEN_SERIES));
     for (const d of SHINKANSEN_DESIGNS) {
       expect(d.loadingGauge).toBe("shinkansen");
@@ -91,6 +94,26 @@ describe("the later Shinkansen", () => {
     expect(t.map((x) => x.pantograph)).toEqual([false, false, true, false, false, true, false, false]);
     expect(t.map((x) => x.turned)).toEqual([false, false, false, false, false, false, false, true]);
     expect(shinkansenTrain(SHINKANSEN_SERIES["proc-vehicle-shinkansen-n700s"]!, 3).map((x) => x.pantograph)).toEqual([false, true, false]);
+  });
+
+  it("offers every train length from two end cars back to back up to eight, keeping the default", () => {
+    const n700s = SHINKANSEN_SERIES["proc-vehicle-shinkansen-n700s"]!;
+    expect(carsOf(n700s)).toEqual([2, 3, 4, 5, 6, 7, 8]);
+    const cars = SHINKANSEN_DESIGNS[0]!.params!.find((p) => p.name === "cars")!;
+    expect(cars.default).toBe("4");
+    // a listed formation only sets the default: a unit of [5] offers 2 - 8 and defaults to 5
+    expect(carsOf({ ...n700s, cars: [5] })).toEqual([2, 3, 4, 5, 6, 7, 8]);
+    // a unit without intermediate cars keeps its own lengths
+    expect(carsOf({ ...n700s, cars: [2] })).toEqual([2]);
+    // two end cars raise the rear one's pantograph; there is no intermediate car to carry it
+    expect(shinkansenTrain(n700s, 2).map((x) => [x.end, x.pantograph, x.turned])).toEqual([[true, false, false], [true, true, true]]);
+  });
+
+  it("starts a power-car train at three cars: its end cars need a car between them", () => {
+    expect(minSeriesCars(TGV_M)).toBe(3);
+    expect(minSeriesCars(S100)).toBe(3);
+    expect(minSeriesCars(HST)).toBe(3);
+    expect(carsOf(TGV_M)[0]).toBe(3);
   });
 
   it("draws the E6's windscreen on its canopy only: one glass wrapping from the front into the side windows", () => {

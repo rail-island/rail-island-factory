@@ -19,13 +19,16 @@ centred between its buffer faces, so the cars of a set couple in any order.
 | | | `cdBlue` | - (photographs) | CD's current blue, the Najbrt scheme (810 290-7) |
 | `veh-cd-812` "CD 812 / 912 Esmeralda" | `unit` | `motorCar` (default) | 812/cd_812.613 | the 812 "Esmeralda", the one 810 rebuilt in 2001 with new noses |
 | | | `drivingTrailer` | 812/cd_912.001 | its driving trailer 912 001 (Bfbdtanx 792), with the low centre door |
+| | | `train` | the two above | the full train, `cars` 2 (default) to 8: 812 + 912 pairs, an odd train ending in a second 812 (see "The full trains") |
 | `veh-cd-843` "CD 843 / 943 / 043" | `unit` | `motorCar` (default) | cd_843 | the 843 motor car, a cab at each end |
 | | | `drivingTrailer` | 843/cd_943 | the 943 driving trailer, cab at +X, gangway at -X |
 | | | `trailer` | 843/cd_btn753-043 | the 043 trailer, gangways at both ends |
+| | | `train` | the three above | the full train, `cars` 2 to 8 (default 3): 843 + 043s + 943, from five cars an 843 at each end |
 | | `livery` | `red` (default) | the three above | vlakosimdb's red and cream on every car |
 | | | `cdBlue` | - (photographs) | CD's current blue on every car (843 007-6, 943 010-9, 043 007-4) |
 | `veh-csd-m131` "CSD M 131.1 Hurvinek" | `unit` | `motorCar` (default) | m131/csd_m131 | the Tatra two-axle railcar |
 | | | `trailer` | m131/csd_m031 | vlakosimdb's "M 031" trailer, the same body without the engine, radiator and exhausts |
+| | | `train` | the two above | the full train, `cars` 2 (default) to 8: the railbus with one or two trailers, from four cars a railbus at each end |
 | `veh-csd-m240` "CSD M 240.0 Singrovka" | - | - | csd_m240 | the bogie railcar with a cab at each end |
 | `veh-csd-m296` "CSD M 296.1 / CD 853 / 854" | `variant` | `m296` (default) | csd_m296 | the express railcar in its CSD paint |
 | | | `cd853` | csd_853 | the same car renumbered 853 (vlakosimdb paints it in the same scheme) |
@@ -63,6 +66,7 @@ Choices:
 | CD 843, 943, 043 | 25.20 m | about 6,800, 6,000 and 5,400; in CD's blue 7,700, 6,500 and 5,400 |
 | CSD M 131.1, M 031 | 12.10 m | about 4,000 and 3,900 |
 | CSD M 240.0 | 18.50 m | about 6,400 |
+| a full train | its cars' 14.47, 25.20 or 12.10 m each | its cars added up (two 812 / 912 cars about 29,400) |
 | CSD M 296.1, 853, 854 | 24.79 m | about 6,300; 7,100 for the 854, 7,600 for the blue 854 |
 
 ## The railcar kit (`dmuKit.ts`)
@@ -284,6 +288,36 @@ re-annotated from the strip over the windscreens to the whole cream upper face,
 the visor no longer being a part of its own. The rows left outside their
 tolerance are deliberate and named in each table.
 
+## The full trains
+
+The 812 / 912, the 843 family and the M 131.1 each offer the value `train` of
+`unit` with a `cars` parameter (2 to 8, shown only for the train), after the
+railroad-vehicle skill's "Multiple units and trainsets". The formation lives in
+`cd812Train(n)`, `cd843Train(n)` and `m131Train(n)`, front first, each car's span
+over its coupling planes (the buffers' faces), the train centred on x = 0 and its
+last car turned:
+
+| design | `cars` default | formation | game figures |
+|---|---|---|---|
+| 812 / 912 | 2 | 812 + 912 pairs (the driving trailer runs with its motor car); an odd count ends in one more 812, the railcar the 912 was rebuilt to run with; 812s often run coupled in multiple | 20.7 t a car, 240 kW a motor car |
+| 843 / 943 / 043 | 3 | the 843 leading, 043 trailers, the 943 at the rear up to four cars (one 423 kW motor car pulls up to two trailers and the driving trailer); from five cars a second 843 at the rear instead of the 943, the 043s between the two | 56 t and 423 kW a motor car, 25 t a trailer; repeated in CD's blue |
+| M 131.1 | 2 | the railbus with one trailer, or two (its 155 kW pulled one, at most two); from four cars a second railbus at the rear, top and tail, the trailers between | 25 t and 155 kW a motor car, 15 t a trailer |
+
+The train is one articulated vehicle (`articulate`, `tramKit.ts`): each car a
+section hinged at the coupling plane ahead of it, on its own two axles or bogies
+(each a support of its section), the buffers meeting at the plane. The cars are
+the lone cars' own drawing functions (`esmeralda`, `car843`, `car131`) drawn into
+the train's builder, moved to their place and the last turned (`MeshCore.turned`),
+so a lone car's geometry is unchanged. The joint over each gap: on the 843 family
+a bellows between the end doors (1.0 m wide, 1.15 to 3.15 m; every car has one, the
+cab ends their door between the windscreens), on the M 131.1 a bellows over the end
+doors (0.6 m wide, 0.95 to 2.7 m); the 812 / 912 have no gangway, so their joint is
+only the low hose and cable bundle between the two aprons (0.5 m wide, 0.62 to
+0.9 m) and the noses meet cab to cab. The bend a joint allows: 15 degrees on the
+short two-axle cars, 12 on the 843s. The distant model of a train keeps the
+sections, the cars' bodies and parts and a plain joint, 100 triangles a car, 500 at
+most (`lodTriangles: 500` on all three designs). OpenTTD's presets carry no train.
+
 ## Tests
 
 `test/czechDmus.test.ts`: the six designs and their parameters; every
@@ -299,5 +333,8 @@ out, the apron) while the M 296.1 and 853 keep the gangway front; the 843's and
 943's headlamp box on every cab end in both liveries and none on a gangway end;
 the running numbers' check digits; CD's blue on the cars' own layouts, the logo with or
 without the wordmark, the cab fronts' number, emblem and light blue hood (from above, light blue across the whole width of every cab end's last 0.5 m); every
-default car within its landmarks' pixel tolerances and MAE limit. The catalog sweep (`test/catalogSweep.ts`)
+default car within its landmarks' pixel tolerances and MAE limit; the full trains'
+formation of every length, their sections, joints, supports, hinges at the coupling
+planes, length, 16,000 triangles a car, deterministic bytes, the distant model's
+sections and budget, and every length's game figures. The catalog sweep (`test/catalogSweep.ts`)
 covers every design generically.

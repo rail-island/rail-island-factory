@@ -1,7 +1,9 @@
 // The CD 471 CityElefant, the Skoda double-deck electric unit of Prague's
 // suburban network: one design `veh-cd-471` whose `unit` picks the car of the
 // three-car set - the 471 motor car (default), the 071 trailer or the 971
-// driving trailer - and whose `variant` picks the CD 471 in its CityElefant
+// driving trailer - or the full train (`cars` 2 .. 8: the motor car ahead,
+// trailers, the driving trailer turned at the rear; `cd471Train`), and whose
+// `variant` picks the CD 471 in its CityElefant
 // livery, vlakosimdb's red "CD 675", the same body and layout in another
 // paint and class (assets/cd-471/SOURCES.md says why it is no separate design),
 // or CD's current blue (`cdBlue`, 471 079, read from a photograph).
@@ -18,8 +20,9 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
-import { LOD_GLASS } from "./lodKit.ts";
-import { bogieParts, coachBody, fitUnit, pantographParts, shifted, sideGlass } from "./lodUnits.ts";
+import { LOD_GLASS, type LodPart, type LodSections } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, shiftBody, shifted, sideGlass, turnBody, type UnitBody } from "./lodUnits.ts";
+import { articulate } from "./tramKit.ts";
 import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
@@ -35,12 +38,23 @@ export const K_Z = 2.82 / 3.0;
 export type ElefantUnit = "motorCar" | "trailer" | "drivingTrailer";
 export type ElefantVariant = "cd471" | "cd675" | "cdBlue";
 
+/** The full train's vehicle counts: motor car and driving trailer, 0 .. 6 trailers between; the three-car set by default. */
+export const CD471_MIN_CARS = 2;
+export const CD471_MAX_CARS = 8;
+export const CD471_DEFAULT_CARS = 3;
+
 export const CD471_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
     motorCar: "Motor car",
     trailer: "Trailer",
     drivingTrailer: "Driving trailer",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: CD471_MAX_CARS - CD471_MIN_CARS + 1 }, (_, i) => [String(i + CD471_MIN_CARS), `${i + CD471_MIN_CARS} cars`]))),
+    default: String(CD471_DEFAULT_CARS),
+    when: { name: "unit", values: ["train"] },
+  },
   enumParam("variant", "Variant", {
     cd471: "CityElefant",
     cd675: "CD 675",
@@ -329,8 +343,9 @@ const BOGIES: [number, number] = [3.15, 22.15];
 /** A car of the CD 471 CityElefant (or the vlakosimdb CD 675) set. */
 export function cd471(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD471_PARAMS, params);
-  const unit = p.unit as ElefantUnit;
   const variant = p.variant as ElefantVariant;
+  if (p.unit === "train") return elefantTrain(Number(p.cars), variant);
+  const unit = p.unit as ElefantUnit;
   return elefantCar(unit, variant);
 }
 
@@ -357,10 +372,11 @@ function volume471(unit: ElefantUnit, paint: Paint): Volume {
   };
 }
 
-function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
+/** A car, into its own builder or into `into` (a car of the full train: no gangway frames at its inner ends). */
+function elefantCar(unit: ElefantUnit, variant: ElefantVariant, into?: MeshBuilder): MeshBuilder {
   const L = LAYOUTS[unit];
   const paint = PAINTS[variant];
-  const c = new Coach({ ...PALETTE, ...paint.palette }, centreOf(L));
+  const c = new Coach({ ...PALETTE, ...paint.palette }, centreOf(L), into);
   const m = c.m;
   const body = volume471(unit, paint);
   const box = (b: PxBox) => sb(L, b);
@@ -372,7 +388,7 @@ function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, paint, s, number));
   });
   if (L.cab) m.scope("cab", () => cab(c, body, L, paint, number));
-  for (const e of L.cab ? [-1] : [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => innerEnd(c, body, L, e));
+  for (const e of L.cab ? [-1] : [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => innerEnd(c, body, L, e, !into));
   if (unit === "motorCar")
     m.scope("roof equipment", () => {
       m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: c.X(3.25), roof: 4.2 * K_Y, hinge: -1, raised: true })));
@@ -413,23 +429,128 @@ function elefantCar(unit: ElefantUnit, variant: ElefantVariant): MeshBuilder {
  */
 export function cd471Lod(params?: ParamValues): MeshBuilder {
   const p = resolveParams(CD471_PARAMS, params);
-  const unit = p.unit as ElefantUnit;
-  const paint = PAINTS[p.variant as ElefantVariant];
+  const variant = p.variant as ElefantVariant;
+  if (p.unit === "train") return elefantTrainLod(Number(p.cars), variant);
+  const paint = PAINTS[variant];
+  const { body, parts } = elefantLodCar(p.unit as ElefantUnit, paint);
+  return fitUnit({ palette: { ...PALETTE, ...paint.palette }, bodies: [body], parts }, 100);
+}
+
+/** A car's distant body (lone-car coordinates) and its parts, placed by `T` from lone-car x to the train's on `section` in the train. */
+function elefantLodCar(unit: ElefantUnit, paint: Paint, train?: { T: (x: number) => number; section: number }): { body: UnitBody; parts: LodPart[] } {
   const L = LAYOUTS[unit];
   const centre = centreOf(L);
+  const T = train?.T ?? ((x: number) => x);
   const windows = sideGlass(shifted([...L.upper, ...L.lower, ...L.ends].map((b) => sb(L, b)), centre), 0.6, 2);
   const body = coachBody([{ v: volume471(unit, paint), X: (b) => b - centre }], {
     y0: 0.9 * K_Y, windows, ...(L.cab ? { frontWindows: [{ u: [fz(26), fz(4)], y: [fy(36.9), fy(27)], mat: LOD_GLASS }] } : {}),
   });
   const half = (L.motor ? 1.3 : 1.2) + 0.66;
-  return fitUnit({
-    palette: { ...PALETTE, ...paint.palette },
-    bodies: [body],
+  const sec = train ? [train.section] as const : ([] as const);
+  return {
+    body,
     parts: [
-      ...bogieParts(BOGIES.map((b) => [b - centre, half] as const), 0.9 * K_Y),
-      ...(unit === "motorCar" ? pantographParts([3.25 - centre], 4.2 * K_Y, 4.2 * K_Y + 0.25) : []),
+      ...bogieParts(BOGIES.map((b) => [T(b - centre), half, ...sec] as const), 0.9 * K_Y),
+      ...(unit === "motorCar" ? pantographParts([T(3.25 - centre)], 4.2 * K_Y, 4.2 * K_Y + 0.25, train ? { section: train.section } : {}) : []),
     ],
-  }, 100);
+  };
+}
+
+// --- the full train ---------------------------------------------------------------------------
+
+/** One vehicle of the train: its span lo..hi over its coupling planes (model x) and whether it is turned. */
+export interface ElefantSlot {
+  car: ElefantUnit;
+  lo: number;
+  hi: number;
+  turned: boolean;
+}
+
+/** A car's length over its coupling faces (the inner bellows, the cab coupler or the far bellows). */
+export const elefantLength = (unit: ElefantUnit): number => {
+  const L = LAYOUTS[unit];
+  return (L.cab ? L.length + CAB_COUPLER : L.length + BELLOWS) + BELLOWS;
+};
+
+/**
+ * The vehicles of a train of `n` (2 .. 8), front first: the motor car with its
+ * cab ahead, n - 2 trailers, the driving trailer turned at the rear (its cab
+ * facing -X): 2 cars motor car + driving trailer, 3 the CityElefant set.
+ * Longer trains add trailers to the one set (the prototype runs two sets
+ * coupled cab to cab instead; a set of up to eight cars keeps one pantograph
+ * and one pair of cabs). Each with its span over its coupling planes, the
+ * train centred on x = 0.
+ */
+export function cd471Train(n: number): ElefantSlot[] {
+  if (!Number.isInteger(n) || n < CD471_MIN_CARS || n > CD471_MAX_CARS) throw new Error(`CD 471: no ${n}-car train`);
+  const cars: ElefantUnit[] = ["motorCar", ...Array.from({ length: n - 2 }, (): ElefantUnit => "trailer"), "drivingTrailer"];
+  let hi = cars.reduce((t, car) => t + elefantLength(car), 0) / 2;
+  return cars.map((car, i) => {
+    const lo = hi - elefantLength(car);
+    const out = { car, lo, hi, turned: i === n - 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/** The bellows over a gap between two cars' end walls (the gangway frame's outline), and the hinges' height (the coupler bar's). */
+const BELLOWS_471: Array<[number, number]> = [[-0.6 * K_Z, fy(48)], [0.6 * K_Z, fy(48)], [0.6 * K_Z, fy(19)], [-0.6 * K_Z, fy(19)]];
+const COUPLER_Y = 0.72;
+const MAX_BEND_DEG = 10;
+const BELLOWS_PAINT: MaterialSpec = { color: "#26272a", roughness: 0.95 };
+
+/** A slot's mapping from lone-car x to train x, and its body's end walls (a cab car: wall and nose tip) in train x [low, high]. */
+function placement(slot: ElefantSlot): { T: (x: number) => number; walls: [number, number] } {
+  const cx = (slot.lo + slot.hi) / 2;
+  const L = LAYOUTS[slot.car];
+  const centre = centreOf(L);
+  const T = (x: number) => (slot.turned ? cx - x : cx + x);
+  const [a, b] = [T(0 - centre), T(L.length - centre)];
+  return { T, walls: [Math.min(a, b), Math.max(a, b)] };
+}
+
+function elefantTrain(n: number, variant: ElefantVariant): MeshBuilder {
+  const slots = cd471Train(n);
+  const m = new Coach({ ...PALETTE, ...PAINTS[variant].palette, bellows: BELLOWS_PAINT }, 0).m;
+  const sections = slots.map((slot, k) => {
+    const cx = (slot.lo + slot.hi) / 2;
+    const { walls } = placement(slot);
+    return {
+      x0: walls[0],
+      x1: walls[1],
+      draw: () =>
+        m.scope(`car ${k + 1}`, () => {
+          const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => elefantCar(slot.car, variant, m));
+          if (slot.turned) m.turned(cx, draw);
+          else draw();
+        }),
+    };
+  });
+  articulate({ m }, sections, COUPLER_Y, { profile: BELLOWS_471, folds: 3, depth: 0.03 }, MAX_BEND_DEG, slots.slice(0, -1).map((slot) => slot.lo));
+  return m;
+}
+
+/** The distant model's budget: 100 triangles a car, 500 for the longest trains. */
+export const CD471_LOD = 500;
+
+function elefantTrainLod(n: number, variant: ElefantVariant): MeshBuilder {
+  const slots = cd471Train(n);
+  const paint = PAINTS[variant];
+  const built = slots.map((slot, k) => {
+    const { T } = placement(slot);
+    const { body, parts } = elefantLodCar(slot.car, paint, { T, section: k });
+    const cx = (slot.lo + slot.hi) / 2;
+    // the inner ends stay under the bellows
+    const inner: UnitBody = { ...body, rear: { ...body.rear, hidden: true }, ...(slot.car === "trailer" ? { front: { ...body.front, hidden: true } } : {}), section: k };
+    return { body: slot.turned ? turnBody(shiftBody(inner, cx), cx) : shiftBody(inner, cx), parts };
+  });
+  const walls = slots.map((slot) => placement(slot).walls);
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, COUPLER_Y, 0])),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: walls[i]![0], rear: walls[i + 1]![1], profile: BELLOWS_471 })),
+    maxBendDeg: MAX_BEND_DEG,
+  };
+  return fitUnit({ palette: { ...PALETTE, ...paint.palette }, bodies: built.map((b) => b.body), parts: built.flatMap((b) => b.parts), sections }, Math.min(CD471_LOD, 100 * n));
 }
 
 /** Windows, doors, paint lines and markings on side s. */
@@ -571,12 +692,12 @@ function cab(c: Coach, v: Volume, L: CarLayout, paint: Paint, number: string): v
 }
 
 /** The inner end e: gangway bellows, its door and marker lamps (x_dec of the 471, x_both of the 071). */
-function innerEnd(c: Coach, v: Volume, L: CarLayout, e: number): void {
+function innerEnd(c: Coach, v: Volume, L: CarLayout, e: number, frame: boolean): void {
   const m = c.m;
   const wall = e > 0 ? L.length : 0;
   const face = wall + e * BELLOWS;
   const X = c.X.bind(c);
-  m.scope("gangway", () => {
+  if (frame) m.scope("gangway", () => {
     const [a, b] = [X(wall) - e * 0.02, X(face)].sort((p, q) => p - q) as [number, number];
     // the bellows frame, x_dec columns 9..21 (z +-0.6 m before the width scale), rows 19..48
     for (const z of [-1, 1]) block(m, "rubber", a, b, fy(48), fy(19), ...side(z, 0.46, 0.6 * K_Z));
@@ -601,6 +722,29 @@ function innerEnd(c: Coach, v: Volume, L: CarLayout, e: number): void {
 /** Every car and variant, for the tests: [unit, variant]. */
 export const ELEFANT_CARS: ReadonlyArray<[ElefantUnit, ElefantVariant]> = (["motorCar", "trailer", "drivingTrailer"] as const).flatMap((u) => (["cd471", "cd675", "cdBlue"] as const).map((v): [ElefantUnit, ElefantVariant] => [u, v]));
 
+/**
+ * A car's weight (t) and power (kW) in the full train: the motor car's and the
+ * trailer's as the lone cars state them; the driving trailer, which has no
+ * motors, an estimated 50 t (as the trailer).
+ */
+const TRAIN_WEIGHT: Record<ElefantUnit, number> = { motorCar: 70, trailer: 50, drivingTrailer: 50 };
+const TRAIN_POWER: Record<ElefantUnit, number> = { motorCar: 1000, trailer: 0, drivingTrailer: 0 };
+
+/** Every train length in every variant: its cars' weights and the motor car's power added up; the default length and variant named by the unit alone. */
+const trainVariants = (): NonNullable<GameProperties["variants"]> =>
+  (["cd471", "cd675", "cdBlue"] as const).flatMap((variant) =>
+    Array.from({ length: CD471_MAX_CARS - CD471_MIN_CARS + 1 }, (_, i) => {
+      const n = i + CD471_MIN_CARS;
+      const slots = cd471Train(n);
+      return {
+        params: { unit: "train", ...(n === CD471_DEFAULT_CARS ? {} : { cars: String(n) }), ...(variant === "cd471" ? {} : { variant }) },
+        weight: slots.reduce((t, s) => t + TRAIN_WEIGHT[s.car], 0),
+        power: slots.reduce((t, s) => t + TRAIN_POWER[s.car], 0),
+        ...(variant === "cd675" ? { maxspeed: 160 } : {}),
+      };
+    }),
+  );
+
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
 const CD_471_GAME: GameProperties = {
   weight: 70,
@@ -613,11 +757,12 @@ const CD_471_GAME: GameProperties = {
     { params: { unit: "trailer", variant: "cd675" }, weight: 50, power: 0, maxspeed: 160 },
     { params: { unit: "trailer" }, weight: 50, power: 0 },
     { params: { unit: "trailer", variant: "cdBlue" }, weight: 50, power: 0 },
+    ...trainVariants(),
   ],
 };
 
 export const EMU471_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-471", game: CD_471_GAME, title: "CD 471 CityElefant", build: cd471, buildLod: cd471Lod, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
+  { id: "proc-vehicle-cd-471", game: CD_471_GAME, title: "CD 471 CityElefant", build: cd471, buildLod: cd471Lod, lodTriangles: CD471_LOD, params: CD471_PARAMS, catalog: EMU_CATALOG, references: "cd-471" },
 ];
 
 export { LAYOUTS as ELEFANT_LAYOUTS, centreOf as elefantCentre };

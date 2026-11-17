@@ -7,7 +7,7 @@ import { DB628_BOGIES, DB628_DESIGNS, DB628_PARAMS, DB628_WHEELBASE, db628 } fro
 import { nWagen } from "../generator/dbNWagen";
 import { MDMOT_DESIGNS, MDMOT_PARAMS, mavMdmot } from "../generator/mavMdmot";
 import { ICE1_DESIGNS, ICE1_PARAMS, ice1 } from "../generator/ice1";
-import { TGV_COACH_LENGTH, TGV_DESIGNS, TGV_END_LENGTH, TGV_PARAMS, TGV_POWER_LENGTH, tgv } from "../generator/tgv";
+import { TGV_COACH_LENGTH, TGV_DESIGNS, TGV_END_LENGTH, TGV_LOD, TGV_PARAMS, TGV_POWER_LENGTH, tgv, tgvLod, tgvTrain } from "../generator/tgv";
 import { tractionCheckDigit, tractionNumber } from "../generator/emuParts";
 import { UNIT_TRANSFERS, readUnitLandmarks, unitComparison } from "../generator/unitComparison";
 import { glbStats } from "../generator/glbStats";
@@ -51,19 +51,27 @@ describe("the foreign multiple units", () => {
     expect(DB628_DESIGNS[0]!.references).toEqual(["db-628", "db-n-wagen"]);
     const spec = (ps: typeof DB628_PARAMS) => ps.map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
     expect(spec(DB628_PARAMS)).toEqual([
-      ["unit", "motorCar", ["motorCar", "bn", "abn", "bdnrf"]],
+      ["unit", "motorCar", ["motorCar", "bn", "abn", "bdnrf", "train"]],
+      ["cars", "2", ["2", "3", "4", "5", "6", "7", "8"]],
       ["livery", "mint", ["mint", "red"]],
     ]);
-    expect(spec(MDMOT_PARAMS)).toEqual([["unit", "motorCar", ["motorCar", "trailerAx", "trailerBx", "drivingTrailer"]]]);
-    expect(spec(ICE1_PARAMS)).toEqual([["unit", "powerCar", ["powerCar", "coach", "restaurant"]]]);
+    expect(spec(MDMOT_PARAMS)).toEqual([
+      ["unit", "motorCar", ["motorCar", "trailerAx", "trailerBx", "drivingTrailer", "train"]],
+      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
+    ]);
+    expect(spec(ICE1_PARAMS)).toEqual([["unit", "powerCar", ["powerCar", "coach", "restaurant", "train"]], ["cars", "4", ["3", "4", "5", "6", "7", "8"]]]);
+    expect(ICE1_PARAMS[1]!.when).toEqual({ name: "unit", values: ["train"] });
     expect(spec(TGV_PARAMS)).toEqual([
-      ["unit", "powerCar", ["powerCar", "set"]],
+      ["unit", "powerCar", ["powerCar", "set", "train"]],
       ["cars", "1", ["1", "2", "3", "4", "5", "6"]],
+      ["trainCars", "4", ["3", "4", "5", "6", "7", "8"]],
       ["livery", "pse", ["pse", "atlantique"]],
     ]);
-    // the car count applies to the trailer set only
+    // the set's car count applies to the trailer set only (a saved { unit: "set" } stays one car);
+    // the full train's length, every vehicle counted, is a parameter of its own
     expect(TGV_PARAMS[1]!.when).toEqual({ name: "unit", values: ["set"] });
-    expect(paramCombinations(TGV_PARAMS)).toHaveLength(2 + 6 * 2);
+    expect(TGV_PARAMS[2]!.when).toEqual({ name: "unit", values: ["train"] });
+    expect(paramCombinations(TGV_PARAMS)).toHaveLength(2 + 6 * 2 + 6 * 2);
   });
 
   for (const d of designs)
@@ -75,9 +83,9 @@ describe("the foreign multiple units", () => {
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
       expect(s.max[1]).toBeLessThanOrEqual(6.5);
       // an articulated set is several cars: the budget is per car
-      expect(s.triangles).toBeLessThanOrEqual(combo.unit === "set" ? Math.max(16_000, 4_000 * Number(combo.cars)) : 16_000);
+      expect(s.triangles).toBeLessThanOrEqual(combo.unit === "set" ? Math.max(16_000, 4_000 * Number(combo.cars)) : combo.unit === "train" ? 16_000 * Number(combo.trainCars ?? combo.cars) : 16_000);
       expect(s.triangles).toBeGreaterThan(2_000);
-      const fixed = nodes.filter((n) => !n.id.startsWith("roof-equipment/pantographs/") && n.tri[1] > 0);
+      const fixed = nodes.filter((n) => !/(^|\/)roof-equipment\/pantographs\//.test(n.id) && n.tri[1] > 0);
       expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
     });
 
@@ -249,6 +257,84 @@ describe("the foreign multiple units", () => {
     const b = built(one, "proc-vehicle-tgv");
     expect(bounds(b.nodes, /^front-end\/coupler\//).max[0]).toBeCloseTo(b.stats.max[0], 2);
     expect(bounds(b.nodes, /^rear-end\/coupler\//).min[0]).toBeCloseTo(b.stats.min[0], 2);
+  });
+
+  it("TGV: the full train is power car, trailer set and power car turned, 3 .. 8 vehicles", () => {
+    const kinds = (n: number) => tgvTrain(n).map((s) => `${s.kind}${s.turned ? "*" : ""}`);
+    expect(kinds(3)).toEqual(["powerCar", "endCoach", "powerCar*"]);
+    expect(kinds(4)).toEqual(["powerCar", "endCoach", "endCoach*", "powerCar*"]);
+    expect(kinds(8)).toEqual(["powerCar", "endCoach", "coach", "coach", "coach", "coach", "endCoach*", "powerCar*"]);
+    for (let n = 3; n <= 8; n++) {
+      const slots = tgvTrain(n);
+      expect(slots).toHaveLength(n);
+      // end to end, centred on x = 0
+      for (let k = 1; k < n; k++) expect(slots[k]!.hi).toBeCloseTo(slots[k - 1]!.lo, 9);
+      expect(slots[0]!.hi).toBeCloseTo(-slots[n - 1]!.lo, 9);
+      const length = 2 * TGV_POWER_LENGTH + (n === 3 ? TGV_END_LENGTH : 2 * TGV_END_LENGTH + (n - 4) * TGV_COACH_LENGTH);
+      expect(slots[0]!.hi - slots[n - 1]!.lo).toBeCloseTo(length, 9);
+    }
+    expect(() => tgvTrain(2)).toThrow();
+    expect(() => tgvTrain(9)).toThrow();
+  });
+
+  it("TGV: the full train is one articulated vehicle: a section per vehicle, a bellows per gap, every bogie a support", () => {
+    for (const n of [3, 4, 6, 8]) {
+      const m = tgv({ unit: "train", trainCars: String(n), livery: n === 6 ? "atlantique" : "pse" });
+      const rig = m.rig!;
+      const slots = tgvTrain(n);
+      expect(rig.sections).toHaveLength(n);
+      expect(rig.joints).toHaveLength(n - 1);
+      // hinged on the coupling plane or the Jacobs joint ahead of each car
+      for (let k = 1; k < n; k++) expect(rig.sections![k]!.pivot[0]).toBeCloseTo(slots[k - 1]!.lo, 3);
+      const supports = [...rig.supports!].sort((a, b) => b.x - a.x);
+      // two bogies a power car; the end coaches' own bogies; a Jacobs bogie under each joint inside the set
+      const trailers = n - 2;
+      expect(supports).toHaveLength(4 + (trailers === 1 ? 2 : trailers + 1));
+      expect(supports.every((p) => p.axles === 2)).toBe(true);
+      expect(supports.slice(0, 2).map((p) => p.sections)).toEqual([[0], [0]]);
+      expect(supports.slice(-2).map((p) => p.sections)).toEqual([[n - 1], [n - 1]]);
+      expect(supports.filter((p) => p.sections!.length === 2)).toHaveLength(trailers === 1 ? 0 : trailers - 1);
+      const { stats: s, nodes } = built(m, "proc-vehicle-tgv");
+      expect(s.max[0] - s.min[0]).toBeCloseTo(slots[0]!.hi - slots[n - 1]!.lo, 2);
+      expect(s.max[0]).toBeCloseTo(-s.min[0], 5);
+      expect(s.triangles).toBeLessThanOrEqual(16_000 * n);
+      // the rear power car is turned: both noses (their windscreens) at the train's ends
+      const screens = nodes.filter((x) => /\/cab\/windscreen\//.test(x.id) && x.tri[1] > 0);
+      expect(Math.max(...screens.map((x) => x.max![0]))).toBeGreaterThan(s.max[0] - 4);
+      expect(Math.min(...screens.map((x) => x.min![0]))).toBeLessThan(s.min[0] + 4);
+      // the end coaches' gangways stay under the train's bellows; their couplers stay
+      expect(nodes.some((x) => /\/gangway\//.test(x.id))).toBe(false);
+      expect(nodes.filter((x) => /car-2\/front-end\/coupler\//.test(x.id)).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("TGV: the full train's bytes are deterministic and its lone cars unchanged by it", () => {
+    const a = tgv({ unit: "train", trainCars: "5" }).toGlb("x");
+    const b = tgv({ unit: "train", trainCars: "5" }).toGlb("x");
+    expect(Buffer.from(a).equals(Buffer.from(b))).toBe(true);
+    // the default train is four vehicles
+    expect(Buffer.from(tgv({ unit: "train" }).toGlb("x")).equals(Buffer.from(tgv({ unit: "train", trainCars: "4" }).toGlb("x")))).toBe(true);
+  });
+
+  it("TGV: the full train's distant model keeps its sections and joints within 100 triangles a vehicle", () => {
+    for (let n = 3; n <= 8; n++) {
+      const full = tgv({ unit: "train", trainCars: String(n) }).rig!;
+      const low = tgvLod({ unit: "train", trainCars: String(n) });
+      expect(low.triangleCount()).toBeLessThanOrEqual(Math.min(TGV_LOD, 100 * n));
+      expect(low.rig!.sections!.map((x) => x.pivot)).toEqual(full.sections!.map((x) => x.pivot));
+      expect(low.rig!.joints!.map((j) => j.sections)).toEqual(full.joints!.map((j) => j.sections));
+    }
+  });
+
+  it("TGV: every train length states its game figures in both liveries", () => {
+    const game = TGV_DESIGNS[0]!.game!;
+    for (const livery of [undefined, "atlantique"])
+      for (let n = 3; n <= 8; n++) {
+        const params = { ...(livery ? { livery } : {}), ...(n === 4 ? {} : { trainCars: String(n) }), unit: "train" };
+        const v = game.variants!.find((x) => JSON.stringify(x.params) === JSON.stringify(params));
+        expect(v, JSON.stringify(params)).toBeDefined();
+        expect(v!.power).toBe(2 * game.power!);
+      }
   });
 
   it.each(UNIT_TRANSFERS.map((t) => [t.key] as const))("%s matches its native BMP landmarks within their pixel tolerances once the documented scales are undone", (key) => {

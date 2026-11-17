@@ -11,18 +11,18 @@ Every design is filed under the Netherlands (`generator/factTable.ts`).
 | id | title | built on | parameters (default first) | figures (game) |
 |---|---|---|---|---|
 | `proc-vehicle-ns-mat46` | NS Mat '46 | series, cab face, Jacobs (`nlMat46.ts`) | `unit`, `livery` (`green`, `yellowGrey`) | Bo'2'Bo', two cars, 44.7 m; 89 t, 796 kW, 140 km/h |
-| `proc-vehicle-ns-mat54` | NS Mat '54 Hondekop | series, cab face (`nlMat54.ts`) | `unit`, `cars` 2 - 4, `livery` (`green`, `yellowGrey`) | 25.56 / 24.07 m (51.12 / 99.26 m); 140 km/h |
+| `proc-vehicle-ns-mat54` | NS Mat '54 Hondekop | series, cab face (`nlMat54.ts`) | `unit`, `cars` 2 - 8, `livery` (`green`, `yellowGrey`) | 25.56 / 24.07 m (51.12 / 99.26 m); 140 km/h |
 | `proc-vehicle-ns-plan-v` | NS Plan V | series, cab face, centre coupler (`nlPlanV.ts`) | `unit`, `livery` (`yellowGrey`, `yellowBlue`) | two cars of 26.05 m; 140 km/h |
 | `proc-vehicle-ns-de1` | NS DE-I Blauwe Engel | series, diesel, single, cab face at the front only (`nlDe1.ts`) | - | 27.05 m; 57 t, 120 km/h |
-| `proc-vehicle-ns-icm` | NS ICM Koploper | series, cab face, raised cab (`nlIcm.ts`) | `unit`, `cars` 3 - 4, `livery` (`yellowBlue`, `yellowGrey`) | 27.05 / 26.5 m (80.6 / 107.1 m); 160 km/h |
-| `proc-vehicle-ns-virm` | NS VIRM | series, double-deck, cab face, roof wells (`nlVirm.ts`) | `unit`, `cars` 4 - 6, `livery` (`yellowBlue`, `yellowGrey`) | 27.28 / 27.0 m, 4.67 m high; 1,608 / 2,412 kW, 160 km/h |
-| `proc-vehicle-ns-ddz` | NS DDZ | series, double-deck well, cab face, own lead car (`nlDdz.ts`) | `unit`, `cars` 4 - 6, `livery` (`yellowBlue`, `yellowGrey`) | mBk 21.39 m Bo'Bo'Bo', coaches 26.4 m, ABvk 26.9 m; 140 km/h |
-| `proc-vehicle-ns-sgm` | NS SGM Sprinter | series, cab face, centre coupler (`nlSgm.ts`) | `unit`, `cars` 2 - 3, `livery` (`yellowGrey`, `sprinter`) | 26.1 / 26.5 m cars; 1,280 kW a unit; 125 km/h |
-| `proc-vehicle-ns-slt` | NS SLT | series, cab face, Jacobs (`nlSlt.ts`) | `unit`, `cars` 4 - 6 | end car 19.09 m, intermediate 15.59 m (69.36 / 100.54 m); 160 km/h |
-| `proc-vehicle-ns-sng` | NS SNG | series, cab face, Jacobs (`nlSng.ts`) | `unit`, `cars` 3 - 4 | end 21.68 m, middle 16.2 m (59.56 / 75.76 m); 160 km/h |
-| `proc-vehicle-ns-icng` | NS ICNG | series, cab face, Jacobs (`nlIcng.ts`) | `unit`, `cars` 5 - 8 | end 24.45 m, intermediate 19.85 m, 4.2 m high; 200 km/h |
-| `proc-vehicle-ns-flirt` | NS Flirt | series, own cab face, Jacobs (`nlFlirt.ts`) | `unit`, `cars` 3 - 4, `livery` (`sprinter`) | Bo'(2)'(2)'Bo', end 22.85 m, middle 17.5 m (63.2 / 80.7 m); 160 km/h |
-| `proc-vehicle-ns-v250` | Fyra V250 | series, own cab face (`nlV250.ts`) | `unit`, `cars` 3 - 8 | 26.95 / 24.5 m (200.9 m for eight); 250 km/h |
+| `proc-vehicle-ns-icm` | NS ICM Koploper | series, cab face, raised cab (`nlIcm.ts`) | `unit`, `cars` 2 - 8, `livery` (`yellowBlue`, `yellowGrey`) | 27.05 / 26.5 m (80.6 / 107.1 m); 160 km/h |
+| `proc-vehicle-ns-virm` | NS VIRM | series, double-deck, cab face, roof wells (`nlVirm.ts`) | `unit`, `cars` 2 - 8, `livery` (`yellowBlue`, `yellowGrey`) | 27.28 / 27.0 m, 4.67 m high; 1,608 / 2,412 kW, 160 km/h |
+| `proc-vehicle-ns-ddz` | NS DDZ | series, double-deck well, cab face, own lead car (`nlDdz.ts`) | `unit`, `cars` 3 - 8, `livery` (`yellowBlue`, `yellowGrey`) | mBk 21.39 m Bo'Bo'Bo', coaches 26.4 m, ABvk 26.9 m; 140 km/h |
+| `proc-vehicle-ns-sgm` | NS SGM Sprinter | series, cab face, centre coupler (`nlSgm.ts`) | `unit`, `cars` 2 - 8, `livery` (`yellowGrey`, `sprinter`) | 26.1 / 26.5 m cars; 1,280 kW a unit; 125 km/h |
+| `proc-vehicle-ns-slt` | NS SLT | series, cab face, Jacobs (`nlSlt.ts`) | `unit`, `cars` 2 - 8 | end car 19.09 m, intermediate 15.59 m (69.36 / 100.54 m); 160 km/h |
+| `proc-vehicle-ns-sng` | NS SNG | series, cab face, Jacobs (`nlSng.ts`) | `unit`, `cars` 2 - 8 | end 21.68 m, middle 16.2 m (59.56 / 75.76 m); 160 km/h |
+| `proc-vehicle-ns-icng` | NS ICNG | series, cab face, Jacobs (`nlIcng.ts`) | `unit`, `cars` 2 - 8 | end 24.45 m, intermediate 19.85 m, 4.2 m high; 200 km/h |
+| `proc-vehicle-ns-flirt` | NS Flirt | series, own cab face, Jacobs (`nlFlirt.ts`) | `unit`, `cars` 2 - 8, `livery` (`sprinter`) | Bo'(2)'(2)'Bo', end 22.85 m, middle 17.5 m (63.2 / 80.7 m); 160 km/h |
+| `proc-vehicle-ns-v250` | Fyra V250 | series, own cab face (`nlV250.ts`) | `unit`, `cars` 2 - 8 | 26.95 / 24.5 m (200.9 m for eight); 250 km/h |
 | `proc-vehicle-ns-1700` | NS 1600 / 1700 | box locomotive, own profile (`nl1700.ts`) | `livery` (`yellowGrey`, `railion`) | B'B', 17.64 m, bogies 9.694 m apart, 4,540 kW, 160 km/h |
 | `proc-vehicle-ns-1100` | NS 1100 | box locomotive (`nl1100.ts`) | `livery` (`blue`, `yellowGrey`) | B-B, 12.98 m (14.18 m with the nose), 2,030 kW, 135 km/h |
 | `proc-vehicle-ns-1300` | NS 1300 | box locomotive, own profile (`nl1300.ts`) | `livery` (`blue`, `yellowGrey`) | Co-Co, 18.95 m, 3,159 kW, 130 km/h |

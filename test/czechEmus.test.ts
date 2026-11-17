@@ -3,7 +3,8 @@
 import { describe, expect, it } from "vitest";
 import { paramCombinations, type ParamValues } from "../generator/design";
 import { cd471, CD471_PARAMS, EMU471_DESIGNS, elefantNumber, K_Y } from "../generator/emu471";
-import { cd680, CD680_PARAMS, EMU680_DESIGNS } from "../generator/emu680";
+import { cd680, cd680Lod, CD680_LOD, CD680_PARAMS, EMU680_DESIGNS, pendolinoLength, PENDOLINO_LAYOUTS, pendolinoTrain } from "../generator/emu680";
+import { createHash } from "node:crypto";
 import { tractionCheckDigit } from "../generator/emuParts";
 import { EMU_TRANSFERS, emuComparison, readEmuLandmarks } from "../generator/emuComparison";
 import { glbStats } from "../generator/glbStats";
@@ -43,10 +44,15 @@ describe("the Czech electric units", () => {
       expect(d.references).toMatch(/^cd-(471|680)$/);
     }
     expect(CD471_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
-      ["unit", "motorCar", ["motorCar", "trailer", "drivingTrailer"]],
+      ["unit", "motorCar", ["motorCar", "trailer", "drivingTrailer", "train"]],
+      ["cars", "3", ["2", "3", "4", "5", "6", "7", "8"]],
       ["variant", "cd471", ["cd471", "cd675", "cdBlue"]],
     ]);
-    expect(CD680_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["unit", "endCar", ["endCar", "car683", "car685", "car686"]]]);
+    expect(CD680_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
+      ["unit", "endCar", ["endCar", "car683", "car685", "car686", "train"]],
+      ["cars", "4", ["3", "4", "5", "6", "7", "8"]],
+    ]);
+    expect(CD680_PARAMS[1]!.when).toEqual({ name: "unit", values: ["train"] });
   });
 
   for (const d of designs)
@@ -57,9 +63,11 @@ describe("the Czech electric units", () => {
       expect(s.max[0]).toBeCloseTo(-s.min[0], 5);
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
       expect(s.max[1]).toBeLessThanOrEqual(6.5);
-      expect(s.triangles).toBeLessThanOrEqual(16_000);
-      expect(s.triangles).toBeGreaterThan(4_000);
-      const fixed = nodes.filter((n) => !n.id.startsWith("roof-equipment/pantographs/") && n.tri[1] > 0);
+      // a full train adds its cars' budgets up
+      const cars = combo.unit === "train" ? Number(combo.cars) : 1;
+      expect(s.triangles).toBeLessThanOrEqual(16_000 * cars);
+      expect(s.triangles).toBeGreaterThan(4_000 * cars);
+      const fixed = nodes.filter((n) => !/^(section\d+\/car-\d+\/)?roof-equipment\/pantographs\//.test(n.id) && n.tri[1] > 0);
       expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
     });
 
@@ -179,6 +187,96 @@ describe("the Czech electric units", () => {
     // the 683 has its kitchen section: fewer windows than the 686
     const windows = (unit: string) => built(cd680({ unit }), "x").nodes.filter((n) => /^body\/right-side\/windows\/window-\d+\//.test(n.id)).length;
     expect(windows("car683")).toBeLessThan(windows("car686"));
+  });
+
+  it("CD 680 full train: the formation of each length, the prototype's seven cars, the 685 always there", () => {
+    const order = (n: number) => pendolinoTrain(n).map((s) => s.car);
+    expect(order(3)).toEqual(["endCar", "car685", "endCar"]);
+    expect(order(4)).toEqual(["endCar", "car683", "car685", "endCar"]);
+    expect(order(5)).toEqual(["endCar", "car683", "car686", "car685", "endCar"]);
+    expect(order(6)).toEqual(["endCar", "car683", "car686", "car685", "car686", "endCar"]);
+    // the prototype (generator/openttdTable.ts's 7-car formation)
+    expect(order(7)).toEqual(["endCar", "car683", "car686", "car685", "car683", "car686", "endCar"]);
+    expect(order(8)).toEqual(["endCar", "car683", "car686", "car685", "car683", "car686", "car686", "endCar"]);
+    for (let n = 3; n <= 8; n++) {
+      const slots = pendolinoTrain(n);
+      expect(slots.length).toBe(n);
+      expect(slots.map((s) => s.turned)).toEqual(slots.map((_, i) => i === n - 1));
+      expect(slots.filter((s) => s.car === "car685").length).toBe(1);
+      // contiguous spans, each the car's length, centred on x = 0
+      const total = slots.reduce((t, s) => t + pendolinoLength(PENDOLINO_LAYOUTS[s.car]), 0);
+      expect(slots[0]!.hi).toBeCloseTo(total / 2, 9);
+      expect(slots[n - 1]!.lo).toBeCloseTo(-total / 2, 9);
+      slots.forEach((s, i) => {
+        expect(s.hi - s.lo).toBeCloseTo(pendolinoLength(PENDOLINO_LAYOUTS[s.car]), 9);
+        if (i > 0) expect(s.hi).toBe(slots[i - 1]!.lo);
+      });
+    }
+    expect(() => pendolinoTrain(2)).toThrow();
+    expect(() => pendolinoTrain(9)).toThrow();
+  });
+
+  it.each([3, 4, 8])("CD 680 full train of %i cars: a section per car, a joint per gap, two bogies a car, its length and budget", (n) => {
+    const m = cd680({ unit: "train", cars: String(n) });
+    const { stats: s, nodes } = built(m, "proc-vehicle-cd-680");
+    const slots = pendolinoTrain(n);
+    expect(s.max[0] - s.min[0]).toBeCloseTo(2 * 27.7 + (n - 2) * 25.9, 3);
+    expect(s.max[0]).toBeCloseTo(-s.min[0], 5);
+    expect(s.min[1]).toBeCloseTo(0, 5);
+    expect(s.triangles).toBeLessThanOrEqual(16_000 * n);
+    const rig = m.rig!;
+    expect(rig.sections!.length).toBe(n);
+    // hinged at the coupling planes
+    expect(rig.sections!.slice(1).map((sec) => sec.pivot[0])).toEqual(slots.slice(0, -1).map((sl) => sl.lo));
+    expect(rig.joints!.map((j) => j.sections)).toEqual(slots.slice(0, -1).map((_, i) => [i, i + 1]));
+    expect(rig.supports!.length).toBe(2 * n);
+    for (let k = 0; k < n; k++) {
+      const own = rig.supports!.filter((sp) => sp.sections!.length === 1 && sp.sections![0] === k);
+      expect(own.length).toBe(2);
+      for (const sp of own) {
+        expect(sp.x).toBeGreaterThan(slots[k]!.lo);
+        expect(sp.x).toBeLessThan(slots[k]!.hi);
+      }
+    }
+    // the rear end car turned: a cab at each end; only the 685's pantograph raised, the end cars' folded
+    const lamps = (pattern: RegExp) => nodes.filter((nd) => pattern.test(nd.id) && /\/cab\/lamps\//.test(nd.id));
+    expect(Math.max(...lamps(/^section0\//).map((nd) => nd.max![0]))).toBeGreaterThan(s.max[0] - 0.5);
+    expect(Math.min(...lamps(new RegExp(`^section${n - 1}/`)).map((nd) => nd.min![0]))).toBeLessThan(s.min[0] + 0.5);
+    const pantoTop = (k: number) => Math.max(...nodes.filter((nd) => nd.id.startsWith(`section${k}/`) && /pantograph/.test(nd.id) && nd.tri[1] > 0).map((nd) => nd.max![1]));
+    const p685 = slots.findIndex((sl) => sl.car === "car685");
+    expect(pantoTop(p685)).toBeGreaterThan(5.5);
+    expect(pantoTop(0)).toBeLessThan(4.7);
+    expect(pantoTop(n - 1)).toBeLessThan(4.7);
+  });
+
+  it("CD 680 full train: deterministic bytes, lone cars unchanged by the train", () => {
+    const hash = (m: MeshBuilder) => createHash("sha256").update(m.toGlb("x")).digest("hex");
+    expect(hash(cd680({ unit: "train", cars: "5" }))).toBe(hash(cd680({ unit: "train", cars: "5" })));
+    expect(hash(cd680({ unit: "train" }))).toBe(hash(cd680({ unit: "train", cars: "4" })));
+    expect(hash(cd680({ unit: "car685" }))).not.toBe(hash(cd680({ unit: "train", cars: "3" })));
+  });
+
+  it("CD 680 full train: the distant model has the train's sections and joints, 100 triangles a car, 500 at most", () => {
+    for (let n = 3; n <= 8; n++) {
+      const full = cd680({ unit: "train", cars: String(n) }).rig!;
+      const low = cd680Lod({ unit: "train", cars: String(n) });
+      expect(low.rig!.sections!.map((sec) => sec.pivot)).toEqual(full.sections!.map((sec) => sec.pivot));
+      expect(low.rig!.joints!.map((j) => j.sections)).toEqual(full.joints!.map((j) => j.sections));
+      const budget = Math.min(CD680_LOD, 100 * n);
+      expect(low.triangleCount()).toBeLessThanOrEqual(budget);
+      expect(low.triangleCount()).toBeGreaterThanOrEqual(budget * 0.7);
+    }
+  });
+
+  it("CD 680 game properties: every train length weighs its cars and has its motored cars' power", () => {
+    const game = EMU680_DESIGNS[0]!.game!;
+    for (let n = 3; n <= 8; n++) {
+      const v = game.variants!.find((x) => x.params.unit === "train" && (x.params.cars ?? "4") === String(n))!;
+      expect(v).toBeDefined();
+      expect(v.weight).toBe(40 * n);
+      // the two end cars and the 685
+      expect(v.power).toBe(4500);
+    }
   });
 
   it.each(EMU_TRANSFERS.map((t) => [t.key] as const))("%s matches its native BMP landmarks within their pixel tolerances once the documented scales are undone", (key) => {

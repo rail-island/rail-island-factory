@@ -1,7 +1,9 @@
 // The CD 470, the Studenka double-deck electric unit of 1991 (two prototype
 // sets, in service until 2009): one design `veh-cd-470` whose `unit` picks the
-// single-deck 470 motor car with its cab (default) or the 070 double-deck
-// trailer, both in the dark green and yellow of the first set, 470 001/002.
+// single-deck 470 motor car with its cab (default), the 070 double-deck
+// trailer, both in the dark green and yellow of the first set, 470 001/002, or
+// the full train (`cars` 2 .. 8: a motor car at each end, the rear one turned,
+// trailers between; `cd470Train`).
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/cd-470/native
 // (db/train/emu/cd 470/cd_470 and cd_070): the XML `alongx` sections, the
@@ -14,6 +16,9 @@
 // motor car's cab is its +X end. See docs/models/czech-emus-classic.md.
 
 import type { MaterialSpec, MeshBuilder } from "./meshBuilder.ts";
+import { articulate } from "./tramKit.ts";
+import type { LodPart, LodSections } from "./lodKit.ts";
+import { shiftBody, turnBody, type UnitBody } from "./lodUnits.ts";
 import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Opening, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
@@ -27,11 +32,22 @@ export const K_X = 132 / (5 * 24.5);
 
 export type Unit470 = "motorCar" | "trailer";
 
+/** The full train's vehicle counts: two motor cars and 0 .. 6 trailers; four by default. */
+export const CD470_MIN_CARS = 2;
+export const CD470_MAX_CARS = 8;
+export const CD470_DEFAULT_CARS = 4;
+
 export const CD470_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
     motorCar: "Motor car",
     trailer: "Trailer",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: CD470_MAX_CARS - CD470_MIN_CARS + 1 }, (_, i) => [String(i + CD470_MIN_CARS), `${i + CD470_MIN_CARS} cars`]))),
+    default: String(CD470_DEFAULT_CARS),
+    when: { name: "unit", values: ["train"] },
+  },
 ];
 
 /** The green set 470 001/002 (photographed at Ostrava-Svinov in 1991) and its first trailer. */
@@ -73,9 +89,11 @@ const upperAt = (y: number): Pt => [0.2 + (0.3 * (y - 1.8)) / 1.8, y];
 const lowerAt = (y: number): Pt => [0.4 - (0.2 * (y - 0.9)) / 0.9, y];
 const CAB_PLAN: Pt[] = [[0.2, 1.2], [0.3, 1.4], [0.6, 1.5], [1.7, 1.5]];
 
-/** A car of the CD 470 set. */
+/** A car of the CD 470 set, or the full train. */
 export function cd470(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(CD470_PARAMS, params).unit as Unit470;
+  const p = resolveParams(CD470_PARAMS, params);
+  if (p.unit === "train") return train470(Number(p.cars));
+  const unit = p.unit as Unit470;
   return unit === "motorCar" ? motorCar() : trailer();
 }
 
@@ -151,10 +169,11 @@ function passengerDoor(c: Coach, body: Volume, s: number, b: Box, glass: Box[]):
   });
 }
 
-function motorCar(): MeshBuilder {
+/** The motor car, into its own builder or into `into` (a car of the full train: no gangway frame at its inner end). */
+function motorCar(into?: MeshBuilder): MeshBuilder {
   const car = CARS.motorCar;
   const F = car.F;
-  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
+  const c = new Coach(PALETTE, (car.front + car.rear) / 2, into);
   const m = c.m;
   const box = (b: PxBox) => sb(F, b);
   const X = (x: number) => c.X(bOf(F, x));
@@ -219,7 +238,7 @@ function motorCar(): MeshBuilder {
     });
     m.scope("buffers", () => endBuffers(c, 1, bOf(F, 0.45), bOf(F, 0), 1.0, "rect"));
   });
-  m.scope("rear end", () => gangwayEnd(c, body, { wall: 0, e: -1, face: 0.2 * K_X, door: { x0: -0.6, x1: 0.6, y0: 1.4, y1: 3.3 }, doorPaint: "green", couplerY: 1.0, buffers: { y: 1.0, head: "rect" } }));
+  m.scope("rear end", () => gangwayEnd(c, body, { wall: 0, e: -1, face: 0.2 * K_X, door: { x0: -0.6, x1: 0.6, y0: 1.4, y1: 3.3 }, doorPaint: "green", couplerY: 1.0, buffers: { y: 1.0, head: "rect" }, ...(into ? { frame: false } : {}) }));
   m.scope("roof equipment", () => {
     // the inner end rises to the trailer's double-deck roof, to 4.7 m: from source x 21.4 as z_both draws it (the XML clips it from 22.6)
     m.scope("raised roof", () => {
@@ -242,10 +261,11 @@ function motorCar(): MeshBuilder {
   return m;
 }
 
-function trailer(): MeshBuilder {
+/** The trailer, into its own builder or into `into` (a car of the full train: no gangway frames). */
+function trailer(into?: MeshBuilder): MeshBuilder {
   const car = CARS.trailer;
   const F = car.F;
-  const c = new Coach(PALETTE, (car.front + car.rear) / 2);
+  const c = new Coach(PALETTE, (car.front + car.rear) / 2, into);
   const m = c.m;
   const box = (b: PxBox) => sb(F, b);
   const body = trailerVolume();
@@ -277,7 +297,7 @@ function trailer(): MeshBuilder {
   });
   for (const e of [1, -1])
     m.scope(e > 0 ? "front end" : "rear end", () =>
-      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2 * K_X, door: { x0: -0.6, x1: 0.6, y0: 1.4, y1: 3.3 }, doorPaint: "green", couplerY: 1.0, buffers: { y: 1.0, head: "rect" } }),
+      gangwayEnd(c, body, { wall: e > 0 ? bOf(F, 0.2) : 0, e, face: 0.2 * K_X, door: { x0: -0.6, x1: 0.6, y0: 1.4, y1: 3.3 }, doorPaint: "green", couplerY: 1.0, buffers: { y: 1.0, head: "rect" }, ...(into ? { frame: false } : {}) }),
     );
   m.scope("running gear", () => {
     [3.05, 21.45].forEach((x, i) => m.scope(`bogie ${i + 1}`, () => emuBogie(c, bOf(F, x), 2.4, 0.45, 0.88, false)));
@@ -292,32 +312,134 @@ function trailer(): MeshBuilder {
  * inner end and its raised rear pantograph.
  */
 export function cd470Lod(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(CD470_PARAMS, params).unit as Unit470;
+  const p = resolveParams(CD470_PARAMS, params);
+  if (p.unit === "train") return train470Lod(Number(p.cars));
+  const { body, parts } = lodCar(p.unit as Unit470);
+  return fitUnit({ palette: PALETTE, bodies: [body], parts }, 100);
+}
+
+/**
+ * A car's distant body (lone-car coordinates) and its parts; in the train
+ * (`slot`, `section`) the parts are placed by `T` from lone-car x to the
+ * train's, only the raised pantograph is kept and the inner ends are hidden.
+ */
+function lodCar(unit: Unit470, train?: { T: (x: number) => number; section: number }): { body: UnitBody; parts: LodPart[] } {
   const car = CARS[unit];
   const F = car.F;
   const centre = (car.front + car.rear) / 2;
+  const T = train?.T ?? ((x: number) => x);
+  const sec = train ? [train.section] as const : ([] as const);
   const X = (x: number) => bOf(F, x) - centre;
   const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
   const glass = (boxes: PxBox[], rows = 1) => sideGlass(shifted(boxes.map((b) => sb(F, b)), centre), 0.6, rows);
   if (unit === "trailer") {
     const body = coachBody([place(trailerVolume())], { y0: 0.9, windows: glass([...UPPER_070, ...LOWER_070, ...END_070], 2) });
-    return fitUnit({ palette: PALETTE, bodies: [body], parts: bogieParts([[X(3.05), 1.85], [X(21.45), 1.85]], 0.9) }, 100);
+    return { body, parts: bogieParts([[T(X(3.05)), 1.85, ...sec], [T(X(21.45)), 1.85, ...sec]], 0.9) };
   }
   const { body, upper, lower } = motorVolumes();
   const shell = coachBody([place(body), place(upper), place(lower)], {
     y0: 0.9, main: 0, windows: glass(WINDOWS_470), frontWindows: [{ u: [-1.2, 1.2], y: [2.5, 3.6], mat: LOD_GLASS }],
   });
-  return fitUnit({
-    palette: PALETTE,
-    bodies: [shell],
+  return {
+    body: shell,
     parts: [
-      ...bogieParts([[X(3.55), 1.9], [X(20.95), 1.9]], 0.9),
+      ...bogieParts([[T(X(3.55)), 1.9, ...sec], [T(X(20.95)), 1.9, ...sec]], 0.9),
       // the raised roof over the inner end: given up before a colour band
-      { ...roofPart("roofGrey", X(24.27), X(21.7), 1.17, 0.6, 4.1, 4.7), optional: 45 },
-      roofPart("roofGrey", X(7.6), X(5.8), 0.4, 0.4, 4.1, 4.4),
-      ...pantographParts([X(20.4), X(2.8)], 4.1, 4.3),
+      { ...roofPart("roofGrey", T(X(24.27)), T(X(21.7)), 1.17, 0.6, 4.1, 4.7, train?.section), optional: 45 },
+      roofPart("roofGrey", T(X(7.6)), T(X(5.8)), 0.4, 0.4, 4.1, 4.4, train?.section),
+      // the train keeps each motor car's raised pantograph alone (the first of the list is drawn raised)
+      ...(train ? pantographParts([T(X(20.4))], 4.1, 4.3, { section: train.section }) : pantographParts([X(20.4), X(2.8)], 4.1, 4.3)),
     ],
-  }, 100);
+  };
+}
+
+// --- the full train ---------------------------------------------------------------------------
+
+/** One vehicle of the train: its span lo..hi over its coupling planes (model x) and whether it is turned. */
+export interface Slot470 {
+  car: Unit470;
+  lo: number;
+  hi: number;
+  turned: boolean;
+}
+
+/**
+ * The vehicles of a train of `n` (2 .. 8), front first: a motor car at each
+ * end, the rear one turned (its cab facing -X), and n - 2 trailers between
+ * them (the prototype's five-car set 470 + 3 x 070 + 470). Each with its span
+ * over its coupling planes, the train centred on x = 0.
+ */
+export function cd470Train(n: number): Slot470[] {
+  if (!Number.isInteger(n) || n < CD470_MIN_CARS || n > CD470_MAX_CARS) throw new Error(`CD 470: no ${n}-car train`);
+  const cars: Unit470[] = ["motorCar", ...Array.from({ length: n - 2 }, (): Unit470 => "trailer"), "motorCar"];
+  let hi = cars.reduce((t, car) => t + length470(car), 0) / 2;
+  return cars.map((car, i) => {
+    const lo = hi - length470(car);
+    const out = { car, lo, hi, turned: i === n - 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/** The bellows over a gap between two cars' end walls (round the end door), and the hinges' height (the buffers'). */
+const BELLOWS_470: Array<[number, number]> = [[-0.78, 1.26], [0.78, 1.26], [0.78, 3.44], [-0.78, 3.44]];
+const COUPLER_Y = 1.0;
+const BELLOWS_PAINT: MaterialSpec = { color: "#26272a", roughness: 0.95 };
+const MAX_BEND_DEG = 10;
+
+/** A slot's mapping from lone-car x to train x, and its end walls in train x [low, high]. */
+function placement(slot: Slot470): { T: (x: number) => number; walls: [number, number] } {
+  const cx = (slot.lo + slot.hi) / 2;
+  const car = CARS[slot.car];
+  const centre = (car.front + car.rear) / 2;
+  const T = (x: number) => (slot.turned ? cx - x : cx + x);
+  // the inner end wall at body 0; the trailer's other wall at source 0.2, the motor car's cab out to its coupling plane
+  const front = slot.car === "trailer" ? bOf(car.F, 0.2) : car.front;
+  const [a, b] = [T(0 - centre), T(front - centre)];
+  return { T, walls: [Math.min(a, b), Math.max(a, b)] };
+}
+
+function train470(n: number): MeshBuilder {
+  const slots = cd470Train(n);
+  const m = new Coach({ ...PALETTE, bellows: BELLOWS_PAINT }, 0).m;
+  const sections = slots.map((slot, k) => {
+    const cx = (slot.lo + slot.hi) / 2;
+    const { walls } = placement(slot);
+    return {
+      x0: walls[0],
+      x1: walls[1],
+      draw: () =>
+        m.scope(`car ${k + 1}`, () => {
+          const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => (slot.car === "motorCar" ? motorCar(m) : trailer(m)));
+          if (slot.turned) m.turned(cx, draw);
+          else draw();
+        }),
+    };
+  });
+  articulate({ m }, sections, COUPLER_Y, { profile: BELLOWS_470, folds: 3, depth: 0.03 }, MAX_BEND_DEG, slots.slice(0, -1).map((slot) => slot.lo));
+  return m;
+}
+
+/** The distant model's budget: 100 triangles a car, 500 for the longest trains. */
+export const CD470_LOD = 500;
+
+function train470Lod(n: number): MeshBuilder {
+  const slots = cd470Train(n);
+  const built = slots.map((slot, k) => {
+    const { T } = placement(slot);
+    const { body, parts } = lodCar(slot.car, { T, section: k });
+    const cx = (slot.lo + slot.hi) / 2;
+    // the inner ends stay under the bellows
+    const inner: UnitBody = { ...body, rear: { ...body.rear, hidden: true }, ...(slot.car === "trailer" ? { front: { ...body.front, hidden: true } } : {}), section: k };
+    return { body: slot.turned ? turnBody(shiftBody(inner, cx), cx) : shiftBody(inner, cx), parts };
+  });
+  const walls = slots.map((slot) => placement(slot).walls);
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, COUPLER_Y, 0])),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: walls[i]![0], rear: walls[i + 1]![1], profile: BELLOWS_470 })),
+    maxBendDeg: MAX_BEND_DEG,
+  };
+  return fitUnit({ palette: PALETTE, bodies: built.map((b) => b.body), parts: built.flatMap((b) => b.parts), sections }, Math.min(CD470_LOD, 100 * n));
 }
 
 /** A car's source mapping and the body x of its centre, for the comparison. */
@@ -327,14 +449,28 @@ export const frame470 = (unit: Unit470): { F: CarFrame; centre: number } => ({ F
 export const CARS_470: readonly Unit470[] = ["motorCar", "trailer"];
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+/** A car's weight (t) and power (kW). */
+const WEIGHT_470: Record<Unit470, number> = { motorCar: 70, trailer: 55 };
+const POWER_470: Record<Unit470, number> = { motorCar: 1000, trailer: 0 };
+
 const CD_470_GAME: GameProperties = {
-  weight: 70,
-  power: 1000,
+  weight: WEIGHT_470.motorCar,
+  power: POWER_470.motorCar,
   maxspeed: 120,
   accel: null,
   variants: [
-    { params: { unit: "trailer" }, weight: 55, power: 0 },
+    { params: { unit: "trailer" }, weight: WEIGHT_470.trailer, power: POWER_470.trailer },
+    // every train length: its cars' weights and the motor cars' power added up; the default length named by the unit alone
+    ...Array.from({ length: CD470_MAX_CARS - CD470_MIN_CARS + 1 }, (_, i) => {
+      const n = i + CD470_MIN_CARS;
+      const slots = cd470Train(n);
+      return {
+        params: { unit: "train", ...(n === CD470_DEFAULT_CARS ? {} : { cars: String(n) }) },
+        weight: slots.reduce((t, s) => t + WEIGHT_470[s.car], 0),
+        power: slots.reduce((t, s) => t + POWER_470[s.car], 0),
+      };
+    }),
   ],
 };
 
-export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-470", game: CD_470_GAME, title: "CD 470", build: cd470, buildLod: cd470Lod, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];
+export const EMU470_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-470", game: CD_470_GAME, title: "CD 470", build: cd470, buildLod: cd470Lod, lodTriangles: CD470_LOD, params: CD470_PARAMS, catalog: EMU_CATALOG, references: "cd-470" }];

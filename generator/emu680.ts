@@ -17,14 +17,17 @@ import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
-import { LOD_GLASS } from "./lodKit.ts";
-import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, skirtParts } from "./lodUnits.ts";
+import { LOD_GLASS, type LodPart, type LodSections } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, skirtParts, turnBody, type UnitBody } from "./lodUnits.ts";
+import { articulate } from "./tramKit.ts";
 import { emblem } from "./cd163.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
 import { blockX, EMU_CATALOG, enumParam, pantograph, slopePanel } from "./emuParts.ts";
 
 export type PendolinoUnit = "endCar" | "car683" | "car685" | "car686";
+/** What the design builds: one car, or the full train. */
+export type Cd680Unit = PendolinoUnit | "train";
 
 export const CD680_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -32,7 +35,13 @@ export const CD680_PARAMS: readonly ParamSpec[] = [
     car683: "Car 683",
     car685: "Car 685",
     car686: "Car 686",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries([3, 4, 5, 6, 7, 8].map((n) => [String(n), `${n} cars`]))),
+    default: "4",
+    when: { name: "unit", values: ["train"] },
+  },
 ];
 
 /** The vlakosimdb cars are 25.0 m over their gangways: stretched to the published 27.7 m and 25.9 m. */
@@ -209,11 +218,22 @@ function cabVolumes(L: CarLayout): { nose: Volume; cabBody: Volume } {
  * the bogies, the roof covers and the raised pantograph.
  */
 export function cd680Lod(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(CD680_PARAMS, params).unit as PendolinoUnit;
+  const p = resolveParams(CD680_PARAMS, params);
+  if (p.unit === "train") return train680Lod(Number(p.cars));
+  const unit = p.unit as PendolinoUnit;
+  const { body, parts } = carLod(unit, lengthOf(LAYOUTS[unit]) / 2, (x) => x, undefined, true);
+  return fitUnit({ palette: PALETTE, bodies: [body], parts }, 100);
+}
+
+/**
+ * A car's distant body and parts, its body metres b at model x `b - off`, its
+ * parts' x through `T` (a turned car's mirror), in `section` of a train; the
+ * pantograph drawn only when `panto` (the train shows the raised one alone).
+ */
+function carLod(unit: PendolinoUnit, off: number, T: (x: number) => number, section: number | undefined, panto: boolean): { body: UnitBody; parts: LodPart[] } {
   const L = LAYOUTS[unit];
-  const centre = lengthOf(L) / 2;
-  const place = (v: Volume) => ({ v, X: (b: number) => b - centre });
-  const X = (x: number) => bOf(L, x) - centre;
+  const place = (v: Volume) => ({ v, X: (b: number) => b - off });
+  const X = (x: number) => T(bOf(L, x) - off);
   const body = body680(L);
   const vols = L.cab ? (({ nose, cabBody }) => [place(body), place(nose), place(cabBody)])(cabVolumes(L)) : [place(body)];
   const fz = (u: number) => (1.5 - u / 10) * K_Z;
@@ -222,24 +242,61 @@ export function cd680Lod(params?: ParamValues): MeshBuilder {
     y0: 0.8, main: 0,
     ...(L.cab ? { frontWindows: [{ u: [fz(28), fz(2)], y: [H - 2.9, H - 1.9], mat: LOD_GLASS }] } : {}),
   });
-  return fitUnit({
-    palette: PALETTE,
-    bodies: [shell],
-    parts: [
-      ...bogieParts(L.bogies.map((x) => [X(x), 2.0] as const), 0.8),
-      ...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.8, HALF - 0.02, "teal"),
-      ...L.boxes.map(([x0, x1]) => roofPart("roofBox", X(x1), X(x0), 1.0 * K_Z, 0.8 * K_Z, 3.5, 4.0)),
-      ...(L.pantograph ? pantographParts([X(21.8)], 3.6, 3.85) : []),
-    ],
-  }, 100);
+  const inSection = <P extends LodPart>(q: P): P => (section === undefined ? q : { ...q, section });
+  const parts: LodPart[] = [
+    ...bogieParts(L.bogies.map((x) => [X(x), 2.0, ...(section !== undefined ? [section] : [])] as unknown as readonly [number, number, number?]), 0.8),
+    ...skirtParts((body.bottom ?? []).map(([b, y]): Pt => [T(b - off), y]).sort((q, r) => q[0] - r[0]), 0.8, HALF - 0.02, "teal").map(inSection),
+    ...L.boxes.map(([x0, x1]) => roofPart("roofBox", X(x1), X(x0), 1.0 * K_Z, 0.8 * K_Z, 3.5, 4.0, section)),
+    ...(L.pantograph && panto ? pantographParts([X(21.8)], 3.6, 3.85, section !== undefined ? { section } : {}) : []),
+  ];
+  return { body: shell, parts };
 }
 
-/** A car of the CD 680 Pendolino. */
+/** The distant model's budget: 100 triangles a car, 500 for the longest trains. */
+export const CD680_LOD = 500;
+
+/**
+ * The full train for distant views: each car's body, skirts, bogies and roof
+ * covers as a section, its joints' bellows as in the full model, the 685's
+ * raised pantograph; 100 triangles a car, 500 at most.
+ */
+function train680Lod(n: number): MeshBuilder {
+  const slots = pendolinoTrain(n);
+  const built = slots.map((slot, k) => {
+    const L = LAYOUTS[slot.car];
+    const cx = (slot.lo + slot.hi) / 2;
+    const T = (x: number) => (slot.turned ? 2 * cx - x : x);
+    // drawn facing +X about cx, then turned; the gangway ends stay under the bellows
+    const { body, parts } = carLod(slot.car, lengthOf(L) / 2 - cx, T, k, slot.car === "car685");
+    const hidden: UnitBody = { ...body, rear: { ...body.rear, hidden: true }, ...(L.cab ? {} : { front: { ...body.front, hidden: true } }), section: k };
+    return { body: slot.turned ? turnBody(hidden, cx) : hidden, parts };
+  });
+  const ends = slots.map(walls);
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, COUPLER_Y, 0])),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: ends[i]![0], rear: ends[i + 1]![1], profile: BELLOWS })),
+    maxBendDeg: MAX_BEND_DEG,
+  };
+  return fitUnit({ palette: PALETTE, bodies: built.map((b) => b.body), parts: built.flatMap((b) => b.parts), sections }, Math.min(CD680_LOD, 100 * n));
+}
+
+/** A car of the CD 680 Pendolino, or the full train (`unit` `train`, `cars` long). */
 export function cd680(params?: ParamValues): MeshBuilder {
-  const unit = resolveParams(CD680_PARAMS, params).unit as PendolinoUnit;
+  const p = resolveParams(CD680_PARAMS, params);
+  if (p.unit === "train") return train680(Number(p.cars));
+  const unit = p.unit as PendolinoUnit;
+  const c = new Coach(PALETTE, lengthOf(LAYOUTS[unit]) / 2);
+  drawCar(c, unit, { inTrain: false, raised: true });
+  return c.m;
+}
+
+/**
+ * Draws car `unit` facing +X into its coach `c` (whose `X` places it): a lone
+ * car, or a car of the train, where its ends' rubber gangways are left to the
+ * bellows and only the raised pantograph is the one the train collects with.
+ */
+function drawCar(c: Coach, unit: PendolinoUnit, o: { inTrain: boolean; raised: boolean }): void {
   const L = LAYOUTS[unit];
-  const len = lengthOf(L);
-  const c = new Coach(PALETTE, len / 2);
   const m = c.m;
   const gum = 0.1 * L.k;
   const body = body680(L);
@@ -250,7 +307,7 @@ export function cd680(params?: ParamValues): MeshBuilder {
     for (const s of [1, -1]) m.scope(s > 0 ? "right side" : "left side", () => sideWork(c, body, L, s));
   });
   if (L.cab) m.scope("cab", () => cab(c, L));
-  for (const e of L.cab ? [-1] : [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, e, gum));
+  for (const e of L.cab ? [-1] : [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => gangwayEnd(c, body, e, gum, !o.inTrain));
   m.scope("roof equipment", () => {
     L.boxes.forEach(([x0, x1], i) =>
       m.scope(`roof cover ${i + 1}`, () => {
@@ -259,7 +316,7 @@ export function cd680(params?: ParamValues): MeshBuilder {
         m.sweep("roofBox", "x", ring, a, ring, b);
       }),
     );
-    if (L.pantograph) m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: c.X(bOf(L, 21.8)), roof: 3.6, hinge: -1, raised: true })));
+    if (L.pantograph) m.scope("pantographs", () => m.scope("pantograph", () => pantograph(m, { x: c.X(bOf(L, 21.8)), roof: 3.6, hinge: -1, raised: o.raised })));
   });
   m.scope("running gear", () => {
     L.bogies.forEach((x, i) =>
@@ -268,6 +325,99 @@ export function cd680(params?: ParamValues): MeshBuilder {
       }),
     );
   });
+}
+
+// --- the full train -----------------------------------------------------------------------------
+
+/** The train's lengths in cars, the end cars included. */
+export const CD680_MIN_CARS = 3;
+export const CD680_MAX_CARS = 8;
+
+/**
+ * The intermediate cars of a train of 3 .. 8, front to back. The prototype's
+ * seven cars are the reference (683, 686, 685, 683, 686 between the end cars);
+ * the 685, the pantograph car the train collects with, is always there. Ahead
+ * of it the 683 with its kitchen (from four cars) and then the 686 (from five);
+ * behind it a 686 (from six), the second 683 ahead of that (seven, the
+ * prototype) and a further 686 at the back (eight).
+ */
+const MIDDLE: Record<number, PendolinoUnit[]> = {
+  1: ["car685"],
+  2: ["car683", "car685"],
+  3: ["car683", "car686", "car685"],
+  4: ["car683", "car686", "car685", "car686"],
+  5: ["car683", "car686", "car685", "car683", "car686"],
+  6: ["car683", "car686", "car685", "car683", "car686", "car686"],
+};
+
+export interface PendolinoSlot {
+  car: PendolinoUnit;
+  /** Its span over its coupling planes (the gangway faces; the cab tip). */
+  lo: number;
+  hi: number;
+  turned: boolean;
+}
+
+/**
+ * The cars of a train of `n`, front first: an end car at each end (the rear one
+ * turned, its cab at -X), the intermediate cars between them (`MIDDLE`), each
+ * with its span over its coupling planes, the train centred on x = 0.
+ */
+export function pendolinoTrain(n: number): PendolinoSlot[] {
+  const middle = MIDDLE[n - 2];
+  if (!middle || n < CD680_MIN_CARS || n > CD680_MAX_CARS) throw new Error(`CD 680: no train of ${n} cars`);
+  const cars: PendolinoUnit[] = ["endCar", ...middle, "endCar"];
+  const total = cars.reduce((t, car) => t + lengthOf(LAYOUTS[car]), 0);
+  let hi = total / 2;
+  return cars.map((car, i) => {
+    const lo = hi - lengthOf(LAYOUTS[car]);
+    const out = { car, lo, hi, turned: i === n - 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/** A slot's body ends in model x: the end walls inside the gangway faces, the cab tip on the face. */
+function walls(slot: PendolinoSlot): [number, number] {
+  const L = LAYOUTS[slot.car];
+  const inset = 0.1 * L.k;
+  const front = L.cab ? 0 : inset;
+  // facing +X the cab (or the front gangway) is at hi; turned, it is at lo
+  return slot.turned ? [slot.lo + front, slot.hi - inset] : [slot.lo + inset, slot.hi - front];
+}
+
+const COUPLER_Y = 0.65;
+const MAX_BEND_DEG = 10;
+/** The bellows between two cars' gangways: inside the tilting body's section. */
+const BELLOWS: Array<[number, number]> = [[-1.0, 1.0], [1.0, 1.0], [1.0, 3.3], [-1.0, 3.3]];
+const TRAIN_PALETTE: Record<string, MaterialSpec> = { ...PALETTE, bellows: { color: "#1f1f22", roughness: 0.95 } };
+
+/**
+ * The full train: one articulated vehicle, a section per car hinged at the
+ * coupling plane ahead of it, bellows over each gap; every car on its own two
+ * tilting bogies (supports of its section), the rear end car turned, only the
+ * 685's pantograph raised.
+ */
+function train680(n: number): MeshBuilder {
+  const slots = pendolinoTrain(n);
+  const m = new Coach(TRAIN_PALETTE, 0).m;
+  const sections = slots.map((slot, k) => {
+    const cx = (slot.lo + slot.hi) / 2;
+    const [x0, x1] = walls(slot);
+    return {
+      x0,
+      x1,
+      draw: () =>
+        m.scope(`car ${k + 1}`, () => {
+          // the car's coach: its body metres b to model x about the slot's centre
+          const c = new Coach(TRAIN_PALETTE, lengthOf(LAYOUTS[slot.car]) / 2 - cx, m);
+          const draw = () => drawCar(c, slot.car, { inTrain: true, raised: slot.car === "car685" });
+          if (slot.turned) m.turned(cx, draw);
+          else draw();
+        }),
+    };
+  });
+  articulate({ m }, sections, COUPLER_Y, { profile: BELLOWS, folds: 3, depth: 0.03 }, MAX_BEND_DEG, slots.slice(0, -1).map((s) => s.lo));
   return m;
 }
 
@@ -414,12 +564,12 @@ function cab(c: Coach, L: CarLayout): void {
 }
 
 /** A gangway end e: the rubber gangway, its frame, the double door, and the coupler under it. */
-function gangwayEnd(c: Coach, v: Volume, e: number, gum: number): void {
+function gangwayEnd(c: Coach, v: Volume, e: number, gum: number, rubber = true): void {
   const m = c.m;
   const wall = e > 0 ? v.plan[v.plan.length - 1]![0] : v.plan[0]![0];
   const X = (b: number) => c.X(b);
   const fz = (u: number) => (u / 10 - 1.5) * K_Z;
-  m.scope("gangway", () => {
+  if (rubber) m.scope("gangway", () => {
     const [a, b] = [X(wall) - e * 0.02, X(wall) + e * gum].sort((p, q) => p - q) as [number, number];
     for (const z of [-1, 1]) block(m, "rubber", a, b, 1.0, 3.3, ...side(z, 0.9, 1.1 * K_Z));
     block(m, "rubber", a, b, 3.1, 3.3, -0.9, 0.9);
@@ -438,20 +588,34 @@ function gangwayEnd(c: Coach, v: Volume, e: number, gum: number): void {
   });
 }
 
-/** What the game needs of it beyond its geometry (design.ts GameProperties). */
-const CD_680_GAME: GameProperties = {
-  weight: 40,
-  power: 1500,
-  maxspeed: 160,
-  accel: null,
-  variants: [
+/**
+ * What the game needs of it beyond its geometry (design.ts GameProperties): 40 t
+ * a car; the end cars and the 685 motored at 1,500 kW each, the 683 and 686
+ * unpowered. A train weighs its cars and has the motored cars' power, 230 km/h.
+ */
+const CAR_WEIGHT = 40;
+const CAR_POWER: Record<PendolinoUnit, number> = { endCar: 1500, car683: 0, car685: 1500, car686: 0 };
+
+function cd680Game(): GameProperties {
+  const variants: NonNullable<GameProperties["variants"]> = [
     { params: { unit: "car683" }, power: 0, maxspeed: 230 },
     { params: { unit: "car686" }, power: 0, maxspeed: 230 },
-  ],
-};
+  ];
+  for (let n = CD680_MIN_CARS; n <= CD680_MAX_CARS; n++) {
+    const slots = pendolinoTrain(n);
+    // the default four cars are named by the unit alone
+    variants.push({
+      params: { ...(n === 4 ? {} : { cars: String(n) }), unit: "train" },
+      weight: CAR_WEIGHT * slots.length,
+      power: slots.reduce((t, s) => t + CAR_POWER[s.car], 0),
+      maxspeed: 230,
+    });
+  }
+  return { weight: CAR_WEIGHT, power: CAR_POWER.endCar, maxspeed: 160, accel: null, variants };
+}
 
 export const EMU680_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-cd-680", game: CD_680_GAME, title: "CD 680 Pendolino", build: cd680, buildLod: cd680Lod, params: CD680_PARAMS, catalog: EMU_CATALOG, references: "cd-680" },
+  { id: "proc-vehicle-cd-680", game: cd680Game(), title: "CD 680 Pendolino", build: cd680, buildLod: cd680Lod, lodTriangles: CD680_LOD, params: CD680_PARAMS, catalog: EMU_CATALOG, references: "cd-680" },
 ];
 
 export { LAYOUTS as PENDOLINO_LAYOUTS, lengthOf as pendolinoLength };

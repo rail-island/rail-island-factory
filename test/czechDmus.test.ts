@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { CZ_DMUS } from "../generator/czDmus.ts";
 import { K810, cd810Number } from "../generator/dmu810.ts";
-import { K812, cd812Number } from "../generator/dmu812.ts";
-import { cd843Number } from "../generator/dmu843.ts";
-import { K131, M131_NUMBERS } from "../generator/dmuM131.ts";
+import { K812, cd812Number, cd812Train } from "../generator/dmu812.ts";
+import { cd843Number, cd843Train } from "../generator/dmu843.ts";
+import { K131, M131_NUMBERS, m131Train } from "../generator/dmuM131.ts";
 import { K240, M240_NUMBER } from "../generator/dmuM240.ts";
 import { K296, m296Number } from "../generator/dmuM296.ts";
 import { DMU_COMPARED, compare, mae } from "../generator/dmuComparison.ts";
@@ -11,6 +11,8 @@ import { paramCombinations, type ParamValues } from "../generator/design.ts";
 import { collectTriangles, parseGlb } from "../generator/glbTriangles.ts";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree.ts";
 import { sample } from "./catalogCache";
+import { glbStats } from "../generator/glbStats.ts";
+import { lodBudget } from "../generator/lod.ts";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -49,16 +51,17 @@ describe("Czech diesel railcars from vlakosimdb", () => {
     expect(CZ_DMUS.map((d) => d.id)).toEqual(["proc-vehicle-cd-810", "proc-vehicle-cd-812", "proc-vehicle-cd-843", "proc-vehicle-csd-m131", "proc-vehicle-csd-m240", "proc-vehicle-csd-m296"]);
     const values = (id: string) => (CZ_DMUS.find((d) => d.id === id)!.params ?? []).map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
     expect(values("proc-vehicle-cd-810")).toEqual([["livery", "red", ["red", "yellowBand", "blueWhite", "ivoryBand", "cdBlue"]]]);
-    expect(values("proc-vehicle-cd-812")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer"]]]);
-    expect(values("proc-vehicle-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer"]], ["livery", "red", ["red", "cdBlue"]]]);
-    expect(values("proc-vehicle-csd-m131")).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
+    expect(values("proc-vehicle-cd-812")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "train"]], ["cars", "2", ["2", "3", "4", "5", "6", "7", "8"]]]);
+    expect(values("proc-vehicle-cd-843")).toEqual([["unit", "motorCar", ["motorCar", "drivingTrailer", "trailer", "train"]], ["cars", "3", ["2", "3", "4", "5", "6", "7", "8"]], ["livery", "red", ["red", "cdBlue"]]]);
+    expect(values("proc-vehicle-csd-m131")).toEqual([["unit", "motorCar", ["motorCar", "trailer", "train"]], ["cars", "2", ["2", "3", "4", "5", "6", "7", "8"]]]);
     expect(values("proc-vehicle-csd-m240")).toEqual([]);
     expect(values("proc-vehicle-csd-m296")).toEqual([["variant", "m296", ["m296", "cd853", "cd854", "cd854Blue"]]]);
     for (const d of CZ_DMUS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "diesel" });
   });
 
   for (const d of CZ_DMUS)
-    for (const params of sample(paramCombinations(d.params)))
+    // the full trains: "the full trains" below
+    for (const params of sample(paramCombinations(d.params)).filter((p) => p.unit !== "train"))
       it(`${d.id} ${JSON.stringify(params)}: length, running gear, envelope and budget`, () => {
         const spec = SPECS[d.id]!(params);
         const { mesh, tris, nodes } = build(d.id, params);
@@ -283,5 +286,95 @@ describe("Czech diesel railcars from vlakosimdb", () => {
     expect(K131 * 11.5).toBeCloseTo(12.1, 9);
     expect(K240 * 19.0).toBeCloseTo(18.5, 9);
     expect(K296 * 24.6).toBeCloseTo(24.79, 9);
+  });
+});
+
+// The full trains (unit "train", `cars` 2 .. 8): one articulated vehicle, a car a section.
+const TRAINS = [
+  { id: "proc-vehicle-cd-812", lob: 14.47, formation: cd812Train, extra: {} },
+  { id: "proc-vehicle-cd-843", lob: 25.2, formation: cd843Train, extra: {} },
+  { id: "proc-vehicle-cd-843", lob: 25.2, formation: cd843Train, extra: { livery: "cdBlue" } },
+  { id: "proc-vehicle-csd-m131", lob: 12.1, formation: m131Train, extra: {} },
+] as const;
+
+describe("the full trains", () => {
+  it("lay out their cars by the formation rules", () => {
+    const names = (f: (n: number) => Array<{ car: string; turned: boolean }>, n: number) => f(n).map((c) => (c.turned ? `${c.car}~` : c.car));
+    // 812 + 912 pairs, an odd train ending in a second 812
+    expect(names(cd812Train, 2)).toEqual(["motorCar", "drivingTrailer~"]);
+    expect(names(cd812Train, 3)).toEqual(["motorCar", "drivingTrailer", "motorCar~"]);
+    expect(names(cd812Train, 8)).toEqual(["motorCar", "drivingTrailer", "motorCar", "drivingTrailer", "motorCar", "drivingTrailer", "motorCar", "drivingTrailer~"]);
+    // the 843 leading, 043s, the 943 at the rear up to four cars, a second 843 from five
+    expect(names(cd843Train, 2)).toEqual(["motorCar", "drivingTrailer~"]);
+    expect(names(cd843Train, 3)).toEqual(["motorCar", "trailer", "drivingTrailer~"]);
+    expect(names(cd843Train, 4)).toEqual(["motorCar", "trailer", "trailer", "drivingTrailer~"]);
+    expect(names(cd843Train, 5)).toEqual(["motorCar", "trailer", "trailer", "trailer", "motorCar~"]);
+    expect(names(cd843Train, 8)).toEqual(["motorCar", ...Array(6).fill("trailer"), "motorCar~"]);
+    // the railbus with up to two trailers, from four cars a motor car at each end
+    expect(names(m131Train, 2)).toEqual(["motorCar", "trailer~"]);
+    expect(names(m131Train, 3)).toEqual(["motorCar", "trailer", "trailer~"]);
+    expect(names(m131Train, 4)).toEqual(["motorCar", "trailer", "trailer", "motorCar~"]);
+    expect(names(m131Train, 8)).toEqual(["motorCar", ...Array(6).fill("trailer"), "motorCar~"]);
+    // every length: the cars end to end over their coupling planes, centred on x = 0
+    for (const { formation, lob } of TRAINS)
+      for (let n = 2; n <= 8; n++) {
+        const cars = formation(n);
+        expect(cars).toHaveLength(n);
+        expect(cars[0]!.hi).toBeCloseTo((n * lob) / 2, 9);
+        expect(cars[n - 1]!.lo).toBeCloseTo((-n * lob) / 2, 9);
+        cars.forEach((c, i) => {
+          expect(c.hi - c.lo).toBeCloseTo(lob, 9);
+          if (i > 0) expect(c.hi).toBeCloseTo(cars[i - 1]!.lo, 9);
+        });
+      }
+  });
+
+  for (const { id, lob, extra } of TRAINS)
+    for (const n of [2, 3, 8])
+      it(`${id} ${JSON.stringify(extra)} ${n} cars: sections, joints, supports, length, budget and distant model`, () => {
+        const d = CZ_DMUS.find((x) => x.id === id)!;
+        const params = { ...extra, unit: "train", cars: String(n) };
+        const m = d.build(params);
+        const rig = m.rig!;
+        expect(rig.sections).toHaveLength(n);
+        expect(rig.joints).toHaveLength(n - 1);
+        // two axles or bogies a car, each a support of its own section
+        expect(rig.supports).toHaveLength(2 * n);
+        // the hinges at the coupling planes
+        rig.sections!.slice(1).forEach((s, i) => expect(s.pivot[0]).toBeCloseTo((n * lob) / 2 - (i + 1) * lob, 6));
+        const glb = m.toGlb("t");
+        const s = glbStats(glb);
+        expect(s.max[0]).toBeCloseTo((n * lob) / 2, 4);
+        expect(s.min[0]).toBeCloseTo((-n * lob) / 2, 4);
+        expect(s.min[1]).toBeCloseTo(0, 5);
+        expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
+        expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
+        expect(s.triangles).toBeLessThanOrEqual(16000 * n);
+        // deterministic
+        expect(Buffer.from(d.build(params).toGlb("t")).equals(Buffer.from(glb))).toBe(true);
+        // the distant model: the same sections, 100 triangles a car, 500 at most
+        const low = d.buildLod!(params);
+        const budget = Math.min(lodBudget(d), 100 * n);
+        expect(lodBudget(d)).toBe(500);
+        expect(low.triangleCount()).toBeLessThanOrEqual(budget);
+        expect(low.triangleCount()).toBeGreaterThanOrEqual(budget * 0.7);
+        expect(low.rig!.sections).toHaveLength(n);
+        expect(low.rig!.joints).toHaveLength(n - 1);
+      }, 120_000);
+
+  it("states the game figures of every train: the cars' weights added up, the motor cars' power", () => {
+    const car = { "proc-vehicle-cd-812": { motorCar: [20.7, 240], drivingTrailer: [20.7, 0] }, "proc-vehicle-cd-843": { motorCar: [56, 423], drivingTrailer: [25, 0], trailer: [25, 0] }, "proc-vehicle-csd-m131": { motorCar: [25, 155], trailer: [15, 0] } } as Record<string, Record<string, [number, number]>>;
+    for (const { id, formation, extra } of TRAINS) {
+      const d = CZ_DMUS.find((x) => x.id === id)!;
+      const def = d.params!.find((p) => p.name === "cars")!.default;
+      for (let n = 2; n <= 8; n++) {
+        const want = { ...extra, unit: "train", ...(String(n) === def ? {} : { cars: String(n) }) };
+        const v = d.game!.variants!.find((x) => JSON.stringify(Object.entries(x.params).sort()) === JSON.stringify(Object.entries(want).sort()));
+        expect(v, `${id} ${n}`).toBeDefined();
+        const cars = formation(n);
+        expect(v!.weight).toBeCloseTo(cars.reduce((t, c) => t + car[id]![c.car]![0], 0), 6);
+        expect(v!.power).toBe(cars.reduce((t, c) => t + car[id]![c.car]![1], 0));
+      }
+    }
   });
 });

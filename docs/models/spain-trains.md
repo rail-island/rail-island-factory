@@ -11,17 +11,17 @@ The catalog had no Spanish train before. Every design is filed under Spain.
 | id | title | kit | parameters | figures (game) |
 |---|---|---|---|---|
 | `proc-vehicle-renfe-s100` | AVE S-100 | series, TGV-style nose | `unit`, `cars` 3 - 8, `livery` (`ave`, `avlo`) | 300 km/h |
-| `proc-vehicle-renfe-s103` | AVE S-103 | series, Velaro body | `unit`, `cars` 3 - 8 | 350 km/h |
-| `proc-vehicle-renfe-s102` | AVE S-102 Pato | series, Talgo base | `unit`, `cars` 4 - 8, `livery` (`ave`, `avlo`) | the duck-bill power cars; 330 km/h |
-| `proc-vehicle-renfe-s106` | Talgo Avril S-106 | series, Talgo base | `unit`, `cars` 4 - 8, `livery` (`avlo`, `ave`) | 330 km/h |
-| `proc-vehicle-renfe-s130` | Alvia S-130 | series, Talgo base | `unit`, `cars` 4 - 8 | 250 km/h |
-| `proc-vehicle-talgo-iii` | Talgo III | series, Talgo base, unpowered, tail face | `unit`, `cars` 4 - 8 | short coaches; 140 km/h |
+| `proc-vehicle-renfe-s103` | AVE S-103 | series, Velaro body | `unit`, `cars` 2 - 8 | 350 km/h |
+| `proc-vehicle-renfe-s102` | AVE S-102 Pato | series, Talgo base | `unit`, `cars` 3 - 8, `livery` (`ave`, `avlo`) | the duck-bill power cars; 330 km/h |
+| `proc-vehicle-renfe-s106` | Talgo Avril S-106 | series, Talgo base | `unit`, `cars` 3 - 8, `livery` (`avlo`, `ave`) | 330 km/h |
+| `proc-vehicle-renfe-s130` | Alvia S-130 | series, Talgo base | `unit`, `cars` 3 - 8 | 250 km/h |
+| `proc-vehicle-talgo-iii` | Talgo III | series, Talgo base, unpowered, tail face | `unit`, `cars` 3 - 8 | short coaches; 140 km/h |
 | `proc-vehicle-renfe-s120` | Renfe S-120 | series | `unit` (four cars), `livery` (`alvia`, `mediaDistancia`) | 250 km/h |
-| `proc-vehicle-renfe-civia` | Renfe Civia | series | `unit`, `cars` 3 - 5 | 120 km/h |
+| `proc-vehicle-renfe-civia` | Renfe Civia | series | `unit`, `cars` 2 - 8 | 120 km/h |
 | `proc-vehicle-renfe-446` | Renfe 446 | series, flat cab | `unit` (three cars) | 100 km/h |
 | `proc-vehicle-renfe-440` | Renfe 440 | series, flat cab | `unit`, `livery` (`regional`, `cercanias`) | 140 km/h |
 | `proc-vehicle-renfe-592` | Renfe 592 | series, flat cab, diesel | `unit`, `livery` (`regional`, `mediaDistancia`) | 120 km/h |
-| `proc-vehicle-iryo-s109` | Iryo Frecciarossa 1000 | series | `unit`, `cars` 4 - 8 | 360 km/h |
+| `proc-vehicle-iryo-s109` | Iryo Frecciarossa 1000 | series | `unit`, `cars` 2 - 8 | 360 km/h |
 | `proc-vehicle-renfe-354` | Renfe 354 Virgen | box locomotive, streamlined, diesel | - | 17.5 m, 1,980 kW, 180 km/h |
 | `proc-vehicle-renfe-252` | Renfe 252 | box locomotive, raked | `livery` (`ave`, `mercancias`) | Bo-Bo, 20.38 m, 5,600 kW, 220 km/h |
 | `proc-vehicle-renfe-269` | Renfe 269 | box locomotive, flat | `livery` (`taxi`, `estrella`) | Bo-Bo, 17.27 m, 3,100 kW, 140 km/h |

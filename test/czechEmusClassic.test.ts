@@ -12,6 +12,11 @@ import { glbStats } from "../generator/glbStats";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import type { MeshBuilder } from "../generator/meshBuilder";
 import { sample } from "./catalogCache";
+import { cd451Lod, cd451Train } from "../generator/emu451";
+import { cd460Lod, cd460Train } from "../generator/emu460";
+import { classicUnits, lodBudget as trainLodBudget } from "../generator/emuClassicTrain";
+import { findCoplanarOverlaps } from "../generator/coplanar";
+import { buildLodModel } from "../generator/lodModel";
 
 function leaves(n: TreeNode): LeafNode[] {
   return isLeaf(n) ? [n] : n.children.flatMap(leaves);
@@ -51,18 +56,24 @@ describe("the older Czech electric units", () => {
     for (const d of DESIGNS) expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "unit", traction: "electric" });
     expect(DESIGNS.map((d) => d.references)).toEqual(["cd-451", "cd-460", "cd-470"]);
     expect(CD451_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
-      ["unit", "motorCar", ["motorCar", "trailer"]],
+      ["unit", "motorCar", ["motorCar", "trailer", "train"]],
+      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
       ["livery", "cd", ["cd", "cdBlue"]],
     ]);
     expect(CD460_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
-      ["unit", "motorCar", ["motorCar", "trailer"]],
+      ["unit", "motorCar", ["motorCar", "trailer", "train"]],
+      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
       ["livery", "cd", ["cd", "cd003", "cd007", "csd", "cdBlue"]],
     ]);
-    expect(CD470_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([["unit", "motorCar", ["motorCar", "trailer"]]]);
+    expect(CD470_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
+      ["unit", "motorCar", ["motorCar", "trailer", "train"]],
+      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
+    ]);
   });
 
   for (const d of DESIGNS)
-    it.each(sample(paramCombinations(d.params)).map((c) => [JSON.stringify(c), c] as const))(`${d.id} %s stands on the rail, centred, inside the envelope and the budget`, (_, combo: ParamValues) => {
+    // a single car (the full trains have tests of their own)
+    it.each(sample(paramCombinations(d.params).filter((c) => c.unit !== "train")).map((c) => [JSON.stringify(c), c] as const))(`${d.id} %s stands on the rail, centred, inside the envelope and the budget`, (_, combo: ParamValues) => {
       const { stats: s, nodes } = built(d.build(combo), d.id);
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
@@ -237,4 +248,105 @@ describe("the older Czech electric units", () => {
       for (let i = 0; i < 4; i++) expect(Math.abs(r.model[i]! - r.source[i]!), `${key} ${id} ${r.element} ${i}`).toBeLessThanOrEqual(r.tolerancePixels);
     }
   });
+});
+
+describe("the CD 451 and CD 460 full trains", () => {
+  const TRAINS = [
+    { id: "proc-vehicle-cd-451", d: EMU451_DESIGNS[0]!, build: cd451, lod: cd451Lod, formation: cd451Train, length: length451, liveries: ["cd", "cdBlue"], weight: { motorCar: 59, trailer: 40 }, power: 660 },
+    { id: "proc-vehicle-cd-460", d: EMU460_DESIGNS[0]!, build: cd460, lod: cd460Lod, formation: cd460Train, length: length460, liveries: ["cd", "cd003", "cd007", "csd", "cdBlue"], weight: { motorCar: 40, trailer: 40 }, power: 1000 },
+  ] as const;
+  const SIZES = [2, 3, 4, 5, 6, 7, 8];
+  const code = (n: number, basic: number) =>
+    classicUnits(n, basic)
+      .map((k) => "M" + "T".repeat(k - 2) + "m")
+      .join("|");
+
+  it("split a train into units of a motor car at each end: one unit up to the basic unit, two coupled cab to cab beyond", () => {
+    expect(SIZES.map((n) => classicUnits(n, 4))).toEqual([[2], [3], [4], [3, 2], [3, 3], [4, 3], [4, 4]]);
+    expect(SIZES.map((n) => classicUnits(n, 5))).toEqual([[2], [3], [4], [5], [3, 3], [4, 3], [4, 4]]);
+    // M a motor car with its cab leading, m one turned (cab at the rear), T a trailer
+    const form = (slots: ReturnType<typeof cd451Train>) => slots.map((s) => (s.car === "trailer" ? "T" : s.turned ? "m" : "M")).join("").replace(/mM/g, "m|M");
+    expect(SIZES.map((n) => form(cd451Train(n)))).toEqual(SIZES.map((n) => code(n, 4)));
+    expect(SIZES.map((n) => form(cd460Train(n)))).toEqual(SIZES.map((n) => code(n, 5)));
+    expect(form(cd451Train(8))).toBe("MTTm|MTTm");
+    expect(form(cd460Train(5))).toBe("MTTTm");
+    expect(() => cd451Train(1)).toThrow();
+    expect(() => cd460Train(9)).toThrow();
+  });
+
+  for (const t of TRAINS)
+    for (const n of SIZES)
+      it(`${t.id}: a ${n}-car train is one articulated vehicle, a section per car on its own bogies, centred`, () => {
+        const slots = t.formation(n);
+        const total = slots.reduce((a, s) => a + t.length(s.car), 0);
+        expect(slots[0]!.hi).toBeCloseTo(total / 2, 9);
+        expect(slots[n - 1]!.lo).toBeCloseTo(-total / 2, 9);
+        slots.slice(1).forEach((s, i) => expect(s.hi).toBeCloseTo(slots[i]!.lo, 9));
+        const m = t.build({ unit: "train", cars: String(n) });
+        const glb = m.toGlb(t.id);
+        const s = glbStats(glb);
+        // the cabs' couplers reach the train's coupling planes
+        expect(s.min[0]).toBeCloseTo(-total / 2, 2);
+        expect(s.max[0]).toBeCloseTo(total / 2, 2);
+        expect(s.min[1]).toBeCloseTo(0, 5);
+        expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
+        expect(s.triangles).toBeLessThanOrEqual(16_000 * n);
+        const rig = m.rig!;
+        expect(rig.sections).toHaveLength(n);
+        expect(rig.joints).toHaveLength(n - 1);
+        // each hinge on the coupling plane ahead of its car
+        rig.sections!.slice(1).forEach((sec, i) => expect(sec.pivot[0]).toBeCloseTo(slots[i]!.lo, 9));
+        for (const j of rig.joints!) expect(j.front).toBeGreaterThan(j.rear);
+        expect(rig.supports).toHaveLength(2 * n);
+        for (let k = 0; k < n; k++) expect(rig.supports!.filter((sp) => sp.sections.length === 1 && sp.sections[0] === k)).toHaveLength(2);
+        if (n <= 3) expect(findCoplanarOverlaps(glb)).toEqual([]);
+      });
+
+  for (const t of TRAINS)
+    it(`${t.id}: the rear motor car is turned (its cab at -X), two units meet cab to cab; same bytes twice`, () => {
+      const m = t.build({ unit: "train", cars: "6" });
+      const nodes = leaves(m.sourceTree(t.id, t.id).root);
+      // the cab windscreen pillars or windscreens of each car, by car
+      const cabs = (k: number) => bounds(nodes, new RegExp(`^section${k - 1}/car-${k}/cab/`));
+      const slots = t.formation(6);
+      for (const [k, s] of slots.entries()) {
+        if (s.car !== "motorCar") continue;
+        const b = cabs(k + 1);
+        const cx = (s.lo + s.hi) / 2;
+        expect(b.count).toBeGreaterThan(0);
+        expect(s.turned ? b.max[0]! < cx : b.min[0]! > cx, `car ${k + 1}`).toBe(true);
+      }
+      // 3 + 3: the third car's cab and the fourth car's cab face each other over a coupler joint
+      expect(slots.map((s) => s.turned)).toEqual([false, false, true, false, false, true]);
+      expect(m.rig!.joints![2]!.front - m.rig!.joints![2]!.rear).toBeCloseTo(0.3, 6);
+      expect(Buffer.from(m.toGlb("a")).equals(Buffer.from(t.build({ unit: "train", cars: "6" }).toGlb("a")))).toBe(true);
+    });
+
+  for (const t of TRAINS)
+    it(`${t.id}: the distant model of every train keeps its sections within 100 triangles a car`, () => {
+      expect(t.d.lodTriangles).toBe(500);
+      for (const n of SIZES) {
+        const low = buildLodModel(t.d, { unit: "train", cars: String(n) });
+        expect(low.triangleCount()).toBeGreaterThan(0);
+        expect(low.triangleCount()).toBeLessThanOrEqual(trainLodBudget(n));
+        expect(trainLodBudget(n)).toBeLessThanOrEqual(Math.min(n > 5 ? 500 : 300, 100 * n));
+        expect(low.rig!.sections).toHaveLength(n);
+        expect(low.rig!.joints).toHaveLength(n - 1);
+      }
+      expect(t.lod({ unit: "motorCar" }).triangleCount()).toBeLessThanOrEqual(100);
+    });
+
+  for (const t of TRAINS)
+    it(`${t.id}: every train length in every livery is a game variant, its cars added up`, () => {
+      const variants = t.d.game!.variants!;
+      for (const livery of t.liveries)
+        for (const n of SIZES) {
+          const params = { ...(n === 4 ? {} : { cars: String(n) }), ...(livery === "cd" ? {} : { livery }), unit: "train" };
+          const v = variants.find((x) => JSON.stringify(Object.entries(x.params).sort()) === JSON.stringify(Object.entries(params).sort()));
+          expect(v, `${livery} ${n}`).toBeDefined();
+          const slots = t.formation(n);
+          expect(v!.weight).toBeCloseTo(slots.reduce((a, s) => a + t.weight[s.car], 0), 6);
+          expect(v!.power).toBe(slots.filter((s) => s.car === "motorCar").length * t.power);
+        }
+    });
 });

@@ -9,10 +9,12 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { MaterialSpec } from "./meshCore.ts";
-import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
+import { resolveParams, type CatalogFields, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { block, side } from "./vehicleParts.ts";
-import { Tram, type Pt, type PxBox, type SourceVolume, type TramMap } from "./tramKit.ts";
+import { articulate, Tram, TRAM_PALETTE, type Pt, type PxBox, type SourceVolume, type TramMap } from "./tramKit.ts";
 import { tramLod } from "./lodTrams.ts";
+import { LOD_GLASS, type LodSections } from "./lodKit.ts";
+import { bogieParts, coachBody, fitUnit, sideGlass, turnBody, type UnitBody } from "./lodUnits.ts";
 
 /** The game-catalog fields of the metro: rail vehicles in their own pool. */
 export const METRO_CATALOG: CatalogFields = {
@@ -24,7 +26,11 @@ export const METRO_CATALOG: CatalogFields = {
   source: "Rail Island",
 };
 
+/** The cars; the design's `unit` also offers the full train ("train", `cars` long). */
 export type MetroUnit = "headCar" | "middleCar";
+/** The full train's car counts: a head car at each end, 0 .. 6 middle cars between. */
+export const METRO_MIN_CARS = 2;
+export const METRO_MAX_CARS = 8;
 export type MetroLivery = "prague" | "budapest";
 
 export const METRO_PARAMS: readonly ParamSpec[] = [{
@@ -33,8 +39,15 @@ export const METRO_PARAMS: readonly ParamSpec[] = [{
   values: [
     { value: "headCar", title: "Head car" },
     { value: "middleCar", title: "Middle car" },
+    { value: "train", title: "Full train" },
   ],
   default: "headCar",
+}, {
+  name: "cars",
+  title: "Cars",
+  values: Array.from({ length: METRO_MAX_CARS - METRO_MIN_CARS + 1 }, (_, i) => ({ value: String(i + METRO_MIN_CARS), title: `${i + METRO_MIN_CARS} cars` })),
+  default: "4",
+  when: { name: "unit", values: ["train"] },
 }, {
   name: "livery",
   title: "Livery",
@@ -190,6 +203,7 @@ function spansBetween(stops: PxBox[], from: number, to: number): Array<[number, 
  */
 export function metro8171Lod(params?: ParamValues): MeshBuilder {
   const p = resolveParams(METRO_PARAMS, params);
+  if (p.unit === "train") return metroTrainLod(Number(p.cars), METRO_LIVERIES[p.livery as MetroLivery]);
   const unit = p.unit as MetroUnit;
   const car = CARS[unit];
   const head = unit === "headCar";
@@ -212,13 +226,29 @@ export function metro8171Lod(params?: ParamValues): MeshBuilder {
   }, 100);
 }
 
+/** A car's tram builder, centred between its coupling planes; drawing into `m` (a train's builder) when given. */
+function carTram(unit: MetroUnit, livery: MetroPaint, m?: MeshBuilder): Tram {
+  const car = CARS[unit];
+  const t = new Tram(livery.palette, { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 });
+  // a train's later cars draw into the first car's builder (the same palette)
+  if (m) (t as unknown as { m: MeshBuilder }).m = m;
+  return t;
+}
+
 export function metro8171(params?: ParamValues): MeshBuilder {
   const p = resolveParams(METRO_PARAMS, params);
-  const unit = p.unit as MetroUnit;
   const livery = METRO_LIVERIES[p.livery as MetroLivery];
+  if (p.unit === "train") return metroTrainModel(Number(p.cars), livery);
+  const unit = p.unit as MetroUnit;
+  const t = carTram(unit, livery);
+  drawMetroCar(t, unit, livery);
+  return t.m;
+}
+
+/** Draws one car, cab (if any) toward +X, centred between its coupling planes, through `t`. */
+function drawMetroCar(t: Tram, unit: MetroUnit, livery: MetroPaint): void {
   const car = CARS[unit];
   const head = unit === "headCar";
-  const t = new Tram(livery.palette, { ...METRO_MAP, c: (car.couplers[0] + car.couplers[1]) / 2 });
   const m = t.m;
   const [a, b] = car.ends;
   const vols = head
@@ -320,9 +350,144 @@ export function metro8171(params?: ParamValues): MeshBuilder {
       });
     }));
   });
+}
+
+// ---------------------------------------------------------------------------
+// The full train
+
+/** A car over its coupling planes (m). */
+export const METRO_CAR_LENGTH: Record<MetroUnit, number> = {
+  headCar: (CARS.headCar.couplers[1] - CARS.headCar.couplers[0]) * METRO_MAP.kx,
+  middleCar: (CARS.middleCar.couplers[1] - CARS.middleCar.couplers[0]) * METRO_MAP.kx,
+};
+
+/** The coupler's height, the hinge of the train's joints. */
+const COUPLER_Y = 0.85 * METRO_MAP.ky;
+/** The bellows over a gap between two cars: round the end door, inside the rounded corners. */
+const METRO_BELLOWS: Array<[number, number]> = [[-0.5, 1.1], [0.5, 1.1], [0.5, 3.3], [-0.5, 3.3]];
+const METRO_MAX_BEND = 10;
+/** The distant model's cap: 100 triangles a car up to five cars. */
+export const METRO_LOD = 500;
+
+/** A car of a train: its span lo..hi over its coupling planes (model x) and whether it is turned. */
+export interface MetroSlot {
+  car: MetroUnit;
+  lo: number;
+  hi: number;
+  turned: boolean;
+}
+
+/**
+ * The cars of a train of `n`, front first: a head car at each end, the rear
+ * one turned, middle cars between them (none in the two-car train). Each with
+ * its span over its coupling planes, the train centred on x = 0.
+ */
+export function metroTrain(n: number): MetroSlot[] {
+  if (!Number.isInteger(n) || n < METRO_MIN_CARS || n > METRO_MAX_CARS) throw new Error(`a metro 81-71 train of ${n} cars`);
+  const cars = Array.from({ length: n }, (_, i): MetroUnit => (i === 0 || i === n - 1 ? "headCar" : "middleCar"));
+  let hi = cars.reduce((t, car) => t + METRO_CAR_LENGTH[car], 0) / 2;
+  return cars.map((car, i) => {
+    const lo = hi - METRO_CAR_LENGTH[car];
+    const out = { car, lo, hi, turned: i === n - 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/** A car's end walls (its body's ends) as model x about its centre: the front (+X) and the rear one. */
+function walls(unit: MetroUnit): [front: number, rear: number] {
+  const car = CARS[unit];
+  const c = (car.couplers[0] + car.couplers[1]) / 2;
+  return [(c - car.ends[0]) * METRO_MAP.kx, (c - car.ends[1]) * METRO_MAP.kx];
+}
+
+/** A slot's end walls in the train, x0 (rear) and x1 (front). */
+function slotWalls(slot: MetroSlot): [x0: number, x1: number] {
+  const cx = (slot.lo + slot.hi) / 2;
+  const [front, rear] = walls(slot.car);
+  return slot.turned ? [cx - front, cx - rear] : [cx + rear, cx + front];
+}
+
+/** The train as one articulated vehicle: each car a section hinged at the coupling plane ahead of it, a bellows over each gap. */
+function metroTrainModel(n: number, livery: MetroPaint): MeshBuilder {
+  const slots = metroTrain(n);
+  const first = carTram(slots[0]!.car, livery);
+  const m = first.m;
+  const sections = slots.map((slot, k) => {
+    const t = k === 0 ? first : carTram(slot.car, livery, m);
+    const cx = (slot.lo + slot.hi) / 2;
+    const [x0, x1] = slotWalls(slot);
+    return {
+      x0,
+      x1,
+      draw: () => m.scope(`car ${k + 1}`, () => {
+        // the car drawn about its own centre, moved to its place (and turned about it)
+        const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => drawMetroCar(t, slot.car, livery));
+        if (slot.turned) m.turned(cx, draw);
+        else draw();
+      }),
+    };
+  });
+  articulate({ m }, sections, COUPLER_Y, { profile: METRO_BELLOWS, folds: 3, depth: 0.03 }, METRO_MAX_BEND, slots.slice(0, -1).map((slot) => slot.lo));
   return m;
 }
 
+/** A car of the train from afar, section k: the body from its volumes (`inner` its ends hidden under the bellows, before a turn), the side windows and windscreen, the bogies. */
+function metroCarLod(slot: MetroSlot, k: number, livery: MetroPaint, inner: { front: boolean; rear: boolean }) {
+  const car = CARS[slot.car];
+  const head = slot.car === "headCar";
+  const t = carTram(slot.car, livery);
+  const cx = (slot.lo + slot.hi) / 2;
+  const [a, b] = car.ends;
+  const vols = head
+    ? [t.vol("cab", SECTION, car.body, a, 0.75, CAB_BANDS), t.vol("saloon", SECTION, car.body, 0.75, b, BANDS)]
+    : [t.vol("saloon", SECTION, car.body, a, b, BANDS)];
+  const windows = sideGlass(car.windows.map((w) => { const q = t.box(w); return { ...q, x0: q.x0 + cx, x1: q.x1 + cx }; }), 0.35);
+  const screen = t.endBox([4, 30, 26, 39]);
+  let body: UnitBody = coachBody(vols.map((v) => ({ v, X: (x: number) => x + cx })), {
+    main: vols.length - 1, roof: "roof", windows, section: k,
+    ...(head ? { frontWindows: [{ u: [screen.x0, screen.x1] as const, y: [screen.y0, screen.y1] as const, mat: LOD_GLASS }] } : {}),
+  });
+  body = { ...body, front: { ...body.front, hidden: inner.front || undefined }, rear: { ...body.rear, hidden: inner.rear || undefined } };
+  if (slot.turned) body = turnBody(body, cx);
+  const T = (x: number) => (slot.turned ? cx - x : cx + x);
+  const bogies = bogieParts(car.bogies.map((x) => [T(t.fx(x)), METRO_WHEELBASE / 2 + METRO_WHEEL_R + 0.15, k] as const), t.fy(1.0));
+  // the middle cars' bogies give way first
+  return { body, parts: head ? bogies : bogies.map((part) => ({ ...part, optional: 5 })) };
+}
+
+function metroTrainLod(n: number, livery: MetroPaint): MeshBuilder {
+  const slots = metroTrain(n);
+  // in each car's own frame (before a turn): only a head car's cab end shows
+  const built = slots.map((slot, k) => metroCarLod(slot, k, livery, { front: slot.car !== "headCar", rear: true }));
+  const w = slots.map(slotWalls);
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, COUPLER_Y, 0])),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: w[i]![0], rear: w[i + 1]![1], profile: METRO_BELLOWS })),
+    maxBendDeg: METRO_MAX_BEND,
+    material: "bellows",
+  };
+  return fitUnit({ palette: { ...TRAM_PALETTE, ...livery.palette }, bodies: built.map((c) => c.body), parts: built.flatMap((c) => c.parts), sections }, Math.min(METRO_LOD, 100 * n));
+}
+
+// ---------------------------------------------------------------------------
+// What the game needs
+
+/** Every car is a motor car: 35 t and 300 kW each (the design's figures), the train their sums. */
+const CAR_WEIGHT = 35;
+const CAR_POWER = 300;
+
+function metroGame(): GameProperties {
+  const variants: NonNullable<GameProperties["variants"]> = [];
+  for (const livery of Object.keys(METRO_LIVERIES) as MetroLivery[]) {
+    const base: ParamValues = livery === "prague" ? {} : { livery };
+    for (let n = METRO_MIN_CARS; n <= METRO_MAX_CARS; n++)
+      // the default four cars are named by the unit alone
+      variants.push({ params: { ...(n === 4 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight: n * CAR_WEIGHT, power: n * CAR_POWER });
+  }
+  return { weight: CAR_WEIGHT, power: CAR_POWER, maxspeed: 80, accel: null, variants };
+}
+
 export const METRO_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-metro-81-71", game: { weight: 35, power: 300, maxspeed: 80, accel: null }, title: "Metro 81-71", build: metro8171, buildLod: metro8171Lod, params: METRO_PARAMS, catalog: METRO_CATALOG, references: "metro-81-71" },
+  { id: "proc-vehicle-metro-81-71", game: metroGame(), title: "Metro 81-71", build: metro8171, buildLod: metro8171Lod, lodTriangles: METRO_LOD, params: METRO_PARAMS, catalog: METRO_CATALOG, references: "metro-81-71" },
 ];

@@ -135,6 +135,8 @@ export interface GangwayOpts {
   /** Marker lamps' height; omitted: none. Their distance from the centre line (default 1.1 m). */
   markerY?: number;
   markerZ?: number;
+  /** False leaves out the gangway's rubber frame (a car inside a full train, under its bellows). */
+  frame?: boolean;
 }
 
 /** An inner end: gangway bellows, the end door, marker lamps, a short coupler bar and buffers if any. */
@@ -143,7 +145,7 @@ export function gangwayEnd(c: Coach, v: Volume, o: GangwayOpts): void {
   const { wall, e } = o;
   const X = (b: number) => c.X(b);
   const bell = wall + e * Math.min(o.face, 0.2);
-  m.scope("gangway", () => {
+  if (o.frame !== false) m.scope("gangway", () => {
     const [a, b] = [X(wall) - e * 0.02, X(bell)].sort((p, q) => p - q) as [number, number];
     for (const z of [-1, 1]) block(m, "rubber", a, b, o.door.y0 - 0.12, o.door.y1 + 0.12, ...side(z, -o.door.x0 + 0.04, -o.door.x0 + 0.18));
     block(m, "rubber", a, b, o.door.y1 + 0.02, o.door.y1 + 0.12, o.door.x0 + 0.04, o.door.x1 - 0.04);

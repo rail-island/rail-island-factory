@@ -11,7 +11,10 @@
 // red stripe laid from native pixel boxes, 0.1 m a pixel. Lengths are the
 // published ones (power car 20.56 m, coaches 26.40 m over couplers), width
 // 3.02 m, heights 3.84 m and 4.295 m; bogie pivots 11.46 m on the
-// power car (published) and 19.0 m on the coaches. See docs/models/foreign-units.md.
+// power car (published) and 19.0 m on the coaches. `unit` `train` is the whole
+// train, articulated: `cars` (3 .. 8) vehicles, a power car at each end (the rear
+// one turned), coaches between them and the restaurant car in the middle from
+// five cars (ice1Train). See docs/models/foreign-units.md.
 
 import { ngon, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { GameProperties } from "./design.ts";
@@ -21,9 +24,18 @@ import { block, side } from "./vehicleParts.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, pantograph, slopePanel } from "./emuParts.ts";
 import { bOf, roofBox, sideBox, spacedLetters, unitBogie, type PxBox, type SideMap } from "./unitParts.ts";
 import { LOD_GLASS } from "./lodKit.ts";
-import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, skirtParts } from "./lodUnits.ts";
+import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shiftBody, skirtParts, turnBody, type UnitBody } from "./lodUnits.ts";
+import { articulate } from "./tramKit.ts";
+import type { LodPart, LodSections } from "./lodKit.ts";
 
+/** One car of the ICE 1. */
 export type Ice1Unit = "powerCar" | "coach" | "restaurant";
+/** What the design builds: one car, or the whole train. */
+export type Ice1Selection = Ice1Unit | "train";
+
+/** The train's vehicle counts: two power cars and one to six cars between them. */
+export const ICE1_MIN_CARS = 3;
+export const ICE1_MAX_CARS = 8;
 
 /**
  * The ICE 2's cars drawn on the ICE 1's builders (deIce2.ts): `ice2` paints the single traffic-red
@@ -44,7 +56,13 @@ export const ICE1_PARAMS: readonly ParamSpec[] = [
     powerCar: "Power car",
     coach: "Coach",
     restaurant: "Restaurant car",
+    train: "Full train",
   }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: ICE1_MAX_CARS - ICE1_MIN_CARS + 1 }, (_, i) => [String(i + ICE1_MIN_CARS), `${i + ICE1_MIN_CARS} cars`]))),
+    default: "4",
+    when: { name: "unit", values: ["train"] },
+  },
 ];
 
 /** The power car's BMPs are 38 rows for its 3.84 m: rows are scaled by 3.84 / 3.8. */
@@ -96,8 +114,8 @@ const coachBands = (top: number): Array<[number, number, string]> => [[0.1, 0.5,
 const ice2PowerBands = (): Array<[number, number, string]> => [[0.1, 0.5, "skirt"], [0.5, 1.21, "white"], [1.21, 1.52, "red"], [1.52, 3.8, "white"]];
 /** The ICE 2's sides: white, the stripe under the windows (the coaches, the power car's door and its distant model). */
 const ice2Bands = (top: number): Array<[number, number, string]> => [[0.1, 0.5, "skirt"], [0.5, ICE2_STRIPE[0], "white"], [ICE2_STRIPE[0], ICE2_STRIPE[1], "red"], [ICE2_STRIPE[1], top, "white"]];
-/** The ICE 2's traffic red. */
-const ICE2_PALETTE: Record<string, MaterialSpec> = { ...PALETTE, red: { color: "#ec0016", roughness: 0.45 } };
+/** The ICE 2's traffic red (the ICE 2's cars and its train, deIce2.ts). */
+export const ICE2_PALETTE: Record<string, MaterialSpec> = { ...PALETTE, red: { color: "#ec0016", roughness: 0.45 } };
 
 interface CarLayout {
   key: string;
@@ -128,45 +146,164 @@ export const ICE1_POWER_BOGIES: [number, number] = [5.27, 16.73];
 /** Coach bogies: 19.0 m apart on the 26.4 m car, 2.5 m wheelbase, 920 mm wheels. */
 export const ICE1_COACH_BOGIES: [number, number] = [3.7, 22.7];
 
-/** A car of the ICE 1. */
 /**
- * A car of the ICE 1 for distant views (lodUnits.ts): the power car's long
- * sloping nose with its windscreen, the bodies' sections and the red and pink
- * band, the coaches' dark window band and the restaurant's raised roof, the
- * skirts between and beyond the bogies, the bogies, the power car's roof
- * hatches and its raised pantograph.
+ * The ICE 1 for distant views (lodUnits.ts): one car (ice1CarLod), or the
+ * whole train with the full model's sections and a plain bellows over each
+ * joint, 100 triangles a car and 500 at most.
  */
 export function ice1Lod(params?: ParamValues, variant: Ice1Variant = {}): MeshBuilder {
-  const unit = resolveParams(ICE1_PARAMS, params).unit as Ice1Unit;
+  const p = resolveParams(ICE1_PARAMS, params);
+  const unit = p.unit as Ice1Selection;
+  const ice2 = !!variant.ice2;
+  const palette = ice2 ? ICE2_PALETTE : PALETTE;
+  if (unit === "train") {
+    const slots = ice1Train(Number(p.cars));
+    return iceTrainLod(palette, slots, (slot) => ICE1_WALLS[slot.car], (slot, k) => ice1CarLod(slot.car, ice2, { cx: (slot.lo + slot.hi) / 2, turned: slot.turned, section: k }));
+  }
+  const { body, parts } = ice1CarLod(unit, ice2);
+  return fitUnit({ palette, bodies: [body], parts }, 100);
+}
+
+/**
+ * A car of the ICE 1 for distant views: the power car's long sloping nose with
+ * its windscreen, the bodies' sections and the red and pink band, the coaches'
+ * dark window band and the restaurant's raised roof, the skirts between and
+ * beyond the bogies, the bogies, the power car's roof hatches and its raised
+ * pantograph. Centred on x = 0 facing +X; in a train (`place`) moved to its
+ * centre cx, turned there when `turned`, in its section with its inner ends
+ * hidden under the bellows and an intermediate car's bogies the first to give way.
+ */
+export function ice1CarLod(unit: Ice1Unit, ice2 = false, place?: { cx: number; turned: boolean; section: number }): { body: UnitBody; parts: LodPart[] } {
   const L = LAYOUTS[unit];
   const centre = L.length / 2;
   const X = (x: number) => bOf(L.map, x) - centre;
+  // car x to model x: the car's place in a train
+  const T = (x: number) => (!place ? x : place.turned ? place.cx - x : place.cx + x);
   const power = unit === "powerCar";
-  const ice2 = !!variant.ice2;
   // at a distance the ICE 2 power car's stripe runs at the coaches' height (its sweep to the nose left out)
   const v = power ? powerVolume(ice2 ? ice2Bands(3.8) : undefined) : coachVolume(unit, ice2);
   const rect = (b: PxBox) => { const r = sideBox(L.map, b); return { u: [r.x0 - centre, r.x1 - centre] as const, y: [r.y0, r.y1] as const, mat: LOD_GLASS }; };
   const windows = power ? [] : unit === "coach" ? [rect([15, 13, 250, 22])] : [rect([21, 13, 80, 22]), rect([164, 13, 244, 22])];
   const body = coachBody([{ v, X: (b) => b - centre }], { y0: 0.5, windows, ...(power ? { frontWindows: [{ u: [-1.18, 1.18], y: [2.3, 3.32], mat: LOD_GLASS }] } : {}) });
   const bogies = power ? ICE1_POWER_BOGIES : ICE1_COACH_BOGIES;
-  return fitUnit({
-    palette: ice2 ? ICE2_PALETTE : PALETTE,
-    bodies: [body],
-    parts: [
-      ...bogieParts(bogies.map((x) => [X(x), (power ? 1.5 + 0.52 : 1.25 + 0.46) + 0.2] as const), 0.5),
-      ...skirtParts((v.bottom ?? []).map(([b, y]): Pt => [b - centre, y]), 0.5, 1.5 * L.kZ - 0.02, "skirt"),
-      ...(power ? [
-        roofPart("roofGrey", X(14.5), X(3.6), 0.7, 0.65, 3.78, 3.84),
-        ...pantographParts([X(17.4)], 3.83, 4.05),
-      ] : []),
-    ],
-  }, 100);
+  const running = bogieParts(bogies.map((x) => [T(X(x)), (power ? 1.5 + 0.52 : 1.25 + 0.46) + 0.2] as const), 0.5);
+  const parts: LodPart[] = [
+    ...(place && !power ? running.map((q) => ({ ...q, optional: 5 })) : running),
+    ...skirtParts((v.bottom ?? []).map(([b, y]): Pt => [T(b - centre), y]), 0.5, 1.5 * L.kZ - 0.02, "skirt"),
+    ...(power ? [
+      roofPart("roofGrey", T(X(14.5)), T(X(3.6)), 0.7, 0.65, 3.78, 3.84),
+      ...pantographParts([T(X(17.4))], 3.83, 4.05),
+    ] : []),
+  ];
+  if (!place) return { body, parts };
+  const inner: UnitBody = { ...body, rear: { ...body.rear, hidden: true }, ...(power ? {} : { front: { ...body.front, hidden: true } }), section: place.section };
+  const moved = shiftBody(inner, place.cx);
+  return { body: place.turned ? turnBody(moved, place.cx) : moved, parts: parts.map((q) => ({ ...q, section: place.section })) };
 }
 
 export function ice1(params?: ParamValues, variant: Ice1Variant = {}): MeshBuilder {
-  const unit = resolveParams(ICE1_PARAMS, params).unit as Ice1Unit;
+  const p = resolveParams(ICE1_PARAMS, params);
+  const unit = p.unit as Ice1Selection;
   const ice2 = !!variant.ice2;
+  if (unit === "train") {
+    const coach = new Coach({ ...(ice2 ? ICE2_PALETTE : PALETTE), ...ICE_TRAIN_PALETTE }, 0);
+    return iceArticulated(coach.m, ice1Train(Number(p.cars)), (slot) => ICE1_WALLS[slot.car], (slot) => drawIce1Car(coach.m, slot.car, ice2, true));
+  }
   return unit === "powerCar" ? powerCar(ice2) : coach(unit, ice2);
+}
+
+/**
+ * A car of the ICE 1 (ICE 2 with `ice2`) drawn into `m`, centred on x = 0 facing
+ * +X; in a train (`inTrain`) a coach leaves out its gangway frames, which the
+ * joints' bellows replace, and keeps its couplers.
+ */
+export function drawIce1Car(m: MeshBuilder, unit: Ice1Unit, ice2: boolean, inTrain: boolean): void {
+  if (unit === "powerCar") powerCar(ice2, m);
+  else coach(unit, ice2, m, !inTrain);
+}
+
+// --- the train ------------------------------------------------------------------------------
+
+/** A vehicle of an ICE train: its kind, its span lo..hi over its coupling planes (model x) and whether it is turned. */
+export interface IceSlot<C extends string> {
+  car: C;
+  lo: number;
+  hi: number;
+  turned: boolean;
+}
+
+/** Cars laid out front to back over their coupling planes, the train centred on x = 0, the last one turned. */
+export function iceSlots<C extends string>(cars: readonly C[], length: (car: C) => number): IceSlot<C>[] {
+  let hi = cars.reduce((t, car) => t + length(car), 0) / 2;
+  return cars.map((car, i) => {
+    const lo = hi - length(car);
+    const out = { car, lo, hi, turned: i === cars.length - 1 };
+    hi = lo;
+    return out;
+  });
+}
+
+/**
+ * The vehicles of an ICE 1 of `n` (3 .. 8), front first: a power car at each
+ * end (the rear one turned) and coaches between them, the restaurant car in the
+ * middle of them from five cars (the prototype's runs it mid-train).
+ */
+export function ice1Train(n: number): IceSlot<Ice1Unit>[] {
+  if (!Number.isInteger(n) || n < ICE1_MIN_CARS || n > ICE1_MAX_CARS) throw new Error(`ICE 1: no ${n}-car train`);
+  const k = n - 2;
+  const middle = Array.from({ length: k }, (_, i): Ice1Unit => (k >= 3 && i === Math.floor(k / 2) ? "restaurant" : "coach"));
+  return iceSlots<Ice1Unit>(["powerCar", ...middle, "powerCar"], ice1Length);
+}
+
+/** Each car's end walls inside its front and rear coupling planes (m): the power car's rear wall, the coaches' two. */
+export const ICE1_WALLS: Record<Ice1Unit, readonly [front: number, rear: number]> = { powerCar: [0, 0.05], coach: [0.15, 0.15], restaurant: [0.15, 0.15] };
+
+/** What a train adds to its cars' materials: the black rubber bellows over each joint. */
+export const ICE_TRAIN_PALETTE: Record<string, MaterialSpec> = { bellows: { color: "#1c1c1e", roughness: 0.95 } };
+/** The hinge between two cars: on the coupling plane at the couplers' height. */
+export const ICE_HINGE_Y = 1.0;
+/** The bellows over the gangway between two cars (z, y): the coaches' gangway frame. */
+const ICE_BELLOWS: Array<[number, number]> = [[-0.72, 1.15], [0.72, 1.15], [0.72, 3.35], [-0.72, 3.35]];
+const ICE_MAX_BEND_DEG = 10;
+/** The distant model's budget for the longest trains: 100 triangles a car, 500 at most. */
+export const ICE_TRAIN_LOD = 500;
+
+/** Each section's body span: from its rear wall to its front wall (a turned car's walls swapped). */
+function iceSpans<C extends string>(slots: readonly IceSlot<C>[], walls: (slot: IceSlot<C>) => readonly [number, number]): Array<[x0: number, x1: number]> {
+  return slots.map((slot) => {
+    const [f, r] = walls(slot);
+    const [front, rear] = slot.turned ? [r, f] : [f, r];
+    return [slot.lo + rear, slot.hi - front];
+  });
+}
+
+/**
+ * An ICE train as one articulated vehicle (articulate, tramKit.ts): each car a
+ * section hinged at the coupling plane ahead of it, riding on its own two
+ * bogies, a bellows over the gap between two bodies. `draw(slot)` draws a car
+ * centred on x = 0 facing +X; it is moved to its place and the last car turned.
+ */
+export function iceArticulated<C extends string>(m: MeshBuilder, slots: readonly IceSlot<C>[], walls: (slot: IceSlot<C>) => readonly [number, number], draw: (slot: IceSlot<C>) => void): MeshBuilder {
+  const spans = iceSpans(slots, walls);
+  const sections = slots.map((slot, k) => {
+    const cx = (slot.lo + slot.hi) / 2;
+    const placed = () => m.moved(([x, y, z]) => [x + cx, y, z], () => draw(slot));
+    return { x0: spans[k]![0], x1: spans[k]![1], draw: () => m.scope(`car ${k + 1}`, () => (slot.turned ? m.turned(cx, placed) : placed())) };
+  });
+  articulate({ m }, sections, ICE_HINGE_Y, { profile: ICE_BELLOWS, folds: 4, depth: 0.03 }, ICE_MAX_BEND_DEG, slots.slice(0, -1).map((slot) => slot.lo));
+  return m;
+}
+
+/** An ICE train's distant model: `car(slot, k)` each car's body and parts in its place, the sections and joints of the full model. */
+export function iceTrainLod<C extends string>(palette: Record<string, MaterialSpec>, slots: readonly IceSlot<C>[], walls: (slot: IceSlot<C>) => readonly [number, number], car: (slot: IceSlot<C>, k: number) => { body: UnitBody; parts: LodPart[] }): MeshBuilder {
+  const built = slots.map(car);
+  const spans = iceSpans(slots, walls);
+  const sections: LodSections = {
+    pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, ICE_HINGE_Y, 0])),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: spans[i]![0], rear: spans[i + 1]![1], profile: ICE_BELLOWS })),
+    maxBendDeg: ICE_MAX_BEND_DEG,
+  };
+  return fitUnit({ palette, bodies: built.map((b) => b.body), parts: built.flatMap((b) => b.parts), sections }, Math.min(ICE_TRAIN_LOD, 100 * slots.length));
 }
 
 /** A polyline (source x, y) with extra stations where it crosses the bands' edges. */
@@ -218,9 +355,9 @@ function coachVolume(unit: "coach" | "restaurant", ice2 = false): Volume {
   };
 }
 
-function powerCar(ice2 = false): MeshBuilder {
+function powerCar(ice2 = false, into?: MeshBuilder): MeshBuilder {
   const L = LAYOUTS.powerCar;
-  const c = new Coach(ice2 ? ICE2_PALETTE : PALETTE, L.length / 2);
+  const c = new Coach(ice2 ? ICE2_PALETTE : PALETTE, L.length / 2, into);
   const m = c.m;
   const B = (x: number) => bOf(L.map, x);
   const box = (b: PxBox) => sideBox(L.map, b);
@@ -310,9 +447,9 @@ function powerCar(ice2 = false): MeshBuilder {
   return m;
 }
 
-function coach(unit: "coach" | "restaurant", ice2 = false): MeshBuilder {
+function coach(unit: "coach" | "restaurant", ice2 = false, into?: MeshBuilder, gangways = true): MeshBuilder {
   const L = LAYOUTS[unit];
-  const c = new Coach(ice2 ? ICE2_PALETTE : PALETTE, L.length / 2);
+  const c = new Coach(ice2 ? ICE2_PALETTE : PALETTE, L.length / 2, into);
   const m = c.m;
   const B = (x: number) => bOf(L.map, x);
   const box = (b: PxBox) => sideBox(L.map, b);
@@ -327,7 +464,7 @@ function coach(unit: "coach" | "restaurant", ice2 = false): MeshBuilder {
     m.scope(e > 0 ? "front end" : "rear end", () => {
       const wall = e > 0 ? B(0.15) : B(26.25);
       const face = e > 0 ? L.length : 0;
-      m.scope("gangway", () => {
+      if (gangways) m.scope("gangway", () => {
         const [a, b] = [c.X(wall) - e * 0.02, c.X(face) - e * 0.01].sort((p, q) => p - q) as [number, number];
         for (const z of [-1, 1]) block(m, "rubber", a, b, 1.15, 3.35, ...side(z, 0.5, 0.72));
         block(m, "rubber", a, b, 3.15, 3.35, -0.5, 0.5);
@@ -440,17 +577,25 @@ function grille(c: Coach, v: Volume, s: number, b: Box): void {
 }
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
+/** Each car's weight (t) and power (kW): the design's figures for the power car, a coach and the restaurant car. */
+const ICE1_CAR: Record<Ice1Unit, { weight: number; power: number }> = { powerCar: { weight: 78, power: 9600 }, coach: { weight: 53, power: 0 }, restaurant: { weight: 58, power: 0 } };
+
 const ICE_1_GAME: GameProperties = {
-  weight: 78,
-  power: 9600,
+  ...ICE1_CAR.powerCar,
   maxspeed: 280,
   accel: null,
   variants: [
-    { params: { unit: "coach" }, weight: 53, power: 0 },
-    { params: { unit: "restaurant" }, weight: 58, power: 0 },
+    { params: { unit: "coach" }, ...ICE1_CAR.coach },
+    { params: { unit: "restaurant" }, ...ICE1_CAR.restaurant },
+    // a train: its cars added up; the default four cars named by the unit alone
+    ...Array.from({ length: ICE1_MAX_CARS - ICE1_MIN_CARS + 1 }, (_, i) => {
+      const slots = ice1Train(i + ICE1_MIN_CARS);
+      const params: ParamValues = slots.length === 4 ? { unit: "train" } : { cars: String(slots.length), unit: "train" };
+      return { params, weight: slots.reduce((t, s) => t + ICE1_CAR[s.car].weight, 0), power: slots.reduce((t, s) => t + ICE1_CAR[s.car].power, 0) };
+    }),
   ],
 };
 
 export const ICE1_DESIGNS: ProceduralDesign[] = [
-  { id: "proc-vehicle-ice-1", game: ICE_1_GAME, title: "ICE 1", build: ice1, buildLod: ice1Lod, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
+  { id: "proc-vehicle-ice-1", game: ICE_1_GAME, title: "ICE 1", build: ice1, buildLod: ice1Lod, lodTriangles: ICE_TRAIN_LOD, params: ICE1_PARAMS, catalog: EMU_CATALOG, references: "ice-1" },
 ];

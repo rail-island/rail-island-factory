@@ -209,8 +209,10 @@ export interface ShinkansenSeries {
   traction?: "electric" | "diesel" | "none";
   /** A diesel unit's exhaust stack, d behind the body's +X end of every car (default the car's middle): over the engine. */
   exhaustAt?: number;
-  /** The train lengths offered (default 3 - 8; 4 the default when offered, else the shortest). */
+  /** The prototype's train lengths: they set the default (4 when listed, else the shortest); every length from the shortest sensible train to eight is offered (`carsOf`). */
   cars?: readonly number[];
+  /** The shortest full train offered, where `minSeriesCars`' rule does not fit (the TGV M's power cars need a trailer between them). */
+  minCars?: number;
   /** One double-ended railcar, a cab or nose at both ends: no car or train choice. */
   single?: boolean;
   /**
@@ -375,8 +377,31 @@ const couplerOf = (s: ShinkansenSeries) => s.couplerY ?? COUPLER_Y;
 /** No pantograph: a diesel unit or an unpowered set. */
 const unwired = (s: ShinkansenSeries) => s.traction === "diesel" || s.traction === "none" || s.metro === true;
 /** The train lengths a series offers, and its default. */
-export const carsOf = (s: ShinkansenSeries): readonly number[] => s.cars ?? SHINKANSEN_CARS;
-const defaultCars = (s: ShinkansenSeries) => (carsOf(s).includes(4) ? 4 : carsOf(s)[0]!);
+/** The longest full train a series offers (railroad-vehicle skill: at most eight cars). */
+export const MAX_SERIES_CARS = 8;
+/**
+ * The shortest sensible full train: two end cars back to back (two cab cars make a working unit),
+ * or three where the end cars cannot run without a car between them - a power-car train, a
+ * locomotive leading coaches, a series with its own power car among the intermediate cars.
+ */
+export const minSeriesCars = (s: ShinkansenSeries): number =>
+  s.minCars ?? (s.powerCar || s.leadCar || s.endSides || s.jacobsTrailers !== undefined || s.endPantograph === "lead" || s.endPantograph === "trail" || s.traction === "none" ? 3 : 2);
+/**
+ * The train lengths a series offers: every count from its shortest sensible train up to eight,
+ * odd counts included; `cars` (the prototype's own formations) only sets the default. A unit
+ * without intermediate cars (every stated length two or less) keeps its own lengths.
+ */
+export const carsOf = (s: ShinkansenSeries): readonly number[] => {
+  const own = s.cars ?? SHINKANSEN_CARS;
+  if (own.every((n) => n <= 2)) return own;
+  const lo = Math.min(minSeriesCars(s), ...own), hi = Math.max(MAX_SERIES_CARS, ...own);
+  return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+};
+/** The default train length: four when the series' own formations include it, else the shortest of them. */
+const defaultCars = (s: ShinkansenSeries) => {
+  const own = s.cars ?? SHINKANSEN_CARS;
+  return own.includes(4) ? 4 : own[0]!;
+};
 
 // ---------------------------------------------------------------------------
 // Building a series
@@ -850,7 +875,7 @@ export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[
   const total = lead ? lead.endLength + s.endLength + (n - 2) * s.midLength : leadLength !== undefined ? 2 * s.endLength + (n - 2) * s.midLength + (leadLength - s.endLength) : s.endLength + s.endLength + (n - 2) * s.midLength;
   let hi = total / 2;
   const slots = s.pantographSlots?.(n);
-  return Array.from({ length: n }, (_, k) => {
+  const train = Array.from({ length: n }, (_, k) => {
     const end = k === 0 || k === n - 1;
     const lo = hi - (lead && k === 0 ? lead.endLength : end ? (k === 0 && leadLength !== undefined ? leadLength : s.endLength) : s.midLength);
     const at = slots?.find((o) => o.k === k);
@@ -858,6 +883,9 @@ export function shinkansenTrain(s: ShinkansenSeries, n: number): ShinkansenSlot[
     hi = lo;
     return out;
   });
+  // two end cars back to back have no intermediate car to collect current: the rear one raises its pantograph
+  if (n === 2 && !lead && !unwired(s) && !train.some((o) => o.pantograph)) train[1] = { ...train[1]!, pantograph: true };
+  return train;
 }
 
 export function buildSeries(series: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): MeshBuilder {
@@ -2080,3 +2108,41 @@ export const SHINKANSEN_DESIGNS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-shinkansen-100", "Shinkansen 100 series", S100, P.s100, shinkansen100, shinkansen100Lod, "shinkansen-100"),
   seriesDesign("proc-vehicle-shinkansen-e4", "Shinkansen E4 Max", E4, P.e4, shinkansenE4, shinkansenE4Lod, "shinkansen-e4"),
 ];
+
+// --- a series end car in another design's train ---------------------------------------------------
+
+/** A series car's inner end wall stands this far inside its coupling plane. */
+export const SERIES_GAP = GAP;
+
+/** The materials buildSeries draws the lone end car (`unit` endCar) in `v` with: for another design's builder that draws it. */
+export function seriesEndCarPalette(series: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): Record<string, MaterialSpec> {
+  const p = resolveParams(params, v);
+  const s = leadSeries(series);
+  return { ...PALETTE, ...(s.leadCar ? { ...liveryOf(s.leadCar, p).palette, ...panelPaint(s.leadCar) } : {}), ...liveryOf(s, p).palette, ...panelPaint(s) };
+}
+
+const loneEndPantograph = (s: ShinkansenSeries): boolean => !unwired(s) && (s.powerCar ? false : !!s.endPantograph);
+
+/**
+ * The lone end car drawn into another design's builder `m` (its palette holding
+ * seriesEndCarPalette's materials) exactly as buildSeries draws it into its own:
+ * centred between its coupling planes on x = 0, facing +X. The caller moves and
+ * turns it into its place: the ICE 2's driving trailer at the rear of its train (deIce2.ts).
+ */
+export function drawSeriesEndCar(m: MeshBuilder, series: ShinkansenSeries, params: readonly ParamSpec[], v?: ParamValues): void {
+  const p = resolveParams(params, v);
+  const s = leadSeries(series);
+  const l = liveryOf(s, p);
+  const inside = s.endCoupler === "buffers" ? [] : twoCabs(s) ? [1, -1] : [1];
+  const def = carDef(s, l, true, loneEndPantograph(s), l.number, false, undefined), X = (d: number) => s.endLength / 2 - frontGap(s, true) - d;
+  const lone = loneJointAxles(s, true);
+  drawCar(m, def, X, { ...(inside.length ? { inside } : {}), ...(lone.length ? { trucks: def.trucks.map((_, i) => !lone.some((a) => a.i === i)) } : {}) });
+  if (lone.length) m.scope("joint axles", () => lone.forEach((a, k) => m.scope(`axle ${k + 1}`, () => bogieGeometry(m, X(a.d), loneAxleSpec(s, def.truck)))));
+}
+
+/** The end car's distant model in another design's train: facing +X about cx, turned about it when `turned`, its inner end hidden in `section`. */
+export function seriesEndCarLod(series: ShinkansenSeries, params: readonly ParamSpec[], v: ParamValues | undefined, cx: number, turned: boolean, section: number): { body: UnitBody; parts: LodPart[] } {
+  const s = leadSeries(series);
+  const l = liveryOf(s, resolveParams(params, v));
+  return carLod(s, l, true, loneEndPantograph(s), (d) => cx + s.endLength / 2 - frontGap(s, true) - d, cx, turned, section);
+}

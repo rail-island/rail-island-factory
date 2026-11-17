@@ -319,10 +319,13 @@ export const CR200J: ShinkansenSeries = {
 // ---------------------------------------------------------------------------
 // The design
 
+/** The train lengths: the power car, one coach and the driving trailer up to eight cars (four the default). */
+export const CR200J_CARS: readonly number[] = [3, 4, 5, 6, 7, 8];
+
 /** The cars: the power car (the default, the train's locomotive), a coach, the driving trailer, the train. */
 export const CR200J_PARAMS: ParamSpec[] = [
   enumParam("unit", "Car", { endCar: "Power car", middleCar: "Coach", drivingTrailer: "Driving trailer", train: "Full train" }),
-  { ...enumParam("cars", "Cars", Object.fromEntries([4, 5, 6, 7, 8].map((n) => [String(n), `${n} cars`]))), when: { name: "unit", values: ["train"] } },
+  { ...enumParam("cars", "Cars", Object.fromEntries(CR200J_CARS.map((n) => [String(n), `${n} cars`]))), default: "4", when: { name: "unit", values: ["train"] } },
   enumParam("livery", "Livery", { green: "Green Giant", whiteRed: "White and red" }),
 ];
 
@@ -349,7 +352,7 @@ function game(): GameProperties {
     const base: ParamValues = livery === "green" ? {} : { livery };
     variants.push({ params: { ...base, unit: "middleCar" }, weight: CR200J.weight.middle, power: 0 });
     variants.push({ params: { ...base, unit: "drivingTrailer" }, weight: CR200J.weight.end, power: 0 });
-    for (const n of [4, 5, 6, 7, 8])
+    for (const n of CR200J_CARS)
       variants.push({ params: { ...(n === 4 ? {} : { cars: String(n) }), ...base, unit: "train" }, weight: POWER.weight.end + (n - 2) * CR200J.weight.middle + CR200J.weight.end, power: POWER.power });
   }
   return { weight: POWER.weight.end, power: POWER.power, maxspeed: 160, accel: null, variants };

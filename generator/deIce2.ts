@@ -8,6 +8,8 @@
 // wipers parked at the foot, the lamp over it, the paired head and tail lamps with the slatted grille
 // between them, the bulging split coupler flap with the stripe across it - on a 26.4 m coach body with
 // the raked cab side window, the "ICE" lettering, one door and the saloon's window band; no pantograph.
+// `unit` `train` is the whole push-pull set, articulated: `cars` (2 .. 8) vehicles, the power car
+// leading, coaches between and the driving trailer turned at the rear (dbIce2Train).
 // Registered in deUnits.ts. See docs/models/germany-trains.md.
 //
 // Heights over the rail, d behind the tip (the coupler flap's front, 0.88 m up).
@@ -17,9 +19,11 @@ import type { Pt } from "./sliceLoft.ts";
 import type { ShinkansenLivery, ShinkansenSeries } from "./shinkansen.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
-import { ice1, ice1Lod, ICE2_STRIPE } from "./ice1.ts";
+import { drawIce1Car, ice1, ice1CarLod, ice1Length, ice1Lod, iceArticulated, iceSlots, iceTrainLod, ICE1_WALLS, ICE2_PALETTE, ICE2_STRIPE, ICE_TRAIN_PALETTE, type IceSlot } from "./ice1.ts";
+import { Coach } from "./csdCoachParts.ts";
+import type { GameProperties } from "./design.ts";
 import { EMU_CATALOG, enumParam } from "./emuParts.ts";
-import { buildSeries, buildSeriesLod, seriesParams } from "./shinkansen.ts";
+import { buildSeries, buildSeriesLod, drawSeriesEndCar, SERIES_GAP, seriesEndCarLod, seriesEndCarPalette, seriesParams } from "./shinkansen.ts";
 import { c, NO_NOSE } from "./seriesHelpers.ts";
 import { sidePanel, type SliceBody } from "./sliceBody.ts";
 
@@ -175,19 +179,81 @@ export const ICE2_DT: ShinkansenSeries = {
   weight: { end: 50, middle: 50 }, power: 0, maxspeed: 280,
 };
 
-export const ICE2_PARAMS: ParamSpec[] = [enumParam("unit", "Car", { powerCar: "Power car", coach: "Coach", drivingTrailer: "Driving trailer" })];
+/** One car of the ICE 2. */
+export type Ice2Unit = "powerCar" | "coach" | "drivingTrailer";
+
+/** The train's vehicle counts: the power car and the driving trailer, alone or with up to six coaches between them. */
+export const ICE2_MIN_CARS = 2;
+export const ICE2_MAX_CARS = 8;
+
+export const ICE2_PARAMS: ParamSpec[] = [
+  enumParam("unit", "Car", { powerCar: "Power car", coach: "Coach", drivingTrailer: "Driving trailer", train: "Full train" }),
+  {
+    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: ICE2_MAX_CARS - ICE2_MIN_CARS + 1 }, (_, i) => [String(i + ICE2_MIN_CARS), `${i + ICE2_MIN_CARS} cars`]))),
+    default: "4",
+    when: { name: "unit", values: ["train"] },
+  },
+];
 const DT_PARAMS = seriesParams(ICE2_DT);
+const DT: ParamValues = { unit: "endCar" };
+
+/** Each car's length over its coupling planes: the ICE 1's power car and coach, the driving trailer's 26.4 m. */
+const ice2Length = (car: Ice2Unit): number => (car === "drivingTrailer" ? ICE2_DT.endLength : ice1Length(car));
+
+/**
+ * The vehicles of an ICE 2 of `n` (2 .. 8), front first: the power car, n - 2
+ * coaches and the driving trailer turned at the rear, its cab leading the other
+ * way (the push-pull half train; the power car and the driving trailer alone are
+ * the shortest set that runs).
+ */
+export function dbIce2Train(n: number): IceSlot<Ice2Unit>[] {
+  if (!Number.isInteger(n) || n < ICE2_MIN_CARS || n > ICE2_MAX_CARS) throw new Error(`ICE 2: no ${n}-car train`);
+  return iceSlots<Ice2Unit>(["powerCar", ...Array.from({ length: n - 2 }, (): Ice2Unit => "coach"), "drivingTrailer"], ice2Length);
+}
+
+/** Each car's end walls inside its front and rear coupling planes: the ICE 1's cars', the driving trailer's inner end the series kit's. */
+const walls = (slot: IceSlot<Ice2Unit>): readonly [number, number] => (slot.car === "drivingTrailer" ? [0, SERIES_GAP] : ICE1_WALLS[slot.car]);
+
+/** The train's materials: the driving trailer's beside the ICE 1 cars' (theirs where both name one). */
+const trainPalette = () => ({ ...seriesEndCarPalette(ICE2_DT, DT_PARAMS, DT), ...ICE2_PALETTE, ...ICE_TRAIN_PALETTE });
 
 export function dbIce2(v?: ParamValues): MeshBuilder {
-  const u = resolveParams(ICE2_PARAMS, v).unit;
-  return u === "drivingTrailer" ? buildSeries(ICE2_DT, DT_PARAMS, { unit: "endCar" }) : ice1({ unit: u! }, { ice2: true });
+  const p = resolveParams(ICE2_PARAMS, v);
+  const u = p.unit;
+  if (u === "train") {
+    const m = new Coach(trainPalette(), 0).m;
+    return iceArticulated(m, dbIce2Train(Number(p.cars)), walls, (slot) => (slot.car === "drivingTrailer" ? drawSeriesEndCar(m, ICE2_DT, DT_PARAMS, DT) : drawIce1Car(m, slot.car, true, true)));
+  }
+  return u === "drivingTrailer" ? buildSeries(ICE2_DT, DT_PARAMS, DT) : ice1({ unit: u! }, { ice2: true });
 }
 export function dbIce2Lod(v?: ParamValues): MeshBuilder {
-  const u = resolveParams(ICE2_PARAMS, v).unit;
-  return u === "drivingTrailer" ? buildSeriesLod(ICE2_DT, DT_PARAMS, { unit: "endCar" }) : ice1Lod({ unit: u! }, { ice2: true });
+  const p = resolveParams(ICE2_PARAMS, v);
+  const u = p.unit;
+  if (u === "train")
+    return iceTrainLod(trainPalette(), dbIce2Train(Number(p.cars)), walls, (slot, k) => {
+      const cx = (slot.lo + slot.hi) / 2;
+      return slot.car === "drivingTrailer" ? seriesEndCarLod(ICE2_DT, DT_PARAMS, DT, cx, slot.turned, k) : ice1CarLod(slot.car, true, { cx, turned: slot.turned, section: k });
+    });
+  return u === "drivingTrailer" ? buildSeriesLod(ICE2_DT, DT_PARAMS, DT) : ice1Lod({ unit: u! }, { ice2: true });
 }
 
+/** Each car's weight (t) and power (kW): the 402 power car, a coach, the driving trailer. */
+const ICE2_CAR: Record<Ice2Unit, { weight: number; power: number }> = { powerCar: { weight: 78, power: 4800 }, coach: { weight: 53, power: 0 }, drivingTrailer: { weight: 50, power: 0 } };
+
+const ICE2_GAME: GameProperties = {
+  ...ICE2_CAR.powerCar, maxspeed: 280, accel: null,
+  variants: [
+    { params: { unit: "coach" }, ...ICE2_CAR.coach },
+    { params: { unit: "drivingTrailer" }, ...ICE2_CAR.drivingTrailer },
+    // a train: its cars added up; the default four cars named by the unit alone
+    ...Array.from({ length: ICE2_MAX_CARS - ICE2_MIN_CARS + 1 }, (_, i) => {
+      const slots = dbIce2Train(i + ICE2_MIN_CARS);
+      const params: ParamValues = slots.length === 4 ? { unit: "train" } : { cars: String(slots.length), unit: "train" };
+      return { params, weight: slots.reduce((t, s) => t + ICE2_CAR[s.car].weight, 0), power: slots.reduce((t, s) => t + ICE2_CAR[s.car].power, 0) };
+    }),
+  ],
+};
+
 export const ICE2_DESIGN: ProceduralDesign = {
-  id: "proc-vehicle-db-ice2", title: "ICE 2", build: dbIce2, buildLod: dbIce2Lod, params: ICE2_PARAMS, catalog: EMU_CATALOG, references: "db-ice2",
-  game: { weight: 78, power: 4800, maxspeed: 280, accel: null, variants: [{ params: { unit: "coach" }, weight: 53, power: 0 }, { params: { unit: "drivingTrailer" }, weight: 50, power: 0 }] },
+  id: "proc-vehicle-db-ice2", title: "ICE 2", build: dbIce2, buildLod: dbIce2Lod, lodTriangles: 500, params: ICE2_PARAMS, catalog: EMU_CATALOG, references: "db-ice2", game: ICE2_GAME,
 };
