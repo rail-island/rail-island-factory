@@ -52,7 +52,6 @@ describe("the foreign multiple units", () => {
     const spec = (ps: typeof DB628_PARAMS) => ps.map((p) => [p.name, p.default, p.values.map((v) => v.value)]);
     expect(spec(DB628_PARAMS)).toEqual([
       ["unit", "motorCar", ["motorCar", "bn", "abn", "bdnrf", "train"]],
-      ["cars", "2", ["2", "3", "4", "5", "6", "7", "8"]],
       ["livery", "mint", ["mint", "red"]],
     ]);
     expect(spec(MDMOT_PARAMS)).toEqual([
@@ -83,7 +82,7 @@ describe("the foreign multiple units", () => {
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
       expect(s.max[1]).toBeLessThanOrEqual(6.5);
       // an articulated set is several cars: the budget is per car
-      expect(s.triangles).toBeLessThanOrEqual(combo.unit === "set" ? Math.max(16_000, 4_000 * Number(combo.cars)) : combo.unit === "train" ? 16_000 * Number(combo.trainCars ?? combo.cars) : 16_000);
+      expect(s.triangles).toBeLessThanOrEqual(combo.unit === "set" ? Math.max(16_000, 4_000 * Number(combo.cars)) : combo.unit === "train" ? 16_000 * Number(combo.trainCars ?? combo.cars ?? 2) : 16_000);
       expect(s.triangles).toBeGreaterThan(2_000);
       const fixed = nodes.filter((n) => !/(^|\/)roof-equipment\/pantographs\//.test(n.id) && n.tri[1] > 0);
       expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);

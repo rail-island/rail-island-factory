@@ -29,9 +29,8 @@ import { bogieParts, coachBody, fitUnit, roofPart, shiftBody, sideGlass, skirtPa
 export type Db628Livery = "mint" | "red";
 export type Db628Unit = "motorCar" | NWagenVariant | "train";
 
-/** The full train's car counts: one 628 unit of two cars up to four units. */
-export const DB628_MIN_CARS = 2;
-export const DB628_MAX_CARS = 8;
+/** The full train: one 628 unit, its two cars joined by a gangway (units in multiple are the player's to couple). */
+export const DB628_TRAIN_CARS = 2;
 
 export const DB628_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -41,11 +40,6 @@ export const DB628_PARAMS: readonly ParamSpec[] = [
     bdnrf: "BDnrf",
     train: "Full train",
   }),
-  {
-    ...enumParam("cars", "Cars", Object.fromEntries(Array.from({ length: DB628_MAX_CARS - DB628_MIN_CARS + 1 }, (_, i) => [String(i + DB628_MIN_CARS), `${i + DB628_MIN_CARS} cars`]))),
-    default: "2",
-    when: { name: "unit", values: ["train"] },
-  },
   enumParam("livery", "Livery", {
     mint: "Mint",
     red: "Traffic red",
@@ -181,7 +175,7 @@ export function db628(params?: ParamValues): MeshBuilder {
   const p = resolveParams(DB628_PARAMS, params);
   const unit = p.unit as Db628Unit;
   const livery = p.livery as Db628Livery;
-  if (unit === "train") return train(Number(p.cars), livery);
+  if (unit === "train") return train(livery);
   if (unit !== "motorCar") return nWagen({ variant: unit, livery: DB628_COACH_LIVERY[livery] });
   const L = LIVERIES[livery];
   const c = new Coach({ ...PALETTE, ...L.palette }, DB628_LENGTH / 2);
@@ -232,62 +226,47 @@ export interface Db628Slot {
 }
 
 /**
- * The cars of a train of `n`, front first: 628 units of two cars, the second of
- * each turned so the pair meets at the inner ends' short coupling and shows a cab
- * at each end, the units coupled cab to cab (vlakosimdb has no 928 driving
- * trailer, whose body is the motor car's, so both cars of a unit are the motor
- * car). An odd train ends in a single car, turned so the train ends in a cab: its
- * inner end coupled to the cab ahead. Centred on x = 0.
+ * The cars of the full train, front first: one 628 unit of two cars, the second
+ * turned so the pair meets at the inner ends' short coupling and gangway and shows
+ * a cab at each end (vlakosimdb has no 928 driving trailer, whose body is the motor
+ * car's, so both cars are the motor car). Centred on x = 0.
  */
-export function db628Train(n: number): Db628Slot[] {
-  if (!Number.isInteger(n) || n < 1) throw new Error(`a 628 train of ${n} cars`);
-  let hi = (n * DB628_LENGTH) / 2;
-  return Array.from({ length: n }, (_, k) => {
-    const slot: Db628Slot = { car: "motorCar", lo: hi - DB628_LENGTH, hi, turned: k % 2 === 1 || (n > 1 && k === n - 1) };
+export function db628Train(): Db628Slot[] {
+  let hi = (DB628_TRAIN_CARS * DB628_LENGTH) / 2;
+  return Array.from({ length: DB628_TRAIN_CARS }, (_, k) => {
+    const slot: Db628Slot = { car: "motorCar", lo: hi - DB628_LENGTH, hi, turned: k === 1 };
     hi = slot.lo;
     return slot;
   });
 }
 
-/** Whether the slot's end facing +X (front) or -X is its inner end (the short coupling and gangway). */
-const innerAt = (s: Db628Slot, front: boolean): boolean => s.turned === front;
-/** Two cars meet with their gangways where both inner ends face each other. */
-const gangwayJoint = (slots: readonly Db628Slot[], k: number): boolean => innerAt(slots[k]!, false) && innerAt(slots[k + 1]!, true);
-
 /** The coupling height (the short coupler's and the buffers' 1.03 m) where the cars hinge. */
 const COUPLER_Y = 1.03;
 /** The inner end's wall stands 0.35 m behind the short coupling's middle (source x 22.1). */
 const INNER_WALL = DB628_MAP.x0 - 22.1;
-/** The bellows between two inner ends (inside their gangway frames); a small one round the couplers elsewhere. */
+/** The bellows between the two inner ends (inside their gangway frames). */
 const GANGWAY_BELLOWS: Array<[number, number]> = [[-0.75, 1.2], [0.75, 1.2], [0.75, 3.2], [-0.75, 3.2]];
-const COUPLER_BELLOWS: Array<[number, number]> = [[-0.2, 0.9], [0.2, 0.9], [0.2, 1.15], [-0.2, 1.15]];
 const MAX_BEND_DEG = 10;
 
 function trainJoints(slots: readonly Db628Slot[]): CoupledJoint[] {
-  return slots.slice(0, -1).map((s, k) => {
-    const g = gangwayJoint(slots, k);
-    const d = g ? INNER_WALL : 0.3;
-    return { front: s.lo + d, rear: s.lo - d, profile: g ? GANGWAY_BELLOWS : COUPLER_BELLOWS };
-  });
+  return slots.slice(0, -1).map((s) => ({ front: s.lo + INNER_WALL, rear: s.lo - INNER_WALL, profile: GANGWAY_BELLOWS }));
 }
 
 /**
  * The train as one articulated vehicle: each car a section hinged at the
- * coupling plane ahead of it on its own two bogies, a bellows over the gangways
- * where two inner ends meet (their gangway frames left out), a small one round
- * the couplers where a cab is coupled.
+ * coupling plane ahead of it on its own two bogies, a bellows over the gangway
+ * where the inner ends meet (their gangway frames left out).
  */
-function train(n: number, livery: Db628Livery): MeshBuilder {
+function train(livery: Db628Livery): MeshBuilder {
   const L = LIVERIES[livery];
-  const slots = db628Train(n);
+  const slots = db628Train();
   const m = new Coach({ ...PALETTE, ...L.palette, bellows: BELLOWS_MAT }, 0).m;
   const draws = slots.map((s, k) => () =>
     m.scope(`car ${k + 1}`, () => {
       const cx = (s.lo + s.hi) / 2;
       const c = new Coach({}, DB628_LENGTH / 2, m);
-      // the inner end's gangway frame stays under the bellows when it meets another inner end
-      const gangway = !(s.turned ? k > 0 && gangwayJoint(slots, k - 1) : k < n - 1 && gangwayJoint(slots, k));
-      const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => motorCar(c, L, gangway));
+      // the inner ends meet under the bellows: their gangway frames left out
+      const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => motorCar(c, L, false));
       if (s.turned) m.turned(cx, draw);
       else draw();
     }),
@@ -309,7 +288,7 @@ export function db628Lod(params?: ParamValues): MeshBuilder {
   const p = resolveParams(DB628_PARAMS, params);
   const unit = p.unit as Db628Unit;
   const livery = p.livery as Db628Livery;
-  if (unit === "train") return trainLod(Number(p.cars), livery);
+  if (unit === "train") return trainLod(livery);
   if (unit !== "motorCar") return coachLod(() => nWagen({ variant: unit, livery: DB628_COACH_LIVERY[livery] }));
   const L = LIVERIES[livery];
   const { body, parts } = motorCarLod(L);
@@ -338,18 +317,18 @@ function motorCarLod(L: Livery): { body: UnitBody; parts: LodPart[] } {
   };
 }
 
-/** The distant model's budget: 100 triangles a car, 500 for the longest trains. */
-export const DB628_LOD = 500;
+/** The distant model's budget: 100 triangles a car, the full train's 200. */
+export const DB628_LOD = 200;
 
 /**
  * The train for distant views: each car the motor car's distant model moved to
  * its place (turned where the train turns it) as its own section, the inner ends
- * that meet under a bellows left open, the joints as in the full model; 100
- * triangles a car, 500 at most.
+ * that meet under the bellows left open, the joint as in the full model; 100
+ * triangles a car.
  */
-function trainLod(n: number, livery: Db628Livery): MeshBuilder {
+function trainLod(livery: Db628Livery): MeshBuilder {
   const L = LIVERIES[livery];
-  const slots = db628Train(n);
+  const slots = db628Train();
   const one = motorCarLod(L);
   const bodies: UnitBody[] = [];
   const parts: LodPart[] = [];
@@ -357,16 +336,13 @@ function trainLod(n: number, livery: Db628Livery): MeshBuilder {
     const cx = (s.lo + s.hi) / 2;
     let b = shiftBody(one.body, cx);
     if (s.turned) b = turnBody(b, cx);
-    const hideFront = k > 0 && gangwayJoint(slots, k - 1);
-    const hideRear = k < n - 1 && gangwayJoint(slots, k);
-    bodies.push({ ...b, section: k, front: { ...b.front, ...(hideFront ? { hidden: true } : {}) }, rear: { ...b.rear, ...(hideRear ? { hidden: true } : {}) } });
+    // the inner end (the rear of the first car, the front of the turned second) is under the bellows
+    bodies.push({ ...b, section: k, ...(k === 0 ? { rear: { ...b.rear, hidden: true } } : { front: { ...b.front, hidden: true } }) });
     const place = (draw: (m: MeshBuilder) => void) => (m: MeshBuilder) => {
       const at = () => m.moved(([x, y, z]) => [x + cx, y, z], () => draw(m));
       return s.turned ? m.turned(cx, at) : at();
     };
-    // a long train gives up its intermediate cars' bogies first: from afar the skirts hide them
-    const middle = k > 0 && k < n - 1;
-    one.parts.forEach((part, i) => parts.push({ ...part, section: k, draw: place(part.draw), ...(middle && i < DB628_BOGIES.length ? { optional: 5 } : {}) }));
+    one.parts.forEach((part) => parts.push({ ...part, section: k, draw: place(part.draw) }));
   });
   const joints = trainJoints(slots);
   const sections: LodSections = {
@@ -374,7 +350,7 @@ function trainLod(n: number, livery: Db628Livery): MeshBuilder {
     joints: joints.map((j, i) => ({ sections: [i, i + 1] as [number, number], front: j.front, rear: j.rear, profile: j.profile })),
     maxBendDeg: MAX_BEND_DEG,
   };
-  return fitUnit({ palette: { ...PALETTE, ...L.palette }, bodies, parts, sections }, Math.min(DB628_LOD, 100 * n));
+  return fitUnit({ palette: { ...PALETTE, ...L.palette }, bodies, parts, sections }, DB628_LOD);
 }
 
 /** Windows, doors, paint lines and markings on side s. */
@@ -503,15 +479,12 @@ const DB_628_GAME: GameProperties = {
     { params: { unit: "bdnrf" }, weight: 46, power: 0, maxspeed: 160 },
     { params: { livery: "red", unit: "bn" }, weight: 46, power: 0, maxspeed: 160 },
     { params: { unit: "bn" }, weight: 46, power: 0, maxspeed: 160 },
-    // the full trains in both liveries: every car a motor car's 56 t and 423 kW
-    ...(["mint", "red"] as const).flatMap((livery) =>
-      Array.from({ length: DB628_MAX_CARS - DB628_MIN_CARS + 1 }, (_, i) => {
-        const n = i + DB628_MIN_CARS;
-        const params: ParamValues = { ...(n === 2 ? {} : { cars: String(n) }), ...(livery === "mint" ? {} : { livery }), unit: "train" };
-        const cars = db628Train(n).length;
-        return { params, weight: 56 * cars, power: 423 * cars };
-      }),
-    ),
+    // the full train in both liveries: both cars a motor car's 56 t and 423 kW
+    ...(["mint", "red"] as const).map((livery) => ({
+      params: { ...(livery === "mint" ? {} : { livery }), unit: "train" } as ParamValues,
+      weight: 56 * DB628_TRAIN_CARS,
+      power: 423 * DB628_TRAIN_CARS,
+    })),
   ],
 };
 

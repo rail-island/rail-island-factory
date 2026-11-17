@@ -9,8 +9,7 @@ import { describe, expect, it } from "vitest";
 import { paramCombinations, resolveParams } from "../generator/design.ts";
 import { ALL_VEHICLES, DESIGNS } from "../generator/generate.ts";
 import { GT4_BOGIES, GT4_MAP, KT4_BOGIES, KT4_MAP, KT8_BOGIES, KT8_MAP, T3_MAP, T6_MAP, TRAM_CATALOG, TRAM_DESIGNS, TRAM_WIRE } from "../generator/trams.ts";
-import { METRO_CAR_LENGTH, METRO_CATALOG, METRO_DESIGNS, METRO_LOD, METRO_MAP, METRO_MAX_CARS, METRO_MIN_CARS, METRO_PIVOTS, metroTrain } from "../generator/metro.ts";
-import { buildLodModel } from "../generator/lodModel.ts";
+import { METRO_CATALOG, METRO_DESIGNS, METRO_MAP, METRO_PIVOTS } from "../generator/metro.ts";
 import { TRAM_TRANSFERS, tramComparison, worstTramPixels } from "../generator/tramComparison.ts";
 import { meanAbsoluteError } from "../generator/csdCoachComparison.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
@@ -59,9 +58,8 @@ describe("the tram and metro designs", () => {
     expect(params("proc-vehicle-tatra-kt8")).toEqual({ livery: "redWhite" });
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-kt8"))!.params![0]!.values.map((v) => v.value)).toEqual(["redWhite", "red", "modern"]);
     expect(params("proc-vehicle-metro-81-71")).toEqual({ unit: "headCar", livery: "prague" });
-    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![0]!.values.map((v) => v.value)).toEqual(["headCar", "middleCar", "train"]);
-    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![1]!.values.map((v) => v.value)).toEqual(["2", "3", "4", "5", "6", "7", "8"]);
-    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![2]!.values.map((v) => v.value)).toEqual(["prague", "budapest"]);
+    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![0]!.values.map((v) => v.value)).toEqual(["headCar", "middleCar"]);
+    expect(DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!.params![1]!.values.map((v) => v.value)).toEqual(["prague", "budapest"]);
     expect(DESIGNS.get(proceduralId("proc-vehicle-tatra-t6"))!.params).toBeUndefined();
   });
 
@@ -76,7 +74,7 @@ describe("the tram and metro designs", () => {
     expect(s.max[0] - s.min[0]).toBeGreaterThan(2 * (s.max[2] - s.min[2]));
     expect(s.max[1]).toBeLessThanOrEqual(6.5);
     // a tram's budget: 10,000 for one body and 5,000 more a joint (exterior); the metro car a rail vehicle's 16,000
-    if (METRO_DESIGNS.includes(d)) expect(s.triangles).toBeLessThanOrEqual(16_000 * (p.unit === "train" ? Number(p.cars) : 1));
+    if (METRO_DESIGNS.includes(d)) expect(s.triangles).toBeLessThanOrEqual(16_000);
     else expect(m.triangleCount() - m.interiorTriangleCount()).toBeLessThanOrEqual(tramTriangleBudget(m.rig?.sections?.length ?? 1));
     const fixed = walk(m.sourceTree(d.id, d.title).root).filter((n) => isLeaf(n) && n.max && !/(^|\/)roof-equipment\/pantographs(\/|$)/.test(n.id));
     expect(Math.max(...fixed.map((n) => n.max![1]))).toBeLessThanOrEqual(4.7);
@@ -325,72 +323,6 @@ describe("the articulated trams", () => {
       expect(j.front).toBeCloseTo(ahead.min[0]!, 2);
       expect(j.rear).toBeCloseTo(behind.max[0]!, 2);
     });
-  });
-});
-
-describe("the 81-71 full train", () => {
-  const metro = DESIGNS.get(proceduralId("proc-vehicle-metro-81-71"))!;
-
-  it("draws every train's distant model with finite vertices, its middle cars' ends included", () => {
-    // regression: a middle car's LOD end had no volume at the body's bottom row, an infinite tip, NaN vertices
-    for (const livery of ["prague", "budapest"])
-      for (let n = METRO_MIN_CARS; n <= METRO_MAX_CARS; n++) {
-        const glb = buildLodModel(metro, { unit: "train", cars: String(n), livery }).toGlb("t");
-        const { json, bin } = parseGlb(glb);
-        expect(collectTriangles(json, bin).every((f) => f.p.flat().every(Number.isFinite))).toBe(true);
-      }
-  });
-
-  it("lays out 2 .. 8 cars: a head car at each end, the rear one turned, middle cars between, centred and touching", () => {
-    expect(metroTrain(2).map((s) => [s.car, s.turned])).toEqual([["headCar", false], ["headCar", true]]);
-    expect(metroTrain(4).map((s) => [s.car, s.turned])).toEqual([["headCar", false], ["middleCar", false], ["middleCar", false], ["headCar", true]]);
-    for (let n = METRO_MIN_CARS; n <= METRO_MAX_CARS; n++) {
-      const slots = metroTrain(n);
-      expect(slots).toHaveLength(n);
-      expect(slots.filter((s) => s.car === "headCar")).toHaveLength(2);
-      expect(slots.filter((s) => s.turned).map((s) => slots.indexOf(s))).toEqual([n - 1]);
-      expect(slots[0]!.hi + slots[n - 1]!.lo).toBeCloseTo(0, 9);
-      slots.forEach((s, i) => {
-        expect(s.hi - s.lo).toBeCloseTo(METRO_CAR_LENGTH[s.car], 9);
-        if (i) expect(s.hi).toBeCloseTo(slots[i - 1]!.lo, 9);
-      });
-    }
-    expect(() => metroTrain(1)).toThrow();
-    expect(() => metroTrain(9)).toThrow();
-  });
-
-  it.each([2, 3, 4, 8])("builds the %i-car train as one articulated vehicle: a section a car, a joint a gap, two bogies a car, its length over the couplers", (n) => {
-    const m = metro.build({ unit: "train", cars: String(n) });
-    const rig = m.rig!;
-    expect(rig.sections!.map((s) => s.node)).toEqual(Array.from({ length: n }, (_, i) => `section${i}`));
-    expect(rig.joints!).toHaveLength(n - 1);
-    expect(rig.supports!).toHaveLength(2 * n);
-    for (let k = 0; k < n; k++) expect(rig.supports!.filter((s) => s.sections.length === 1 && s.sections[0] === k)).toHaveLength(2);
-    // the hinges on the coupling planes, the bellows from end wall to end wall
-    const slots = metroTrain(n);
-    rig.joints!.forEach((j, i) => {
-      expect(rig.sections![i + 1]!.pivot[0]).toBeCloseTo(slots[i]!.lo, 9);
-      expect(j.front).toBeGreaterThan(j.rear);
-    });
-    const glb = m.toGlb("metro");
-    const s = glbStats(glb);
-    expect(s.max[0] - s.min[0]).toBeCloseTo(slots.reduce((t, c) => t + METRO_CAR_LENGTH[c.car], 0), 1);
-    expect(s.max[0] + s.min[0]).toBeCloseTo(0, 2);
-    expect(s.triangles).toBeLessThanOrEqual(16_000 * n);
-    // deterministic bytes
-    expect(Buffer.from(metro.build({ unit: "train", cars: String(n) }).toGlb("metro")).equals(Buffer.from(glb))).toBe(true);
-    // the distant model: 100 triangles a car up to the cap, its sections and bellows
-    const lod = buildLodModel(metro, { unit: "train", cars: String(n) });
-    expect(lod.triangleCount()).toBeLessThanOrEqual(Math.min(METRO_LOD, 100 * n));
-    expect(lod.rig!.sections!).toHaveLength(n);
-    expect(lod.rig!.joints!).toHaveLength(n - 1);
-  });
-
-  it("states the train's weight and power: every car motored", () => {
-    const v = metro.game!.variants!;
-    expect(v.find((x) => x.params.unit === "train" && !x.params.cars && !x.params.livery)).toMatchObject({ weight: 140, power: 1200 });
-    expect(v.find((x) => x.params.unit === "train" && x.params.cars === "8" && x.params.livery === "budapest")).toMatchObject({ weight: 280, power: 2400 });
-    expect(v.filter((x) => x.params.unit === "train")).toHaveLength(2 * (METRO_MAX_CARS - METRO_MIN_CARS + 1));
   });
 });
 

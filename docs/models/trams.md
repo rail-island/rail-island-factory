@@ -1,6 +1,6 @@
 # Trams and metro
 
-**Covers** - the trams and the metro car transferred from vlakosimdb: the Tatra T3 (three variants), T6A5, KT8D5 (three liveries) and KT4, the GT4, and the 81-71 metro car (head and middle car, the full train of 2 to 8 cars, Prague and Budapest liveries); the shared tram builder and its source-to-Factory map, the articulated trams' sections and joints, pantographs, lamps and direction indicators, sources, deviations, the native comparison and tests.
+**Covers** - the trams and the metro car transferred from vlakosimdb: the Tatra T3 (three variants), T6A5, KT8D5 (three liveries) and KT4, the GT4, and the 81-71 metro car (head and middle car, Prague and Budapest liveries); the shared tram builder and its source-to-Factory map, the articulated trams' sections and joints, pantographs, lamps and direction indicators, sources, deviations, the native comparison and tests.
 **Code** - `generator/trams.ts`, `generator/metro.ts`, `generator/tramKit.ts`, `generator/tramComparison.ts`, `generator/tramReport.ts`, `generator/orthoViews.ts`, `generator/treeIds.ts`, `test/trams.test.ts`, `test/rig.test.ts`
 **See also** - [world-trams.md](world-trams.md) (the world trams on the dimension-driven kit), [vehicles.md](vehicles.md), [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder underneath), [../../.agents/skills/vlakosimdb-transfer/SKILL.md](../../.agents/skills/vlakosimdb-transfer/SKILL.md)
 
@@ -13,20 +13,7 @@
 | `veh-tatra-kt8` | Tatra KT8D5 | `livery`: `redWhite` (tram_ckd_kt8, default), `red` (tram_ckd_kt8#2), `modern` (tram_ckd_kt8m) | three sections, two joints | 12,000 |
 | `veh-tatra-kt4` | Tatra KT4 | - (tram_ckd_kt4) | two sections, one joint | 7,900 |
 | `veh-kvag-gt4` | GT4 | - (tram_kvag_gt4) | two sections, one joint | 7,600 |
-| `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v), `train` (Full train); `cars` (train only): `2` .. `8` (default `4`); `livery`: `prague` (default), `budapest` | rigid car; the train a section a car, a joint a gap | 11,300 / 10,500 a car |
-
-**The 81-71 full train** (`unit` `train`, `metroTrain(n)` in `generator/metro.ts`): `cars` 2 to 8
-(default 4) cars, a head car at each end - the rear one drawn turned - and the middle cars
-between them (none in the two-car train). It is one articulated vehicle (`articulate`,
-tramKit.ts): each car a section hinged at the coupling plane ahead of it, a bellows over the
-gap between the end walls, every car on its own two bogies (two supports a section), the
-train centred on x = 0. The cars are the lone cars' own drawing (`drawMetroCar`) moved to
-their places, the later cars drawn into the first car's builder; the lone cars are unchanged.
-Its distant model is 100 triangles a car up to 500 (`lodTriangles: 500`): each car's body
-from its volumes with its inner ends under the bellows, the side windows, the windscreen and
-the bogies (the middle cars' given up first). Every car is a motor car: the train weighs
-35 t and has 300 kW a car (`game.variants`, per length and livery). The OpenTTD presets leave
-the train out; its formations stay the coupled single cars.
+| `veh-metro-81-71` | Metro 81-71 | `unit`: `headCar` (m_mmz_81-71l, default), `middleCar` (m_mmz_81-71v); `livery`: `prague` (default), `budapest` | rigid | 11,300 / 10,500 |
 
 The trams take `TRAM_CATALOG` (category `Rail vehicles`, group `tram`, traction `electric`), the metro
 car `METRO_CATALOG` (group `metro`). Every design has its `assets/<folder>/`

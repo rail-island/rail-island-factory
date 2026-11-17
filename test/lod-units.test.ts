@@ -29,7 +29,7 @@ describe('unit LODs', () => {
         const n = m.triangleCount();
         // an articulated set gets 100 a car, its budget (300, the longest trains 500) at most; a single car 100
         // (a train of fixed length, the MTR's Disneyland train, counts its sections)
-        const cars = v.unit === 'set' || v.unit === 'train' ? Number(v.cars ?? v.trainCars) : (m.rig?.sections?.length ?? 1);
+        const cars = (v.unit === 'set' || v.unit === 'train') && (v.cars ?? v.trainCars) ? Number(v.cars ?? v.trainCars) : (m.rig?.sections?.length ?? 1);
         // the TGV's lone trailer set keeps its 300 (TGV_SET_LOD); its full train has the design's 500
         const budget = Math.min(lodBudget(d), v.unit === 'set' ? TGV_SET_LOD : Infinity, 100 * cars);
         expect(n).toBeLessThanOrEqual(budget);

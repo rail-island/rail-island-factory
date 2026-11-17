@@ -1,9 +1,8 @@
 // The CD 460 (CSD EM 488.0), the Studenka electric unit of 1971-1978 for the
 // Ostrava region: one design `veh-cd-460` whose `unit` picks the 460 motor car
 // with its cab (default) or the intermediate trailer (CD class 063, vlakosimdb's
-// "CD 060") or the full train (`train`, `cars` 2 .. 8, four by default; up to
-// five cars one unit as the 460s ran, a longer train two units coupled cab to
-// cab; cd460Train, emuClassicTrain.ts), and whose `livery` picks the paint and running number: the CD grey
+// "CD 060") or the full train (`train`, `cars` 2 .. 8, four by default; one unit,
+// a motor car at each end and trailers between; cd460Train, emuClassicTrain.ts), and whose `livery` picks the paint and running number: the CD grey
 // and blue (460 071), the vlakosimdb units 460 003 and 460 007 in the same
 // paint, the CSD cream and green (460 045) and CD's current blue (460 016, read
 // from a photograph).
@@ -25,7 +24,7 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
 import { diamond } from "./czElectricKit.ts";
 import { LOD_GLASS, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shiftBody, shifted, sideGlass, turnBody, underPart, type UnitBody } from "./lodUnits.ts";
-import { articulateTrain, classicTrain, coupledCabs, lodBudget, sectionSpans, TRAIN_PALETTE, type ClassicSlot } from "./emuClassicTrain.ts";
+import { articulateTrain, classicTrain, lodBudget, sectionSpans, TRAIN_PALETTE, type ClassicSlot } from "./emuClassicTrain.ts";
 import { EMU_CATALOG, enumParam, slopePanel, tractionNumber, blockX } from "./emuParts.ts";
 import { wordmarkAt, type Wordmark } from "./letters.ts";
 import type { Vec3 } from "./meshCore.ts";
@@ -38,8 +37,6 @@ export type Livery460 = "cd" | "cd003" | "cd007" | "csd" | "cdBlue";
 export const CD460_MIN_CARS = 2;
 export const CD460_MAX_CARS = 8;
 export const CD460_DEFAULT_CARS = 4;
-/** The prototype's unit: motor car, three trailers, motor car; a longer train is two units. */
-export const CD460_UNIT_CARS = 5;
 
 export const CD460_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -177,21 +174,19 @@ export function cd460(params?: ParamValues): MeshBuilder {
 }
 
 /**
- * The cars of a train of `n`, front first (emuClassicTrain.ts): up to five cars
- * (the prototype's unit) one unit - a motor car leading, its trailers, a motor
- * car turned (two cars: the motor cars back to back); six to eight cars two
- * units coupled cab to cab, the longer one in front (6: 3 + 3, 7: 4 + 3, 8: 4 + 4).
- * Each car's span over its coupling planes, the train centred on x = 0.
+ * The cars of a train of `n`, front first (emuClassicTrain.ts): one unit, its cars
+ * joined by gangways - a motor car leading, n - 2 trailers, a motor car turned (two
+ * cars: the motor cars back to back). Units coupled in multiple are left to the
+ * player. Each car's span over its coupling planes, the train centred on x = 0.
  */
 export function cd460Train(n: number): ClassicSlot[] {
   if (n < CD460_MIN_CARS || n > CD460_MAX_CARS) throw new Error(`a CD 460 train has ${CD460_MIN_CARS} to ${CD460_MAX_CARS} cars, not ${n}`);
-  return classicTrain(n, CD460_UNIT_CARS, length460);
+  return classicTrain(n, length460);
 }
 
-/** The bellows between two cars' gangways (z, y), and the short joint over two coupled cabs' screw coupling. */
+/** The bellows between two cars' gangways (z, y). */
 const TRAIN_BELLOWS: Array<[number, number]> = [[-0.75, 1.5], [0.75, 1.5], [0.75, 3.2], [-0.75, 3.2]];
-const COUPLER_JOINT: Array<[number, number]> = [[-0.15, 0.8], [0.15, 0.8], [0.15, 1.1], [-0.15, 1.1]];
-/** The gangway's face 0.2 m off the end wall; a coupled cab's section stops 0.15 m short of its buffers' plane. */
+/** The gangway's face 0.2 m off the end wall; a cab end's section stops 0.15 m short of its buffers' plane. */
 const GANGWAY = 0.2;
 const CAB_JOINT = 0.15;
 const HINGE_Y = 0.95;
@@ -201,8 +196,7 @@ const MAX_BEND_DEG = 10;
  * The whole train as one articulated vehicle (emuClassicTrain.ts): each car a
  * section hinged at the coupling plane ahead of it, on its own two bogies, drawn
  * as the lone car is (without its gangway frames) and moved to its place, the
- * rear motor car of a unit turned; a bellows over each gangway, a coupler joint
- * between coupled cabs.
+ * rear motor car turned; a bellows over each gangway.
  */
 function train460(livery: Livery460, n: number): MeshBuilder {
   const slots = cd460Train(n);
@@ -213,7 +207,7 @@ function train460(livery: Livery460, n: number): MeshBuilder {
     const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => car(s.car, livery, m));
     return { x0: spans[k]![0], x1: spans[k]![1], draw: () => m.scope(`car ${k + 1}`, () => (s.turned ? m.turned(cx, draw) : draw())) };
   });
-  articulateTrain(m, slots, sections, HINGE_Y, TRAIN_BELLOWS, COUPLER_JOINT, MAX_BEND_DEG);
+  articulateTrain(m, slots, sections, HINGE_Y, TRAIN_BELLOWS, MAX_BEND_DEG);
   return m;
 }
 
@@ -456,13 +450,13 @@ export function cd460Lod(params?: ParamValues): MeshBuilder {
   }
   // the train: each car's distant model moved to its place (the rear motor car of
   // a unit turned), its gangway ends hidden under the bellows; 100 triangles a car, 300 at most
-  // up to five cars, 500 for the longest (two units: their shells and joints need more)
+  // up to five cars, 500 for the longest
   const slots = cd460Train(Number(p.cars));
   const built = slots.map((s, k) => carLod(s.car, paint, (s.lo + s.hi) / 2, s.turned, k));
   const spans = sectionSpans(slots, GANGWAY, CAB_JOINT);
   const sections: LodSections = {
     pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, HINGE_Y, 0])),
-    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: spans[i]![0], rear: spans[i + 1]![1], profile: coupledCabs(slots, i) ? COUPLER_JOINT : TRAIN_BELLOWS })),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: spans[i]![0], rear: spans[i + 1]![1], profile: TRAIN_BELLOWS })),
     maxBendDeg: MAX_BEND_DEG,
   };
   return fitUnit({ palette, bodies: built.map((c) => c.body), parts: built.flatMap((c) => c.parts), sections }, lodBudget(slots.length));

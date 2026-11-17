@@ -3,7 +3,7 @@
 // `veh-cd-451` whose `unit` picks the 451 motor car with its cab (default) or
 // the 051 intermediate trailer, or the full train (`train`, `cars` 2 .. 8, four by
 // default: the 451's basic unit of a motor car at each end and two trailers; a
-// longer train is two units coupled cab to cab; cd451Train, emuClassicTrain.ts).
+// longer train one unit with more trailers; cd451Train, emuClassicTrain.ts).
 //
 // Reconstructed from the native vlakosimdb XML and BMPs in assets/cd-451/native
 // (db/train/emu/cd 451/cd_451 and cd_051): the XML `alongx` sections, the
@@ -23,7 +23,7 @@ import type { GameProperties } from "./design.ts";
 import { Coach, type Box, type Pt, type Volume } from "./csdCoachParts.ts";
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { diamond } from "./czElectricKit.ts";
-import { articulateTrain, classicTrain, coupledCabs, lodBudget, sectionSpans, TRAIN_PALETTE, type ClassicSlot } from "./emuClassicTrain.ts";
+import { articulateTrain, classicTrain, lodBudget, sectionSpans, TRAIN_PALETTE, type ClassicSlot } from "./emuClassicTrain.ts";
 import { centreCoupler, EMU_CATALOG, enumParam, slopePanel, tractionNumber } from "./emuParts.ts";
 import { block, side } from "./vehicleParts.ts";
 import { bogieParts, coachBody, fitUnit, pantographParts, roofPart, shiftBody, sideGlass, turnBody, underPart, type UnitBody } from "./lodUnits.ts";
@@ -39,7 +39,7 @@ export type Livery451 = "cd" | "cdBlue";
 /** The full train's lengths: two motor cars back to back up to eight cars; four (the basic unit) by default. */
 export const CD451_MIN_CARS = 2;
 export const CD451_MAX_CARS = 8;
-/** The basic unit: motor car, two trailers, motor car; a longer train is two units. */
+/** The basic unit, the default train: motor car, two trailers, motor car. */
 export const CD451_UNIT_CARS = 4;
 
 export const CD451_PARAMS: readonly ParamSpec[] = [
@@ -191,21 +191,19 @@ export function cd451(params?: ParamValues): MeshBuilder {
 }
 
 /**
- * The cars of a train of `n`, front first (emuClassicTrain.ts): up to four cars
- * one unit - a motor car leading, its trailers, a motor car turned (two cars: the
- * motor cars back to back); five to eight cars two units coupled cab to cab, the
- * longer one in front (5: 3 + 2, 6: 3 + 3, 7: 4 + 3, 8: 4 + 4), as the 451s ran
- * in multiple. Each car's span over its coupling planes, the train centred on x = 0.
+ * The cars of a train of `n`, front first (emuClassicTrain.ts): one unit, its cars
+ * joined by gangways - a motor car leading, n - 2 trailers, a motor car turned (two
+ * cars: the motor cars back to back). Units coupled in multiple are left to the
+ * player. Each car's span over its coupling planes, the train centred on x = 0.
  */
 export function cd451Train(n: number): ClassicSlot[] {
   if (n < CD451_MIN_CARS || n > CD451_MAX_CARS) throw new Error(`a CD 451 train has ${CD451_MIN_CARS} to ${CD451_MAX_CARS} cars, not ${n}`);
-  return classicTrain(n, CD451_UNIT_CARS, length451);
+  return classicTrain(n, length451);
 }
 
-/** The bellows between two cars' gangways (z, y), and the short joint over two coupled cabs' couplers. */
+/** The bellows between two cars' gangways (z, y). */
 const TRAIN_BELLOWS: Array<[number, number]> = [[-0.7, 1.1], [0.7, 1.1], [0.7, 3.3], [-0.7, 3.3]];
-const COUPLER_JOINT: Array<[number, number]> = [[-0.15, 0.75], [0.15, 0.75], [0.15, 1.05], [-0.15, 1.05]];
-/** How far a coupled cab's section stops short of its coupling plane (the coupler joint's half length). */
+/** How far a cab end's section stops short of its coupling plane. */
 const CAB_JOINT = 0.15;
 const HINGE_Y = 0.85;
 const MAX_BEND_DEG = 10;
@@ -214,8 +212,7 @@ const MAX_BEND_DEG = 10;
  * The whole train as one articulated vehicle (emuClassicTrain.ts): each car a
  * section hinged at the coupling plane ahead of it, on its own two bogies, drawn
  * as the lone car is (without its gangway frames) and moved to its place, the
- * rear motor car of a unit turned; a bellows over each gangway, a coupler joint
- * between coupled cabs.
+ * rear motor car turned; a bellows over each gangway.
  */
 function train451(livery: Livery451, n: number): MeshBuilder {
   const slots = cd451Train(n);
@@ -226,7 +223,7 @@ function train451(livery: Livery451, n: number): MeshBuilder {
     const draw = () => m.moved(([x, y, z]) => [x + cx, y, z], () => (s.car === "motorCar" ? motorCar : trailer)(livery, m));
     return { x0: spans[k]![0], x1: spans[k]![1], draw: () => m.scope(`car ${k + 1}`, () => (s.turned ? m.turned(cx, draw) : draw())) };
   });
-  articulateTrain(m, slots, sections, HINGE_Y, TRAIN_BELLOWS, COUPLER_JOINT, MAX_BEND_DEG);
+  articulateTrain(m, slots, sections, HINGE_Y, TRAIN_BELLOWS, MAX_BEND_DEG);
   return m;
 }
 
@@ -438,13 +435,13 @@ export function cd451Lod(params?: ParamValues): MeshBuilder {
   }
   // the train: each car's distant model moved to its place (the rear motor car of
   // a unit turned), its gangway ends hidden under the bellows; 100 triangles a car, 300 at most
-  // up to five cars, 500 for the longest (two units: their shells and joints need more)
+  // up to five cars, 500 for the longest
   const slots = cd451Train(Number(p.cars));
   const built = slots.map((s, k) => carLod(s.car, paint, (s.lo + s.hi) / 2, s.turned, k));
   const spans = sectionSpans(slots, BELLOWS * K_X, CAB_JOINT);
   const sections: LodSections = {
     pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, HINGE_Y, 0])),
-    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: spans[i]![0], rear: spans[i + 1]![1], profile: coupledCabs(slots, i) ? COUPLER_JOINT : TRAIN_BELLOWS })),
+    joints: slots.slice(0, -1).map((_, i) => ({ sections: [i, i + 1] as [number, number], front: spans[i]![0], rear: spans[i + 1]![1], profile: TRAIN_BELLOWS })),
     maxBendDeg: MAX_BEND_DEG,
   };
   return fitUnit({ palette: paletteOf(paint), bodies: built.map((c) => c.body), parts: built.flatMap((c) => c.parts), sections }, lodBudget(slots.length));

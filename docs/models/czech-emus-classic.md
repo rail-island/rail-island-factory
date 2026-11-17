@@ -138,25 +138,21 @@ OpenTTD presets stay single cars.
 `unit` `train` builds the whole train, `cars` 2 to 8 vehicles long, 4 by default
 (the 451's basic unit; the 460's ran five, four is the default's cap).
 `cd451Train(n)` and `cd460Train(n)` lay it out front to back with
-`emuClassicTrain.ts` (`classicUnits`, `classicTrain`): a unit is a motor car with its
-cab leading, its trailers and a motor car turned (its cab facing -X); two cars are
-the two motor cars back to back. Up to the prototype's unit (4 cars on the 451, 5 on
-the 460) the train is one unit; a longer one is two units coupled cab to cab, as the
-units ran in multiple, as even as can be with the longer in front (451: 5 = 3 + 2,
-6 = 3 + 3, 7 = 4 + 3, 8 = 4 + 4; 460: 6 = 3 + 3, 7 = 4 + 3, 8 = 4 + 4), so the motor
-cars keep up with the trailers. Each car is a section (`articulateTrain`, tramKit's
-`articulate` with a joint of its own between coupled cabs) hinged at the coupling
+`emuClassicTrain.ts` (`classicTrain`): one unit, its cars joined by gangways - a
+motor car with its cab leading, n - 2 trailers and a motor car turned (its cab
+facing -X); two cars are the two motor cars back to back. A full train holds only
+cars joined by gangways: units coupled in multiple, cab to cab, are left to the
+player. Each car is a section (`articulateTrain`, tramKit's `articulate`) hinged at the coupling
 plane ahead of it (0.85 m on the 451, 0.95 m on the 460), drawn by the lone car's
 own builder into the train's builder and moved to its place, on its own two bogies;
-a bellows covers each gangway between the end walls, and a short coupler joint
-(0.3 m, round the couplers at their height) the two coupled cabs. Inside the train
+a bellows covers each gangway between the end walls. Inside the train
 the cars leave out their gangway frames (`GangwayOpts.frame`) and keep their
 couplers and buffers; the lone cars are unchanged. The train is centred on x = 0
 (the 451's four cars 95.29 m, the 460's 98 m). The distant model is each car's
 (`carLod`) placed and turned the same way, its gangway ends hidden under the
 bellows, a 460 motor car with its inner (raised) pantograph alone, the trailers'
 bogies given up first: 100 triangles a car, 300 at most up to five cars and 500 for
-the two-unit trains (`lodTriangles: 500`). The game's figures add the cars up: the
+the longer trains (`lodTriangles: 500`). The game's figures add the cars up: the
 451 59 t and 660 kW a motor car, 40 t a trailer (the four-car train 198 t, 1,320 kW);
 the 460 40 t a car and 1,000 kW a motor car, every train length repeated per
 livery (the CSD one at 110 km/h). The OpenTTD presets stay single cars.
@@ -194,7 +190,7 @@ deterministic bytes, the distant model of every length and the trains' game figu
 The same file's full-train block: the units and the 451's and 460's formation of
 every length, each train's sections, hinges, joints and supports, its length,
 centring and budget (16,000 a car), no coplanar faces up to three cars, the turned
-rear motor cars and the coupler joint of a two-unit train, deterministic bytes, the
+rear motor car and a bellows over every joint (no cab coupled to a cab), deterministic bytes, the
 distant model of every length and every length's game figures in every livery.
 `test/czechEmus.test.ts` checks every landmark of every transferred car;
 The catalog sweep (`test/catalogSweep.ts`) covers every design generically.

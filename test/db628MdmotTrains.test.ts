@@ -2,7 +2,7 @@
 // (generator/mavMdmot.ts): formations, the articulated rig, lengths, budgets,
 // determinism and the distant models. See docs/models/foreign-units.md.
 import { describe, expect, it } from "vitest";
-import { DB628_DESIGNS, DB628_LENGTH, DB628_MAX_CARS, DB628_MIN_CARS, db628, db628Train } from "../generator/db628";
+import { DB628_DESIGNS, DB628_LENGTH, DB628_TRAIN_CARS, db628, db628Train } from "../generator/db628";
 import { MDMOT_DESIGNS, MDMOT_MAX_CARS, MDMOT_MIN_CARS, mavMdmot, mdmotLength, mdmotTrain } from "../generator/mavMdmot";
 import { glbStats } from "../generator/glbStats";
 import { buildLodModel } from "../generator/lodModel";
@@ -16,7 +16,6 @@ function leaves(n: TreeNode): LeafNode[] {
 }
 
 const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
-const DB_SIZES = range(DB628_MIN_CARS, DB628_MAX_CARS);
 const MD_SIZES = range(MDMOT_MIN_CARS, MDMOT_MAX_CARS);
 
 /** The model x of the leaves whose id matches, as [min, max]. */
@@ -42,73 +41,59 @@ function expectTrainRig(m: MeshBuilder, slots: ReadonlyArray<{ lo: number }>): v
 }
 
 describe("the DB 628 full train", () => {
-  it("pairs the cars into 628 units, the second of each turned; an odd train ends in a turned car", () => {
-    expect(db628Train(2).map((s) => s.turned)).toEqual([false, true]);
-    expect(db628Train(3).map((s) => s.turned)).toEqual([false, true, true]);
-    expect(db628Train(4).map((s) => s.turned)).toEqual([false, true, false, true]);
-    expect(db628Train(5).map((s) => s.turned)).toEqual([false, true, false, true, true]);
-    for (const n of DB_SIZES) {
-      const slots = db628Train(n);
-      expect(slots).toHaveLength(n);
-      expect(slots.every((s) => s.car === "motorCar")).toBe(true);
-      // the train ends in a cab at both ends, centred, each car 22.70 m
-      expect(slots[0]!.turned).toBe(false);
-      expect(slots[n - 1]!.turned).toBe(true);
-      expect(slots[0]!.hi).toBeCloseTo((n * DB628_LENGTH) / 2, 9);
-      expect(slots[n - 1]!.lo).toBeCloseTo((-n * DB628_LENGTH) / 2, 9);
-      for (const s of slots) expect(s.hi - s.lo).toBeCloseTo(DB628_LENGTH, 9);
-    }
+  it("is one 628 unit of two cars joined by a gangway, the second turned: no cars choice, no units in multiple", () => {
+    expect(DB628_TRAIN_CARS).toBe(2);
+    expect(DB628_DESIGNS[0]!.params!.map((p) => p.name)).toEqual(["unit", "livery"]);
+    const slots = db628Train();
+    expect(slots.map((s) => [s.car, s.turned])).toEqual([["motorCar", false], ["motorCar", true]]);
+    expect(slots[0]!.hi).toBeCloseTo(DB628_LENGTH, 9);
+    expect(slots[1]!.lo).toBeCloseTo(-DB628_LENGTH, 9);
   });
 
-  for (const n of DB_SIZES)
-    it(`a ${n}-car train is one articulated vehicle, ${n} x 22.70 m over the cabs' buffers, within budget`, () => {
-      const m = db628({ unit: "train", cars: String(n), livery: n % 2 ? "red" : "mint" });
+  it("is one articulated vehicle, 2 x 22.70 m over the cabs' buffers, within budget", () => {
+    for (const livery of ["mint", "red"]) {
+      const m = db628({ unit: "train", livery });
       const glb = m.toGlb("x");
       const s = glbStats(glb);
-      expect(s.min[0]).toBeCloseTo((-n * DB628_LENGTH) / 2, 2);
-      expect(s.max[0]).toBeCloseTo((n * DB628_LENGTH) / 2, 2);
+      expect(s.min[0]).toBeCloseTo(-DB628_LENGTH, 2);
+      expect(s.max[0]).toBeCloseTo(DB628_LENGTH, 2);
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.max[1]).toBeLessThanOrEqual(4.7);
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
-      expect(s.triangles).toBeLessThanOrEqual(16_000 * n);
-      expectTrainRig(m, db628Train(n));
-      if (n <= 3) expect(findCoplanarOverlaps(glb)).toEqual([]);
-    });
+      expect(s.triangles).toBeLessThanOrEqual(16_000 * 2);
+      expectTrainRig(m, db628Train());
+      expect(findCoplanarOverlaps(glb)).toEqual([]);
+    }
+  });
 
   it("turns the rear car: its cab at the train's -X end, the inner ends meeting under a gangway bellows", () => {
-    const m = db628({ unit: "train", cars: "2" });
+    const m = db628({ unit: "train" });
     // the windscreens: the first car's at +X, the turned car's at -X
     expect(span(m, /^section0\/car-1\/cab\/windscreen/)[0]).toBeGreaterThan(20);
     expect(span(m, /^section1\/car-2\/cab\/windscreen/)[1]).toBeLessThan(-20);
     // the inner ends' gangway frames give way to the bellows; a lone car keeps its own
     expect(leaves(m.sourceTree("x", "x").root).some((n) => /\/rear-end\/gangway\//.test(n.id))).toBe(false);
     expect(leaves(db628().sourceTree("x", "x").root).some((n) => /^rear-end\/gangway\//.test(n.id))).toBe(true);
+    expect(m.rig!.joints).toHaveLength(1);
     expect(m.rig!.joints![0]!.front - m.rig!.joints![0]!.rear).toBeCloseTo(0.7, 6);
-    // a cab coupled to a cab (two units) gets only the small bellows round the couplers
-    const four = db628({ unit: "train", cars: "4" }).rig!.joints!;
-    expect(four.map((j) => j.front - j.rear)).toEqual([expect.closeTo(0.7, 6), expect.closeTo(0.6, 6), expect.closeTo(0.7, 6)]);
   });
 
-  it("builds the same bytes twice and keeps a distant model of every train", () => {
-    const a = db628({ unit: "train", cars: "3" }).toGlb("a");
-    expect(Buffer.from(a).equals(Buffer.from(db628({ unit: "train", cars: "3" }).toGlb("a")))).toBe(true);
+  it("builds the same bytes twice and keeps a distant model of the train", () => {
+    const a = db628({ unit: "train" }).toGlb("a");
+    expect(Buffer.from(a).equals(Buffer.from(db628({ unit: "train" }).toGlb("a")))).toBe(true);
     const d = DB628_DESIGNS[0]!;
-    for (const n of DB_SIZES) {
-      const low = buildLodModel(d, { unit: "train", cars: String(n) });
-      expect(low.triangleCount()).toBeGreaterThan(0);
-      expect(low.triangleCount()).toBeLessThanOrEqual(Math.min(lodBudget(d), 100 * n));
-      expect(low.rig!.sections).toHaveLength(n);
-      expect(low.rig!.joints).toHaveLength(n - 1);
-    }
+    const low = buildLodModel(d, { unit: "train" });
+    expect(low.triangleCount()).toBeGreaterThan(0);
+    expect(low.triangleCount()).toBeLessThanOrEqual(Math.min(lodBudget(d), 200));
+    expect(low.rig!.sections).toHaveLength(2);
+    expect(low.rig!.joints).toHaveLength(1);
   });
 
-  it("states the game figures of every train in both liveries: 56 t and 423 kW a car", () => {
-    const variants = d628Variants();
-    for (const livery of ["mint", "red"])
-      for (const n of DB_SIZES) {
-        const params = { ...(n === 2 ? {} : { cars: String(n) }), ...(livery === "mint" ? {} : { livery }), unit: "train" };
-        expect(variants.find((v) => JSON.stringify(v.params) === JSON.stringify(params))).toMatchObject({ weight: 56 * n, power: 423 * n });
-      }
+  it("states the game figures of the train in both liveries: 56 t and 423 kW a car", () => {
+    for (const livery of ["mint", "red"]) {
+      const params = { ...(livery === "mint" ? {} : { livery }), unit: "train" };
+      expect(d628Variants().find((v) => JSON.stringify(v.params) === JSON.stringify(params))).toMatchObject({ weight: 112, power: 846 });
+    }
   });
 });
 

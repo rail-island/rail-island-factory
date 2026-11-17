@@ -1,6 +1,6 @@
 # Foreign multiple units
 
-**Covers** - the parametric `veh-db-628` (DB 628: the motor car, the set's three n-Wagen coaches and the full train of 2 to 8 cars, two liveries), `veh-mav-mdmot` (MAV MDmot, four cars and the full train of 2 to 8 cars), `veh-ice-1` (ICE 1, three cars and the full train of 3 to 8 vehicles) and `veh-tgv` (TGV: the power car, the articulated trailer set of 1 to 6 cars and the full train of 3 to 8 vehicles, in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV set's Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
+**Covers** - the parametric `veh-db-628` (DB 628: the motor car, the set's three n-Wagen coaches and the full train, one 628 unit of two cars; two liveries), `veh-mav-mdmot` (MAV MDmot, four cars and the full train of 2 to 8 cars), `veh-ice-1` (ICE 1, three cars and the full train of 3 to 8 vehicles) and `veh-tgv` (TGV: the power car, the articulated trailer set of 1 to 6 cars and the full train of 3 to 8 vehicles, in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV set's Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
 **Code** - `generator/db628.ts`, `generator/dbNWagen.ts` (the 628's coach cars), `generator/mavMdmot.ts`, `generator/ice1.ts` (and the ICE trains' shared builder), `generator/tgv.ts`, `generator/unitParts.ts`, `generator/unitComparison.ts`, `generator/unitReport.ts`, `generator/unitViews.ts`, `generator/csdCoachParts.ts` (the body builder), `generator/emuParts.ts` (pantograph, centre coupler, sloped panels), `test/foreignUnits.test.ts`, `test/db628MdmotTrains.test.ts`, `test/iceTrains.test.ts`, `assets/db-628/`, `assets/mav-mdmot/`, `assets/ice-1/`, `assets/tgv/`
 **See also** - [czech-emus.md](czech-emus.md) (the same method for the CD 471 and CD 680), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [DB 628 sources](../../assets/db-628/SOURCES.md), [MDmot sources](../../assets/mav-mdmot/SOURCES.md), [ICE 1 sources](../../assets/ice-1/SOURCES.md), [TGV sources](../../assets/tgv/SOURCES.md)
 
@@ -18,8 +18,7 @@ couple the cars of a set in any order and turn a car to face the other way.
 | | | `bn` | coach/db_bnvriv, db_bnvr | n-Wagen Bn, 2nd class ([german-coaches.md](german-coaches.md)) |
 | | | `abn` | coach/db_abnvriv, db_abnvr | n-Wagen ABn, 1st and 2nd class |
 | | | `bdnrf` | coach/db_bdnrfiv, db_bdnrf | n-Wagen BDnrf driving trailer, the Karlsruher Kopf at -X |
-| | | `train` | db_628, db_628vr | the full train (`db628Train`): 628 units of two motor cars, the second turned; one articulated vehicle |
-| | `cars` (with `train` only) | `2` (default) .. `8` | | the train's cars; two is one 628 unit |
+| | | `train` | db_628, db_628vr | the full train (`db628Train`): one 628 unit of two motor cars joined by a gangway, the second turned; one articulated vehicle |
 | | `livery` | `mint` (default) | db_628, db_*iv | mint turquoise, pale blue and light grey (DB, 1990s); the motor car 628 289-1 |
 | | | `red` | db_628vr, db_*vr | DB Regio traffic red; the motor car 628 305-5 with the first-class line |
 | `veh-mav-mdmot` "MAV MDmot" | `unit` | `motorCar` (default) | dmu/mav_mdmot | the short twin-cab baggage motor car MDmot, radiator hump, machine-room windows and grilles |
@@ -77,20 +76,17 @@ The archived Eurostar (`train-emu-eurostar-*` in the webapp's
 - **DB 628**: the cab end carries buffers and a screw coupling 22.70 m ahead of
   the inner end's coupling plane, half the 628.2 set's 45.40 m over buffers. The
   inner end has the gangway and a short centre coupler whose face is the plane.
-- **DB 628 full train** (`unit: train`, `cars` 2 .. 8, default 2): `db628Train(n)`
-  lays out 628 units of two cars, the second of each turned so the pair meets at
-  the inner ends' short coupling with a cab at each end, the units coupled cab to
-  cab. vlakosimdb has no 928 driving trailer (its body is the motor car's), so both
-  cars of a unit are the motor car, and the n-Wagen coaches stay single cars: their
-  palette names clash with the 628's in one builder. An odd train ends in a single
-  car turned, its inner end coupled to the cab ahead, so the train ends in a cab.
-  The train is one articulated vehicle (`coupledTrain`, unitParts.ts): each car a
-  section hinged on the coupling plane ahead of it on its own two bogies, a 0.70 m
-  gangway bellows where two inner ends meet (their gangway frames left out), a
-  small bellows round the couplers where a cab is coupled. Game figures: a variant
-  per length and livery, 56 t and 423 kW a car. The distant model is the motor
-  car's moved to each car's place, 100 triangles a car, 500 at most
-  (`lodTriangles: 500`).
+- **DB 628 full train** (`unit: train`, no `cars`): `db628Train()` lays out one
+  628 unit, its two cars joined by a gangway, the second turned so the pair meets
+  at the inner ends' short coupling with a cab at each end. A full train holds only
+  cars joined by gangways: coupling 628 units in multiple, or the n-Wagen coaches
+  (ordinary coaches), is left to the player. vlakosimdb has no 928 driving trailer
+  (its body is the motor car's), so both cars are the motor car. The train is one
+  articulated vehicle (`coupledTrain`, unitParts.ts): each car a section hinged on
+  the coupling plane ahead of it on its own two bogies, a 0.70 m gangway bellows
+  where the inner ends meet (their gangway frames left out). Game figures: 112 t
+  and 846 kW in both liveries (56 t and 423 kW a car). The distant model is the
+  motor car's moved to each car's place, 100 triangles a car (`lodTriangles: 200`).
 - **MDmot**: buffers and screw couplings at both ends of every car (the published
   lengths over buffers); trailers and the Btx have gangway bellows at their inner
   ends. A four-car set is MDmot, Bx, Ax, Btx (82.38 m, the published length).

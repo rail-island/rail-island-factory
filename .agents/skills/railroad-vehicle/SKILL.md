@@ -181,7 +181,14 @@ shinkansen-0.md, tgv-duplex.md):
    layout differs visibly (windows, doors, roof, equipment), not for interior
    differences alone. A unit whose cars are all motored (the Shinkansen 0
    series) has no trailer value: say so in its document.
-3. **The full train is the value `train`**, with a `cars` parameter for its
+3. **The full train is the value `train`**, offered only for cars joined by
+   gangways into one unit (an EMU or DMU set, a trainset, a power-car train).
+   Never build it by coupling units in multiple cab to cab or by adding ordinary
+   coaches or loose trailers that couple with buffers: the player couples those
+   by hand. A unit without intermediate cars of its own keeps its fixed length
+   (the DB 628: two cars, no `cars` choice); vehicles that only couple, with no
+   gangway between them (a railbus and its trailers, a metro's cars), get no
+   `train` at all. The `train` value has a `cars` parameter for its
    length (`when: { name: "unit", values: ["train"] }`), counting every vehicle
    including the power or end cars. **Offer at most eight cars, and default to
    at most four** (four for the TGV Duplex, the Shinkansen 0 series and the VT

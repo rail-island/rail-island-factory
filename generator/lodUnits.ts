@@ -216,13 +216,6 @@ function volumeEnd(vols: readonly PlacedVolume[], e: number, ys: readonly number
     tip.push([y, e * best]);
     setback.push([y, Math.round(sb * 1e4) / 1e4]);
   }
-  // a height no volume stands at (a body's bottom just under a volume whose elevation starts above it)
-  // takes the end of the nearest height that has one: never an infinite tip
-  for (let i = 0; i < tip.length; i++) {
-    if (Number.isFinite(tip[i]![1])) continue;
-    const near = [...tip.keys()].filter((j) => Number.isFinite(tip[j]![1])).sort((a, b) => Math.abs(a - i) - Math.abs(b - i) || b - a)[0];
-    if (near !== undefined) { tip[i] = [tip[i]![0], tip[near]![1]]; setback[i] = [setback[i]![0], setback[near]![1]]; }
-  }
   const round = (t: Array<readonly [number, number]>) => t.map(([y, x]) => [y, Math.round(x * 1e4) / 1e4] as const);
   return { tip: round(tip), ...(setback.some(([, s]) => s > NOSE_VEE) ? { setback } : {}) };
 }

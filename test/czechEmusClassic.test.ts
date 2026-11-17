@@ -14,7 +14,7 @@ import type { MeshBuilder } from "../generator/meshBuilder";
 import { sample } from "./catalogCache";
 import { cd451Lod, cd451Train } from "../generator/emu451";
 import { cd460Lod, cd460Train } from "../generator/emu460";
-import { classicUnits, lodBudget as trainLodBudget } from "../generator/emuClassicTrain";
+import { lodBudget as trainLodBudget } from "../generator/emuClassicTrain";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { buildLodModel } from "../generator/lodModel";
 
@@ -256,20 +256,13 @@ describe("the CD 451 and CD 460 full trains", () => {
     { id: "proc-vehicle-cd-460", d: EMU460_DESIGNS[0]!, build: cd460, lod: cd460Lod, formation: cd460Train, length: length460, liveries: ["cd", "cd003", "cd007", "csd", "cdBlue"], weight: { motorCar: 40, trailer: 40 }, power: 1000 },
   ] as const;
   const SIZES = [2, 3, 4, 5, 6, 7, 8];
-  const code = (n: number, basic: number) =>
-    classicUnits(n, basic)
-      .map((k) => "M" + "T".repeat(k - 2) + "m")
-      .join("|");
 
-  it("split a train into units of a motor car at each end: one unit up to the basic unit, two coupled cab to cab beyond", () => {
-    expect(SIZES.map((n) => classicUnits(n, 4))).toEqual([[2], [3], [4], [3, 2], [3, 3], [4, 3], [4, 4]]);
-    expect(SIZES.map((n) => classicUnits(n, 5))).toEqual([[2], [3], [4], [5], [3, 3], [4, 3], [4, 4]]);
+  it("is one unit, its cars joined by gangways: a motor car at each end, trailers between - never two units coupled cab to cab", () => {
     // M a motor car with its cab leading, m one turned (cab at the rear), T a trailer
-    const form = (slots: ReturnType<typeof cd451Train>) => slots.map((s) => (s.car === "trailer" ? "T" : s.turned ? "m" : "M")).join("").replace(/mM/g, "m|M");
-    expect(SIZES.map((n) => form(cd451Train(n)))).toEqual(SIZES.map((n) => code(n, 4)));
-    expect(SIZES.map((n) => form(cd460Train(n)))).toEqual(SIZES.map((n) => code(n, 5)));
-    expect(form(cd451Train(8))).toBe("MTTm|MTTm");
-    expect(form(cd460Train(5))).toBe("MTTTm");
+    const form = (slots: ReturnType<typeof cd451Train>) => slots.map((s) => (s.car === "trailer" ? "T" : s.turned ? "m" : "M")).join("");
+    const one = (n: number) => "M" + "T".repeat(n - 2) + "m";
+    expect(SIZES.map((n) => form(cd451Train(n)))).toEqual(SIZES.map(one));
+    expect(SIZES.map((n) => form(cd460Train(n)))).toEqual(SIZES.map(one));
     expect(() => cd451Train(1)).toThrow();
     expect(() => cd460Train(9)).toThrow();
   });
@@ -303,7 +296,7 @@ describe("the CD 451 and CD 460 full trains", () => {
       });
 
   for (const t of TRAINS)
-    it(`${t.id}: the rear motor car is turned (its cab at -X), two units meet cab to cab; same bytes twice`, () => {
+    it(`${t.id}: the rear motor car is turned (its cab at -X), a bellows over every joint; same bytes twice`, () => {
       const m = t.build({ unit: "train", cars: "6" });
       const nodes = leaves(m.sourceTree(t.id, t.id).root);
       // the cab windscreen pillars or windscreens of each car, by car
@@ -316,9 +309,9 @@ describe("the CD 451 and CD 460 full trains", () => {
         expect(b.count).toBeGreaterThan(0);
         expect(s.turned ? b.max[0]! < cx : b.min[0]! > cx, `car ${k + 1}`).toBe(true);
       }
-      // 3 + 3: the third car's cab and the fourth car's cab face each other over a coupler joint
-      expect(slots.map((s) => s.turned)).toEqual([false, false, true, false, false, true]);
-      expect(m.rig!.joints![2]!.front - m.rig!.joints![2]!.rear).toBeCloseTo(0.3, 6);
+      // only the last car is turned; every joint a gangway's bellows reaching up the body (no low coupler joint between two cabs)
+      expect(slots.map((s) => s.turned)).toEqual([false, false, false, false, false, true]);
+      for (const j of m.rig!.joints!) expect(Math.max(...j.profile.map((p) => p[1]))).toBeGreaterThan(3);
       expect(Buffer.from(m.toGlb("a")).equals(Buffer.from(t.build({ unit: "train", cars: "6" }).toGlb("a")))).toBe(true);
     });
 
