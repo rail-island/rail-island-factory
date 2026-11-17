@@ -17,7 +17,7 @@ The catalog had no Spanish train before. Every design is filed under Spain.
 | `proc-vehicle-renfe-s130` | Alvia S-130 | series, Talgo base | `unit`, `cars` 3 - 8 | 250 km/h |
 | `proc-vehicle-talgo-iii` | Talgo III | series, Talgo base, unpowered, tail face | `unit`, `cars` 3 - 8 | short coaches; 140 km/h |
 | `proc-vehicle-renfe-s120` | Renfe S-120 | series | `unit` (four cars), `livery` (`alvia`, `mediaDistancia`) | 250 km/h |
-| `proc-vehicle-renfe-civia` | Renfe Civia | series | `unit`, `cars` 2 - 8 | 120 km/h |
+| `proc-vehicle-renfe-civia` | Renfe Civia | series | `unit`, `cars` 2 - 5 | 120 km/h |
 | `proc-vehicle-renfe-446` | Renfe 446 | series, flat cab | `unit` (three cars) | 100 km/h |
 | `proc-vehicle-renfe-440` | Renfe 440 | series, flat cab | `unit`, `livery` (`regional`, `cercanias`) | 140 km/h |
 | `proc-vehicle-renfe-592` | Renfe 592 | series, flat cab, diesel | `unit`, `livery` (`regional`, `mediaDistancia`) | 120 km/h |

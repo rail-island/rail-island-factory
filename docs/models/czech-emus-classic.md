@@ -1,6 +1,6 @@
 # Older Czech electric units
 
-**Covers** - the parametric `veh-cd-451` (CD 451 "zabotlam": motor car, trailer, the full train of 2 to 8 cars; two liveries), `veh-cd-460` (CD 460: motor car, trailer, the full train of 2 to 8 cars; five liveries) and `veh-cd-470` (CD 470 double-deck prototype: motor car, trailer, the full train of 2 to 8 cars) from vlakosimdb, and CD's current blue on the 451 and 460 from photographs: what each parameter value builds, the shared kit, the scales from the XML to the published dimensions, the measured comparison and the tests.
+**Covers** - the parametric `veh-cd-451` (CD 451 "zabotlam": motor car, trailer, the full train of 2 to 4 cars; two liveries), `veh-cd-460` (CD 460: motor car, trailer, the full train of 2 to 5 cars; five liveries) and `veh-cd-470` (CD 470 double-deck prototype: motor car, trailer, the full train of 2 to 5 cars) from vlakosimdb, and CD's current blue on the 451 and 460 from photographs: what each parameter value builds, the shared kit, the scales from the XML to the published dimensions, the measured comparison and the tests.
 **Code** - `generator/emu451.ts`, `generator/emu460.ts`, `generator/emu470.ts`, `generator/emuClassicKit.ts`, `generator/emuClassicTrain.ts` (the 451's and 460's full train), `generator/letters.ts` (the 460's wordmark), `generator/emuParts.ts`, `generator/emuComparison.ts`, `generator/emuReport.ts`, `generator/csdCoachParts.ts` (the body builder), `test/czechEmusClassic.test.ts`, `test/cd470Train.test.ts`, `assets/cd-451/`, `assets/cd-460/`, `assets/cd-470/`
 **See also** - [czech-emus.md](czech-emus.md) (the CD 471 and 680, the shared EMU parts), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [CD 451 sources](../../assets/cd-451/SOURCES.md), [CD 460 sources](../../assets/cd-460/SOURCES.md), [CD 470 sources](../../assets/cd-470/SOURCES.md)
 
@@ -118,8 +118,8 @@ Lengths are scaled to the published 132 m of the five-car set (`K_X = 1.0776`).
 
 ### The full train
 
-`unit` `train` builds the whole set, `cars` 2 to 8 vehicles long (4 by default; the
-prototype ran five). `cd470Train(n)` lays it out front to back: a motor car at each
+`unit` `train` builds the whole set, `cars` 2 to 5 vehicles long (4 by default; the
+prototype ran five, never more). `cd470Train(n)` lays it out front to back: a motor car at each
 end, the rear one turned (its cab facing -X), n - 2 trailers between them - the two
 motor cars alone for 2 cars. Each car is a section (`articulate`, `tramKit.ts`)
 hinged at the coupling plane ahead of it at buffer height (1.0 m), drawn by the lone
@@ -135,8 +135,9 @@ OpenTTD presets stay single cars.
 
 ## The 451's and 460's full trains
 
-`unit` `train` builds the whole train, `cars` 2 to 8 vehicles long, 4 by default
-(the 451's basic unit; the 460's ran five, four is the default's cap).
+`unit` `train` builds the whole train, never longer than the real unit: the 451's
+`cars` 2 to 4 (its four-car unit, the default), the 460's 2 to 5 (it ran five; four
+is the default's cap).
 `cd451Train(n)` and `cd460Train(n)` lay it out front to back with
 `emuClassicTrain.ts` (`classicTrain`): one unit, its cars joined by gangways - a
 motor car with its cab leading, n - 2 trailers and a motor car turned (its cab
@@ -151,8 +152,7 @@ couplers and buffers; the lone cars are unchanged. The train is centred on x = 0
 (the 451's four cars 95.29 m, the 460's 98 m). The distant model is each car's
 (`carLod`) placed and turned the same way, its gangway ends hidden under the
 bellows, a 460 motor car with its inner (raised) pantograph alone, the trailers'
-bogies given up first: 100 triangles a car, 300 at most up to five cars and 500 for
-the longer trains (`lodTriangles: 500`). The game's figures add the cars up: the
+bogies given up first: 100 triangles a car, 300 at most (`lodTriangles: 300`). The game's figures add the cars up: the
 451 59 t and 660 kW a motor car, 40 t a trailer (the four-car train 198 t, 1,320 kW);
 the 460 40 t a car and 1,000 kW a motor car, every train length repeated per
 livery (the CSD one at 110 km/h). The OpenTTD presets stay single cars.

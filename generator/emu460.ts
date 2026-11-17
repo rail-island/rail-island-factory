@@ -33,9 +33,9 @@ import { bOf, CLASSIC_PALETTE, emuBogie, endBuffers, frontNumber, gangwayEnd, le
 export type Unit460 = "motorCar" | "trailer";
 export type Livery460 = "cd" | "cd003" | "cd007" | "csd" | "cdBlue";
 
-/** The full train's lengths: two motor cars back to back up to eight cars; four by default. */
+/** The full train's lengths: two motor cars back to back up to the real five-car unit; four by default; never longer than the prototype. */
 export const CD460_MIN_CARS = 2;
-export const CD460_MAX_CARS = 8;
+export const CD460_MAX_CARS = 5;
 export const CD460_DEFAULT_CARS = 4;
 
 export const CD460_PARAMS: readonly ParamSpec[] = [
@@ -533,4 +533,4 @@ const CD_460_GAME: GameProperties = {
   ],
 };
 
-export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", game: CD_460_GAME, title: "CD 460", build: cd460, buildLod: cd460Lod, lodTriangles: 500, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];
+export const EMU460_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-460", game: CD_460_GAME, title: "CD 460", build: cd460, buildLod: cd460Lod, lodTriangles: 300, params: CD460_PARAMS, catalog: EMU_CATALOG, references: "cd-460" }];

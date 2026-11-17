@@ -56,7 +56,7 @@ describe("the foreign multiple units", () => {
     ]);
     expect(spec(MDMOT_PARAMS)).toEqual([
       ["unit", "motorCar", ["motorCar", "trailerAx", "trailerBx", "drivingTrailer", "train"]],
-      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
+      ["cars", "4", ["2", "3", "4"]],
     ]);
     expect(spec(ICE1_PARAMS)).toEqual([["unit", "powerCar", ["powerCar", "coach", "restaurant", "train"]], ["cars", "4", ["3", "4", "5", "6", "7", "8"]]]);
     expect(ICE1_PARAMS[1]!.when).toEqual({ name: "unit", values: ["train"] });

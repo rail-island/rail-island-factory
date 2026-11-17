@@ -65,8 +65,9 @@ combinations hashed before and after):
 - `traction: "diesel"` - no pantograph, a roof exhaust over each car's middle, filed with
   the DMUs;
 - `cars` - the prototype's train lengths (default 3 - 8): they set the default `cars` (4 when
-  listed, else the shortest), and the series offers every length from its shortest sensible
-  train up to eight, odd counts included (`carsOf`): two end cars back to back (`minSeriesCars`;
+  listed, else the shortest) and the longest train, and the series offers every length from
+  its shortest sensible train up to the longest real formation (eight at most), odd counts
+  included - never longer than the prototype (`carsOf`): two end cars back to back (`minSeriesCars`;
   with no intermediate car the rear end car raises the pantograph), three where the end cars
   need a car between them (a `powerCar`, a `leadCar`, locomotive ends - `endSides`,
   `jacobsTrailers`, `endPantograph` `lead` or `trail` - or unpowered coaches). A unit of two

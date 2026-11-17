@@ -42,8 +42,8 @@ export function classicTrain(n: number, length: (car: ClassicCar) => number): Cl
   });
 }
 
-/** The distant model's budget of a train of `n`: 100 triangles a car, 300 at most up to five cars, 500 beyond. */
-export const lodBudget = (n: number): number => Math.min(n > 5 ? 500 : 300, 100 * n);
+/** The distant model's budget of a train of `n` (five cars at most, the real units): 100 triangles a car, 300 at most. */
+export const lodBudget = (n: number): number => Math.min(300, 100 * n);
 
 /** Whether a slot's +X (front) end is its cab: a leading motor car's front, a turned one's rear. */
 export const cabAhead = (s: ClassicSlot): boolean => s.car === "motorCar" && !s.turned;

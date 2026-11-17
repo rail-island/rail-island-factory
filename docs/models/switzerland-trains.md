@@ -10,13 +10,13 @@ The catalog had no Swiss train before. Every design is filed under Switzerland.
 
 | id | title | kit | parameters | figures (game) |
 |---|---|---|---|---|
-| `proc-vehicle-sbb-rae-tee` | SBB RAe TEE II | series, cab face, power car | `unit` (`endCar`, `middleCar`, `powerCar`), `cars` 3 - 8, `livery` (`tee`, `gottardo`) | 26.0 m driving cars, 24.43 m others; 2,310 kW; 160 km/h |
+| `proc-vehicle-sbb-rae-tee` | SBB RAe TEE II | series, cab face, power car | `unit` (`endCar`, `middleCar`, `powerCar`), `cars` 3 - 6, `livery` (`tee`, `gottardo`) | 26.0 m driving cars, 24.43 m others; 2,310 kW; 160 km/h |
 | `proc-vehicle-sbb-roter-pfeil` | SBB Roter Pfeil | series, single, pantograph on the car | - | 22.4 m; 125 km/h |
 | `proc-vehicle-sbb-icn` | SBB ICN | series | `unit` (seven cars) | tilting; 200 km/h |
 | `proc-vehicle-sbb-giruno` | SBB Giruno | series | `unit`, `cars` 2 - 8 | 250 km/h |
 | `proc-vehicle-sbb-fv-dosto` | SBB FV-Dosto | series, double-deck | `unit`, `cars` 2 - 8 | 200 km/h |
-| `proc-vehicle-sbb-flirt` | SBB FLIRT | series, Stadler FLIRT, cab face, Jacobs bogies | `unit`, `cars` 2 - 8 | RABe 523 021; 21.03 m end cars, 16.1 m middle cars; 160 km/h |
-| `proc-vehicle-sbb-kiss` | SBB KISS | series, Stadler KISS | `unit`, `cars` 2 - 8 | double-deck; 160 km/h |
+| `proc-vehicle-sbb-flirt` | SBB FLIRT | series, Stadler FLIRT, cab face, Jacobs bogies | `unit`, `cars` 2 - 4 | RABe 523 021; 21.03 m end cars, 16.1 m middle cars; 160 km/h |
+| `proc-vehicle-sbb-kiss` | SBB KISS | series, Stadler KISS | `unit`, `cars` 2 - 6 | double-deck; 160 km/h |
 | `proc-vehicle-rhb-allegra` | RhB Allegra | series, metre gauge | `unit` (three cars) | 2.65 m wide; 120 km/h |
 | `proc-vehicle-sbb-re460` | SBB Re 460 | box locomotive, its own profile (below) | - | Bo-Bo, 18.5 m, 6,100 kW, 230 km/h; 460 014-4 |
 | `proc-vehicle-sbb-re420` | SBB Re 4/4 II | box locomotive, flat | `livery` (`green`, `red`) | Bo-Bo, 15.41 m, 4,700 kW, 140 km/h |

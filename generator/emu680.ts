@@ -38,7 +38,7 @@ export const CD680_PARAMS: readonly ParamSpec[] = [
     train: "Full train",
   }),
   {
-    ...enumParam("cars", "Cars", Object.fromEntries([3, 4, 5, 6, 7, 8].map((n) => [String(n), `${n} cars`]))),
+    ...enumParam("cars", "Cars", Object.fromEntries([3, 4, 5, 6, 7].map((n) => [String(n), `${n} cars`]))),
     default: "4",
     when: { name: "unit", values: ["train"] },
   },
@@ -329,17 +329,16 @@ function drawCar(c: Coach, unit: PendolinoUnit, o: { inTrain: boolean; raised: b
 
 // --- the full train -----------------------------------------------------------------------------
 
-/** The train's lengths in cars, the end cars included. */
+/** The train's lengths in cars, the end cars included: up to the real seven-car set. */
 export const CD680_MIN_CARS = 3;
-export const CD680_MAX_CARS = 8;
+export const CD680_MAX_CARS = 7;
 
 /**
- * The intermediate cars of a train of 3 .. 8, front to back. The prototype's
- * seven cars are the reference (683, 686, 685, 683, 686 between the end cars);
- * the 685, the pantograph car the train collects with, is always there. Ahead
- * of it the 683 with its kitchen (from four cars) and then the 686 (from five);
- * behind it a 686 (from six), the second 683 ahead of that (seven, the
- * prototype) and a further 686 at the back (eight).
+ * The intermediate cars of a train of 3 .. 7, front to back: the prototype's
+ * seven cars (683, 686, 685, 683, 686 between the end cars) the longest, never
+ * more. The 685, the pantograph car the train collects with, is always there.
+ * Ahead of it the 683 with its kitchen (from four cars) and then the 686 (from
+ * five); behind it a 686 (from six) and the second 683 ahead of that (seven).
  */
 const MIDDLE: Record<number, PendolinoUnit[]> = {
   1: ["car685"],
@@ -347,7 +346,6 @@ const MIDDLE: Record<number, PendolinoUnit[]> = {
   3: ["car683", "car686", "car685"],
   4: ["car683", "car686", "car685", "car686"],
   5: ["car683", "car686", "car685", "car683", "car686"],
-  6: ["car683", "car686", "car685", "car683", "car686", "car686"],
 };
 
 export interface PendolinoSlot {

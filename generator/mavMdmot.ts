@@ -27,9 +27,9 @@ import { bogieParts, coachBody, fitUnit, roofPart, shiftBody, sideGlass, turnBod
 
 export type MdmotUnit = "motorCar" | "trailerAx" | "trailerBx" | "drivingTrailer";
 
-/** The full train's car counts: the motor car and the driving trailer, up to six trailers between them. */
+/** The full train's car counts: the motor car and the driving trailer, up to the real four-car set (two trailers between them). */
 export const MDMOT_MIN_CARS = 2;
-export const MDMOT_MAX_CARS = 8;
+export const MDMOT_MAX_CARS = 4;
 
 export const MDMOT_PARAMS: readonly ParamSpec[] = [
   enumParam("unit", "Car", {
@@ -365,7 +365,7 @@ export interface MdmotSlot {
  * the driving trailer alone. Centred on x = 0.
  */
 export function mdmotTrain(n: number): MdmotSlot[] {
-  if (!Number.isInteger(n) || n < 2) throw new Error(`an MDmot train of ${n} cars`);
+  if (!Number.isInteger(n) || n < MDMOT_MIN_CARS || n > MDMOT_MAX_CARS) throw new Error(`an MDmot train of ${n} cars (the real set has ${MDMOT_MAX_CARS} at most)`);
   const middle: MdmotUnit[] = n === 2 ? [] : [...Array.from({ length: n - 3 }, (): MdmotUnit => "trailerBx"), "trailerAx"];
   const cars: MdmotUnit[] = ["motorCar", ...middle, "drivingTrailer"];
   let hi = cars.reduce((t, car) => t + LAYOUTS[car].length, 0) / 2;

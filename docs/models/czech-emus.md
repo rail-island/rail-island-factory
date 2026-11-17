@@ -1,6 +1,6 @@
 # Czech electric units
 
-**Covers** - the parametric `veh-cd-471` (CD 471 CityElefant: three cars and the full train of 2 to 8, three variants, CD's current blue from a photograph) and `veh-cd-680` (CD 680 Pendolino: four cars and the full train of 3 to 8) from vlakosimdb: what each parameter value builds, the shared EMU parts, the scales from the XML to the published dimensions, the measured comparison and the tests.
+**Covers** - the parametric `veh-cd-471` (CD 471 CityElefant: three cars and the full train of 2 or 3, three variants, CD's current blue from a photograph) and `veh-cd-680` (CD 680 Pendolino: four cars and the full train of 3 to 7) from vlakosimdb: what each parameter value builds, the shared EMU parts, the scales from the XML to the published dimensions, the measured comparison and the tests.
 **Code** - `generator/emu471.ts`, `generator/emu680.ts`, `generator/emuParts.ts`, `generator/letters.ts` (the blue's wordmark), `generator/emuComparison.ts`, `generator/emuReport.ts`, `generator/csdCoachParts.ts` (the body builder), `test/czechEmus.test.ts`, `test/cd471Train.test.ts`, `assets/cd-471/`, `assets/cd-680/`
 **See also** - [czech-emus-classic.md](czech-emus-classic.md) (the CD 451, 460 and 470), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [bmo-double-deck.md](bmo-double-deck.md), [CD 471 sources](../../assets/cd-471/SOURCES.md), [CD 680 sources](../../assets/cd-680/SOURCES.md)
 
@@ -88,13 +88,11 @@ vlakosimdb layout and is not drawn; the inner end walls and end doors stay white
 
 ### The CityElefant full train
 
-`unit` `train` builds the set in any variant, `cars` 2 to 8 vehicles long, the
-three-car set by default. `cd471Train(n)` lays it out front to back: the 471 motor
+`unit` `train` builds the set in any variant, `cars` 2 or 3 vehicles long, the
+three-car set by default - never longer than the real set. `cd471Train(n)` lays it out front to back: the 471 motor
 car with its cab ahead, n - 2 trailers 071, the driving trailer 971 turned at the
-rear (its cab facing -X); 2 cars are the motor car and the driving trailer. A
-longer train adds trailers to the one set rather than coupling a second set (the
-prototype runs two sets cab to cab for six cars): it keeps every length from 2 to
-8, odd ones included, with one pantograph and a cab at each end. Each car is a
+rear (its cab facing -X); 2 cars are the motor car and the driving trailer.
+Coupling two sets cab to cab (the prototype's six cars) is left to the player. Each car is a
 section (`articulate`, `tramKit.ts`) hinged at the coupling plane ahead of it at the
 coupler bar's height (0.72 m), drawn by the lone car's builder into the train's
 (`elefantCar(unit, variant, m)`), on its own two bogies; a bellows joint covers each
@@ -126,7 +124,7 @@ published 27.7 m and 25.9 m and narrows them to 2.8 m. Heights are the XML's.
 
 ### The full train
 
-`unit` `train` builds the whole train of `cars` (3 to 8, default 4), the end
+`unit` `train` builds the whole train of `cars` (3 to 7, default 4; never longer than the real set), the end
 cars included. `pendolinoTrain(n)` lays the cars out front to back, the train
 centred on x = 0, the rear end car turned (its cab at -X). The prototype's
 seven cars - end car, 683, 686, 685, 683, 686, end car (the 7-car formation in
@@ -140,11 +138,9 @@ is in every train. Between the end cars:
 | 5 | 683, 686, 685 |
 | 6 | 683, 686, 685, 686 |
 | 7 | 683, 686, 685, 683, 686 (the prototype) |
-| 8 | 683, 686, 685, 683, 686, 686 |
 
 That is: ahead of the 685 the 683 with its kitchen (from four cars) and the
-686 (from five); behind it a 686 (from six), the second 683 (seven) and a
-further 686 (eight). The train is one articulated vehicle: each car a section
+686 (from five); behind it a 686 (from six) and the second 683 (seven). The train is one articulated vehicle: each car a section
 (`articulate`, tramKit.ts) hinged at the coupling plane ahead of it, bellows
 over each gap between the end walls, every car on its own two tilting bogies
 (the supports of its section). The cars are the lone cars' drawing; inside the

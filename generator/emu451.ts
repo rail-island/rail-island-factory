@@ -36,9 +36,9 @@ export const K_X = 95.29 / 98.8;
 export type Unit451 = "motorCar" | "trailer";
 export type Livery451 = "cd" | "cdBlue";
 
-/** The full train's lengths: two motor cars back to back up to eight cars; four (the basic unit) by default. */
+/** The full train's lengths: two motor cars back to back up to the real four-car unit (the default); never longer than the prototype. */
 export const CD451_MIN_CARS = 2;
-export const CD451_MAX_CARS = 8;
+export const CD451_MAX_CARS = 4;
 /** The basic unit, the default train: motor car, two trailers, motor car. */
 export const CD451_UNIT_CARS = 4;
 
@@ -511,7 +511,7 @@ const CD_451_GAME: GameProperties = {
   }),
 };
 
-export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-451", game: CD_451_GAME, title: "CD 451 Zabotlam", build: cd451, buildLod: cd451Lod, lodTriangles: 500, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
+export const EMU451_DESIGNS: ProceduralDesign[] = [{ id: "proc-vehicle-cd-451", game: CD_451_GAME, title: "CD 451 Zabotlam", build: cd451, buildLod: cd451Lod, lodTriangles: 300, params: CD451_PARAMS, catalog: EMU_CATALOG, references: "cd-451" }];
 
 /** A car's source mapping and the body x of its centre, for the comparison. */
 export const frame451 = (unit: Unit451): { F: CarFrame; centre: number } => ({ F: CARS[unit].F, centre: (CARS[unit].front + CARS[unit].rear) / 2 });

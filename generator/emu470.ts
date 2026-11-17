@@ -32,9 +32,9 @@ export const K_X = 132 / (5 * 24.5);
 
 export type Unit470 = "motorCar" | "trailer";
 
-/** The full train's vehicle counts: two motor cars and 0 .. 6 trailers; four by default. */
+/** The full train's vehicle counts: two motor cars and 0 .. 3 trailers, up to the prototype's five cars; four by default. */
 export const CD470_MIN_CARS = 2;
-export const CD470_MAX_CARS = 8;
+export const CD470_MAX_CARS = 5;
 export const CD470_DEFAULT_CARS = 4;
 
 export const CD470_PARAMS: readonly ParamSpec[] = [

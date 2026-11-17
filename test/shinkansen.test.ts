@@ -96,13 +96,14 @@ describe("the later Shinkansen", () => {
     expect(shinkansenTrain(SHINKANSEN_SERIES["proc-vehicle-shinkansen-n700s"]!, 3).map((x) => x.pantograph)).toEqual([false, true, false]);
   });
 
-  it("offers every train length from two end cars back to back up to eight, keeping the default", () => {
+  it("offers every train length from two end cars back to back up to the longest real formation, keeping the default", () => {
     const n700s = SHINKANSEN_SERIES["proc-vehicle-shinkansen-n700s"]!;
     expect(carsOf(n700s)).toEqual([2, 3, 4, 5, 6, 7, 8]);
     const cars = SHINKANSEN_DESIGNS[0]!.params!.find((p) => p.name === "cars")!;
     expect(cars.default).toBe("4");
-    // a listed formation only sets the default: a unit of [5] offers 2 - 8 and defaults to 5
-    expect(carsOf({ ...n700s, cars: [5] })).toEqual([2, 3, 4, 5, 6, 7, 8]);
+    // never longer than the prototype: a unit of [5] offers 2 - 5, one of [4, 8] 2 - 8
+    expect(carsOf({ ...n700s, cars: [5] })).toEqual([2, 3, 4, 5]);
+    expect(carsOf({ ...n700s, cars: [4, 8] })).toEqual([2, 3, 4, 5, 6, 7, 8]);
     // a unit without intermediate cars keeps its own lengths
     expect(carsOf({ ...n700s, cars: [2] })).toEqual([2]);
     // two end cars raise the rear one's pantograph; there is no intermediate car to carry it

@@ -57,17 +57,17 @@ describe("the older Czech electric units", () => {
     expect(DESIGNS.map((d) => d.references)).toEqual(["cd-451", "cd-460", "cd-470"]);
     expect(CD451_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "motorCar", ["motorCar", "trailer", "train"]],
-      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
+      ["cars", "4", ["2", "3", "4"]],
       ["livery", "cd", ["cd", "cdBlue"]],
     ]);
     expect(CD460_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "motorCar", ["motorCar", "trailer", "train"]],
-      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
+      ["cars", "4", ["2", "3", "4", "5"]],
       ["livery", "cd", ["cd", "cd003", "cd007", "csd", "cdBlue"]],
     ]);
     expect(CD470_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "motorCar", ["motorCar", "trailer", "train"]],
-      ["cars", "4", ["2", "3", "4", "5", "6", "7", "8"]],
+      ["cars", "4", ["2", "3", "4", "5"]],
     ]);
   });
 
@@ -252,23 +252,23 @@ describe("the older Czech electric units", () => {
 
 describe("the CD 451 and CD 460 full trains", () => {
   const TRAINS = [
-    { id: "proc-vehicle-cd-451", d: EMU451_DESIGNS[0]!, build: cd451, lod: cd451Lod, formation: cd451Train, length: length451, liveries: ["cd", "cdBlue"], weight: { motorCar: 59, trailer: 40 }, power: 660 },
-    { id: "proc-vehicle-cd-460", d: EMU460_DESIGNS[0]!, build: cd460, lod: cd460Lod, formation: cd460Train, length: length460, liveries: ["cd", "cd003", "cd007", "csd", "cdBlue"], weight: { motorCar: 40, trailer: 40 }, power: 1000 },
+    { id: "proc-vehicle-cd-451", d: EMU451_DESIGNS[0]!, build: cd451, lod: cd451Lod, formation: cd451Train, length: length451, liveries: ["cd", "cdBlue"], weight: { motorCar: 59, trailer: 40 }, power: 660, sizes: [2, 3, 4] },
+    { id: "proc-vehicle-cd-460", d: EMU460_DESIGNS[0]!, build: cd460, lod: cd460Lod, formation: cd460Train, length: length460, liveries: ["cd", "cd003", "cd007", "csd", "cdBlue"], weight: { motorCar: 40, trailer: 40 }, power: 1000, sizes: [2, 3, 4, 5] },
   ] as const;
-  const SIZES = [2, 3, 4, 5, 6, 7, 8];
 
   it("is one unit, its cars joined by gangways: a motor car at each end, trailers between - never two units coupled cab to cab", () => {
     // M a motor car with its cab leading, m one turned (cab at the rear), T a trailer
     const form = (slots: ReturnType<typeof cd451Train>) => slots.map((s) => (s.car === "trailer" ? "T" : s.turned ? "m" : "M")).join("");
     const one = (n: number) => "M" + "T".repeat(n - 2) + "m";
-    expect(SIZES.map((n) => form(cd451Train(n)))).toEqual(SIZES.map(one));
-    expect(SIZES.map((n) => form(cd460Train(n)))).toEqual(SIZES.map(one));
+    for (const t of TRAINS) expect(t.sizes.map((n) => form(t.formation(n)))).toEqual(t.sizes.map(one));
+    // never longer than the real unit: the 451's four cars, the 460's five
     expect(() => cd451Train(1)).toThrow();
-    expect(() => cd460Train(9)).toThrow();
+    expect(() => cd451Train(5)).toThrow();
+    expect(() => cd460Train(6)).toThrow();
   });
 
   for (const t of TRAINS)
-    for (const n of SIZES)
+    for (const n of t.sizes)
       it(`${t.id}: a ${n}-car train is one articulated vehicle, a section per car on its own bogies, centred`, () => {
         const slots = t.formation(n);
         const total = slots.reduce((a, s) => a + t.length(s.car), 0);
@@ -297,11 +297,11 @@ describe("the CD 451 and CD 460 full trains", () => {
 
   for (const t of TRAINS)
     it(`${t.id}: the rear motor car is turned (its cab at -X), a bellows over every joint; same bytes twice`, () => {
-      const m = t.build({ unit: "train", cars: "6" });
+      const m = t.build({ unit: "train", cars: "4" });
       const nodes = leaves(m.sourceTree(t.id, t.id).root);
       // the cab windscreen pillars or windscreens of each car, by car
       const cabs = (k: number) => bounds(nodes, new RegExp(`^section${k - 1}/car-${k}/cab/`));
-      const slots = t.formation(6);
+      const slots = t.formation(4);
       for (const [k, s] of slots.entries()) {
         if (s.car !== "motorCar") continue;
         const b = cabs(k + 1);
@@ -310,19 +310,19 @@ describe("the CD 451 and CD 460 full trains", () => {
         expect(s.turned ? b.max[0]! < cx : b.min[0]! > cx, `car ${k + 1}`).toBe(true);
       }
       // only the last car is turned; every joint a gangway's bellows reaching up the body (no low coupler joint between two cabs)
-      expect(slots.map((s) => s.turned)).toEqual([false, false, false, false, false, true]);
+      expect(slots.map((s) => s.turned)).toEqual([false, false, false, true]);
       for (const j of m.rig!.joints!) expect(Math.max(...j.profile.map((p) => p[1]))).toBeGreaterThan(3);
-      expect(Buffer.from(m.toGlb("a")).equals(Buffer.from(t.build({ unit: "train", cars: "6" }).toGlb("a")))).toBe(true);
+      expect(Buffer.from(m.toGlb("a")).equals(Buffer.from(t.build({ unit: "train", cars: "4" }).toGlb("a")))).toBe(true);
     });
 
   for (const t of TRAINS)
     it(`${t.id}: the distant model of every train keeps its sections within 100 triangles a car`, () => {
-      expect(t.d.lodTriangles).toBe(500);
-      for (const n of SIZES) {
+      expect(t.d.lodTriangles).toBe(300);
+      for (const n of t.sizes) {
         const low = buildLodModel(t.d, { unit: "train", cars: String(n) });
         expect(low.triangleCount()).toBeGreaterThan(0);
         expect(low.triangleCount()).toBeLessThanOrEqual(trainLodBudget(n));
-        expect(trainLodBudget(n)).toBeLessThanOrEqual(Math.min(n > 5 ? 500 : 300, 100 * n));
+        expect(trainLodBudget(n)).toBe(Math.min(300, 100 * n));
         expect(low.rig!.sections).toHaveLength(n);
         expect(low.rig!.joints).toHaveLength(n - 1);
       }
@@ -333,7 +333,7 @@ describe("the CD 451 and CD 460 full trains", () => {
     it(`${t.id}: every train length in every livery is a game variant, its cars added up`, () => {
       const variants = t.d.game!.variants!;
       for (const livery of t.liveries)
-        for (const n of SIZES) {
+        for (const n of t.sizes) {
           const params = { ...(n === 4 ? {} : { cars: String(n) }), ...(livery === "cd" ? {} : { livery }), unit: "train" };
           const v = variants.find((x) => JSON.stringify(Object.entries(x.params).sort()) === JSON.stringify(Object.entries(params).sort()));
           expect(v, `${livery} ${n}`).toBeDefined();

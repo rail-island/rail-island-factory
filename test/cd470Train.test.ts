@@ -12,8 +12,8 @@ const SIZES = Array.from({ length: CD470_MAX_CARS - CD470_MIN_CARS + 1 }, (_, i)
 const design = EMU470_DESIGNS[0]!;
 
 describe("the CD 470 full train", () => {
-  it("offers 2 to 8 cars, four by default: a motor car at each end (the rear one turned), trailers between", () => {
-    expect(SIZES).toEqual([2, 3, 4, 5, 6, 7, 8]);
+  it("offers 2 to 5 cars - never more than the prototype - four by default: a motor car at each end (the rear one turned), trailers between", () => {
+    expect(SIZES).toEqual([2, 3, 4, 5]);
     expect(CD470_DEFAULT_CARS).toBe(4);
     for (const n of SIZES) {
       const slots = cd470Train(n);
@@ -27,10 +27,10 @@ describe("the CD 470 full train", () => {
     // the prototype's five-car set over its published 132 m
     expect(cd470Train(5)[0]!.hi - cd470Train(5)[4]!.lo).toBeCloseTo(132, 3);
     expect(() => cd470Train(1)).toThrow();
-    expect(() => cd470Train(9)).toThrow();
+    expect(() => cd470Train(6)).toThrow();
   });
 
-  for (const n of [2, 4, 8])
+  for (const n of [2, 4, 5])
     it(`a ${n}-car train: one section a car hinged at its coupling plane, two bogies each, its length, in budget`, () => {
       const slots = cd470Train(n);
       const m = cd470({ unit: "train", cars: String(n) });

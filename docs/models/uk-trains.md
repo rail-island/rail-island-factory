@@ -18,8 +18,8 @@ The catalog had no British train before; the archived webapp Eurostar is now the
 | `proc-vehicle-eurostar-373` | Eurostar e300 | series, cab face, Jacobs trailers | `unit`, `cars` 3 - 8, `livery` (`eurostar`, `eurostar2011`) | power car 22.15 m, trailer 18.7 m; 300 km/h |
 | `proc-vehicle-br-class-158` | Class 158 | its own cars on bogies (`brClass158.ts`) | `unit`, `livery` (`regional`, `northern`) | two cars of 22.57 m, 2.70 m wide; 145 km/h |
 | `proc-vehicle-br-class-142` | Class 142 Pacer | its own two-axle cars (`brClass142.ts`) | `unit`, `livery` (`provincial`, `northern`, `walesTeal`, `provincialBlue`, `metro`, `walesWrap`) | two cars of 15.45 m; 120 km/h |
-| `proc-vehicle-br-class-378` | Class 378 Capitalstar | series, two doors a side | `unit`, `cars` 2 - 8 | Electrostar, 2.80 m wide, end car 20.4 m, middle 20.1 m; 2,400 kW a five-car unit; 121 km/h |
-| `proc-vehicle-lu-1938-stock` | London 1938 Stock | series, metro, flat domed cab | `unit`, `cars` 2 - 8 | tube profile, 2.62 m by 2.88 m; 72 km/h |
+| `proc-vehicle-br-class-378` | Class 378 Capitalstar | series, two doors a side | `unit`, `cars` 2 - 5 | Electrostar, 2.80 m wide, end car 20.4 m, middle 20.1 m; 2,400 kW a five-car unit; 121 km/h |
+| `proc-vehicle-lu-1938-stock` | London 1938 Stock | series, metro, flat domed cab | `unit`, `cars` 2 - 7 | tube profile, 2.62 m by 2.88 m; 72 km/h |
 | `proc-vehicle-br-class-55` | Class 55 Deltic | box locomotive, bonnets | `livery` (`twoToneGreen`, `brBlue`) | Co-Co, 21.18 m, 2,460 kW, 160 km/h |
 | `proc-vehicle-br-class-37` | Class 37 | box locomotive, bonnets | `livery` (`green`, `brBlue`, `railfreight`) | Co-Co, 18.75 m, 1,300 kW, 145 km/h |
 | `proc-vehicle-br-class-47` | Class 47 | box locomotive, raked | `livery` (`twoToneGreen`, `brBlue`, `intercity`) | Co-Co, 19.38 m, 1,925 kW, 153 km/h |

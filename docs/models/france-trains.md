@@ -12,10 +12,10 @@ repeated. Every design is filed under France (`generator/factTable.ts`).
 | id | title | kit | parameters | figures (game) |
 |---|---|---|---|---|
 | `proc-vehicle-sncf-tgv-m` | TGV M | series, double-deck | `unit`, `cars` 3 - 8, `livery` (`inoui`, `ouigo`) | end 22.15 m, middle 20.6 m; 320 km/h |
-| `proc-vehicle-sncf-z20500` | SNCF Z 20500 | series, double-deck, flat cab | `unit`, `cars` 2 - 8, `livery` (`transilien`, `ileDeFrance`) | 26.4 / 24.28 m; 140 km/h |
+| `proc-vehicle-sncf-z20500` | SNCF Z 20500 | series, double-deck, flat cab | `unit`, `cars` 2 - 5, `livery` (`transilien`, `ileDeFrance`) | 26.4 / 24.28 m; 140 km/h |
 | `proc-vehicle-ratp-mi09` | RER MI 09 | series, double-deck, cab face | `unit` (five cars) | 23.6 / 21.0 m, three wide doors a side; 120 km/h |
-| `proc-vehicle-sncf-regio2n` | Regio 2N | series, double-deck | `unit`, `cars` 2 - 8, `livery` (`ter`, `transilien`) | 17.9 / 16.0 m; 160 km/h |
-| `proc-vehicle-sncf-regiolis` | Regiolis | series | `unit`, `cars` 2 - 8, `livery` (`ter`, `grandEst`) | 19.0 / 15.5 m; 160 km/h |
+| `proc-vehicle-sncf-regio2n` | Regio 2N | series, double-deck | `unit`, `cars` 2 - 6, `livery` (`ter`, `transilien`) | 17.9 / 16.0 m; 160 km/h |
+| `proc-vehicle-sncf-regiolis` | Regiolis | series | `unit`, `cars` 2 - 6, `livery` (`ter`, `grandEst`) | 19.0 / 15.5 m; 160 km/h |
 | `proc-vehicle-sncf-x3800` | SNCF X 3800 Picasso | series, diesel, single, cab face, roof turret | - | 21.85 m over buffers; 120 km/h |
 | `proc-vehicle-sncf-x73500` | SNCF X 73500 | series, diesel, single | `livery` (`ter`, `alsace`) | 28.9 m; 140 km/h |
 | `proc-vehicle-sncf-cc6500` | SNCF CC 6500 | box locomotive, nez casse | `livery` (`capitole`, `maurienne`, `beton`) | C-C, 20.19 m, 5,900 kW, 200 km/h |

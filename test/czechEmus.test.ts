@@ -45,12 +45,12 @@ describe("the Czech electric units", () => {
     }
     expect(CD471_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "motorCar", ["motorCar", "trailer", "drivingTrailer", "train"]],
-      ["cars", "3", ["2", "3", "4", "5", "6", "7", "8"]],
+      ["cars", "3", ["2", "3"]],
       ["variant", "cd471", ["cd471", "cd675", "cdBlue"]],
     ]);
     expect(CD680_PARAMS.map((p) => [p.name, p.default, p.values.map((v) => v.value)])).toEqual([
       ["unit", "endCar", ["endCar", "car683", "car685", "car686", "train"]],
-      ["cars", "4", ["3", "4", "5", "6", "7", "8"]],
+      ["cars", "4", ["3", "4", "5", "6", "7"]],
     ]);
     expect(CD680_PARAMS[1]!.when).toEqual({ name: "unit", values: ["train"] });
   });
@@ -197,8 +197,7 @@ describe("the Czech electric units", () => {
     expect(order(6)).toEqual(["endCar", "car683", "car686", "car685", "car686", "endCar"]);
     // the prototype (generator/openttdTable.ts's 7-car formation)
     expect(order(7)).toEqual(["endCar", "car683", "car686", "car685", "car683", "car686", "endCar"]);
-    expect(order(8)).toEqual(["endCar", "car683", "car686", "car685", "car683", "car686", "car686", "endCar"]);
-    for (let n = 3; n <= 8; n++) {
+    for (let n = 3; n <= 7; n++) {
       const slots = pendolinoTrain(n);
       expect(slots.length).toBe(n);
       expect(slots.map((s) => s.turned)).toEqual(slots.map((_, i) => i === n - 1));
@@ -213,10 +212,10 @@ describe("the Czech electric units", () => {
       });
     }
     expect(() => pendolinoTrain(2)).toThrow();
-    expect(() => pendolinoTrain(9)).toThrow();
+    expect(() => pendolinoTrain(8)).toThrow();
   });
 
-  it.each([3, 4, 8])("CD 680 full train of %i cars: a section per car, a joint per gap, two bogies a car, its length and budget", (n) => {
+  it.each([3, 4, 7])("CD 680 full train of %i cars: a section per car, a joint per gap, two bogies a car, its length and budget", (n) => {
     const m = cd680({ unit: "train", cars: String(n) });
     const { stats: s, nodes } = built(m, "proc-vehicle-cd-680");
     const slots = pendolinoTrain(n);
@@ -257,7 +256,7 @@ describe("the Czech electric units", () => {
   });
 
   it("CD 680 full train: the distant model has the train's sections and joints, 100 triangles a car, 500 at most", () => {
-    for (let n = 3; n <= 8; n++) {
+    for (let n = 3; n <= 7; n++) {
       const full = cd680({ unit: "train", cars: String(n) }).rig!;
       const low = cd680Lod({ unit: "train", cars: String(n) });
       expect(low.rig!.sections!.map((sec) => sec.pivot)).toEqual(full.sections!.map((sec) => sec.pivot));
@@ -270,7 +269,7 @@ describe("the Czech electric units", () => {
 
   it("CD 680 game properties: every train length weighs its cars and has its motored cars' power", () => {
     const game = EMU680_DESIGNS[0]!.game!;
-    for (let n = 3; n <= 8; n++) {
+    for (let n = 3; n <= 7; n++) {
       const v = game.variants!.find((x) => x.params.unit === "train" && (x.params.cars ?? "4") === String(n))!;
       expect(v).toBeDefined();
       expect(v.weight).toBe(40 * n);

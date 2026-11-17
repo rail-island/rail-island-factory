@@ -190,12 +190,14 @@ shinkansen-0.md, tgv-duplex.md):
    gangway between them (a railbus and its trailers, a metro's cars), get no
    `train` at all. The `train` value has a `cars` parameter for its
    length (`when: { name: "unit", values: ["train"] }`), counting every vehicle
-   including the power or end cars. **Offer at most eight cars, and default to
+   including the power or end cars. **Never offer a train longer than the
+   prototype's longest real unit, and at most eight cars; default to
    at most four** (four for the TGV Duplex, the Shinkansen 0 series and the VT
    18.16), even when the prototype's usual formation is longer; the full
    prototype formation may still be the reference the formation function is
    tested against. Offer every count from the shortest sensible train up to
-   eight, **odd counts included**: when the prototype pairs its motor cars,
+   that longest one (the CD 451's four cars, the CD 471's three, the CD 680's
+   seven), **odd counts included**: when the prototype pairs its motor cars,
    give the formation rule a group of three (one pantograph car feeding two
    neighbours) rather than leaving the odd lengths out. When you shorten an
    existing train, list the removed counts as `retired` values resolving to

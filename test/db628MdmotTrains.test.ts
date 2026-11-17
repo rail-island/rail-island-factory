@@ -105,7 +105,7 @@ describe("the MAV MDmot full train", () => {
     expect(cars(2)).toEqual(["motorCar", "drivingTrailer"]);
     expect(cars(3)).toEqual(["motorCar", "trailerAx", "drivingTrailer"]);
     expect(cars(4)).toEqual(["motorCar", "trailerBx", "trailerAx", "drivingTrailer"]);
-    expect(cars(6)).toEqual(["motorCar", "trailerBx", "trailerBx", "trailerBx", "trailerAx", "drivingTrailer"]);
+    expect(() => mdmotTrain(5)).toThrow();
     for (const n of MD_SIZES) {
       const slots = mdmotTrain(n);
       expect(slots.map((s) => s.turned)).toEqual(slots.map((_, k) => k === n - 1));
@@ -144,8 +144,8 @@ describe("the MAV MDmot full train", () => {
   });
 
   it("builds the same bytes twice and keeps a distant model of every train", () => {
-    const a = mavMdmot({ unit: "train", cars: "5" }).toGlb("a");
-    expect(Buffer.from(a).equals(Buffer.from(mavMdmot({ unit: "train", cars: "5" }).toGlb("a")))).toBe(true);
+    const a = mavMdmot({ unit: "train", cars: "3" }).toGlb("a");
+    expect(Buffer.from(a).equals(Buffer.from(mavMdmot({ unit: "train", cars: "3" }).toGlb("a")))).toBe(true);
     const d = MDMOT_DESIGNS[0]!;
     for (const n of MD_SIZES) {
       const low = buildLodModel(d, { unit: "train", cars: String(n) });

@@ -38,9 +38,9 @@ export const K_Z = 2.82 / 3.0;
 export type ElefantUnit = "motorCar" | "trailer" | "drivingTrailer";
 export type ElefantVariant = "cd471" | "cd675" | "cdBlue";
 
-/** The full train's vehicle counts: motor car and driving trailer, 0 .. 6 trailers between; the three-car set by default. */
+/** The full train's vehicle counts: motor car and driving trailer, at most the one trailer of the real three-car set (the default). */
 export const CD471_MIN_CARS = 2;
-export const CD471_MAX_CARS = 8;
+export const CD471_MAX_CARS = 3;
 export const CD471_DEFAULT_CARS = 3;
 
 export const CD471_PARAMS: readonly ParamSpec[] = [

@@ -1,6 +1,6 @@
 # Foreign multiple units
 
-**Covers** - the parametric `veh-db-628` (DB 628: the motor car, the set's three n-Wagen coaches and the full train, one 628 unit of two cars; two liveries), `veh-mav-mdmot` (MAV MDmot, four cars and the full train of 2 to 8 cars), `veh-ice-1` (ICE 1, three cars and the full train of 3 to 8 vehicles) and `veh-tgv` (TGV: the power car, the articulated trailer set of 1 to 6 cars and the full train of 3 to 8 vehicles, in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV set's Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
+**Covers** - the parametric `veh-db-628` (DB 628: the motor car, the set's three n-Wagen coaches and the full train, one 628 unit of two cars; two liveries), `veh-mav-mdmot` (MAV MDmot, four cars and the full train of 2 to 4 cars), `veh-ice-1` (ICE 1, three cars and the full train of 3 to 8 vehicles) and `veh-tgv` (TGV: the power car, the articulated trailer set of 1 to 6 cars and the full train of 3 to 8 vehicles, in two liveries) from vlakosimdb: what each parameter value builds, how the cars couple (the TGV set's Jacobs bogies), the scales from the XML to the published dimensions, the shared parts, the measured comparison and the tests.
 **Code** - `generator/db628.ts`, `generator/dbNWagen.ts` (the 628's coach cars), `generator/mavMdmot.ts`, `generator/ice1.ts` (and the ICE trains' shared builder), `generator/tgv.ts`, `generator/unitParts.ts`, `generator/unitComparison.ts`, `generator/unitReport.ts`, `generator/unitViews.ts`, `generator/csdCoachParts.ts` (the body builder), `generator/emuParts.ts` (pantograph, centre coupler, sloped panels), `test/foreignUnits.test.ts`, `test/db628MdmotTrains.test.ts`, `test/iceTrains.test.ts`, `assets/db-628/`, `assets/mav-mdmot/`, `assets/ice-1/`, `assets/tgv/`
 **See also** - [czech-emus.md](czech-emus.md) (the same method for the CD 471 and CD 680), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the coach builder and the comparison method), [DB 628 sources](../../assets/db-628/SOURCES.md), [MDmot sources](../../assets/mav-mdmot/SOURCES.md), [ICE 1 sources](../../assets/ice-1/SOURCES.md), [TGV sources](../../assets/tgv/SOURCES.md)
 
@@ -90,7 +90,7 @@ The archived Eurostar (`train-emu-eurostar-*` in the webapp's
 - **MDmot**: buffers and screw couplings at both ends of every car (the published
   lengths over buffers); trailers and the Btx have gangway bellows at their inner
   ends. A four-car set is MDmot, Bx, Ax, Btx (82.38 m, the published length).
-- **MDmot full train** (`unit: train`, `cars` 2 .. 8, default 4): `mdmotTrain(n)`
+- **MDmot full train** (`unit: train`, `cars` 2 .. 4, default 4 - the real set, never longer): `mdmotTrain(n)`
   lays out the motor car, n - 3 Bx trailers, the Ax and the Btx turned at the rear
   (a two-car train is MDmot and Btx, a three-car one adds the Ax), centred on
   x = 0. One articulated vehicle like the 628's: a 1.40 m bellows between two

@@ -13,8 +13,8 @@ const VARIANTS = ["cd471", "cd675", "cdBlue"];
 const design = EMU471_DESIGNS[0]!;
 
 describe("the CD 471 full train", () => {
-  it("offers 2 to 8 cars, the three-car set by default: the motor car ahead, trailers, the driving trailer turned at the rear", () => {
-    expect(SIZES).toEqual([2, 3, 4, 5, 6, 7, 8]);
+  it("offers 2 or 3 cars - never more than the real set, the default: the motor car ahead, trailers, the driving trailer turned at the rear", () => {
+    expect(SIZES).toEqual([2, 3]);
     expect(CD471_DEFAULT_CARS).toBe(3);
     expect(cd471Train(2).map((s) => s.car)).toEqual(["motorCar", "drivingTrailer"]);
     expect(cd471Train(3).map((s) => s.car)).toEqual(["motorCar", "trailer", "drivingTrailer"]);
@@ -29,10 +29,10 @@ describe("the CD 471 full train", () => {
     // 26.05 m cab cars and a 25.7 m trailer: the three-car set 77.8 m over its couplers
     expect(cd471Train(3)[0]!.hi - cd471Train(3)[2]!.lo).toBeCloseTo(77.8, 3);
     expect(() => cd471Train(1)).toThrow();
-    expect(() => cd471Train(9)).toThrow();
+    expect(() => cd471Train(4)).toThrow();
   });
 
-  for (const [n, variant] of [[2, "cd471"], [3, "cdBlue"], [8, "cd675"]] as const)
+  for (const [n, variant] of [[2, "cd471"], [3, "cdBlue"], [3, "cd675"]] as const)
     it(`a ${n}-car train (${variant}): one section a car hinged at its coupling plane, two bogies each, its length, in budget`, () => {
       const slots = cd471Train(n);
       const m = cd471({ unit: "train", cars: String(n), variant });

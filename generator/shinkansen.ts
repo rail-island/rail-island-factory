@@ -209,7 +209,7 @@ export interface ShinkansenSeries {
   traction?: "electric" | "diesel" | "none";
   /** A diesel unit's exhaust stack, d behind the body's +X end of every car (default the car's middle): over the engine. */
   exhaustAt?: number;
-  /** The prototype's train lengths: they set the default (4 when listed, else the shortest); every length from the shortest sensible train to eight is offered (`carsOf`). */
+  /** The prototype's train lengths: they set the default (4 when listed, else the shortest) and the longest train offered; every length from the shortest sensible train to the longest is offered (`carsOf`). */
   cars?: readonly number[];
   /** The shortest full train offered, where `minSeriesCars`' rule does not fit (the TGV M's power cars need a trailer between them). */
   minCars?: number;
@@ -387,14 +387,15 @@ export const MAX_SERIES_CARS = 8;
 export const minSeriesCars = (s: ShinkansenSeries): number =>
   s.minCars ?? (s.powerCar || s.leadCar || s.endSides || s.jacobsTrailers !== undefined || s.endPantograph === "lead" || s.endPantograph === "trail" || s.traction === "none" ? 3 : 2);
 /**
- * The train lengths a series offers: every count from its shortest sensible train up to eight,
- * odd counts included; `cars` (the prototype's own formations) only sets the default. A unit
- * without intermediate cars (every stated length two or less) keeps its own lengths.
+ * The train lengths a series offers: every count from its shortest sensible train up to its
+ * longest real formation (`cars`, the prototype's own formations; eight at most), odd counts
+ * included - never longer than the prototype. A unit without intermediate cars (every stated
+ * length two or less) keeps its own lengths.
  */
 export const carsOf = (s: ShinkansenSeries): readonly number[] => {
   const own = s.cars ?? SHINKANSEN_CARS;
   if (own.every((n) => n <= 2)) return own;
-  const lo = Math.min(minSeriesCars(s), ...own), hi = Math.max(MAX_SERIES_CARS, ...own);
+  const lo = Math.min(minSeriesCars(s), ...own), hi = Math.min(MAX_SERIES_CARS, Math.max(...own));
   return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
 };
 /** The default train length: four when the series' own formations include it, else the shortest of them. */
