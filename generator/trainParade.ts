@@ -13,7 +13,8 @@
 // check it with small fixtures.
 
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "./collector.ts";
-import type { OpenttdProperties, ParamSpec, ParamValues } from "./design.ts";
+import type { OpenttdProperties, ParamSpec, ParamValues, Ropeway } from "./design.ts";
+import { TYPE_META as CABLE_STATION_TYPES } from "./sets/cableCarStation.ts";
 
 /** One car as the list writes it. */
 export interface TrainCarSpec {
@@ -36,8 +37,24 @@ export interface FormationRef {
  * there (a steam locomotive "with tender", then the coaches).
  */
 export type TrainSpec =
-  | { id: string; category?: TrainCategory; cars: (TrainCarSpec | { formation: FormationRef })[] }
-  | { id: string; category?: TrainCategory; formation: FormationRef };
+  | { id: string; category?: TrainCategory; cars: (TrainCarSpec | { formation: FormationRef })[]; rope?: RopeSpec }
+  | { id: string; category?: TrainCategory; formation: FormationRef; rope?: RopeSpec };
+
+/**
+ * A cable car line's chain: the station type standing at both ends of the strip
+ * (generator/sets/cableCarStation.ts) and, for circulating cabins, how many run
+ * and how far apart. A jig-back cabin (an aerial tramway's) runs alone. The chain
+ * lists its one cabin as its only car.
+ */
+export interface RopeSpec {
+  station: string;
+  /** Cabins of a circulating line (default ROPE_CABINS); a jig-back line runs one. */
+  cabins?: number;
+}
+
+/** Cabins a circulating line runs by default, and metres from one cabin's nose to the next's. */
+export const ROPE_CABINS = 4;
+export const ROPE_SPACING_M = 30;
 
 /**
  * What kind of chain a train is, for the website's play order (it spreads the
@@ -55,11 +72,17 @@ export const TRAIN_CATEGORIES = {
   bus: "Bus",
   truck: "Truck",
   horse: "Horse-drawn",
+  cableCar: "Cable car",
+  ship: "Ship",
+  aircraft: "Aircraft",
 } as const;
 export type TrainCategory = keyof typeof TRAIN_CATEGORIES;
 
 /** A train's category from its lead vehicle's catalog fields. */
 export function trainCategory(lead: { category: string; group?: string; traction?: string }): TrainCategory {
+  if (lead.category === "Ships") return "ship";
+  if (lead.category === "Aircraft") return "aircraft";
+  if (lead.category === "Cable car") return "cableCar";
   if (lead.traction === "animal") return "horse";
   if (lead.category === "Road vehicles") return lead.group === "truck" ? "truck" : "bus";
   switch (lead.group) {
@@ -78,7 +101,10 @@ export function trainCategory(lead: { category: string; group?: string; traction
  * How fast a chain of each category runs across railisland.com, in metres of the
  * model per second (the site multiplies by its pixels per metre). A fixed table,
  * not the vehicles' own top speeds: the strip is a few hundred pixels wide, and
- * every chain must stay on screen long enough to be seen.
+ * every chain must stay on screen long enough to be seen. A kind drawn at a smaller
+ * scale (PARADE_VIEWS: ships, aircraft, cable cars) runs proportionally more metres
+ * a second, so its speed on screen is like a train's: a ship at 70 m/s crosses the
+ * strip about as fast as a train at 10.
  */
 export const PARADE_SPEED_MPS: Record<TrainCategory, number> = {
   electricUnit: 22,
@@ -91,6 +117,9 @@ export const PARADE_SPEED_MPS: Record<TrainCategory, number> = {
   bus: 13,
   truck: 14,
   horse: 6,
+  cableCar: 16,
+  ship: 70,
+  aircraft: 150,
 };
 
 /**
@@ -580,6 +609,27 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
   { id: "praga-rv", cars: [{ model: "proc-vehicle-praga-rv" }] },
   { id: "cistern-semi-truck", cars: [{ model: "proc-vehicle-cistern-semi-truck" }] },
   { id: "mercedes-atego", cars: [{ model: "proc-vehicle-mercedes-atego-1224" }] },
+  // cable car lines, one per station type: the stations stand at both ends of the strip
+  { id: "omega-gondola", cars: [{ model: "proc-vehicle-doppelmayr-omega" }], rope: { station: "open_gantry" } },
+  { id: "classic-cabin", cars: [{ model: "proc-vehicle-cabin-classic" }], rope: { station: "alpine_chalet" } },
+  { id: "peak-2-peak", cars: [{ model: "proc-vehicle-peak-2-peak" }], rope: { station: "glass_modern", cabins: 3 } },
+  { id: "sugarloaf-bondinho", cars: [{ model: "proc-vehicle-sugarloaf-bondinho" }], rope: { station: "concrete_drive" } },
+  // ships, on the water (drawn above their waterline)
+  { id: "harbour-tug", cars: [{ model: "proc-vehicle-ship-harbour-tug" }] },
+  { id: "swiss-paddle", cars: [{ model: "proc-vehicle-ship-swiss-paddle" }] },
+  { id: "elbe-paddle", cars: [{ model: "proc-vehicle-ship-elbe-paddle" }] },
+  { id: "cutty-sark", cars: [{ model: "proc-vehicle-ship-cutty-sark" }] },
+  { id: "ss-great-britain", cars: [{ model: "proc-vehicle-ship-ss-great-britain" }] },
+  { id: "feeder-container", cars: [{ model: "proc-vehicle-ship-feeder-container" }] },
+  { id: "product-tanker", cars: [{ model: "proc-vehicle-ship-product-tanker" }] },
+  { id: "ocean-liner", cars: [{ model: "proc-vehicle-ocean-liner" }] },
+  // aircraft, in level flight with the gear up
+  { id: "aero-a10", cars: [{ model: "proc-vehicle-aero-a10" }] },
+  { id: "airbus-h145", cars: [{ model: "proc-vehicle-airbus-h145" }] },
+  { id: "boeing-737", cars: [{ model: "proc-vehicle-boeing-737", params: { livery: "ryanair" } }] },
+  { id: "airbus-beluga", cars: [{ model: "proc-vehicle-airbus-beluga" }] },
+  { id: "boeing-747", cars: [{ model: "proc-vehicle-boeing-747", params: { livery: "klm" } }] },
+  { id: "airbus-a380", cars: [{ model: "proc-vehicle-airbus-a380", params: { livery: "emirates" } }] },
 ];
 
 /** What a train needs to know about one model. */
@@ -599,19 +649,26 @@ export interface TrainContext {
   /** True when the model is confirmed (generator/catalogModels.json), not a workshop draft. */
   confirmed(id: string): boolean;
   isSideView(category: string): boolean;
+  /** A cable car cabin's ropeway (circulating or jig-back); undefined for any other model. */
+  ropeway?(id: string): Ropeway | undefined;
 }
+
+/** The catalog categories the parade draws besides the side-view ones, each on its own ground. */
+export const CRAFT_GROUNDS: Readonly<Record<string, Ground>> = { Ships: "water", Aircraft: "air", "Cable car": "rope" };
 
 /** One car resolved: its model, its non-default values (sorted by name), and turned. */
 export interface TrainCar {
   model: string;
   params: ParamValues;
   turned: boolean;
+  /** A cable car cabin: the station type of its line, whose rope it hangs from (the rope's height). */
+  station?: string;
 }
 
 /** A car's identity: `<model>[--<name>-<value>...][--turned]`, values sorted by name; two cars with the same key share their images. */
 export function carKey(car: TrainCar): string {
   const values = Object.keys(car.params).sort().map((k) => `--${k}-${car.params[k]}`).join("");
-  return `${car.model}${values}${car.turned ? "--turned" : ""}`;
+  return `${car.model}${values}${car.turned ? "--turned" : ""}${car.station ? `--rope-${car.station}` : ""}`;
 }
 
 /** The base of a car's image file name, or of its section `section` (0 from the nose) when it is drawn in several; the writer adds a content hash and the extension. */
@@ -628,10 +685,11 @@ export const SECTION_MAX_M = 40;
 
 /**
  * Where a car is cut into sections, metres from its nose: [start, end] pairs of
- * equal length covering it, one pair for a car up to SECTION_MAX_M.
+ * equal length covering it, one pair for a car up to `maxM` (SECTION_MAX_M at the
+ * side view's scale; a view drawn at fewer pixels per metre takes longer sections).
  */
-export function carSections(lengthM: number): [number, number][] {
-  const n = Math.max(1, Math.ceil(lengthM / SECTION_MAX_M - 1e-9));
+export function carSections(lengthM: number, maxM = SECTION_MAX_M): [number, number][] {
+  const n = Math.max(1, Math.ceil(lengthM / maxM - 1e-9));
   return Array.from({ length: n }, (_, i) => [round((lengthM * i) / n), round((lengthM * (i + 1)) / n)]);
 }
 
@@ -663,6 +721,8 @@ export interface ResolvedTrain {
   speedMps: number;
   wireM?: number;
   cars: TrainCar[];
+  /** A cable car line: its station type, and the metres from one cabin's nose to the next's (absent: one cabin). */
+  rope?: { station: string; spacingM?: number };
 }
 
 export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): ResolvedTrain[] {
@@ -687,7 +747,7 @@ export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): Re
       const info = ctx.model(c.model);
       if (!info) throw new Error(`${where}: no such model`);
       if (!ctx.confirmed(c.model)) throw new Error(`${where}: a workshop draft, not a confirmed model`);
-      if (!ctx.isSideView(info.category)) throw new Error(`${where}: a ${info.category} model has no side view`);
+      if (!ctx.isSideView(info.category) && !(info.category in CRAFT_GROUNDS)) throw new Error(`${where}: a ${info.category} model has no side view`);
       categories.push(info.category);
       infos.push(info);
       lead ??= info;
@@ -696,7 +756,24 @@ export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): Re
     if (train.category && !(train.category in TRAIN_CATEGORIES)) throw new Error(`train "${train.id}": no category "${train.category}"`);
     const category = train.category ?? trainCategory(lead!);
     const wireM = trainWire(infos);
-    return { id: train.id, ground: trainGround(categories), category, speedMps: PARADE_SPEED_MPS[category], ...(wireM !== undefined ? { wireM } : {}), cars };
+    const ground = trainGround(categories);
+    if (categories.some((c) => c in CRAFT_GROUNDS) && new Set(categories).size > 1) throw new Error(`train "${train.id}": a ship, aircraft or cabin runs with nothing else`);
+    if ((ground === "water" || ground === "air") && cars.length !== 1) throw new Error(`train "${train.id}": a ship or aircraft runs alone`);
+    let rope: ResolvedTrain["rope"];
+    if (ground === "rope") {
+      if (cars.length !== 1) throw new Error(`train "${train.id}": a cable car line lists its one cabin`);
+      if (!train.rope) throw new Error(`train "${train.id}": a cable car line needs its rope (station type)`);
+      if (!(train.rope.station in CABLE_STATION_TYPES)) throw new Error(`train "${train.id}": no cable car station type "${train.rope.station}"`);
+      const jigback = ctx.ropeway?.(cars[0]!.model) === "jigback";
+      const count = jigback ? 1 : (train.rope.cabins ?? ROPE_CABINS);
+      if (!Number.isInteger(count) || count < 1) throw new Error(`train "${train.id}": bad cabin count`);
+      const cabin = { ...cars[0]!, station: train.rope.station };
+      cars.splice(0, 1, ...Array.from({ length: count }, () => ({ ...cabin })));
+      rope = { station: train.rope.station, ...(count > 1 ? { spacingM: ROPE_SPACING_M } : {}) };
+    } else if (train.rope) throw new Error(`train "${train.id}": only a cable car line has a rope`);
+    return {
+      id: train.id, ground, category, speedMps: PARADE_SPEED_MPS[category], ...(wireM !== undefined ? { wireM } : {}), cars, ...(rope ? { rope } : {}),
+    };
   });
 }
 
@@ -728,6 +805,8 @@ export interface CarImages {
   frames?: number;
   /** Metres the car travels in that cycle (one wheel turn, one stride). */
   cycleM?: number;
+  /** Or, for parts that turn with time rather than distance (an aircraft's propellers or rotor), the cycle's seconds. */
+  cycleS?: number;
   /** Per section, the exhaust mouths its image shows (absent for a car with none). */
   emitters?: CarEmitter[][];
 }
@@ -737,7 +816,8 @@ export interface CarImages {
  * diesel's exhaust (`diesel`), `xM`, `yM` metres from the image's top-left corner.
  */
 export interface CarEmitter {
-  kind: "steam" | "diesel";
+  /** `wake`: a ship's bow wave (the nose's) or wake (the stern's), at the waterline. */
+  kind: "steam" | "diesel" | "wake";
   xM: number;
   yM: number;
 }
@@ -758,9 +838,15 @@ export interface PlacedCar extends TrainCar {
    * gap), each `widthM` wide, placed `xM`, `yM` metres from the image's top-left
    * corner - one cycle of its moving parts (wheels and rods, a team's legs) over
    * `cycleM` metres travelled. A client shows frame floor(frac(distance / cycleM) *
-   * frames) as the car moves, so nothing slides.
+   * frames) as the car moves, so nothing slides; a sprite with `cycleS` instead
+   * (an aircraft's propellers or rotor) loops over that many seconds.
    */
-  sprite?: { image: string; xM: number; yM: number; widthM: number; heightM: number; pitchM: number; frames: number; cycleM: number };
+  sprite?: {
+    image: string; xM: number; yM: number; widthM: number; heightM: number; pitchM: number; frames: number;
+    /** Exactly one: the metres travelled per loop, or (parts turning with time: propellers, a rotor) its seconds. */
+    cycleM?: number;
+    cycleS?: number;
+  };
   /** The exhaust mouths on this image, where a client starts its smoke (steam puffs, diesel haze). */
   emitters?: CarEmitter[];
 }
@@ -770,15 +856,18 @@ export interface PlacedCar extends TrainCar {
  * is its built length along X (buffers and couplers included), and its image spans
  * that plus `marginM` at each end, so neighbouring images overlap by twice the
  * margin (transparent pixels between cars; the same pixels twice between the
- * sections of one car, so no seam shows). A car longer than SECTION_MAX_M is
- * placed as its sections (`carSections`).
+ * sections of one car, so no seam shows). A car longer than `sectionMaxM` is
+ * placed as its sections (`carSections`). With `spacingM`, the cars keep that
+ * distance from one nose to the next (cabins on a rope) instead of coupling.
  */
-export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => CarImages, marginM: number, pxPerM: number): PlacedCar[] {
+export function layOutTrain(
+  cars: readonly TrainCar[], info: (car: TrainCar) => CarImages, marginM: number, pxPerM: number, spacingM = 0, sectionMaxM = SECTION_MAX_M,
+): PlacedCar[] {
   let at = 0;
   return cars.flatMap((car) => {
     const c = info(car);
     if (!(c.lengthM > 0)) throw new Error(`${carKey(car)}: no length`);
-    const sections = carSections(c.lengthM);
+    const sections = carSections(c.lengthM, sectionMaxM);
     if (sections.length !== c.images.length) throw new Error(`${carKey(car)}: ${c.images.length} images for ${sections.length} sections`);
     const placed = sections.map(([s0, s1], i): PlacedCar => {
       const sp = c.sprites?.[i];
@@ -789,7 +878,7 @@ export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => 
         image: `${PARADE_IMAGE_DIR}/${c.images[i]}`,
         offsetM: round(at + s0 - marginM),
         widthM: round(s1 - s0 + 2 * marginM),
-        ...(sp && c.frames && c.cycleM
+        ...(sp && c.frames && (c.cycleM || c.cycleS)
           ? {
               sprite: {
                 image: `${PARADE_IMAGE_DIR}/${sp.image}`,
@@ -799,25 +888,59 @@ export function layOutTrain(cars: readonly TrainCar[], info: (car: TrainCar) => 
                 heightM: round(sp.h / pxPerM),
                 pitchM: round(sp.pitch / pxPerM),
                 frames: c.frames,
-                cycleM: c.cycleM,
+                ...(c.cycleM ? { cycleM: c.cycleM } : { cycleS: c.cycleS! }),
               },
             }
           : {}),
         ...(em && em.length ? { emitters: em } : {}),
       };
     });
-    at += c.lengthM;
+    // cabins on a rope keep their spacing, nose to nose; cars couple
+    at += Math.max(c.lengthM, spacingM);
     return placed;
   });
 }
 
-/** Where a train runs: on rails, or on the road (every car a road vehicle). */
-export type Ground = "rail" | "road";
+/**
+ * Where a chain runs: on rails, on the road (every car a road vehicle), on the
+ * water (a ship), in the air (an aircraft) or on a rope (cable car cabins).
+ */
+export type Ground = "rail" | "road" | "water" | "air" | "rope";
+export const GROUNDS: readonly Ground[] = ["rail", "road", "water", "air", "rope"];
 
-/** A train's ground from its cars' catalog categories. */
+/** A chain's ground from its cars' catalog categories. */
 export function trainGround(categories: readonly string[]): Ground {
+  if (categories.length > 0 && categories.every((c) => c === categories[0]) && CRAFT_GROUNDS[categories[0]!]) return CRAFT_GROUNDS[categories[0]!]!;
   return categories.length > 0 && categories.every((c) => c === "Road vehicles") ? "road" : "rail";
 }
+
+/**
+ * How the images of a chain on one ground are drawn: `pxPerM` pixels per metre,
+ * and the height window every image (and every sprite frame) covers - `heightM`
+ * metres from `bottomM` metres relative to the ground's datum: the rail or the
+ * road surface, a ship's waterline, a cable car station's level. An aircraft has
+ * no ground: its window starts `-bottomM` metres under its wheels (gear up), which
+ * sets how high it flies in the strip. A client draws every chain of one ground
+ * at one scale, so lengths compare within a kind, and fits the window to its
+ * strip's height.
+ */
+export interface ParadeView {
+  pxPerM: number;
+  heightM: number;
+  bottomM: number;
+}
+
+export const PARADE_VIEWS: Readonly<Record<Ground, ParadeView>> = {
+  // the side thumbnails' window (renderGlbThumb.ts SIDE_PX_PER_M, SIDE_BOTTOM_M, SIDE_TOP_M)
+  rail: { pxPerM: 32, heightM: 6.3, bottomM: -0.3 },
+  road: { pxPerM: 32, heightM: 6.3, bottomM: -0.3 },
+  // up to a sailing ship's mastheads; the hull below the waterline is not drawn
+  water: { pxPerM: 5, heightM: 44, bottomM: -1.5 },
+  // the A380's fin in the top of the window, every aircraft's belly 40 % up it
+  air: { pxPerM: 6, heightM: 40, bottomM: -16 },
+  // the stations up to their roofs (the concrete drive's, 24.5 m), the cabins hanging from the rope head
+  rope: { pxPerM: 8, heightM: 26, bottomM: -0.5 },
+};
 
 /**
  * The kinds of vehicle the parade's caption counts, in the order it shows them.
@@ -894,12 +1017,9 @@ export const PARADE_IMAGE_DIR = "parade/img";
 
 /** export/parade.json, served at factory.railisland.com/parade.json (docs/site/train-parade.md). */
 export interface ParadeFile {
-  version: 1;
-  /** Pixels per metre of every image. */
-  pxPerM: number;
-  /** Every image's (and every sprite frame's) height in metres, and where the rail sits: `-bottomM` metres above the bottom edge. */
-  heightM: number;
-  bottomM: number;
+  version: 2;
+  /** How every chain on each ground is drawn (PARADE_VIEWS): pixels per metre and the height window of its images. */
+  views: Record<Ground, ParadeView>;
   /** The caption's counts: every kind of vehicle the factory makes, and all their variants. */
   fleet: FleetCounts;
   /** How the first round opens (PARADE_OPENING): a client passes it to playOrder for its first round only. */
@@ -909,14 +1029,51 @@ export interface ParadeFile {
    * `wireM` the height of the overhead wire it runs under over the rail, absent
    * for none.
    */
-  trains: { id: string; ground: Ground; category: TrainCategory; speedMps: number; wireM?: number; lengthM: number; cars: PlacedCar[] }[];
+  trains: ParadeChain[];
+}
+
+/** A chain as parade.json carries it. */
+export interface ParadeChain {
+  id: string;
+  ground: Ground;
+  category: TrainCategory;
+  speedMps: number;
+  wireM?: number;
+  lengthM: number;
+  cars: PlacedCar[];
+  /** A cable car line's scenery: the ropes, a station at each end, a pylon (ParadeRope). */
+  rope?: ParadeRope;
+}
+
+/** An image of the scenery a chain brings, in its ground's view: as high as the view, `widthM` wide. */
+export interface SceneryImage {
+  image: string;
+  widthM: number;
+}
+
+/**
+ * The rope a cable car line's cabins hang from and what carries it: `ropes`, the
+ * heights of the ropes to draw over the station level (metres; the haul rope the
+ * cabins hang from, and a track rope where the cabin runs on one), `right` the
+ * station at the strip's right end (the cabins come out of it), `left` the one at
+ * its left end (they go into it), each drawn facing the line, and `pylon` the
+ * support a client stands every `spacingM` metres between them, its rope saddle
+ * at the rope's height.
+ */
+export interface ParadeRope {
+  station: string;
+  ropes: { kind: "haul" | "track"; yM: number }[];
+  right: SceneryImage;
+  left: SceneryImage;
+  pylon: SceneryImage & { spacingM: number };
 }
 
 /**
  * How the parade opens - the first round a visitor sees after the page loads:
  * `categories` are the first chains' categories, in order (an electric locomotive
- * and its train, then a steam train, ...), and `notBefore` keeps a category out
- * of the round's first places (horse-drawn: not before the tenth chain, index 9).
+ * and its train, then a steam train, ..., then a cable car line, a ship and an
+ * aircraft), and `notBefore` keeps a category out of the round's first places
+ * (horse-drawn: not before the tenth chain, index 9).
  * Later rounds follow the plain spread order.
  */
 export interface ParadeOpening {
@@ -925,7 +1082,7 @@ export interface ParadeOpening {
 }
 
 export const PARADE_OPENING: ParadeOpening = {
-  categories: ["electricLoco", "steamLoco", "electricUnit", "dieselLoco", "dieselUnit"],
+  categories: ["electricLoco", "steamLoco", "electricUnit", "dieselLoco", "dieselUnit", "cableCar", "ship", "aircraft"],
   notBefore: { horse: 9 },
 };
 

@@ -2,7 +2,9 @@
 // railisland.com drives across its hero, with its id - the value of the site's
 // `?parade=` parameter, which plays that one chain only, for checking it - its
 // category, length and a picture, in list order, shuffled into one round as the
-// site plays it, or sorted by category (docs/site/train-parade.md).
+// site plays it, or sorted by category (docs/site/train-parade.md). A ship is shown
+// on its water, an aircraft without ground, a cable car line on its rope between
+// its two stations with its pylons.
 //
 // A standalone page written by writeParade.ts next to parade.json, not a route of
 // the catalog app: it is a debugging aid, its data is inlined, and it embeds the
@@ -50,6 +52,9 @@ export function paradePage(file: ParadeFile): string {
   .train > div { position: absolute; top: 0; }
   .train img { position: absolute; max-width: none; }
   .rail { position: absolute; left: 0; right: 0; height: 1px; background: #ffffff30; }
+  .sea { position: absolute; left: 0; right: 0; bottom: 0; background: #2a5a8a; }
+  .rope { position: absolute; left: 0; right: 0; height: 1px; background: #d8d2c4; }
+  .scenery { position: absolute; top: 0; max-width: none; }
 </style>
 </head>
 <body>
@@ -71,7 +76,8 @@ export function paradePage(file: ParadeFile): string {
 const __name = (f) => f;
 const playOrder = ${playOrder.toString()};
 const { file, categories, site } = JSON.parse(document.getElementById("parade-data").textContent);
-const PX_PER_M = 8;
+// pixels per metre on this page: a quarter of a rail or road image's, half of the other views' (drawn at fewer)
+const pxPerM = (ground) => file.views[ground].pxPerM * (ground === "rail" || ground === "road" ? 0.25 : 0.5);
 const main = document.getElementById("chains");
 
 function el(tag, attrs, ...children) {
@@ -89,11 +95,12 @@ const movers = [];
 function load(src) {
   return new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
 }
-function animated(car, h) {
+function animated(car, h, train) {
   const sp = car.sprite;
+  const view = file.views[train.ground];
   const dpr = window.devicePixelRatio || 1;
   const canvas = el("canvas", { style: "position:absolute;inset:0;width:100%;height:100%" });
-  canvas.width = Math.max(1, Math.round(car.widthM * PX_PER_M * dpr));
+  canvas.width = Math.max(1, Math.round(car.widthM * pxPerM(train.ground) * dpr));
   canvas.height = Math.max(1, Math.round(h * dpr));
   Promise.all([load("/" + car.image), load("/" + sp.image)]).then(([still, sheet]) => {
     const ctx = canvas.getContext("2d");
@@ -101,8 +108,8 @@ function animated(car, h) {
     ctx.imageSmoothingQuality = "high";
     const k = canvas.width / car.widthM; // canvas pixels per metre
     movers.push({
-      canvas, ctx, still, sheet, shown: -1, frames: sp.frames, cycleM: sp.cycleM,
-      frameH: Math.round(sp.heightM * file.pxPerM), pitch: Math.round((sp.pitchM ?? sp.heightM) * file.pxPerM),
+      canvas, ctx, still, sheet, shown: -1, frames: sp.frames, cycleM: sp.cycleM, cycleS: sp.cycleS,
+      frameH: Math.round(sp.heightM * view.pxPerM), pitch: Math.round((sp.pitchM ?? sp.heightM) * view.pxPerM),
       dx: sp.xM * k, dy: sp.yM * k, dw: sp.widthM * k, dh: sp.heightM * k,
     });
   }, () => {});
@@ -114,13 +121,13 @@ function draw(m, frame) {
   m.ctx.drawImage(m.still, 0, 0, m.canvas.width, m.canvas.height);
   m.ctx.drawImage(m.sheet, 0, frame * m.pitch, m.sheet.naturalWidth, m.frameH, m.dx, m.dy, m.dw, m.dh);
 }
-// the wheels turn as if the train ran at the site's speed (it stands still here)
+// the wheels turn as if the train ran at the site's speed (it stands still here); propellers with time
 function tick(now) {
   const distance = (now / 1000) * SPEED_MPS;
   for (let i = movers.length - 1; i >= 0; i--) {
     const m = movers[i];
     if (!m.canvas.isConnected) { movers.splice(i, 1); continue; }
-    const cycle = distance / m.cycleM;
+    const cycle = m.cycleS ? now / 1000 / m.cycleS : distance / m.cycleM;
     const frame = Math.floor((cycle - Math.floor(cycle)) * m.frames) % m.frames;
     if (frame !== m.shown) draw(m, frame);
   }
@@ -129,19 +136,40 @@ function tick(now) {
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) requestAnimationFrame(tick);
 else setInterval(() => movers.forEach((m) => m.shown < 0 && draw(m, 0)), 500);
 
-// One chain at PX_PER_M: every car's still image; an animated car as a canvas whose wheels and legs move.
+// One chain at its view's scale: every car's still image; an animated car as a canvas
+// whose wheels, legs or propellers move; its ground (rail, road, sea; none in the air);
+// a cable car line between its stations, under its ropes, past its pylons.
 function picture(train) {
-  const h = file.heightM * PX_PER_M;
-  const box = el("div", { class: "train", style: "height:" + h + "px;width:" + (train.lengthM + 1) * PX_PER_M + "px" });
-  box.append(el("div", { class: "rail", style: "bottom:" + -file.bottomM * PX_PER_M + "px" }));
+  const view = file.views[train.ground];
+  const k = pxPerM(train.ground);
+  const h = view.heightM * k;
+  const rope = train.rope;
+  const lead = rope ? rope.left.widthM + 6 : 0.5; // metres before the chain's nose
+  const widthM = lead + train.lengthM + (rope ? rope.right.widthM + 6 : 0.5);
+  const box = el("div", { class: "train", style: "height:" + h + "px;width:" + widthM * k + "px" });
+  const ground = -view.bottomM * k; // pixels from the bottom to the ground's datum
+  if (train.ground === "water") box.append(el("div", { class: "sea", style: "height:" + ground + "px" }));
+  else if (train.ground !== "air") box.append(el("div", { class: "rail", style: "bottom:" + ground + "px" }));
+  if (rope) {
+    for (const r of rope.ropes) box.append(el("div", { class: "rope", style: "bottom:" + (r.yM - view.bottomM) * k + "px" }));
+    for (let x = lead + rope.pylon.spacingM / 2; x < widthM - rope.right.widthM - 6; x += rope.pylon.spacingM) {
+      box.append(el("img", { class: "scenery", src: "/" + rope.pylon.image, alt: "", style: "left:" + x * k + "px;width:" + rope.pylon.widthM * k + "px;height:" + h + "px" }));
+    }
+  }
   for (const car of train.cars) {
-    const c = el("div", { style: "left:" + (car.offsetM + 0.5) * PX_PER_M + "px;width:" + car.widthM * PX_PER_M + "px;height:" + h + "px" });
-    if (car.sprite && car.sprite.frames > 1) c.append(animated(car, h));
+    const c = el("div", { style: "left:" + (car.offsetM + lead) * k + "px;width:" + car.widthM * k + "px;height:" + h + "px" });
+    if (car.sprite && car.sprite.frames > 1) c.append(animated(car, h, train));
     else c.append(el("img", { src: "/" + car.image, alt: "", loading: "lazy", style: "inset:0;width:100%;height:100%" }));
     box.append(c);
   }
+  if (rope) {
+    box.append(el("img", { class: "scenery", src: "/" + rope.left.image, alt: "", style: "left:0;width:" + rope.left.widthM * k + "px;height:" + h + "px" }));
+    box.append(el("img", { class: "scenery", src: "/" + rope.right.image, alt: "", style: "right:0;width:" + rope.right.widthM * k + "px;height:" + h + "px" }));
+  }
   return el("div", { class: "strip" }, box);
 }
+
+const GROUNDS = { rail: "on rails", road: "on the road", water: "on the water", air: "in the air", rope: "on a rope" };
 
 function row(train, n) {
   const link = el("a", { href: site + "/?parade=" + encodeURIComponent(train.id), target: "_blank", rel: "noopener" }, "Show on railisland.com");
@@ -153,7 +181,7 @@ function row(train, n) {
     el("span", { class: "num" }, n + "."),
     el("code", { class: "id" }, train.id),
     el("span", {}, categories[train.category] || train.category),
-    el("span", { class: "meta" }, train.lengthM.toFixed(1) + " m, " + train.cars.length + " image(s), " + (train.ground === "road" ? "on the road" : "on rails") + wire + animated + smoke + speed),
+    el("span", { class: "meta" }, train.lengthM.toFixed(1) + " m, " + train.cars.length + " image(s), " + (GROUNDS[train.ground] || train.ground) + (train.rope ? " between two " + train.rope.station.replace(/_/g, " ") + " stations" : "") + wire + animated + smoke + speed),
     link);
   return el("section", { class: "chain", id: train.id }, head, picture(train));
 }

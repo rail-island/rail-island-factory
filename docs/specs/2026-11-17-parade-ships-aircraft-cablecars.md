@@ -1,6 +1,6 @@
 # Parade ships, aircraft and cable cars
 
-Status: draft
+Status: agreed
 Date: 2026-11-17
 Area: rail-island-factory (parade list, parade.json, parade renderer, overview page), web-railisland-com (hero TrainParade)
 
@@ -33,6 +33,8 @@ No game data and no saved-map ids are involved: the parade is site decoration on
 
 "Suggest how to add to parade in web hero ships, aircrafts and cable cars."
 After the suggestion: "Add all. Cable cars with stations. Brainstorm it."
+After the spec: "Cable car should be 6th, ship 7th, aircraft 8th. Implement the spec"
+(this replaces the earlier hold-back of the new kinds until the sixth place).
 
 ## Decisions
 
@@ -108,7 +110,9 @@ empty track in between is accepted.
 | Show one early | One new kind as the 6th chain. |
 | No special rule | Spread like any other category after the opening. |
 
-**Answer: Keep trains first.**
+**Answer: Keep trains first.** Revised by the user before implementation: "Cable car
+should be 6th, ship 7th, aircraft 8th" - the first round opens with the five trains,
+then a cable car line, a ship and an aircraft.
 
 ## High-level plan
 
