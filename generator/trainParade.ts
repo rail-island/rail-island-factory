@@ -23,6 +23,11 @@ export interface TrainCarSpec {
   params?: ParamValues;
   /** True for a car running backwards (the rear power car of a TGV). */
   turned?: boolean;
+  /**
+   * An aircraft drawn this many times its size (> 1): the light plane and the
+   * helicopters, which at the air view's scale would be a few pixels tall.
+   */
+  zoom?: number;
 }
 
 /** A model's named OpenTTD formation (generator/openttdTable.ts), standing for its cars. */
@@ -624,8 +629,9 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
   { id: "product-tanker", cars: [{ model: "proc-vehicle-ship-product-tanker" }] },
   { id: "ocean-liner", cars: [{ model: "proc-vehicle-ocean-liner" }] },
   // aircraft, in level flight with the gear up
-  { id: "aero-a10", cars: [{ model: "proc-vehicle-aero-a10" }] },
-  { id: "airbus-h145", cars: [{ model: "proc-vehicle-airbus-h145" }] },
+  // the light plane and the helicopter drawn larger, or they would be a few pixels tall
+  { id: "aero-a10", cars: [{ model: "proc-vehicle-aero-a10", zoom: 2.5 }] },
+  { id: "airbus-h145", cars: [{ model: "proc-vehicle-airbus-h145", zoom: 2.5 }] },
   { id: "boeing-737", cars: [{ model: "proc-vehicle-boeing-737", params: { livery: "ryanair" } }] },
   { id: "airbus-beluga", cars: [{ model: "proc-vehicle-airbus-beluga" }] },
   { id: "boeing-747", cars: [{ model: "proc-vehicle-boeing-747", params: { livery: "klm" } }] },
@@ -663,12 +669,14 @@ export interface TrainCar {
   turned: boolean;
   /** A cable car cabin: the station type of its line, whose rope it hangs from (the rope's height). */
   station?: string;
+  /** An aircraft drawn larger than its kind's scale (TrainCarSpec.zoom). */
+  zoom?: number;
 }
 
 /** A car's identity: `<model>[--<name>-<value>...][--turned]`, values sorted by name; two cars with the same key share their images. */
 export function carKey(car: TrainCar): string {
   const values = Object.keys(car.params).sort().map((k) => `--${k}-${car.params[k]}`).join("");
-  return `${car.model}${values}${car.turned ? "--turned" : ""}${car.station ? `--rope-${car.station}` : ""}`;
+  return `${car.model}${values}${car.turned ? "--turned" : ""}${car.station ? `--rope-${car.station}` : ""}${car.zoom ? `--zoom-${car.zoom}` : ""}`;
 }
 
 /** The base of a car's image file name, or of its section `section` (0 from the nose) when it is drawn in several; the writer adds a content hash and the extension. */
@@ -751,7 +759,8 @@ export function resolveTrains(list: readonly TrainSpec[], ctx: TrainContext): Re
       categories.push(info.category);
       infos.push(info);
       lead ??= info;
-      return { model: c.model, params: nonDefault(info.params ?? [], c.params ?? {}, where), turned: c.turned === true };
+      if (c.zoom !== undefined && (info.category !== "Aircraft" || !(c.zoom > 1 && c.zoom <= 4))) throw new Error(`${where}: only an aircraft is zoomed, by more than 1 and at most 4`);
+      return { model: c.model, params: nonDefault(info.params ?? [], c.params ?? {}, where), turned: c.turned === true, ...(c.zoom ? { zoom: c.zoom } : {}) };
     });
     if (train.category && !(train.category in TRAIN_CATEGORIES)) throw new Error(`train "${train.id}": no category "${train.category}"`);
     const category = train.category ?? trainCategory(lead!);

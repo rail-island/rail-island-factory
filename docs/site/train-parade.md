@@ -150,7 +150,8 @@ left):
   aircraft faces -X (the game's forward), then half round. It stands on its
   waterline - `draftFrac` of the model's height over its keel (`waterline`) - and
   every pixel below the waterline row is cleared, so the site's water is there;
-- **an aircraft**: turned the same way, with its retractable gear left out (the GLB
+- **an aircraft**: turned the same way (and scaled by its `zoom` about its wheels'
+  level, when the list gives one), with its retractable gear left out (the GLB
   node `gear`, which the game hides in flight: `withoutNode`). Its propellers or
   rotor turn on `time` clips (`propellers`, `rotor`; docs/models/animation.md):
   drawn as a sprite over one turn of the longest clip, its cycle in seconds
@@ -349,7 +350,9 @@ cache. The test that compares a car with its thumbnail keeps the two in step.
   jumps once per loop in the shorter one.
 - The sprites with a horse team are the heaviest images (30-80 KiB); a team of four
   would double the stagecoach's, so the parade's teams are of two.
-- One view per ground: the smallest aircraft (the Aero A.10, the H145) are only a
-  tenth of the air window's height, a few pixels on a phone.
+- One view per ground: the smallest aircraft (the Aero A.10, the H145) would be only
+  a tenth of the air window's height, so the list draws them 2.5 times their size
+  (`zoom` on the car: aircraft only, at most 4; the car's key ends `--zoom-<k>`).
+  They no longer compare in length with the airliners.
 - The ropes are straight between the stations (no sag) and every pylon is drawn at
   the stations' rope height.

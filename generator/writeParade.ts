@@ -235,6 +235,11 @@ export async function renderCar(car: TrainCar, base: (section?: number) => strin
   let map: PointMap | null = null;
   let rot: PointMap | null = null;
   if (ground === "water" || ground === "air") map = rot = craftTurn(design);
+  if (car.zoom && map) {
+    // a small aircraft drawn larger, about its wheels' level
+    const turn = map, k = car.zoom;
+    map = (p) => turn(p).map((v) => v * k) as Vec3;
+  }
   if (ground === "rope") {
     if (!car.station) throw new Error(`${carKey(car)}: a cabin with no station type`);
     const hang = cabinHang(design, car.params, car.station);
@@ -456,7 +461,7 @@ export function carHash(car: TrainCar, ground: Ground = "rail"): string | null {
   if (!key) return null;
   const params: ParamValues = Object.fromEntries(Object.keys(car.params).sort().map((k) => [k, car.params[k]!]));
   // a car on the ground keeps the hash it always had; the others add their view (and a cabin its station)
-  const extra = ground === "rail" || ground === "road" ? {} : { view: PARADE_VIEWS[ground], station: car.station ?? null, stations: car.station ? STATION_SET : null };
+  const extra = ground === "rail" || ground === "road" ? {} : { view: PARADE_VIEWS[ground], station: car.station ?? null, stations: car.station ? STATION_SET : null, zoom: car.zoom ?? null };
   return crypto.createHash("sha256").update(JSON.stringify({ key, model: car.model, params, turned: car.turned, writer: SELF, ...extra })).digest("hex").slice(0, 12);
 }
 

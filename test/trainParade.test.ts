@@ -139,6 +139,8 @@ describe("train list", () => {
     ["a cable car line without its rope", [{ id: "a", cars: [{ model: "gondola" }] }], /needs its rope/],
     ["an unknown station type", [{ id: "a", cars: [{ model: "gondola" }], rope: { station: "castle" } }], /no cable car station type "castle"/],
     ["a rope under a train", [{ id: "a", cars: [{ model: "loco" }], rope: { station: "open_gantry" } }], /only a cable car line/],
+    ["a zoomed train", [{ id: "a", cars: [{ model: "loco", zoom: 2 }] }], /only an aircraft is zoomed/],
+    ["an aircraft zoomed too far", [{ id: "a", cars: [{ model: "plane", zoom: 6 }] }], /at most 4/],
   ];
   for (const [what, list, error] of bad) {
     it(`refuses ${what}`, () => expect(() => resolveTrains(list, fixture)).toThrow(error));
@@ -551,6 +553,17 @@ describe("ships, aircraft and cable cars", () => {
     for (const w of wakes) expect(w.yM).toBeCloseTo(view.heightM + view.bottomM, 3);
     expect(Math.max(...wakes.map((w) => w.xM)) - Math.min(...wakes.map((w) => w.xM))).toBeCloseTo(r.lengthM, 3);
     expect(em.some((e) => e.kind === "diesel" && e.yM < view.heightM + view.bottomM)).toBe(true);
+  });
+
+  it("draws a small aircraft larger when the list zooms it", async () => {
+    const [p] = resolveTrains([{ id: "p", cars: [{ model: "plane", zoom: 2.5 }] }], fixture);
+    expect(p!.cars[0]).toEqual({ model: "plane", params: {}, turned: false, zoom: 2.5 });
+    expect(carImageBase(p!.cars[0]!)).toBe("plane--zoom-2.5");
+    const plain = await renderCar({ model: "proc-vehicle-airbus-h145", params: {}, turned: false }, () => "h", "air");
+    const big = await renderCar({ model: "proc-vehicle-airbus-h145", params: {}, turned: false, zoom: 2.5 }, () => "h", "air");
+    expect(big.lengthM).toBeCloseTo(plain.lengthM * 2.5, 6);
+    // the small aircraft of the parade are zoomed
+    for (const id of ["aero-a10", "airbus-h145"]) expect(resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT).find((t) => t.id === id)!.cars[0]!.zoom).toBe(2.5);
   });
 
   it("turns an aircraft's propeller with time, as a sprite", async () => {
