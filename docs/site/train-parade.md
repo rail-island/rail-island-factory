@@ -51,12 +51,13 @@ a rope (`rope`), everything else on rails. A ship and an aircraft run alone, and
 nothing else is coupled to one. A **cable car line** lists its one cabin and a
 `rope`: the station type standing at both ends of the strip (`open_gantry`,
 `alpine_chalet`, `glass_modern`, `concrete_drive`;
-[../models/cable-car-stations.md](../models/cable-car-stations.md)) and, for a
-circulating cabin (a gondola), how many run (`cabins`, default `ROPE_CABINS`, 4),
-`ROPE_SPACING_M` (30 m) from one cabin's nose to the next; a jig-back cabin (an
-aerial tramway's) runs alone, as the game's lines run it. Every cabin of the chain
-is the same car, hung from that station type's rope head (its key ends
-`--rope-<station>`).
+[../models/cable-car-stations.md](../models/cable-car-stations.md)). Its one car
+is the cabin hung from that station type's rope head (its key ends
+`--rope-<station>`). A client does not run the line across the strip like a train:
+it hangs a circulating cabin (a gondola) every `rope.spacingM` (`ROPE_SPACING_M`,
+40 m) along the whole rope and one jig-back cabin (an aerial tramway's, as the
+game's lines run it) out on the line, already there as the scene fades in, runs
+them for a while and fades them out.
 
 ## Categories and the play order
 
@@ -94,12 +95,13 @@ Shuffle shows such a first round.
 Every chain carries `speedMps`, from the fixed table `PARADE_SPEED_MPS` by
 category (horse-drawn 6, tram 12, bus 13, truck 14, steam 16, diesel locomotive
 17, metro 18, diesel unit and electric locomotive 20, electric unit 22, cable car
-16, ship 70, aircraft 150 metres of model per second) - not the vehicles' own top
-speeds: the strip is a few hundred pixels wide and every chain must stay on screen
-long enough to be seen. A kind drawn at a smaller scale (its view, below) runs
-proportionally more metres a second, so its speed on screen is like a train's: a
-ship at 70 m/s in a 44 m window crosses the strip about as fast as a train at 10
-in the rail's 6.3 m one.
+8 metres of model per second; ship 10, aircraft 24 on screen, below) - not the
+vehicles' own top speeds: the strip is a few hundred pixels wide and every chain
+must stay on screen long enough to be seen. A ship or an aircraft is drawn as large
+as the strip allows (its own view, below), so its table speed is a rail chain's on
+screen and its `speedMps` is that times its view's height over 6.3 m (`viewSpeed`):
+the liner, in a 41 m window, runs at 65 m/s and crosses the strip as fast as a
+train at 10.
 
 `wireM` (`trainWire`) is the height of the wire the chain runs under, read from
 its first powered car (the first that states a traction): an electric railway
@@ -125,23 +127,26 @@ self-contained: the overview page embeds its source, and railisland.com's
 
 ## Views: ships, aircraft and cable cars
 
-The images of the rail and road chains are the side thumbnails' (below): 32 px per
-metre over a 6.3 m window. A ship, an aircraft or a cable car line does not fit
-that window, so every ground has its own **view** (`PARADE_VIEWS`, `ParadeView`):
-pixels per metre and a height window from `bottomM` to `bottomM + heightM` metres
-over the ground's datum. A client draws every chain of one ground at one scale, so
-lengths compare within a kind (a tug beside a liner), and fits the window to its
-strip.
+Every chain carries its **view** (`ParadeView`): pixels per metre and a height
+window from `bottomM` to `bottomM + heightM` metres over its datum. A client fits
+the window to its strip's height.
 
-| Ground | px/m | Window | Datum |
-|---|---|---|---|
-| `rail`, `road` | 32 | -0.3 .. 6.0 m | the rail, the road surface |
-| `water` | 5 | -1.5 .. 42.5 m | the waterline (a full-rigged ship's mastheads fit) |
-| `air` | 6 | -16 .. 24 m | the aircraft's wheels: its belly flies 40 % up the window, the A380's fin at its top |
-| `rope` | 8 | -0.5 .. 25.5 m | the stations' level (the concrete drive's roof, 24.5 m, fits) |
+- **Trains, trams, road and horse-drawn chains** share one, `LAND_VIEW`, the side
+  thumbnails' (below): 32 px per metre over -0.3 .. 6.0 m from the rail or road. One
+  scale, so their lengths compare.
+- **Each ship and each aircraft** is drawn as large as the strip allows
+  (`fitView`), from its own bounds: a ship from its waterline - where the strip draws
+  its ground, 0.3 / 6.3 of the window up - to its masthead just under the window's
+  top; an aircraft (gear up) from its belly a third of the way up to its fin at 95 %.
+  The H145 is as tall on screen as the A380, and lengths no longer compare.
+- **A cable car line** is drawn at its stations' scale: from the station level (where
+  the strip draws its ground) to the taller station's roof just under the top. Its
+  cabin is drawn `CABIN_ZOOM` (1.5) times its size about its rope datum, so it still
+  hangs from the rope but is not lost beside stations 18-25 m tall.
 
-Every view's longest section (`sectionMaxM`) is as many pixels as SECTION_MAX_M at
-32 px per metre, so a 269 m liner is drawn in two sections at 5 px per metre.
+Every fitted image is `VIEW_PX` (202) pixels tall, as a rail image is, and every
+view's longest section (`sectionMaxM`) is as many pixels as SECTION_MAX_M at 32 px
+per metre, so the liner is drawn in two sections.
 
 `paradeScenery.ts` moves each into the parade's frame (nose at +X, drawn on the
 left):
@@ -150,8 +155,7 @@ left):
   aircraft faces -X (the game's forward), then half round. It stands on its
   waterline - `draftFrac` of the model's height over its keel (`waterline`) - and
   every pixel below the waterline row is cleared, so the site's water is there;
-- **an aircraft**: turned the same way (and scaled by its `zoom` about its wheels'
-  level, when the list gives one), with its retractable gear left out (the GLB
+- **an aircraft**: turned the same way, with its retractable gear left out (the GLB
   node `gear`, which the game hides in flight: `withoutNode`). Its propellers or
   rotor turn on `time` clips (`propellers`, `rotor`; docs/models/animation.md):
   drawn as a sprite over one turn of the longest clip, its cycle in seconds
@@ -159,16 +163,16 @@ left):
 - **a cable car cabin** (`cabinHang`): the game's own frame for it
   (`cableCarLine.ts`: the catalog's yaw, recentred and scaled to studs, the rope
   datum at 0, the rope along +X) in metres, its rope datum at the station type's
-  rope head (`ropeHeadM`). The game draws a vehicle at `STUD_SCALE` (1.5) studs per
-  model metre, so a stud is 1 / 1.5 m here.
+  rope head (`ropeHeadM`), drawn `CABIN_ZOOM` times its size. The game draws a
+  vehicle at `STUD_SCALE` (1.5) studs per model metre, so a stud is 1 / 1.5 m here.
 
 **A cable car line's scenery** (`lineScenery`, `renderRope`) is the station set's
 own drawing, as the line preview draws it (previews/cableCarLine.ts) but alone:
 the station facing the line at the strip's **right** end (the cabins come out of
 it) and the **left** end (they go into it), each with its footprint's slab and
 everything below the station's level cut, and the **pylon** for the cabin's ropes,
-its saddle at the rope head. All three are drawn in the rope view, framed on
-themselves, under one hash of the cabin's car hash and whether the line
+its saddle at the rope head. All three are drawn in the line's view (fitted to its
+stations, which set it before the cabin is drawn), framed on themselves, under one hash of the cabin's car hash and whether the line
 circulates. The **ropes** to draw are the cabin's (`game.ropes`, one per height and
 kind: the haul rope it hangs from, a track rope it runs on), as heights over the
 station level (`ropeHeights`).
@@ -294,13 +298,13 @@ no other parameter counts 1.
 
 | Field | What |
 |---|---|
-| `version` | 2 (1 had one global `pxPerM`, `heightM`, `bottomM`: the rail's) |
-| `views` | per ground (`rail`, `road`, `water`, `air`, `rope`): `pxPerM`, and every image's height in metres (`heightM`) and its bottom edge relative to the ground's datum (`bottomM`) (above) |
+| `version` | 3 (1 had one global `pxPerM`, `heightM`, `bottomM`: the rail's; 2 one per ground) |
 | `fleet.types` | confirmed vehicles per kind, every kind present (above) |
 | `fleet.variants` | all their variants (above) |
 | `opening` | how the first round opens: `categories` (its first chains' categories, in order) and `notBefore` (category to the first index it may take) (above) |
 | `trains[].id` | the train's id from the list |
-| `trains[].ground` | `rail`, `road`, `water`, `air` or `rope`: the view its images are in, and the scenery a client draws |
+| `trains[].ground` | `rail`, `road`, `water`, `air` or `rope`: the scenery a client draws |
+| `trains[].view` | how its images are drawn: `pxPerM`, every image's height in metres (`heightM`) and its bottom edge relative to the chain's datum (`bottomM`) (above) |
 | `trains[].category` | its category (above) |
 | `trains[].speedMps` | how fast it runs, metres of the model per second (above) |
 | `trains[].wireM` | the overhead wire's height over the rail, metres; absent for none (above) |
@@ -312,13 +316,13 @@ no other parameter counts 1.
 | `trains[].cars[].widthM` | the image's width in metres: the car's length and the 0.3 m margins |
 | `trains[].cars[].emitters` | a steam or diesel car's (or a ship's funnels') exhaust mouths on this image: `kind` (`steam`, `diesel`; `wake` at a ship's bow and stern on the waterline), `xM`, `yM` from its top-left corner, metres; absent for none |
 | `trains[].cars[].sprite` | an animated car's moving part: `image` (the frames, relative to parade.json), `xM`, `yM` (its top-left corner from the still image's, metres), `widthM`, `heightM` (one frame), `pitchM` (from one frame's top to the next's, the gap included), `frames`, and either `cycleM` (metres travelled per loop) or `cycleS` (seconds per loop: an aircraft's propellers or rotor) |
-| `trains[].rope` | a cable car line's scenery: `station` (its type), `ropes` (`kind` `haul` or `track`, `yM` over the station level), `right` and `left` (the station at each end: `image`, `widthM`, as high as the view), `pylon` (`image`, `widthM`, `spacingM` between two) |
+| `trains[].rope` | a cable car line's scenery: `station` (its type), `spacingM` (a circulating line: metres between two cabins' noses; absent: one cabin), `ropes` (`kind` `haul` or `track`, `yM` over the station level), `right` and `left` (the station at each end: `image`, `widthM`, as high as the view), `pylon` (`image`, `widthM`, `spacingM` between two) |
 
 Cars are laid end to end with couplers touching: each car's length is its built
-extent along X, buffers and couplers included; a cable car line's cabins keep
-`ROPE_SPACING_M` from one nose to the next instead. Neighbouring images overlap by the
+extent along X, buffers and couplers included (a cable car line lists its one
+cabin; the client repeats it every `rope.spacingM`). Neighbouring images overlap by the
 two transparent margins. A client places a car at `offsetM * scale` and sizes it
-`widthM * scale` by `heightM * scale` (its ground's view), one scale for every chain
+`widthM * scale` by `heightM * scale` (its view's), one scale for every rail and road chain
 of a ground so lengths compare, and its sprite at `xM * scale`, `yM * scale` inside it.
 
 ## Serving
@@ -350,9 +354,8 @@ cache. The test that compares a car with its thumbnail keeps the two in step.
   jumps once per loop in the shorter one.
 - The sprites with a horse team are the heaviest images (30-80 KiB); a team of four
   would double the stagecoach's, so the parade's teams are of two.
-- One view per ground: the smallest aircraft (the Aero A.10, the H145) would be only
-  a tenth of the air window's height, so the list draws them 2.5 times their size
-  (`zoom` on the car: aircraft only, at most 4; the car's key ends `--zoom-<k>`).
-  They no longer compare in length with the airliners.
+- Ships and aircraft are each fitted to the strip, so their lengths do not compare
+  with each other's, and a cable car line's cabins are drawn 1.5 times their size
+  beside their stations.
 - The ropes are straight between the stations (no sag) and every pylon is drawn at
   the stations' rope height.

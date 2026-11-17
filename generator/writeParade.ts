@@ -37,7 +37,7 @@ import { cabinHang, craftTurn, lineScenery, mapTriangles, PYLON_SPACING_M, ropeH
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { SIDE_MARGIN_M, SIDE_PX_PER_M, SIDE_TOP_M, rasterize, readTriangles, sideFrame } from "./renderGlbThumb.ts";
 import {
-  PARADE_OPENING, PARADE_VIEWS, SECTION_MAX_M, TRAIN_PARADE, carImageBase, carKey, carSections, fleetCounts, layOutTrain, PARADE_IMAGE_DIR, resolveTrains,
+  CABIN_ZOOM, fitView, groundView, PARADE_OPENING, ROPE_SPACING_M, SECTION_MAX_M, viewSpeed, TRAIN_PARADE, carImageBase, carKey, carSections, fleetCounts, layOutTrain, PARADE_IMAGE_DIR, resolveTrains,
   type CarEmitter, type CarImages, type CountedModel, type Ground, type ParadeRope, type ParadeView, type SpriteRect, type TrainCar, type TrainContext,
   type TrainSpec, type ParadeFile,
 } from "./trainParade.ts";
@@ -214,18 +214,19 @@ export function timeClips(clips: readonly AnimationClipSpec[], glb: Uint8Array):
  * screen its wheels turn the same way as every other car's.
  *
  * On its `ground`: a rail or road vehicle is drawn as the side thumbnail draws it;
- * a ship, an aircraft and a cabin in their ground's view (PARADE_VIEWS). A ship is
+ * a ship and an aircraft as large as the strip allows (fitView, from its own
+ * bounds), a cabin in its line's view (`lineView`, its stations'). A ship is
  * turned to face the parade's way and stood on its waterline, the hull under it
  * cleared, its funnels smoking and a wake at its bow and stern; an aircraft is
  * turned, its gear retracted (the node `gear` left out) and its propellers or rotor
  * turning with time (`cycleS`); a cabin hangs from its line's rope head.
  */
-export async function renderCar(car: TrainCar, base: (section?: number) => string, ground: Ground = "rail"): Promise<RenderedCar> {
+export async function renderCar(car: TrainCar, base: (section?: number) => string, ground: Ground = "rail", lineView?: ParadeView): Promise<RenderedCar> {
   const design = DESIGNS.get(car.model);
   if (!design) throw new Error(`no procedural model "${car.model}"`);
+  if (ground === "rope" && !lineView) throw new Error(`${carKey(car)}: a cabin is drawn in its line's view`);
   const model = design.build(car.params);
   let glb = toGlb(car.model, model);
-  const view = ground === "rail" || ground === "road" ? undefined : PARADE_VIEWS[ground];
   if (ground === "air") glb = withoutNode(glb, "gear");
   // an aircraft's parts turn with time, everything else's with the distance travelled
   const timed = ground === "air";
@@ -235,11 +236,6 @@ export async function renderCar(car: TrainCar, base: (section?: number) => strin
   let map: PointMap | null = null;
   let rot: PointMap | null = null;
   if (ground === "water" || ground === "air") map = rot = craftTurn(design);
-  if (car.zoom && map) {
-    // a small aircraft drawn larger, about its wheels' level
-    const turn = map, k = car.zoom;
-    map = (p) => turn(p).map((v) => v * k) as Vec3;
-  }
   if (ground === "rope") {
     if (!car.station) throw new Error(`${carKey(car)}: a cabin with no station type`);
     const hang = cabinHang(design, car.params, car.station);
@@ -258,6 +254,9 @@ export async function renderCar(car: TrainCar, base: (section?: number) => strin
   const rest = posed(0);
   const { min, max } = triBounds(rest);
   const lengthM = max[0] - min[0];
+  // rail and road: the land view (the side thumbnail's own frame); a ship or an aircraft fitted to itself
+  const view =
+    ground === "rail" || ground === "road" ? undefined : ground === "rope" ? lineView! : fitView(ground, ground === "water" ? 0 : min[1], max[1]);
   const sections = carSections(lengthM, view ? sectionMaxM(view) : SECTION_MAX_M);
   const sign = car.turned ? -1 : 1;
   const frames = cycle ? Array.from({ length: cycle.frames }, (_, f) => (f === 0 ? rest : posed((sign * f * cycle.cycleM) / cycle.frames))) : [rest];
@@ -326,6 +325,7 @@ export async function renderCar(car: TrainCar, base: (section?: number) => strin
   return {
     lengthM,
     images,
+    ...(view ? { view } : {}),
     ...(animated ? { sprites, frames: cycle.frames, ...(timed ? { cycleS: cycle.cycleM } : { cycleM: cycle.cycleM }) } : {}),
     ...(emitters.some((e) => e.length) ? { emitters } : {}),
     files,
@@ -460,26 +460,38 @@ export function carHash(car: TrainCar, ground: Ground = "rail"): string | null {
   const key = factsKey(car.model);
   if (!key) return null;
   const params: ParamValues = Object.fromEntries(Object.keys(car.params).sort().map((k) => [k, car.params[k]!]));
-  // a car on the ground keeps the hash it always had; the others add their view (and a cabin its station)
-  const extra = ground === "rail" || ground === "road" ? {} : { view: PARADE_VIEWS[ground], station: car.station ?? null, stations: car.station ? STATION_SET : null, zoom: car.zoom ?? null };
+  // a car on the ground keeps the hash it always had; the others add how their view is
+  // fitted (and a cabin its station, the station set and its zoom)
+  const extra =
+    ground === "rail" || ground === "road"
+      ? {}
+      : { fit: fitView(ground === "rope" ? "rope" : ground, 0, 10), station: car.station ?? null, stations: car.station ? STATION_SET : null, zoom: car.station ? CABIN_ZOOM : null };
   return crypto.createHash("sha256").update(JSON.stringify({ key, model: car.model, params, turned: car.turned, writer: SELF, ...extra })).digest("hex").slice(0, 12);
 }
 
 /** A cable car line's rendered scenery: the ropes, the two stations and the pylon, image names relative to the image folder. */
-type RopeImages = Omit<ParadeRope, "right" | "left" | "pylon"> & { right: { image: string; widthM: number }; left: { image: string; widthM: number }; pylon: { image: string; widthM: number; spacingM: number } };
+type RopeImages = Omit<ParadeRope, "right" | "left" | "pylon"> & {
+  right: { image: string; widthM: number };
+  left: { image: string; widthM: number };
+  pylon: { image: string; widthM: number; spacingM: number };
+  /** The line's view: its stations fitted to the strip (fitView), the cabins drawn in it too. */
+  view: ParadeView;
+};
 
 /** export/.parade-keys.json: what each car hash, and each line's scenery hash, rendered. */
 interface TrainsKeys {
-  version: 2;
+  version: 3;
   cars: Record<string, CarImages>;
   scenery: Record<string, RopeImages>;
 }
 
-/** The images of one piece of scenery (in studs, as the station set draws it) in the rope view, framed on itself. */
-async function sceneryImage(builder: MeshBuilder, name: string): Promise<{ image: string; widthM: number; bytes: Buffer }> {
-  const tris = mapTriangles(readTriangles(toGlb(name, builder)), studsToMetres, (n) => n);
+/** One piece of scenery (in studs, as the station set draws it) as triangles in metres. */
+const sceneryTris = (builder: MeshBuilder, name: string): Tri[] => mapTriangles(readTriangles(toGlb(name, builder)), studsToMetres, (n) => n);
+
+/** The image of one piece of scenery in the line's `view`, framed on itself. */
+async function sceneryImage(tris: Tri[], name: string, view: ParadeView): Promise<{ image: string; widthM: number; bytes: Buffer }> {
   const { min, max } = triBounds(tris);
-  const png = renderSide(tris, [min[0], max[0]], PARADE_VIEWS.rope);
+  const png = renderSide(tris, [min[0], max[0]], view);
   return { image: `${name}.webp`, widthM: Math.round((max[0] - min[0] + 2 * SIDE_MARGIN_M) * 1000) / 1000, bytes: await webp(png) };
 }
 
@@ -489,13 +501,18 @@ export async function renderRope(car: TrainCar, circulating: boolean, suffix: st
   const type = car.station!;
   const parts = lineScenery(design, car.params, type, circulating);
   const base = `rope-${type}--${carKey({ ...car, station: undefined })}`;
-  const right = await sceneryImage(parts.right, `${base}--station-right-${suffix}`);
-  const left = await sceneryImage(parts.left, `${base}--station-left-${suffix}`);
-  const pylon = await sceneryImage(parts.pylon, `${base}--pylon-${suffix}`);
+  const tris = { right: sceneryTris(parts.right, base), left: sceneryTris(parts.left, base), pylon: sceneryTris(parts.pylon, base) };
+  // the line's view: its stations' roofs just under the strip's top
+  const view = fitView("rope", 0, Math.max(triBounds(tris.right).max[1], triBounds(tris.left).max[1]));
+  const right = await sceneryImage(tris.right, `${base}--station-right-${suffix}`, view);
+  const left = await sceneryImage(tris.left, `${base}--station-left-${suffix}`, view);
+  const pylon = await sceneryImage(tris.pylon, `${base}--pylon-${suffix}`, view);
   const line = cabinHang(design, car.params, type).line;
   return {
     images: {
       station: type,
+      view,
+      ...(circulating ? { spacingM: ROPE_SPACING_M } : {}),
       ropes: ropeHeights(line, type),
       right: { image: right.image, widthM: right.widthM },
       left: { image: left.image, widthM: left.widthM },
@@ -522,21 +539,44 @@ export async function writeParade(
   const outDir = path.join(dir, ...PARADE_IMAGE_DIR.split("/"));
   const keysPath = path.join(dir, ".parade-keys.json");
   fs.mkdirSync(outDir, { recursive: true });
-  let old: TrainsKeys = { version: 2, cars: {}, scenery: {} };
+  let old: TrainsKeys = { version: 3, cars: {}, scenery: {} };
   try {
-    const read = JSON.parse(fs.readFileSync(keysPath, "utf8")) as TrainsKeys | { version: 1; cars: Record<string, CarImages> };
-    // the first version's cars are the same images (a car on the ground keeps its hash)
-    if ((read.version === 1 || read.version === 2) && read.cars) old = { version: 2, cars: read.cars, scenery: read.version === 2 ? read.scenery ?? {} : {} };
+    const read = JSON.parse(fs.readFileSync(keysPath, "utf8")) as TrainsKeys;
+    // an earlier version's craft and scenery were drawn in other views: only this version's are kept
+    if (read.version === 3 && read.cars) old = { version: 3, cars: read.cars, scenery: read.scenery ?? {} };
   } catch {
     // no earlier run: render everything
   }
-  const keys: TrainsKeys = { version: 2, cars: {}, scenery: {} };
+  const keys: TrainsKeys = { version: 3, cars: {}, scenery: {} };
   const byCar = new Map<string, CarImages>();
   const byRope = new Map<string, RopeImages>();
   const exists = (names: string[]) => names.every((n) => fs.existsSync(path.join(outDir, n)));
   let rendered = 0;
   let reused = 0;
   for (const t of trains) {
+    // a cable car line's scenery first: its stations set the view its cabin is drawn in
+    let lineView: ParadeView | undefined;
+    if (t.rope) {
+      const cabin = t.cars[0]!;
+      const id = carKey(cabin);
+      let r = byRope.get(id);
+      if (!r) {
+        const circulating = t.rope.spacingM !== undefined;
+        const carH = carHash(cabin, t.ground);
+        const hash = carH ? crypto.createHash("sha256").update(JSON.stringify({ carH, circulating })).digest("hex").slice(0, 12) : null;
+        const cached = hash ? old.scenery[hash] : undefined;
+        if (hash && cached && exists(ropeFiles(cached))) r = cached;
+        else {
+          const out = await renderRope(cabin, circulating, hash ?? crypto.randomBytes(6).toString("hex"));
+          for (const f of out.files) fs.writeFileSync(path.join(outDir, f.name), f.bytes);
+          r = out.images;
+          log(`  ${id}: line scenery, ${out.files.length} file(s)`);
+        }
+        byRope.set(id, r);
+        if (hash) keys.scenery[hash] = r;
+      }
+      lineView = r.view;
+    }
     for (const car of t.cars) {
       const id = carKey(car);
       if (byCar.has(id)) continue;
@@ -550,7 +590,7 @@ export async function writeParade(
         continue;
       }
       const suffix = hash ?? crypto.randomBytes(6).toString("hex");
-      const r = await renderCar(car, (section) => `${carImageBase(car, section)}-${suffix}`, t.ground);
+      const r = await renderCar(car, (section) => `${carImageBase(car, section)}-${suffix}`, t.ground, lineView);
       for (const f of r.files) fs.writeFileSync(path.join(outDir, f.name), f.bytes);
       const { files, ...images } = r;
       byCar.set(id, images);
@@ -559,25 +599,6 @@ export async function writeParade(
       const kib = files.reduce((n, f) => n + f.bytes.length, 0) / 1024;
       const cycle = r.cycleM ? `${r.cycleM} m` : `${r.cycleS} s`;
       log(`  ${id}: ${files.length} file(s), ${kib.toFixed(1)} KiB${r.frames ? ` (${r.frames} frames / ${cycle})` : ""}`);
-    }
-    if (t.rope) {
-      const cabin = t.cars[0]!;
-      const id = carKey(cabin);
-      if (byRope.has(id)) continue;
-      const circulating = t.cars.length > 1;
-      const carH = carHash(cabin, t.ground);
-      const hash = carH ? crypto.createHash("sha256").update(JSON.stringify({ carH, circulating })).digest("hex").slice(0, 12) : null;
-      const cached = hash ? old.scenery[hash] : undefined;
-      if (hash && cached && exists(ropeFiles(cached))) {
-        byRope.set(id, cached);
-        keys.scenery[hash] = cached;
-        continue;
-      }
-      const r = await renderRope(cabin, circulating, hash ?? crypto.randomBytes(6).toString("hex"));
-      for (const f of r.files) fs.writeFileSync(path.join(outDir, f.name), f.bytes);
-      byRope.set(id, r.images);
-      if (hash) keys.scenery[hash] = r.images;
-      log(`  ${id}: line scenery, ${r.files.length} file(s)`);
     }
   }
   // drop what nothing uses any more (old hashes, an earlier run's PNGs)
@@ -591,20 +612,21 @@ export async function writeParade(
   const models = countedModels();
   const img = (name: string) => `${PARADE_IMAGE_DIR}/${name}`;
   const file: ParadeFile = {
-    version: 2,
-    views: { ...PARADE_VIEWS },
+    version: 3,
     fleet: fleetCounts(models, FACTORY_TRAIN_CONTEXT.confirmed),
     opening: PARADE_OPENING,
     trains: trains.map((t) => {
-      const view = PARADE_VIEWS[t.ground];
-      const cars = layOutTrain(t.cars, (c) => byCar.get(carKey(c))!, SIDE_MARGIN_M, view.pxPerM, t.rope?.spacingM ?? 0, sectionMaxM(view));
-      const last = cars[cars.length - 1]!;
       const rope = t.rope ? byRope.get(carKey(t.cars[0]!))! : undefined;
+      // every rail and road chain in the land view; a ship or an aircraft in its own, a line in its stations'
+      const view = groundView(t.ground) ?? rope?.view ?? byCar.get(carKey(t.cars[0]!))!.view!;
+      const cars = layOutTrain(t.cars, (c) => byCar.get(carKey(c))!, SIDE_MARGIN_M, view.pxPerM, 0, sectionMaxM(view));
+      const last = cars[cars.length - 1]!;
       return {
         id: t.id,
         ground: t.ground,
         category: t.category,
-        speedMps: t.speedMps,
+        view: { ...view },
+        speedMps: viewSpeed(t.category, t.ground, view),
         ...(t.wireM !== undefined ? { wireM: t.wireM } : {}),
         lengthM: Math.round((last.offsetM + last.widthM - SIDE_MARGIN_M) * 1000) / 1000,
         cars,
@@ -612,6 +634,7 @@ export async function writeParade(
           ? {
               rope: {
                 station: rope.station,
+                ...(rope.spacingM !== undefined ? { spacingM: rope.spacingM } : {}),
                 ropes: rope.ropes,
                 right: { image: img(rope.right.image), widthM: rope.right.widthM },
                 left: { image: img(rope.left.image), widthM: rope.left.widthM },

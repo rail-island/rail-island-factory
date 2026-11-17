@@ -76,8 +76,8 @@ export function paradePage(file: ParadeFile): string {
 const __name = (f) => f;
 const playOrder = ${playOrder.toString()};
 const { file, categories, site } = JSON.parse(document.getElementById("parade-data").textContent);
-// pixels per metre on this page: a quarter of a rail or road image's, half of the other views' (drawn at fewer)
-const pxPerM = (ground) => file.views[ground].pxPerM * (ground === "rail" || ground === "road" ? 0.25 : 0.5);
+// pixels per metre on this page: a quarter of a rail or road image's, half of a fitted view's
+const pxPerM = (train) => train.view.pxPerM * (train.ground === "rail" || train.ground === "road" ? 0.25 : 0.5);
 const main = document.getElementById("chains");
 
 function el(tag, attrs, ...children) {
@@ -97,10 +97,10 @@ function load(src) {
 }
 function animated(car, h, train) {
   const sp = car.sprite;
-  const view = file.views[train.ground];
+  const view = train.view;
   const dpr = window.devicePixelRatio || 1;
   const canvas = el("canvas", { style: "position:absolute;inset:0;width:100%;height:100%" });
-  canvas.width = Math.max(1, Math.round(car.widthM * pxPerM(train.ground) * dpr));
+  canvas.width = Math.max(1, Math.round(car.widthM * pxPerM(train) * dpr));
   canvas.height = Math.max(1, Math.round(h * dpr));
   Promise.all([load("/" + car.image), load("/" + sp.image)]).then(([still, sheet]) => {
     const ctx = canvas.getContext("2d");
@@ -138,14 +138,16 @@ else setInterval(() => movers.forEach((m) => m.shown < 0 && draw(m, 0)), 500);
 
 // One chain at its view's scale: every car's still image; an animated car as a canvas
 // whose wheels, legs or propellers move; its ground (rail, road, sea; none in the air);
-// a cable car line between its stations, under its ropes, past its pylons.
+// a cable car line between its stations, under its ropes, past its pylons, its cabin
+// hung every spacingM along the rope (one for a jig-back line).
 function picture(train) {
-  const view = file.views[train.ground];
-  const k = pxPerM(train.ground);
+  const view = train.view;
+  const k = pxPerM(train);
   const h = view.heightM * k;
   const rope = train.rope;
   const lead = rope ? rope.left.widthM + 6 : 0.5; // metres before the chain's nose
-  const widthM = lead + train.lengthM + (rope ? rope.right.widthM + 6 : 0.5);
+  const middleM = rope ? Math.max(train.lengthM, 2.5 * rope.pylon.spacingM) : train.lengthM;
+  const widthM = lead + middleM + (rope ? rope.right.widthM + 6 : 0.5);
   const box = el("div", { class: "train", style: "height:" + h + "px;width:" + widthM * k + "px" });
   const ground = -view.bottomM * k; // pixels from the bottom to the ground's datum
   if (train.ground === "water") box.append(el("div", { class: "sea", style: "height:" + ground + "px" }));
@@ -156,7 +158,10 @@ function picture(train) {
       box.append(el("img", { class: "scenery", src: "/" + rope.pylon.image, alt: "", style: "left:" + x * k + "px;width:" + rope.pylon.widthM * k + "px;height:" + h + "px" }));
     }
   }
-  for (const car of train.cars) {
+  const cabins = rope && rope.spacingM ? Math.max(1, Math.floor(middleM / rope.spacingM)) : 1;
+  const placed = [];
+  for (let i = 0; i < cabins; i++) for (const car of train.cars) placed.push({ ...car, offsetM: car.offsetM + i * (rope && rope.spacingM ? rope.spacingM : 0) });
+  for (const car of placed) {
     const c = el("div", { style: "left:" + (car.offsetM + lead) * k + "px;width:" + car.widthM * k + "px;height:" + h + "px" });
     if (car.sprite && car.sprite.frames > 1) c.append(animated(car, h, train));
     else c.append(el("img", { src: "/" + car.image, alt: "", loading: "lazy", style: "inset:0;width:100%;height:100%" }));

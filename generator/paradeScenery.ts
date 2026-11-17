@@ -19,6 +19,7 @@ import { parseGlb } from "./glbParse.ts";
 import { Sketch } from "./previews/sketch.ts";
 import * as station from "./sets/cableCarStation.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
+import { CABIN_ZOOM } from "./trainParade.ts";
 
 /** Metres per stud of the game's cable car frame. */
 export const M_PER_STUD = 1 / STUD_SCALE;
@@ -108,7 +109,7 @@ export function ropeHeadM(type: string): number {
  * A cable car cabin hung from a line of station type `type`: the game's own frame
  * for it (cableCarLine.ts: the catalog's yaw, recentred and scaled to studs, the
  * rope datum at 0, the rope along +x), in metres, its rope datum at the rope head's
- * height over the station level.
+ * height over the station level, drawn CABIN_ZOOM times its size.
  */
 export function cabinHang(design: ProceduralDesign, params: ParamValues | undefined, type: string): { map: PointMap; turn: PointMap; line: CabinLine } {
   const line = cabinLine(design, params);
@@ -116,9 +117,11 @@ export function cabinHang(design: ProceduralDesign, params: ParamValues | undefi
   const turn = yawTurn(design.catalog?.yaw ?? 0);
   const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2;
   const head = ropeHeadM(type);
+  // drawn CABIN_ZOOM times its size about its rope datum, so it still hangs from the rope
+  const m = k * M_PER_STUD * CABIN_ZOOM;
   const map: PointMap = (p) => {
     const [rx, y, rz] = turn(p);
-    return [(rx - cx) * k * M_PER_STUD, ((y - b.y0) * k - line.drop) * M_PER_STUD + head, (rz - cz) * k * M_PER_STUD];
+    return [(rx - cx) * m, ((y - b.y0) - line.drop / k) * m + head, (rz - cz) * m];
   };
   return { map, turn, line };
 }

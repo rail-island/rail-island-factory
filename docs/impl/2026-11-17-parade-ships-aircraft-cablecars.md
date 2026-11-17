@@ -49,6 +49,19 @@ in 6 min 52 s on this container - over the 5-minute rule, but the parade file it
 `pnpm build:parade` rendered all 118 chains (279 images, 260 s from cold). Website:
 `npm run build` complete (311 pages); the component's script typechecks under `tsc --strict`.
 
+## Follow-up changes
+
+1. "Make small aircrafts and helicopters bigger in the parade" - the A.10 and the H145
+   were drawn 2.5 times their size (a per-car `zoom`); replaced by change 2.
+2. "Cablecar cabins are too small ... too long ... ships, aircrafts: each vehicle as big as
+   possible; only trains, trams, road vehicles and horses keep scale" - parade.json version
+   3 carries a `view` on every chain: rail and road chains share `LAND_VIEW`, each ship and
+   aircraft is fitted to the strip (`fitView`; speed scaled by `viewSpeed`), a cable car
+   line is fitted to its stations and its cabin drawn 1.5 times its size (`CABIN_ZOOM`). A
+   line now lists one cabin: the site hangs one every 40 m along the whole rope (one for a
+   jig-back line), already there as the scene fades in, runs them 10 s (`ROPE_MS`) and
+   fades them out. The per-car `zoom` is gone.
+
 ## How to test
 
 **Automated coverage.** `pnpm exec vitest run test/trainParade.test.ts` in the factory. No E2E
@@ -66,12 +79,14 @@ framework.
    hanging from the rope; on a ship row the sea up to the waterline; on an aircraft row no
    ground line, and the A.10's propeller and the H145's rotor turning.
 3. Open the website at `http://localhost:4321/?parade=omega-gondola` - the tunnel portals
-   fade out, the ropes, pylons and two stations fade in, four red gondolas come out of the
-   right station and go into the left one.
+   fade out, the ropes, pylons and two stations fade in with red gondolas already along the
+   whole rope; they run left for about 10 s (into the left station, out of the right) and
+   fade out.
 4. `?parade=ocean-liner` - the rail fades, a sea band rises to the waterline with drifting
    crests, the liner sails across with foam at its bow and stern and haze from its funnels.
-5. `?parade=airbus-h145` - the helicopter flies above the near hills, its rotor turning
-   while it moves; the rail stays empty.
+5. `?parade=airbus-h145` - the helicopter, as tall on screen as the A380 is with
+   `?parade=airbus-a380`, flies with its belly a third up the strip, its rotor turning;
+   the rail stays empty.
 6. Without `?parade`, reload: the first eight chains are electric loco, steam, electric
    unit, diesel loco, diesel unit, cable car, ship, aircraft, in that order.
 
@@ -86,7 +101,7 @@ Nothing - the spec is implemented in full.
 ## Known problems
 
 - The spec's suggestion that cable cars keep the trains' scale does not fit stations of up to 24.5 m in the strip; the rope ground got its own view (8 px/m, 26 m window) under the agreed "scale per kind".
-- The Aero A.10 and the H145 are about a tenth of the air window's height: a few pixels tall on a phone.
+- Ships and aircraft no longer compare in length with each other; cable car cabins are 1.5 times their size beside their stations.
 - The ropes are drawn straight (no sag) and every pylon at the stations' rope height.
 - On a phone the two stations cover close to half the strip's width.
 - Propeller and rotor sprites loop at 0.24 s / 0.48 s per turn in 12 frames; at 60 fps that strobes rather than blurs.

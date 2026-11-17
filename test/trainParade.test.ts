@@ -3,9 +3,9 @@
 // drawn nose right, moving parts become sprites, the fleet is counted, the images
 // are reused while nothing changed, parade.json matches what was written, the
 // play order spreads the categories, and the overview page lists every chain.
-// Ships, aircraft and cable car lines are drawn in their own views: a ship above
-// its waterline with a wake, an aircraft gear up with turning propellers, a line's
-// cabins on its rope between two stations.
+// Ships and aircraft are each drawn as large as the strip allows: a ship above its
+// waterline with a wake, an aircraft gear up with turning propellers; a cable car
+// line's cabin hangs from its rope between two stations, in the stations' view.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -20,7 +20,7 @@ import { SIDE_MARGIN_M, SIDE_PX_PER_M, readTriangles, renderGlbSideThumb } from 
 import {
   SECTION_MAX_M, TRAIN_PARADE, VEHICLE_TYPES, carImageBase, carSections, fleetCounts, layOutTrain, modelVariants, resolveTrains,
   trainGround, trainCategory, trainWire, playOrder, PARADE_OPENING, PARADE_SPEED_MPS, vehicleType, PARADE_IMAGE_DIR, TRAIN_CATEGORIES, type CarImages, type TrainContext, type TrainSpec,
-  PARADE_VIEWS, GROUNDS, ROPE_CABINS, ROPE_SPACING_M, type ParadeFile,
+  LAND_VIEW, VIEW_PX, CABIN_ZOOM, ROPE_SPACING_M, fitView, viewSpeed, type ParadeFile,
 } from "../generator/trainParade.ts";
 import { SIDE_BOTTOM_M, SIDE_TOP_M } from "../generator/renderGlbThumb.ts";
 import { craftTurn, ropeHeadM, withoutNode } from "../generator/paradeScenery.ts";
@@ -114,11 +114,10 @@ describe("train list", () => {
     expect(resolveTrains([{ id: "p", cars: [{ model: "plane" }] }], fixture)[0]).toMatchObject({ ground: "air", category: "aircraft" });
     const [g] = resolveTrains([{ id: "g", cars: [{ model: "gondola" }], rope: { station: "open_gantry" } }], fixture);
     expect(g).toMatchObject({ ground: "rope", category: "cableCar", rope: { station: "open_gantry", spacingM: ROPE_SPACING_M } });
-    // a circulating line runs ROPE_CABINS cabins (or as many as it says), each hung from its station type's rope
-    expect(g!.cars).toEqual(Array.from({ length: ROPE_CABINS }, () => ({ model: "gondola", params: {}, turned: false, station: "open_gantry" })));
-    expect(resolveTrains([{ id: "g", cars: [{ model: "gondola" }], rope: { station: "open_gantry", cabins: 2 } }], fixture)[0]!.cars.length).toBe(2);
+    // the line lists its one cabin, hung from its station type's rope; a client hangs as many as fit, spacingM apart
+    expect(g!.cars).toEqual([{ model: "gondola", params: {}, turned: false, station: "open_gantry" }]);
     // a jig-back cabin runs alone, so it keeps no spacing
-    const [t] = resolveTrains([{ id: "t", cars: [{ model: "tramway" }], rope: { station: "concrete_drive", cabins: 3 } }], fixture);
+    const [t] = resolveTrains([{ id: "t", cars: [{ model: "tramway" }], rope: { station: "concrete_drive" } }], fixture);
     expect(t!.cars.length).toBe(1);
     expect(t!.rope).toEqual({ station: "concrete_drive" });
   });
@@ -139,8 +138,6 @@ describe("train list", () => {
     ["a cable car line without its rope", [{ id: "a", cars: [{ model: "gondola" }] }], /needs its rope/],
     ["an unknown station type", [{ id: "a", cars: [{ model: "gondola" }], rope: { station: "castle" } }], /no cable car station type "castle"/],
     ["a rope under a train", [{ id: "a", cars: [{ model: "loco" }], rope: { station: "open_gantry" } }], /only a cable car line/],
-    ["a zoomed train", [{ id: "a", cars: [{ model: "loco", zoom: 2 }] }], /only an aircraft is zoomed/],
-    ["an aircraft zoomed too far", [{ id: "a", cars: [{ model: "plane", zoom: 6 }] }], /at most 4/],
   ];
   for (const [what, list, error] of bad) {
     it(`refuses ${what}`, () => expect(() => resolveTrains(list, fixture)).toThrow(error));
@@ -178,10 +175,30 @@ describe("layout", () => {
     expect(carImageBase(cabin)).toBe("c--rope-open_gantry");
   });
 
-  it("draws every view's longest section at as many pixels as a rail car's, and the rail and road views as the side thumbnails", () => {
-    for (const g of GROUNDS) expect(sectionMaxM(PARADE_VIEWS[g]) * PARADE_VIEWS[g].pxPerM).toBeCloseTo(SECTION_MAX_M * SIDE_PX_PER_M, 6);
-    for (const g of ["rail", "road"] as const) expect(PARADE_VIEWS[g]).toEqual({ pxPerM: SIDE_PX_PER_M, heightM: SIDE_TOP_M - SIDE_BOTTOM_M, bottomM: SIDE_BOTTOM_M });
-    expect(carSections(269, sectionMaxM(PARADE_VIEWS.water)).length).toBe(2);
+  it("keeps the rail and road chains at the side thumbnails' scale, and fits a ship, an aircraft and a line to the strip", () => {
+    expect(LAND_VIEW).toEqual({ pxPerM: SIDE_PX_PER_M, heightM: SIDE_TOP_M - SIDE_BOTTOM_M, bottomM: SIDE_BOTTOM_M });
+    expect(Math.round(LAND_VIEW.heightM * LAND_VIEW.pxPerM)).toBe(VIEW_PX);
+    const share = (v: { heightM: number; bottomM: number }, m: number) => (m - v.bottomM) / v.heightM;
+    for (const [low, high] of [[0, 16], [0, 40]]) {
+      // a ship's waterline where the strip draws its ground, its masthead just under the strip's top
+      const w = fitView("water", low, high);
+      expect(Math.round(w.heightM * w.pxPerM)).toBe(VIEW_PX);
+      expect(share(w, 0)).toBeCloseTo(-LAND_VIEW.bottomM / LAND_VIEW.heightM, 3);
+      expect(share(w, high)).toBeGreaterThan(0.95);
+      expect(share(w, high)).toBeLessThan(1);
+    }
+    // an aircraft from a third of the strip up to just under its top, whatever its size
+    for (const [low, high] of [[0.5, 4], [1, 24]]) {
+      const a = fitView("air", low, high);
+      expect(share(a, low)).toBeCloseTo(0.33, 3);
+      expect(share(a, high)).toBeCloseTo(0.95, 3);
+    }
+    // every view's longest section is as many pixels as a rail car's
+    const v = fitView("water", 0, 40);
+    expect(sectionMaxM(v) * v.pxPerM).toBeCloseTo(SECTION_MAX_M * SIDE_PX_PER_M, 6);
+    // a ship or an aircraft runs as fast on screen as its table speed in the land view
+    expect(viewSpeed("ship", "water", v)).toBeCloseTo((PARADE_SPEED_MPS.ship * v.heightM) / LAND_VIEW.heightM, 1);
+    expect(viewSpeed("tram", "rail", LAND_VIEW)).toBe(PARADE_SPEED_MPS.tram);
   });
 
   it("cuts a car longer than SECTION_MAX_M into equal sections that cover it", () => {
@@ -482,12 +499,12 @@ describe("categories and play order", () => {
 
 describe("overview page", () => {
   const file: ParadeFile = {
-    version: 2, views: { ...PARADE_VIEWS },
+    version: 3,
     fleet: { types: { trains: 2, trams: 0, buses: 0, trucks: 0, horseDrawn: 0, ships: 0, aircraft: 0, cableCars: 0 }, variants: 3 },
     opening: PARADE_OPENING,
     trains: [
-      { id: "steam-<one>", ground: "rail" as const, category: "steamLoco" as const, speedMps: 16, lengthM: 20, cars: [] },
-      { id: "unit-two", ground: "rail" as const, category: "electricUnit" as const, speedMps: 22, wireM: 5.88, lengthM: 40, cars: [] },
+      { id: "steam-<one>", ground: "rail" as const, category: "steamLoco" as const, view: LAND_VIEW, speedMps: 16, lengthM: 20, cars: [] },
+      { id: "unit-two", ground: "rail" as const, category: "electricUnit" as const, view: LAND_VIEW, speedMps: 22, wireM: 5.88, lengthM: 40, cars: [] },
     ],
   };
   const html = paradePage(file);
@@ -540,7 +557,7 @@ describe("ships, aircraft and cable cars", () => {
   it("draws a ship above its waterline only, with a wake at its bow and stern and its funnel smoking", async () => {
     const car = { model: "proc-vehicle-ship-harbour-tug", params: {}, turned: false };
     const r = await renderCar(car, () => "tug", "water");
-    const view = PARADE_VIEWS.water;
+    const view = r.view!;
     const png = PNG.sync.read(await sharp(r.files.find((f) => f.name === "tug.webp")!.bytes).png().toBuffer());
     expect(png.height).toBe(Math.round(view.heightM * view.pxPerM));
     const waterRow = Math.ceil((view.heightM + view.bottomM) * view.pxPerM);
@@ -555,15 +572,16 @@ describe("ships, aircraft and cable cars", () => {
     expect(em.some((e) => e.kind === "diesel" && e.yM < view.heightM + view.bottomM)).toBe(true);
   });
 
-  it("draws a small aircraft larger when the list zooms it", async () => {
-    const [p] = resolveTrains([{ id: "p", cars: [{ model: "plane", zoom: 2.5 }] }], fixture);
-    expect(p!.cars[0]).toEqual({ model: "plane", params: {}, turned: false, zoom: 2.5 });
-    expect(carImageBase(p!.cars[0]!)).toBe("plane--zoom-2.5");
-    const plain = await renderCar({ model: "proc-vehicle-airbus-h145", params: {}, turned: false }, () => "h", "air");
-    const big = await renderCar({ model: "proc-vehicle-airbus-h145", params: {}, turned: false, zoom: 2.5 }, () => "h", "air");
-    expect(big.lengthM).toBeCloseTo(plain.lengthM * 2.5, 6);
-    // the small aircraft of the parade are zoomed
-    for (const id of ["aero-a10", "airbus-h145"]) expect(resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT).find((t) => t.id === id)!.cars[0]!.zoom).toBe(2.5);
+  it("draws a helicopter as tall on screen as an airliner: each aircraft fitted to the strip", async () => {
+    const small = await renderCar({ model: "proc-vehicle-airbus-h145", params: {}, turned: false }, () => "h", "air");
+    const big = await renderCar({ model: "proc-vehicle-airbus-a380", params: {}, turned: false }, () => "a", "air");
+    const tall = async (r: typeof small) => {
+      const png = PNG.sync.read(await sharp(r.files.find((f) => !f.name.includes("frames"))!.bytes).png().toBuffer());
+      const rows = Array.from({ length: png.height }, (_, y) => Array.from({ length: png.width }, (_, x) => png.data[(y * png.width + x) * 4 + 3]!).some((a) => a > 0));
+      return rows.lastIndexOf(true) - rows.indexOf(true);
+    };
+    expect(small.view!.pxPerM).toBeGreaterThan(4 * big.view!.pxPerM);
+    expect(Math.abs((await tall(small)) - (await tall(big)))).toBeLessThan(VIEW_PX * 0.08);
   });
 
   it("turns an aircraft's propeller with time, as a sprite", async () => {
@@ -595,8 +613,8 @@ describe("writeParade", () => {
       const first = await writeParade(list, dir);
       const file = first.file;
       expect([first.rendered, first.reused]).toEqual([2, 0]);
-      expect(file.version).toBe(2);
-      expect(file.views).toEqual(PARADE_VIEWS);
+      expect(file.version).toBe(3);
+      for (const t of file.trains) expect(t.view).toEqual(LAND_VIEW);
       expect(file.fleet.types.trains).toBeGreaterThan(100);
       expect(file.fleet.variants).toBeGreaterThan(Object.values(file.fleet.types).reduce((a, b) => a + b, 0));
       expect(JSON.parse(fs.readFileSync(path.join(dir, "parade.json"), "utf8"))).toEqual(file);
@@ -610,7 +628,7 @@ describe("writeParade", () => {
       expect(file.trains[0]!.ground).toBe("rail");
       for (const car of [a!, b!]) {
         const img = await sharp(path.join(dir, car.image)).metadata();
-        expect([img.format, img.width, img.height]).toEqual(["webp", Math.round(car.widthM * SIDE_PX_PER_M), Math.round(file.views.rail.heightM * SIDE_PX_PER_M)]);
+        expect([img.format, img.width, img.height]).toEqual(["webp", Math.round(car.widthM * SIDE_PX_PER_M), Math.round(file.trains[0]!.view.heightM * SIDE_PX_PER_M)]);
         const sp = car.sprite!;
         expect(sp.frames).toBeGreaterThanOrEqual(12);
         expect(sp.cycleM).toBeGreaterThan(0);
@@ -619,8 +637,8 @@ describe("writeParade", () => {
         const pitch = Math.round(sp.pitchM * SIDE_PX_PER_M);
         expect([sheet.width, sheet.height]).toEqual([Math.round(sp.widthM * SIDE_PX_PER_M), pitch * sp.frames - (pitch - h)]);
         // the wheels are low on the car, inside its image
-        expect(sp.yM + sp.heightM).toBeLessThanOrEqual(file.views.rail.heightM);
-        expect(sp.yM).toBeGreaterThan(file.views.rail.heightM / 2);
+        expect(sp.yM + sp.heightM).toBeLessThanOrEqual(file.trains[0]!.view.heightM);
+        expect(sp.yM).toBeGreaterThan(file.trains[0]!.view.heightM / 2);
       }
       // the overview page sits beside it and lists the chain
       expect(fs.readFileSync(path.join(dir, "parade", "index.html"), "utf8")).toContain('"pair"');
@@ -645,16 +663,21 @@ describe("writeParade", () => {
   it("hangs a cable car line's cabins from its rope between its two stations, and reuses its scenery next time", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "trains-"));
     try {
-      const list: TrainSpec[] = [{ id: "line", cars: [{ model: "proc-vehicle-doppelmayr-omega" }], rope: { station: "open_gantry", cabins: 3 } }];
+      const list: TrainSpec[] = [{ id: "line", cars: [{ model: "proc-vehicle-doppelmayr-omega" }], rope: { station: "open_gantry" } }];
       const first = await writeParade(list, dir);
       const t = first.file.trains[0]!;
       expect(t.ground).toBe("rope");
       expect(t.speedMps).toBe(PARADE_SPEED_MPS.cableCar);
-      expect(t.cars.map((c) => c.offsetM)).toEqual([-SIDE_MARGIN_M, ROPE_SPACING_M - SIDE_MARGIN_M, 2 * ROPE_SPACING_M - SIDE_MARGIN_M]);
+      expect(t.cars.map((c) => c.offsetM)).toEqual([-SIDE_MARGIN_M]);
       const rope = t.rope!;
       expect(rope.station).toBe("open_gantry");
+      expect(rope.spacingM).toBe(ROPE_SPACING_M);
       expect(rope.ropes).toEqual([{ kind: "haul", yM: Math.round(ropeHeadM("open_gantry") * 1000) / 1000 }]);
-      const view = PARADE_VIEWS.rope;
+      const view = t.view;
+      // the stations' roofs just under the strip's top
+      expect(view.heightM).toBeLessThan(21);
+      // the cabin drawn CABIN_ZOOM times its size (the Omega is about 2.2 m long)
+      expect(t.cars[0]!.widthM - 2 * SIDE_MARGIN_M).toBeCloseTo(2.2 * CABIN_ZOOM, 0);
       for (const part of [rope.right, rope.left, rope.pylon]) {
         const img = await sharp(path.join(dir, part.image)).metadata();
         expect([img.width, img.height]).toEqual([Math.round(part.widthM * view.pxPerM), Math.round(view.heightM * view.pxPerM)]);
