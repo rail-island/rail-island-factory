@@ -10,7 +10,7 @@
 // docs/site/seo-pages.md).
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, NO_CHIPS, OPENTTD_PATH, chipLabel, chipMatches, chipRows, chipSlug, countryChips, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
+import { COLUMNS, GROUPS, NO_CHIPS, OPENTTD_PATH, chipLabel, chipMatches, chipRows, chipSlug, countryChips, linkUrl, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
 import { SITE_URL, categoryMeta, categoryTree, countryMeta, homeMeta, listIntro, makerMeta, modelMeta, openttdMeta, type PageMeta } from "./pageMeta";
 import { Link } from "./Link";
 import type { ModelCatalog } from "../generator/catalog.ts";
@@ -126,7 +126,8 @@ export function App() {
   const l2Pick = (v: string | null): Partial<ViewState> => ({ l2: v === null || chipMatches(v, view().l2) ? null : chipSlug(v), l3: null });
   const l3Pick = (v: string | null): Partial<ViewState> => ({ l3: v === null || chipMatches(v, view().l3) ? null : chipSlug(v) });
   const countryPick = (v: string | null): Partial<ViewState> => ({ country: v === null || chipMatches(v, view().country) ? null : chipSlug(v) });
-  const hrefOf = (patch: Partial<ViewState>) => viewUrl({ ...view(), ...patch });
+  // A link's href names the page only (linkUrl): the list state rides on the click.
+  const hrefOf = (patch: Partial<ViewState>) => linkUrl({ ...view(), ...patch });
   const pick = (patch: Partial<ViewState>) => update(patch, true);
 
   const onSort = (col: Column) => {
@@ -153,7 +154,7 @@ export function App() {
   };
   const stepHref = (delta: number) => {
     const patch = stepPatch(delta);
-    return patch ? hrefOf(patch) : viewUrl(view());
+    return patch ? hrefOf(patch) : linkUrl(view());
   };
 
   // The document head follows the page: its title, description and canonical URL
@@ -307,7 +308,7 @@ export function App() {
                       class="factory-filter factory-section"
                       classList={{ "factory-filter--on": section() === s }}
                       aria-current={section() === s ? "page" : undefined}
-                      href={hrefOf({ section: s })}
+                      href={viewUrl({ ...view(), section: s })}
                       onNavigate={() => pick({ section: s })}
                     >
                       {s === "workshop" ? "Workshop" : "Catalog"} <span class="factory-section__count">{counts()[s]}</span>

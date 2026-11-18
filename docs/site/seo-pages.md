@@ -40,6 +40,16 @@ The rest of the view stays in the query string: search, layout, sort, tab, node 
 previous and next steps and Back stay within the same list. The canonical URL drops
 the query.
 
+That full URL is what the address bar shows after a click, never what a link names.
+Every in-site link's `href` is the page alone (`linkUrl`, `src/catalogQuery.ts`): a
+model card, row or step link is `/model/<id>/`, a chip is its category, country or
+maker page, and only a variant thumbnail adds its `p.<name>` parameters. Otherwise
+Googlebot, which runs the app, followed thousands of `/model/<id>/?cat=...&country=...`
+links and indexed them in place of the canonical pages. A plain click still opens the
+whole view (`viewUrl`); a middle click opens the page without the list's filters. The
+Catalog/Workshop switch is the one link that keeps its query (`?section=workshop`), since
+the workshop has no page of its own.
+
 The old all-query form (`/?model=<id>`, `/?cat=...&sub=...`, the webapp Creator's form)
 is still read. On load the app rewrites it to the path form with `replaceState`.
 

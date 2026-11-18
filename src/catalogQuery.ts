@@ -630,6 +630,20 @@ export function viewUrl(v: ViewState): string {
   return `${viewPath(v)}${serializeView(v)}`;
 }
 
+/**
+ * The href of an in-site link to a view: its page (viewPath), plus a model's variant
+ * parameters (`p.<name>`). The list state - chips kept on a model page, a country,
+ * maker or OpenTTD filter that is not the page, search, sort, layout, section - stays
+ * out, so the links a crawler follows name the canonical pages, not query duplicates
+ * of them (docs/site/seo-pages.md). A plain click still opens the whole view (viewUrl).
+ */
+export function linkUrl(v: ViewState): string {
+  const p = new URLSearchParams();
+  if (v.model) for (const k of Object.keys(v.params).sort()) p.set(`p.${k}`, v.params[k]!);
+  const s = p.toString();
+  return `${viewPath(v)}${s ? `?${s}` : ""}`;
+}
+
 // ------------------------------------------------------------- parameters
 
 /** One parameter of a record (its spec as the catalog carries it). */

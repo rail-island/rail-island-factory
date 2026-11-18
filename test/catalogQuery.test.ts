@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import {
   COLUMNS, DEFAULT_SORT, cellFile, cellText, column, compareRows, effectiveParams, formatBytes, isDefaultParams, nonDefaultParams, parseView,
-  NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView, shownId, viewUrl, chipSlug, chipMatches, viewPath,
+  NO_CHIPS, chipLabel, chipRows, groupOf, prepareRows, queryRows, serializeView, shownId, viewUrl, linkUrl, chipSlug, chipMatches, viewPath,
   MAX_SHOWN_VARIANTS, offeredValues, representativeVariants, variantCaption, variantCount, variantThumbKey,
   type CatalogRecord,
 } from "../src/catalogQuery";
@@ -253,6 +253,21 @@ describe("the URL state", () => {
     expect(viewPath(v)).toBe("/model/proc-vehicle-cd-163/");
     expect(viewUrl(v)).toBe("/model/proc-vehicle-cd-163/?cat=train&sub=loco&sub2=electric");
     expect(parseUrl(viewUrl(v))).toEqual(v);
+  });
+
+  // Regression: the list's model links carried the chips (`?cat=&sub=&sub2=&country=`),
+  // so Google indexed those query URLs instead of the canonical `/model/<id>/`.
+  it("links to the canonical page, leaving the list state to the click", () => {
+    const list = { ...parseView("?q=re&sort=triangles&view=thumbs&section=workshop"), group: "train", l2: "loco", l3: "electric", country: "switzerland" };
+    const model = { ...list, model: "proc-vehicle-rhb-ge66" };
+    expect(viewUrl(model)).toContain("?");
+    expect(linkUrl(model)).toBe("/model/proc-vehicle-rhb-ge66/");
+    expect(linkUrl(list)).toBe("/category/train/loco/electric/");
+    expect(linkUrl({ ...parseView(""), country: "switzerland" })).toBe("/country/switzerland/");
+    expect(linkUrl({ ...parseView(""), maker: "slm", openttd: true })).toBe("/maker/slm/");
+    expect(linkUrl(parseView("?q=tower&section=workshop"))).toBe("/");
+    // a variant thumbnail still names its variant
+    expect(linkUrl({ ...model, params: { livery: "red", cab: "a" } })).toBe("/model/proc-vehicle-rhb-ge66/?p.cab=a&p.livery=red");
   });
 
   it("reads the old all-query form, which the app rewrites to the path form", () => {
