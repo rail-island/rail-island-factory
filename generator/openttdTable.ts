@@ -1037,7 +1037,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-renfe-s120": series(59, 60, ELRL, { cars: 4, liveries: ["mediaDistancia"] }),
   "proc-vehicle-renfe-civia": series(62, 51, ELRL, { cars: 4 }),
   "proc-vehicle-renfe-446": series(76, 88, ELRL, { cars: 3 }),
-  "proc-vehicle-renfe-440": series(76, 84, ELRL, { cars: 3, liveries: ["cercanias"] }),
+  "proc-vehicle-renfe-440": series(80, 100, ELRL, { cars: 3, liveries: ["cercanias"] }), // 260 seats in three cars, 160 in M + Rc (de.wikipedia)
   "proc-vehicle-renfe-592": series(76, 84, RAIL, { cars: 3, liveries: ["mediaDistancia"] }),
   "proc-vehicle-iryo-s109": series(40, 56, ELRL, { cars: 8 }),
   "proc-vehicle-renfe-354": loco(RAIL, { presets: presets() }),
