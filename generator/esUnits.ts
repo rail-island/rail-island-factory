@@ -6,8 +6,8 @@
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
-import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, nose } from "./seriesHelpers.ts";
+import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery } from "./shinkansen.ts";
+import { c } from "./seriesHelpers.ts";
 import { TALGO_III } from "./esTalgoIii.ts";
 import { S103 } from "./esS103.ts";
 import { S102, s102Series } from "./esS102.ts";
@@ -26,6 +26,7 @@ import { CIVIA } from "./esCivia.ts";
 import { r440Game, R440, R440_PARAMS, renfe440, renfe440Lod } from "./es440.ts";
 export { R440, renfe440, renfe440Lod };
 import { R592 } from "./es592.ts";
+import { S109 } from "./esIryoS109.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -50,17 +51,6 @@ export { S130 };
 
 export { R446 };
 export { R592 };
-
-export const S109: ShinkansenSeries = {
-  endLength: 26.5, midLength: 25.4, W: 1.46, Y: 1.4, S: 3.1, C: 4.05, lean: 0.95, B: 0.8, A: 1.05,
-  // the Frecciarossa 1000's long nose, its windscreen in one sweep
-  nose: nose(6.0, 0.06, 2.5, [[0, 1.2], [0.6, 1.6], [2.4, 2.3], [4.2, 3.0], [5.8, 3.65], [6.8, 4.05]], [[0, 1.15], [0.6, 1.5], [2.4, 2.1], [4.2, 2.65], [5.8, 2.95], [6.8, 3.1]], [[0, 1.1], [1.5, 1.3], [3.0, 1.4]], [[0, 1.05], [1.5, 1.05]], [[0, 1.0], [0.6, 0.6], [2.0, 0.8]]),
-  windscreen: [4.0, 6.0, 0.07, 1.05], lamps: [1.4, 1.45],
-  windows: [[1.95, 2.75]], windowW: 1.3, pitch: 1.55, door: [1.3, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 17.5, wheelR: 0.46, wheelbase: 2.65, cars: [4, 8],
-  liveries: { iryo: esLivery("iryo", "109 001") },
-  weight: { end: 58, middle: 54 }, power: 1100, maxspeed: 360,
-};
 
 export { TALGO_III };
 

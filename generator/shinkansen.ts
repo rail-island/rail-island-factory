@@ -61,7 +61,7 @@ export interface ShinkansenLivery {
   /** The front's colour carried back over the cab roof along a slanted edge, drawn over the bands in `frontRoof` paint: from d[0] (the front's `frontD`) at height y up to d[1] at the shoulder and d[2] at the crown. */
   capSlope?: { y: number; d: readonly [number, number, number] };
   /** The end car's own markings on both sides (d from the body's front, foot, height): a power car's emblem and name. */
-  endLettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
+  endLettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string; letterStroke?: number }>;
   /** The end car's own side bands (default the livery's): a power car painted apart from its coaches. */
   endBands?: readonly Band[];
   /**

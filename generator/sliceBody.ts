@@ -160,13 +160,13 @@ export function sideDecal(m: MeshBuilder, b: SliceBody, X: (d: number) => number
   m.facets(mat, pts, [0, 0, s]);
 }
 
-/** Lettering on the side, centred at d, its foot at y, h tall, reading left to right from outside. */
-export function sideLettering(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, text: string, d: number, y: number, h: number, mat: string, proud = 0.004): void {
+/** Lettering on the side, centred at d, its foot at y, h tall, reading left to right from outside; its strokes `stroke` wide (default 0.13 h). */
+export function sideLettering(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: number, text: string, d: number, y: number, h: number, mat: string, proud = 0.004, stroke = h * 0.13): void {
   const w = h * 0.58, gap = h * 0.18;
   const width = strokeWidth(text, w, gap);
   // seen from outside the +Z side reads toward +X (against d when the car faces +X), the -Z side the other way
   const dir = Math.sign(X(0) - X(1));
-  const tris = strokeText(text, -width / 2, y, h, w, gap, false, h * 0.13).map(([u, v]): Pt => [d - dir * s * u, v]);
+  const tris = strokeText(text, -width / 2, y, h, w, gap, false, stroke).map(([u, v]): Pt => [d - dir * s * u, v]);
   sideDecal(m, b, X, s, mat, tris, proud);
 }
 
