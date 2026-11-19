@@ -331,6 +331,13 @@ export interface ShinkansenSeries {
    * (this series unwired, `traction: "none"`). A lone car is built from either series by the design.
    */
   leadCar?: ShinkansenSeries;
+  /**
+   * The end car's own crown and shoulder by d behind the body's front end ([d, height] tables), in
+   * place of C and S, and the body's slice spacing along them: a cab section taller than the car
+   * behind it (the Regio 2N's single-deck end car, whose cab is as tall as the double-deck cars'). With
+   * `lowWell` too; the face meets the section at d = 0.
+   */
+  endSection?: { C: Pt[]; S: Pt[]; step: number };
 }
 
 /** The leading end car's series: the series with its `leadEnd` fields. */
@@ -511,6 +518,8 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       ...(s.lowWell && !power ? { front: wellNose(s, s.lowWell, end, L), noseStep: 1.0 } : {}),
       // the roof wells: a nose of the body's full plan at each inner end whose crown and shoulder tables rise to the roof
       ...(s.roofWells && !power ? wellNoses(s, end) : {}),
+      // the end car's own crown and shoulder by d (endSection), over its well's tables when it has one
+      ...(end && !power && s.endSection ? { front: { ...(s.lowWell ? wellNose(s, s.lowWell, true, L) : { len: 1e-3, tip: 1, power: 2 }), C: s.endSection.C, S: s.endSection.S }, noseStep: s.endSection.step } : {}),
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
@@ -2154,4 +2163,44 @@ export function seriesEndCarLod(series: ShinkansenSeries, params: readonly Param
   const s = leadSeries(series);
   const l = liveryOf(s, resolveParams(params, v));
   return carLod(s, l, true, loneEndPantograph(s), (d) => cx + s.endLength / 2 - frontGap(s, true) - d, cx, turned, section);
+}
+
+// --- any series car in another design's train ----------------------------------------------------
+// (frRegio2n.ts: a set of four kinds of car - two end cars and two intermediate ones - articulated in
+// one train; each kind is a car of one of its series, laid out and hinged by that design itself)
+
+/** The materials a series' cars in the livery `key` are drawn with: for another design's builder that draws them (drawSeriesCar). */
+export function seriesCarPalette(series: ShinkansenSeries, key: string): Record<string, MaterialSpec> {
+  return { ...PALETTE, ...series.liveries[key]!.palette, ...panelPaint(series) };
+}
+
+/**
+ * One car of a series - its end car (`end`) or its intermediate car - drawn into another design's
+ * builder `m` (its palette holding seriesCarPalette's materials) as buildSeries draws it in a train:
+ * centred between its coupling planes on x = 0, facing +X; the caller moves and turns it into its
+ * place. `trucks` keeps or leaves out each of its bogies (a joint's bogie drawn once, by
+ * drawSeriesJointBogie), `inside` the ends whose couplers it draws (default both); `rear` marks the
+ * train's rear end car (the series' `rearEnd`).
+ */
+export function drawSeriesCar(m: MeshBuilder, series: ShinkansenSeries, key: string, o: { end: boolean; pantograph: boolean | "lowered"; rear?: boolean; trucks?: readonly boolean[]; inside?: readonly number[] }): void {
+  const l = series.liveries[key]!;
+  const def = carDef(series, l, o.end, o.pantograph, l.number, false, undefined, o.rear === true);
+  const len = o.end ? series.endLength : series.midLength;
+  drawCar(m, def, (d) => len / 2 - frontGap(series, o.end) - d, { inside: o.inside ?? [1, -1], ...(o.trucks ? { trucks: o.trucks } : {}) });
+}
+
+/** A series' bogie at x in another design's builder (the caller wraps it in `m.bogie`): a Jacobs bogie under a joint. */
+export function drawSeriesJointBogie(m: MeshBuilder, series: ShinkansenSeries, key: string, x: number): void {
+  const l = series.liveries[key]!;
+  bogieGeometry(m, x, carDef(series, l, false, false, l.number).truck);
+}
+
+/**
+ * A series car's distant model in another design's train: its body and parts facing +X about cx
+ * (turned about it when `turned`), its inner ends hidden in `section`; `trucks` as in drawSeriesCar
+ * (a Jacobs series in a section keeps an end car's leading bogie and each car's rear one).
+ */
+export function seriesCarLod(series: ShinkansenSeries, key: string, o: { end: boolean; pantograph: boolean; cx: number; turned: boolean; section: number; trucks?: readonly boolean[] }): { body: UnitBody; parts: LodPart[] } {
+  const len = o.end ? series.endLength : series.midLength;
+  return carLod(series, series.liveries[key]!, o.end, o.pantograph, (d) => o.cx + len / 2 - frontGap(series, o.end) - d, o.cx, o.turned, o.section, o.trucks ?? [true, true]);
 }
