@@ -172,6 +172,8 @@ export interface ShinkansenSeries {
   pantographCover?: { len: number; hw: number; top: readonly [number, number]; h: number; mat: string };
   /** With `endPantograph` true: the rear end car's pantograph folded down, only the leading one raised. */
   trailingLowered?: boolean;
+  /** A single-arm pantograph's knee toward the car's +X end, its hinge at the rear (default the other way round): the Renfe 440's rear pantograph, the pair's knees facing inward. */
+  pantographKneeForward?: boolean;
   /** Fittings on the sides of the end car and of an intermediate car: service doors, grilles, displays. */
   sidePanels?: { end?: readonly SeriesSidePanel[]; middle?: readonly SeriesSidePanel[] };
   /** One pantograph only, on the second car (default two from four cars up). */
@@ -304,8 +306,8 @@ export interface ShinkansenSeries {
   roofWells?: { C: number; S: number; ramp: number; end: number; front: number; rear: number; step: number };
   /** A power car of its own among the intermediate cars (the unit value `powerCar`): the train's only pantograph car. */
   powerCar?: SeriesPowerCar;
-  /** Fittings of the series' own, drawn in place of the plain underfloor box. */
-  fittings?: (m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }) => void;
+  /** Fittings of the series' own, drawn in place of the plain underfloor box (`rearEndCar`: a train's rear end car, drawn with the series' `rearEnd` layout). */
+  fittings?: (m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[]; rearEndCar?: boolean }) => void;
   /**
    * The leading end car's own fields over the series' (a lone end car is the leading one): a unit whose
    * motor car differs from its driving trailer at the other end (the DDZ's short mBk on three bogies
@@ -636,11 +638,11 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
           const kind = l.pantograph ?? s.pantograph;
           if (kind === "diamond") diamond(m, { xc: x, roofY: C + 0.05, baseY: C + 0.35, raised });
           else if (kind === "wing") wingPantograph(m, x, C + 0.05, raised, l.roofStripe?.mat ?? l.roof);
-          else singleArm(m, { xc: x, roofY: C + 0.05, baseY: C + 0.3, h: 1, raised });
+          else singleArm(m, { xc: x, roofY: C + 0.05, baseY: C + 0.3, h: s.pantographKneeForward ? -1 : 1, raised });
           if (s.pantographFittings) m.scope("fittings", () => s.pantographFittings!(m, x, s.C));
         }
       });
-      if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr });
+      if (s.fittings) s.fittings(m, b, X, { end, length: L, trucks: tr, ...(rearOwn ? { rearEndCar: true } : {}) });
       else m.scope("underfloor", () => block(m, "under", X(tr[1] - 2.6), X(tr[0] + 2.6), s.B - 0.35, s.B, -s.W * 0.8, s.W * 0.8));
     },
   };
