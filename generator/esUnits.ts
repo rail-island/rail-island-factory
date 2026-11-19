@@ -11,6 +11,9 @@ import { c, flatCab, nose, NO_NOSE, talgo } from "./seriesHelpers.ts";
 import { S103 } from "./esS103.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import { S102, s102Series } from "./esS102.ts";
+import { renfeS100, renfeS100Lod, S100, S100_PARAMS } from "./esS100.ts";
+
+export { renfeS100, renfeS100Lod, S100 };
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -28,20 +31,6 @@ export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regiona
     case "estrella": return { title: "Estrella", number, palette: pal({ blue: "#1d3f80", white: "#f1f1ee" }), bands: [[0, 1.45, "blue"], [1.45, 1.55, "white"], [1.55, 9, "blue"]], roof: "roofG", skirt: "skirtG" };
   }
 }
-
-/** A long, pointed high-speed nose. */
-const HSR_NOSE = nose(5.5, 0.06, 2.4, [[0, 1.2], [0.6, 1.6], [2.4, 2.3], [4.0, 3.0], [5.4, 3.6], [6.4, 3.9]], [[0, 1.15], [0.6, 1.5], [2.4, 2.1], [4.0, 2.65], [5.4, 2.95], [6.4, 3.1]], [[0, 1.1], [1.5, 1.3], [3.0, 1.4]], [[0, 1.05], [1.5, 1.05]], [[0, 1.0], [0.6, 0.6], [2.0, 0.8]]);
-
-export const S100: ShinkansenSeries = {
-  endLength: 22.15, midLength: 18.7, W: 1.45, Y: 1.4, S: 3.1, C: 3.9, lean: 0.95, B: 0.8, A: 1.05,
-  // the TGV Atlantique's nose
-  nose: HSR_NOSE, windscreen: [3.6, 5.4, 0.07, 1.05], lamps: [1.3, 1.45],
-  windows: [[1.95, 2.7]], windowW: 1.1, pitch: 1.4, door: [1.3, 3.0, 1.95, 2.6], doorW: 0.8,
-  // power cars at the ends: the shortest train has a trailer between them
-  bogieCentres: 11.2, wheelR: 0.46, wheelbase: 3.0, minCars: 3,
-  liveries: { ave: esLivery("ave", "100 001"), avlo: esLivery("avlo", "100 025") },
-  weight: { end: 68, middle: 44 }, power: 1100, maxspeed: 300,
-};
 
 export { S103 };
 
@@ -147,12 +136,10 @@ export const S109: ShinkansenSeries = {
 };
 
 const P = {
-  s100: seriesParams(S100), s103: seriesParams(S103), s102: seriesParams(S102), s106: seriesParams(S106), s130: seriesParams(S130), talgo3: seriesParams(TALGO_III),
+  s100: S100_PARAMS, s103: seriesParams(S103), s102: seriesParams(S102), s106: seriesParams(S106), s130: seriesParams(S130), talgo3: seriesParams(TALGO_III),
   s120: seriesParams(S120), civia: seriesParams(CIVIA), r446: seriesParams(R446), r440: seriesParams(R440), r592: seriesParams(R592), s109: seriesParams(S109),
 };
 
-export function renfeS100(v?: ParamValues): MeshBuilder { return buildSeries(S100, P.s100, v); }
-export function renfeS100Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S100, P.s100, v); }
 export function renfeS103(v?: ParamValues): MeshBuilder { return buildSeries(S103, P.s103, v); }
 export function renfeS103Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S103, P.s103, v); }
 export function renfeS102(v?: ParamValues): MeshBuilder { return buildSeries(s102Series(v), P.s102, v); }
