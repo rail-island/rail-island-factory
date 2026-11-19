@@ -9,6 +9,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, talgo, velaro } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { S102, s102Series } from "./esS102.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -42,15 +43,6 @@ export const S100: ShinkansenSeries = {
 };
 
 export const S103: ShinkansenSeries = velaro({ liveries: { ave: esLivery("ave", "103 001") }, weight: { end: 55, middle: 50 }, power: 1100, maxspeed: 350 });
-
-export const S102: ShinkansenSeries = talgo({
-  endLength: 20.0, C: 3.95,
-  // the "Pato": the duck-bill nose of the power car
-  nose: nose(6.5, 0.3, 3.0, [[0, 1.15], [0.6, 1.4], [3.0, 1.85], [5.5, 2.6], [6.6, 3.4], [7.6, 3.95]], [[0, 1.12], [0.6, 1.33], [3.0, 1.7], [5.5, 2.35], [6.6, 2.85], [7.6, 2.95]], [[0, 1.08], [1.5, 1.25]], [[0, 1.05], [1.5, 0.95]], [[0, 1.0], [0.6, 0.6], [2.0, 0.75]]),
-  windscreen: [5.2, 6.8, 0.07, 1.0], lamps: [1.6, 1.62],
-  liveries: { ave: esLivery("ave", "102 001"), avlo: esLivery("avlo", "112 015") },
-  weight: { end: 70, middle: 18 }, power: 2000, maxspeed: 330,
-});
 
 export const S106: ShinkansenSeries = talgo({
   endLength: 20.0, C: 3.6,
@@ -162,7 +154,7 @@ export function renfeS100(v?: ParamValues): MeshBuilder { return buildSeries(S10
 export function renfeS100Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S100, P.s100, v); }
 export function renfeS103(v?: ParamValues): MeshBuilder { return buildSeries(S103, P.s103, v); }
 export function renfeS103Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S103, P.s103, v); }
-export function renfeS102(v?: ParamValues): MeshBuilder { return buildSeries(S102, P.s102, v); }
+export function renfeS102(v?: ParamValues): MeshBuilder { return buildSeries(s102Series(v), P.s102, v); }
 export function renfeS102Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S102, P.s102, v); }
 export function renfeS106(v?: ParamValues): MeshBuilder { return buildSeries(S106, P.s106, v); }
 export function renfeS106Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S106, P.s106, v); }

@@ -272,6 +272,8 @@ export interface ShinkansenSeries {
   jacobsTrailers?: number;
   /** The intermediate cars' own shoulder and crown, lower than the end cars' (a power car taller than its trailers). */
   trailerSection?: { S: number; C: number };
+  /** The end cars' own running gear, in place of the series' wheelbase and wheel radius: a Talgo's power cars on two-axle bogies while its coaches ride on single axles (`wheelbase` 0). */
+  endCarBogie?: { wheelbase: number; wheelR: number };
   /** Both bogies of every car centred on its body, bogieCentres apart (default 3.5 m in from the rear, the other ahead of it). */
   centredBogies?: boolean;
   /** The doors and windows of the end and the middle car (d from the body's +X end), in place of the generated layout. */
@@ -450,6 +452,8 @@ function loneAxleSpec(s: ShinkansenSeries, t: BogieSpec): BogieSpec {
 function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean | "lowered", number: string, joint: boolean | readonly [boolean, boolean] = false, power?: SeriesPowerCar, rear = false): CarDef {
   // the intermediate cars' own, lower section
   if (!end && !power && s.trailerSection) s = { ...s, S: s.trailerSection.S, C: s.trailerSection.C };
+  // the end cars' own running gear (endCarBogie)
+  if (end && !power && s.endCarBogie) s = { ...s, wheelbase: s.endCarBogie.wheelbase, wheelR: s.endCarBogie.wheelR };
   // the centre coupler's draft gear ends 0.3 m below its centre: a skirt bottom there would lie on it
   if (Math.abs(s.B - (couplerOf(s) - 0.3)) < 0.005) throw new Error(`series: skirt bottom ${s.B} m lies on the coupler's draft gear`);
   // the bogie's brake cylinders stand 0.55 m inside its axles: a shorter wheelbase puts them on its transoms (0 is a single axle)
@@ -964,6 +968,8 @@ export function buildSeries(series: ShinkansenSeries, params: readonly ParamSpec
 function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantograph: boolean, X: (d: number) => number, cx: number, turned: boolean, section?: number, trucks: readonly boolean[] = [true, true], power?: SeriesPowerCar): { body: UnitBody; parts: LodPart[] } {
   // the intermediate cars' own, lower section
   if (!end && !power && s.trailerSection) s = { ...s, S: s.trailerSection.S, C: s.trailerSection.C };
+  // the end cars' own running gear (endCarBogie)
+  if (end && !power && s.endCarBogie) s = { ...s, wheelbase: s.endCarBogie.wheelbase, wheelR: s.endCarBogie.wheelR };
   const def = carDef(s, l, end, pantograph, l.number, false, power);
   const b = carbody({ ...def.spec, edges: [] });
   const roof = l.roofStripe?.mat ?? l.roof;

@@ -1025,7 +1025,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   // Spain (docs/models/spain-trains.md)
   "proc-vehicle-renfe-s100": series(40, 50, ELRL, { cars: 8, liveries: ["avlo"] }),
   "proc-vehicle-renfe-s103": series(40, 50, ELRL, { cars: 8 }),
-  "proc-vehicle-renfe-s102": series(0, 26, ELRL, { cars: 8, liveries: ["avlo"] }),
+  "proc-vehicle-renfe-s102": series(0, 28, ELRL, { cars: 8, liveries: ["avlo"] }),
   "proc-vehicle-renfe-s106": series(30, 36, ELRL, { cars: 8, liveries: ["ave"] }),
   "proc-vehicle-renfe-s130": series(0, 26, ELRL, { cars: 8 }),
   "proc-vehicle-talgo-iii": series(22, 26, RAIL, { cars: 8 }),
