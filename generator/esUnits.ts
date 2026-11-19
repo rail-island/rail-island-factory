@@ -23,6 +23,8 @@ export { renfeS120, renfeS120Lod };
 import { S130 } from "./esS130.ts";
 import { R446, r446Game } from "./es446.ts";
 import { CIVIA } from "./esCivia.ts";
+import { r440Game, R440, R440_PARAMS, renfe440, renfe440Lod } from "./es440.ts";
+export { R440, renfe440, renfe440Lod };
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -57,7 +59,6 @@ const flatEmu = (o: { number: string; livery: "cercanias" | "regional" | "mediaD
 });
 
 export { R446 };
-export const R440 = flatEmu({ number: "440 001", livery: "regional", second: "cercanias", doorW: 1.0, power: 290, maxspeed: 140 });
 export const R592 = flatEmu({ number: "592 001", livery: "regional", second: "mediaDistancia", doorW: 1.0, power: 290, maxspeed: 120, diesel: true });
 
 export const S109: ShinkansenSeries = {
@@ -75,7 +76,7 @@ export { TALGO_III };
 
 const P = {
   s100: S100_PARAMS, s103: seriesParams(S103), s102: seriesParams(S102), s106: seriesParams(S106), s130: seriesParams(S130), talgo3: seriesParams(TALGO_III),
-  s120: seriesParams(S120), civia: seriesParams(CIVIA), r446: seriesParams(R446), r440: seriesParams(R440), r592: seriesParams(R592), s109: seriesParams(S109),
+  s120: seriesParams(S120), civia: seriesParams(CIVIA), r446: seriesParams(R446), r440: R440_PARAMS, r592: seriesParams(R592), s109: seriesParams(S109),
 };
 
 export function renfeS103(v?: ParamValues): MeshBuilder { return buildSeries(S103, P.s103, v); }
@@ -92,8 +93,6 @@ export function renfeCivia(v?: ParamValues): MeshBuilder { return buildSeries(CI
 export function renfeCiviaLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CIVIA, P.civia, v); }
 export function renfe446(v?: ParamValues): MeshBuilder { return buildSeries(R446, P.r446, v); }
 export function renfe446Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(R446, P.r446, v); }
-export function renfe440(v?: ParamValues): MeshBuilder { return buildSeries(R440, P.r440, v); }
-export function renfe440Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(R440, P.r440, v); }
 export function renfe592(v?: ParamValues): MeshBuilder { return buildSeries(R592, P.r592, v); }
 export function renfe592Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(R592, P.r592, v); }
 export function iryoS109(v?: ParamValues): MeshBuilder { return buildSeries(S109, P.s109, v); }
@@ -109,7 +108,7 @@ export const ES_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-renfe-s120", "Renfe S-120", S120, P.s120, renfeS120, renfeS120Lod, "renfe-s120", "uic"),
   seriesDesign("proc-vehicle-renfe-civia", "Renfe Civia", CIVIA, P.civia, renfeCivia, renfeCiviaLod, "renfe-civia", "uic"),
   ((d) => ({ ...d, game: r446Game(d.game!) }))(seriesDesign("proc-vehicle-renfe-446", "Renfe 446", R446, P.r446, renfe446, renfe446Lod, "renfe-446", "uic")),
-  seriesDesign("proc-vehicle-renfe-440", "Renfe 440", R440, P.r440, renfe440, renfe440Lod, "renfe-440", "uic"),
+  ((d) => ({ ...d, game: r440Game(d.game!) }))(seriesDesign("proc-vehicle-renfe-440", "Renfe 440", R440, P.r440, renfe440, renfe440Lod, "renfe-440", "uic")),
   seriesDesign("proc-vehicle-renfe-592", "Renfe 592", R592, P.r592, renfe592, renfe592Lod, "renfe-592", "uic"),
   seriesDesign("proc-vehicle-iryo-s109", "Iryo Frecciarossa 1000", S109, P.s109, iryoS109, iryoS109Lod, "iryo-s109", "uic"),
 ];
