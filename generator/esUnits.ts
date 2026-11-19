@@ -7,9 +7,9 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose, NO_NOSE, talgo } from "./seriesHelpers.ts";
+import { c, flatCab, nose, talgo } from "./seriesHelpers.ts";
+import { TALGO_III } from "./esTalgoIii.ts";
 import { S103 } from "./esS103.ts";
-import type { SeriesCabFace } from "./seriesCab.ts";
 import { S102, s102Series } from "./esS102.ts";
 import { renfeS100, renfeS100Lod, S100, S100_PARAMS } from "./esS100.ts";
 
@@ -50,44 +50,6 @@ export const S130: ShinkansenSeries = talgo({
   liveries: { alvia: esLivery("alvia", "130 001") },
   weight: { end: 72, middle: 18 }, power: 2400, maxspeed: 250,
 });
-
-/**
- * The Talgo III's tail: a bowed, upright end with rounded corners and no windscreen, the red
- * band round it, the door off to one side with its porthole, the marker lamps high and low,
- * buffers. Read from photo-s00-199-bf-bilbao-abando-talgo-iii-endwagen.jpg.
- */
-const TALGO_TAIL: SeriesCabFace = {
-  // dJoin clears the face's top corners (profile + bow + corner radius), so none of it is pressed into the join plane
-  dJoin: 0.75, dSide: 0.6, first: 2.2, roofFrom: 2.95,
-  profile: [[0.75, 0.08], [0.9, 0.02], [1.1, 0], [2.6, 0], [2.8, 0.06], [3.0, 0.18], [3.2, 0.4], [3.3, 0.75]],
-  corner: [[0.75, 0.45], [2.8, 0.45], [3.2, 0.2], [3.3, 0.02]], bulge: 0.1, cols: [6, 3, 1, 1],
-  rows: [0.75, 0.9, 1.1, 1.45, 1.5, 2.0, 2.5, 2.55, 2.8, 3.0, 3.2, 3.3],
-  masks: [{ lat: [-0.88, -0.3], y: [1.28, 2.82], r: 0.08, mat: "red" }],
-  panes: [],
-  // the door's outline
-  decals: [
-    { mat: "line", pts: [[-0.9, 1.26], [-0.87, 1.26], [-0.87, 2.84], [-0.9, 2.84]] },
-    { mat: "line", pts: [[-0.31, 1.26], [-0.28, 1.26], [-0.28, 2.84], [-0.31, 2.84]] },
-    { mat: "line", pts: [[-0.865, 2.81], [-0.315, 2.81], [-0.315, 2.84], [-0.865, 2.84]] },
-  ],
-  // the porthole, then the marker lamps: two high, a white and a red one low
-  lamps: [[-0.59, 2.42, 0.17, "cabGlass"], [-1.12, 2.68, 0.06, "lampRed"], [0.3, 2.68, 0.06, "lampRed"], [-1.0, 1.32, 0.08, "lampHead"], [0.05, 1.32, 0.07, "lampRed"]],
-  number: { lat: 0.55, y: 2.1, h: 0.13, mat: "white" },
-};
-
-export const TALGO_III: ShinkansenSeries = {
-  ...talgo({
-    endLength: 13.14, C: 3.3, traction: "none", cars: [4, 8],
-    nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0],
-    liveries: { talgo: esLivery("talgo", "1B19") },
-    weight: { end: 14, middle: 12 }, power: 0, maxspeed: 140,
-  }),
-  // the buffers' beam 2 cm clear of the low body's bottom (0.75 m)
-  cabFace: TALGO_TAIL, endCoupler: "buffers", couplerY: 1.02,
-  // the stainless body's fluting below and above the red band, the roof's ribs (photo-bf-granada-...jpg)
-  fluting: [{ y0: 0.96, y1: 1.42, pitch: 0.075, mat: "flute" }, { y0: 2.6, y1: 2.92, pitch: 0.075, mat: "flute" }],
-  roofRibs: { pitch: 0.13, zMax: 1.3, mat: "flute" },
-};
 
 export const S120: ShinkansenSeries = {
   endLength: 26.0, midLength: 25.0, W: 1.47, Y: 1.35, S: 3.1, C: 4.0, lean: 0.95, B: 0.8, A: 1.0,
@@ -134,6 +96,8 @@ export const S109: ShinkansenSeries = {
   liveries: { iryo: esLivery("iryo", "109 001") },
   weight: { end: 58, middle: 54 }, power: 1100, maxspeed: 360,
 };
+
+export { TALGO_III };
 
 const P = {
   s100: S100_PARAMS, s103: seriesParams(S103), s102: seriesParams(S102), s106: seriesParams(S106), s130: seriesParams(S130), talgo3: seriesParams(TALGO_III),
