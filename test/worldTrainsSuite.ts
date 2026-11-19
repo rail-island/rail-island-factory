@@ -125,9 +125,11 @@ describe("the eight countries' trains", () => {
           // each bogie stands in its skirt's gap: the body covers neither half of its wheels alone (test/bogieGap.ts),
           // unless it does on the prototype (COVERED)
           if (!COVERED.has(d.id)) expect(bogieCovers(glb, supports).filter(offGap), `${label} bogie off its gap`).toEqual([]);
-          // doors open on a passenger car (a unit's cars, a coach), never on a locomotive
+          // doors open on a passenger car (a unit's cars, a coach), never on a locomotive - nor on a power car without passengers
+          // leading its unit (the ICE 2's, the Talgo Avril's: a cab door and a luggage room)
           const opens = m.animations().some((c) => c.drive.drive === "door");
-          expect(opens, label).toBe(PASSENGER_GROUPS.has(d.catalog?.group ?? "") && !(d.id === "proc-vehicle-db-ice2"));
+          const powerCarDefault = d.id === "proc-vehicle-db-ice2" || (d.id === "proc-vehicle-renfe-s106" && (v.unit ?? "endCar") === "endCar");
+          expect(opens, label).toBe(PASSENGER_GROUPS.has(d.catalog?.group ?? "") && !powerCarDefault);
           const want = LENGTHS[d.id];
           if (want) expect(Math.abs(s.max[0] - s.min[0] - want), `${d.id} length`).toBeLessThan(0.05 * want);
         }

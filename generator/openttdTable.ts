@@ -1026,7 +1026,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-renfe-s100": series(40, 50, ELRL, { cars: 8, liveries: ["avlo"] }),
   "proc-vehicle-renfe-s103": series(40, 50, ELRL, { cars: 8 }),
   "proc-vehicle-renfe-s102": series(0, 26, ELRL, { cars: 8, liveries: ["avlo"] }),
-  "proc-vehicle-renfe-s106": series(30, 36, ELRL, { cars: 8, liveries: ["ave"] }),
+  "proc-vehicle-renfe-s106": series(0, 48, ELRL, { cars: 8, liveries: ["ave"] }), // power cars carry luggage only; 581 seats in 12 cars (Avlo)
   "proc-vehicle-renfe-s130": series(0, 26, ELRL, { cars: 8 }),
   "proc-vehicle-talgo-iii": series(22, 26, RAIL, { cars: 8 }),
   "proc-vehicle-renfe-s120": series(60, 70, ELRL, { cars: 4, liveries: ["mediaDistancia"] }),
