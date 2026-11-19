@@ -7,7 +7,8 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose, NO_NOSE, talgo, velaro } from "./seriesHelpers.ts";
+import { c, flatCab, nose, NO_NOSE, talgo } from "./seriesHelpers.ts";
+import { S103 } from "./esS103.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 
 /** Renfe's schemes and its operators'. */
@@ -41,7 +42,7 @@ export const S100: ShinkansenSeries = {
   weight: { end: 68, middle: 44 }, power: 1100, maxspeed: 300,
 };
 
-export const S103: ShinkansenSeries = velaro({ liveries: { ave: esLivery("ave", "103 001") }, weight: { end: 55, middle: 50 }, power: 1100, maxspeed: 350 });
+export { S103 };
 
 export const S102: ShinkansenSeries = talgo({
   endLength: 20.0, C: 3.95,
