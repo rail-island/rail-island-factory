@@ -32,7 +32,7 @@ const JOIN = 7.0;
 /** The power car's body: half width, belly (the crease under the door), shoulder, crown, lean, skirt bottom and top. */
 const [W, Y, S, C, LEAN, B, A] = [1.51, 1.2, 3.3, 4.0, 0.93, 0.5, 0.95];
 /** The crown at the join (the face's top), rising to C behind it. */
-const C_JOIN = 3.86;
+const C_JOIN = 3.95;
 /** The Talgo cars' own lower roof. */
 const TRAILER = { S: 3.0, C: 3.55 };
 
@@ -74,15 +74,15 @@ function bodyHalf0(y: number): number {
  * upright at NA - the bumper and the flank behind it stand out beside it. Its top line rises from the
  * bumper's top 0.45 m behind the tip to the roof at the join, about 17 degrees.
  */
-const HOOD_Y = 1.7;
-const NA = smooth([[0.42, 0], [0.5, 0.3], [0.7, 0.5], [1.2, 0.68], [1.8, 0.84], [2.4, 0.98], [3.0, 1.16], [3.7, 1.35], [4.5, 1.45], [5.5, 1.495], [7.0, W]]);
-const NT = smooth([[0.42, HOOD_Y], [0.5, 1.84], [0.65, 1.98], [0.85, 2.1], [1.15, 2.24], [1.6, 2.38], [2.4, 2.6], [3.2, 2.84], [4.0, 3.1], [4.8, 3.35], [5.6, 3.58], [6.3, 3.75], [7.0, C_JOIN]]);
-const NTE = smooth([[0.4, 2.0], [2.0, 2.2], [4.0, 2.6], [6.0, 3.2], [7.0, 3.6]]);
+const HOOD_Y = 1.76;
+const NA = smooth([[0.3, 0], [0.36, 0.42], [0.5, 0.66], [0.8, 0.86], [1.2, 1.02], [1.8, 1.2], [2.6, 1.35], [3.4, 1.44], [4.4, 1.49], [5.5, W]]);
+const NT = smooth([[0.3, HOOD_Y], [0.34, 1.95], [0.42, 2.12], [0.56, 2.3], [0.8, 2.5], [1.2, 2.76], [1.8, 3.08], [2.6, 3.42], [3.4, 3.66], [4.2, 3.82], [5.0, 3.91], [6.0, C_JOIN]]);
+const NTE = smooth([[0.3, 2.2], [1.5, 2.5], [3.0, 3.0], [4.5, 3.5], [6.0, 3.8], [7.0, 3.8]]);
 /** The bumper: a rounded block round BC, its top BT, bottom BB and half width BA by d; behind 2.6 m it runs into the flank (the body's lower section). */
-const BC = 1.08;
-const BT = smooth([[0, BC], [0.02, 1.34], [0.08, 1.5], [0.2, 1.6], [0.45, 1.66], [0.8, 1.68], [2.6, 1.68], [3.4, 1.72], [4.4, 1.82]]);
-const BB = smooth([[0, BC], [0.02, 0.8], [0.08, 0.64], [0.2, 0.56], [0.45, 0.51], [0.8, B]]);
-const BA = smooth([[0, 0], [0.02, 0.45], [0.08, 0.75], [0.2, 0.98], [0.45, 1.15], [0.9, 1.28], [1.5, 1.36], [2.2, 1.41], [2.6, 1.43]]);
+const BC = 1.12;
+const BT = smooth([[0, BC], [0.02, 1.42], [0.08, 1.6], [0.2, 1.69], [0.45, 1.74], [0.8, HOOD_Y], [2.6, HOOD_Y], [3.4, 1.78], [4.4, 1.84]]);
+const BB = smooth([[0, BC], [0.02, 0.82], [0.08, 0.65], [0.2, 0.56], [0.45, 0.51], [0.8, B]]);
+const BA = smooth([[0, 0], [0.02, 0.5], [0.08, 0.82], [0.2, 1.04], [0.45, 1.2], [0.9, 1.3], [1.5, 1.37], [2.2, 1.41], [2.6, 1.43]]);
 const [BTE, BBE] = [2.6, 3.0];
 /** The bumper's tip (the coupler cover's centre) for the distant model. */
 const TIP_Y = BC;
@@ -135,49 +135,48 @@ export function avrilDepth(lat: number, y: number): number {
 }
 
 /** The grid's rows: dense over the bumper, its top shelf and the headlights, then up the long hood. */
-const ROWS = [B, 0.56, 0.64, 0.74, 0.86, 0.95, 1.04, 1.16, 1.3, 1.42, 1.5, 1.56, 1.6, 1.64, 1.7, 1.78, 1.86, 1.95, 2.04, 2.14, 2.26, 2.4, 2.55, 2.7, 2.85, 3.0, 3.15, 3.3, 3.45, 3.6, 3.7, 3.8, C_JOIN];
+const ROWS = [B, 0.56, 0.64, 0.74, 0.86, 0.95, 1.04, 1.12, 1.24, 1.38, 1.5, 1.6, 1.68, 1.74, 1.78, 1.84, 1.92, 2.0, 2.1, 2.2, 2.32, 2.45, 2.6, 2.75, 2.9, 3.05, 3.2, 3.35, 3.5, 3.62, 3.74, 3.84, 3.9, C_JOIN];
 const PROFILE: Pt[] = ROWS.map((y): Pt => [y, avrilDepth(0, y)]);
 
-/** The black cap's back edge on the nose's sides [y, d]: from the bumper's top past the headlight's top to the roof. */
-const CAP_BACK: Pt[] = [[1.68, 1.9], [1.78, 2.35], [1.95, 2.9], [2.12, 3.6], [2.25, 4.3], [2.6, 5.1], [3.0, 5.95], [3.3, 6.5], [3.6, 7.0], [4.1, 7.0]];
 /**
  * The headlight seen from the side (photo-l04-226-...): an almond 1.4 m long rising 0.5 m from its
  * front tip on the bumper's top to its round rear end, its front and back edges [y, d] by height.
  */
-const LAMP_FRONT: Pt[] = [[1.7, 2.42], [1.8, 2.5], [1.95, 2.78], [2.08, 3.12], [2.17, 3.45], [2.22, 3.8]];
-const LAMP_BACK: Pt[] = [[1.7, 2.45], [1.74, 3.0], [1.86, 3.5], [2.0, 3.85], [2.13, 3.97], [2.22, 3.85]];
+const LAMP_FRONT: Pt[] = [[1.76, 0.85], [1.86, 0.88], [2.0, 1.0], [2.12, 1.25], [2.2, 1.6], [2.23, 1.82]];
+const LAMP_BACK: Pt[] = [[1.76, 0.95], [1.8, 1.35], [1.9, 1.7], [2.04, 1.88], [2.17, 1.93], [2.23, 1.82]];
 /** A lamp edge moved out by g (front edge ahead, back edge behind) and its heights spread by g. */
 const grow = (e: Pt[], g: number, sd: number): Pt[] => e.map(([y, d], i): Pt => [y + (i === 0 ? -g : i === e.length - 1 ? g : 0), d + sd * g]);
 
 /** A symmetric outline [lat, y] from its right half (bottom centre round to top centre). */
 const mirror = (half: Pt[]): Pt[] => [...half, ...half.slice(1, -1).reverse().map(([l, y]): Pt => [-l, y])];
 /** The windscreen seen head on (photo-talgo-avril-106-64-a-coruna, photo-106ave): wide at its foot, its sides curving in to an arched top. */
-const SCREEN: Pt[] = mirror([[0, 2.5], [0.62, 2.52], [0.76, 2.58], [0.8, 2.72], [0.76, 3.25], [0.66, 3.5], [0.44, 3.64], [0, 3.68]]);
+const SCREEN: Pt[] = mirror([[0, 2.42], [0.6, 2.44], [0.76, 2.5], [0.8, 2.64], [0.77, 3.2], [0.68, 3.46], [0.46, 3.6], [0, 3.64]]);
+/** The dark mask round it, narrowing down the upright front to the bumper's top between the headlights. */
+const MASK: Pt[] = mirror([[0, HOOD_Y], [0.5, HOOD_Y + 0.01], [0.7, 1.86], [0.84, 2.1], [0.9, 2.4], [0.92, 2.7], [0.88, 3.25], [0.78, 3.55], [0.52, 3.72], [0, 3.76]]);
 const rect = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0], [l1, y0], [l1, y1], [l0, y1]];
 
 const AVRIL_FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 6.0, first: 7.15, reach: 0.07, roofFrom: S, cols: [6, 10, 2, 3], tolerance: 0.06,
+  dJoin: JOIN, dSide: 6.0, first: 7.15, reach: 0.07, roofFrom: 3.45, cols: [6, 10, 2, 3], tolerance: 0.06,
   // the plan: the face's columns across the centre, the corners out to the body's side (the depth is avrilDepth's)
   profile: PROFILE, corner: [[B, 1.0], [C_JOIN, 1.0]], cornerDepth: [[B, 1.0], [C_JOIN, 1.0]], rows: ROWS,
   reshape: (lat, y) => avrilDepth(lat, y),
   // the face in the livery's base colour; the cap, the bumper's dark foot and the sweeps painted over it
   bands: () => [[0, 9, "faceBase"]],
-  lodBands: [[0, 0.66, "skirtG"], [0.66, HOOD_Y, "faceBase"], [HOOD_Y, 9, "cabMask"]],
+  lodBands: [[0, 0.66, "skirtG"], [0.66, 9, "faceBase"]],
   // the leading bogie's wheels (from 6.25 m) show under the face's sides
   wheelCut: { d: 5.75, y: A },
   paint: [
     // the dark foot round the bumper, and the skirt behind it
     { mat: "skirtG", front: [[B - 0.1, -9], [0.66, -9]], back: [[B - 0.1, 99], [0.66, 99]], top: 0.66 },
     { mat: "skirtG", front: [[B - 0.1, 3.4], [A, 3.4]], back: [[B - 0.1, 99], [A, 99]], top: A },
-    // the cap's thin outline, then the black cap itself over the whole hood
-    { mat: "capRim", front: [[HOOD_Y - 0.02, -9], [4.1, -9]], back: CAP_BACK.map(([y, d]): Pt => [y, d + 0.08]), top: 4.1 },
-    { mat: "cabMask", front: [[HOOD_Y - 0.02, -9], [4.1, -9]], back: CAP_BACK, top: 4.1 },
     // the headlight: its black surround, the cover and the lamps in it
     { mat: "black", front: grow(LAMP_FRONT, 0.05, -1), back: grow(LAMP_BACK, 0.05, 1), top: 4.1 },
     { mat: "lampCover", front: LAMP_FRONT, back: LAMP_BACK, top: 4.1 },
-    { mat: "lampHead", front: [[1.8, 2.75], [1.9, 2.82], [2.0, 3.08], [2.06, 3.4]], back: [[1.8, 3.05], [1.9, 3.42], [2.0, 3.66], [2.06, 3.56]], top: 4.1 },
+    { mat: "lampHead", front: [[1.86, 1.12], [1.94, 1.16], [2.03, 1.32], [2.08, 1.55]], back: [[1.86, 1.3], [1.94, 1.55], [2.03, 1.7], [2.08, 1.66]], top: 4.1 },
   ],
   fields: [
+    // the dark mask: the windscreen's surround, carried down the upright front over the lamp window and grille
+    { mat: "cabMask", pts: MASK },
     { mat: "screenGlass", pts: SCREEN },
     // the lamp window under the windscreen, the grille under it
     { mat: "lampRim", pts: rect(-0.21, 0.21, 2.12, 2.32) }, { mat: "lampWindow", pts: rect(-0.17, 0.17, 2.15, 2.29) },
@@ -185,15 +184,15 @@ const AVRIL_FACE: SeriesCabFace = {
   ],
   // the grille's slats
   decals: Array.from({ length: 5 }, (_, i) => ({ mat: "black", pts: rect(-0.36, 0.36, 1.84 + 0.04 * i, 1.855 + 0.04 * i), fine: 2 })),
-  panes: [], lodGlass: { hw: 0.72, y: [2.5, 3.66] },
+  panes: [], lodGlass: { hw: 0.8, y: [2.42, 3.64] },
   wipers: Array.from({ length: 4 }, (_, i): [Pt, Pt] => {
     const p = (t: number): Pt => [0.12 - 0.42 * t, 2.56 + 0.46 * t];
     return [p(i / 4), p((i + 1) / 4)];
   }),
   // the distant model's nose: the bumper, the long hood and its crown, on few rows
   lod: {
-    profile: [[B, 0.55], [TIP_Y, 0], [HOOD_Y, 0.45], [2.3, 2.35], [3.0, 4.35], [C_JOIN, JOIN]], corner: [[B, 1.2], [C_JOIN, 1.2]],
-    cornerDepth: [[B, 2.2], [TIP_Y, 2.4], [HOOD_Y, 3.4], [2.3, 3.2], [3.0, 2.0], [C_JOIN, 0.05]], rows: [B, TIP_Y, HOOD_Y, 2.3, 3.0, C_JOIN],
+    profile: [[B, 0.5], [TIP_Y, 0], [HOOD_Y, 0.3], [2.3, 0.56], [3.0, 1.6], [3.6, 3.0], [C_JOIN, JOIN]], corner: [[B, 1.2], [C_JOIN, 1.2]],
+    cornerDepth: [[B, 2.2], [TIP_Y, 2.4], [HOOD_Y, 1.8], [2.3, 1.8], [3.0, 1.5], [3.6, 0.8], [C_JOIN, 0.05]], rows: [B, TIP_Y, HOOD_Y, 2.3, 3.0, 3.6, C_JOIN],
   },
 };
 
@@ -210,9 +209,9 @@ function line(centre: Tab, thick: Tab): { front: Pt[]; back: Pt[] } {
 }
 
 /** The Avlo sweeps on the power car (photo-l04-226-..., photo-renfe-avril-avlo): orange from low at the rear up to the cap over the door, a thin white line under it ending at the door, turquoise from under the door up to the cap's foot. Centre lines [d, y] by d ascending. */
-const ORANGE = line([[6.6, 3.24], [8.0, 3.0], [10.0, 2.64], [12.5, 2.2], [15.0, 1.78], [17.5, 1.44], [19.4, 1.3]], [[6.6, 0.4], [19.4, 0.4]]);
-const WHITE_LINE = line([[7.2, 2.14], [8.0, 2.02], [10.0, 1.75], [12.0, 1.5], [14.2, 1.24]], [[7.2, 0.09], [14.2, 0.09]]);
-const TURQUOISE = line([[4.9, 2.5], [6.0, 2.2], [7.0, 1.9], [8.5, 1.56], [10.3, 1.22]], [[4.9, 0.22], [10.3, 0.22]]);
+const ORANGE = line([[6.9, 3.25], [8.5, 2.62], [10.5, 1.88], [12.5, 1.42], [15.0, 1.26], [19.4, 1.22]], [[6.9, 0.4], [12.5, 0.38], [19.4, 0.3]]);
+const WHITE_LINE = line([[7.2, 2.52], [9.0, 1.92], [11.0, 1.42], [12.5, 1.25]], [[7.2, 0.14], [12.5, 0.12]]);
+const TURQUOISE = line([[4.4, 3.05], [5.8, 2.5], [7.3, 1.92], [8.8, 1.45], [10.0, 1.25]], [[4.4, 0.3], [10.0, 0.26]]);
 
 /** The Avlo cars' sweeps: a white and an orange wave along each car, d behind its +X end, kept off the door (0.45 - 1.35 m) and between the belly and the shoulder. */
 function waves(): Array<{ mat: string; pts: Pt[] }> {
@@ -249,7 +248,7 @@ const common = { roofG: c("#c1c5c8", 0.5), skirtG: c("#26282b", 0.75), cabMask: 
 /** Avlo: magenta all over, the sweeps, orange doors, the light grey line under the roof. */
 const AVLO: ShinkansenLivery = {
   title: "Avlo", number: "106 051",
-  palette: { ...common, magenta: c("#a8148f", 0.35), faceBase: c("#a8148f", 0.35), orange: c("#f47a2c", 0.4), white: c("#f3f6f6", 0.4), turquoise: c("#5ad8d2", 0.4), edge: c("#b9bdc1", 0.5), capRim: c("#b9bdc1", 0.5), logo: c("#62d2ea", 0.4) },
+  palette: { ...common, magenta: c("#a8148f", 0.35), faceBase: c("#a8148f", 0.35), orange: c("#f47a2c", 0.4), white: c("#f3f6f6", 0.4), turquoise: c("#5ad8d2", 0.4), edge: c("#b9bdc1", 0.5), cabMask: { color: "#2e1028", metallic: 0.3, roughness: 0.2, glass: true }, logo: c("#62d2ea", 0.4) },
   bands: [[0, 9, "magenta"]], endBands: [[0, 3.22, "magenta"], [3.22, 9, "edge"]],
   doors: [[0, 9, "orange"]], roof: "roofG", skirt: "skirtG",
   endLettering: [{ text: "avlo", d: 12.7 - JOIN, y: 1.85, h: 0.55, mat: "logo" }],
@@ -258,7 +257,6 @@ const AVLO: ShinkansenLivery = {
     { mat: "white", ...WHITE_LINE, face: true },
     { mat: "turquoise", ...TURQUOISE, face: true },
   ],
-  endRoofEdge: { mat: "cabMask", y: 3.98, d: [JOIN, JOIN, 7.7] },
   sideFields: { middle: waves() },
   lodSides: [[0, 9, "magenta"]],
 };
@@ -266,7 +264,7 @@ const AVLO: ShinkansenLivery = {
 /** AVE: pearl white, the aubergine line low along every car over the light grey foot, the dark window band on the cars, the dark grey line under the power car's roof. */
 const AVE: ShinkansenLivery = {
   title: "AVE", number: "106 064",
-  palette: { ...common, white: c("#eceae5", 0.35), faceBase: c("#eceae5", 0.35), lowGrey: c("#b4b6b6", 0.45), purple: c("#6e2650", 0.4), aveGrey: c("#8b8f93", 0.4), edge: c("#53575b", 0.5), capRim: c("#6c7175", 0.45), band: c("#1d2023", 0.3) },
+  palette: { ...common, white: c("#eceae5", 0.35), faceBase: c("#eceae5", 0.35), lowGrey: c("#b4b6b6", 0.45), purple: c("#6e2650", 0.4), aveGrey: c("#8b8f93", 0.4), edge: c("#53575b", 0.5), band: c("#1d2023", 0.3) },
   bands: [[0, 1.05, "lowGrey"], [1.05, 1.16, "purple"], [1.16, 9, "white"]],
   endBands: [[0, 1.06, "lowGrey"], [1.06, 1.18, "purple"], [1.18, 3.22, "white"], [3.22, 9, "edge"]],
   roof: "roofG", skirt: "skirtG",
@@ -276,7 +274,6 @@ const AVE: ShinkansenLivery = {
     { mat: "lowGrey", front: [[A, 6.75], [1.08, 6.7]], back: [[A, 6.97], [1.08, 6.97]], face: true },
     { mat: "purple", front: [[1.08, 6.7], [1.2, 6.55]], back: [[1.08, 6.97], [1.2, 6.97]], face: true },
   ],
-  endRoofEdge: { mat: "cabMask", y: 3.98, d: [JOIN, JOIN, 7.7] },
   sideFields: { end: AVE_V, middle: [{ mat: "band", pts: AVE_BAND }] },
 };
 
@@ -313,7 +310,7 @@ export const S106: ShinkansenSeries = {
   // 19.4 m power cars over the couplers, 13.21 m Talgo cars
   endLength: 19.4, midLength: 13.21, W, Y, S, C, lean: LEAN, B, A,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: AVRIL_FACE,
-  endCrown: [[0, C_JOIN], [0.4, 3.95], [0.8, C]],
+  endCrown: [[0, C_JOIN], [0.5, C]],
   trailerSection: TRAILER,
   // the cars' windows 1.8 - 2.5 m, a single plug door with a narrow window
   windows: [[1.8, 2.5]], windowW: 1.3, pitch: 1.95, door: [1.0, 2.75, 1.75, 2.5], doorW: 0.9, doorGlassW: 0.16,
