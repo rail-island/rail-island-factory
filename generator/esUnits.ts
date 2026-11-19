@@ -21,6 +21,7 @@ import { S120, renfeS120, renfeS120Lod } from "./esS120.ts";
 
 export { renfeS120, renfeS120Lod };
 import { S130 } from "./esS130.ts";
+import { R446, r446Game } from "./es446.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -64,7 +65,7 @@ const flatEmu = (o: { number: string; livery: "cercanias" | "regional" | "mediaD
   weight: { end: 56, middle: 48 }, power: o.power, maxspeed: o.maxspeed,
 });
 
-export const R446 = flatEmu({ number: "446 001", livery: "cercanias", doorCount: 3, doorW: 1.3, power: 290, maxspeed: 100, endLength: 23.4 });
+export { R446 };
 export const R440 = flatEmu({ number: "440 001", livery: "regional", second: "cercanias", doorW: 1.0, power: 290, maxspeed: 140 });
 export const R592 = flatEmu({ number: "592 001", livery: "regional", second: "mediaDistancia", doorW: 1.0, power: 290, maxspeed: 120, diesel: true });
 
@@ -116,7 +117,7 @@ export const ES_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-talgo-iii", "Talgo III", TALGO_III, P.talgo3, talgoIii, talgoIiiLod, "talgo-iii", "uic"),
   seriesDesign("proc-vehicle-renfe-s120", "Renfe S-120", S120, P.s120, renfeS120, renfeS120Lod, "renfe-s120", "uic"),
   seriesDesign("proc-vehicle-renfe-civia", "Renfe Civia", CIVIA, P.civia, renfeCivia, renfeCiviaLod, "renfe-civia", "uic"),
-  seriesDesign("proc-vehicle-renfe-446", "Renfe 446", R446, P.r446, renfe446, renfe446Lod, "renfe-446", "uic"),
+  ((d) => ({ ...d, game: r446Game(d.game!) }))(seriesDesign("proc-vehicle-renfe-446", "Renfe 446", R446, P.r446, renfe446, renfe446Lod, "renfe-446", "uic")),
   seriesDesign("proc-vehicle-renfe-440", "Renfe 440", R440, P.r440, renfe440, renfe440Lod, "renfe-440", "uic"),
   seriesDesign("proc-vehicle-renfe-592", "Renfe 592", R592, P.r592, renfe592, renfe592Lod, "renfe-592", "uic"),
   seriesDesign("proc-vehicle-iryo-s109", "Iryo Frecciarossa 1000", S109, P.s109, iryoS109, iryoS109Lod, "iryo-s109", "uic"),
