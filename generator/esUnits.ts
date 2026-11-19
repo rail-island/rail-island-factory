@@ -22,6 +22,7 @@ import { S120, renfeS120, renfeS120Lod } from "./esS120.ts";
 export { renfeS120, renfeS120Lod };
 import { S130 } from "./esS130.ts";
 import { R446, r446Game } from "./es446.ts";
+import { CIVIA } from "./esCivia.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -43,16 +44,6 @@ export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regiona
 export { S103 };
 
 export { S130 };
-
-export const CIVIA: ShinkansenSeries = {
-  endLength: 20.6, midLength: 19.0, W: 1.47, Y: 1.25, S: 3.2, C: 4.1, lean: 0.95, B: 0.6, A: 0.8,
-  nose: nose(2.2, 0.35, 2.3, [[0, 2.2], [0.4, 2.9], [1.5, 3.7], [2.4, 4.1]], [[0, 2.1], [0.4, 2.75], [1.5, 3.1], [2.4, 3.2]], [[0, 1.25], [0.8, 1.25]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
-  windscreen: [0.45, 2.0, 0.07, 1.2], lamps: [0.15, 1.35],
-  windows: [[1.45, 2.65]], windowW: 1.5, pitch: 1.75, door: [0.95, 3.0, 1.5, 2.6], doorW: 1.3, doorCount: 2,
-  bogieCentres: 13.0, wheelR: 0.43, wheelbase: 2.5, cars: [3, 4, 5],
-  liveries: { cercanias: esLivery("cercanias", "463 001") },
-  weight: { end: 44, middle: 36 }, power: 550, maxspeed: 120,
-};
 
 const flatEmu = (o: { number: string; livery: "cercanias" | "regional" | "mediaDistancia"; second?: "cercanias" | "regional" | "mediaDistancia"; doorCount?: number; doorW: number; power: number; maxspeed: number; diesel?: boolean; endLength?: number }): ShinkansenSeries => ({
   endLength: o.endLength ?? 26.5, midLength: 26.0, W: 1.47, Y: 1.35, S: 3.2, C: 4.0, lean: 0.97, B: 1.0, A: 1.15,
