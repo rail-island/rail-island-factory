@@ -14,6 +14,7 @@ import { DRG01_WORLD, drg01Spec } from "./deSteam01.ts";
 import { DR52_WORLD, dr52LodSpec, dr52Spec } from "./deSteam52.ts";
 import { P8_WORLD, p8LodSpec, p8Spec } from "./deSteamP8.ts";
 import { NS3700_WORLD, ns3700LodSpec, ns3700Spec } from "./nl3700.ts";
+import { RENFE141F_WORLD, renfe141fLodSpec, renfe141fSpec } from "./es141f.ts";
 import { wpLod, wpSpec } from "./inWp.ts";
 import { wgLod, wgSpec } from "./inWg.ts";
 import { dhrBLod, dhrBSpec } from "./inDhrB.ts";
@@ -42,7 +43,7 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-sncf-241p": { base: { ...UIC, title: "SNCF 241 P", lead: 2, coupled: 4, trail: 1, leadD: 1.0, coupledD: 2.02, trailD: 1.35, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: ALL_BLACK, tender: { length: 10.2, axles: 4, d: 1.0 }, number: "241 P 17" } },
   "proc-vehicle-sncf-141r": { base: { ...UIC, title: "SNCF 141 R", lead: 1, coupled: 4, trail: 1, leadD: 0.92, coupledD: 1.65, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 10.5, axles: 4, d: 0.92 }, number: "141 R 1199" } },
   "proc-vehicle-ns-3700": NS3700_WORLD,
-  "proc-vehicle-renfe-141f": { base: { ...UIC, title: "Renfe 141F Mikado", lead: 1, coupled: 4, trail: 1, leadD: 1.0, coupledD: 1.56, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 8.9, axles: 4, d: 0.95 }, number: "141F 2111" } },
+  "proc-vehicle-renfe-141f": RENFE141F_WORLD,
   "proc-vehicle-renfe-242f": { base: { ...UIC, title: "Renfe 242F", lead: 2, coupled: 4, trail: 1, leadD: 0.95, coupledD: 1.9, trailD: 1.1, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: { paint: "#244a33", wheel: "#2a2b2d", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 10.4, axles: 4, d: 1.0 }, number: "242F 2009" } },
   "proc-vehicle-lner-a4": { base: { ...UK, title: "LNER A4", lead: 2, coupled: 3, trail: 1, leadD: 0.97, coupledD: 2.03, trailD: 1.17, boilerR: 0.85, deflectors: "none", domes: 1, palette: { paint: "#1d3f80", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, tender: { length: 8.6, axles: 4, d: 1.0 }, number: "4468 MALLARD" },
     liveries: { garterBlue: { title: "Garter blue", palette: { paint: "#1d3f80", wheel: "#a51a1f", frame: "#a51a1f", smokebox: "#1c1d22" }, number: "4468 MALLARD" }, brGreen: { title: "BR green", palette: { paint: "#1f4d2e", wheel: "#1f4d2e", frame: "#1d1e20", smokebox: "#1c1d22" }, number: "60022" } } },
@@ -97,8 +98,10 @@ export function sncf141rLod(v?: ParamValues): MeshBuilder { return steamLocoLod(
 const ns3700Unit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-ns-3700"]!, v).unit!;
 export function ns3700(v?: ParamValues): MeshBuilder { return buildLoco(ns3700Spec(ns3700Unit(v))); }
 export function ns3700Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(ns3700LodSpec(ns3700Unit(v))); }
-export function renfe141f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-renfe-141f", v)); }
-export function renfe141fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-renfe-141f", v)); }
+// the Renfe 141F is drawn from its own spec (es141f.ts)
+const renfe141fUnit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-renfe-141f"]!, v).unit!;
+export function renfe141f(v?: ParamValues): MeshBuilder { return buildLoco(renfe141fSpec(renfe141fUnit(v))); }
+export function renfe141fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(renfe141fLodSpec(renfe141fUnit(v))); }
 export function renfe242f(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-renfe-242f", v)); }
 export function renfe242fLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-renfe-242f", v)); }
 export function lnerA4(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-lner-a4", v)); }
@@ -159,7 +162,7 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-dr-52", dr52, dr52Lod, steamGame(84, 1192, 80, 60), "dr-52"),
   design("proc-vehicle-kpev-p8", kpevP8, kpevP8Lod, steamGame(78, 868, 100, 50), "kpev-p8"),
   design("proc-vehicle-sncf-241p", sncf241p, sncf241pLod, steamGame(131, 2980, 120, 85), "sncf-241p"),
-  design("proc-vehicle-renfe-141f", renfe141f, renfe141fLod, steamGame(102, 1460, 90, 60), "renfe-141f"),
+  design("proc-vehicle-renfe-141f", renfe141f, renfe141fLod, steamGame(103, 1460, 90, 63.5), "renfe-141f"),
   design("proc-vehicle-renfe-242f", renfe242f, renfe242fLod, steamGame(138, 2100, 135, 90), "renfe-242f"),
   design("proc-vehicle-lner-a4", lnerA4, lnerA4Lod, steamGame(104, 1360, 160, 65), "lner-a4", "uk"),
   design("proc-vehicle-lner-a3", lnerA3, lnerA3Lod, steamGame(98, 1300, 160, 58), "lner-a3", "uk"),
