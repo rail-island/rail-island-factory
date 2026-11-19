@@ -1028,7 +1028,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-sbb-ic2000": pax(100, RAIL, { variants: [at({ unit: "b" }, { capacity: 130 })], presets: presets({ unit: "b" }) }),
   "proc-vehicle-glacier-express": pax(36, RAIL, { variants: [at({ unit: "second" }, { capacity: 48 })], presets: presets({ unit: "second" }) }),
   // Spain (docs/models/spain-trains.md)
-  "proc-vehicle-renfe-s100": series(40, 50, ELRL, { cars: 8, liveries: ["avlo"] }),
+  "proc-vehicle-renfe-s100": series(0, 41, ELRL, { cars: 8, liveries: ["avlo"] }), // power cars without seats; 329 seats in 8 trailers
   "proc-vehicle-renfe-s103": series(40, 50, ELRL, { cars: 8 }),
   "proc-vehicle-renfe-s102": series(0, 28, ELRL, { cars: 8, liveries: ["avlo"] }),
   "proc-vehicle-renfe-s106": series(30, 36, ELRL, { cars: 8, liveries: ["ave"] }),
