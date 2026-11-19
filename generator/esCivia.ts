@@ -33,7 +33,7 @@ import type { Pt } from "./sliceLoft.ts";
 import type { SeriesLayout, ShinkansenLivery, ShinkansenSeries } from "./shinkansen.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import { c, NO_NOSE } from "./seriesHelpers.ts";
-import { crownPane, type SliceBody } from "./sliceBody.ts";
+import type { SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
 import { singleArm } from "./czElectricKit.ts";
 
@@ -77,7 +77,7 @@ const PROFILE: Pt[] = [
 ];
 
 /** The face's plan: nearly as wide as the body at the cheeks, the corners rounding and sweeping back further up; over the shoulder the face follows the body's own roof arc. */
-const CORNER: Pt[] = [[B - 0.17, 0.35], [0.8, 0.3], [1.47, 0.32], [1.7, 0.42], [2.0, 0.5], [2.5, 0.56], [3.08, 0.66], [3.4, 0.3], [3.62, 0.02], [C, 0.02]];
+const CORNER: Pt[] = [[B - 0.17, 0.35], [0.8, 0.3], [1.47, 0.32], [1.7, 0.42], [2.0, 0.5], [2.5, 0.7], [3.08, 0.85], [3.4, 0.9], [3.62, 0.8], [3.8, 0.5], [C, 0.2]];
 const DEPTH: Pt[] = [[B - 0.17, 0.3], [1.47, 0.32], [1.7, 0.5], [2.0, 0.65], [2.5, 0.75], [3.08, 0.55], [3.4, 9], [C, 9]];
 /** The profile's d at height y (linear between its points). */
 const profileD = (y: number): number => {
@@ -90,7 +90,7 @@ const profileD = (y: number): number => {
 
 /** The face's own rows: the profile's heights and every paint edge. */
 const ROWS = [...new Set([
-  ...PROFILE.map(([y]) => y), 0.7, 1.13, 1.49, 1.92, 2.12, 2.27, 2.95, 3.12, 3.32, 3.52,
+  ...PROFILE.map(([y]) => y), 0.7, 1.13, 1.49, 1.92, 2.12, 2.27, 2.95, 3.18, 3.5,
 ])].sort((a, b) => a - b);
 
 const mirror = (half: readonly Pt[]): Pt[] => [...half.map(([l, y]): Pt => [-l, y]).reverse(), ...half];
@@ -108,10 +108,10 @@ const RED_FOOT: Pt[] = mirror([[0, 1.47], [0.98, 1.47], [1.1, 1.56], [1.22, 1.72
  * 3.52 m, the sides 1.22 m out at the windscreen's head narrowing to 1.06 m at its foot, the chin
  * curving under the display to 1.7 m in the middle.
  */
-const SHIELD: Pt[] = mirror([[0, 1.7], [0.45, 1.75], [0.82, 1.9], [1.06, 2.2], [1.22, 3.08], [1.19, 3.32], [1.06, 3.47], [0.84, 3.52]]).reverse();
+const SHIELD: Pt[] = mirror([[0, 1.7], [0.45, 1.75], [0.82, 1.88], [1.07, 2.15], [1.2, 2.6], [1.3, 3.1], [1.27, 3.32], [1.12, 3.46], [0.88, 3.5]]).reverse();
 
 /** The windscreen, widening upward (the 226 head-on: 1.96 m wide at its foot, 2.3 m at its head) with rounded corners. */
-const GLASS: Pt[] = mirror([[0, 2.27], [0.9, 2.27], [0.99, 2.32], [1.04, 2.45], [1.11, 2.75], [1.16, 2.98], [1.14, 3.06], [1.08, 3.09]]).reverse();
+const GLASS: Pt[] = mirror([[0, 2.22], [0.88, 2.22], [0.97, 2.27], [1.03, 2.4], [1.12, 2.75], [1.19, 3.05], [1.18, 3.14], [1.1, 3.18]]).reverse();
 
 export const CIVIA_FACE: SeriesCabFace = {
   dJoin: JOIN, dSide: 1.6, reach: REACH, first: 8.75, roofFrom: C + 0.3, bulge: 0.1, tolerance: 0.04, cols: [5, 3, 1, 1],
@@ -121,17 +121,17 @@ export const CIVIA_FACE: SeriesCabFace = {
   cornerDepth: DEPTH.map(([y, k]): Pt => [y, +Math.max(0.01, Math.min(JOIN - profileD(y) - 0.05, k)).toFixed(3)]),
   rows: ROWS,
   // the dark anticlimber, the white cover and cheeks, the red frame from the lamps up
-  // (the cab's dark grey roof over the frame: the body's end wall, which the face's top rows touch in the
+  // (the cab's light grey roof over the frame: the body's end wall, which the face's top rows touch in the
   // join's plane, takes the same paint over the shoulder, so the two never show different colours there)
-  bands: () => [[0, 0.7, "anti"], [0.7, 2.2, "white"], [2.2, 3.8, "red"], [3.8, 9, "cap"]],
-  lodBands: [[0, 0.7, "anti"], [0.7, 1.49, "white"], [1.49, 3.8, "red"], [3.8, 9, "cap"]],
-  lodGlass: { hw: 1.0, y: [2.27, 3.08] },
-  lodPaint: [{ lat: [-0.62, 0.62], y: [1.92, 2.12], mat: "shield" }, { lat: [-1.0, 1.0], y: [3.12, 3.48], mat: "shield" }],
+  bands: () => [[0, 0.7, "anti"], [0.7, 2.2, "white"], [2.2, 3.62, "red"], [3.62, 9, "cap"]],
+  lodBands: [[0, 0.7, "anti"], [0.7, 1.49, "white"], [1.49, 3.62, "red"], [3.62, 9, "cap"]],
+  lodGlass: { hw: 1.1, y: [2.22, 3.18] },
+  lodPaint: [{ lat: [-0.62, 0.62], y: [1.92, 2.12], mat: "shield" }, { lat: [-1.1, 1.1], y: [3.2, 3.48], mat: "shield" }],
   fields: [
     // the red frame's foot round the lamps and over the cover
     { mat: "red", pts: [...RED_FOOT, [1.6, 2.22], [-1.6, 2.22]] },
     // the cover's red top between the cheeks
-    { mat: "red", pts: box(-0.68, 0.68, 1.13, 1.47) },
+    { mat: "red", pts: mirror([[0, 1.1], [0.4, 1.12], [0.6, 1.16], [0.68, 1.22], [0.68, 1.38], [0.64, 1.45], [0.56, 1.47]]).reverse() },
     // the shield, the windscreen in it
     { mat: "shield", pts: SHIELD },
     { mat: "cabGlass", pts: GLASS },
@@ -153,17 +153,19 @@ export const CIVIA_FACE: SeriesCabFace = {
   ],
   pods: [
     // the oval headlight in the cap
-    { lat: 0, y: 3.3, w: 0.48, h: 0.27, r: 0.13, proud: 0.015, depth: 0.04, mat: "rim", lamps: [[0, 0.11, "lampHead"]] as const },
+    // the white cheeks standing forward on either side of the cover
+    ...[1, -1].map((sd) => ({ lat: sd * 1.07, y: 1.1, w: 0.68, h: 0.72, r: 0.16, proud: 0.06, depth: 0.06, mat: "white" })),
+    { lat: 0, y: 3.34, w: 0.44, h: 0.22, r: 0.11, proud: 0.015, depth: 0.04, mat: "rim", lamps: [[0, 0.09, "lampHead"]] as const },
   ],
   // the round headlight (outer, high) and tail light (inner, low) on each lower corner; the red markers in the cap's corners
   lamps: [
     ...[1, -1].flatMap((sd) => [[sd * 1.12, 1.95, 0.1, "lampHead"], [sd * 0.88, 1.68, 0.095, "lampRed"]] as const),
-    [0.8, 3.36, 0.045, "lampRed"], [-0.8, 3.36, 0.045, "lampRed"],
+    [0.82, 3.38, 0.04, "lampRed"], [-0.82, 3.38, 0.04, "lampRed"],
   ],
   texts: [
     // the unit's number and its depot letter (Madrid) in the cap
-    { text: "076", lat: -0.74, y: 3.15, h: 0.13, mat: "numRed" },
-    { text: "M", lat: -0.4, y: 3.15, h: 0.13, mat: "numYellow" },
+    { text: "076", lat: -0.74, y: 3.24, h: 0.11, mat: "numRed" },
+    { text: "M", lat: -0.45, y: 3.24, h: 0.11, mat: "numYellow" },
   ],
   // the two wipers, both parked on the right of their half
   wipers: [[[-0.62, 2.31], [-0.84, 2.98]], [[0.98, 2.31], [1.03, 2.98]]],
@@ -211,7 +213,7 @@ const CERCANIAS: ShinkansenLivery = {
     skirtG: c("#3b3e41", 0.75), anti: c("#4a4d50", 0.6), shield: c("#3e4246", 0.35), black: c("#16181a", 0.3), seam: c("#8d9295", 0.5),
     display: { color: "#2a2014", metallic: 0.2, roughness: 0.15, glass: true }, sideGlass: { color: "#1b222b", metallic: 0.3, roughness: 0.08, glass: true },
     rim: c("#b9bdc0", 0.35), numRed: c("#e2401c", 0.4), numYellow: c("#f0c419", 0.4), cabMask: c("#1d1f22", 0.3),
-    fairing: c("#45494d", 0.6), cap: c("#45494d", 0.6), louvre: c("#2b2e31", 0.7), acGrey: c("#a9aeb1", 0.5), grille: c("#5d6266", 0.6), step: c("#9ea3a6", 0.5),
+    fairing: c("#45494d", 0.6), cap: c("#c3c7c9", 0.55), louvre: c("#2b2e31", 0.7), acGrey: c("#a9aeb1", 0.5), grille: c("#5d6266", 0.6), step: c("#9ea3a6", 0.5),
   },
   bands: [
     [0, A, "skirtG"], [A, PURPLE[0], "white"], [PURPLE[0], PURPLE[1], "purple"], [PURPLE[1], RED_LINE[0], "white"], [RED_LINE[0], RED_LINE[1], "red"],
@@ -246,7 +248,7 @@ const PANTO_D = 1.7;
 const MID_BODY = MID_LENGTH - 2 * GAP;
 
 /** The roof's fairings and air conditioning, the cab roof, the door steps and the underfloor. */
-function civiaFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
+function civiaFittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
   const L = car.length;
   const at = (mat: string, d0: number, d1: number, y0: number, y1: number, z0: number, z1: number) => block(m, mat, Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1)), y0, y1, z0, z1);
   /**
@@ -257,9 +259,9 @@ function civiaFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, c
     const [x0, x1] = [Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1))];
     // counter-clockwise seen from above (+y): a negative shoelace area in (x, z)
     const ring = (a: number, e: number, hw: number): Array<[number, number]> => [[a, -hw], [a, hw], [e, hw], [e, -hw]];
-    m.loft("fairing", ring(x0, x1, 1.3), S + 0.12, ring(x0 + 0.12, x1 - 0.12, 0.92), C + 0.25);
+    m.loft("fairing", ring(x0, x1, 1.15), S + 0.3, ring(x0 + 0.12, x1 - 0.12, 0.85), C + 0.25);
     for (let i = 0; i < 3; i++) {
-      const t = (i + 0.5) / 3, y = S + 0.12 + t * (C + 0.13 - S), hw = 1.3 - t * 0.38;
+      const t = (i + 0.5) / 3, y = S + 0.3 + t * (C - 0.05 - S), hw = 1.15 - t * 0.3;
       for (const sd of [1, -1]) block(m, "louvre", x0 + 0.25, x1 - 0.25, y - 0.025, y + 0.025, sd > 0 ? hw - 0.07 : -hw - 0.005, sd > 0 ? hw + 0.005 : -hw + 0.07);
     }
   });
@@ -270,8 +272,7 @@ function civiaFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, c
   });
   m.scope("roof equipment", () => {
     if (car.end) {
-      // the dark grey cab roof behind the red frame, then a fairing, the air conditioning, a fairing to the joint
-      for (const sd of [1, -1]) crownPane(m, b, X, sd, "fairing", [0, body(3.55)], [0, 1.4], 0.004);
+      // the light grey cab roof behind the red frame, then a fairing, the air conditioning, a fairing to the joint
       fairing(body(3.6), body(11.35));
       ac(body(11.65), body(15.05));
       fairing(body(15.35), L - 0.25);
