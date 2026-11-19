@@ -11,6 +11,7 @@ import type { SeriesCabFace } from "./seriesCab.ts";
 import type { SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
 import { decalX, decalZ } from "./usHoodKit.ts";
+import { REGIO2N_DD as REGIO2N, REGIO2N_DESIGN } from "./frRegio2n.ts";
 
 /** A livery of bands bottom first: [top of band, paint] pairs over a body colour list. */
 const livery = (title: string, number: string, palette: Record<string, string>, bands: Array<[number, number, string]>, roof = "roofG", skirt = "skirtG"): ShinkansenLivery => ({
@@ -77,20 +78,6 @@ export const MI09: ShinkansenSeries = {
     ratp: { ...livery("RATP", "MI 09 001", { body: "#eef0f0", grey: "#8c9196", turquoise: "#1aa596" }, [[0, 0.95, "grey"], [0.95, 1.15, "body"], [1.15, 2.5, "grey"], [2.5, 9, "body"]]), doors: [[0, 9, "turquoise"]] },
   },
   weight: { end: 58, middle: 52 }, power: 750, maxspeed: 120,
-};
-
-export const REGIO2N: ShinkansenSeries = {
-  endLength: 17.9, midLength: 16.0, W: 1.45, Y: 1.2, S: 3.85, C: 4.32, lean: 0.97, B: 0.6, A: 0.8,
-  // the Omneo's tall, rounded front, the windscreen high over a sloping apron
-  nose: nose(2.2, 0.35, 2.3, [[0, 2.2], [0.5, 3.2], [1.5, 4.0], [2.4, 4.32]], [[0, 2.1], [0.5, 2.95], [1.5, 3.6], [2.4, 3.85]], [[0, 1.2], [1.0, 1.2]], [[0, 0.95], [0.8, 0.8]], [[0, 0.85], [0.4, 0.6]]),
-  windscreen: [0.6, 2.0, 0.07, 1.15], lamps: [0.15, 1.35],
-  windows: DD_ROWS, windowW: 1.4, pitch: 1.7, door: [0.95, 3.05, 1.6, 2.6], doorW: 1.3,
-  bogieCentres: 12.5, wheelR: 0.42, wheelbase: 2.3, cars: [4, 5, 6],
-  liveries: {
-    ter: livery("TER", "Z 55501", { body: "#e9ebec", grey: "#4d5257", blue: "#00a3e0" }, [[0, 1.05, "grey"], [1.05, 1.15, "blue"], [1.15, 9, "body"]]),
-    transilien: livery("Transilien", "Z 57001", { body: "#e9ebec", grey: "#4d5257", teal: "#3fa9a0" }, [[0, 1.05, "grey"], [1.05, 1.15, "teal"], [1.15, 9, "body"]]),
-  },
-  weight: { end: 48, middle: 40 }, power: 500, maxspeed: 160,
 };
 
 export const REGIOLIS: ShinkansenSeries = {
@@ -220,8 +207,7 @@ export function sncfZ20500(v?: ParamValues): MeshBuilder { return buildSeries(Z2
 export function sncfZ20500Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(Z20500, P.z20500, v); }
 export function ratpMi09(v?: ParamValues): MeshBuilder { return buildSeries(MI09, P.mi09, v); }
 export function ratpMi09Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MI09, P.mi09, v); }
-export function sncfRegio2n(v?: ParamValues): MeshBuilder { return buildSeries(REGIO2N, P.regio2n, v); }
-export function sncfRegio2nLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(REGIO2N, P.regio2n, v); }
+export { sncfRegio2n, sncfRegio2nLod } from "./frRegio2n.ts";
 export function sncfRegiolis(v?: ParamValues): MeshBuilder { return buildSeries(REGIOLIS, P.regiolis, v); }
 export function sncfRegiolisLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(REGIOLIS, P.regiolis, v); }
 export function sncfX3800(v?: ParamValues): MeshBuilder { return buildSeries(X3800, P.x3800, v); }
@@ -233,7 +219,7 @@ export const FR_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-sncf-tgv-m", "TGV M", TGV_M, P.tgvM, sncfTgvM, sncfTgvMLod, "sncf-tgv-m", "uic"),
   seriesDesign("proc-vehicle-sncf-z20500", "SNCF Z 20500", Z20500, P.z20500, sncfZ20500, sncfZ20500Lod, "sncf-z20500", "uic"),
   seriesDesign("proc-vehicle-ratp-mi09", "RER MI 09", MI09, P.mi09, ratpMi09, ratpMi09Lod, "ratp-mi09", "uic"),
-  seriesDesign("proc-vehicle-sncf-regio2n", "Regio 2N", REGIO2N, P.regio2n, sncfRegio2n, sncfRegio2nLod, "sncf-regio2n", "uic"),
+  REGIO2N_DESIGN,
   seriesDesign("proc-vehicle-sncf-regiolis", "Regiolis", REGIOLIS, P.regiolis, sncfRegiolis, sncfRegiolisLod, "sncf-regiolis", "uic"),
   seriesDesign("proc-vehicle-sncf-x3800", "SNCF X 3800 Picasso", X3800, P.x3800, sncfX3800, sncfX3800Lod, "sncf-x3800", "uic"),
   seriesDesign("proc-vehicle-sncf-x73500", "SNCF X 73500", X73500, P.x73500, sncfX73500, sncfX73500Lod, "sncf-x73500", "uic"),
