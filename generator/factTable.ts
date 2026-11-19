@@ -1248,7 +1248,7 @@ export const FACTS: Readonly<Record<string, ModelFacts>> = {
   "proc-vehicle-renfe-277": { country: "es", year: 1952 },
   "proc-vehicle-renfe-319": { country: "es", year: 1965 },
   "proc-vehicle-renfe-333": { country: "es", year: 1974 },
-  "proc-vehicle-renfe-354": { country: "es", year: 1964 },
+  "proc-vehicle-renfe-354": { country: "es", year: 1983 },
   "proc-vehicle-renfe-440": { country: "es", year: 1974 },
   "proc-vehicle-renfe-446": { country: "es", year: 1989 },
   "proc-vehicle-renfe-592": { country: "es", year: 1981 },
