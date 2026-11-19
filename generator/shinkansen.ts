@@ -270,6 +270,13 @@ export interface ShinkansenSeries {
    * bogies this far inside both ends. In the train the skirt is cut open over the joints' bogies.
    */
   jacobsTrailers?: number;
+  /**
+   * With `jacobsTrailers`: the end trailers' own layout (d from the body's +X end, beside the leading
+   * power car), mirrored on the rear one, in place of `layout.middle` (the TGV Atlantique's and the AVE
+   * S-100's vestibule by the power car). A train's only trailer and a lone trailer keep it unmirrored
+   * and `layout.middle` respectively.
+   */
+  jacobsEndTrailerLayout?: SeriesLayout;
   /** The intermediate cars' own shoulder and crown, lower than the end cars' (a power car taller than its trailers). */
   trailerSection?: { S: number; C: number };
   /** Both bogies of every car centred on its body, bogieCentres apart (default 3.5 m in from the rear, the other ahead of it). */
@@ -368,6 +375,16 @@ export interface SeriesLayout {
   windows: ReadonlyArray<readonly [number, number]>;
   /** Each window row's own spans (by the series' `windows` index), in place of `windows` for that row. */
   rows?: ReadonlyArray<ReadonlyArray<readonly [number, number]> | undefined>;
+}
+
+/** A car's layout turned end for end over its body of length L (the doors sliding the other way). */
+function mirrorLayout(l: SeriesLayout, L: number): SeriesLayout {
+  const flip = <T extends readonly number[]>(sp: T): [number, number] => [L - sp[1]!, L - sp[0]!];
+  return {
+    doors: l.doors.map((d): readonly [number, number, number] => [...flip(d), -d[2]!]).reverse(),
+    windows: l.windows.map(flip).reverse(),
+    ...(l.rows ? { rows: l.rows.map((r) => r?.map(flip).reverse()) } : {}),
+  };
 }
 
 /** The coupling plane's distance beyond a buffered cab end. */
@@ -480,7 +497,10 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
   }
   // a train's rear end car with a layout of its own (rearEnd)
   const rearOwn = end && rear && s.rearEnd !== undefined;
-  const own = power ? power.layout : rearOwn ? s.rearEnd!.layout : s.layout?.[end ? "end" : "middle"];
+  // a power-car train's end trailer beside a power car (jacobsTrailers): its own layout, mirrored when the power car is behind it
+  const et = !end && !power && s.jacobsEndTrailerLayout && Array.isArray(joint) ? (!joint[0] ? 1 : !joint[1] ? -1 : 0) : 0;
+  const etl = et === 1 ? s.jacobsEndTrailerLayout : et === -1 ? mirrorLayout(s.jacobsEndTrailerLayout!, L) : undefined;
+  const own = power ? power.layout : rearOwn ? s.rearEnd!.layout : etl ?? s.layout?.[end ? "end" : "middle"];
   const cabWindows = rearOwn ? s.rearEnd!.cabWindows : s.cabWindows;
   if (own) {
     doors = own.doors.map(([a, e]): [number, number] => [a, e]);
