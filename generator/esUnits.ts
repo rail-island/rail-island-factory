@@ -14,6 +14,9 @@ import { S102, s102Series } from "./esS102.ts";
 import { renfeS100, renfeS100Lod, S100, S100_PARAMS } from "./esS100.ts";
 
 export { renfeS100, renfeS100Lod, S100 };
+import { S106 } from "./esS106.ts";
+
+export { S106 };
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -33,15 +36,6 @@ export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regiona
 }
 
 export { S103 };
-
-export const S106: ShinkansenSeries = talgo({
-  endLength: 20.0, C: 3.6,
-  // the Avril's long, low nose and the low wide body
-  nose: nose(6.0, 0.1, 2.5, [[0, 1.2], [0.6, 1.55], [2.6, 2.2], [4.6, 2.9], [6.4, 3.6]], [[0, 1.15], [0.6, 1.45], [2.6, 2.05], [4.6, 2.65], [6.4, 2.95]], [[0, 1.1], [1.5, 1.25]], [[0, 1.05], [1.5, 0.95]], [[0, 1.0], [0.6, 0.6], [2.0, 0.75]]),
-  windscreen: [4.0, 5.9, 0.07, 1.0], lamps: [1.4, 1.4],
-  liveries: { avlo: esLivery("avlo", "106 001"), ave: esLivery("ave", "106 010") },
-  weight: { end: 40, middle: 20 }, power: 800, maxspeed: 330,
-});
 
 export const S130: ShinkansenSeries = talgo({
   endLength: 20.0, C: 3.95,
