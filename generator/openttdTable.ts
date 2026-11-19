@@ -1031,7 +1031,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-talgo-iii": series(22, 26, RAIL, { cars: 8 }),
   "proc-vehicle-renfe-s120": series(60, 70, ELRL, { cars: 4, liveries: ["mediaDistancia"] }),
   "proc-vehicle-renfe-civia": series(80, 90, ELRL, { cars: 4 }),
-  "proc-vehicle-renfe-446": series(70, 80, ELRL, { cars: 3 }),
+  "proc-vehicle-renfe-446": series(76, 88, ELRL, { cars: 3 }),
   "proc-vehicle-renfe-440": series(76, 84, ELRL, { cars: 3, liveries: ["cercanias"] }),
   "proc-vehicle-renfe-592": series(76, 84, RAIL, { cars: 3, liveries: ["mediaDistancia"] }),
   "proc-vehicle-iryo-s109": series(40, 56, ELRL, { cars: 8 }),
