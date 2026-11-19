@@ -262,6 +262,8 @@ export interface ShinkansenSeries {
   bufferBeam?: boolean;
   /** With buffers at the cab ends: the heads' shape (default round; rect the Talgo III tail's wide flat plates). */
   bufferHeadShape?: "round" | "rect";
+  /** With buffers at the cab ends: the buffer heads' (the coupling plane's) distance ahead of the face's tip (default 0.65): the Talgo III's short buffers close to its apron. */
+  bufferGap?: number;
   /** The roof arc's segments (default 8). */
   arc?: number;
   /** The centre coupler's height (default 1.0 m; a tube car's sits under its low floor). */
@@ -421,7 +423,7 @@ const defaultCars = (s: ShinkansenSeries) => {
 // Building a series
 
 /** The body's +X end behind the car's front: the nose tip at it, a flat cab's lamps 7 cm proud of the wall, an inner wall a coupling gap behind. */
-const frontGap = (s: ShinkansenSeries, end: boolean) => (end ? (s.cabFace ? s.cabFace.dJoin : 0) + (s.endCoupler === "buffers" ? BUFFER_GAP : s.cabFace ? s.cabFace.reach ?? 0.07 : s.flatCab || s.noseCab ? 0.07 : 0) : GAP);
+const frontGap = (s: ShinkansenSeries, end: boolean) => (end ? (s.cabFace ? s.cabFace.dJoin : 0) + (s.endCoupler === "buffers" ? (s.bufferGap ?? BUFFER_GAP) : s.cabFace ? s.cabFace.reach ?? 0.07 : s.flatCab || s.noseCab ? 0.07 : 0) : GAP);
 /** A single railcar with a cab (a face or a nose) at both ends. */
 const twoCabs = (s: ShinkansenSeries) => s.single === true && !(s.cabFace && s.cabFaceFrontOnly);
 const endBody = (s: ShinkansenSeries) => s.endLength - (twoCabs(s) ? frontGap(s, true) : GAP) - frontGap(s, true);

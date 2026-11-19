@@ -42,13 +42,22 @@ const LOW_LINE: [number, number] = [1.32, 1.37];
 const HIGH_LINE: [number, number] = [2.36, 2.41];
 /** The dome's foot on the tail: a dark line round the face only. */
 const DOME_LINE: [number, number] = [2.78, 2.82];
-/** The tail's depth from its tip to the body's own section (the dome's foot along the roof). */
-const JOIN = 0.9;
+/**
+ * The tail's depth from its tip to the body's own section: the plan a flattened half-ellipse, its corners
+ * rounding back 0.9 m over 0.85 m of the half width (Irun three-quarter, Bilbao), the dome over it.
+ */
+const JOIN = 1.1;
+/** The tail's tip to the dome's foot on the side photographs, where the tail car's side positions below were measured from. */
+const MEASURED = 0.9;
+/** The buffer heads ahead of the apron: short housings, the plates 0.3 m out (Bilbao). */
+const BUFFERS = 0.3;
 /** A car's pitch (the 11.1 m box and its joint) and the tail car's length over its buffers to the joint. */
 const MID_LENGTH = 11.6;
-const END_LENGTH = 13.14;
-/** The body of the tail car behind its join: END_LENGTH less the buffers' gap (0.65), the join and half a joint (0.25). */
-const END_BODY = END_LENGTH - 0.65 - JOIN - 0.25;
+const END_LENGTH = 12.49 + BUFFERS;
+/** The body of the tail car behind its join: END_LENGTH less the buffers' gap, the join and half a joint (0.25). */
+const END_BODY = END_LENGTH - BUFFERS - JOIN - 0.25;
+/** A side position measured behind the dome's foot on the photographs, behind the body's join. */
+const atTail = (d: number) => d + MEASURED - JOIN;
 
 /** Talgo's silver and red, read from photo-bf-granada-talgo-iii-endwagen-tg1-26.jpg: the stainless lower body and roof, the red window band between dark lines. */
 const LIVERY: ShinkansenLivery = {
@@ -73,9 +82,10 @@ const MID_WINDOWS: Array<[number, number]> = [[2.0, 3.48], [3.95, 5.45], [5.92, 
 const MID_DOOR: [number, number] = [9.64, 10.67];
 const AC: [number, number] = [0.49, 1.66];
 /** The tail car (Granada and Irun): the high window, two narrower windows, the door, one more window. */
-const END_WINDOWS: Array<[number, number]> = [[3.65, 4.61], [5.11, 6.07], [9.06, 10.03]];
-const END_DOOR: [number, number] = [7.1, 8.06];
-const END_HIGH: [number, number] = [0.14, 1.2];
+const END_WINDOWS: Array<[number, number]> = [[3.65, 4.61], [5.11, 6.07], [9.06, 10.03]].map(([a, e]): [number, number] => [atTail(a), atTail(e)]);
+const END_DOOR: [number, number] = [atTail(7.1), atTail(8.06)];
+/** The high window starts where the side does, right behind the tail's rounded corner. */
+const END_HIGH: [number, number] = [0.05, atTail(1.2)];
 
 /** A louvre column on the A/C hatch: vertical slots, as the Granada photograph shows them. */
 const louvres = (d0: number, d1: number, y: readonly [number, number], n: number): SeriesSidePanel[] =>
@@ -95,7 +105,7 @@ const MID_PANELS: SeriesSidePanel[] = [
 ];
 const END_PANELS: SeriesSidePanel[] = [
   // the plain rubbing strip low along the front half (Granada, Irun)
-  { d: [JOIN + 0.2, JOIN + 5.4], y: [0.78, 0.93], kind: "panel", mat: "silver" },
+  { d: [JOIN + 0.05, MEASURED + 5.4], y: [0.78, 0.93], kind: "panel", mat: "silver" },
   { d: [END_DOOR[0] + JOIN + 0.04, END_DOOR[1] + JOIN - 0.04], y: [B + 0.06, DOOR[0] - 0.03], kind: "seam" },
 ];
 
@@ -109,9 +119,12 @@ const seam = (lat: number, top: number): { mat: string; pts: readonly Pt[] } => 
  */
 const TAIL: SeriesCabFace = {
   // dJoin clears the face's top corners (profile + bow + corner radius), so none of it is pressed into the join plane
-  dJoin: JOIN, dSide: 0.7, first: 2.2, roofFrom: 3.2,
-  profile: [[B, 0.09], [0.55, 0.03], [0.75, 0], [2.55, 0], [2.78, 0.05], [2.95, 0.14], [3.12, 0.3], [3.28, 0.55], [C, JOIN]],
-  corner: [[B, 0.45], [2.78, 0.45], [3.12, 0.25], [C, 0.02]], bulge: 0.1, cols: [6, 3, 1, 1],
+  dJoin: JOIN, dSide: 0.9, first: 2.2, roofFrom: 3.2,
+  profile: [[B, 0.09], [0.55, 0.03], [0.75, 0], [2.55, 0], [2.78, 0.05], [2.95, 0.15], [3.12, 0.33], [3.28, 0.65], [C, JOIN]],
+  // the plan: wide elliptic corners (0.85 m across, 0.9 m back) and a bowed middle, closing in under the dome
+  corner: [[B, 0.85], [2.78, 0.85], [2.95, 0.75], [3.12, 0.55], [3.28, 0.3], [C, 0.02]],
+  cornerDepth: [[B, 0.9], [2.78, 0.9], [2.95, 0.8], [3.12, 0.6], [3.28, 0.32], [C, 0.02]],
+  bulge: 0.12, cols: [6, 5, 1, 1],
   rows: [B, 0.55, 0.75, 1.17, LOW_LINE[0], LOW_LINE[1], 1.9, HIGH_LINE[0], HIGH_LINE[1], DOME_LINE[0], DOME_LINE[1], 2.95, 3.12, 3.28, C],
   // the face's bands: the sides', and the dark line at the dome's foot
   bands: (l) => [...l.bands.filter(([, top]) => top <= HIGH_LINE[1]), [HIGH_LINE[1], DOME_LINE[0], "silver"], [DOME_LINE[0], DOME_LINE[1], "line"], [DOME_LINE[1], 9, "silver"]],
@@ -125,9 +138,15 @@ const TAIL: SeriesCabFace = {
     // the dome's riveted seams
     seam(-0.85, 3.22), seam(-0.25, 3.34), seam(0.25, 3.34), seam(0.85, 3.22),
   ],
-  // the porthole, then the marker lamps: two high, a white and a red one low
-  lamps: [[-0.59, 2.48, 0.22, "cabGlass"], [-1.12, 2.6, 0.07, "lampRed"], [0.3, 2.6, 0.07, "lampRed"], [-1.0, 1.16, 0.1, "lampHead"], [0.05, 1.12, 0.09, "lampRed"]],
-  number: { lat: 0.7, y: 1.9, h: 0.16, mat: "white" },
+  // the low marker lamps: a white and a red one
+  lamps: [[-1.0, 1.16, 0.1, "lampHead"], [0.05, 1.12, 0.09, "lampRed"]],
+  // the porthole in its bright ring, the two high markers in dark upright housings (Bilbao, Irun)
+  pods: [
+    { lat: -0.59, y: 2.48, w: 0.56, h: 0.56, r: 0.28, proud: 0.04, depth: 0.08, mat: "frameSilver", lamps: [[0, 0.21, "cabGlass"]] },
+    { lat: -1.1, y: 2.6, w: 0.16, h: 0.3, r: 0.06, proud: 0.06, depth: 0.05, mat: "black", lamps: [[0, 0.055, "lampRed"]] },
+    { lat: 0.3, y: 2.6, w: 0.16, h: 0.3, r: 0.06, proud: 0.06, depth: 0.05, mat: "black", lamps: [[0, 0.055, "lampRed"]] },
+  ],
+  number: { lat: 0.4, y: 1.9, h: 0.16, mat: "white" },
 };
 
 export const TALGO_III: ShinkansenSeries = {
@@ -141,7 +160,7 @@ export const TALGO_III: ShinkansenSeries = {
   },
   sidePanels: { end: END_PANELS, middle: MID_PANELS },
   // one wheel pair under each joint, shared by the two cars (the "rodal"); the tail car's own under the tail, 2.9 m behind its tip
-  jacobs: true, wheelbase: 0, wheelR: 0.4, bogieCentres: END_BODY + 0.25 - 2.0, endBogies: [2.0, END_BODY + 0.25],
+  jacobs: true, wheelbase: 0, wheelR: 0.4, bogieCentres: END_BODY + 0.25 - (2.9 - JOIN), endBogies: [2.9 - JOIN, END_BODY + 0.25],
   // a lone car keeps a wheel pair of its own 0.85 m inside each inner end (its frame within the body)
   loneJointAxleInset: 0.85,
   // the dark rubber shroud over the whole section at each joint, just inside the bodies
@@ -151,7 +170,7 @@ export const TALGO_III: ShinkansenSeries = {
   // the cars' tare (Talgo's light aluminium boxes); 160 km/h from the 1970s (140 km/h at first)
   weight: { end: 14, middle: 12 }, power: 0, maxspeed: 160,
   // the tail: its face, the buffers low out of its apron (no beam), their heads wide flat plates (Bilbao, Perpignan)
-  cabFace: TAIL, endCoupler: "buffers", couplerY: 0.82, bufferBeam: false, bufferHeadShape: "rect",
+  cabFace: TAIL, endCoupler: "buffers", couplerY: 0.82, bufferBeam: false, bufferHeadShape: "rect", bufferGap: BUFFERS,
   // the stainless body's ribs below and above the red band (the window band smooth), the roof's
   fluting: [{ y0: B + 0.06, y1: LOW_LINE[0] - 0.03, pitch: 0.075, mat: "flute" }, { y0: HIGH_LINE[1] + 0.04, y1: S - 0.04, pitch: 0.075, mat: "flute" }],
   roofRibs: { pitch: 0.13, zMax: 1.3, mat: "flute" },
