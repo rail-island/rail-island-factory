@@ -20,6 +20,7 @@ export { S106 };
 import { S120, renfeS120, renfeS120Lod } from "./esS120.ts";
 
 export { renfeS120, renfeS120Lod };
+import { S130 } from "./esS130.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -40,13 +41,7 @@ export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regiona
 
 export { S103 };
 
-export const S130: ShinkansenSeries = talgo({
-  endLength: 20.0, C: 3.95,
-  nose: nose(6.0, 0.3, 3.0, [[0, 1.15], [0.6, 1.4], [3.0, 1.9], [5.2, 2.7], [6.2, 3.5], [7.0, 3.95]], [[0, 1.12], [0.6, 1.33], [3.0, 1.75], [5.2, 2.4], [6.2, 2.85], [7.0, 2.95]], [[0, 1.08], [1.5, 1.25]], [[0, 1.05], [1.5, 0.95]], [[0, 1.0], [0.6, 0.6], [2.0, 0.75]]),
-  windscreen: [4.8, 6.3, 0.07, 1.0], lamps: [1.6, 1.62],
-  liveries: { alvia: esLivery("alvia", "130 001") },
-  weight: { end: 72, middle: 18 }, power: 2400, maxspeed: 250,
-});
+export { S130 };
 
 export const CIVIA: ShinkansenSeries = {
   endLength: 20.6, midLength: 19.0, W: 1.47, Y: 1.25, S: 3.2, C: 4.1, lean: 0.95, B: 0.6, A: 0.8,
