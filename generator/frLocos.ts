@@ -13,6 +13,9 @@ import { c } from "./czElectricKit.ts";
 import { enumParam } from "./emuParts.ts";
 import { DIESEL_LOCO_CATALOG, ELECTRIC_LOCO_CATALOG } from "./cd163.ts";
 import { worldLocoSpec, type WorldLoco } from "./worldLocoKit.ts";
+import { CC6500_PARAMS, sncfCc6500, sncfCc6500Lod } from "./frCc6500.ts";
+
+export { sncfCc6500, sncfCc6500Lod };
 
 export type Liveries = Record<string, { title: string; loco: WorldLoco }>;
 type Body = Omit<WorldLoco, "palette" | "side" | "number">;
@@ -28,8 +31,7 @@ const pinstripes = (body: string, at: number): WorldLoco["side"] => [[1.3, 1.6, 
 // ---------------------------------------------------------------------------
 // The bodies
 
-export const CC6500_BODY: Body = { length: 20.19, W: 1.5, y0: 1.3, roof: 4.0, nose: "nezCasse", bogies: mono(5.6, 1.6, 0.57, 3), pantograph: "singleArm", pantographX: 5.4, room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
-export const CC40100_BODY: Body = { ...CC6500_BODY, length: 22.03, bogies: mono(6.2, 1.6, 0.55, 3), pantographX: 6.0, room: { kind: "grilles", n: 6, y: [2.6, 3.4] } };
+export const CC40100_BODY: Body = { length: 22.03, W: 1.5, y0: 1.3, roof: 4.0, nose: "nezCasse", bogies: mono(6.2, 1.6, 0.55, 3), pantograph: "singleArm", pantographX: 6.0, room: { kind: "grilles", n: 6, y: [2.6, 3.4] } };
 export const BB22200_BODY: Body = { length: 17.48, W: 1.5, y0: 1.3, roof: 4.0, nose: "nezCasse", bogies: mono(4.5, 1.4, 0.55, 2), pantograph: "singleArm", pantographX: 4.3, room: { kind: "grilles", n: 4, y: [2.6, 3.4] } };
 export const CC72000_BODY: Body = { length: 20.19, W: 1.5, y0: 1.3, roof: 4.0, nose: "nezCasse", bogies: mono(5.6, 1.6, 0.57, 3), exhausts: [-1.5], room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 /** Alsthom's rounded 1950s body: the CC 7100 (and the NS 1300), the BB 9200 a shorter Bo-Bo of the family. */
@@ -42,11 +44,6 @@ const BB67400_BODY: Body = { length: 17.09, W: 1.48, y0: 1.35, roof: 3.95, nose:
 // ---------------------------------------------------------------------------
 // The liveries
 
-const CC6500: Liveries = {
-  capitole: { title: "Capitole", loco: { ...CC6500_BODY, palette: { red: c("#b5232b"), white: WHITE, grey: GREY }, side: pinstripes("red", 2.3), number: "CC 6544" } },
-  maurienne: { title: "Maurienne green", loco: { ...CC6500_BODY, palette: { green: c("#2f6b3a"), white: WHITE, grey: GREY }, side: pinstripes("green", 2.3), number: "CC 6558" } },
-  beton: { title: "Beton", loco: { ...CC6500_BODY, palette: { concrete: c("#8c9196", 0.5), orange: c("#e8701e"), grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.25, "concrete"], [2.25, 2.45, "orange"], [2.45, 4.3, "concrete"]], number: "CC 6575" } },
-};
 const CC40100: Liveries = {
   inox: { title: "Stainless steel", loco: { ...CC40100_BODY, palette: { inox: c("#b8bcbf", 0.25), blue: c("#1f3c78"), grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.25, "inox"], [2.25, 2.45, "blue"], [2.45, 4.3, "inox"]], number: "CC 40101" } },
 };
@@ -83,10 +80,8 @@ export const liverySpec = (l: Liveries, p: readonly ParamSpec[], v?: ParamValues
 export const paramsOf = (p: ParamSpec[]) => (p[0]!.values.length > 1 ? { params: p } : {});
 export const locoGame = (weight: number, power: number, maxspeed: number): GameProperties => ({ weight, power, maxspeed, accel: null });
 
-const P = { cc6500: liveryParams(CC6500), cc40100: liveryParams(CC40100), bb22200: liveryParams(BB22200), cc72000: liveryParams(CC72000), cc7100: liveryParams(CC7100), bb9200: liveryParams(BB9200), bb27000: liveryParams(BB27000), bb67400: liveryParams(BB67400) };
+const P = { cc40100: liveryParams(CC40100), bb22200: liveryParams(BB22200), cc72000: liveryParams(CC72000), cc7100: liveryParams(CC7100), bb9200: liveryParams(BB9200), bb27000: liveryParams(BB27000), bb67400: liveryParams(BB67400) };
 
-export function sncfCc6500(v?: ParamValues): MeshBuilder { return buildBoxLoco(liverySpec(CC6500, P.cc6500, v)); }
-export function sncfCc6500Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(liverySpec(CC6500, P.cc6500, v)); }
 export function sncfCc40100(v?: ParamValues): MeshBuilder { return buildBoxLoco(liverySpec(CC40100, P.cc40100, v)); }
 export function sncfCc40100Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(liverySpec(CC40100, P.cc40100, v)); }
 export function sncfBb22200(v?: ParamValues): MeshBuilder { return buildBoxLoco(liverySpec(BB22200, P.bb22200, v)); }
@@ -104,7 +99,7 @@ export function sncfBb67400Lod(v?: ParamValues): MeshBuilder { return boxLocoLod
 
 const E = ELECTRIC_LOCO_CATALOG, D = DIESEL_LOCO_CATALOG;
 export const FR_LOCOS: ProceduralDesign[] = [
-  { id: "proc-vehicle-sncf-cc6500", title: "SNCF CC 6500", build: sncfCc6500, buildLod: sncfCc6500Lod, ...paramsOf(P.cc6500), game: locoGame(115, 5900, 200), catalog: E, references: "sncf-cc6500" },
+  { id: "proc-vehicle-sncf-cc6500", title: "SNCF CC 6500", build: sncfCc6500, buildLod: sncfCc6500Lod, params: CC6500_PARAMS, game: locoGame(115, 5900, 200), catalog: E, references: "sncf-cc6500" },
   { id: "proc-vehicle-sncf-cc40100", title: "SNCF CC 40100", build: sncfCc40100, buildLod: sncfCc40100Lod, ...paramsOf(P.cc40100), game: locoGame(107, 4480, 160), catalog: E, references: "sncf-cc40100" },
   { id: "proc-vehicle-sncf-bb22200", title: "SNCF BB 22200", build: sncfBb22200, buildLod: sncfBb22200Lod, ...paramsOf(P.bb22200), game: locoGame(89, 4360, 160), catalog: E, references: "sncf-bb22200" },
   { id: "proc-vehicle-sncf-cc7100", title: "SNCF CC 7100", build: sncfCc7100, buildLod: sncfCc7100Lod, ...paramsOf(P.cc7100), game: locoGame(107, 3490, 150), catalog: E, references: "sncf-cc7100" },
