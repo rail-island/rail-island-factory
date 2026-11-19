@@ -958,7 +958,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-sncf-tgv-m": series(0, 82, ELRL, { cars: 8, liveries: ["ouigo"] }),
   "proc-vehicle-sncf-z20500": series(140, 160, ELRL, { cars: 4, liveries: ["ileDeFrance"] }),
   "proc-vehicle-ratp-mi09": series(100, 110, ELRL, { cars: 5 }),
-  "proc-vehicle-sncf-regio2n": series(90, 100, ELRL, { cars: 4, liveries: ["transilien"] }),
+  // the double-deck end car leads; the double-deck and single-deck (access) cars alternate; the single-deck end car closes the 4-car set
+  "proc-vehicle-sncf-regio2n": pax(76, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 104 }), at({ unit: "singleDeckCar" }, { capacity: 16 }), at({ unit: "singleDeckEnd" }, { capacity: 40 })],
+    presets: presets({ unit: "middleCar" }, { unit: "singleDeckCar" }, { unit: "singleDeckEnd" }, ...each("livery", "transilien")),
+    formations: [formation("4 cars", {}, { unit: "singleDeckCar" }, { unit: "middleCar" }, [{ unit: "singleDeckEnd" }, "turned"])],
+  }),
   "proc-vehicle-sncf-regiolis": series(60, 60, ELRL, { cars: 4, liveries: ["grandEst"] }),
   "proc-vehicle-sncf-x3800": series(62, 62, RAIL, { single: true }),
   "proc-vehicle-sncf-x73500": series(64, 64, RAIL, { single: true, liveries: ["alsace"] }),

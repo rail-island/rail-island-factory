@@ -3976,6 +3976,14 @@
         "id": 6644,
         "size": 6
       },
+      "proc-vehicle-sncf-regio2n?unit=singleDeckCar": {
+        "id": 10194,
+        "size": 4
+      },
+      "proc-vehicle-sncf-regio2n?unit=singleDeckEnd": {
+        "id": 10198,
+        "size": 4
+      },
       "proc-vehicle-sncf-regiolis?": {
         "id": 6680,
         "size": 6
