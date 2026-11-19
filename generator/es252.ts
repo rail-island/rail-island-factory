@@ -50,7 +50,7 @@ type Pt = readonly [number, number];
 const HALF = 10.19;
 /** The lower face, |x|; the buffer beam's front. */
 const N = 9.6;
-const BEAM = 9.85;
+const BEAM = 9.68;
 /** The body's bottom (the side walls' lower edge). */
 const Y0 = 1.0;
 /** The white face's foot over the beam. */
@@ -213,14 +213,18 @@ function lampItems(l: Es252Livery): EndItem[] {
   return units;
 }
 
-function spec(l: Es252Livery): LocoSpec {
-  const screens: EndItem[] = l.splitScreen
-    ? [
-        { kind: "paint", name: "windscreen pillar", z: [-0.04, 0.04], y: SCREEN, mat: "rubber", layer: 1 },
-        { kind: "window", name: "windscreen left", z: [0.03, 1.13], y: SCREEN, mat: "rubber" },
-        { kind: "window", name: "windscreen right", z: [-1.13, -0.03], y: SCREEN, mat: "rubber" },
-      ]
-    : [{ kind: "window", name: "windscreen", z: [-1.13, 1.13], y: SCREEN, mat: "rubber" }];
+/**
+ * The windscreen's outer frame edge |z| at its foot and head (252 024 head-on: the glass 2.29 m wide at
+ * the foot, 2.17 m at the head, a narrow frame left at the rounded corners); the glass is 0.04 m inside.
+ */
+const SCREEN_Z: readonly [number, number] = [1.19, 1.13];
+
+/** `lod`: the distant model takes the windscreens as the kit's windows (the full model draws them tapered). */
+function spec(l: Es252Livery, lod = false): LocoSpec {
+  const screens: EndItem[] = [
+    ...(l.splitScreen ? [{ kind: "paint", name: "windscreen pillar", z: [-0.04, 0.04], y: SCREEN, mat: "rubber", layer: 1 } as const] : []),
+    ...(lod ? [{ kind: "window", name: "windscreen", z: [-SCREEN_Z[0], SCREEN_Z[0]], y: SCREEN, mat: "rubber" } as const] : []),
+  ];
   return {
     palette: {
       rim: c("#9a9fa1", 0.45), slat: c("#5e6367", 0.6), louvre: c("#24272a", 0.85), groove: c("#2a2c2e", 0.7), wiper: c("#2a2c2e", 0.5),
@@ -436,6 +440,39 @@ function cabWindows(m: MeshBuilder, sp: ShellSpec): void {
   });
 }
 
+/** The windscreen: tapered with the face, one pane or two either side of the pillar, framed. */
+function windscreens(m: MeshBuilder, sp: ShellSpec, l: Es252Livery): void {
+  const [y0, y1] = SCREEN;
+  const vB = [...new Set([...TIP, ...HW, ...CORNER].map(([y]) => y))].sort((a, b) => a - b);
+  const uB = [...new Set([y0, (y0 + y1) / 2, y1].flatMap((h) => sp.endPlan(h).map(([z]) => z)).flatMap((z) => [z, -z]))].sort((a, b) => a - b);
+  // a pane from |z| = inner out to the frame's edge, in (z, y), counter-clockwise for the side +z
+  const pane = (inner: number, k: number, side: number): Ring => {
+    const q: Ring = [[inner, y0 + k], [SCREEN_Z[0] - k, y0 + k], [SCREEN_Z[1] - k, y1 - k], [inner, y1 - k]];
+    return side > 0 ? q : q.map(([z, y]) => [-z, y] as [number, number]).reverse();
+  };
+  const panes: Array<[number, number]> = l.splitScreen ? [[0.03, 1], [0.03, -1]] : [[0, 1], [0, -1]];
+  m.scope("windscreens", () => {
+    for (const e of [-1, 1])
+      m.scope(e > 0 ? "front" : "rear", () => {
+        const at = onEnd(sp, e);
+        const n: Vec3 = [e, 0, 0];
+        // the outline is symmetric and kept counter-clockwise in (z, y) at both ends, as the kit's end items
+        const turn = (q: Ring): Ring => q;
+        if (l.splitScreen)
+          for (const [inner, sd] of panes)
+            m.scope(sd > 0 ? "left pane" : "right pane", () => {
+              m.scope("frame", () => surfacePanel(m, "rubber", at, n, turn(pane(inner, 0, sd)), -0.01, 0.014, uB, vB));
+              m.scope("glass", () => surfacePanel(m, "glass", at, n, turn(pane(inner + 0.04, 0.04, sd)), -0.005, 0.022, uB, vB));
+            });
+        else {
+          const whole = (k: number): Ring => [[-SCREEN_Z[0] + k, y0 + k], [SCREEN_Z[0] - k, y0 + k], [SCREEN_Z[1] - k, y1 - k], [-SCREEN_Z[1] + k, y1 - k]];
+          m.scope("frame", () => surfacePanel(m, "rubber", at, n, turn(whole(0)), -0.01, 0.014, uB, vB));
+          m.scope("glass", () => surfacePanel(m, "glass", at, n, turn(whole(0.04)), -0.005, 0.022, uB, vB));
+        }
+      });
+  });
+}
+
 /** The windscreen wipers parked upright at the screens' outer edges. */
 function wipers(m: MeshBuilder, sp: ShellSpec): void {
   m.scope("wipers", () => {
@@ -445,7 +482,7 @@ function wipers(m: MeshBuilder, sp: ShellSpec): void {
       for (const s of [-1, 1])
         m.scope(`${e > 0 ? "front" : "rear"} ${s > 0 ? "left" : "right"}`, () => {
           const u = (z: number) => (e > 0 ? -z : z) * s;
-          const z0 = 1.02, z1 = 0.98;
+          const z0 = 1.1, z1 = 1.06;
           const arm: Ring = [[u(z0 - 0.012), SCREEN[0] + 0.08], [u(z0 + 0.012), SCREEN[0] + 0.08], [u(z1 + 0.012), SCREEN[1] - 0.1], [u(z1 - 0.012), SCREEN[1] - 0.1]];
           surfacePanel(m, "wiper", at, n, (e > 0) === (s > 0) ? [...arm].reverse() : arm, 0.024, 0.04);
         });
@@ -459,8 +496,8 @@ function bufferBeams(m: MeshBuilder): void {
     for (const e of [-1, 1])
       m.scope(e > 0 ? "front" : "rear", () => {
         const span = (a: number, b: number): [number, number] => (e > 0 ? [a, b] : [-b, -a]);
-        block(m, "beam", ...span(N - 0.3, BEAM), 0.8, FACE_FOOT - 0.03, -1.36, 1.36);
-        for (const z of [-1, 1]) block(m, "beam", ...span(BEAM, BEAM + 0.1), 0.86, 1.26, z > 0 ? 0.6 : -1.24, z > 0 ? 1.24 : -0.6);
+        block(m, "beam", ...span(N - 0.3, BEAM), 0.78, FACE_FOOT - 0.06, -1.36, 1.36);
+        for (const z of [-1, 1]) block(m, "beam", ...span(BEAM, BEAM + 0.08), 0.88, 1.24, z > 0 ? 0.62 : -1.22, z > 0 ? 1.22 : -0.62);
       });
   });
 }
@@ -509,6 +546,7 @@ export function renfe252(v?: ParamValues): MeshBuilder {
     else mercanciasMarkings(m, sp);
     faceNumbers(m, sp, l);
     cabWindows(m, sp);
+    windscreens(m, sp, l);
     wipers(m, sp);
     bufferBeams(m);
     tank(m);
@@ -522,7 +560,7 @@ export function renfe252(v?: ParamValues): MeshBuilder {
 
 /** The distant model: the kit's box locomotive from the same profile and paint, with the cab windows. */
 export function renfe252Lod(v?: ParamValues): MeshBuilder {
-  const s = spec(liveryOf(v));
+  const s = spec(liveryOf(v), true);
   return boxLocoLod({ ...s, sideItems: [...s.sideItems, { kind: "window", name: "cab window", x: [7.59, 8.1], y: [2.82, 3.36], mirror: true }] });
 }
 
