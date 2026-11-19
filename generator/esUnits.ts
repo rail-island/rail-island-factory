@@ -9,6 +9,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, talgo, velaro } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { CIVIA } from "./esCivia.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -115,16 +116,6 @@ export const S120: ShinkansenSeries = {
   bogieCentres: 18.0, wheelR: 0.43, wheelbase: 2.5, cars: [4],
   liveries: { alvia: esLivery("alvia", "120 001"), mediaDistancia: esLivery("mediaDistancia", "121 001") },
   weight: { end: 58, middle: 54 }, power: 1100, maxspeed: 250,
-};
-
-export const CIVIA: ShinkansenSeries = {
-  endLength: 20.6, midLength: 19.0, W: 1.47, Y: 1.25, S: 3.2, C: 4.1, lean: 0.95, B: 0.6, A: 0.8,
-  nose: nose(2.2, 0.35, 2.3, [[0, 2.2], [0.4, 2.9], [1.5, 3.7], [2.4, 4.1]], [[0, 2.1], [0.4, 2.75], [1.5, 3.1], [2.4, 3.2]], [[0, 1.25], [0.8, 1.25]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
-  windscreen: [0.45, 2.0, 0.07, 1.2], lamps: [0.15, 1.35],
-  windows: [[1.45, 2.65]], windowW: 1.5, pitch: 1.75, door: [0.95, 3.0, 1.5, 2.6], doorW: 1.3, doorCount: 2,
-  bogieCentres: 13.0, wheelR: 0.43, wheelbase: 2.5, cars: [3, 4, 5],
-  liveries: { cercanias: esLivery("cercanias", "463 001") },
-  weight: { end: 44, middle: 36 }, power: 550, maxspeed: 120,
 };
 
 const flatEmu = (o: { number: string; livery: "cercanias" | "regional" | "mediaDistancia"; second?: "cercanias" | "regional" | "mediaDistancia"; doorCount?: number; doorW: number; power: number; maxspeed: number; diesel?: boolean; endLength?: number }): ShinkansenSeries => ({
