@@ -152,6 +152,8 @@ export interface ShinkansenSeries {
   doorGlassPair?: number;
   /** Every window row's frame and glass rounded at this corner radius (the car kit's `cornerR`; default square): the Mat '46's silver-framed windows. */
   windowCornerR?: number;
+  /** The passenger windows' frame paint (default rubber): the Talgo III's bright aluminium frames. */
+  windowFrameMat?: string;
   /** The door leaf's window rounded at this corner radius (with `doorGlassW`; half its width makes a porthole: the ICE T's). */
   doorGlassR?: number;
   /** A tilting train's section: the skirt top's and the bottom's half widths over W (default 0.97 and 0.9: the side tucked in under the belly) and the roof arc's superellipse power (default 2). */
@@ -191,6 +193,15 @@ export interface ShinkansenSeries {
    * reaching beyond it, which the game cannot couple by hand (the FLIRT; `jacobsInset` the Giruno's).
    */
   jacobs?: boolean;
+  /**
+   * With `jacobs` on single axles (`wheelbase` 0): a lone car's axle at each inner end stands this far
+   * inside its body's end, the skirt cut open over it (default half the wheelbase inside the joint): the
+   * Talgo's, whose one wheel pair under each joint would otherwise stand beyond a lone car's body. In the
+   * train each joint keeps its own axle, the skirt open over it as without this field.
+   */
+  loneJointAxleInset?: number;
+  /** The joints' bellows outline, [z, y] (default the door-sized one): the Talgo's rubber shroud closing the whole section between its cars. */
+  jointShroudProfile?: ReadonlyArray<readonly [number, number]>;
   /** A flat cab front in place of the nose: its windscreen panes (z0, z1, y0, y1), lamps (z, y, r, lens) and the front's mask. */
   flatCab?: NonNullable<CarDef["cab"]>;
   /** An upright cab on the nose's flat front face (its tip): the panes and lamps drawn there, in place of the windscreen and headlights on the crown, and a gangway door's outline (half width, sill and head). */
@@ -249,6 +260,8 @@ export interface ShinkansenSeries {
   endCoupler?: "centre" | "buffers";
   /** With buffers at the cab ends: false leaves the buffer beam out, the buffers standing out of the cab face's own bodywork (the VT 98's; default drawn). */
   bufferBeam?: boolean;
+  /** With buffers at the cab ends: the heads' shape (default round; rect the Talgo III tail's wide flat plates). */
+  bufferHeadShape?: "round" | "rect";
   /** The roof arc's segments (default 8). */
   arc?: number;
   /** The centre coupler's height (default 1.0 m; a tube car's sits under its low floor). */
@@ -438,7 +451,7 @@ function bogies(s: ShinkansenSeries, end: boolean, power?: SeriesPowerCar): [num
  */
 export function loneJointAxles(s: ShinkansenSeries, end: boolean): Array<{ i: number; d: number }> {
   if (!s.jacobs) return [];
-  const L = end ? endBody(s) : midBody(s), half = s.wheelbase / 2;
+  const L = end ? endBody(s) : midBody(s), half = s.loneJointAxleInset !== undefined ? GAP + s.loneJointAxleInset : s.wheelbase / 2;
   return end ? [{ i: 1, d: L + GAP - half }] : [{ i: 0, d: -GAP + half }, { i: 1, d: L + GAP - half }];
 }
 
@@ -508,7 +521,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
-    windows: power ? [{ y: power.windows, spans, frame: "rubber" }] : s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: "rubber", ...(s.windowCornerR ? { cornerR: s.windowCornerR } : s.windowCornerRadius ? { cornerR: s.windowCornerRadius } : {}) })),
+    windows: power ? [{ y: power.windows, spans, frame: "rubber" }] : s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: s.windowFrameMat ?? "rubber", ...(s.windowCornerR ? { cornerR: s.windowCornerR } : s.windowCornerRadius ? { cornerR: s.windowCornerRadius } : {}) })),
     ...(s.fluting ? { fluting: s.fluting } : {}),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(s.doorGlassR ? { glassCornerR: s.doorGlassR } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(s.roofWells && !power ? { strips: wellStrips(s, end, L, l.roof) } : {}),
@@ -521,7 +534,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       frameTop: s.wheelbase > 0 ? wheelR + 0.4 : s.A + 0.03, frameBottom: wheelR + 0.08,
       frameZ: [0.92, 1.04], primary: s.wheelbase > 0 ? "coil" : "leaf", secondary: [-0.42, 0.42], secondaryZ: 1.1, bolster: s.B,
     },
-    coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: couplerOf(s), ...(s.bufferBeam === false ? { bufferBeam: false } : {}),
+    coupler: s.endCoupler === "buffers" ? "buffers" : "centre", couplerY: couplerOf(s), ...(s.bufferBeam === false ? { bufferBeam: false } : {}), ...(s.bufferHeadShape ? { bufferHeadShape: s.bufferHeadShape } : {}),
     gap: [end ? frontGap(s, true) : GAP, twoCabs(s) ? frontGap(s, true) : GAP],
     // a Jacobs bogie's skirt cut reaches in from the joint: the cabin stops short of it
     ...(s.jacobs ? { cabin: [end ? first - 1.2 : reach - GAP + 0.05, L - (reach - GAP) - 0.05] as const } : end ? { cabin: [first - 1.2, twoCabs(s) ? L - first + 1.2 : L] as const } : {}),
@@ -676,6 +689,11 @@ function jacobsCuts(s: ShinkansenSeries, end: boolean, L: number, tr: readonly n
   if (typeof joint !== "boolean") {
     // a power-car train's trailer: open over the joint's bogie at each end that has one, else round its own bogie
     return [joint[0] ? [-0.01, reach - GAP] : [tr[0]! - reach, tr[0]! + reach], joint[1] ? [L + GAP - reach, L + 0.01] : [tr[1]! - reach, tr[1]! + reach]];
+  }
+  // a lone Talgo-style car (loneJointAxleInset): the joint-end cuts reach in over its own axle there
+  if (s.jacobs && s.loneJointAxleInset !== undefined && !joint) {
+    const lone = s.loneJointAxleInset + s.wheelR + 0.1;
+    return tr.map((d, i) => (i === 1 ? [Math.min(d - reach, L - lone), d + reach] as const : !end ? [d - reach, Math.max(d + reach, lone)] as const : [d - reach, d + reach] as const));
   }
   if (s.jacobsInset === undefined || !joint) return tr.map((d) => [d - reach, d + reach] as const);
   return [end ? [tr[0]! - reach, tr[0]! + reach] : [-0.01, reach - GAP], [L + GAP - reach, L + 0.01]];
@@ -920,7 +938,7 @@ export function buildSeries(series: ShinkansenSeries, params: readonly ParamSpec
     const X = (d: number) => cx + len / 2 - frontGap(S === s ? sc : S, slot.end) - d;
     // a power-car train's trailer: which of its ends stands over a joint's bogie shared with another trailer
     const tj: readonly [boolean, boolean] | undefined = s.jacobsTrailers !== undefined && !slot.end && !slot.power ? [k > 1, k < slots.length - 2] : undefined;
-    const def = S === s ? carDef(sc, lc, slot.end, slot.pantograph && (slot.lowered || (s.trailingLowered && s.endPantograph === true && slot.turned)) ? "lowered" : slot.pantograph, l.number, tj ?? s.jacobsInset !== undefined, slot.power ? s.powerCar : undefined, slot.turned) : carDef(S, liveryOf(S, p), true, slot.pantograph, liveryOf(S, p).number);
+    const def = S === s ? carDef(sc, lc, slot.end, slot.pantograph && (slot.lowered || (s.trailingLowered && s.endPantograph === true && slot.turned)) ? "lowered" : slot.pantograph, l.number, tj ?? (s.jacobsInset !== undefined || s.loneJointAxleInset !== undefined), slot.power ? s.powerCar : undefined, slot.turned) : carDef(S, liveryOf(S, p), true, slot.pantograph, liveryOf(S, p).number);
     // a buffered cab end keeps its buffers at the train's two ends
     const inside = slot.end && S.endCoupler === "buffers" ? [-1] : [1, -1];
     if (tj) {
@@ -956,7 +974,7 @@ export function buildSeries(series: ShinkansenSeries, params: readonly ParamSpec
       },
     };
   });
-  const bellows: Array<[number, number]> = [[-0.78, s.door[0]], [0.78, s.door[0]], [0.78, s.door[1] + 0.25], [-0.78, s.door[1] + 0.25]];
+  const bellows: Array<[number, number]> = s.jointShroudProfile ? s.jointShroudProfile.map(([z, y]): [number, number] => [z, y]) : [[-0.78, s.door[0]], [0.78, s.door[0]], [0.78, s.door[1] + 0.25], [-0.78, s.door[1] + 0.25]];
   articulate({ m }, sections, couplerOf(s), { profile: bellows, folds: 4, depth: 0.03 }, 10, slots.slice(0, -1).map((x) => x.lo));
   return m;
 }
@@ -1045,7 +1063,7 @@ export function buildSeriesLod(series: ShinkansenSeries, params: readonly ParamS
     pivots: slots.map((_, i): [number, number, number] => (i === 0 ? [0, 0, 0] : [slots[i - 1]!.lo, couplerOf(s), 0])),
     joints: slots.slice(0, -1).map((slot, i) => ({
       sections: [i, i + 1] as [number, number], front: slot.lo + GAP, rear: slots[i + 1]!.hi - GAP,
-      profile: [[-0.78, s.door[0]], [0.78, s.door[0]], [0.78, s.door[1] + 0.25], [-0.78, s.door[1] + 0.25]] as Array<[number, number]>,
+      profile: (s.jointShroudProfile ? s.jointShroudProfile.map(([z, y]): [number, number] => [z, y]) : [[-0.78, s.door[0]], [0.78, s.door[0]], [0.78, s.door[1] + 0.25], [-0.78, s.door[1] + 0.25]]) as Array<[number, number]>,
     })),
     maxBendDeg: 10,
   };
