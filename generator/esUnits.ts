@@ -9,6 +9,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, talgo, velaro } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { S130 } from "./esS130.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -61,13 +62,7 @@ export const S106: ShinkansenSeries = talgo({
   weight: { end: 40, middle: 20 }, power: 800, maxspeed: 330,
 });
 
-export const S130: ShinkansenSeries = talgo({
-  endLength: 20.0, C: 3.95,
-  nose: nose(6.0, 0.3, 3.0, [[0, 1.15], [0.6, 1.4], [3.0, 1.9], [5.2, 2.7], [6.2, 3.5], [7.0, 3.95]], [[0, 1.12], [0.6, 1.33], [3.0, 1.75], [5.2, 2.4], [6.2, 2.85], [7.0, 2.95]], [[0, 1.08], [1.5, 1.25]], [[0, 1.05], [1.5, 0.95]], [[0, 1.0], [0.6, 0.6], [2.0, 0.75]]),
-  windscreen: [4.8, 6.3, 0.07, 1.0], lamps: [1.6, 1.62],
-  liveries: { alvia: esLivery("alvia", "130 001") },
-  weight: { end: 72, middle: 18 }, power: 2400, maxspeed: 250,
-});
+export { S130 };
 
 /**
  * The Talgo III's tail: a bowed, upright end with rounded corners and no windscreen, the red
