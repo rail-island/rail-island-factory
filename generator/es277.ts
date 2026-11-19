@@ -315,9 +315,9 @@ function strokeQuads(pts: ReadonlyArray<Pt>, t: number): Ring[] {
 
 /**
  * The yellow line's centre on the nose (u from the face's centre, y), from the head-on 7702:
- * the V's foot on the nose door's sill, round the corner, level with the sides' line behind it.
+ * the V's foot just under the nose door's sill (1.8 m), round the corner, level with the sides' line behind it.
  */
-const NOSE_LINE: ReadonlyArray<Pt> = [[0, 1.68], [0.13, 1.8], [0.36, 1.97], [0.62, 2.12], [0.88, 2.22], [1.19, 2.3], [1.57, 2.36], [2.3, 2.43], [2.9, 2.48], [3.4, 2.5], [U_END, 2.5]];
+const NOSE_LINE: ReadonlyArray<Pt> = [[0, 1.74], [0.13, 1.83], [0.36, 1.98], [0.62, 2.12], [0.88, 2.22], [1.19, 2.3], [1.57, 2.36], [2.3, 2.43], [2.9, 2.48], [3.4, 2.5], [U_END, 2.5]];
 
 /** Lays (u, v) outlines on the nose's side s, split at the plan's corners so each piece lies on one facet. */
 function onNoseDecal(m: MeshBuilder, mat: string, s: number, polys: readonly Ring[], d: number): void {
@@ -387,7 +387,7 @@ function nose(m: MeshBuilder, l: Es277Livery): void {
         m.scope("reflector", () => surfacePanel(m, "lampRed", onFace, FACE_N, rect(s * 0.66 - 0.06, 1.6, s * 0.66 + 0.06, 1.66), -0.004, 0.012));
       });
     m.scope("nose door", () => {
-      const [z0, z1, y0, y1] = [-0.24, 0.24, 2.0, 2.66];
+      const [z0, z1, y0, y1] = [-0.24, 0.24, 1.8, 2.64];
       for (const q of [rect(z0, y0, z1, y0 + 0.015), rect(z0, y1 - 0.015, z1, y1), rect(z0, y0 + 0.015, z0 + 0.015, y1 - 0.015), rect(z1 - 0.015, y0 + 0.015, z1, y1 - 0.015)])
         surfacePanel(m, "seam", onFace, FACE_N, q, -0.002, 0.004);
       surfacePanel(m, "steel", onFace, FACE_N, rect(0.12, 2.28, 0.16, 2.4), -0.002, 0.03);
@@ -397,15 +397,15 @@ function nose(m: MeshBuilder, l: Es277Livery): void {
       if (l.rfe) {
         // "R" with a small "FE" raised over a bar, on the reader's left (+z at the front, read toward -z)
         const u0 = 0.9, wr = wordWidth("R", h, style), hf = h * 0.5, wf = wordWidth("FE", hf, style);
-        const tris = [...letters("R", u0, 1.8, h, true, style), ...letters("FE", u0 - wr - 0.02, 1.8 + h - hf, hf, true, style)];
+        const tris = [...letters("R", u0, 1.86, h, true, style), ...letters("FE", u0 - wr - 0.02, 1.86 + h - hf, hf, true, style)];
         m.facets(l.faceInk, tris.map(([u, v]) => onFace(u, v, 0.006)), FACE_N);
         const [b0, b1] = [u0 - wr - 0.02 - wf, u0 - wr - 0.02];
-        surfaceDecal(m, l.faceInk, onFace, FACE_N, [[[b1, 1.82], [b1, 1.835], [b0, 1.835], [b0, 1.82]]], 0.006);
+        surfaceDecal(m, l.faceInk, onFace, FACE_N, [[[b1, 1.88], [b1, 1.895], [b0, 1.895], [b0, 1.88]]], 0.006);
       }
       // the number on the reader's right (-z at the front)
       const nh = l.number.length > 5 ? 0.11 : 0.16, w = nh * 0.45, gap = nh * 0.14;
       const width = letteringWidth(l.number, w, gap);
-      const tris = lettering(l.number, -0.62 + width / 2, 1.8, nh, w, gap, true);
+      const tris = lettering(l.number, -0.62 + width / 2, 1.86, nh, w, gap, true);
       m.facets(l.faceInk, tris.map(([a, b]) => onFace(a, b, 0.006)), FACE_N);
     });
   });
