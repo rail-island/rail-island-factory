@@ -955,7 +955,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   }),
   "proc-vehicle-db-ic-coach": pax(54, RAIL, { variants: [at({ unit: "bpmz" }, { capacity: 72 })], presets: presets({ unit: "bpmz" }, ...each("livery", "oceanBlue", "intercity")) }),
   // France (docs/models/france-trains.md)
-  "proc-vehicle-sncf-tgv-m": series(40, 90, ELRL, { cars: 8, liveries: ["ouigo"] }),
+  "proc-vehicle-sncf-tgv-m": series(0, 82, ELRL, { cars: 8, liveries: ["ouigo"] }),
   "proc-vehicle-sncf-z20500": series(140, 160, ELRL, { cars: 4, liveries: ["ileDeFrance"] }),
   "proc-vehicle-ratp-mi09": series(100, 110, ELRL, { cars: 5 }),
   "proc-vehicle-sncf-regio2n": series(90, 100, ELRL, { cars: 4, liveries: ["transilien"] }),

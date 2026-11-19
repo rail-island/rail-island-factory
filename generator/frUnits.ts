@@ -10,6 +10,8 @@ import { c, flatCab, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import type { SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
+import { TGV_M, tgvMGame } from "./frTgvM.ts";
+export { TGV_M };
 import { decalX, decalZ } from "./usHoodKit.ts";
 
 /** A livery of bands bottom first: [top of band, paint] pairs over a body colour list. */
@@ -20,21 +22,6 @@ const livery = (title: string, number: string, palette: Record<string, string>, 
 
 // the double-deck rows: the lower deck's windows low, the upper's under the eaves
 const DD_ROWS: ReadonlyArray<readonly [number, number]> = [[1.25, 1.95], [2.75, 3.45]];
-
-export const TGV_M: ShinkansenSeries = {
-  endLength: 22.15, midLength: 20.6, W: 1.45, Y: 1.2, S: 3.9, C: 4.32, lean: 0.97, B: 0.72, A: 0.95,
-  // the Avelia Horizon's broad, low nose rising to a wide windscreen
-  nose: nose(6.5, 0.12, 2.5, [[0, 1.3], [0.6, 1.7], [2.6, 2.4], [4.6, 3.2], [6.2, 3.95], [7.4, 4.32]], [[0, 1.25], [0.6, 1.6], [2.6, 2.25], [4.6, 2.95], [6.2, 3.6], [7.4, 3.9]], [[0, 1.2], [1.5, 1.2]], [[0, 1.05], [1.5, 0.95]], [[0, 1.0], [0.6, 0.55], [2.0, 0.7]]),
-  windscreen: [4.4, 6.3, 0.07, 1.05], lamps: [1.6, 1.5],
-  windows: DD_ROWS, windowW: 1.2, pitch: 1.5, door: [1.1, 3.05, 1.8, 2.6], doorW: 0.95,
-  // the end cars are power cars: the shortest train has a trailer between them
-  bogieCentres: 14.0, wheelR: 0.46, wheelbase: 2.5, minCars: 3,
-  liveries: {
-    inoui: livery("TGV inOui", "310 001", { body: "#f1f1ee", grey: "#4d5257", red: "#c8102e" }, [[0, 1.05, "grey"], [1.05, 1.12, "red"], [1.12, 9, "body"]]),
-    ouigo: livery("Ouigo", "310 051", { body: "#f1f1ee", blue: "#0096d6", pink: "#e6007e" }, [[0, 1.05, "blue"], [1.05, 1.12, "pink"], [1.12, 9, "body"]]),
-  },
-  weight: { end: 68, middle: 52 }, power: 1000, maxspeed: 320,
-};
 
 export const Z20500: ShinkansenSeries = {
   endLength: 26.4, midLength: 24.28, W: 1.45, Y: 1.2, S: 3.85, C: 4.32, lean: 0.97, B: 0.75, A: 0.95,
@@ -230,7 +217,7 @@ export function sncfX73500(v?: ParamValues): MeshBuilder { return buildSeries(X7
 export function sncfX73500Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(X73500, P.x73500, v); }
 
 export const FR_UNITS: ProceduralDesign[] = [
-  seriesDesign("proc-vehicle-sncf-tgv-m", "TGV M", TGV_M, P.tgvM, sncfTgvM, sncfTgvMLod, "sncf-tgv-m", "uic"),
+  tgvMGame(seriesDesign("proc-vehicle-sncf-tgv-m", "TGV M", TGV_M, P.tgvM, sncfTgvM, sncfTgvMLod, "sncf-tgv-m", "uic")),
   seriesDesign("proc-vehicle-sncf-z20500", "SNCF Z 20500", Z20500, P.z20500, sncfZ20500, sncfZ20500Lod, "sncf-z20500", "uic"),
   seriesDesign("proc-vehicle-ratp-mi09", "RER MI 09", MI09, P.mi09, ratpMi09, ratpMi09Lod, "ratp-mi09", "uic"),
   seriesDesign("proc-vehicle-sncf-regio2n", "Regio 2N", REGIO2N, P.regio2n, sncfRegio2n, sncfRegio2nLod, "sncf-regio2n", "uic"),
