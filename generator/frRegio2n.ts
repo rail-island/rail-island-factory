@@ -92,7 +92,7 @@ const PROFILE: Pt[] = [
 const SURROUND = [2.0, 3.97] as const;
 const GLASS = [2.08, 3.89] as const;
 const VISOR = [1.6, 2.0] as const;
-const RECESS = [0.55, 1.38] as const;
+const RECESS = [0.5, 1.46] as const;
 /** The mask's foot on the face (TER: the blue below the lamps). */
 const MASK_FOOT = 1.52;
 
@@ -102,10 +102,19 @@ const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0],
 const mirror = (pts: readonly Pt[]): Pt[] => pts.map(([l, y]): Pt => [-l, y]).reverse();
 
 /** The almond headlight on the viewer's right: low and narrow inside, rising to the corner. */
-const ALMOND: Pt[] = [[0.6, 1.64], [0.85, 1.57], [1.12, 1.58], [1.32, 1.66], [1.42, 1.8], [1.4, 1.97], [1.22, 2.02], [0.92, 1.93], [0.64, 1.77]];
+const ALMOND: Pt[] = [[0.5, 1.5], [0.75, 1.45], [1.02, 1.46], [1.25, 1.53], [1.41, 1.67], [1.47, 1.84], [1.41, 1.97], [1.2, 1.96], [0.95, 1.84], [0.7, 1.67]];
+/** The rim's corners: the lens's, grown 5 cm, on six of them (a field's corners cost the face's grid). */
+const RIM_AT = [0, 2, 4, 5, 6, 8];
+/** A polygon grown about its centroid by k (m): the headlight's silver rim round its lens. */
+const grown = (pts: readonly Pt[], k: number): Pt[] => {
+  const [cl, cy] = [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+  return pts.map(([l, y]): Pt => { const [dl, dy] = [l - cl, y - cy], r = Math.hypot(dl, dy); return [Math.round((l + (dl / r) * k) * 1e4) / 1e4, Math.round((y + (dy / r) * k) * 1e4) / 1e4]; });
+};
+
+const RIM: Pt[] = grown(ALMOND, 0.05).filter((_, i) => RIM_AT.includes(i));
 
 const FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 1.2, reach: REACH, first: 4.3, roofFrom: C_D - 0.02, tolerance: 0.02, cols: [7, 5, 1, 1],
+  dJoin: JOIN, dSide: 1.2, reach: REACH, first: 4.3, roofFrom: C_D - 0.02, tolerance: 0.03, cols: [7, 4, 1, 1],
   profile: PROFILE,
   // round in plan: broad and flat low down, the corners sweeping further back up the windscreen, the dome round
   corner: [[B, 0.8], [1.1, 0.8], [1.9, 0.75], [2.5, 0.8], [3.2, 0.9], [3.9, 0.95], [4.15, 0.8], [C_D, 0.6]],
@@ -120,20 +129,24 @@ const FACE: SeriesCabFace = {
     { mat: "arch", pts: [[-1.46, 1.84], [-1.3, 1.92], [-1.25, 3.85], [-1.16, 4.0], [-1.32, 4.08], [-1.46, 3.8]] },
     { mat: "arch", pts: [[1.46, 1.84], [1.46, 3.8], [1.32, 4.08], [1.16, 4.0], [1.25, 3.85], [1.3, 1.92]] },
     { mat: "arch", pts: box(-1.18, 1.18, 3.99, 4.08) },
+    // the headlights' silver rims (117M, 070L: teardrops about 0.95 m long, swept up and out from beside the recess to the corner)
+    { mat: "lampRim", pts: RIM }, { mat: "lampRim", pts: mirror(RIM) },
   ],
   masks: [
     { lat: [-1.2, 1.2], y: SURROUND, r: 0.22, mat: "black" },
-    { lat: [-0.66, 0.66], y: VISOR, r: 0.06, mat: "visor" },
-    { lat: [-0.55, 0.55], y: RECESS, r: 0.12, mat: "black" },
+    { lat: [-0.58, 0.58], y: [1.66, VISOR[1]], r: 0.06, mat: "visor" },
+    // the dark chin round the open recess of the coupler, its top rounded up to the mask
+    { lat: [-0.74, 0.74], y: [0.47, 1.52], r: 0.15, mat: "chin" },
+    { lat: [-0.62, 0.62], y: RECESS, r: 0.15, mat: "black" },
   ],
   panes: [{ lat: [-1.12, 1.12], y: GLASS, r: 0.18 }],
   decals: [
-    { mat: "lampGlass", pts: ALMOND }, { mat: "lampGlass", pts: mirror(ALMOND) },
+    { mat: "lampGlass", pts: ALMOND, fine: 5 }, { mat: "lampGlass", pts: mirror(ALMOND), fine: 5 },
     // the three lamps on the dome
     ...[-0.22, 0, 0.22].map((l) => ({ mat: "black", pts: box(l - 0.07, l + 0.07, 4.12, 4.2), fine: 1 })),
   ],
-  lamps: [[-1.13, 1.8, 0.1, "lampHead"], [1.13, 1.8, 0.1, "lampHead"], [-0.78, 1.7, 0.05, "lampRed"], [0.78, 1.7, 0.05, "lampRed"], [0, 4.16, 0.04, "lampHead"]],
-  number: { lat: -0.45, y: 1.74, h: 0.1, mat: "white" },
+  lamps: [[-1.05, 1.72, 0.11, "lampHead"], [1.05, 1.72, 0.11, "lampHead"], [-1.3, 1.8, 0.06, "lampHead"], [1.3, 1.8, 0.06, "lampHead"], [-0.74, 1.57, 0.05, "lampRed"], [0.74, 1.57, 0.05, "lampRed"], [0, 4.16, 0.04, "lampHead"]],
+  number: { lat: -0.38, y: 1.76, h: 0.08, mat: "white" },
   wipers: [[[-0.25, 2.15], [-0.9, 3.35]]],
 };
 
@@ -201,12 +214,12 @@ const IDFM_BLUE = "#18a6dd";
 const TER_PALETTE = {
   body: c("#c3c7cb", 0.35), noseLow: c("#c3c7cb", 0.35), mask: c(TER_BLUE, 0.3), arch: c(TER_BLUE, 0.3), visor: c("#1c2340", 0.3), blue: c(TER_BLUE, 0.35),
   green: c("#7dbb3c", 0.4), winBand: c("#454b52", 0.4), skirtG: c("#3b3f44", 0.7), roofG: c("#a7abaf", 0.55), roofE: c("#8a8e92", 0.6),
-  black: c("#16181a", 0.35), white: c("#f2f2f0", 0.4), lampGlass: { color: "#c9d3dc", metallic: 0.3, roughness: 0.1, glass: true }, doorLeaf: c(TER_BLUE, 0.35), cabMask: c("#1d1f22", 0.3),
+  black: c("#16181a", 0.35), white: c("#f2f2f0", 0.4), lampGlass: { color: "#eef3f7", metallic: 0.2, roughness: 0.08, glass: true }, lampRim: c("#9da2a7", 0.3), chin: c("#2b2e32", 0.6), doorLeaf: c(TER_BLUE, 0.35), cabMask: c("#1d1f22", 0.3),
 };
 const IDFM_PALETTE = {
   body: c("#e6e8e9", 0.4), noseLow: c("#eef0f0", 0.4), mask: c("#eef0f0", 0.4), arch: c(IDFM_BLUE, 0.35), visor: c("#16181a", 0.3), blue: c(IDFM_BLUE, 0.35),
   anthracite: c("#4a4f56", 0.45), skirtG: c("#3b3f44", 0.7), roofG: c("#b4b8bb", 0.55), roofE: c("#8a8e92", 0.6),
-  black: c("#16181a", 0.35), white: c("#f2f2f0", 0.4), lampGlass: { color: "#c9d3dc", metallic: 0.3, roughness: 0.1, glass: true }, doorLeaf: c("#dfe2e4", 0.4), cabMask: c("#1d1f22", 0.3),
+  black: c("#16181a", 0.35), white: c("#f2f2f0", 0.4), lampGlass: { color: "#eef3f7", metallic: 0.2, roughness: 0.08, glass: true }, lampRim: c("#9da2a7", 0.3), chin: c("#2b2e32", 0.6), doorLeaf: c("#dfe2e4", 0.4), cabMask: c("#1d1f22", 0.3),
 };
 
 /** A field's rectangle in [d, y]. */
@@ -342,7 +355,7 @@ function regio2nFittings(kind: Kind) {
       m.scope("roof grilles", () => {
         for (const sd of [1, -1]) for (const [d0, d1] of [[T(3.3), T(5.3)], [T(5.6), T(8.8)]] as const) {
           crownPane(m, b, X, sd, "roofE", [d0, d1], [0.55, 1.15], 0.005);
-          for (let d = d0 + 0.2; d + 0.12 < d1; d += 0.3) crownPane(m, b, X, sd, "black", [d, d + 0.12], [0.6, 1.1], 0.009);
+          for (let d = d0 + 0.2; d + 0.12 < d1; d += 0.45) crownPane(m, b, X, sd, "black", [d, d + 0.12], [0.6, 1.1], 0.009);
         }
       });
     }
