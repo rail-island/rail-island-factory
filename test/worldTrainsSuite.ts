@@ -33,6 +33,8 @@ const COVERED = new Set([
   // the cab doors' ladders and steps over the outer wheels
   "proc-vehicle-sncf-cc6500", "proc-vehicle-sncf-bb22200", "proc-vehicle-sncf-bb27000", "proc-vehicle-sncf-bb67400", "proc-vehicle-sncf-cc72000",
   "proc-vehicle-br-class-55", "proc-vehicle-br-class-47", "proc-vehicle-cr-hxd1", "proc-vehicle-ir-icf-coach", "proc-vehicle-ir-memu", "proc-vehicle-ns-plan-v",
+  // the Renfe 354's cab door steps over its leading wheel
+  "proc-vehicle-renfe-354",
   // a pilot ahead of the leading wheels
   "proc-vehicle-ir-wap5", "proc-vehicle-ir-wag12b",
   // aprons and nose skirts over the bogies (the Fliegender Hamburger's almost to the rail)
@@ -51,7 +53,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-ns-icr-coach": 26.4, "proc-vehicle-ns-de1": 27.05,
   "proc-vehicle-sbb-re460": 18.5, "proc-vehicle-sbb-re420": 15.41, "proc-vehicle-sbb-re620": 19.31, "proc-vehicle-sbb-ae66": 18.4, "proc-vehicle-sbb-ce68": 19.46,
   "proc-vehicle-sbb-ae814": 34.0, "proc-vehicle-rhb-ge443": 16.0, "proc-vehicle-rhb-ge66": 13.3, "proc-vehicle-mgb-hge442": 14.776, "proc-vehicle-sbb-roter-pfeil": 22.4,
-  "proc-vehicle-renfe-354": 17.5, "proc-vehicle-renfe-252": 20.38, "proc-vehicle-renfe-269": 17.27, "proc-vehicle-renfe-277": 20.68, "proc-vehicle-renfe-319": 20.0, "proc-vehicle-renfe-333": 20.7,
+  "proc-vehicle-renfe-354": 19.92, "proc-vehicle-renfe-252": 20.38, "proc-vehicle-renfe-269": 17.27, "proc-vehicle-renfe-277": 20.68, "proc-vehicle-renfe-319": 20.0, "proc-vehicle-renfe-333": 20.7,
   "proc-vehicle-br-class-55": 21.18, "proc-vehicle-br-class-37": 18.75, "proc-vehicle-br-class-47": 19.38, "proc-vehicle-br-class-66": 21.35, "proc-vehicle-br-class-86": 17.83,
   "proc-vehicle-br-mk1-coach": 19.66, "proc-vehicle-br-class-378": 20.4,
   "proc-vehicle-ir-wam4": 18.79, "proc-vehicle-ir-wap4": 18.79, "proc-vehicle-ir-wap7": 20.56, "proc-vehicle-ir-wap5": 18.16, "proc-vehicle-ir-wag12b": 38.4,
