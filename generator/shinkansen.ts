@@ -327,6 +327,8 @@ export interface ShinkansenSeries {
   lodRoof?: { d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string };
   /** More blocks on the end car in the distant model, like `lodRoof` (d span behind the tip, half width, heights, paint): a livery's colour over the side bands near the nose (the ICM's yellow ahead of its band's end); never given up for the budget, however short. */
   lodEndPatches?: ReadonlyArray<{ d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string }>;
+  /** Blocks on every intermediate car's roof in the distant model (d span behind its +X end, half width, heights, paint), like `lodRoof` on the end car: the Renfe 592's air-conditioning humps. */
+  lodMiddleRoofBlocks?: ReadonlyArray<{ d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string }>;
   /**
    * Lowered roofs over the cars' inner end sections (the VIRM's wells holding the pantographs and the
    * roof grilles): their crown and shoulder, the ramp up to the full roof (m), each well's length from
@@ -1073,6 +1075,7 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     ...(s.lowWell && !power ? [((w, [d0, d1]) => roofPart(w.lodMat, T(X(d0 + 0.15)), T(X(d1 - 0.15)), s.W * 0.97, s.W * 0.97, w.B, s.B + 0.02, section))(s.lowWell, end ? s.lowWell.end : s.lowWell.middle)] : []),
     ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
     ...(end && s.lodEndPatches ? s.lodEndPatches.map((q): LodPart => { const { optional: _short, ...part } = roofPart(q.mat, T(X(q.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(q.d[1] - (s.cabFace?.dJoin ?? 0))), q.hw, q.hw, q.y[0], q.y[1], section); return part; }) : []),
+    ...(!end && !power && s.lodMiddleRoofBlocks ? s.lodMiddleRoofBlocks.map((q) => roofPart(q.mat, T(X(q.d[0])), T(X(q.d[1])), q.hw, q.hw, q.y[0], q.y[1], section)) : []),
     ...(pantograph ? [{ ...roofPart("pantograph", T(X(panD)) - 0.8, T(X(panD)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
   ];
   return { body, parts };

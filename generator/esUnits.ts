@@ -7,7 +7,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose, talgo } from "./seriesHelpers.ts";
+import { c, nose } from "./seriesHelpers.ts";
 import { TALGO_III } from "./esTalgoIii.ts";
 import { S103 } from "./esS103.ts";
 import { S102, s102Series } from "./esS102.ts";
@@ -25,6 +25,7 @@ import { R446, r446Game } from "./es446.ts";
 import { CIVIA } from "./esCivia.ts";
 import { r440Game, R440, R440_PARAMS, renfe440, renfe440Lod } from "./es440.ts";
 export { R440, renfe440, renfe440Lod };
+import { R592 } from "./es592.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -47,19 +48,8 @@ export { S103 };
 
 export { S130 };
 
-const flatEmu = (o: { number: string; livery: "cercanias" | "regional" | "mediaDistancia"; second?: "cercanias" | "regional" | "mediaDistancia"; doorCount?: number; doorW: number; power: number; maxspeed: number; diesel?: boolean; endLength?: number }): ShinkansenSeries => ({
-  endLength: o.endLength ?? 26.5, midLength: 26.0, W: 1.47, Y: 1.35, S: 3.2, C: 4.0, lean: 0.97, B: 1.0, A: 1.15,
-  nose: nose(0.1, 1, 2, [[0, 4.0]], [[0, 3.2]], [[0, 1.35]], [[0, 1.15]], [[0, 1.0]]),
-  windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.47, 2.0, 2.85, "cabMask", 1.55),
-  windows: [[1.95, 2.85]], windowW: 1.3, pitch: 1.55, door: [1.2, 3.05, 1.95, 2.65], doorW: o.doorW, ...(o.doorCount ? { doorCount: o.doorCount } : {}),
-  bogieCentres: 18.0, wheelR: 0.48, wheelbase: 2.5, cars: [3], ...(o.diesel ? { traction: "diesel" as const } : {}),
-  liveries: { [o.livery]: esLivery(o.livery, o.number), ...(o.second ? { [o.second]: esLivery(o.second, o.number.replace(/1$/, "7")) } : {}) },
-  weight: { end: 56, middle: 48 }, power: o.power, maxspeed: o.maxspeed,
-});
-
 export { R446 };
-export const R592 = flatEmu({ number: "592 001", livery: "regional", second: "mediaDistancia", doorW: 1.0, power: 290, maxspeed: 120, diesel: true });
+export { R592 };
 
 export const S109: ShinkansenSeries = {
   endLength: 26.5, midLength: 25.4, W: 1.46, Y: 1.4, S: 3.1, C: 4.05, lean: 0.95, B: 0.8, A: 1.05,
