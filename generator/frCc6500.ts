@@ -224,7 +224,7 @@ function spec(l: Cc6500Livery, lod = false): LocoSpec {
     palette: {
       rim: c("#9a9fa1", 0.45), groove: c("#2a2c2e", 0.7), amber: c("#f0a020", 0.35), louvre: c("#25282b", 0.85), slat: c("#3a3e42", 0.7),
       bogie: c("#34373a", 0.8), steel: c("#4a4d51", 0.5), spring: c("#3a3c3f", 0.7), wheel: c("#3a3c3f", 0.6),
-      plough: c("#6a6f73", 0.6), inox: { color: "#c3c7c9", metallic: 0.6, roughness: 0.3 }, inoxRib: { color: "#9ea3a6", metallic: 0.6, roughness: 0.35 },
+      plough: c("#3e4246", 0.6), inox: { color: "#c3c7c9", metallic: 0.6, roughness: 0.3 }, inoxRib: { color: "#9ea3a6", metallic: 0.6, roughness: 0.35 },
       roofBox: c("#8a8f92", 0.6), horn: c("#9ca1a4", 0.4), white: c("#ebece7"),
       ...l.palette,
     },
@@ -470,16 +470,23 @@ function headstocks(m: MeshBuilder): void {
   m.scope("ploughs", () => {
     for (const e of [-1, 1])
       m.scope(e > 0 ? "front" : "rear", () => {
-        // a curved plate from the headstock's foot down and forward to the lip, wider at the lip (6549, 6558)
-        const prof: Array<[number, number, number]> = [[0.62, 9.3, 1.0], [0.4, 9.4, 1.12], [0.26, 9.5, 1.2], [0.2, 9.54, 1.22]];
-        for (let i = 0; i + 1 < prof.length; i++) {
-          const [ya, xa, wa] = prof[i]!, [yb, xb, wb] = prof[i + 1]!;
-          const ring = (x: number, w: number): Ring => (e > 0 ? [[x, -w], [x, w], [x - 0.05, w], [x - 0.05, -w]] : [[-x, w], [-x, -w], [-x + 0.05, -w], [-x + 0.05, w]]);
-          m.loft("plough", ring(xb, wb), yb, ring(xa, wa), ya, i === 0);
-          if (i + 2 === prof.length) m.cap("plough", ring(xb, wb), yb, false);
+        // a curved blade close under the headstock, measured on 6549 (128 px/m) and 6558: its lip 0.16 m over
+        // the rail, its top 0.6 m, 2.58 m wide at the lip, its middle 0.5 m behind the buffers' heads and its
+        // ends swept back 0.25 m; a vertical face 0.05 m thick, raked back 0.06 m at the top, in six segments
+        const zs = [-1.29, -0.86, -0.43, 0, 0.43, 0.86, 1.29];
+        const xf = (z: number, top: boolean) => 9.6 - 0.25 * (z / 1.29) ** 2 - (top ? 0.06 : 0);
+        const T = 0.05;
+        for (let i = 0; i + 1 < zs.length; i++) {
+          const [z0, z1] = [zs[i]!, zs[i + 1]!];
+          const ring = (top: boolean): Ring => {
+            const [a, b] = [xf(z0, top), xf(z1, top)];
+            return e > 0 ? [[a, z0], [a - T, z0], [b - T, z1], [b, z1]] : [[-b, z1], [-b + T, z1], [-a + T, z0], [-a, z0]];
+          };
+          m.loft("plough", ring(false), 0.16, ring(true), 0.6);
+          m.cap("plough", ring(false), 0.16, false);
         }
         // the brackets to the headstock
-        for (const z of [-0.7, 0.7]) block(m, "underframe", e > 0 ? 9.0 : -9.38, e > 0 ? 9.38 : -9.0, 0.58, 0.86, z - 0.05, z + 0.05);
+        for (const z of [-0.7, 0.7]) block(m, "underframe", e > 0 ? 9.0 : -9.5, e > 0 ? 9.5 : -9.0, 0.52, 0.86, z - 0.05, z + 0.05);
       });
   });
 }
