@@ -73,7 +73,8 @@ export interface CarDef {
   bufferBeam?: boolean;
   /** The coupling planes beyond the body's ends. */
   gap: readonly [number, number];
-  lettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string }>;
+  /** Side lettering; `letterStroke` its strokes' width over the letter height (default 0.13): a bold wordmark. */
+  lettering?: ReadonlyArray<{ text: string; d: number; y: number; h: number; mat: string; letterStroke?: number }>;
   /** The cabin's d span (default the whole body): behind a nose's cab. */
   cabin?: readonly [number, number];
   /** Repaints the shell over the bands' painter (default none): paint that changes along the car, its ends. */
@@ -232,7 +233,7 @@ export function drawCar(m: MeshBuilder, c: CarDef, X: (d: number) => number, o: 
           }))));
         m.scope("doors", () => c.doors.spans.forEach(([a, e], i) => doorOn(c, i, s) && m.scope(`door ${i + 1}`, () => door(m, c, b, X, s, a, e, i))));
         if (c.fluting) m.scope("fluting", () => fluting(m, c, b, X, s));
-        for (const l of c.lettering ?? []) m.scope("lettering", () => sideLettering(m, b, X, s, l.text, l.d, l.y, l.h, l.mat, 0.012));
+        for (const l of c.lettering ?? []) m.scope("lettering", () => sideLettering(m, b, X, s, l.text, l.d, l.y, l.h, l.mat, 0.012, l.letterStroke === undefined ? undefined : l.h * l.letterStroke));
       });
     if (leaves.length) {
       const panes = [1, -1].flatMap((s) => c.windows.filter((w) => rowOn(w, s)).flatMap((w) => w.spans.map(([a, e]) => ({ s, d0: a + 0.04, d1: e - 0.04, y0: w.y[0] + 0.04, y1: w.y[1] - 0.04 }))));

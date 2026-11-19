@@ -9,6 +9,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, talgo, velaro } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { S109 } from "./esIryoS109.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -141,17 +142,6 @@ const flatEmu = (o: { number: string; livery: "cercanias" | "regional" | "mediaD
 export const R446 = flatEmu({ number: "446 001", livery: "cercanias", doorCount: 3, doorW: 1.3, power: 290, maxspeed: 100, endLength: 23.4 });
 export const R440 = flatEmu({ number: "440 001", livery: "regional", second: "cercanias", doorW: 1.0, power: 290, maxspeed: 140 });
 export const R592 = flatEmu({ number: "592 001", livery: "regional", second: "mediaDistancia", doorW: 1.0, power: 290, maxspeed: 120, diesel: true });
-
-export const S109: ShinkansenSeries = {
-  endLength: 26.5, midLength: 25.4, W: 1.46, Y: 1.4, S: 3.1, C: 4.05, lean: 0.95, B: 0.8, A: 1.05,
-  // the Frecciarossa 1000's long nose, its windscreen in one sweep
-  nose: nose(6.0, 0.06, 2.5, [[0, 1.2], [0.6, 1.6], [2.4, 2.3], [4.2, 3.0], [5.8, 3.65], [6.8, 4.05]], [[0, 1.15], [0.6, 1.5], [2.4, 2.1], [4.2, 2.65], [5.8, 2.95], [6.8, 3.1]], [[0, 1.1], [1.5, 1.3], [3.0, 1.4]], [[0, 1.05], [1.5, 1.05]], [[0, 1.0], [0.6, 0.6], [2.0, 0.8]]),
-  windscreen: [4.0, 6.0, 0.07, 1.05], lamps: [1.4, 1.45],
-  windows: [[1.95, 2.75]], windowW: 1.3, pitch: 1.55, door: [1.3, 3.05, 1.95, 2.65], doorW: 0.9,
-  bogieCentres: 17.5, wheelR: 0.46, wheelbase: 2.65, cars: [4, 8],
-  liveries: { iryo: esLivery("iryo", "109 001") },
-  weight: { end: 58, middle: 54 }, power: 1100, maxspeed: 360,
-};
 
 const P = {
   s100: seriesParams(S100), s103: seriesParams(S103), s102: seriesParams(S102), s106: seriesParams(S106), s130: seriesParams(S130), talgo3: seriesParams(TALGO_III),
