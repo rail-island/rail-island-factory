@@ -9,6 +9,9 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, talgo, velaro } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { S120, renfeS120, renfeS120Lod } from "./esS120.ts";
+
+export { renfeS120, renfeS120Lod };
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -107,16 +110,6 @@ export const TALGO_III: ShinkansenSeries = {
   roofRibs: { pitch: 0.13, zMax: 1.3, mat: "flute" },
 };
 
-export const S120: ShinkansenSeries = {
-  endLength: 26.0, midLength: 25.0, W: 1.47, Y: 1.35, S: 3.1, C: 4.0, lean: 0.95, B: 0.8, A: 1.0,
-  nose: nose(3.4, 0.2, 2.4, [[0, 1.5], [0.5, 2.1], [1.8, 2.9], [3.0, 3.6], [3.8, 4.0]], [[0, 1.45], [0.5, 1.95], [1.8, 2.6], [3.0, 2.95], [3.8, 3.1]], [[0, 1.35], [1.0, 1.35]], [[0, 1.15], [0.8, 1.0]], [[0, 1.05], [0.4, 0.8]]),
-  windscreen: [1.6, 3.2, 0.07, 1.1], lamps: [0.4, 1.5],
-  windows: [[1.9, 2.75]], windowW: 1.4, pitch: 1.65, door: [1.2, 3.0, 1.9, 2.6], doorW: 0.9,
-  bogieCentres: 18.0, wheelR: 0.43, wheelbase: 2.5, cars: [4],
-  liveries: { alvia: esLivery("alvia", "120 001"), mediaDistancia: esLivery("mediaDistancia", "121 001") },
-  weight: { end: 58, middle: 54 }, power: 1100, maxspeed: 250,
-};
-
 export const CIVIA: ShinkansenSeries = {
   endLength: 20.6, midLength: 19.0, W: 1.47, Y: 1.25, S: 3.2, C: 4.1, lean: 0.95, B: 0.6, A: 0.8,
   nose: nose(2.2, 0.35, 2.3, [[0, 2.2], [0.4, 2.9], [1.5, 3.7], [2.4, 4.1]], [[0, 2.1], [0.4, 2.75], [1.5, 3.1], [2.4, 3.2]], [[0, 1.25], [0.8, 1.25]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
@@ -170,8 +163,6 @@ export function renfeS130(v?: ParamValues): MeshBuilder { return buildSeries(S13
 export function renfeS130Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S130, P.s130, v); }
 export function talgoIii(v?: ParamValues): MeshBuilder { return buildSeries(TALGO_III, P.talgo3, v); }
 export function talgoIiiLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(TALGO_III, P.talgo3, v); }
-export function renfeS120(v?: ParamValues): MeshBuilder { return buildSeries(S120, P.s120, v); }
-export function renfeS120Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(S120, P.s120, v); }
 export function renfeCivia(v?: ParamValues): MeshBuilder { return buildSeries(CIVIA, P.civia, v); }
 export function renfeCiviaLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CIVIA, P.civia, v); }
 export function renfe446(v?: ParamValues): MeshBuilder { return buildSeries(R446, P.r446, v); }
