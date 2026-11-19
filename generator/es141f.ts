@@ -18,7 +18,9 @@
 // Scales: 141F 2295 side-on (photo-renfe-141f-2295-foto-110.jpg) 133 px/m vertically at the
 // rear driver, the coupled axles fitted projectively (spacing 1.69 m against the published
 // 1.707 m); 141F 2111 three-quarter (photo-museo-del-ferrocarril-3664629895.jpg) placed
-// along the boiler by a projective fit through the deflector's ends and the cab front.
+// along the boiler by a projective fit through the deflector's ends and the cab front;
+// 141F 2348 (photo-locomotora-de-vapor-museu-vilanova1.jpg) about 135 px/m vertically at the cab
+// (rear driver 1.56 m): cab windows 3.2 - 3.95 m, the eave 4.2 m, the roof 4.45 m.
 //
 // Every length is in metres along the locomotive from its front buffer heads (the tender:
 // from its own front head, where the engine's drawbar meets it), y up from the rail top.
@@ -37,7 +39,10 @@ const PALETTE: Record<string, MaterialSpec> = {
   black: mat("#161618", 0.75),
   frame: mat("#1f2022", 0.75),
   wheel: mat("#232427", 0.65),
-  smokebox: mat("#1c1d22", 0.85),
+  // the smokebox in its graphite finish, greyer and shinier than the black paint
+  smokebox: { color: "#3a3d43", metallic: 0.35, roughness: 0.4 },
+  // the tyres dark steel, the drivers black as on 2111
+  tyre: { color: "#62666b", metallic: 0.35, roughness: 0.45 },
   red: mat("#b3221f", 0.55),
   beam: mat("#b3221f", 0.6),
   // the boiler bands and the cab plate's figures, polished brass
@@ -79,8 +84,8 @@ const SMOKEBOX = [1.15, 3.6] as const;
 const CAB0 = 12.05;
 const CAB1 = 14.35;
 
-/** The cab's right half section: the side sheets from 1.95 m, the round roof from 3.98 m to 4.45 m. */
-const CAB_HALF: Pt[] = [[1.45, 1.95], [1.45, 3.98], [1.3, 4.25], [0.8, 4.4], [0, 4.45]];
+/** The cab's right half section: the side sheets upright from 1.95 m to the eave at 4.2 m, the round roof to 4.45 m. */
+const CAB_HALF: Pt[] = [[1.45, 1.95], [1.45, 4.2], [1.28, 4.36], [0.75, 4.43], [0, 4.45]];
 const CAB_SEC: Pt[] = [...CAB_HALF, ...[...CAB_HALF].reverse().map(([z, y]): Pt => [-z, y])].filter((p, i, all) => i === 0 || p[0] !== all[i - 1]![0] || p[1] !== all[i - 1]![1]);
 
 /** The barrel's radius at source x. */
@@ -261,9 +266,9 @@ function engineExtras(t: Steam): void {
   m.scope("cab entrance", () => {
     // the open entrance behind the windows, its top arched, and the red grab rail
     for (const s of [-1, 1]) {
-      t.sidePanel(CAB_SEC, "opening", s, 13.83, 14.25, 2.0, 3.55);
-      t.sidePanel(CAB_SEC, "opening", s, 13.89, 14.19, 3.55, 3.7);
-      m.rod("steel", [t.X(13.8), 2.05, s * 1.5], [t.X(13.8), 3.5, s * 1.5], 0.018, 6);
+      t.sidePanel(CAB_SEC, "opening", s, 13.83, 14.25, 2.0, 3.8);
+      t.sidePanel(CAB_SEC, "opening", s, 13.89, 14.19, 3.8, 3.98);
+      m.rod("steel", [t.X(13.8), 2.05, s * 1.5], [t.X(13.8), 3.75, s * 1.5], 0.018, 6);
     }
   });
   m.scope("cab steps", () => {
@@ -297,8 +302,8 @@ function engine(): LocoSpec {
     runningBoard: { profile: [[SLOPE[1], RB], [CAB0 + 0.02, RB]], half: 1.5, valance: 0.12, valanceMat: "red" },
     frame: { x0: 0.8, x1: COUPLED[3]! + 0.95, top: 2.25 },
     cab: {
-      x0: CAB0, x1: CAB1, half: CAB_HALF, roofY: 3.98,
-      windows: [{ x0: 12.35, x1: 12.95, y0: 3.05, y1: 3.72 }, { x0: 13.1, x1: 13.7, y0: 3.05, y1: 3.72 }],
+      x0: CAB0, x1: CAB1, half: CAB_HALF, roofY: 4.2,
+      windows: [{ x0: 12.28, x1: 12.96, y0: 3.2, y1: 3.95 }, { x0: 13.06, x1: 13.74, y0: 3.2, y1: 3.95 }],
     },
     // the round-topped firebox behind the barrel, over the trailing truck
     prisms: [{ name: "firebox", x0: 9.85, x1: CAB0, half: [[1.0, RB], [1.0, BY + 0.35], [0.86, BY + 0.72], [0.52, BY + 0.94], [0, BY + 1.0]] }],
@@ -430,7 +435,7 @@ export function renfe141fSpec(unit: string): LocoSpec {
   return unit === "tender" ? tender() : engine();
 }
 
-/** The spec its distant model is drawn from: the deflectors as their two flat pieces, the tank as a prism of its middle section. */
+/** The spec its distant model is drawn from: the deflectors as their two flat pieces, the cab's roof chamfered, the tank as a prism of its middle section. */
 export function renfe141fLodSpec(unit: string): LocoSpec {
   if (unit === "tender") {
     const s = tender();
@@ -439,5 +444,9 @@ export function renfe141fLodSpec(unit: string): LocoSpec {
     return { ...s, prisms: [{ name: "tank", x0: TANK.x0, x1: TANK.x1, half: mid }, { name: "red edge", x0: TANK.x0 + 0.02, x1: TANK.x1 - 0.02, half: [[TANK.half + 0.01, TANK.side - 0.06], [TANK.half + 0.01, TANK.side]], mat: "red" }] };
   }
   const s = engine();
-  return { ...s, deflectors: { outlines: DEF_PIECES, z: DEF.z - DEF.t } };
+  // the cab's round roof as one chamfer and no firebox beside the barrel, so the deflectors and the red beams stay in the budget
+  const cab = { ...s.cab!, half: [[1.45, 1.95], [1.45, 4.2], [0.8, 4.45]] as Pt[] };
+  // the board's red edge from the deck up the slope
+  const runningBoard = { ...s.runningBoard!, profile: [[SLOPE[0], DECK], [SLOPE[1], RB], [CAB0 + 0.02, RB]] as Pt[] };
+  return { ...s, cab, runningBoard, prisms: [], deflectors: { outlines: DEF_PIECES, z: DEF.z - DEF.t } };
 }
