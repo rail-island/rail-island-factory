@@ -57,9 +57,9 @@ const body = (d: number) => +(d - JOIN).toFixed(3);
  * (0.7 m back) raked about 47 degrees to 3.48 m (1.85 m back); the grey cap with the lamp strip rounding into the crown.
  */
 const PROFILE: Pt[] = [
-  [B, 0.5], [0.62, 0.36], [0.7, 0.2], [0.78, 0.1], [1.0, 0.01], [1.15, 0], [1.6, 0], [1.82, 0.07],
-  [1.9, 0.14], [1.96, 0.24], [1.99, 0.34], [2.02, 0.5], [2.2, 0.57], [2.42, 0.7], [2.9, 1.22], [3.48, 1.86], [3.62, 2.08],
-  [3.76, 2.36], [3.88, 2.66], [3.96, 2.95], [4.0, 3.15], [C - 0.03, JOIN],
+  [B, 0.55], [0.62, 0.42], [0.7, 0.27], [0.8, 0.15], [0.92, 0.07], [1.05, 0.025], [1.4, 0], [1.68, 0.04],
+  [1.78, 0.09], [1.86, 0.16], [1.92, 0.24], [1.96, 0.33], [1.99, 0.42], [2.02, 0.52], [2.2, 0.57], [2.42, 0.7], [2.9, 1.22], [3.48, 1.86], [3.62, 2.08],
+  [3.76, 2.36], [3.88, 2.66], [4.0, 3.15], [C - 0.03, JOIN],
 ];
 
 /** The black face over the bumper: its outline [lat, y], widest at the windscreen's head (the white A pillars beside it). */
@@ -70,7 +70,7 @@ const GLASS: Pt[] = [[-0.86, 2.47], [0.86, 2.47], [0.98, 3.1], [1.02, 3.45], [-1
 const STRIP = [3.62, 3.86] as const;
 
 const ROWS = [...new Set([
-  ...PROFILE.map(([y]) => y), 0.85, A, LOWER[0], LOWER[1], UPPER[0], UPPER[1], BAND[0], 2.15, 2.47, BAND[1], 3.1, 3.45, 3.53, STRIP[0], STRIP[1],
+  ...PROFILE.map(([y]) => y), 0.85, A, LOWER[0], LOWER[1], UPPER[0], UPPER[1], BAND[0], 2.47, BAND[1], 3.45, 3.53, STRIP[0], STRIP[1],
 ])].sort((a, b) => a - b);
 
 /** A rectangle [lat0, lat1] x [y0, y1]. */
@@ -112,7 +112,7 @@ function logoQuads(text: string, h: number): Pt[][] {
 const logoTris = (text: string, h: number): Pt[] => logoQuads(text, h).flatMap((q) => [q[0]!, q[1]!, q[2]!, q[0]!, q[2]!, q[3]!]);
 
 /** The bumper's coupler hatch: an outline 2 cm wide round a rounded rectangle on the bumper's front. */
-const HATCH = { lat: [-0.62, 0.62] as const, y: [0.9, 1.84] as const, r: 0.18 };
+const HATCH = { lat: [-0.56, 0.56] as const, y: [0.92, 1.8] as const, r: 0.18 };
 
 /** The outline of a rounded rectangle (half width hw, centre height yc, half height hh, corner radius r) as convex quads `t` wide. */
 function ring(hw: number, yc: number, hh: number, r: number, t: number): Pt[][] {
@@ -127,14 +127,14 @@ function ring(hw: number, yc: number, hh: number, r: number, t: number): Pt[][] 
 }
 
 const S120_FACE: SeriesCabFace = {
-  dJoin: JOIN, dSide: 2.2, reach: REACH, first: 3.45, roofFrom: 3.53, tolerance: 0.035, cols: [6, 4, 1, 1],
+  dJoin: JOIN, dSide: 2.2, reach: REACH, first: 3.45, roofFrom: 3.53, tolerance: 0.05, cols: [5, 4, 1, 1],
   profile: PROFILE,
   // the bumper broad, its corners rounding 0.6 m and sweeping back to the crease 1.6 m behind its front; the face over it
   // narrower and rounder, the cap round
-  corner: [[B, 0.8], [1.0, 0.82], [1.7, 0.82], [1.99, 0.8], [2.02, 0.62], [2.42, 0.6], [3.1, 0.62], [3.48, 0.72], [3.76, 0.95], [3.96, 1.2], [C - 0.03, 1.3]],
-  cornerDepth: [[B, 1.3], [1.0, 1.5], [1.7, 1.55], [1.99, 1.45], [2.02, 1.2], [2.42, 1.1], [3.1, 0.95], [3.48, 0.75], [3.76, 0.5], [3.96, 0.25], [C - 0.03, 0.02]],
+  corner: [[B, 0.95], [1.0, 1.0], [1.7, 1.0], [1.99, 0.95], [2.02, 0.62], [2.42, 0.6], [3.1, 0.62], [3.48, 0.72], [3.76, 0.95], [3.96, 1.2], [C - 0.03, 1.3]],
+  cornerDepth: [[B, 1.5], [1.0, 1.75], [1.7, 1.75], [1.99, 1.6], [2.02, 1.2], [2.42, 1.1], [3.1, 0.95], [3.48, 0.75], [3.76, 0.5], [3.96, 0.25], [C - 0.03, 0.02]],
   // the bumper bowed forward in plan
-  bulge: [[B, 0.06], [1.6, 0.1], [1.99, 0.08], [2.02, 0.05], [3.48, 0.05], [C - 0.03, 0]],
+  bulge: [[B, 0.12], [1.0, 0.18], [1.6, 0.18], [1.99, 0.14], [2.02, 0.05], [3.48, 0.05], [C - 0.03, 0]],
   rows: ROWS,
   // the face is white over the dark plough; its own bands from the livery's `front`
   bands: (l) => l.front ?? [[0, 0.85, "skirtG"], [0.85, 9, "white"]],
@@ -169,6 +169,8 @@ const S120_FACE: SeriesCabFace = {
 /** The cab's side window: a black triangle ahead of the crew door, its front edge raked with the windscreen. */
 const CAB_FRONT: Pt[] = [[BAND[0], 2.25], [BAND[1], 3.02]];
 const CREW: readonly [number, number] = [3.45, 4.1];
+/** The bumper's crease on the nose's side, [y, d]: upright 2.05 m behind the tip, rolling back above 1.6 m to the band's foot. */
+const CREASE: Pt[] = [[A + 0.01, 2.08], [1.55, 2.05], [1.75, 2.1], [1.88, 2.18], [1.97, 2.3], [BAND[0] - 0.005, 2.42]];
 
 /** Renfe's purple and the Avant's orange as the photographs show them. */
 const PURPLE = "#86235f";
@@ -266,9 +268,20 @@ function s120Fittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, ca
       sideDecal(m, b, X, sd, "logo", quads.map(([x, y]): Pt => [d - dir * sd * x, y + 1.62]), 0.004);
     }
   });
+  if (car.end) m.scope("bumper crease", () => {
+    // the bumper's rear crease on the nose's sides (where the face's sides stand at the body's own section): upright behind
+    // the bumper, rolling back and up to the cab side window's foot; a dark line 3.5 cm wide
+    const tris: Pt[] = [];
+    for (let i = 1; i < CREASE.length; i++) {
+      const [[ya, da], [yb, db]] = [CREASE[i - 1]!, CREASE[i]!];
+      const [p0, p1, p2, p3]: Pt[] = [[body(da), ya], [body(db), yb], [body(db) + 0.035, yb], [body(da) + 0.035, ya]];
+      tris.push(p0!, p1!, p2!, p0!, p2!, p3!);
+    }
+    for (const sd of [1, -1]) sideDecal(m, b, X, sd, "seam", tris, 0.004);
+  });
   if (car.end) m.scope("front gear", () => {
     // the plough under the bumper
-    at("skirtG", body(0.55), body(1.5), 0.34, B + 0.02, -0.9, 0.9);
+    at("skirtG", body(0.75), body(1.6), 0.34, B - 0.01, -0.72, 0.72);
   });
   m.scope("underfloor", () => {
     const [t0, t1] = [car.trucks[0]!, car.trucks[1]!];
