@@ -9,6 +9,7 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
 import { c, flatCab, nose, NO_NOSE, talgo, velaro } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
+import { R592 } from "./es592.ts";
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -140,7 +141,7 @@ const flatEmu = (o: { number: string; livery: "cercanias" | "regional" | "mediaD
 
 export const R446 = flatEmu({ number: "446 001", livery: "cercanias", doorCount: 3, doorW: 1.3, power: 290, maxspeed: 100, endLength: 23.4 });
 export const R440 = flatEmu({ number: "440 001", livery: "regional", second: "cercanias", doorW: 1.0, power: 290, maxspeed: 140 });
-export const R592 = flatEmu({ number: "592 001", livery: "regional", second: "mediaDistancia", doorW: 1.0, power: 290, maxspeed: 120, diesel: true });
+export { R592 };
 
 export const S109: ShinkansenSeries = {
   endLength: 26.5, midLength: 25.4, W: 1.46, Y: 1.4, S: 3.1, C: 4.05, lean: 0.95, B: 0.8, A: 1.05,
