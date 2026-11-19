@@ -15,6 +15,7 @@ import { SVT877 } from "../generator/deSvt877";
 import { MAT46 } from "../generator/nlMat46";
 import { SLT_SERIES } from "../generator/nlSlt";
 import { NS_FLIRT } from "../generator/nlFlirt";
+import { TALGO_III } from "../generator/esTalgoIii";
 
 const CASES: Array<[string, ShinkansenSeries]> = [
   ["proc-vehicle-sbb-flirt", SBB_FLIRT],
@@ -65,4 +66,37 @@ describe("lone cars of a Jacobs set", () => {
       for (const j of joints) expect(j.axles).toBe(2);
     });
   }
+});
+
+// The Talgo III (generator/esTalgoIii.ts): one wheel pair under each joint, shared by the two cars
+// (`jacobs` on single axles); a lone car keeps a wheel pair of its own inside each inner end
+// (`loneJointAxleInset`), the tail car its own under the tail as well.
+describe("the Talgo III's shared wheel pairs", () => {
+  const design = ALL_VEHICLES.find((d) => d.id === "proc-vehicle-talgo-iii")!;
+
+  it.each(["endCar", "middleCar"])("a lone %s stands on single axles under its own body", (unit) => {
+    const m = design.build({ unit });
+    const shell = span(m, /^body\/shell\//);
+    const [x0, x1] = [Math.min(...shell.map((s) => s[0])), Math.max(...shell.map((s) => s[1]))];
+    const wheels = span(m, /(^|\/)wheelset(-\d+)?\//);
+    expect(wheels.length).toBeGreaterThan(0);
+    for (const [a, e] of wheels) {
+      expect(a).toBeGreaterThan(x0);
+      expect(e).toBeLessThan(x1);
+    }
+    const supports = m.rig!.supports!;
+    expect(supports.every((s) => s.axles === 1)).toBe(true);
+    expect(supports.filter((s) => !s.node)).toHaveLength(loneJointAxles(TALGO_III, unit === "endCar").length);
+    expect(supports.filter((s) => s.node)).toHaveLength(unit === "endCar" ? 1 : 0);
+  });
+
+  it("the train shares one wheel pair under every joint", () => {
+    const m = design.build({ unit: "train" });
+    const sections = m.rig!.sections!.length;
+    const joints = m.rig!.supports!.filter((s) => s.sections.length === 2);
+    expect(joints).toHaveLength(sections - 1);
+    for (const j of joints) expect(j.axles).toBe(1);
+    // and the tail car's own at each end of the set: n + 1 wheel pairs for n cars
+    expect(m.rig!.supports!.reduce((n, s) => n + s.axles, 0)).toBe(sections + 1);
+  });
 });
