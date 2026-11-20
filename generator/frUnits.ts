@@ -11,6 +11,7 @@ import type { SeriesCabFace } from "./seriesCab.ts";
 import type { SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
 import { decalX, decalZ } from "./usHoodKit.ts";
+import { REGIOLIS_SERIES as REGIOLIS, REGIOLIS_DESIGN } from "./frRegiolis.ts";
 
 /** A livery of bands bottom first: [top of band, paint] pairs over a body colour list. */
 const livery = (title: string, number: string, palette: Record<string, string>, bands: Array<[number, number, string]>, roof = "roofG", skirt = "skirtG"): ShinkansenLivery => ({
@@ -91,20 +92,6 @@ export const REGIO2N: ShinkansenSeries = {
     transilien: livery("Transilien", "Z 57001", { body: "#e9ebec", grey: "#4d5257", teal: "#3fa9a0" }, [[0, 1.05, "grey"], [1.05, 1.15, "teal"], [1.15, 9, "body"]]),
   },
   weight: { end: 48, middle: 40 }, power: 500, maxspeed: 160,
-};
-
-export const REGIOLIS: ShinkansenSeries = {
-  endLength: 19.0, midLength: 15.5, W: 1.45, Y: 1.25, S: 3.2, C: 3.9, lean: 0.95, B: 0.6, A: 0.8,
-  // the Coradia Polyvalent's rounded front under a big wrap-round windscreen
-  nose: nose(2.0, 0.35, 2.3, [[0, 2.3], [0.4, 3.0], [1.4, 3.65], [2.2, 3.9]], [[0, 2.2], [0.4, 2.8], [1.4, 3.1], [2.2, 3.2]], [[0, 1.25], [0.8, 1.25]], [[0, 0.95], [0.6, 0.8]], [[0, 0.85], [0.3, 0.6]]),
-  windscreen: [0.4, 1.8, 0.07, 1.2], lamps: [0.15, 1.4],
-  windows: [[1.45, 2.65]], windowW: 1.5, pitch: 1.75, door: [0.95, 3.0, 1.5, 2.6], doorW: 1.3,
-  bogieCentres: 12.0, wheelR: 0.42, wheelbase: 2.3, cars: [3, 4, 6],
-  liveries: {
-    ter: livery("TER", "Z 51501", { body: "#e9ebec", grey: "#4d5257", blue: "#00a3e0" }, [[0, 1.05, "grey"], [1.05, 1.15, "blue"], [1.15, 9, "body"]]),
-    grandEst: livery("Grand Est", "Z 51503", { body: "#e9ebec", grey: "#4d5257", red: "#c8102e" }, [[0, 1.05, "grey"], [1.05, 1.15, "red"], [1.15, 9, "body"]]),
-  },
-  weight: { end: 45, middle: 35 }, power: 450, maxspeed: 160,
 };
 
 /** The Picasso's turret: d behind the tip, z span (to one side of the roof), base and top. */
@@ -222,8 +209,7 @@ export function ratpMi09(v?: ParamValues): MeshBuilder { return buildSeries(MI09
 export function ratpMi09Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MI09, P.mi09, v); }
 export function sncfRegio2n(v?: ParamValues): MeshBuilder { return buildSeries(REGIO2N, P.regio2n, v); }
 export function sncfRegio2nLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(REGIO2N, P.regio2n, v); }
-export function sncfRegiolis(v?: ParamValues): MeshBuilder { return buildSeries(REGIOLIS, P.regiolis, v); }
-export function sncfRegiolisLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(REGIOLIS, P.regiolis, v); }
+export { sncfRegiolis, sncfRegiolisLod } from "./frRegiolis.ts";
 export function sncfX3800(v?: ParamValues): MeshBuilder { return buildSeries(X3800, P.x3800, v); }
 export function sncfX3800Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(X3800, P.x3800, v); }
 export function sncfX73500(v?: ParamValues): MeshBuilder { return buildSeries(X73500, P.x73500, v); }
@@ -234,7 +220,7 @@ export const FR_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-sncf-z20500", "SNCF Z 20500", Z20500, P.z20500, sncfZ20500, sncfZ20500Lod, "sncf-z20500", "uic"),
   seriesDesign("proc-vehicle-ratp-mi09", "RER MI 09", MI09, P.mi09, ratpMi09, ratpMi09Lod, "ratp-mi09", "uic"),
   seriesDesign("proc-vehicle-sncf-regio2n", "Regio 2N", REGIO2N, P.regio2n, sncfRegio2n, sncfRegio2nLod, "sncf-regio2n", "uic"),
-  seriesDesign("proc-vehicle-sncf-regiolis", "Regiolis", REGIOLIS, P.regiolis, sncfRegiolis, sncfRegiolisLod, "sncf-regiolis", "uic"),
+  REGIOLIS_DESIGN,
   seriesDesign("proc-vehicle-sncf-x3800", "SNCF X 3800 Picasso", X3800, P.x3800, sncfX3800, sncfX3800Lod, "sncf-x3800", "uic"),
   seriesDesign("proc-vehicle-sncf-x73500", "SNCF X 73500", X73500, P.x73500, sncfX73500, sncfX73500Lod, "sncf-x73500", "uic"),
 ];
