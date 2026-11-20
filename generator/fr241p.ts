@@ -66,7 +66,8 @@ const PALETTE: Record<string, MaterialSpec> = {
   beamText: mat("#efece4", 0.5),
   smokebox: mat("#141517", 0.55),
   roof: mat("#1f2022", 0.8),
-  tyre: { color: "#8d9297", metallic: 0.4, roughness: 0.4 },
+  // the tyres dark worn steel, as on 241 P 17: the wheels read black, only the rods bright
+  tyre: { color: "#55595e", metallic: 0.4, roughness: 0.45 },
   rod: { color: "#b9bec3", metallic: 0.45, roughness: 0.3 },
   steel: { color: "#8c9197", metallic: 0.45, roughness: 0.4 },
   chrome: { color: "#c9ced2", metallic: 0.7, roughness: 0.2 },
