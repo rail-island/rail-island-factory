@@ -139,8 +139,8 @@ head-on views scaled on the oval cover). Heights over the rail, d behind the nos
 
 `generator/cnCrh3c.ts`, matched to the photographs in `assets/cr-crh3c/` (unit CRH3-037C).
 The Velaro CN shares the ICE 3's snout, so the design reuses its measured cab face
-(`ICE3_FACE`, [germany-trains.md](germany-trains.md)) with the CRH face's own paint; the
-shared `velaro()` body is no longer used by it (the AVE S-103 keeps it).
+(`ICE3_FACE`, [germany-trains.md](germany-trains.md)) with the CRH face's own paint (the AVE S-103,
+`esS103.ts`, does the same with Renfe's).
 
 - **Size.** End car 25.675 m and middle car 24.775 m over the couplers (200 m for eight
   cars), 3.89 m high, bogie centres 17.375 m. The real body is 3.265 m wide, wider than the

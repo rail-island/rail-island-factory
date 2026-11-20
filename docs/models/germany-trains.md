@@ -56,8 +56,7 @@ window, `bufferBeam`, a window row's `glass` and the doors' `glassInward`
 
 ### Units
 
-- **ICE 3** (`deIce3.ts`). Its own cab face (the CRH3C reuses it, `cnCrh3c.ts`); the AVE S-103 keeps the shared
-  `velaro()` body. The round snout with the coupler cover's front 1.24 m up rises steeply
+- **ICE 3** (`deIce3.ts`). Its own cab face (the CRH3C and the AVE S-103 reuse it, `cnCrh3c.ts`, `esS103.ts`). The round snout with the coupler cover's front 1.24 m up rises steeply
   past the louvred, slanted lamp clusters and the upper lamp to the tinted canopy
   (2.4 - 3.65 m) that wraps onto the sides; the face joins the body 7 m back. The red stripe
   crosses the coupler cover and sweeps up the nose to the body stripe, broken by the grey

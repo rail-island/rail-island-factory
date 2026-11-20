@@ -20,13 +20,13 @@ third-rail current collection not drawn (the 5000-series draws its shoes).
 
 A `CarDef` is a carbody spec ([us-carbodies.md](us-carbodies.md), `carbodyKit.ts`) and its
 fittings: side paint bands, window rows (sill, head, spans; `onSide` a row on one side only, `cornerR` rounded corners, `glass` the panes' paint: a frosted toilet window), passenger doors (spans, sill,
-head, the leaf's window; `spanSides` a span on one side only, `glassCornerR` the leaf windows' rounded corners (a single centred one with `glassW` alone: a porthole), `glassSurround` a rubber surround with a bright rim round them, `glassInward` a narrow window moved off the leaf's centre toward the car's middle: a folding door's inner leaf) - plug doors that open onto the car's generic cabin (`openable`,
+head, the leaf's window; `spanSides` a span on one side only, `glassCornerR` the leaf windows' rounded corners (a single centred one with `glassW` alone: a porthole), `glassSurround` a rubber surround with a bright rim round them, `glassInward` a narrow window moved off the leaf's centre toward the car's middle: a folding door's inner leaf, `leafEdgeStripe` a stripe of paint down each leaf's meeting edge, its window moved `glassShift` toward it: the MI 09's jade) - plug doors that open onto the car's generic cabin (`openable`,
 `plugMove`, `sliceCabin`; doors.md, interiors.md) - stainless fluting (one band or several) broken over windows and
 doors, painted `strips` over the bands (d spans between two heights, down over the skirt: a
 double-deck coach's door strips), a flat cab end's windscreen panes, front mask and lamps, both ends painted
 apart (`ends`: their bands up to d from each end and the end walls' paint), the
 diaphragm (`diaphragmW` its half width, default 0.5), trucks at d
-(the diesel toolkit's bogie geometry), knuckle or centre couplers, lettering and extras.
+(the diesel toolkit's bogie geometry), knuckle or centre couplers or buffers (`bufferHeadShape` `rect`: the Talgo III tail's flat plates), lettering (`letterStroke` its strokes' width over the letter height, default 0.13: Iryo's bold wordmark) and extras.
 `drawCar` takes the ends inside an articulated set (no coupler or diaphragm there) and the
 trucks a Jacobs bogie replaces.
 

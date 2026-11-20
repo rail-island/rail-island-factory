@@ -258,13 +258,33 @@ combinations hashed before and after):
   the raised pantograph standing on the lowered roof; and a livery's `sideFields` - convex [d, y] polygons
   painted as decals on the end car's and an intermediate car's sides, colour areas that are not bands (both
   the VIRM's, `generator/nlVirm.ts`).
+- The Spanish and French detail pass ([spain-trains.md](spain-trains.md), [france-trains.md](france-trains.md))
+  added, each off by default: a livery's `endCarDoors` - the end car's own door bands over `doors` (the
+  TGV M's white cab door between carmine trailer doors); `endCarBogie` and `endCarRunningGear` - the end
+  cars' own wheelbase and wheel radius (a Talgo's power cars on two-axle bogies ahead of coaches on single
+  axles; two names for one idea, the S-102's and S-130's and the S-106's); `jacobsEndTrailerLayout` - with
+  `jacobsTrailers`, the end trailers' own layout beside a power car, mirrored at the rear (the S-100's
+  vestibule); `loneJointAxleInset`, `jointShroudProfile`, `bufferHeadShape`, `bufferGap` and
+  `windowFrameMat` - a lone Talgo car's axle inside its end, the rubber shroud closing a whole joint, flat
+  rectangular buffer plates and their distance ahead of the tip, bright window frames (the Talgo III);
+  `pantographKneeForward` - a single arm's knee toward the car's +X end (the 440's inward-facing pair) and
+  the `fittings` callback's `rearEndCar`; `lodMiddleRoofBlocks` - roof blocks on every intermediate car in
+  the distant model (the 592's humps); a livery's `endLettering` item's `letterStroke` (bold lettering:
+  Iryo); `roofWells.endCarOnly` - the well on the end car only (the Z 20500's pantograph end);
+  `leafEdgeStripe` - paint down each door leaf's meeting edge (the MI 09's jade); `lodRoof.centreZ` - the
+  distant model's roof block off the centre line (the X 3800's turret); `endSection` - the end car's own
+  crown and shoulder tables (the Regio 2N's single-deck end car with its tall cab); `railcarUnderside` - a
+  single railcar's belly and skirt lines by d, low under its cabs and between its bogies, high over them
+  (the X 73500).
 
 A nose end never carries a gangway frame, buffered or not. A short car's leading bogie comes in so that its wheels stay under the body. The kit
 refuses a wheelbase under 2.05 m (the bogie's brake cylinders would lie on its
 transoms) and a skirt bottom on the centre coupler's draft gear or on the transoms.
 
 `seriesHelpers.ts` holds the paint, nose and flat-cab helpers, the one-colour `striped`
-livery and `velaro()`, the Siemens Velaro body the CRH3C and the AVE S-103 share (the ICE 3 has its own cab face in `deIce3.ts`).
+livery and the Stadler bodies `flirt()` and `kiss()`. The Velaro (ICE 3, CRH3C, AVE S-103)
+is drawn on the ICE 3's cab face (`deIce3.ts`) by each design's own module, and each Talgo by its own
+module ([spain-trains.md](spain-trains.md)); the shared `velaro()` and `talgo()` bodies are gone.
 
 ## The 500 series
 
@@ -465,6 +485,11 @@ byte for byte as `buildSeries` draws it, centred between its coupling planes fac
 the caller to move and turn into its place; `seriesEndCarPalette` gives its materials,
 `seriesEndCarLod` its distant model in a section and `SERIES_GAP` its inner wall's inset.
 The ICE 2's train uses them for its driving trailer (deIce2.ts, germany-trains.md).
+
+`drawSeriesCar`, `seriesCarPalette`, `seriesCarLod` and `drawSeriesJointBogie` do the same for any
+car of a series - an end or intermediate car, leading or rear, with its trucks and inner walls as the
+caller asks - and for a Jacobs bogie under a joint: the Regio 2N (`frRegio2n.ts`, [france-trains.md](france-trains.md))
+draws its four kinds of car from two series and hinges them on shared bogies itself.
 
 ## Deviations
 

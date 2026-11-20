@@ -197,13 +197,13 @@ field but the vehicle's own, which the export reads ([../site/openttd-export.md]
 | `dr-52` | DR 52 | train RAIL | 1942 | 0 PASS | 66 / 34 | 2 | with tender |
 | `kpev-p8` | Prussian P 8 | train RAIL | 1906 | 0 PASS | 62 / 27 | 3 | with tender |
 | `db-ic-coach` | DB Intercity coach | train RAIL | 1971 | 54 PASS | 48 / 12 | 4 | - |
-| `sncf-tgv-m` | TGV M | train ELRL | 2025 | 40 PASS | 119 / 37 | 3 | 8 cars |
+| `sncf-tgv-m` | TGV M | train ELRL | 2025 | 0 PASS | 181 / 88 | 3 | 8 cars |
 | `sncf-z20500` | SNCF Z 20500 | train ELRL | 1988 | 140 PASS | 101 / 47 | 3 | 4 cars |
-| `ratp-mi09` | RER MI 09 | train ELRL | 2011 | 100 PASS | 88 / 42 | 2 | 5 cars |
-| `sncf-regio2n` | Regio 2N | train ELRL | 2014 | 90 PASS | 87 / 35 | 3 | 4 cars |
+| `ratp-mi09` | RER MI 09 | train ELRL | 2011 | 87 PASS | 85 / 40 | 2 | 5 cars |
+| `sncf-regio2n` | Regio 2N | train ELRL | 2014 | 76 PASS | 89 / 37 | 5 | 4 cars |
 | `sncf-regiolis` | Regiolis | train ELRL | 2014 | 60 PASS | 78 / 29 | 3 | 4 cars |
 | `sncf-x3800` | SNCF X 3800 Picasso | train RAIL | 1950 | 62 PASS | 66 / 25 | 1 | - |
-| `sncf-x73500` | SNCF X 73500 | train RAIL | 1999 | 64 PASS | 77 / 31 | 2 | - |
+| `sncf-x73500` | SNCF X 73500 | train RAIL | 1999 | 61 PASS | 76 / 30 | 2 | - |
 | `sncf-cc6500` | SNCF CC 6500 | train ELRL | 1969 | 0 PASS | 208 / 128 | 3 | - |
 | `sncf-cc40100` | SNCF CC 40100 | train ELRL | 1964 | 0 PASS | 164 / 100 | 1 | - |
 | `sncf-bb22200` | SNCF BB 22200 | train ELRL | 1976 | 0 PASS | 161 / 97 | 3 | - |
@@ -212,11 +212,11 @@ field but the vehicle's own, which the export reads ([../site/openttd-export.md]
 | `sncf-bb27000` | SNCF BB 27000 Prima | train ELRL | 2001 | 0 PASS | 153 / 94 | 1 | - |
 | `sncf-bb67400` | SNCF BB 67400 | train RAIL | 1969 | 0 PASS | 92 / 45 | 2 | - |
 | `sncf-cc72000` | SNCF CC 72000 | train RAIL | 1967 | 0 PASS | 118 / 63 | 2 | - |
-| `sncf-241p` | SNCF 241 P | train RAIL | 1948 | 0 PASS | 119 / 70 | 2 | with tender |
-| `sncf-141r` | SNCF 141 R | train RAIL | 1945 | 0 PASS | 86 / 47 | 2 | with tender |
+| `sncf-241p` | SNCF 241 P | train RAIL | 1948 | 0 PASS | 118 / 69 | 2 | with tender |
+| `sncf-141r` | SNCF 141 R | train RAIL | 1945 | 0 PASS | 94 / 53 | 2 | with tender |
 | `sncf-corail-coach` | SNCF Corail coach | train RAIL | 1975 | 58 PASS | 49 / 12 | 3 | - |
 | `sncf-grand-confort` | SNCF Grand Confort | train RAIL | 1970 | 48 PASS | 46 / 11 | 3 | - |
-| `ciwl-car` | Wagons-Lits car | train RAIL | 1929 | 28 PASS | 33 / 9 | 3 | - |
+| `ciwl-car` | Wagons-Lits car | train RAIL | 1929* | 28 PASS | 33 / 9 | 3 | - |
 | `ns-mat46` | NS Mat '46 | train ELRL | 1949 | 62 PASS | 73 / 28 | 2 | 2 cars |
 | `ns-mat54` | NS Mat '54 Hondekop | train ELRL | 1957 | 64 PASS | 72 / 27 | 3 | 4 cars |
 | `ns-plan-v` | NS Plan V | train ELRL | 1966 | 72 PASS | 74 / 28 | 2 | 2 cars |
@@ -257,26 +257,26 @@ field but the vehicle's own, which the export reads ([../site/openttd-export.md]
 | `sbb-ew4-coach` | SBB EW IV coach | train RAIL | 1981 | 54 PASS | 48 / 12 | 3 | - |
 | `sbb-ic2000` | SBB IC 2000 coach | train RAIL | 1997 | 100 PASS | 63 / 18 | 2 | - |
 | `glacier-express` | Glacier Express coach | train RAIL | 2006 | 36 PASS | 31 / 10 | 2 | - |
-| `renfe-s100` | AVE S-100 | train ELRL | 1992 | 40 PASS | 118 / 39 | 3 | 8 cars |
+| `renfe-s100` | AVE S-100 | train ELRL | 1992 | 0 PASS | 102 / 28 | 3 | 8 cars |
 | `renfe-s103` | AVE S-103 | train ELRL | 2007 | 40 PASS | 128 / 39 | 2 | 8 cars |
-| `renfe-s102` | AVE S-102 Pato | train ELRL | 2005 | 0 PASS | 136 / 50 | 3 | 8 cars |
-| `renfe-s106` | Talgo Avril S-106 | train ELRL | 2022 | 30 PASS | 114 / 31 | 3 | 8 cars |
+| `renfe-s102` | AVE S-102 Pato | train ELRL | 2005 | 0 PASS | 186 / 90 | 3 | 8 cars |
+| `renfe-s106` | Talgo Avril S-106 | train ELRL | 2022 | 0 PASS | 186 / 90 | 3 | 8 cars |
 | `renfe-s130` | Alvia S-130 | train ELRL | 2007 | 0 PASS | 130 / 58 | 2 | 8 cars |
-| `talgo-iii` | Talgo III | train RAIL | 1964 | 22 PASS | 31 / 8 | 2 | 8 cars |
-| `renfe-s120` | Renfe S-120 | train ELRL | 2006 | 60 PASS | 113 / 42 | 3 | 4 cars |
-| `renfe-civia` | Renfe Civia | train ELRL | 2003 | 80 PASS | 78 / 34 | 2 | 4 cars |
-| `renfe-446` | Renfe 446 | train ELRL | 1989 | 70 PASS | 65 / 27 | 2 | 3 cars |
-| `renfe-440` | Renfe 440 | train ELRL | 1974 | 76 PASS | 74 / 28 | 3 | 3 cars |
-| `renfe-592` | Renfe 592 | train RAIL | 1981 | 76 PASS | 70 / 28 | 3 | 3 cars |
-| `iryo-s109` | Iryo Frecciarossa 1000 | train ELRL | 2022 | 40 PASS | 130 / 39 | 2 | 8 cars |
-| `renfe-354` | Renfe 354 Virgen | train RAIL | 1964 | 0 PASS | 106 / 50 | 1 | - |
+| `talgo-iii` | Talgo III | train RAIL | 1964 | 22 PASS | 33 / 8 | 2 | 8 cars |
+| `renfe-s120` | Renfe S-120 | train ELRL | 2006 | 59 PASS | 110 / 40 | 3 | 4 cars |
+| `renfe-civia` | Renfe Civia | train ELRL | 2003 | 62 PASS | 71 / 29 | 2 | 4 cars |
+| `renfe-446` | Renfe 446 | train ELRL | 1989 | 76 PASS | 89 / 47 | 2 | 3 cars |
+| `renfe-440` | Renfe 440 | train ELRL | 1974 | 80 PASS | 97 / 47 | 3 | 3 cars |
+| `renfe-592` | Renfe 592 | train RAIL | 1981 | 72 PASS | 73 / 30 | 3 | 3 cars |
+| `iryo-s109` | Iryo Frecciarossa 1000 | train ELRL | 2022 | 42 PASS | 133 / 42 | 2 | 8 cars |
+| `renfe-354` | Renfe 354 Virgen | train RAIL | 1983 | 0 PASS | 137 / 71 | 1 | - |
 | `renfe-252` | Renfe 252 | train ELRL | 1991 | 0 PASS | 204 / 122 | 2 | - |
 | `renfe-269` | Renfe 269 | train ELRL | 1973 | 0 PASS | 126 / 72 | 2 | - |
-| `renfe-277` | Renfe 277 | train ELRL | 1952 | 0 PASS | 110 / 64 | 2 | - |
+| `renfe-277` | Renfe 277 | train ELRL | 1952 | 0 PASS | 97 / 54 | 2 | - |
 | `renfe-319` | Renfe 319 | train RAIL | 1965 | 0 PASS | 82 / 40 | 2 | - |
-| `renfe-333` | Renfe 333 | train RAIL | 1974 | 0 PASS | 110 / 56 | 2 | - |
+| `renfe-333` | Renfe 333 | train RAIL | 1974 | 0 PASS | 106 / 59 | 2 | - |
 | `renfe-141f` | Renfe 141F Mikado | train RAIL | 1953 | 0 PASS | 75 / 39 | 2 | with tender |
-| `renfe-242f` | Renfe 242F | train RAIL | 1956 | 0 PASS | 100 / 52 | 2 | with tender |
+| `renfe-242f` | Renfe 242F | train RAIL | 1956 | 0 PASS | 97 / 50 | 2 | with tender |
 | `br-hst` | InterCity 125 | train RAIL | 1976 | 0 PASS | 102 / 44 | 3 | 8 cars |
 | `br-ic225` | InterCity 225 | train ELRL | 1988 | 0 PASS | 183 / 104 | 3 | 8 cars |
 | `br-class-800` | Class 800 IET | train ELRL | 2017 | 60 PASS | 93 / 34 | 3 | 5 cars |
