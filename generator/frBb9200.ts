@@ -143,9 +143,9 @@ interface Livery {
 const ALU: MaterialSpec = { color: "#c9ced1", metallic: 0.55, roughness: 0.3 };
 
 const LIVERIES: Record<string, Livery> = {
-  // the class's vert of 1957, BB 9274 (and 9218) in the 1970s - 1980s
+  // the class's vert of 1957 (key `blue` kept: saved maps store it), BB 9274 (and 9218) in the 1970s - 1980s
   blue: {
-    title: "SNCF blue",
+    title: "SNCF green",
     palette: { body: c("#5a8680", 0.55), plateDark: c("#1b1d1f", 0.6), discDark: c("#22282b", 0.6), beam: c("#25282a", 0.75) },
     band: [2.12, 2.16],
     bandMat: "alu",

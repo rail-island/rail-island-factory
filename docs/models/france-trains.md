@@ -148,7 +148,7 @@ The Regio 2N adds two `unit` values, `singleDeckCar` and `singleDeckEnd`, with t
 - **BB 9200** (`frBb9200.ts`). The B-B of 1957 - 64 with its own profile, measured on 9233 and 9291
   head-on and 9274 side-on: the cab end upright to an aluminium sill at 3.0 m, curved in plan, the
   window band set back and leaning to a visor at 3.62 m, two windscreens and curved corner windows,
-  the aluminium moustache with the plate curving down to the SNCF disc. `blue` is the 1957 blue-green
+  the aluminium moustache with the plate curving down to the SNCF disc. `blue` (titled "SNCF green") is the 1957 blue-green
   "vert" (BB 9274) with diamonds; `capitole` the red with the gris dauphin band and single arms (BB
   9291, 4,240 kW, 200 km/h).
 - **BB 27000 Prima** (`frBb27000.ts`). Alstom's dual-voltage Bo'Bo' of 2001 - 06, 19.52 m, bogie
