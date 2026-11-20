@@ -25,7 +25,7 @@ The catalog had no Spanish train before. Every design is filed under Spain.
 | `proc-vehicle-renfe-354` | Renfe 354 Virgen | own lofted body, diesel (`es354.ts`) | - | B'B', 19.92 m, 80 t, 3,070 kW, 200 km/h |
 | `proc-vehicle-renfe-252` | Renfe 252 | box locomotive, own profile (`es252.ts`) | `livery` (`ave`, `mercancias`) | Bo'Bo', 20.38 m, 5,600 kW, 220 km/h |
 | `proc-vehicle-renfe-269` | Renfe 269 | box locomotive, own profile (`es269.ts`) | `livery` (`taxi`, `estrella`) | B'B', 17.27 m, 3,100 kW, 140 km/h |
-| `proc-vehicle-renfe-277` | Renfe 277 | own shell, single cab (`es277.ts`) | `livery` (`green`, `blue`) | Co'Co', 20.567 m, 120 t, 2,208 kW, 110 km/h |
+| `proc-vehicle-renfe-277` | Renfe 277 | own shell, double-ended (`es277.ts`) | `livery` (`green`, `blue`) | Co'Co', 20.567 m, 120 t, 2,208 kW, 110 km/h |
 | `proc-vehicle-renfe-319` | Renfe 319 | box locomotive, hood, diesel (`es319.ts`) | `livery` (`estrella`, `mercancias`) | Co'Co', 19.50 m, 116 t, 1,500 kW, 120 km/h |
 | `proc-vehicle-renfe-333` | Renfe 333 | box locomotive, own profile, diesel (`es333.ts`) | `livery` (`mercancias`, `talgo`) | Co'Co', 22.33 m, 120 t, 2,460 kW, 120 km/h (160 in `talgo`) |
 | `proc-vehicle-renfe-141f` | Renfe 141F Mikado | steam, own spec (`es141f.ts`) | `unit` | 1'D1', 1.56 m drivers, 19.57 m with tender; 103 + 63.5 t, 1,460 kW, 90 km/h |
@@ -169,11 +169,12 @@ font's f, l and v. The French designs added more ([france-trains.md](france-trai
 
 - **354 "Virgen"** (`es354.ts`). The Krauss-Maffei B'B' diesel-hydraulic "4000-T" of 1982 - 84,
   354 001 "Virgen de Covadonga" in the Talgo Pendular's dark blue and cream: 19.92 m, a low 3.45 m
-  body, bogies 10.4 m apart. Its own lofted shell: one cab with an upright cream bumper and a
-  bowed upper face leaning back over three aluminium-framed windows, a corner window wrapping each
-  rounded corner, the roof hump with the twin headlight pod; the rear flat with rounded corners
-  where the Talgo couples. 14 upper grilles, six lower, the cab's cream band wrapping to the door.
-  No Talgo script logo.
+  body, bogies 10.4 m apart. Its own lofted shell with a cab at each end (the rear one the front one
+  turned; both ends shown by the user's Arnold HN2504 model of 354 003): an upright cream bumper and
+  a bowed upper face leaning back over three aluminium-framed windows, a corner window wrapping each
+  rounded corner, the roof hump with the twin headlight pod. The side is symmetric about the middle:
+  14 upper grilles at 0.94 m between the doors, the big lower grille behind each door and four in
+  the middle, a cream bar either side; each cab's cream band wraps to its door. No Talgo script logo.
 - **252** (`es252.ts`). Siemens and Krauss-Maffei's Eurosprinter on the box kit, measured on 066
   side-on (75 px/m) and 024 head-on: 20.38 m, 3.0 m wide, bogie centres 10.5 m. The raked face from
   1.38 m to the windscreen (2.74 - 3.58 m, about 25 degrees), the twin top headlight, upright walls
@@ -187,12 +188,12 @@ font's f, l and v. The French designs added more ([france-trains.md](france-trai
   each end: cab window, cab door, narrow window, two louvre grilles, a window in the middle. `taxi`
   (269-038: blue-grey, yellow cab ends and top strip) and `estrella` (269-307: orange, not the
   draft's blue and white). Generic bogies; 160 km/h for the Estrella is not set per livery.
-- **277 "Inglesa"** (`es277.ts`). English Electric and Vulcan's 7700 of 1952: a single-cab Co'Co'
-  with the rounded nose 2.8 m ahead of the cab and the flat rear end for multiple working,
-  20.567 m. Its own shell, measured on 7702 (head-on, 107 px/m), 7766 and 277 002 / 026 / 047: the
+- **277 "Inglesa"** (`es277.ts`). English Electric and Vulcan's 7700 of 1952: a double-ended Co'Co'
+  with the rounded nose 2.8 m ahead of the cab at each end (one half the other turned round, as the
+  user's side view of 7722 shows), 20.567 m. Its own shell, measured on 7702 (head-on, 107 px/m), 7766 and 277 002 / 026 / 047: the
   headlight on the nose top, lamps in round pods, the nose door, the yellow line round the corners
-  into a V, the red beam between black buffer housings, the deep skirt rising over the leading
-  wheels; two diamonds, the rear raised; pivots 11.0 m apart. `green` is Renfe's dark green
+  into a V, the red beam between black buffer housings, the deep skirt rising over the outer
+  wheels; two diamonds at +3.0 m (raised) and -4.0 m; pivots 10.04 m apart. `green` is Renfe's dark green
   (7701); `blue` (277 015) is unverified.
 - **319** (`es319.ts`). The GM-EMD Co'Co' as the rebuilt 319.2 / .3 carbody of 1984 - 92 (the draft
   was a streamlined GM nose), measured on 319.254 side-on and 319.310 head-on: 19.50 m, 4.145 m
