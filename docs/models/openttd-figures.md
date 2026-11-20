@@ -273,8 +273,8 @@ field but the vehicle's own, which the export reads ([../site/openttd-export.md]
 | `renfe-252` | Renfe 252 | train ELRL | 1991 | 0 PASS | 204 / 122 | 2 | - |
 | `renfe-269` | Renfe 269 | train ELRL | 1973 | 0 PASS | 126 / 72 | 2 | - |
 | `renfe-277` | Renfe 277 | train ELRL | 1952 | 0 PASS | 97 / 54 | 2 | - |
-| `renfe-319` | Renfe 319 | train RAIL | 1965 | 0 PASS | 82 / 40 | 2 | - |
-| `renfe-333` | Renfe 333 | train RAIL | 1974 | 0 PASS | 106 / 59 | 2 | - |
+| `renfe-319` | Renfe 319 | train RAIL | 1984 | 0 PASS | 82 / 40 | 2 | - |
+| `renfe-333` | Renfe 333 | train RAIL | 2002 | 0 PASS | 106 / 59 | 2 | - |
 | `renfe-141f` | Renfe 141F Mikado | train RAIL | 1953 | 0 PASS | 75 / 39 | 2 | with tender |
 | `renfe-242f` | Renfe 242F | train RAIL | 1956 | 0 PASS | 97 / 50 | 2 | with tender |
 | `br-hst` | InterCity 125 | train RAIL | 1976 | 0 PASS | 102 / 44 | 3 | 8 cars |

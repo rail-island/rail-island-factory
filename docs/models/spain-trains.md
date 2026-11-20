@@ -27,7 +27,7 @@ The catalog had no Spanish train before. Every design is filed under Spain.
 | `proc-vehicle-renfe-269` | Renfe 269 | box locomotive, own profile (`es269.ts`) | `livery` (`taxi`, `estrella`) | B'B', 17.27 m, 3,100 kW, 140 km/h |
 | `proc-vehicle-renfe-277` | Renfe 277 | own shell, double-ended (`es277.ts`) | `livery` (`green`, `blue`) | Co'Co', 20.567 m, 120 t, 2,208 kW, 110 km/h |
 | `proc-vehicle-renfe-319` | Renfe 319 | box locomotive, hood, diesel (`es319.ts`) | `livery` (`estrella`, `mercancias`) | Co'Co', 19.50 m, 116 t, 1,500 kW, 120 km/h |
-| `proc-vehicle-renfe-333` | Renfe 333 | box locomotive, own profile, diesel (`es333.ts`) | `livery` (`mercancias`, `talgo`) | Co'Co', 22.33 m, 120 t, 2,460 kW, 120 km/h (160 in `talgo`) |
+| `proc-vehicle-renfe-333` | Renfe 333 | box locomotive, own profile, diesel (`es333.ts`) | `livery` (`mercancias`, `talgo`, `operadora`) | Co'Co', 22.33 m, 120 t, 2,460 kW, 120 km/h (160 in `talgo`) |
 | `proc-vehicle-renfe-141f` | Renfe 141F Mikado | steam, own spec (`es141f.ts`) | `unit` | 1'D1', 1.56 m drivers, 19.57 m with tender; 103 + 63.5 t, 1,460 kW, 90 km/h |
 | `proc-vehicle-renfe-242f` | Renfe 242F | steam, own spec (`es242f.ts`) | `unit` | 2'D1', 1.9 m drivers; 142.5 + 70.2 t, 1,990 kW, 135 km/h |
 
@@ -207,9 +207,11 @@ font's f, l and v. The French designs added more ([france-trains.md](france-trai
   22.33 m, 3.16 m wide (the `us` gauge the broad gauge allows). The flat face leaning back from
   1.95 m, one 2.13 m windscreen in a black frame, hooped handrails, the black beam with square
   buffer housings; the long hood's ribbed panels and the cant's filter grilles; flexicoil bogies
-  7.1 m either side of the middle. `mercancias` is the early yellow and silver (333 301; today's
-  ivory and graphite scheme is not a livery), `talgo` the Trenhotel ivory and bronze (333 407,
-  160 km/h).
+  7.1 m either side of the middle. `mercancias` is the early yellow and silver (333 301), `talgo`
+  the Trenhotel ivory and bronze (333 407, 160 km/h), and `operadora` (Renfe Operadora, 333 333)
+  today's scheme from 333 333, 352, 353 and 359: ivory cabs, a graphite hood up to the ribs' top
+  under the silver-grey band, cant and roof, a purple line low on each cab side, the big ivory
+  "renfe" mid-hood and the purple "renfe Mercancias" on the face.
 
 ### Steam
 
