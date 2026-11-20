@@ -1,6 +1,6 @@
 // Small helpers for the specs drawn on the series kit (shinkansen.ts): paints,
-// nose tables, a flat cab front and the shared Velaro body (the AVE S-103; the ICE 3
-// and the CRH3C have their own faces). See docs/models/shinkansen.md, "The series kit".
+// nose tables, a flat cab front and Stadler's FLIRT and KISS bodies (the Velaro and the
+// Talgos are drawn by their own modules). See docs/models/shinkansen.md, "The series kit".
 
 import type { MaterialSpec } from "./meshBuilder.ts";
 import { paint } from "./dieselParts.ts";
@@ -33,18 +33,6 @@ export function striped(title: string, body: string, stripe: string, y0: number,
   };
 }
 
-/** The Velaro: 2.95 m wide, its long nose sloping to the cab; a series takes its lengths, liveries and figures. */
-export function velaro(o: Pick<ShinkansenSeries, "liveries" | "weight" | "power" | "maxspeed"> & { endLength?: number; midLength?: number; W?: number }): ShinkansenSeries {
-  return {
-    endLength: o.endLength ?? 25.675, midLength: o.midLength ?? 24.775, W: o.W ?? 1.475, Y: 1.4, S: 3.15, C: 3.89, lean: 0.95, B: 0.75, A: 1.05,
-    nose: nose(6.2, 0.05, 2.4, [[0, 1.15], [0.6, 1.5], [2.4, 2.1], [4.4, 2.75], [5.8, 3.4], [7.2, 3.89]], [[0, 1.1], [0.6, 1.4], [2.4, 1.9], [4.4, 2.5], [5.8, 2.95], [7.2, 3.15]], [[0, 1.05], [1.5, 1.25], [3.0, 1.4]], [[0, 1.0], [1.5, 1.05]], [[0, 0.98], [0.6, 0.55], [2.0, 0.75]]),
-    windscreen: [4.0, 5.9, 0.07, 1.05], lamps: [1.3, 1.45],
-    windows: [[1.95, 2.75]], windowW: 1.25, pitch: 1.45, door: [1.3, 3.1, 1.95, 2.65], doorW: 0.9,
-    bogieCentres: 17.375, wheelR: 0.46, wheelbase: 2.5,
-    liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
-  };
-}
-
 /** Stadler's FLIRT: the rounded, raked front with its big windscreen; a series takes its width, car lengths, liveries and figures. */
 export function flirt(o: Pick<ShinkansenSeries, "liveries" | "weight" | "power" | "maxspeed"> & { W?: number; endLength?: number; midLength?: number; cars?: readonly number[] }): ShinkansenSeries {
   return {
@@ -65,21 +53,6 @@ export function kiss(o: Pick<ShinkansenSeries, "liveries" | "weight" | "power" |
     windscreen: [0.7, 2.2, 0.07, 1.15], lamps: [0.15, 1.35],
     windows: [[1.25, 1.95], [2.85, 3.55]], windowW: 1.4, pitch: 1.7, door: [0.95, 3.05, 1.6, 2.6], doorW: 1.3,
     bogieCentres: 18.0, wheelR: 0.46, wheelbase: 2.5, cars: o.cars ?? [4, 6],
-    liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
-  };
-}
-
-/**
- * A Talgo set: short, low cars on single axles (the real train shares one wheel
- * pair between two cars at each joint; the kit stands each car on two of its own).
- */
-export function talgo(o: Pick<ShinkansenSeries, "liveries" | "weight" | "power" | "maxspeed" | "nose" | "windscreen" | "lamps"> & { endLength?: number; cars?: readonly number[]; traction?: ShinkansenSeries["traction"]; C?: number }): ShinkansenSeries {
-  return {
-    endLength: o.endLength ?? 20.0, midLength: 13.14, W: 1.47, Y: 1.25, S: 2.95, C: o.C ?? 3.4, lean: 0.95, B: 0.75, A: 0.9,
-    nose: o.nose, windscreen: o.windscreen, lamps: o.lamps,
-    windows: [[1.55, 2.45]], windowW: 1.1, pitch: 1.4, door: [0.95, 2.85, 1.55, 2.45], doorW: 0.8,
-    // the power cars at the ends raise the pantographs; the Talgo coaches between them none (at least one)
-    bogieCentres: 5.6, wheelR: 0.4, wheelbase: 0, cars: o.cars ?? [4, 8], minCars: 3, endPantograph: true, ...(o.traction ? { traction: o.traction } : {}),
     liveries: o.liveries, weight: o.weight, power: o.power, maxspeed: o.maxspeed,
   };
 }

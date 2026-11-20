@@ -3,8 +3,7 @@
 // canopy, the CRH face's own paint (the grey lip under the glass holding the upper lamp, the
 // lamp clusters with their slats on the inner half) and the CRH livery's thin blue band, which
 // runs under the windows and dives down the nose to a point, a thin line rising back from it.
-// Matched to the photographs in assets/cr-crh3c/ (SOURCES.md). The shared `velaro()` body
-// (seriesHelpers.ts) is left as the AVE S-103 has it. See docs/models/china-units.md.
+// Matched to the photographs in assets/cr-crh3c/ (SOURCES.md). See docs/models/china-units.md.
 //
 // Heights over the rail, d behind the snout's tip (the coupler cover's front, 1.24 m up).
 

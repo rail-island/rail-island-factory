@@ -1,13 +1,12 @@
-// Spanish units on the series kit (shinkansen.ts): the AVE S-100 and S-103
-// (on the shared Velaro body), the Talgo S-102 "Pato", S-106 Avril and S-130
-// Alvia and the Talgo III coaches (the Talgo base, seriesHelpers.ts), the
-// dual-gauge S-120, the Civia, the 446 and 440 EMUs, the 592 DMU and Iryo's
-// Frecciarossa 1000 (S-109). See docs/models/spain-trains.md.
+// Spanish units on the series kit (shinkansen.ts), each measured from photographs
+// in its own module: the AVE S-100 and S-103, the Talgo S-102 "Pato", S-106 Avril
+// and S-130 Alvia and the Talgo III coaches, the dual-gauge S-120, the Civia, the
+// 446 and 440 EMUs, the 592 DMU and Iryo's Frecciarossa 1000 (S-109). This file
+// registers them. See docs/models/spain-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
-import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery } from "./shinkansen.ts";
-import { c } from "./seriesHelpers.ts";
+import { buildSeries, buildSeriesLod, seriesDesign, seriesParams } from "./shinkansen.ts";
 import { TALGO_III } from "./esTalgoIii.ts";
 import { S103 } from "./esS103.ts";
 import { S102, s102Series } from "./esS102.ts";
@@ -26,23 +25,6 @@ export { S106 };
 export { renfeS120, renfeS120Lod };
 export { R440, renfe440, renfe440Lod };
 export { S103, S130, R446, R592, TALGO_III };
-
-/** Renfe's schemes and its operators'. */
-export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
-  const pal = (p: Record<string, string>) => ({ roofG: c("#b9bdc0", 0.6), skirtG: c("#3a3d40", 0.75), cabMask: c("#1d1f22", 0.3), ...Object.fromEntries(Object.entries(p).map(([k, v]) => [k, c(v)])) });
-  switch (kind) {
-    case "ave": return { title: "AVE", number, palette: pal({ white: "#f1f1ee", grey: "#6f757a", purple: "#6c2a7a" }), bands: [[0, 1.18, "grey"], [1.18, 1.28, "purple"], [1.28, 9, "white"]], roof: "roofG", skirt: "skirtG" };
-    case "avlo": return { title: "Avlo", number, palette: pal({ white: "#f1f1ee", purple: "#7a2c8e", lime: "#b5d334" }), bands: [[0, 1.18, "purple"], [1.18, 1.28, "lime"], [1.28, 9, "white"]], roof: "roofG", skirt: "skirtG" };
-    case "alvia": return { title: "Alvia", number, palette: pal({ white: "#f1f1ee", grey: "#6f757a", orange: "#e8701e" }), bands: [[0, 1.18, "grey"], [1.18, 1.28, "orange"], [1.28, 9, "white"]], roof: "roofG", skirt: "skirtG" };
-    case "cercanias": return { title: "Cercanias", number, palette: pal({ white: "#f1f1ee", red: "#d81e2c", grey: "#6f757a" }), bands: [[0, 1.25, "grey"], [1.25, 1.45, "red"], [1.45, 9, "white"]], roof: "roofG", skirt: "skirtG" };
-    case "regional": return { title: "Regionales", number, palette: pal({ white: "#f1f1ee", green: "#2f8a5a", grey: "#6f757a" }), bands: [[0, 1.25, "grey"], [1.25, 1.45, "green"], [1.45, 9, "white"]], roof: "roofG", skirt: "skirtG" };
-    case "mediaDistancia": return { title: "Media Distancia", number, palette: pal({ white: "#f1f1ee", grey: "#6f757a", violet: "#7a3e8e" }), bands: [[0, 1.25, "grey"], [1.25, 1.4, "violet"], [1.4, 9, "white"]], roof: "roofG", skirt: "skirtG" };
-    // the Talgo III's, read from photo-bf-granada-talgo-iii-endwagen-tg1-26.jpg: the stainless lower body and roof, the red window band between dark lines
-    case "talgo": return { title: "Talgo", number, palette: pal({ silver: "#c3c7ca", red: "#c8282e", line: "#2e3033", flute: "#9ea3a7" }), bands: [[0, 1.45, "silver"], [1.45, 1.5, "line"], [1.5, 2.5, "red"], [2.5, 2.55, "line"], [2.55, 9, "silver"]], roof: "roofG", skirt: "skirtG" };
-    case "iryo": return { title: "Iryo", number, palette: pal({ red: "#c8102e", white: "#f1f1ee", dark: "#3a1d24" }), bands: [[0, 1.3, "dark"], [1.3, 9, "red"]], roof: "roofG", skirt: "skirtG" };
-    case "estrella": return { title: "Estrella", number, palette: pal({ blue: "#1d3f80", white: "#f1f1ee" }), bands: [[0, 1.45, "blue"], [1.45, 1.55, "white"], [1.55, 9, "blue"]], roof: "roofG", skirt: "skirtG" };
-  }
-}
 
 const P = {
   s100: S100_PARAMS, s103: seriesParams(S103), s102: seriesParams(S102), s106: seriesParams(S106), s130: seriesParams(S130), talgo3: seriesParams(TALGO_III),

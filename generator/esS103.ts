@@ -6,8 +6,7 @@
 // nose and across its front over the coupler cover. The end car's raked window behind the canopy,
 // its door, the one long window band and the blank rear section with the "renfe AVE" mark; the
 // intermediate cars' door at the front end, a blank vestibule and the window band of wide and narrow
-// panes. Matched to the photographs in assets/renfe-s103/ (SOURCES.md). The shared `velaro()` body
-// (seriesHelpers.ts) is left unchanged for its other users. See docs/models/spain-trains.md.
+// panes. Matched to the photographs in assets/renfe-s103/ (SOURCES.md). See docs/models/spain-trains.md.
 //
 // Scales (assets/renfe-s103/): photo-renfe-class-103-vinaixa.jpg, about 24 px/m on the leading car's
 // side (a projective fit over the nose tip and the first three car joints; heights at about 193 px/m
