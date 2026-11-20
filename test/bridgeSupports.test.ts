@@ -124,6 +124,29 @@ describe("bridge support planning", () => {
     expect(members.some((d) => d > 80 && d < 80 + 12)).toBe(true);
   });
 
+  it("draws a trestle's low ties across no opening over blocked ground", () => {
+    // ties: timber struts from one bent to the next (their ends at different stations)
+    const ties = (boxes: bridge.BridgeBox[]) => boxes.filter((b): b is Extract<bridge.BridgeBox, { shape: "strut" }> =>
+      b.shape === "strut" && b.material === "timber" && Math.abs(b.a.x - b.b.x) > 1);
+    const crossing = (boxes: bridge.BridgeBox[], from: number, to: number) =>
+      ties(boxes).filter((t) => Math.min(t.a.x, t.b.x) < to && Math.max(t.a.x, t.b.x) > from);
+    const g = straight(96, 30);
+    // a track the bents were moved off (automatic) ...
+    expect(crossing(bridge.buildBridge("timber_trestle", g, () => 0), 46, 52).length).toBeGreaterThan(0);
+    const moved = bridge.buildBridge("timber_trestle", g, () => 0, undefined, { groundBlocked: takenBetween(46, 52) });
+    expect(crossing(moved, 46, 52)).toEqual([]);
+    // ... a narrow lane between two bents that never had to move ...
+    const plan = bridge.planSupports("timber_trestle", g, { groundBlocked: takenBetween(43.5, 44.5) });
+    expect(plan.supports).toEqual(bridge.planSupports("timber_trestle", g).supports);
+    expect(plan.openings).toEqual([{ fromDistance: 40, toDistance: 48 }]);
+    expect(crossing(bridge.buildBridge("timber_trestle", g, () => 0, undefined, plan), 43.5, 44.5)).toEqual([]);
+    // ... and the player's blocked span (manual)
+    const manual = bridge.buildBridge("timber_trestle", g, () => 0, undefined, { blockedSpans: [{ from: 20, to: 36 }] });
+    expect(crossing(manual, 20, 36)).toEqual([]);
+    // the ties elsewhere stay
+    expect(ties(moved).length).toBeGreaterThan(4);
+  });
+
   it("is deterministic", () => {
     const g = straight(333);
     const options = { pylons: [100.25], blockedSpans: [{ from: 200, to: 215 }], groundBlocked: takenBetween(40, 47) };

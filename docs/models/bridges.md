@@ -110,7 +110,11 @@ cantilever plans its span boundaries with its tower piers at their quarters; a p
 cantilever becomes a span boundary with a plain pier. A cable type's pylons are its towers;
 otherwise each default tower slides to the nearest free station within a quarter of its main span,
 or stays - a tower is never dropped. The cables follow: a suspension main span sags in proportion
-to its length, a cable-stayed tower fans to half way to each neighbour. The plan is deterministic.
+to its length, a cable-stayed tower fans to half way to each neighbour. A trestle's plan also
+lists its `openings`: neighbouring bents with blocked ground (taken, or in a blocked span) anywhere
+between them, tested every stud - whether the bents were moved there or not. The trestle draws no
+longitudinal ties across an opening, so nothing runs low over the track or road under it. The plan
+is deterministic.
 
 ## The kit
 

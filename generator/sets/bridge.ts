@@ -788,6 +788,13 @@ export interface SupportPlan {
   towers: number[];
   /** Supports that had nowhere free to stand and stand on blocked ground anyway. */
   blocked: number[];
+  /**
+   * A trestle's stretches between two neighbouring bents over blocked ground (taken, or
+   * in a blocked span): the opening a track or a road runs through, where the trestle
+   * draws no longitudinal ties low across it. Absent for every other type, and when
+   * there is none.
+   */
+  openings?: SpanRange[];
 }
 
 const PLAN_STEP = 0.5; // candidate stations every half stud
@@ -918,8 +925,21 @@ export function planSupports(type: string, g: BridgePathGeom, options: SupportOp
   };
   const blockedAt = (d: number): boolean => blockCost(d) > 0;
   const isEnd = (d: number): boolean => d < 0.05 || d > L - 0.05;
+  // A trestle's openings: neighbouring bents with blocked ground anywhere between them,
+  // tested every stud (ground or span, whichever the stretch crosses).
+  const withOpenings = (plan: SupportPlan): SupportPlan => {
+    if (kind !== "bents" || (!ground && spans.length === 0)) return plan;
+    const openings: SpanRange[] = [];
+    for (let i = 1; i < plan.supports.length; i++) {
+      const a = plan.supports[i - 1]!, b = plan.supports[i]!;
+      for (let d = a + 1; d < b - 0.5; d += 1) {
+        if (blockedAt(d)) { openings.push({ fromDistance: a, toDistance: b }); break; }
+      }
+    }
+    return openings.length ? { ...plan, openings } : plan;
+  };
   // nothing to plan: the default layout stands free
-  if (pylons.length === 0 && base.supports.every((d) => isEnd(d) || !blockedAt(d))) return base;
+  if (pylons.length === 0 && base.supports.every((d) => isEnd(d) || !blockedAt(d))) return withOpenings(base);
 
   if (kind === "towers") {
     const main = baseSpan;
@@ -989,14 +1009,16 @@ export function planSupports(type: string, g: BridgePathGeom, options: SupportOp
     return { spans: planSpans, supports, towers: [], blocked: supports.filter((d) => !pylons.includes(d) && blockedAt(d)) };
   }
   const blocked = stops.filter((d) => !isEnd(d) && !pylons.includes(d) && blockedAt(d));
-  if (kind === "piers" || kind === "bents") return { spans: [{ fromDistance: 0, toDistance: L }], supports: stops, towers: [], blocked };
+  if (kind === "bents") return withOpenings({ spans: [{ fromDistance: 0, toDistance: L }], supports: stops, towers: [], blocked });
+  if (kind === "piers") return { spans: [{ fromDistance: 0, toDistance: L }], supports: stops, towers: [], blocked };
   return { spans: planSpans, supports: stops, towers: [], blocked };
 }
 
 // --- per-type builders (Bridge.luau 1932-2260) ---
 // `supports` / `towers`: the planned stations (planSupports) of a type that lays its
 // own piers, bents or towers over the whole path; absent, the type's default.
-type BuildOpts = { suppressGroundPiers?: boolean; waterAt?: WaterLevelFn; supports?: number[]; towers?: number[] };
+// `openings`: a trestle's stretches over blocked ground (SupportPlan.openings).
+type BuildOpts = { suppressGroundPiers?: boolean; waterAt?: WaterLevelFn; supports?: number[]; towers?: number[]; openings?: SpanRange[] };
 type Builder = (out: BridgeBox[], g: BridgePathGeom, opts: BuildOpts, heightAt: TerrainHeightFn) => void;
 
 // Two concrete girders under the slab, over the bearings of the hammerhead piers.
@@ -1542,7 +1564,10 @@ const buildTimberTrestle: Builder = (out, g, opts, heightAt) => {
       if (k + 1 < levels.length - 1) pushStrut(out, at(left, lo), at(right, lo), 0.3, "timber");
     }
     const level = levels.length > 2 ? [at(left, levels[1]!), at(right, levels[1]!)] : [];
-    if (previous && level.length && previous.level.length) for (const j of [0, 1]) pushStrut(out, previous.level[j]!, level[j]!, 0.26, "timber");
+    // the longitudinal ties to the previous bent -- except across an opening, where they
+    // would run low over the track or road the bents were moved off
+    const open = previous !== null && (opts.openings ?? []).some((o) => Math.abs(o.fromDistance - previous!.d) < 0.01 && Math.abs(o.toDistance - d) < 0.01);
+    if (previous && !open && level.length && previous.level.length) for (const j of [0, 1]) pushStrut(out, previous.level[j]!, level[j]!, 0.26, "timber");
     previous = { d, level };
   }
 };
@@ -1608,7 +1633,7 @@ export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHe
   const plan = "supports" in options && Array.isArray(options.supports) && "spans" in options ? options as SupportPlan : planSupports(known, g, options as SupportOptions);
   const maxSpan = TYPE_META[known]?.maxSpan;
   if (!maxSpan || CABLE_TYPES.has(known)) {
-    builder(out, g, { waterAt, supports: plan.supports, towers: plan.towers.length ? plan.towers : undefined }, heightAt);
+    builder(out, g, { waterAt, supports: plan.supports, towers: plan.towers.length ? plan.towers : undefined, openings: plan.openings }, heightAt);
     buildAbutments(out, g, heightAt, known === "timber_trestle" ? "timber" : "pier");
     return out;
   }
