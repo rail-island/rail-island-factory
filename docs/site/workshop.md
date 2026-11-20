@@ -33,6 +33,13 @@ lives in the workshop until somebody confirms it.
   SLT, SNG, ICNG, Flirt and Fyra V250, the 1100, 1200, 1300, 1600 / 1700, 2200 and 3700
   and the ICR coach (docs/models/netherlands-trains.md). The Chinese and Dutch trams stay
   drafts.
+  The 20 Spanish trains of the detail pass (2026-11): the AVE S-100, S-102, S-103 and S-106,
+  the Alvia S-130 and S-120, the Talgo III, the Civia, 446, 440 and 592, Iryo's S-109, the
+  354, 252, 269, 277, 319 and 333, and the 141F and 242F (docs/models/spain-trains.md).
+  The 20 French trains of the detail pass (2026-11): the TGV M, Z 20500, MI 09, Regio 2N,
+  Regiolis, X 3800 and X 73500, the CC 6500, CC 40100, BB 22200, CC 7100, BB 9200,
+  BB 27000, BB 67400 and CC 72000, the 241 P and 141 R, and the Corail, Grand Confort and
+  Wagons-Lits coaches (docs/models/france-trains.md).
 - **A new model starts as a draft**: nothing to do when adding one. It reaches the
   game only once confirmed.
 - **Confirming** a model is adding its id to `ids` in `catalogModels.json` (sorted). Do it
