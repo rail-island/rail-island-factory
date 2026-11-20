@@ -822,16 +822,22 @@ function spansFromStops(stops: number[]): SpanRange[] {
   return stops.slice(1).map((to, i) => ({ fromDistance: stops[i]!, toDistance: to }));
 }
 
-// How wide and deep the ground under a support of `type` is, for the blocked test.
+// How wide and deep the ground under a support of `type` is, for the blocked test:
+// the widest it can be drawn. A concrete shaft widens with its height (pushPier, up to
+// PIER_MAX_FLARE) and stands on a footing FOOTING_MARGIN wider each side; the planner
+// does not know the height, so it keeps the tallest pier's foot off taken ground.
+const PIER_MAX_FLARE = 1.6;
 function supportFootprintSize(type: string, kind: SupportKind, deckWidth: number, spanLength: number): { w: number; d: number } {
+  const foot = (d: number): number => d * PIER_MAX_FLARE + 2 * FOOTING_MARGIN;
   switch (kind) {
     case "bents": return { w: 0.84 * deckWidth + 0.9, d: 0.9 };
-    case "piers": return { w: Math.max(PIER_WIDTH, deckWidth * 0.6), d: PIER_WIDTH + 2 * FOOTING_MARGIN };
-    case "cantilever": return { w: 2 * (deckWidth / 2 + 0.3) + 1.4, d: 5.4 };
+    case "piers": return { w: Math.max(PIER_WIDTH, deckWidth * 0.6), d: foot(PIER_WIDTH) };
+    case "cantilever": return { w: 2 * (deckWidth / 2 + 0.3) + 1.4, d: foot(5.4) };
     default: {
       const spec = boundaryPierStyle(type, deckWidth, spanLength);
       const w = spec.columns ? deckWidth : Math.max(spec.w, spec.capWidth ?? 0, deckWidth * 0.5);
-      return { w, d: spec.d + 2 * FOOTING_MARGIN };
+      const concrete = spec.material === "pier" || spec.material === "tower";
+      return { w, d: concrete ? foot(spec.d) : spec.d + 2 * FOOTING_MARGIN };
     }
   }
 }
@@ -933,7 +939,9 @@ export function planSupports(type: string, g: BridgePathGeom, options: SupportOp
   let target: number, soft: number, hard: number;
   switch (kind) {
     case "piers": target = base.supports.length > 1 ? base.supports[1]! - base.supports[0]! : L; soft = Math.max(target, 2 * PIER_SPACING); hard = soft * 1.4; break;
-    case "bents": target = L / trestleBentCount(L); soft = TRESTLE_BENT * 1.25; hard = TRESTLE_BENT * 2; break;
+    // a trestle opens up to three bents' spacing: enough to clear a track or a road
+    // (their footprint is some 16 studs of ground) with one longer opening
+    case "bents": target = L / trestleBentCount(L); soft = TRESTLE_BENT * 1.25; hard = TRESTLE_BENT * 3; break;
     default: { const max = TYPE_META[type]?.maxSpan ?? L; target = baseSpan; soft = max; hard = max * 1.5; }
   }
   const spanCost = (s: number): number => {
@@ -945,7 +953,7 @@ export function planSupports(type: string, g: BridgePathGeom, options: SupportOp
   };
   // the cantilever's piers stand inside its spans, at a quarter and three quarters
   const innerCost = (a: number, b: number): number =>
-    kind === "cantilever" ? CANTILEVER_TOWER_T.reduce((sum, t) => sum + blockCost(Math.round((a + t * (b - a)) / PLAN_STEP) * PLAN_STEP), 0) : 0;
+    kind === "cantilever" ? CANTILEVER_TOWER_T.reduce((sum, t) => sum + blockCost(a + t * (b - a)), 0) : 0;
   const nodeCost = (d: number): number => (kind === "cantilever" ? 0 : blockCost(d));
   // how far back a span may reach: past the hard cap, and past any blocked span
   const reach = Math.max(hard * 2, target * 3, ...spans.map((s) => s.to - s.from + size.d + hard));

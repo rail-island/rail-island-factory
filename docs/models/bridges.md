@@ -91,7 +91,7 @@ pier and bent spacing, the even tower plan - bit for bit, so the pins do not mov
 
 | Option | What it means |
 |---|---|
-| `groundBlocked(footprint)` | the game's answer to "is the ground under this rectangle taken" (a track, a road, a building); `footprint` is the support's centre on the path, its yaw and its size across and along (`supportFootprint`) |
+| `groundBlocked(footprint)` | the game's answer to "is the ground under this rectangle taken" (a track, a road, a building); `footprint` is the support's centre on the path, its yaw and its size across and along (`supportFootprint`) - the widest it can be drawn: a concrete shaft at its full flare (1.6) on its footing |
 | `pylons` | distances where the player put a support: each is kept, even on taken ground |
 | `blockedSpans` | `{ from, to }` stretches of the path where no support may stand |
 
@@ -100,7 +100,8 @@ pylon, the whole layout is re-planned. Between two fixed stations (the ends and 
 candidate station half a stud apart is weighed and the cheapest chain of spans wins: a span costs
 its squared deviation from the type's even spacing, more once it passes the type's limit
 (`maxSpan`; 50 studs between beam piers, 10 between trestle bents) and prohibitively past the hard
-cap (half as long again; 16 studs for a trestle); a support on taken ground costs more than any
+cap (half as long again; 24 studs - three bents' spacing - for a trestle, enough to clear a track or a
+road); a support on taken ground costs more than any
 span within the cap, and one in a blocked span more than anything else. So a support with nowhere
 free to go is dropped and its neighbours span over, and stands on taken ground only when dropping
 it would stretch a span past the cap. Spans may come out unequal; the superstructure is built over
