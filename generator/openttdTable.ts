@@ -966,7 +966,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   }),
   "proc-vehicle-sncf-regiolis": series(60, 60, ELRL, { cars: 4, liveries: ["grandEst"] }),
   "proc-vehicle-sncf-x3800": series(62, 62, RAIL, { single: true }),
-  "proc-vehicle-sncf-x73500": series(64, 64, RAIL, { single: true, liveries: ["alsace"] }),
+  "proc-vehicle-sncf-x73500": series(61, 61, RAIL, { single: true, liveries: ["alsace"] }),
   "proc-vehicle-sncf-cc6500": loco(ELRL, { presets: presets(...each("livery", "maurienne", "beton")) }),
   "proc-vehicle-sncf-cc40100": loco(ELRL, { presets: presets() }),
   "proc-vehicle-sncf-bb22200": loco(ELRL, { presets: presets(...each("livery", "enVoyage", "fret")) }),
