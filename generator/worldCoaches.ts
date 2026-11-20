@@ -25,6 +25,7 @@ import { IR_LHB, lhbCoach, lhbCoachLod } from "./inLhbCoach.ts";
 import { IR_ICF, icfCoach, icfCoachLod } from "./inIcfCoach.ts";
 import { CR_25 } from "./cnCoach25.ts";
 import { SNCF_CORAIL } from "./frCorail.ts";
+import { SNCF_GRAND_CONFORT } from "./frGrandConfort.ts";
 
 type Band = readonly [number, number, string];
 
@@ -351,18 +352,7 @@ export { DB_IC } from "./deIcCoach.ts";
 
 export { SNCF_CORAIL } from "./frCorail.ts";
 
-export const SNCF_GRAND_CONFORT: WorldCoach = {
-  length: 24.5, W: 1.43, Y: 1.4, S: 3.25, C: 4.05, B: 1.0, A: 1.15, rows: [[1.95, 2.8]], doorIn: 0.7, doorW: 0.75, door: [1.2, 3.1],
-  bogieCentres: 17.2, wheelR: 0.45, wheelbase: 2.56, coupler: "buffers", maxspeed: 200,
-  types: {
-    a8u: { title: "Compartments", windows: 9, windowW: 1.6, number: "A8U 61 87 19-70 001-7", weight: 46 },
-    a7d: { title: "Bar car", windows: 7, windowW: 1.9, number: "A7DU 61 87 89-70 001-2", weight: 48 },
-  },
-  liveries: {
-    capitole: { title: "Capitole", palette: { red: c("#b5232b"), grey: c("#9aa0a5", 0.45), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "red"], [1.85, 2.9, "grey"], [2.9, 9, "red"]], roof: "roofG", skirt: "skirtG" },
-    tee: { title: "TEE", palette: { red: c("#8a1c2b"), beige: c("#e3d3a6"), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "red"], [1.85, 2.9, "beige"], [2.9, 9, "red"]], roof: "roofG", skirt: "skirtG" },
-  },
-};
+export { SNCF_GRAND_CONFORT } from "./frGrandConfort.ts";
 
 export const CIWL: WorldCoach = {
   length: 23.45, W: 1.43, Y: 1.4, S: 3.3, C: 4.05, B: 1.0, A: 1.15, rows: [[1.9, 2.75]], doorIn: 0.7, doorW: 0.75, door: [1.2, 3.05],
