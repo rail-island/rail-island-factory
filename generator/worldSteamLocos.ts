@@ -21,6 +21,7 @@ import { buildFairyQueen, buildFairyQueenLod } from "./inFairyQueen.ts";
 import { QJ_WORLD, qjLodSpec, qjSpec } from "./cnQj.ts";
 import { SY_WORLD, syLodSpec, sySpec } from "./cnSy.ts";
 import { JS_WORLD, jsLodSpec, jsSpec } from "./cnJs.ts";
+import { SNCF241P_WORLD, sncf241pLodSpec, sncf241pSpec } from "./fr241p.ts";
 
 /** A design: its engine and, by livery, the paint and number. */
 interface SteamDesign {
@@ -39,7 +40,7 @@ export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-drg-01": DRG01_WORLD,
   "proc-vehicle-dr-52": DR52_WORLD,
   "proc-vehicle-kpev-p8": P8_WORLD,
-  "proc-vehicle-sncf-241p": { base: { ...UIC, title: "SNCF 241 P", lead: 2, coupled: 4, trail: 1, leadD: 1.0, coupledD: 2.02, trailD: 1.35, boilerR: 0.9, deflectors: "wagner", domes: 2, palette: ALL_BLACK, tender: { length: 10.2, axles: 4, d: 1.0 }, number: "241 P 17" } },
+  "proc-vehicle-sncf-241p": SNCF241P_WORLD,
   "proc-vehicle-sncf-141r": { base: { ...UIC, title: "SNCF 141 R", lead: 1, coupled: 4, trail: 1, leadD: 0.92, coupledD: 1.65, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 10.5, axles: 4, d: 0.92 }, number: "141 R 1199" } },
   "proc-vehicle-ns-3700": NS3700_WORLD,
   "proc-vehicle-renfe-141f": { base: { ...UIC, title: "Renfe 141F Mikado", lead: 1, coupled: 4, trail: 1, leadD: 1.0, coupledD: 1.56, trailD: 1.06, boilerR: 0.9, deflectors: "none", domes: 2, palette: ALL_BLACK, tender: { length: 8.9, axles: 4, d: 0.95 }, number: "141F 2111" } },
@@ -89,8 +90,10 @@ export function drg01Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(drg
 const dr52Unit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-dr-52"]!, v).unit!;
 export function dr52(v?: ParamValues): MeshBuilder { return buildLoco(dr52Spec(dr52Unit(v))); }
 export function dr52Lod(v?: ParamValues): MeshBuilder { return steamLocoLod(dr52LodSpec(dr52Unit(v))); }
-export function sncf241p(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-sncf-241p", v)); }
-export function sncf241pLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-sncf-241p", v)); }
+// the 241 P is drawn from its own spec (fr241p.ts)
+const sncf241pUnit = (v?: ParamValues) => resolveParams(PARAMS["proc-vehicle-sncf-241p"]!, v).unit!;
+export function sncf241p(v?: ParamValues): MeshBuilder { return buildLoco(sncf241pSpec(sncf241pUnit(v))); }
+export function sncf241pLod(v?: ParamValues): MeshBuilder { return steamLocoLod(sncf241pLodSpec(sncf241pUnit(v))); }
 export function sncf141r(v?: ParamValues): MeshBuilder { return buildLoco(worldSteamSpec("proc-vehicle-sncf-141r", v)); }
 export function sncf141rLod(v?: ParamValues): MeshBuilder { return steamLocoLod(worldSteamSpec("proc-vehicle-sncf-141r", v)); }
 // the NS 3700 is drawn from its own spec (nl3700.ts)
@@ -158,7 +161,7 @@ export const WORLD_STEAM_DESIGNS: ProceduralDesign[] = [
   design("proc-vehicle-drg-01", drg01, drg01Lod, steamGame(109, 1670, 130, 77), "drg-01"),
   design("proc-vehicle-dr-52", dr52, dr52Lod, steamGame(84, 1192, 80, 60), "dr-52"),
   design("proc-vehicle-kpev-p8", kpevP8, kpevP8Lod, steamGame(78, 868, 100, 50), "kpev-p8"),
-  design("proc-vehicle-sncf-241p", sncf241p, sncf241pLod, steamGame(131, 2980, 120, 85), "sncf-241p"),
+  design("proc-vehicle-sncf-241p", sncf241p, sncf241pLod, steamGame(131.4, 2940, 120, 84.8), "sncf-241p"),
   design("proc-vehicle-renfe-141f", renfe141f, renfe141fLod, steamGame(102, 1460, 90, 60), "renfe-141f"),
   design("proc-vehicle-renfe-242f", renfe242f, renfe242fLod, steamGame(138, 2100, 135, 90), "renfe-242f"),
   design("proc-vehicle-lner-a4", lnerA4, lnerA4Lod, steamGame(104, 1360, 160, 65), "lner-a4", "uk"),
