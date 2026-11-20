@@ -12,21 +12,20 @@ import { TALGO_III } from "./esTalgoIii.ts";
 import { S103 } from "./esS103.ts";
 import { S102, s102Series } from "./esS102.ts";
 import { renfeS100, renfeS100Lod, S100, S100_PARAMS } from "./esS100.ts";
-
-export { renfeS100, renfeS100Lod, S100 };
 import { S106 } from "./esS106.ts";
-
-export { S106 };
 import { S120, renfeS120, renfeS120Lod } from "./esS120.ts";
-
-export { renfeS120, renfeS120Lod };
 import { S130 } from "./esS130.ts";
 import { R446, r446Game } from "./es446.ts";
 import { CIVIA } from "./esCivia.ts";
 import { r440Game, R440, R440_PARAMS, renfe440, renfe440Lod } from "./es440.ts";
-export { R440, renfe440, renfe440Lod };
 import { R592 } from "./es592.ts";
 import { S109 } from "./esIryoS109.ts";
+
+export { renfeS100, renfeS100Lod, S100 };
+export { S106 };
+export { renfeS120, renfeS120Lod };
+export { R440, renfe440, renfe440Lod };
+export { S103, S130, R446, R592, TALGO_III };
 
 /** Renfe's schemes and its operators'. */
 export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regional" | "mediaDistancia" | "talgo" | "iryo" | "estrella", number: string): ShinkansenLivery {
@@ -44,15 +43,6 @@ export function esLivery(kind: "ave" | "avlo" | "alvia" | "cercanias" | "regiona
     case "estrella": return { title: "Estrella", number, palette: pal({ blue: "#1d3f80", white: "#f1f1ee" }), bands: [[0, 1.45, "blue"], [1.45, 1.55, "white"], [1.55, 9, "blue"]], roof: "roofG", skirt: "skirtG" };
   }
 }
-
-export { S103 };
-
-export { S130 };
-
-export { R446 };
-export { R592 };
-
-export { TALGO_III };
 
 const P = {
   s100: S100_PARAMS, s103: seriesParams(S103), s102: seriesParams(S102), s106: seriesParams(S106), s130: seriesParams(S130), talgo3: seriesParams(TALGO_III),
