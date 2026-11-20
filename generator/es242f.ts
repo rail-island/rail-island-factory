@@ -6,10 +6,11 @@
 // its head-on view and the close-ups of its smokebox front
 // (assets/renfe-242f/SOURCES.md) and the published figures (engine 17.48 m long,
 // engine wheelbase 13.20 m, engine and tender 22.93 m, drivers 1,900 mm,
-// cylinders 640 x 710 mm, 142.5 t engine, 70.2 t tender, 2,700 hp, 140 km/h):
+// cylinders 640 x 710 mm, 142.5 t engine, 70.2 t tender, 2,700 hp, 135 km/h in service):
 // the "lagarto" green of the long boiler on 3.2 m, the long black smokebox (the
 // class's lengthened one) with its dished door, brass dart wheel and the big
-// brass-rimmed headlamp with the white "2009" number box on top, the double
+// brass-rimmed headlamp with the white "2009" number box behind it, the small
+// door lamp, the grey front ring, the double
 // Kylchap chimney in its oval casing behind the smoke deflectors, the long
 // green casing over the domes behind the smokebox, the huge rounded-rectangle
 // smoke deflectors standing high above the running board and flaring outward
@@ -17,11 +18,12 @@
 // poppet valve chests over the black cylinders, the running board on 2.25 m with
 // its red edge dropping in a steep S to the deep red buffer beam lettered
 // "RENFE 242F 2009" with the square buffer heads and the grey chequer-plate
-// front deck, the four coupled wheels black with red hubs and ochre tyres, the
+// front deck (beam lettering measured at 281 px/m on the head-on photo 03), the
+// four coupled wheels black with red hubs and ochre tyres, the
 // red coupling and main rods (the main rod drives the second coupled axle), the
 // leading bogie and the trailing Delta truck, the cab with its two side windows
 // reaching down below the running board, and the flat-sided tender with its
-// chamfered rear top corners and the oil bunker's dark top.
+// top sloping down over its last 2 m and the oil bunker's dark top.
 //
 // Scales (all photographs perspective views, so measured along the wheels by a
 // 1-D projective fit over the four equally spaced drivers): photo 01 about
@@ -29,7 +31,9 @@
 // 70.5 px/m at the third driver (radius 67 px for 0.95 m). Heights from the
 // Gilardi view at the drivers' plane (running board 2.27 m) and from the
 // ratios of the head-on view (deflector top 1.46 m above the smokebox centre,
-// door ring 1.95 m across).
+// door ring 1.95 m across). The Gilardi fit along the six visible axles (residual
+// under 10 px) puts the smokebox ring at 1.75 m, the deflectors from 1.94 to
+// 4.87 m and the end of the black smokebox at 6.0 m.
 //
 // Every length is in metres along the locomotive from its front buffer heads
 // (the tender: from its own front buffer heads), y up from the rail top.
@@ -69,6 +73,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   plateText: { color: "#d8b45a", metallic: 0.55, roughness: 0.3 },
   numBox: mat("#e9e7df", 0.5),
   numText: mat("#151517", 0.6),
+  ring: { color: "#5f6368", metallic: 0.35, roughness: 0.5 },
 };
 
 export const RENFE242F_NUMBER = "242F 2009";
@@ -89,8 +94,8 @@ const END = 17.48;
 const BY = 3.2;
 const BR = 0.98;
 const RB = 2.25;
-/** The lengthened smokebox from 2.1 to 6.0 m; the firebox from 11.9 m; the cab. */
-const SMOKEBOX = [2.1, 6.0] as const;
+/** The lengthened smokebox from 1.8 to 6.0 m (its ring 0.15 m ahead of the deflectors, the Gilardi view's fit); the firebox from 11.9 m; the cab. */
+const SMOKEBOX = [1.8, 6.0] as const;
 const FIREBOX = 11.9;
 const CAB0 = 14.8;
 const CAB1 = 17.3;
@@ -101,7 +106,7 @@ const HALF = 1.42;
 const CAB_HALF: Pt[] = [[1.45, 1.75], [1.45, 3.98], [1.33, 4.2], [0.88, 4.35], [0, 4.4]];
 
 /** The smoke deflectors: front and rear edge, foot and top, the plane at the foot and at the top (they flare out). */
-const DEF = { x0: 2.05, x1: 4.95, y0: 2.78, y1: 4.45, z0: 1.3, z1: 1.47, r: 0.22 };
+const DEF = { x0: 1.95, x1: 4.9, y0: 2.74, y1: 4.47, z0: 1.08, z1: 1.52, r: 0.22 };
 
 /** A rounded rectangle in (x, y): its corners cut by `seg` facets of radius r. */
 function roundedRect(x0: number, x1: number, y0: number, y1: number, r: number, seg = 3): Pt[] {
@@ -142,10 +147,11 @@ function front(t: Steam): void {
   m.scope("smokebox door", () => {
     // the dished door standing out of the front ring
     const rings = [[0, 0.8], [0.06, 0.74], [0.11, 0.6], [0.14, 0.4], [0.155, 0.18]] as const;
+    const DOOR_SIDES = 16;
     for (let i = 0; i + 1 < rings.length; i++) {
       const [da, ra] = rings[i]!;
       const [db, rb] = rings[i + 1]!;
-      m.sweep("smokebox", "x", ngon(20, BR * ra, Math.PI / 20, 0, BY), X0 + 0.07 + da, ngon(20, BR * rb, Math.PI / 20, 0, BY), X0 + 0.07 + db, i === rings.length - 2);
+      m.sweep("smokebox", "x", ngon(DOOR_SIDES, BR * ra, Math.PI / DOOR_SIDES, 0, BY), X0 + 0.07 + da, ngon(DOOR_SIDES, BR * rb, Math.PI / DOOR_SIDES, 0, BY), X0 + 0.07 + db, i === rings.length - 2);
     }
     // the brass dart wheel and handle
     m.tube("brass", "x", 0, BY + 0.1, 0.15, 0.12, X0 + 0.22, X0 + 0.25, 10);
@@ -158,21 +164,40 @@ function front(t: Steam): void {
     const y = BY + BR + 0.21;
     const x = SMOKEBOX[0] + 0.12;
     t.box("black", x - 0.05, x + 0.35, BY + BR - 0.1, y - 0.19, -0.16, 0.16);
-    t.cylX("black", x - 0.02, x + 0.38, 0, y, 0.18, 14);
-    m.tube("brass", "x", 0, y, 0.2, 0.15, t.X(x) + 0.01, t.X(x) + 0.08, 14);
-    const lens = ngon(14, 0.155, 0, 0, y);
+    t.cylX("black", x - 0.02, x + 0.38, 0, y, 0.18, 12);
+    m.tube("brass", "x", 0, y, 0.2, 0.15, t.X(x) + 0.01, t.X(x) + 0.08, 12);
+    const lens = ngon(12, 0.155, 0, 0, y);
     m.sweep("lampHead", "x", lens, t.X(x) + 0.02, lens, t.X(x) + 0.05);
-    // the number box on the lamp's left (seen from ahead: on the right of the lamp is z < 0)
-    const [z0, z1] = [0.2, 0.62];
-    t.box("black", x + 0.02, x + 0.3, y - 0.14, y + 0.12, z0, z1);
-    const X = t.X(x + 0.02) + 0.004;
-    block(m, "numBox", X - 0.01, X + 0.004, y - 0.11, y + 0.09, z0 + 0.03, z1 - 0.03);
-    const h = 0.13;
-    const w = h * 0.58;
-    const gap = h * 0.2;
+    // the white number box behind the lamp, "2009" on both its side faces (photos 34, Bf Delicias)
+    const [b0, b1] = [x + 0.4, x + 0.82];
+    const [bz, by0, by1] = [0.13, y - 0.13, y + 0.13];
+    t.box("black", b0, b1, BY + BR - 0.08, by0, -0.1, 0.1);
+    t.box("black", b0, b1, by0, by1, -bz, bz);
+    const h = 0.14;
+    const w = h * 0.55;
+    const gap = h * 0.22;
     const width = strokeWidth("2009", w, gap);
-    const u0 = (z0 + z1) / 2 + width / 2;
-    m.facets("numText", strokeText("2009", u0, y - 0.075, h, w, gap, true).map(([u, v]): Vec3 => [X + 0.008, v, u]), [1, 0, 0]);
+    for (const s of [-1, 1]) {
+      t.sideBox("numBox", s, b0 + 0.04, b1 - 0.04, by0 + 0.03, by1 - 0.03, bz - 0.005, bz + 0.004);
+      const xm = (b0 + b1) / 2;
+      // read left to right on each side: the front of the engine is on the right seen from z > 0
+      const u0 = s > 0 ? t.X(xm) - width / 2 : t.X(xm) + width / 2;
+      m.facets("numText", strokeText("2009", u0, y - 0.07, h, w, gap, s < 0).map(([u, v]): Vec3 => [u, v, s * (bz + 0.008)]), [0, 0, s]);
+    }
+  });
+  m.scope("door lamp", () => {
+    // the small white-rimmed lamp on the door's top, under the headlamp
+    const y = BY + BR * 0.6;
+    // its housing stands on the dished door, whose face is 0.18 m ahead of the ring at this height
+    const lx = SMOKEBOX[0] - 0.3;
+    t.box("black", lx, SMOKEBOX[0] - 0.12, y - 0.12, y + 0.1, -0.1, 0.1);
+    m.tube("numBox", "x", 0, y, 0.1, 0.07, t.X(lx) - 0.002, t.X(lx) + 0.03, 12);
+    const lens = ngon(12, 0.072, 0, 0, y);
+    m.sweep("lampHead", "x", lens, t.X(lx) - 0.002, lens, t.X(lx) + 0.02);
+  });
+  m.scope("front ring", () => {
+    // the smokebox's front ring round the door: worn grey graphite in every photo
+    m.tube("ring", "x", 0, BY, BR + 0.025, BR * 0.8, X0 - 0.02, X0 + 0.064, 20, Math.PI / 20);
   });
   m.scope("front deck", () => {
     // the chequer-plate deck from the beam to the smokebox foot; its sloping sides drop to the beam corners
@@ -185,13 +210,15 @@ function front(t: Steam): void {
   });
   m.scope("beam lettering", () => {
     // "RENFE" left of the coupling and "242F 2009" right of it, in brass on the beam face (seen from ahead)
+    // measured on the head-on photo 03 at 281 px/m on the beam: RENFE from 0.2 to 0.58 m left of the
+    // centre, the number from 0.22 to 0.67 m right of it, 0.12 m tall, level with the buffer heads
     const X = t.X(0.62) + 0.008;
-    const h = 0.11;
-    const w = h * 0.58;
-    const gap = h * 0.2;
-    for (const [text, zc] of [["RENFE", 0.55], ["242F 2009", -0.58]] as const) {
+    const h = 0.12;
+    const w = h * 0.45;
+    const gap = h * 0.14;
+    for (const [text, zc] of [["RENFE", 0.39], ["242F 2009", -0.44]] as const) {
       const width = strokeWidth(text, w, gap);
-      m.facets("plateText", strokeText(text, zc + width / 2, 0.86, h, w, gap, true).map(([u, v]): Vec3 => [X, v, u]), [1, 0, 0]);
+      m.facets("plateText", strokeText(text, zc + width / 2, 0.9, h, w, gap, true).map(([u, v]): Vec3 => [X, v, u]), [1, 0, 0]);
     }
   });
 }
@@ -236,6 +263,16 @@ function engineExtras(t: Steam): void {
     for (const s of [-1, 1]) {
       const ring = ngon(12, 0.13, 0, t.X(15.95), 3.05);
       m.sweep("plate", "z", ring, s * 1.446, ring, s * 1.462);
+    }
+  });
+  m.scope("red hubs", () => {
+    // the coupled wheels' red hub centres (every photo); round, so drawn on the frame, not the turning wheel
+    const ay = 0.95 * Math.cos(Math.PI / 40);
+    for (const x of COUPLED) for (const s of [-1, 1]) {
+      // a flat 10-sided disc 4 mm off the hub's face, one face only (seen from outside)
+      const ring = ngon(10, 0.12, 0, t.X(x), ay);
+      const z = s * 0.864;
+      m.facets("red", ring.slice(1, -1).flatMap(([px, py], i): Vec3[] => [[ring[0]![0], ring[0]![1], z], [px, py, z], [ring[i + 2]![0], ring[i + 2]![1], z]]), [0, 0, s]);
     }
   });
   m.scope("cab roof vent", () => t.box("roof", 15.4, 16.5, 4.42, 4.5, -0.35, 0.35));
@@ -302,7 +339,7 @@ function tenderExtras(t: Steam): void {
     // the red edge along the tank's foot and the black frame under it
     for (const s of [-1, 1]) {
       t.sideBox("red", s, TANK[0] - 0.02, TANK[1] + 0.02, TANK_FOOT - 0.1, TANK_FOOT + 0.02, T_HALF - 0.02, T_HALF + 0.03);
-      t.sideBox("black", s, 0.5, 9.05, 1.0, TANK_FOOT - 0.1, T_HALF - 0.2, T_HALF - 0.08);
+      t.sideBox("black", s, 0.53, 9.05, 1.0, TANK_FOOT - 0.1, T_HALF - 0.2, T_HALF - 0.08);
     }
   });
   m.scope("front shield", () => {
@@ -312,11 +349,15 @@ function tenderExtras(t: Steam): void {
   m.scope("tank details", () => {
     for (const s of [-1, 1]) {
       // the red plate and emblem on the tank side
-      t.sideBox("plate", s, 3.85, 4.25, 2.95, 3.15, T_HALF - 0.004, T_HALF + 0.012);
+      t.sideBox("plate", s, 3.85, 4.25, 3.05, 3.25, T_HALF - 0.004, T_HALF + 0.012);
+      // the round red emblem under it and the riveted seam along the tank at 2.3 m
+      const disc = ngon(12, 0.11, 0, t.X(4.05), 2.7);
+      m.sweep("plate", "z", disc, s * (T_HALF - 0.004), disc, s * (T_HALF + 0.012));
+      t.sideBox("steel", s, TANK[0] + 0.05, TANK[1] - 0.05, 2.28, 2.31, T_HALF - 0.004, T_HALF + 0.006);
       // ladder rungs at the rear corner
-      t.sideBox("steel", s, 8.75, 8.79, TANK_FOOT, 3.2, T_HALF, T_HALF + 0.05);
+      t.sideBox("steel", s, 8.75, 8.79, TANK_FOOT, 2.8, T_HALF, T_HALF + 0.05);
     }
-    t.cylY("roof", 7.6, 0, TANK_TOP - 0.05, TANK_TOP + 0.12, 0.25, 10);
+    t.cylY("roof", 6.3, 0, TANK_TOP - 0.05, TANK_TOP + 0.12, 0.25, 10);
   });
   m.scope("numbers", () => t.endPlate(-1, TANK[1], 2.3, "2009"));
 }
@@ -332,13 +373,13 @@ function tender(): LocoSpec {
       name: "tank",
       sec: mirrored([[T_HALF, TANK_FOOT], [T_HALF, TANK_TOP - 0.12], [T_HALF - 0.12, TANK_TOP], [0, TANK_TOP + 0.04]]),
       plan: [[TANK[0], T_HALF], [TANK[1], T_HALF]],
-      // the rear top corners chamfered down to 3.0 m
-      top: [[TANK[0], TANK_TOP + 0.04], [TANK[1] - 0.65, TANK_TOP + 0.04], [TANK[1], 3.0]],
+      // the long slope down to the rear: over the last 2.0 m to 2.85 m (the Bf Delicias side view)
+      top: [[TANK[0], TANK_TOP + 0.04], [TANK[1] - 2.0, TANK_TOP + 0.04], [TANK[1], 2.85]],
       bands: [[TANK_FOOT, TANK_TOP - 0.06, "paint"], [TANK_TOP - 0.06, TANK_TOP + 0.04, "roof"]],
     }],
     bogies: [{ x0: T_AXLES[0]! - 0.6, x1: T_AXLES[1]! + 0.6, y: 0.6 }, { x0: T_AXLES[2]! - 0.6, x1: T_AXLES[3]! + 0.6, y: 0.6 }],
     gear: { wheels: T_AXLES.map((x) => ({ x, d: 0.95, spokes: 0, outsideBoxes: true })), engines: [], cylinderZ: 1.1, reference: 0, wheelMaterial: "wheel" },
-    lamps: { front: [], rear: [[9.0, 1.3, 0.85], [9.0, 1.3, -0.85]] },
+    lamps: { front: [], rear: [[9.0, 1.22, 0.85], [9.0, 1.22, -0.85]] },
     extras: tenderExtras,
   };
 }
@@ -348,9 +389,13 @@ export function renfe242fSpec(unit: string): LocoSpec {
   return unit === "tender" ? tender() : engine();
 }
 
-/** The distant model's spec: the deflectors as the kit's flat plates (the LOD adapter draws spec deflectors, not extras). */
+/**
+ * The distant model's spec: the deflectors as the kit's flat plates (the LOD adapter draws spec
+ * deflectors, not extras), no firebox prism (the barrel reaches the cab), like ns3700LodSpec.
+ */
 export function renfe242fLodSpec(unit: string): LocoSpec {
   const s = renfe242fSpec(unit);
   if (unit === "tender") return s;
-  return { ...s, deflectors: { outlines: [[[DEF.x0, DEF.y0], [DEF.x1, DEF.y0], [DEF.x1, DEF.y1], [DEF.x0 + 0.15, DEF.y1], [DEF.x0, DEF.y1 - 0.15]]], z: (DEF.z0 + DEF.z1) / 2 } };
+  // the barrel run on to the cab in place of the firebox prism, so the black smokebox, the cab and the deflectors fit the budget
+  return { ...s, prisms: [], boiler: { ...s.boiler!, x1: CAB0 }, deflectors: { outlines: [[[DEF.x0, DEF.y0], [DEF.x1, DEF.y0], [DEF.x1, DEF.y1], [DEF.x0 + 0.15, DEF.y1], [DEF.x0, DEF.y1 - 0.15]]], z: (DEF.z0 + DEF.z1) / 2 } };
 }
