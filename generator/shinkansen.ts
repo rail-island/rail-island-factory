@@ -26,7 +26,7 @@ import { DMU_CATALOG, EMU_CATALOG, enumParam } from "./emuParts.ts";
 import { COACH_CATALOG } from "./csdCoaches.ts";
 import { METRO_CATALOG } from "./metro.ts";
 import { articulate } from "./tramKit.ts";
-import { LOD_GLASS, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
+import { LOD_GLASS, lodBlock, type LodBand, type LodPart, type LodSections } from "./lodKit.ts";
 import { bogieParts, fitUnit, roofPart, turnBody, type UnitBody } from "./lodUnits.ts";
 import { carbody } from "./carbodyKit.ts";
 import { bodyHalf, cabFaceLod, drawCabFace, edgeAt, type FacePaint, type SeriesCabFace } from "./seriesCab.ts";
@@ -325,8 +325,11 @@ export interface ShinkansenSeries {
   exhaustInFittings?: boolean;
   /** The side number: d behind the body's centre, its foot and height (default 3 m from the rear, just above the belly). */
   numberAt?: readonly [number, number, number];
-  /** A block on the end car's roof in the distant model (d span behind the tip, half width, heights, paint): a cab turret's silhouette. */
-  lodRoof?: { d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string };
+  /**
+   * A block on the end car's roof in the distant model (d span behind the tip, half width, heights, paint): a cab turret's silhouette.
+   * `centreZ` stands it off the centre line, its middle at that z (the X 3800's turret to the right of the crown; default on the centre line).
+   */
+  lodRoof?: { d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string; centreZ?: number };
   /** More blocks on the end car in the distant model, like `lodRoof` (d span behind the tip, half width, heights, paint): a livery's colour over the side bands near the nose (the ICM's yellow ahead of its band's end); never given up for the budget, however short. */
   lodEndPatches?: ReadonlyArray<{ d: readonly [number, number]; hw: number; y: readonly [number, number]; mat: string }>;
   /** Blocks on every intermediate car's roof in the distant model (d span behind its +X end, half width, heights, paint), like `lodRoof` on the end car: the Renfe 592's air-conditioning humps. */
@@ -1078,7 +1081,11 @@ function carLod(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     ...bogieParts(tr.filter((_, i) => trucks[i] !== false).map((d, i) => { const a = lone.find((q) => q.i === i); return [T(X(a ? a.d : d)), a ? s.wheelR + 0.2 : power ? Math.max(...power.axles.map(Math.abs)) + power.wheelR + 0.2 : s.wheelbase / 2 + s.wheelR + 0.2, ...(section !== undefined ? [section] : [])] as const; }) as unknown as ReadonlyArray<readonly [number, number, number?]>, s.B),
     // a double-deck car's well below the body (lowWell)
     ...(s.lowWell && !power ? [((w, [d0, d1]) => roofPart(w.lodMat, T(X(d0 + 0.15)), T(X(d1 - 0.15)), s.W * 0.97, s.W * 0.97, w.B, s.B + 0.02, section))(s.lowWell, end ? s.lowWell.end : s.lowWell.middle)] : []),
-    ...(end && s.lodRoof ? [roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section)] : []),
+    ...(end && s.lodRoof ? [((r, part: LodPart) => (r.centreZ === undefined ? part : { ...part, draw: (m: MeshBuilder) => m.scope("roof equipment", () => {
+      // the block off the centre line: its sides at centreZ -+ hw
+      const [xa, xb] = [T(X(r.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(r.d[1] - (s.cabFace?.dJoin ?? 0)))];
+      lodBlock(m, Math.min(xa, xb), Math.max(xa, xb), r.y[0], r.y[1], r.centreZ! - r.hw, r.centreZ! + r.hw, { side: r.mat });
+    }) }))(s.lodRoof, roofPart(s.lodRoof.mat, T(X(s.lodRoof.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(s.lodRoof.d[1] - (s.cabFace?.dJoin ?? 0))), s.lodRoof.hw, s.lodRoof.hw, s.lodRoof.y[0], s.lodRoof.y[1], section))] : []),
     ...(end && s.lodEndPatches ? s.lodEndPatches.map((q): LodPart => { const { optional: _short, ...part } = roofPart(q.mat, T(X(q.d[0] - (s.cabFace?.dJoin ?? 0))), T(X(q.d[1] - (s.cabFace?.dJoin ?? 0))), q.hw, q.hw, q.y[0], q.y[1], section); return part; }) : []),
     ...(!end && !power && s.lodMiddleRoofBlocks ? s.lodMiddleRoofBlocks.map((q) => roofPart(q.mat, T(X(q.d[0])), T(X(q.d[1])), q.hw, q.hw, q.y[0], q.y[1], section)) : []),
     ...(pantograph ? [{ ...roofPart("pantograph", T(X(panD)) - 0.8, T(X(panD)) + 0.8, 0.45, 0.45, s.C, RAIL_COLLECTOR_TOP, section), optional: 8 }] : []),
