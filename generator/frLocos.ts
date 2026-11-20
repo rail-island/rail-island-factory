@@ -18,6 +18,7 @@ import { CC40100_PARAMS, sncfCc40100, sncfCc40100Lod } from "./frCc40100.ts";
 import { CC7100_PARAMS, sncfCc7100, sncfCc7100Lod } from "./frCc7100.ts";
 import { BB22200_PARAMS, sncfBb22200, sncfBb22200Lod } from "./frBb22200.ts";
 import { BB9200_GAME, BB9200_PARAMS, sncfBb9200, sncfBb9200Lod } from "./frBb9200.ts";
+import { BB27000_PARAMS, sncfBb27000, sncfBb27000Lod } from "./frBb27000.ts";
 
 export { sncfCc6500, sncfCc6500Lod };
 
@@ -34,8 +35,6 @@ const mono = (pivot: number, base: number, r: number, axles: 2 | 3) =>
 
 export const CC72000_BODY: Body = { length: 20.19, W: 1.5, y0: 1.3, roof: 4.0, nose: "nezCasse", bogies: mono(5.6, 1.6, 0.57, 3), exhausts: [-1.5], room: { kind: "grilles", n: 5, y: [2.6, 3.4] } };
 /** Alsthom's rounded 1950s body: the BB 9200, a shorter Bo-Bo of the CC 7100's family (frCc7100.ts). */
-/** The Alstom Prima: the BB 27000 (and India's WAG-12B on its twin frames). */
-export const PRIMA_BODY: Body = { length: 19.52, W: 1.48, y0: 1.3, roof: 4.0, nose: "raked", bogies: mono(5.0, 1.35, 0.575, 2), pantograph: "singleArm", pantographX: 5.0, room: { kind: "grilles", n: 4, y: [2.6, 3.4] } };
 const BB67400_BODY: Body = { length: 17.09, W: 1.48, y0: 1.35, roof: 3.95, nose: "raked", bogies: mono(4.5, 1.4, 0.55, 2), exhausts: [0.4], room: { kind: "grilles", n: 4, y: [2.6, 3.3] } };
 
 // ---------------------------------------------------------------------------
@@ -44,9 +43,6 @@ const BB67400_BODY: Body = { length: 17.09, W: 1.48, y0: 1.35, roof: 3.95, nose:
 const CC72000: Liveries = {
   blueWhite: { title: "Blue and white", loco: { ...CC72000_BODY, palette: { blue: c("#2a4f9a"), white: WHITE, grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.3, "blue"], [2.3, 2.9, "white"], [2.9, 4.3, "blue"]], number: "CC 72001" } },
   multiservice: { title: "Multiservice", loco: { ...CC72000_BODY, palette: { grey2: c("#8c9196", 0.5), red: c("#c8102e"), grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.2, "red"], [2.2, 4.3, "grey2"]], number: "72075" } },
-};
-const BB27000: Liveries = {
-  fret: { title: "Fret SNCF", loco: { ...PRIMA_BODY, palette: { grey2: c("#c9cccd", 0.45), green: c("#3c9b38"), grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.15, "green"], [2.15, 4.3, "grey2"]], number: "427001" } },
 };
 const BB67400: Liveries = {
   blueWhite: { title: "Blue and white", loco: { ...BB67400_BODY, palette: { blue: c("#2a4f9a"), white: WHITE, grey: GREY }, side: [[1.3, 1.6, "grey"], [1.6, 2.3, "blue"], [2.3, 2.85, "white"], [2.85, 4.3, "blue"]], number: "BB 67401" } },
@@ -61,7 +57,7 @@ export const liverySpec = (l: Liveries, p: readonly ParamSpec[], v?: ParamValues
 export const paramsOf = (p: ParamSpec[]) => (p[0]!.values.length > 1 ? { params: p } : {});
 export const locoGame = (weight: number, power: number, maxspeed: number): GameProperties => ({ weight, power, maxspeed, accel: null });
 
-const P = { cc72000: liveryParams(CC72000), bb27000: liveryParams(BB27000), bb67400: liveryParams(BB67400) };
+const P = { cc72000: liveryParams(CC72000), bb67400: liveryParams(BB67400) };
 
 export { sncfCc40100, sncfCc40100Lod };
 export { sncfBb22200, sncfBb22200Lod };
@@ -69,8 +65,7 @@ export function sncfCc72000(v?: ParamValues): MeshBuilder { return buildBoxLoco(
 export function sncfCc72000Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(liverySpec(CC72000, P.cc72000, v)); }
 export { sncfCc7100, sncfCc7100Lod };
 export { sncfBb9200, sncfBb9200Lod };
-export function sncfBb27000(v?: ParamValues): MeshBuilder { return buildBoxLoco(liverySpec(BB27000, P.bb27000, v)); }
-export function sncfBb27000Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(liverySpec(BB27000, P.bb27000, v)); }
+export { sncfBb27000, sncfBb27000Lod };
 export function sncfBb67400(v?: ParamValues): MeshBuilder { return buildBoxLoco(liverySpec(BB67400, P.bb67400, v)); }
 export function sncfBb67400Lod(v?: ParamValues): MeshBuilder { return boxLocoLod(liverySpec(BB67400, P.bb67400, v)); }
 
@@ -81,7 +76,7 @@ export const FR_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-sncf-bb22200", title: "SNCF BB 22200", build: sncfBb22200, buildLod: sncfBb22200Lod, params: BB22200_PARAMS, game: locoGame(90, 4360, 160), catalog: E, references: "sncf-bb22200" },
   { id: "proc-vehicle-sncf-cc7100", title: "SNCF CC 7100", build: sncfCc7100, buildLod: sncfCc7100Lod, params: CC7100_PARAMS, game: locoGame(107, 3490, 150), catalog: E, references: "sncf-cc7100" },
   { id: "proc-vehicle-sncf-bb9200", title: "SNCF BB 9200", build: sncfBb9200, buildLod: sncfBb9200Lod, params: BB9200_PARAMS, game: BB9200_GAME, catalog: E, references: "sncf-bb9200" },
-  { id: "proc-vehicle-sncf-bb27000", title: "SNCF BB 27000 Prima", build: sncfBb27000, buildLod: sncfBb27000Lod, ...paramsOf(P.bb27000), game: locoGame(90, 4200, 140), catalog: E, references: "sncf-bb27000" },
+  { id: "proc-vehicle-sncf-bb27000", title: "SNCF BB 27000 Prima", build: sncfBb27000, buildLod: sncfBb27000Lod, ...paramsOf(BB27000_PARAMS), game: locoGame(90, 4200, 140), catalog: E, references: "sncf-bb27000" },
   { id: "proc-vehicle-sncf-bb67400", title: "SNCF BB 67400", build: sncfBb67400, buildLod: sncfBb67400Lod, ...paramsOf(P.bb67400), game: locoGame(83, 1765, 140), catalog: D, references: "sncf-bb67400" },
   { id: "proc-vehicle-sncf-cc72000", title: "SNCF CC 72000", build: sncfCc72000, buildLod: sncfCc72000Lod, ...paramsOf(P.cc72000), game: locoGame(114, 2650, 160), catalog: D, references: "sncf-cc72000" },
 ];
