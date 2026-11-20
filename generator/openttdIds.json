@@ -3360,6 +3360,10 @@
         "id": 8502,
         "size": 6
       },
+      "proc-vehicle-renfe-333?livery=operadora": {
+        "id": 10202,
+        "size": 6
+      },
       "proc-vehicle-renfe-333?livery=talgo": {
         "id": 8508,
         "size": 6
