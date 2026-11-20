@@ -99,6 +99,8 @@ export interface ShinkansenLivery {
    * its tip, an intermediate car's behind its +X end): a sweep's colour field that the side bands alone
    * do not show (the Class 390's red front, the Avanti cars' white and teal).
    */
+  /** A stripe of paint down each door leaf's meeting edge, w wide (the MI 09's jade stripe through the door's middle); the leaf's window moved `glassShift` toward that edge. */
+  leafEdgeStripe?: { w: number; mat: string; glassShift?: number };
   lodSideFields?: { end?: ReadonlyArray<{ d: readonly [number, number]; bands: readonly Band[] }>; middle?: ReadonlyArray<{ d: readonly [number, number]; bands: readonly Band[] }> };
 }
 
@@ -572,7 +574,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
     windows: power ? [{ y: power.windows, spans, frame: "rubber" }] : s.windows.map((y, r) => ({ y, spans: own?.rows?.[r] ? own.rows[r]!.map(([a, e]): [number, number] => [a, e]) : end && s.endSides && r > 0 ? [] : r > 0 && s.upperOverDoors ? row(end ? doors[0]![0] : 0.6, s.single ? L - doors[0]![0] : L - 0.6) : spans, frame: s.windowFrameMat ?? "rubber", ...(s.windowCornerR ? { cornerR: s.windowCornerR } : s.windowCornerRadius ? { cornerR: s.windowCornerRadius } : {}) })),
     ...(s.fluting ? { fluting: s.fluting } : {}),
-    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(s.doorGlassR ? { glassCornerR: s.doorGlassR } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
+    doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(s.doorGlassR ? { glassCornerR: s.doorGlassR } : {}), ...(l.leafEdgeStripe ? { leafEdgeStripe: l.leafEdgeStripe } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(s.roofWells && !power ? { strips: wellStrips(s, end, L, l.roof) } : {}),
     ...((end && l.endCarDoors) || l.doors ? { doorBands: (end && l.endCarDoors) || l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     // a cab face draws its own panes and lamps: an empty cab keeps the gangway frame off its end

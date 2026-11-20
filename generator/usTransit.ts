@@ -46,7 +46,7 @@ export interface CarDef {
   /** Window rows: their sill and head, their d spans, frame paint; `onSide` (+1 or -1) a row on that side only (default both); `cornerR` rounds the frame's and the glass's corners (default square); `glass` the panes' paint (default "glass": a frosted toilet window). */
   windows: ReadonlyArray<{ y: readonly [number, number]; spans: ReadonlyArray<readonly [number, number]>; frame: string; onSide?: number; cornerR?: number; glass?: string }>;
   /** Passenger doors on both sides: d spans, sill and head, the leaf's window; `spanSides[i]` (+1 or -1) puts span i on that side only (default both); `glassCornerR` rounds a pair of narrow leaf windows (`glassW`, `glassPair`), or a single one (`glassW` alone: a porthole) (default square); `glassSurround` sets those rounded windows in a rubber surround with a bright rim (default none). */
-  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number; glassSurround?: boolean; glassInward?: number };
+  doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number; glassSurround?: boolean; glassInward?: number; leafEdgeStripe?: { w: number; mat: string; glassShift?: number } };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
@@ -121,12 +121,20 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
           const [lo, hi] = [Math.max(a, y0 + 0.02), Math.min(cc, y1 - 0.02)];
           if (hi - lo > 1e-6) sidePanel(mm, b, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
         }
+        // a stripe of paint down the leaf's meeting edge (the edge away from its slide; the MI 09's jade)
+        const st = c.doors.leafEdgeStripe;
+        if (st) {
+          const [a, e] = slide > 0 ? [d0 + 0.02, d0 + 0.02 + st.w] : [d1 - 0.02 - st.w, d1 - 0.02];
+          sidePanel(mm, b, X, s, st.mat, a, e, y0 + 0.02, y1 - 0.02, 0.01, 0.001);
+        }
       });
       mm.scope("glass", () => {
         // a narrow window centred on the leaf, or the leaf's full width
         // `glassInward` (default 0) moves a narrow window off the leaf's centre toward the car's middle (a folding door's inner leaf)
         const w = c.doors.glassW, pair = c.doors.glassPair;
-        const dm = (d0 + d1) / 2 + (c.doors.glassInward ? ((d0 + d1) / 2 < b.length / 2 ? 1 : -1) * c.doors.glassInward : 0);
+        const dm = (d0 + d1) / 2 + (c.doors.glassInward ? ((d0 + d1) / 2 < b.length / 2 ? 1 : -1) * c.doors.glassInward : 0)
+          // a leaf's window moved toward its meeting edge (leafEdgeStripe's glassShift)
+          + (c.doors.leafEdgeStripe?.glassShift ? (slide > 0 ? -1 : 1) * c.doors.leafEdgeStripe.glassShift : 0);
         // a double leaf: two narrow windows `glassPair` apart, the leaves' seam between them
         const gr = c.doors.glassCornerR;
         if (w && pair && gr && c.doors.glassSurround) for (const k of [-1, 1]) {

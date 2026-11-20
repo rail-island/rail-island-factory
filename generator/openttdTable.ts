@@ -957,7 +957,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   // France (docs/models/france-trains.md)
   "proc-vehicle-sncf-tgv-m": series(0, 82, ELRL, { cars: 8, liveries: ["ouigo"] }),
   "proc-vehicle-sncf-z20500": series(140, 160, ELRL, { cars: 4, liveries: ["ileDeFrance"] }),
-  "proc-vehicle-ratp-mi09": series(100, 110, ELRL, { cars: 5 }),
+  "proc-vehicle-ratp-mi09": series(87, 100, ELRL, { cars: 5 }),
   // the double-deck end car leads; the double-deck and single-deck (access) cars alternate; the single-deck end car closes the 4-car set
   "proc-vehicle-sncf-regio2n": pax(76, ELRL, {
     variants: [at({ unit: "middleCar" }, { capacity: 104 }), at({ unit: "singleDeckCar" }, { capacity: 16 }), at({ unit: "singleDeckEnd" }, { capacity: 40 })],
