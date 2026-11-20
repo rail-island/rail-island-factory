@@ -32,12 +32,10 @@ interface SteamDesign {
   liveries?: Record<string, { title: string; palette: WorldSteam["palette"]; number: string }>;
 }
 
-const ALL_BLACK = { paint: "#1d1e20", wheel: "#2a2b2d", frame: "#a51a1f", smokebox: "#1c1d22" };
 /** Britain's W6a gauge: the chimneys under 4.0 m, the cabs 2.74 m wide. */
 const UK = { top: 3.95, coupler: "buffers", half: 1.37 } as const;
 /** India's broad gauge: the bodies on the 3.3 m gauge, buffers and screw couplings; the 610 mm Darjeeling line's tiny engines. */
 const IR = { top: 4.5, coupler: "buffers", half: 1.6 } as const;
-const UIC = { top: 4.65, coupler: "buffers", half: 1.5 } as const;
 
 export const WORLD_STEAM: Record<string, SteamDesign> = {
   "proc-vehicle-drg-01": DRG01_WORLD,
