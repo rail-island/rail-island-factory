@@ -167,7 +167,7 @@ const LIVERIES: Record<string, Es333Livery> = {
     hoodMat: "bronze",
     rail: "rail",
     sockets: ["socketBlue", "socketBlue", "socketBlue"],
-    marker: "markerGlass",
+    marker: "markerLens",
   },
 };
 
@@ -237,7 +237,7 @@ function spec(l: Es333Livery): LocoSpec {
       rim: c("#9a9fa1", 0.45), slat: c("#4f5458", 0.6), louvre: c("#1f2124", 0.85), groove: c("#3a3c3f", 0.7), wiper: c("#2a2c2e", 0.5),
       beam: c("#232427", 0.75), bogie: c("#26272a", 0.8), steel: c("#4a4d51", 0.5), spring: c("#3a3c3f", 0.7), wheel: c("#3a3c3f", 0.6),
       tank: c("#2e3033", 0.7), lampBox: c("#1d1e20", 0.6), mask: c("#151618", 0.6), lampAmber: c("#f2c56a", 0.3),
-      socketRed: c("#b8241c", 0.5), socketBlue: c("#2350a8", 0.5), cantSlat: c("#9a9fa2", 0.55), fan: c("#2a2c2f", 0.8), markerGlass: c("#6d7276", 0.25), exhaust: c("#2b2b2b", 0.9),
+      socketRed: c("#b8241c", 0.5), socketBlue: c("#2350a8", 0.5), cantSlat: c("#9a9fa2", 0.55), fan: c("#2a2c2f", 0.8), markerLens: c("#6d7276", 0.25), exhaust: c("#2b2b2b", 0.9),
       ...l.palette,
     },
     y0: Y0,

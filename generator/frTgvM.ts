@@ -95,7 +95,7 @@ export const TGV_M_FACE: SeriesCabFace = {
     // the windscreen, its foot narrower than its head
     { mat: "cabGlass", front: [[2.35, -9], [3.65, -9]], back: GLASS_BACK, top: 3.66, lat: 1.05 },
     // the headlamps' dark oval glass on the white corners, about 0.9 m long
-    { mat: "lampGlass", front: LAMP_FRONT, back: LAMP_BACK },
+    { mat: "lampLens", front: LAMP_FRONT, back: LAMP_BACK },
   ],
   // the two air intakes' grilles between the lamps under the windscreen
   fields: [
@@ -104,7 +104,7 @@ export const TGV_M_FACE: SeriesCabFace = {
   ],
   panes: [
     // the roof lamp's long window over the windscreen
-    { lat: [-0.32, 0.32], y: [3.9, 4.0], r: 0.05, mat: "lampGlass" },
+    { lat: [-0.32, 0.32], y: [3.9, 4.0], r: 0.05, mat: "lampLens" },
   ],
   lamps: [[1.22, 1.95, 0.07, "lampHead"], [-1.22, 1.95, 0.07, "lampHead"], [0, 3.95, 0.04, "lampHead"]],
   wipers: [[[-0.1, 2.45], [-0.75, 3.15]]],
@@ -144,7 +144,7 @@ function tgvMLivery(title: string, number: string, p: TgvMPaint, lettering: NonN
     title, number,
     palette: {
       body: c(p.body, 0.35), skirtG: c(p.skirt, 0.55), skirtE: c(p.under, 0.7), roofG: c(p.roof, 0.5), doorPaint: c(p.door, 0.4),
-      mask: c("#14171b", 0.2), lampGlass: c("#262b31", 0.12), intake: c("#3a3f45", 0.6), cabGlass: { ...c("#2f4152", 0.08), glass: true }, seam: c("#9a9fa5", 0.6),
+      mask: c("#14171b", 0.2), lampLens: c("#262b31", 0.12), intake: c("#3a3f45", 0.6), cabGlass: { ...c("#2f4152", 0.08), glass: true }, seam: c("#9a9fa5", 0.6),
       frosted: c("#b9c2c9", 0.3), grilleFrame: c("#c9cdd1", 0.5), grilleSlat: c("#555b62", 0.6), cabMask: c("#14171b", 0.3),
       ...Object.fromEntries(Object.entries(p.extra).map(([k, v]) => [k, c(v, 0.4)])),
     },

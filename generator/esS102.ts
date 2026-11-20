@@ -111,8 +111,16 @@ function halfAt(d: number, y: number): number {
   return Math.min(w, bodyHalf0(y));
 }
 
-/** The first d at which the nose reaches lat at height y (bisection: the half width grows toward the join). */
+/** The first d at which the nose reaches lat at height y (bisection: the half width grows toward the join); memoised (a pure function the decals ask many times). */
+const SECTION = new Map<number, Map<number, number>>();
 function sectionDepth(lat: number, y: number): number {
+  let row = SECTION.get(y);
+  if (!row) SECTION.set(y, (row = new Map()));
+  let v = row.get(lat);
+  if (v === undefined) { v = sectionDepthOf(lat, y); row.set(lat, v); }
+  return v;
+}
+function sectionDepthOf(lat: number, y: number): number {
   if (halfAt(JOIN, y) <= lat) return JOIN;
   let [a, b] = [0, JOIN];
   for (let i = 0; i < 26; i++) { const m = (a + b) / 2; if (halfAt(m, y) > lat) b = m; else a = m; }
@@ -130,7 +138,14 @@ export function patoDepth(lat: number, y: number): number {
 }
 
 /** The surface's lateral position at depth d and height y (the inverse of patoDepth across the nose), or undefined where the nose does not reach. */
+const LAT = new Map<number, Map<number, number | undefined>>();
 function latAt(d: number, y: number): number | undefined {
+  let row = LAT.get(y);
+  if (!row) LAT.set(y, (row = new Map()));
+  if (!row.has(d)) row.set(d, latAtOf(d, y));
+  return row.get(d);
+}
+function latAtOf(d: number, y: number): number | undefined {
   const hw = bodyHalf0(y);
   if (sectionDepth(0, y) > d) return undefined;
   let [a, b] = [0, hw];

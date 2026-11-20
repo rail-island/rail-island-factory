@@ -134,7 +134,7 @@ const FACE: SeriesCabFace = {
   ],
   masks: [
     { lat: [-1.2, 1.2], y: SURROUND, r: 0.22, mat: "black" },
-    { lat: [-0.58, 0.58], y: [1.66, VISOR[1]], r: 0.06, mat: "visor" },
+    { lat: [-0.58, 0.58], y: [1.66, VISOR[1]], r: 0.06, mat: "browBand" },
     // the dark chin round the open recess of the coupler, its top rounded up to the mask
     { lat: [-0.74, 0.74], y: [0.47, 1.52], r: 0.15, mat: "chin" },
     { lat: [-0.62, 0.62], y: RECESS, r: 0.15, mat: "black" },
@@ -212,12 +212,12 @@ const TER_BLUE = "#26389a";
 const IDFM_BLUE = "#18a6dd";
 
 const TER_PALETTE = {
-  body: c("#c3c7cb", 0.35), noseLow: c("#c3c7cb", 0.35), mask: c(TER_BLUE, 0.3), arch: c(TER_BLUE, 0.3), visor: c("#1c2340", 0.3), blue: c(TER_BLUE, 0.35),
+  body: c("#c3c7cb", 0.35), noseLow: c("#c3c7cb", 0.35), mask: c(TER_BLUE, 0.3), arch: c(TER_BLUE, 0.3), browBand: c("#1c2340", 0.3), blue: c(TER_BLUE, 0.35),
   green: c("#7dbb3c", 0.4), winBand: c("#454b52", 0.4), skirtG: c("#3b3f44", 0.7), roofG: c("#a7abaf", 0.55), roofE: c("#8a8e92", 0.6),
   black: c("#16181a", 0.35), white: c("#f2f2f0", 0.4), lampGlass: { color: "#eef3f7", metallic: 0.2, roughness: 0.08, glass: true }, lampRim: c("#9da2a7", 0.3), chin: c("#2b2e32", 0.6), doorLeaf: c(TER_BLUE, 0.35), cabMask: c("#1d1f22", 0.3),
 };
 const IDFM_PALETTE = {
-  body: c("#e6e8e9", 0.4), noseLow: c("#eef0f0", 0.4), mask: c("#eef0f0", 0.4), arch: c(IDFM_BLUE, 0.35), visor: c("#16181a", 0.3), blue: c(IDFM_BLUE, 0.35),
+  body: c("#e6e8e9", 0.4), noseLow: c("#eef0f0", 0.4), mask: c("#eef0f0", 0.4), arch: c(IDFM_BLUE, 0.35), browBand: c("#16181a", 0.3), blue: c(IDFM_BLUE, 0.35),
   anthracite: c("#4a4f56", 0.45), skirtG: c("#3b3f44", 0.7), roofG: c("#b4b8bb", 0.55), roofE: c("#8a8e92", 0.6),
   black: c("#16181a", 0.35), white: c("#f2f2f0", 0.4), lampGlass: { color: "#eef3f7", metallic: 0.2, roughness: 0.08, glass: true }, lampRim: c("#9da2a7", 0.3), chin: c("#2b2e32", 0.6), doorLeaf: c("#dfe2e4", 0.4), cabMask: c("#1d1f22", 0.3),
 };

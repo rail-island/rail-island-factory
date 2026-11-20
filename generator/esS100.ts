@@ -109,7 +109,7 @@ export const S100_FACE: SeriesCabFace = {
     { mat: "lampBand", pts: LAMP_SLOT(-1) },
     { mat: "grilleFrame", pts: [[-0.25, 1.64], [0.25, 1.64], [0.25, 1.93], [-0.25, 1.93]] },
     // the visor's slatted bar under the windscreen
-    { mat: "visor", pts: [[-1.0, 2.72], [1.0, 2.72], [1.0, 2.88], [-1.0, 2.88]] },
+    { mat: "slatBar", pts: [[-1.0, 2.72], [1.0, 2.72], [1.0, 2.88], [-1.0, 2.88]] },
   ],
   // the windscreen's two panes either side of the centre pillar
   panes: [{ lat: [-0.86, -0.07], y: [2.93, 3.42], r: 0.06 }, { lat: [0.07, 0.86], y: [2.93, 3.42], r: 0.06 }],
@@ -170,7 +170,7 @@ function s100Livery(title: string, number: string, p: S100Paint & { brand: strin
     title, number,
     palette: {
       faceBase: c(p.base, 0.35), skirtE: c(p.skirt, 0.65), roofE: c(p.roof, 0.55), powerRoof: c(p.powerRoof, 0.55), canopy: c(p.canopy, 0.3),
-      purple: c(p.purple, 0.4), greyLine: c(p.grey, 0.45), lampBand: c(p.lampBand, 0.15), grilleFrame: c("#d9dcdf", 0.4), visor: c("#1d1f23", 0.5),
+      purple: c(p.purple, 0.4), greyLine: c(p.grey, 0.45), lampBand: c(p.lampBand, 0.15), grilleFrame: c("#d9dcdf", 0.4), slatBar: c("#1d1f23", 0.5),
       panelGrey: c(p.panel, 0.45), noseBrand: c(p.brand, 0.4), noseLogo: c(p.logo, 0.45), louvre: c("#2a2d31", 0.7), seam: c("#3a3d42", 0.6), cabMask: c("#15181d", 0.3), lettering: c("#3a3d42", 0.5), under: c("#2a2c2f", 0.8),
       ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, c(v, 0.4)])),
     },

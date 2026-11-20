@@ -239,7 +239,7 @@ const S130_FACE: SeriesCabFace = {
   fields: [
     { mat: "cabMask", pts: FRAME },
     { mat: "cabGlass", pts: SCREEN },
-    { mat: "stripGlass", pts: STRIP },
+    { mat: "lampStrip", pts: STRIP },
     { mat: "frameDark", pts: GRILLE },
     { mat: "lampRim", pts: lampShape(1, 0.06) }, { mat: "lampRim", pts: lampShape(-1, 0.06) },
     { mat: "lampCover", pts: lampShape(1, 0) }, { mat: "lampCover", pts: lampShape(-1, 0) },
@@ -284,7 +284,7 @@ export function s130Livery(number: string): ShinkansenLivery {
       white: c("#eeefec"), purple: c(PURPLE, 0.4), canopyG: c("#b3b8bc", 0.55), roofG: c("#d5d8da", 0.55), skirtG: c("#c4c8ca", 0.6),
       cabMask: c("#1b1d20", 0.3), seam: c("#7a7f84", 0.5), frameDark: c("#6b7075", 0.5), black: c("#151719", 0.6),
       lampCover: c("#262c33", 0.2), lampRim: c("#8d9398", 0.35),
-      stripGlass: c("#c9ced2", 0.3),
+      lampStrip: c("#c9ced2", 0.3),
     },
     bands: sides("white"),
     roof: "roofG", skirt: "skirtG",
