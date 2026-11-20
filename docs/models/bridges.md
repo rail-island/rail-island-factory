@@ -2,20 +2,23 @@
 
 **Covers** - the bridge set's types: what each one builds over the path the game hands in, the
 shared kit (deck section, piers, abutments, the lateral frame), structural spans and the cable
-types' tower plan, the members an overhead line hangs from, part tags, triangle budgets, and the
+types' tower plan, where the supports stand (planned off taken ground, around the player's pylons
+and blocked spans), the members an overhead line hangs from, part tags, triangle budgets, and the
 checks.
 **Code** - `generator/sets/bridge.ts`, `generator/previews/bridges.ts`, `test/bridgeSet.test.ts`,
-`test/bridgeBudget.test.ts`
+`test/bridgeSupports.test.ts`, `test/bridgeBudget.test.ts`
 **See also** - [sets.md](sets.md) (the registry, landed sets, pins), [previews.md](previews.md),
 [lod.md](lod.md), [surfaces.md](surfaces.md), the `bridge` skill (`.agents/skills/bridge/`)
 
 ## What the game hands in, what the module returns
 
 The game plans where a bridge stands - its path, grade profile and the lanes its deck carries -
-and calls `buildBridge(type, path, heightAt, waterAt?)` with the path as plain points (`pathFromPoints`:
+and calls `buildBridge(type, path, heightAt, waterAt?, options?)` with the path as plain points (`pathFromPoints`:
 points, deck width, the lane recentring `shiftAmount`, the deck support height `supportY` and the
 overhead clearance `clearanceY`), a terrain height function (the bed, under water) and, optionally,
-the water surface's height (`WaterLevelFn`: undefined where it is dry). The module returns a list of
+the water surface's height (`WaterLevelFn`: undefined where it is dry), and the support options
+(what ground is taken, the player's pylons and blocked spans - see Where the supports stand; a
+`SupportPlan` from `planSupports` is accepted in their place). The module returns a list of
 `BridgeBox` descriptors in world space, which the game (and the site's preview) draws:
 
 | Shape | What it is |
@@ -75,6 +78,39 @@ tower tops, sagging so the lowest point still clears the overhead wires; it has 
 studs. A cable-stayed tower fans a stay every 4 studs over half of each neighbouring main span
 and over its back span.
 
+## Where the supports stand
+
+`planSupports(type, path, options?)` returns a bridge's `SupportPlan`: its structural spans, every
+ground support's distance along the path (span-boundary piers, a beam bridge's piers, a trestle's
+bents, a cantilever's tower piers, a cable type's towers - with the ends where the type stands on
+them), the cable towers, and the supports that found nowhere free (`blocked`). `buildBridge` and
+`overheadMembers` build from the same plan, so the catenary's fixings follow the drawn structure.
+
+With no options, or nothing in the way, the plan is the default layout above: equal spans, equal
+pier and bent spacing, the even tower plan - bit for bit, so the pins do not move. The options:
+
+| Option | What it means |
+|---|---|
+| `groundBlocked(footprint)` | the game's answer to "is the ground under this rectangle taken" (a track, a road, a building); `footprint` is the support's centre on the path, its yaw and its size across and along (`supportFootprint`) |
+| `pylons` | distances where the player put a support: each is kept, even on taken ground |
+| `blockedSpans` | `{ from, to }` stretches of the path where no support may stand |
+
+When the default layout has a support on taken ground or in a blocked span, or the player put a
+pylon, the whole layout is re-planned. Between two fixed stations (the ends and the pylons) every
+candidate station half a stud apart is weighed and the cheapest chain of spans wins: a span costs
+its squared deviation from the type's even spacing, more once it passes the type's limit
+(`maxSpan`; 50 studs between beam piers, 10 between trestle bents) and prohibitively past the hard
+cap (half as long again; 16 studs for a trestle); a support on taken ground costs more than any
+span within the cap, and one in a blocked span more than anything else. So a support with nowhere
+free to go is dropped and its neighbours span over, and stands on taken ground only when dropping
+it would stretch a span past the cap. Spans may come out unequal; the superstructure is built over
+each span's own length, and a boundary pier is styled for the longer span it carries. A
+cantilever plans its span boundaries with its tower piers at their quarters; a pylon on a
+cantilever becomes a span boundary with a plain pier. A cable type's pylons are its towers;
+otherwise each default tower slides to the nearest free station within a quarter of its main span,
+or stays - a tower is never dropped. The cables follow: a suspension main span sags in proportion
+to its length, a cable-stayed tower fans to half way to each neighbour. The plan is deterministic.
+
 ## The kit
 
 **Deck section.** Every deck is a slab ribbon (`DECK_THICKNESS` 0.8) with a cornice at each edge (except where the edge is something else: the plate girder's girders, the trestle's planks).
@@ -115,13 +151,14 @@ ships. `test/bridgeSet.test.ts` holds the tag to exactly the boxes whose foot is
 
 ## Overhead members
 
-`overheadMembers(type, length, deckWidth, clearanceY)` lists where the superstructure crosses
+`overheadMembers(type, length, deckWidth, clearanceY, plan?)` lists where the superstructure crosses
 over the track, as fractions of the whole path, for the game's catenary planner:
 `point` members (each on a real crossbeam over the wires, `test/bridgeSet.test.ts`: the truss top crossbeams at every other inner node and both portals, at the top chord's height there, the cantilever tower portals, the tied arch struts above
 the wire envelope) a wire is taken up to, and `span` members (the cable types' tower legs) a
 perpendicular wire is strung between. Types with nothing over the deck return none, which tells
 the planner to use deck masts. `overheadMemberEndpoints` gives a member's world endpoints in the
-same lateral frame as the mesh.
+same lateral frame as the mesh. Given the bridge's `SupportPlan`, the members follow its spans and
+towers.
 
 ## Part tags
 

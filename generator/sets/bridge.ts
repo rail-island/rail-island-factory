@@ -229,8 +229,6 @@ const suspensionCableHalfWidth = (deckWidth: number): number => deckWidth / 2 + 
 // lowest point at mid-span still clears both overhead wires of an electric track
 // plus their cross-span fixing
 const suspensionTowerHeight = (main: number): number => Math.max(16, Math.min(main * 0.5, 26));
-// the distance between a cable type's towers (its main span)
-const cableMainSpan = (type: string, length: number): number => length / cableTowerDistances(type, length).length;
 
 // One place a bridge's superstructure passes over the track, as a fraction
 // along the bridge path. A "point" member crosses the centreline at `localY`
@@ -272,18 +270,20 @@ function spanOverheadMembers(bridgeType: string, spanLength: number, clearanceY:
 // Empty for the types with nothing over the deck (the flat ones, and the arches
 // whose arch passes BELOW it), which is what tells the planner to use
 // deck-mounted masts instead.
-export function overheadMembers(type: string, length: number, deckWidth: number, clearanceY: number): BridgeOverheadMember[] {
+export function overheadMembers(type: string, length: number, deckWidth: number, clearanceY: number, plan?: SupportPlan): BridgeOverheadMember[] {
   if (length <= 0) return [];
+  // a plan (planSupports) moves the spans and towers; the members follow them
   if (CABLE_TYPES.has(type)) {
     // The two cable types are strung BETWEEN their towers rather than taken up
     // to them: the tower crossbeam stands as much as 28 studs over the deck, and
     // a wire reaching that far reads as a mast, not a fixing. The tower legs run
     // from below the deck up past it, so a perpendicular wire meets them.
     const halfWidth = type === "suspension" ? suspensionCableHalfWidth(deckWidth) : cableStayedTowerHalfWidth(deckWidth);
-    return cableTowerDistances(type, length).map((d) => ({ t: d / length, kind: "span", halfWidth }));
+    const towers = plan?.towers.length ? plan.towers : cableTowerDistances(type, length);
+    return towers.map((d) => ({ t: d / length, kind: "span", halfWidth }));
   }
   const out: BridgeOverheadMember[] = [];
-  for (const range of getStructuralSpanRanges(type, length)) {
+  for (const range of plan?.spans ?? getStructuralSpanRanges(type, length)) {
     const spanLength = range.toDistance - range.fromDistance;
     if (spanLength <= 0) continue;
     const whole = (t: number) => (range.fromDistance + t * spanLength) / length;
@@ -546,13 +546,6 @@ function buildPathParapets(out: BridgeBox[], g: BridgePathGeom, material: Bridge
     pushRibbon(out, g, g.shiftAmount + side * parapetX, DECK_THICKNESS / 2 + PARAPET_HEIGHT, PARAPET_THICKNESS + 2 * COPING_OVERHANG, COPING_HEIGHT, material, "detail");
   }
 }
-function defaultPierDistances(g: BridgePathGeom): number[] {
-  const numIntermediate = Math.max(0, Math.floor(g.length / PIER_SPACING) - 1);
-  const totalPiers = numIntermediate + 2;
-  const d: number[] = [];
-  for (let i = 1; i <= totalPiers; i++) d.push((g.length * (i - 1)) / (totalPiers - 1));
-  return d;
-}
 
 // A pier: what carries the superstructure down to the terrain at one station.
 //
@@ -699,8 +692,8 @@ function pushStarling(out: BridgeBox[], g: BridgePathGeom, distance: number, spe
     out.push({ shape: "box", center: { x: p.x, y: (foot + top) / 2, z: p.z }, size: { x: d / Math.SQRT2, y: top - foot, z: d / Math.SQRT2 }, yaw: yaw + Math.PI / 4, material: spec.material, part: "support" });
   }
 }
-function buildPathPiers(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHeightFn, pierFractions?: number[], spec: PierSpec = { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier" }, waterAt?: WaterLevelFn): void {
-  const distances = pierFractions ? pierFractions.map((f) => g.length * Math.min(Math.max(f, 0), 1)) : defaultPierDistances(g);
+function buildPathPiers(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHeightFn, pierFractions?: number[], spec: PierSpec = { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier" }, waterAt?: WaterLevelFn, at?: number[]): void {
+  const distances = at ?? (pierFractions ? pierFractions.map((f) => g.length * Math.min(Math.max(f, 0), 1)) : defaultPierDistances(g));
   for (const d of distances) pushPier(out, g, d, spec, heightAt, waterAt);
 }
 // The pier at a structural-span boundary (and at both ends of a spanned type).
@@ -734,16 +727,268 @@ function buildSpanBoundaryPiers(out: BridgeBox[], g: BridgePathGeom, ranges: Spa
       if (!distances.some((d) => Math.abs(d - distance) < 0.05)) distances.push(distance);
     }
   }
-  const style = boundaryPierStyle(bridgeType, g.deckWidth, ranges[0].toDistance - ranges[0].fromDistance);
   for (const d of distances) {
+    // a pier is styled for the longer of the spans it carries (they differ only once
+    // the plan moved a support off taken ground)
+    const adjacent = ranges.filter((r) => Math.abs(r.fromDistance - d) < 0.05 || Math.abs(r.toDistance - d) < 0.05);
+    const spanLength = Math.max(...adjacent.map((r) => r.toDistance - r.fromDistance));
+    const style = boundaryPierStyle(bridgeType, g.deckWidth, spanLength);
     // the bridge's two ends stand on abutments: no cutwater there
     const end = d < 0.05 || d > g.length - 0.05;
     pushPier(out, g, d, end ? { ...style, cutwaterTop: undefined } : style, heightAt, waterAt);
   }
 }
 
+// --- support planning ---------------------------------------------------------
+//
+// Where a bridge's ground supports stand: the span-boundary piers of a spanned type,
+// a beam bridge's piers, a trestle's bents, a cantilever's tower piers and a cable
+// bridge's towers. With nothing to avoid they stand where they always have (equal
+// spans, equal spacing); the game adds what it knows about the ground under the
+// bridge and the player's own choices:
+//
+// - `groundBlocked`: is the footprint a support would stand on taken (a track, a
+//   road, a building)? A support avoids taken ground.
+// - `pylons`: distances along the path where the player put a support. Each is
+//   kept as a fixed support, wherever it stands; the rest of the layout is planned
+//   around them.
+// - `blockedSpans`: stretches of the path where no support may stand at all.
+//
+// The layout is planned for the whole bridge at once, not pier by pier: between two
+// fixed supports (the ends, the player's pylons) every candidate station is weighed
+// and the cheapest chain of spans wins -- spans close to the type's even spacing,
+// none longer than its span limit, no support on a blocked station. A support that
+// has nowhere to go is dropped and its neighbours span over; only when even that
+// would stretch a span past the hard cap does one stand on blocked ground. Cable
+// towers are never dropped: each slides to the nearest free station within a quarter
+// of its main span, or stays.
+//
+// Deterministic: the same path, options and ground give the same plan.
+
+/** The rectangle a support stands on: centre, yaw (radians, like a box) and size across x along. */
+export interface SupportFootprint { x: number; z: number; yaw: number; w: number; d: number }
+/** Is the ground under this footprint taken? */
+export type GroundBlockedFn = (footprint: SupportFootprint) => boolean;
+/** A stretch of the path where no support may stand (distances along it). */
+export interface BlockedSpan { from: number; to: number }
+/** What the game tells the planner about the ground and the player's choices. */
+export interface SupportOptions {
+  groundBlocked?: GroundBlockedFn;
+  /** The player's supports, as distances along the path. */
+  pylons?: number[];
+  blockedSpans?: BlockedSpan[];
+}
+/** Where a bridge's supports stand. */
+export interface SupportPlan {
+  /** The structural spans the superstructure repeats over (one whole span for an unspanned type). */
+  spans: SpanRange[];
+  /** Every ground support's distance along the path (ends included where the type stands on them). */
+  supports: number[];
+  /** A cable type's towers (empty for every other type). */
+  towers: number[];
+  /** Supports that had nowhere free to stand and stand on blocked ground anyway. */
+  blocked: number[];
+}
+
+const PLAN_STEP = 0.5; // candidate stations every half stud
+const PLAN_BLOCK_COST = 1000; // a support on taken ground
+const PLAN_SPAN_COST = 1e12; // a support in one of the player's blocked spans: never, while any other way exists
+const PLAN_HARD_COST = 1e6; // per stud a span runs past the hard cap
+const PLAN_SOFT_COST = 4; // per (relative) stud a span runs past the type's limit
+const PLAN_MIN_GAP = 1; // no candidate this close to a fixed support
+
+type SupportKind = "spans" | "cantilever" | "piers" | "bents" | "towers";
+function supportKind(type: string): SupportKind {
+  if (CABLE_TYPES.has(type)) return "towers";
+  if (type === "cantilever") return "cantilever";
+  if (type === "timber_trestle") return "bents";
+  if (TYPE_META[type]?.maxSpan) return "spans";
+  return "piers";
+}
+
+const trestleBentCount = (length: number): number => Math.max(2, Math.ceil(length / TRESTLE_BENT));
+function defaultPierDistances(g: BridgePathGeom): number[] {
+  const numIntermediate = Math.max(0, Math.floor(g.length / PIER_SPACING) - 1);
+  const totalPiers = numIntermediate + 2;
+  const d: number[] = [];
+  for (let i = 1; i <= totalPiers; i++) d.push((g.length * (i - 1)) / (totalPiers - 1));
+  return d;
+}
+function defaultBentDistances(length: number): number[] {
+  const count = trestleBentCount(length);
+  return Array.from({ length: count + 1 }, (_, i) => (length * i) / count);
+}
+function spansFromStops(stops: number[]): SpanRange[] {
+  return stops.slice(1).map((to, i) => ({ fromDistance: stops[i]!, toDistance: to }));
+}
+
+// How wide and deep the ground under a support of `type` is, for the blocked test.
+function supportFootprintSize(type: string, kind: SupportKind, deckWidth: number, spanLength: number): { w: number; d: number } {
+  switch (kind) {
+    case "bents": return { w: 0.84 * deckWidth + 0.9, d: 0.9 };
+    case "piers": return { w: Math.max(PIER_WIDTH, deckWidth * 0.6), d: PIER_WIDTH + 2 * FOOTING_MARGIN };
+    case "cantilever": return { w: 2 * (deckWidth / 2 + 0.3) + 1.4, d: 5.4 };
+    default: {
+      const spec = boundaryPierStyle(type, deckWidth, spanLength);
+      const w = spec.columns ? deckWidth : Math.max(spec.w, spec.capWidth ?? 0, deckWidth * 0.5);
+      return { w, d: spec.d + 2 * FOOTING_MARGIN };
+    }
+  }
+}
+
+/** The ground footprint a support of `type` at `distance` along `g` would stand on. */
+export function supportFootprint(type: string, g: BridgePathGeom, distance: number): SupportFootprint {
+  const kind = supportKind(type);
+  const spans = getStructuralSpanRanges(type, g.length);
+  const span = spans.length ? spans[0]!.toDistance - spans[0]!.fromDistance : g.length;
+  const size = supportFootprintSize(type, kind, g.deckWidth, span);
+  const c = pathWorldPoint(g, distance, 0, 0);
+  return { x: c.x, z: c.z, yaw: pathYaw(g, distance), w: size.w, d: size.d };
+}
+
+// The default plan: today's layout, with nothing to avoid.
+function defaultPlan(type: string, g: BridgePathGeom): SupportPlan {
+  const kind = supportKind(type);
+  const L = g.length;
+  switch (kind) {
+    case "towers": {
+      const towers = cableTowerDistances(type, L);
+      return { spans: spansFromStops([0, ...towers, L]), supports: towers, towers, blocked: [] };
+    }
+    case "piers": return { spans: [{ fromDistance: 0, toDistance: L }], supports: defaultPierDistances(g), towers: [], blocked: [] };
+    case "bents": return { spans: [{ fromDistance: 0, toDistance: L }], supports: defaultBentDistances(L), towers: [], blocked: [] };
+    case "cantilever": {
+      const spans = getStructuralSpanRanges(type, L);
+      const supports = spans.flatMap((r) => CANTILEVER_TOWER_T.map((t) => r.fromDistance + t * (r.toDistance - r.fromDistance)));
+      return { spans, supports, towers: [], blocked: [] };
+    }
+    default: {
+      const spans = getStructuralSpanRanges(type, L);
+      const supports = [0, ...spans.map((r) => r.toDistance)];
+      return { spans, supports, towers: [], blocked: [] };
+    }
+  }
+}
+
+function cleanPylons(pylons: number[] | undefined, length: number): number[] {
+  const out: number[] = [];
+  for (const p of [...(pylons ?? [])].filter((p) => Number.isFinite(p)).sort((a, b) => a - b)) {
+    if (p <= PLAN_MIN_GAP || p >= length - PLAN_MIN_GAP) continue;
+    if (out.length && p - out[out.length - 1]! < PLAN_MIN_GAP) continue;
+    out.push(p);
+  }
+  return out;
+}
+
+/**
+ * Where the supports of a `type` bridge along `g` stand, given the ground and the
+ * player's pylons and blocked spans (see the section comment). With no options, or
+ * nothing in the way, it is the type's even default layout.
+ */
+export function planSupports(type: string, g: BridgePathGeom, options: SupportOptions = {}): SupportPlan {
+  const kind = supportKind(type);
+  const L = g.length;
+  const base = defaultPlan(type, g);
+  if (L <= 0) return base;
+  const pylons = cleanPylons(options.pylons, L);
+  const spans = (options.blockedSpans ?? []).filter((s) => Number.isFinite(s.from) && Number.isFinite(s.to) && s.to > s.from);
+  const ground = options.groundBlocked;
+  const baseSpan = base.spans.length ? base.spans[0]!.toDistance - base.spans[0]!.fromDistance : L;
+  const size = supportFootprintSize(type, kind, g.deckWidth, baseSpan);
+  const cache = new Map<number, number>();
+  const inSpan = (d: number): boolean => spans.some((s) => d + size.d / 2 > s.from && d - size.d / 2 < s.to);
+  // 0 free, PLAN_BLOCK_COST on taken ground, PLAN_SPAN_COST in a blocked span
+  const blockCost = (d: number): number => {
+    const key = Math.round(d * 1000);
+    const hit = cache.get(key);
+    if (hit !== undefined) return hit;
+    let cost = inSpan(d) ? PLAN_SPAN_COST : 0;
+    if (!cost && ground) {
+      const c = pathWorldPoint(g, d, 0, 0);
+      if (ground({ x: c.x, z: c.z, yaw: pathYaw(g, d), w: size.w, d: size.d })) cost = PLAN_BLOCK_COST;
+    }
+    cache.set(key, cost);
+    return cost;
+  };
+  const blockedAt = (d: number): boolean => blockCost(d) > 0;
+  const isEnd = (d: number): boolean => d < 0.05 || d > L - 0.05;
+  // nothing to plan: the default layout stands free
+  if (pylons.length === 0 && base.supports.every((d) => isEnd(d) || !blockedAt(d))) return base;
+
+  if (kind === "towers") {
+    const main = baseSpan;
+    const towers = pylons.length ? pylons : base.towers.map((t) => {
+      if (!blockedAt(t)) return t;
+      const reach = main / 4;
+      for (let step = PLAN_STEP; step <= reach; step += PLAN_STEP) {
+        for (const d of [t - step, t + step]) if (d > PLAN_MIN_GAP && d < L - PLAN_MIN_GAP && !blockedAt(d)) return d;
+      }
+      return t;
+    });
+    const sorted = [...towers].sort((a, b) => a - b);
+    return { spans: spansFromStops([0, ...sorted, L]), supports: sorted, towers: sorted, blocked: sorted.filter((d) => !pylons.includes(d) && blockedAt(d)) };
+  }
+
+  // the spacing a span aims at, the type's limit and the hard cap
+  let target: number, soft: number, hard: number;
+  switch (kind) {
+    case "piers": target = base.supports.length > 1 ? base.supports[1]! - base.supports[0]! : L; soft = Math.max(target, 2 * PIER_SPACING); hard = soft * 1.4; break;
+    case "bents": target = L / trestleBentCount(L); soft = TRESTLE_BENT * 1.25; hard = TRESTLE_BENT * 2; break;
+    default: { const max = TYPE_META[type]?.maxSpan ?? L; target = baseSpan; soft = max; hard = max * 1.5; }
+  }
+  const spanCost = (s: number): number => {
+    const dev = (s - target) / target;
+    let c = dev * dev;
+    if (s > soft) c += PLAN_SOFT_COST * (s - soft) / soft;
+    if (s > hard) c += PLAN_HARD_COST * (s - hard);
+    return c;
+  };
+  // the cantilever's piers stand inside its spans, at a quarter and three quarters
+  const innerCost = (a: number, b: number): number =>
+    kind === "cantilever" ? CANTILEVER_TOWER_T.reduce((sum, t) => sum + blockCost(Math.round((a + t * (b - a)) / PLAN_STEP) * PLAN_STEP), 0) : 0;
+  const nodeCost = (d: number): number => (kind === "cantilever" ? 0 : blockCost(d));
+  // how far back a span may reach: past the hard cap, and past any blocked span
+  const reach = Math.max(hard * 2, target * 3, ...spans.map((s) => s.to - s.from + size.d + hard));
+
+  const fixed = [0, ...pylons, L];
+  const stops: number[] = [0];
+  for (let k = 1; k < fixed.length; k++) {
+    const a = fixed[k - 1]!, b = fixed[k]!;
+    const nodes = [a];
+    for (let d = a + PLAN_MIN_GAP; d <= b - PLAN_MIN_GAP + 1e-9; d += PLAN_STEP) nodes.push(Math.round(d * 1000) / 1000);
+    nodes.push(b);
+    const cost = new Array<number>(nodes.length).fill(Infinity);
+    const prev = new Array<number>(nodes.length).fill(-1);
+    cost[0] = 0;
+    for (let j = 1; j < nodes.length; j++) {
+      const nj = j === nodes.length - 1 ? 0 : nodeCost(nodes[j]!);
+      for (let i = j - 1; i >= 0; i--) {
+        const s = nodes[j]! - nodes[i]!;
+        if (s > reach && i !== 0) break;
+        if (cost[i] === Infinity) continue;
+        const c = cost[i]! + spanCost(s) + innerCost(nodes[i]!, nodes[j]!) + nj;
+        if (c < cost[j]! - 1e-12) { cost[j] = c; prev[j] = i; }
+        if (s > reach) break;
+      }
+    }
+    const chain: number[] = [];
+    for (let j = nodes.length - 1; j > 0; j = prev[j]!) chain.push(nodes[j]!);
+    stops.push(...chain.reverse());
+  }
+  const planSpans = spansFromStops(stops);
+  if (kind === "cantilever") {
+    const supports = [...planSpans.flatMap((r) => CANTILEVER_TOWER_T.map((t) => r.fromDistance + t * (r.toDistance - r.fromDistance))), ...pylons].sort((a, b) => a - b);
+    return { spans: planSpans, supports, towers: [], blocked: supports.filter((d) => !pylons.includes(d) && blockedAt(d)) };
+  }
+  const blocked = stops.filter((d) => !isEnd(d) && !pylons.includes(d) && blockedAt(d));
+  if (kind === "piers" || kind === "bents") return { spans: [{ fromDistance: 0, toDistance: L }], supports: stops, towers: [], blocked };
+  return { spans: planSpans, supports: stops, towers: [], blocked };
+}
+
 // --- per-type builders (Bridge.luau 1932-2260) ---
-type BuildOpts = { suppressGroundPiers?: boolean; waterAt?: WaterLevelFn };
+// `supports` / `towers`: the planned stations (planSupports) of a type that lays its
+// own piers, bents or towers over the whole path; absent, the type's default.
+type BuildOpts = { suppressGroundPiers?: boolean; waterAt?: WaterLevelFn; supports?: number[]; towers?: number[] };
 type Builder = (out: BridgeBox[], g: BridgePathGeom, opts: BuildOpts, heightAt: TerrainHeightFn) => void;
 
 // Two concrete girders under the slab, over the bearings of the hammerhead piers.
@@ -751,7 +996,7 @@ const buildBeam: Builder = (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
   buildPathParapets(out, g);
   for (const side of [-1, 1]) pushRibbon(out, g, g.shiftAmount + side * g.deckWidth * BEAM_GIRDER_X, -DECK_THICKNESS / 2 - BEAM_GIRDER_DEPTH / 2, BEAM_GIRDER_WIDTH, BEAM_GIRDER_DEPTH, "pier", "frame");
-  buildPathPiers(out, g, heightAt, undefined, { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier", under: BEAM_GIRDER_DEPTH }, opts.waterAt);
+  buildPathPiers(out, g, heightAt, undefined, { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier", under: BEAM_GIRDER_DEPTH }, opts.waterAt, opts.supports);
 };
 
 // A truss carries its own span: it stands on the boundary piers only.
@@ -1043,10 +1288,10 @@ function pushAnchorages(out: BridgeBox[], g: BridgePathGeom, legX: number, heigh
 const HANGER_SPACING = 4;
 const buildSuspension: Builder = (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
-  const towers = cableTowerDistances("suspension", g.length);
-  const main = cableMainSpan("suspension", g.length);
+  const towers = opts.towers ?? cableTowerDistances("suspension", g.length);
+  const main = g.length / towers.length;
   const sideX = suspensionCableHalfWidth(g.deckWidth);
-  buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("suspension", g.deckWidth, main), w: 3.2, d: 3.2 }, opts.waterAt);
+  buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("suspension", g.deckWidth, main), w: 3.2, d: 3.2 }, opts.waterAt, opts.towers);
   pushCableGirders(out, g, sideX, "steel");
   pushAnchorages(out, g, sideX, heightAt);
   const TOWER_HEIGHT = suspensionTowerHeight(main);
@@ -1062,9 +1307,13 @@ const buildSuspension: Builder = (out, g, opts, heightAt) => {
       const s = Math.min(Math.max((d - a) / (b - a), 0), 1);
       return ANCHOR_TOP + (towerTopY - ANCHOR_TOP) * s - (SAG / 4) * 4 * s * (1 - s);
     }
-    const i = Math.min(towers.length - 2, Math.floor((d - first) / main));
-    const s = 2 * ((d - towers[i]!) / main) - 1;
-    return towerTopY - SAG * (1 - s * s);
+    // the main span this distance falls in; a shorter one (towers moved off the
+    // ground beneath) sags in proportion, so its cable stays clear of the deck
+    let i = 0;
+    while (i < towers.length - 2 && d > towers[i + 1]!) i++;
+    const span = Math.max(towers[i + 1]! - towers[i]!, 0.001);
+    const s = 2 * ((d - towers[i]!) / span) - 1;
+    return towerTopY - SAG * Math.min(1, span / main) * (1 - s * s);
   };
   // hangers every HANGER_SPACING studs wherever the cable stands clear above the girder
   const hangers: number[] = [];
@@ -1092,10 +1341,10 @@ const buildSuspension: Builder = (out, g, opts, heightAt) => {
 const STAY_SPACING = 4;
 const makeCableStayed = (type: "cable_stayed" | "cable_stayed_y"): Builder => (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
-  const towers = cableTowerDistances(type, g.length);
-  const main = cableMainSpan(type, g.length);
+  const towers = opts.towers ?? cableTowerDistances(type, g.length);
+  const main = g.length / towers.length;
   const sideX = cableStayedTowerHalfWidth(g.deckWidth);
-  buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("cable_stayed", g.deckWidth, main), w: 3, d: 3 }, opts.waterAt);
+  buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("cable_stayed", g.deckWidth, main), w: 3, d: 3 }, opts.waterAt, opts.towers);
   pushCableGirders(out, g, sideX, "deck");
   const TOWER_WIDTH = CABLE_STAYED_TOWER_WIDTH;
   const y = type === "cable_stayed_y";
@@ -1115,7 +1364,8 @@ const makeCableStayed = (type: "cable_stayed" | "cable_stayed_y"): Builder => (o
   }
   towers.forEach((td, i) => {
     for (const dir of [-1, 1]) {
-      const end = dir < 0 ? (i === 0 ? 1 : td - main / 2) : (i === towers.length - 1 ? g.length - 1 : td + main / 2);
+      // half way to the neighbouring tower (where its own stays meet these), or the abutment
+      const end = dir < 0 ? (i === 0 ? 1 : (td + towers[i - 1]!) / 2) : (i === towers.length - 1 ? g.length - 1 : (td + towers[i + 1]!) / 2);
       const reach = Math.abs(end - td);
       const n = Math.max(4, Math.round(reach / STAY_SPACING));
       const lowest = mergeY + 1.5;
@@ -1237,7 +1487,7 @@ const buildDeckTruss: Builder = (out, g) => {
 // and girts along the bridge from bent to bent at the first story line. Two
 // stringers carry the plank deck; a post-and-rail guard runs along both edges.
 const TRESTLE_BENT = 8, TRESTLE_STORY = 10, TRESTLE_CAP_Y = -1.1;
-const buildTimberTrestle: Builder = (out, g, _opts, heightAt) => {
+const buildTimberTrestle: Builder = (out, g, opts, heightAt) => {
   // every ribbon pays a joint at each path vertex on a bend: a plank deck without a
   // cornice, two stringers, one rail a side
   buildPathDeck(out, g, "timber", false);
@@ -1250,10 +1500,9 @@ const buildTimberTrestle: Builder = (out, g, _opts, heightAt) => {
     const posts = Math.max(2, Math.round(g.length / 4.5));
     for (let i = 0; i <= posts; i++) pushBox(out, g, (g.length * i) / posts, side * (railX + 0.08), DECK_THICKNESS / 2 + 0.7, { x: 0.28, y: 1.4, z: 0.28 }, "timber");
   }
-  const count = Math.max(2, Math.ceil(g.length / TRESTLE_BENT));
+  const bents = opts.supports ?? defaultBentDistances(g.length);
   let previous: { d: number; level: Vec3[] } | null = null;
-  for (let i = 0; i <= count; i++) {
-    const d = (g.length * i) / count;
+  for (const d of bents) {
     // posts: [top lateral, foot lateral]; the outer two are battered
     const posts: Array<[number, number]> = [[-0.27 * W, -0.42 * W], [-0.12 * W, -0.12 * W], [0.12 * W, 0.12 * W], [0.27 * W, 0.42 * W]];
     const lines: Array<{ top: Vec3; foot: Vec3 }> = [];
@@ -1341,25 +1590,33 @@ export function lowDetailBoxes(boxes: BridgeBox[]): BridgeBox[] {
  * Every box of a `type` bridge along `g` over the terrain `heightAt`. A type with a
  * maxSpan repeats its superstructure per structural span over a clipped path, with
  * shared boundary piers; every bridge closes with its abutments. A type this module
- * does not know builds as a beam bridge.
+ * does not know builds as a beam bridge. `options` (or a plan from planSupports)
+ * moves the supports off taken ground and keeps the player's pylons.
  */
-export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn): BridgeBox[] {
+export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn, options: SupportOptions | SupportPlan = {}): BridgeBox[] {
   const out: BridgeBox[] = [];
   const builder = BUILDERS[type] ?? BUILDERS.beam!;
-  const maxSpan = TYPE_META[type]?.maxSpan;
-  if (!maxSpan || CABLE_TYPES.has(type)) {
-    builder(out, g, { waterAt }, heightAt);
-    buildAbutments(out, g, heightAt, type === "timber_trestle" ? "timber" : "pier");
+  const known = BUILDERS[type] ? type : "beam";
+  const plan = "supports" in options && Array.isArray(options.supports) && "spans" in options ? options as SupportPlan : planSupports(known, g, options as SupportOptions);
+  const maxSpan = TYPE_META[known]?.maxSpan;
+  if (!maxSpan || CABLE_TYPES.has(known)) {
+    builder(out, g, { waterAt, supports: plan.supports, towers: plan.towers.length ? plan.towers : undefined }, heightAt);
+    buildAbutments(out, g, heightAt, known === "timber_trestle" ? "timber" : "pier");
     return out;
   }
-  const ranges = getStructuralSpanRanges(type, g.length);
+  const ranges = plan.spans;
   for (const range of ranges) {
     const spanGeom = clipPathGeom(g, range.fromDistance, range.toDistance);
-    if (spanGeom) builder(out, spanGeom, { suppressGroundPiers: type !== "cantilever", waterAt }, heightAt);
+    if (spanGeom) builder(out, spanGeom, { suppressGroundPiers: known !== "cantilever", waterAt }, heightAt);
   }
   // a cantilever stands on its two tower piers alone: its anchor arms reach the
-  // abutments (or the next span's arms), with no pier of their own under them
-  if (type !== "cantilever") buildSpanBoundaryPiers(out, g, ranges, type, heightAt, waterAt);
-  buildAbutments(out, g, heightAt, type === "stone_arch" ? "stone" : type === "brick_arch" ? "brick" : "pier");
+  // abutments (or the next span's arms), with no pier of their own under them --
+  // except where the player put a pylon, which stands as a plain boundary pier
+  if (known !== "cantilever") buildSpanBoundaryPiers(out, g, ranges, known, heightAt, waterAt);
+  else {
+    const inner = new Set(ranges.flatMap((r) => CANTILEVER_TOWER_T.map((t) => Math.round((r.fromDistance + t * (r.toDistance - r.fromDistance)) * 1000))));
+    for (const d of plan.supports) if (!inner.has(Math.round(d * 1000))) pushPier(out, g, d, boundaryPierStyle("truss", g.deckWidth, TYPE_META.cantilever!.maxSpan!), heightAt, waterAt);
+  }
+  buildAbutments(out, g, heightAt, known === "stone_arch" ? "stone" : known === "brick_arch" ? "brick" : "pier");
   return out;
 }
