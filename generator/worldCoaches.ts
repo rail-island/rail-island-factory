@@ -24,6 +24,7 @@ import { NS_ICR } from "./nlIcrCoach.ts";
 import { IR_LHB, lhbCoach, lhbCoachLod } from "./inLhbCoach.ts";
 import { IR_ICF, icfCoach, icfCoachLod } from "./inIcfCoach.ts";
 import { CR_25 } from "./cnCoach25.ts";
+import { SNCF_CORAIL } from "./frCorail.ts";
 
 type Band = readonly [number, number, string];
 
@@ -348,18 +349,7 @@ export { DB_IC } from "./deIcCoach.ts";
 // ---------------------------------------------------------------------------
 // France: the Corail (VTU), the Grand Confort and the Wagons-Lits cars
 
-export const SNCF_CORAIL: WorldCoach = {
-  length: 26.4, W: 1.42, Y: 1.4, S: 3.25, C: 4.05, B: 1.0, A: 1.15, rows: [[1.95, 2.8]], doorIn: 0.7, doorW: 0.8, door: [1.2, 3.1],
-  bogieCentres: 18.4, wheelR: 0.45, wheelbase: 2.56, coupler: "buffers", maxspeed: 200,
-  types: {
-    a10tu: { title: "First class", windows: 12, windowW: 1.3, number: "A10TU 50 87 19-70 110-4", weight: 42 },
-    b11tu: { title: "Second class", windows: 13, windowW: 1.2, number: "B11TU 50 87 21-70 412-4", weight: 42 },
-  },
-  liveries: {
-    corail: { title: "Corail", palette: { grey: c("#9aa0a5", 0.45), white: c("#efefea", 0.4), orange: c("#e8701e"), roofG: c("#6a6c6e", 0.7), skirtG: c("#3a3d40", 0.8) }, bands: [[0, 1.82, "grey"], [1.82, 1.9, "orange"], [1.9, 9, "white"]], roof: "roofG", skirt: "skirtG" },
-    teoz: { title: "Teoz", palette: { dark: c("#3f4448", 0.45), white: c("#efefea", 0.4), roofG: c("#6a6c6e", 0.7), skirtG: c("#2a2c2f", 0.8) }, bands: [[0, 1.85, "dark"], [1.85, 9, "white"]], roof: "roofG", skirt: "skirtG" },
-  },
-};
+export { SNCF_CORAIL } from "./frCorail.ts";
 
 export const SNCF_GRAND_CONFORT: WorldCoach = {
   length: 24.5, W: 1.43, Y: 1.4, S: 3.25, C: 4.05, B: 1.0, A: 1.15, rows: [[1.95, 2.8]], doorIn: 0.7, doorW: 0.75, door: [1.2, 3.1],
