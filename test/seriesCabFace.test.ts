@@ -83,11 +83,18 @@ describe("series cab faces", () => {
     const { pts } = points(d);
     const top = Math.max(...pts.map((p) => p[1]!));
     expect(top).toBeGreaterThan(X3800.C + 0.5);
-    const high = pts.filter((p) => p[1]! > X3800.C + 0.3);
-    // off to one side: all of it on one side of the roof's middle
-    expect(Math.min(...high.map((p) => p[2]!))).toBeGreaterThan(0);
-    // near the front end
-    expect(Math.min(...high.map((p) => p[0]!))).toBeGreaterThan(X3800.endLength / 2 - 4.5);
+    // the turret's own box (the radiator housing ahead of it stands on the other side of the crown)
+    const root = d.build({}).sourceTree(d.id, d.title).root;
+    let box: { min: number[]; max: number[] } | undefined;
+    const walk = (n: any) => { if (!box && /(^|\/)turret$/.test(n.id) && n.min && n.max) box = n; for (const k of n.children ?? []) walk(k); };
+    walk(root);
+    expect(box).toBeDefined();
+    // off to one side: all of it on the right of the roof's middle (its left face on it), reaching well out
+    expect(box!.min[2]!).toBeGreaterThan(-0.02);
+    expect(box!.max[2]!).toBeGreaterThan(1.0);
+    expect(box!.max[1]!).toBeGreaterThan(X3800.C + 0.5);
+    // near the front end: within 5 m of the front's tip (1.6 - 4.1 m behind it at its foot)
+    expect(box!.min[0]!).toBeGreaterThan(Math.max(...pts.map((p) => p[0]!)) - 5);
     expect(ids(d).filter((id) => /turret\/(front|rear)-windscreen$/.test(id))).toHaveLength(2);
     const lod = d.buildLod({}).toGlb("lod");
     const { json, bin } = parseGlb(lod);
@@ -114,9 +121,11 @@ describe("series cab faces", () => {
     let screenTop = 0;
     const walk = (n: any) => { if (/turret\/front-windscreen$/.test(n.id)) screenTop = n.max[1]; for (const k of n.children ?? []) walk(k); };
     walk(root);
-    // past the upright part (the top's radius below the turret's top)
-    expect(screenTop).toBeGreaterThan(4.3 - 0.3 + 0.1);
-    expect(ids(d).filter((id) => /^grilles/.test(id)).length).toBeGreaterThan(0);
+    // arched: up past the upright part into the top's rounded corners (0.45 m across, the turret's top 3.95 m)
+    expect(screenTop).toBeGreaterThan(3.95 - 0.45 + 0.1);
+    // the engine room's louvred side window and the louvres on the end
+    expect(ids(d)).toContain("window-bars");
+    expect(ids(d)).toContain("side-panels");
   });
 
   it("hangs a single axle's horn guides up into the body: no gap over the wheels", () => {
