@@ -6,7 +6,7 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamValues, ProceduralDesign } from "./design.ts";
 import { buildSeries, buildSeriesLod, seriesDesign, seriesParams, type ShinkansenLivery, type ShinkansenSeries } from "./shinkansen.ts";
-import { c, flatCab, nose, NO_NOSE } from "./seriesHelpers.ts";
+import { c, nose, NO_NOSE } from "./seriesHelpers.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import type { SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
@@ -15,6 +15,7 @@ export { TGV_M };
 import { decalX, decalZ } from "./usHoodKit.ts";
 import { REGIO2N_DD as REGIO2N, REGIO2N_DESIGN } from "./frRegio2n.ts";
 import { REGIOLIS_SERIES as REGIOLIS, REGIOLIS_DESIGN } from "./frRegiolis.ts";
+import { Z20500, Z20500_DESIGN } from "./frZ20500.ts";
 
 /** A livery of bands bottom first: [top of band, paint] pairs over a body colour list. */
 const livery = (title: string, number: string, palette: Record<string, string>, bands: Array<[number, number, string]>, roof = "roofG", skirt = "skirtG"): ShinkansenLivery => ({
@@ -24,20 +25,6 @@ const livery = (title: string, number: string, palette: Record<string, string>, 
 
 // the double-deck rows: the lower deck's windows low, the upper's under the eaves
 const DD_ROWS: ReadonlyArray<readonly [number, number]> = [[1.25, 1.95], [2.75, 3.45]];
-
-export const Z20500: ShinkansenSeries = {
-  endLength: 26.4, midLength: 24.28, W: 1.45, Y: 1.2, S: 3.85, C: 4.32, lean: 0.97, B: 0.75, A: 0.95,
-  nose: nose(0.1, 1, 2, [[0, 4.32]], [[0, 3.85]], [[0, 1.2]], [[0, 0.95]], [[0, 0.75]]),
-  windscreen: [0, 0, 0, 0], lamps: [0, 0],
-  flatCab: flatCab(1.45, 2.85, 3.6, "cabMask", 1.5),
-  windows: DD_ROWS, windowW: 1.3, pitch: 1.55, door: [1.1, 3.05, 1.8, 2.6], doorW: 1.3, doorCount: 2,
-  bogieCentres: 17.5, wheelR: 0.46, wheelbase: 2.4, cars: [4, 5],
-  liveries: {
-    transilien: livery("Transilien", "Z 20501", { body: "#e9ebec", blue: "#1d3f80", red: "#c8102e" }, [[0, 1.05, "blue"], [1.05, 1.12, "red"], [1.12, 9, "body"]]),
-    ileDeFrance: livery("Ile-de-France", "Z 20702", { body: "#e9ebec", teal: "#3fa9a0", grey: "#5b6066" }, [[0, 1.05, "grey"], [1.05, 1.15, "teal"], [1.15, 9, "body"]]),
-  },
-  weight: { end: 64, middle: 48 }, power: 700, maxspeed: 140,
-};
 
 /**
  * The MI 09's cab, read from photo-ligne-de-nanterre-...jpg and photo-rame-mi09-...-cdg-...jpg: the
@@ -177,8 +164,7 @@ const P = { tgvM: seriesParams(TGV_M), z20500: seriesParams(Z20500), mi09: serie
 
 export function sncfTgvM(v?: ParamValues): MeshBuilder { return buildSeries(TGV_M, P.tgvM, v); }
 export function sncfTgvMLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(TGV_M, P.tgvM, v); }
-export function sncfZ20500(v?: ParamValues): MeshBuilder { return buildSeries(Z20500, P.z20500, v); }
-export function sncfZ20500Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(Z20500, P.z20500, v); }
+export { sncfZ20500, sncfZ20500Lod } from "./frZ20500.ts";
 export function ratpMi09(v?: ParamValues): MeshBuilder { return buildSeries(MI09, P.mi09, v); }
 export function ratpMi09Lod(v?: ParamValues): MeshBuilder { return buildSeriesLod(MI09, P.mi09, v); }
 export { sncfRegio2n, sncfRegio2nLod } from "./frRegio2n.ts";
@@ -190,7 +176,7 @@ export function sncfX73500Lod(v?: ParamValues): MeshBuilder { return buildSeries
 
 export const FR_UNITS: ProceduralDesign[] = [
   tgvMGame(seriesDesign("proc-vehicle-sncf-tgv-m", "TGV M", TGV_M, P.tgvM, sncfTgvM, sncfTgvMLod, "sncf-tgv-m", "uic")),
-  seriesDesign("proc-vehicle-sncf-z20500", "SNCF Z 20500", Z20500, P.z20500, sncfZ20500, sncfZ20500Lod, "sncf-z20500", "uic"),
+  Z20500_DESIGN,
   seriesDesign("proc-vehicle-ratp-mi09", "RER MI 09", MI09, P.mi09, ratpMi09, ratpMi09Lod, "ratp-mi09", "uic"),
   REGIO2N_DESIGN,
   REGIOLIS_DESIGN,

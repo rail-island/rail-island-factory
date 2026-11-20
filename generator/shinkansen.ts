@@ -334,9 +334,10 @@ export interface ShinkansenSeries {
    * roof grilles): their crown and shoulder, the ramp up to the full roof (m), each well's length from
    * the body's end - the end car's at its inner end, an intermediate car's at its front and rear - and
    * the body's slice spacing along them. The wells' sides over their shoulder take the roof's paint; the
-   * raised pantograph stands on its car's roof, lowered or not.
+   * raised pantograph stands on its car's roof, lowered or not. `endCarOnly`: only the end car's well, the
+   * intermediate cars' roofs full height to their ends (the Z 20500's trailers; `front` and `rear` unused).
    */
-  roofWells?: { C: number; S: number; ramp: number; end: number; front: number; rear: number; step: number };
+  roofWells?: { C: number; S: number; ramp: number; end: number; front: number; rear: number; step: number; endCarOnly?: boolean };
   /** A power car of its own among the intermediate cars (the unit value `powerCar`): the train's only pantograph car. */
   powerCar?: SeriesPowerCar;
   /** Fittings of the series' own, drawn in place of the plain underfloor box (`rearEndCar`: a train's rear end car, drawn with the series' `rearEnd` layout). */
@@ -708,15 +709,17 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
 }
 
 /** The roof wells' noses (`roofWells`): the end car's at its inner (rear) end, an intermediate car's at both. */
-function wellNoses(s: ShinkansenSeries, end: boolean): { front?: NoseShape; rear: NoseShape } {
+function wellNoses(s: ShinkansenSeries, end: boolean): { front?: NoseShape; rear?: NoseShape } {
   const w = s.roofWells!;
   const well = (len: number): NoseShape => ({ len: 1e-3, tip: 1, power: 2, C: [[0, w.C], [len - w.ramp, w.C], [len, s.C]], S: [[0, w.S], [len - w.ramp, w.S], [len, s.S]] });
+  if (!end && w.endCarOnly) return {};
   return end ? { rear: well(w.end) } : { front: well(w.front), rear: well(w.rear) };
 }
 
 /** The roof's paint over a roof well's sides, above its shoulder, out to the ramp's top. */
 function wellStrips(s: ShinkansenSeries, end: boolean, L: number, roof: string): Array<{ d: readonly [number, number]; y: readonly [number, number]; mat: string }> {
   const w = s.roofWells!, y = [w.S, s.C + 0.1] as const;
+  if (!end && w.endCarOnly) return [];
   return end ? [{ d: [L - w.end, L], y, mat: roof }] : [{ d: [0, w.front], y, mat: roof }, { d: [L - w.rear, L], y, mat: roof }];
 }
 
