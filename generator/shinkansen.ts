@@ -375,6 +375,13 @@ export interface ShinkansenSeries {
    * `lowWell` too; the face meets the section at d = 0.
    */
   endSection?: { C: Pt[]; S: Pt[]; step: number };
+  /**
+   * The end car's belly, skirt top and bottom by d behind the body's front end ([d, height] tables over
+   * the whole body), in place of Y, A and B: a single railcar whose body comes down low under its cabs
+   * and between its bogies and stands high over them (the X 73500's engine housings and low floor). The
+   * series' Y, A and B are the bogies' heights for the rest of the kit (the distant model, the bolster).
+   */
+  railcarUnderside?: { Y: Pt[]; A: Pt[]; B: Pt[] };
 }
 
 /** The leading end car's series: the series with its `leadEnd` fields. */
@@ -572,6 +579,8 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
       ...(s.roofWells && !power ? wellNoses(s, end) : {}),
       // the end car's own crown and shoulder by d (endSection), over its well's tables when it has one
       ...(end && !power && s.endSection ? { front: { ...(s.lowWell ? wellNose(s, s.lowWell, true, L) : { len: 1e-3, tip: 1, power: 2 }), C: s.endSection.C, S: s.endSection.S }, noseStep: s.endSection.step } : {}),
+      // a railcar's own underside by d (railcarUnderside): a nose of the body's full plan whose tables run the car's length
+      ...(end && !power && s.railcarUnderside ? { front: { len: 1e-3, tip: 1, power: 2, C: [[0, s.C]], S: [[0, s.S]], Y: s.railcarUnderside.Y, A: s.railcarUnderside.A, B: s.railcarUnderside.B }, noseStep: 1.0 } : {}),
     },
     bands: (end && l.endBands) || l.bands, roof: l.roof, skirt: l.skirt, under: "under",
     ...(end && s.cabPanel ? { field: { d: s.cabPanel.d, y: s.cabPanel.y, mat: "cabPanel" } } : {}),
