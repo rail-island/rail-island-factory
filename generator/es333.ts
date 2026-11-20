@@ -33,7 +33,11 @@
 //   script on the face, the blue number plate and blue handrails;
 // - 333 301 (J.-P. Vergez-Larrouy): Renfe Mercancias' first livery - the cabs yellow all
 //   round, the hood silver grey, the Mercancias roundel (a cyan disc, the blue arrow) on the
-//   face, the number in black.
+//   face, the number in black;
+// - 333 353, 352, 359 and 333 333: Renfe Operadora's scheme of today - the cabs ivory all round,
+//   the hood graphite from the sill to the ribs' top (3.18 m) with the plain band, cant and roof
+//   silver grey, a purple line low on the cab side (1.42 - 1.58 m) from the window to the face,
+//   the big ivory "renfe" mid-hood and the purple "renfe Mercancias" on the face.
 
 import type { MeshBuilder, MaterialSpec, Ring } from "./meshBuilder.ts";
 import { ngon } from "./meshBuilder.ts";
@@ -45,6 +49,7 @@ import { tubeX, type Band } from "./cd163.ts";
 import { block } from "./vehicleParts.ts";
 import { enumParam } from "./emuParts.ts";
 import { letters, wordWidth } from "./letters.ts";
+import { lowerQuads, lowerWidth } from "./es252.ts";
 
 type Table = ReadonlyArray<readonly [number, number]>;
 type Pt = readonly [number, number];
@@ -94,7 +99,7 @@ const frontEdge = (y0: number, y1: number): Pt[] => {
 
 interface Es333Livery {
   title: string;
-  kind: "mercancias" | "talgo";
+  kind: "mercancias" | "talgo" | "operadora";
   palette: Record<string, MaterialSpec>;
   side: readonly Band[];
   end: readonly Band[];
@@ -112,6 +117,8 @@ interface Es333Livery {
   sockets: readonly string[];
   /** The round marker lamps' lenses beside the top headlight. */
   marker: string;
+  /** Narrow stripes laid over the cab fields (+x end, mirrored), convex outlines and their colour. */
+  stripes?: ReadonlyArray<{ poly: ReadonlyArray<Pt>; mat: string }>;
   /** The cab roof's colour, where it is not the hood's roof. */
   cabRoof?: string;
 }
@@ -128,6 +135,11 @@ const WAVE_FIELDS: ReadonlyArray<ReadonlyArray<Pt>> = WAVE.slice(1).map((p, i) =
   const q = WAVE[i]!;
   return [q, [q[0], RIBS[1]], [p[0], RIBS[1]], p] as const;
 });
+
+/** Renfe Operadora: the graphite hood (sill to the ribs' top) out to the cab joints; the purple line low on the cab side, ahead of the door. */
+const OPERADORA_HOOD: ReadonlyArray<ReadonlyArray<Pt>> = [[[0, Y0], [CAB_JOINT - 0.02, Y0], [CAB_JOINT - 0.02, RIBS[1]], [0, RIBS[1]]]];
+const PURPLE_LINE: readonly [number, number] = [1.42, 1.58];
+const OPERADORA_LINE: ReadonlyArray<Pt> = [[8.92, PURPLE_LINE[0]], ...frontEdge(PURPLE_LINE[0], PURPLE_LINE[1]), [8.92, PURPLE_LINE[1]]];
 
 const LIVERIES: Record<string, Es333Livery> = {
   mercancias: {
@@ -168,6 +180,27 @@ const LIVERIES: Record<string, Es333Livery> = {
     rail: "rail",
     sockets: ["socketBlue", "socketBlue", "socketBlue"],
     marker: "markerLens",
+  },
+  operadora: {
+    title: "Renfe Operadora",
+    kind: "operadora",
+    palette: {
+      body: c("#e9e4d6", 0.45), graphite: c("#3f444a", 0.55), silver: c("#b3b8bb", 0.5), roofGrey: c("#b3b8bb", 0.6), ribShade: c("#2c3035", 0.6),
+      purple: c("#8a1f5c"), fadedInk: c("#8e9094", 0.5), ink: c("#2a2b30", 0.6), rail: c("#9a9ea1", 0.45),
+    },
+    side: [[Y0, 4.4, "silver"]],
+    end: [[Y0, 4.4, "body"]],
+    roof: "roofGrey",
+    number: "333.333.3",
+    cabFields: WHOLE_CAB,
+    cabMat: "body",
+    hoodFields: OPERADORA_HOOD,
+    hoodMat: "graphite",
+    rail: "rail",
+    sockets: ["socketRed", "socketRed", "socketRed"],
+    marker: "markerLens",
+    stripes: [{ poly: OPERADORA_LINE, mat: "purple" }],
+    cabRoof: "body",
   },
 };
 
@@ -218,7 +251,7 @@ function lampItems(l: Es333Livery): EndItem[] {
   for (const s of [-1, 1]) {
     const nm = s > 0 ? "left" : "right";
     const zs = (a: number, b: number): readonly [number, number] => (s > 0 ? [a, b] : [-b, -a]);
-    if (l.kind === "talgo") out.push({ kind: "paint", name: `lamp housing ${nm}`, z: zs(0.82, 1.3), y: [1.64, 1.86], mat: "lampBox", layer: 1, poly: roundRect(...zs(0.82, 1.3), 1.64, 1.86, 0.03) });
+    if (l.kind !== "mercancias") out.push({ kind: "paint", name: `lamp housing ${nm}`, z: zs(0.82, 1.3), y: [1.64, 1.86], mat: "lampBox", layer: 1, poly: roundRect(...zs(0.82, 1.3), 1.64, 1.86, 0.03) });
     out.push(
       { kind: "lamp", name: `headlight ${nm}`, z: zs(1.08, 1.24), y, r: 0.075 },
       { kind: "lamp", name: `tail lamp ${nm}`, z: zs(0.88, 1.04), y, r: 0.07, mat: "lampRed" },
@@ -263,6 +296,10 @@ function spec(l: Es333Livery): LocoSpec {
       ...l.hoodFields.map((poly, i): SideItem => {
         const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]);
         return { kind: "paint", name: `hood field ${i + 1}`, x: [Math.min(...xs), Math.max(...xs)], y: [Math.min(...ys), Math.max(...ys)], mat: l.hoodMat, mirror: true, layer: 1, poly: poly as Ring };
+      }),
+      ...(l.stripes ?? []).map(({ poly, mat }, i): SideItem => {
+        const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]);
+        return { kind: "paint", name: `cab stripe ${i + 1}`, x: [Math.min(...xs), Math.max(...xs)], y: [Math.min(...ys), Math.max(...ys)], mat, mirror: true, layer: 2, poly: poly as Ring };
       }),
       { kind: "door", name: "cab door", x: DOOR.x, y: DOOR.y, rails: true, mirror: true },
       { kind: "window", name: "cab window", x: CAB_WINDOW.x, y: CAB_WINDOW.y, bar: CAB_WINDOW.bar, mat: "mask", r: 0.04, mirror: true },
@@ -349,6 +386,37 @@ function trenhotelScript(m: MeshBuilder, sp: ShellSpec): void {
       // the reader's right is +x on the right side (+z), -x on the left; the script sits over the trough at the front half
       const tris = letters("TREN HOTEL", sd > 0 ? 2.5 - w / 2 : 2.5 + w / 2, 2.6, h, sd < 0, style);
       m.scope(sd > 0 ? "right" : "left", () => m.facets("cream", tris.map(([u, v]) => at(u, v, 0.016)), [0, 0, sd]));
+    }
+  });
+}
+
+/**
+ * Renfe Operadora's lettering (333 353's side, 333 333's face): the big ivory "renfe" in the middle of the
+ * graphite hood (x-height 0.4 m, the baseline at 2.4 m), "Mercancias" small under its "nfe"; on the face the
+ * purple "renfe" to the reader's left of the middle over the lamps, the grey "Mercancias" under it to the right.
+ */
+function operadoraMarkings(m: MeshBuilder, sp: ShellSpec): void {
+  m.scope("renfe wordmark", () => {
+    const h = 0.4;
+    for (const sd of [-1, 1]) {
+      const at = onSide(sp, sd);
+      // the reader's right is +x on the right side (+z), -x on the left
+      const place = (polys: readonly Ring[]): Ring[] => polys.map((q) => { const r: Ring = q.map(([u, v]) => [sd * u, v] as [number, number]); return sd > 0 ? r : [...r].reverse(); });
+      const right = lowerWidth("renfe", h) / 2;
+      m.scope(sd > 0 ? "right" : "left", () => {
+        surfaceDecal(m, "body", at, [0, 0, sd], place(lowerQuads("renfe", 0, 2.4, h, 0.2)), 0.016);
+        surfaceDecal(m, "body", at, [0, 0, sd], place(lowerQuads("Mercancias", right + 0.3 - lowerWidth("Mercancias", 0.11), 1.85, 0.11, 0.16, false)), 0.016);
+      });
+    }
+  });
+  m.scope("face lettering", () => {
+    for (const e of [-1, 1]) {
+      const at = onEnd(sp, e);
+      const place = (polys: readonly Ring[]): Ring[] => polys.map((q) => { const r: Ring = q.map(([u, v]) => [-e * u, v] as [number, number]); return e < 0 ? r : [...r].reverse(); });
+      m.scope(e > 0 ? "front" : "rear", () => {
+        surfaceDecal(m, "purple", at, [e, 0, 0], place(lowerQuads("renfe", -0.3, 1.98, 0.19, 0.2)), 0.005);
+        surfaceDecal(m, "fadedInk", at, [e, 0, 0], place(lowerQuads("Mercancias", -0.1, 1.64, 0.075, 0.16, false)), 0.005);
+      });
     }
   });
 }
@@ -471,7 +539,8 @@ export function renfe333(v?: ParamValues): MeshBuilder {
   const sp = shellOf(s);
   m.scope("body", () => {
     if (l.kind === "mercancias") mercanciasRoundel(m, sp);
-    else trenhotelScript(m, sp);
+    else if (l.kind === "talgo") trenhotelScript(m, sp);
+    else operadoraMarkings(m, sp);
     faceNumbers(m, sp, l);
     faceFittings(m, sp, l);
     wipers(m, sp);
@@ -494,15 +563,16 @@ export function renfe333Lod(v?: ParamValues): MeshBuilder {
   const cabTop = l.kind === "talgo" ? BRONZE_TOP : CANT;
   const halves: Pt[][] = [[[CAB_JOINT, Y0], [N - 0.1, Y0], [N - 0.1, cabTop], [CAB_JOINT, cabTop]]];
   if (l.kind === "talgo") halves.push([[CAB_JOINT - 0.02, Y0], [CAB_JOINT - 0.02, RIBS[1]], [6.3, RIBS[1]], [6.3, 2.5]]);
-  const quads: Pt[][] = [...halves, ...halves.map((q) => q.map(([x, y]) => [-x, y] as const))];
-  if (l.kind === "talgo") quads.push([[6.3, 2.5], [6.3, RIBS[1]], [-6.3, RIBS[1]], [-6.3, 2.5]]);
+  const quads: Array<[Pt[], string]> = [...halves, ...halves.map((q) => q.map(([x, y]) => [-x, y] as const))].map((q) => [q, l.cabMat]);
+  if (l.kind === "talgo") quads.push([[[6.3, 2.5], [6.3, RIBS[1]], [-6.3, RIBS[1]], [-6.3, 2.5]], l.cabMat]);
+  if (l.kind === "operadora") quads.push([[[-CAB_JOINT, Y0], [CAB_JOINT, Y0], [CAB_JOINT, RIBS[1]], [-CAB_JOINT, RIBS[1]]], l.hoodMat]);
   const m = boxLocoLod(spec(l), 100 - quads.length * 4);
   m.scope("livery fields", () => {
     for (const sd of [-1, 1])
-      for (const q of quads) {
+      for (const [q, mat] of quads) {
         const p = q.map(([x, y]): Vec3 => [x, y, sd * (W + 0.012)]);
         const tris = [p[0]!, p[1]!, p[2]!, p[0]!, p[2]!, p[3]!];
-        m.facets(l.cabMat, tris, [0, 0, sd]);
+        m.facets(mat, tris, [0, 0, sd]);
       }
   });
   return m;

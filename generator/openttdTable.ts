@@ -1045,7 +1045,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-renfe-269": loco(ELRL, { presets: presets(...each("livery", "estrella")) }),
   "proc-vehicle-renfe-277": loco(ELRL, { presets: presets(...each("livery", "blue")) }),
   "proc-vehicle-renfe-319": loco(RAIL, { presets: presets(...each("livery", "mercancias")) }),
-  "proc-vehicle-renfe-333": loco(RAIL, { presets: presets(...each("livery", "talgo")) }),
+  "proc-vehicle-renfe-333": loco(RAIL, { presets: presets(...each("livery", "talgo", "operadora")) }),
   "proc-vehicle-renfe-141f": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-renfe-242f": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   // the United Kingdom (docs/models/uk-trains.md)

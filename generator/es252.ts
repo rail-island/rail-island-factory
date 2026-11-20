@@ -315,12 +315,12 @@ const LOWER: Record<string, { w: number; lines: ReadonlyArray<ReadonlyArray<Pt>>
 };
 const LOWER_GAP = 0.2;
 
-function lowerWidth(text: string, h: number): number {
+export function lowerWidth(text: string, h: number): number {
   return [...text].reduce((a, ch) => a + LOWER[ch]!.w * h, 0) + Math.max(0, text.length - 1) * LOWER_GAP * h;
 }
 
 /** `text` as stroke quads in the reader's (u, v): x-height h, the baseline at v0, centred on u0 (or starting there). */
-function lowerQuads(text: string, u0: number, v0: number, h: number, weight: number, centre = true): Ring[] {
+export function lowerQuads(text: string, u0: number, v0: number, h: number, weight: number, centre = true): Ring[] {
   const t = weight * h;
   let u = centre ? u0 - lowerWidth(text, h) / 2 : u0;
   const out: Ring[] = [];
