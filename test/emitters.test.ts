@@ -49,17 +49,18 @@ describe("emitters", () => {
   // (MeshCore.moved): its smoke must go through that frame like the stack's triangles.
   // MeshCore.emit once took the point as given, which put the EMD F7's train smoke
   // off its stacks and the HST's and the Renfe 592's rear stack 0.18 - 0.25 m off.
-  it("of a train's turned and moved cars sit on their stacks", () => {
+  // one test a train: a single test building them all ran over a minute, past the worker's report timeout
+  describe("of a train's turned and moved cars sit on their stacks", () => {
     const trains = [...DESIGNS.values()].filter((d) => d.params?.some((p) => p.name === "unit" && p.values.some((v) => v.value === "train")));
     let smoking = 0;
-    for (const d of trains) {
+    for (const d of trains) it(d.id, () => {
       const { emitters, pos } = built(d, { unit: "train" });
       if (emitters.length > 0) smoking++;
       expectEmittersOnMouths(emitters, pos, `${d.id} train`);
       for (const e of emitters) for (const v of e.at) expect(Object.is(v, -0), `${d.id}: -0 in an emitter`).toBe(false);
-    }
-    expect(smoking).toBeGreaterThan(5);
-  }, 300_000);
+    });
+    it("smoke from more than five of them", () => expect(smoking).toBeGreaterThan(5));
+  });
 
   it("are given by every chimney, cooling tower, flare, funnel and locomotive exhaust", () => {
     for (const id of SMOKERS) {

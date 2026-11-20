@@ -48,10 +48,11 @@ describe("every vehicle a GRF can hold", () => {
     }
   });
 
-  it("measures its formations' parts on the built cars", { timeout: 120_000 }, () => {
+  // one test a design: a single test measuring them all ran over a minute, past the worker's report timeout
+  describe("measures its formations' parts on the built cars", () => {
     const withFormations = exportable.filter((d) => d.openttd?.formations?.length);
-    expect(withFormations.length).toBeGreaterThan(15);
-    for (const d of withFormations) expect(() => checkOpenttdDesign(d), d.id).not.toThrow();
+    it("more than fifteen designs offer formations", () => expect(withFormations.length).toBeGreaterThan(15));
+    for (const d of withFormations) it(d.id, () => expect(() => checkOpenttdDesign(d), d.id).not.toThrow());
   });
 });
 
