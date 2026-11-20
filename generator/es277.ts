@@ -63,11 +63,17 @@ const CANT = 3.5;
 const CROWN = 3.97;
 /** The body's half width (2.95 m). */
 const W = 1.475;
-/** The nose top, its face's top edge's and its long edges' radii, the face corners' radius in plan. */
+/**
+ * The nose top, its face's top edge's and its long edges' radii, the face corners' radius in plan,
+ * and how much narrower each side of the nose is at the face than at the cab (the bonnet tapers in
+ * plan). The long edges roll over with 0.5 m, from just above the yellow line: the face's shoulders
+ * round in, its top reads about 2.3 m wide over 2.8 m at the beam, as on the head-on 7702.
+ */
 const NT = 3.02;
 const RT = 0.3;
-const RS = 0.3;
+const RS = 0.5;
 const RC = 0.5;
+const NOSE_TAPER = 0.08;
 /** The yellow line along the sides. */
 const LINE: readonly [number, number] = [2.45, 2.55];
 /** The windscreens' sill and head on the raked cab front. */
@@ -228,19 +234,19 @@ const SKIRT_EDGE: Table = [[0.55, SKIRT], [0.8, 0.8], [1.05, 0.92], [1.25, 1.08]
 const skirtAt = (d: number): number => lerpTable(SKIRT_EDGE, d);
 /** Where the nose's sections are taken, behind the face. */
 const NOSE_D = [0, 0.012, 0.045, 0.1, 0.17, 0.25, RT, 0.38, RC, ...SKIRT_EDGE.map(([d]) => d), NOSE_LEN];
-const noseW = (d: number) => W - inset(RC, d);
+const noseW = (d: number) => W - NOSE_TAPER * (1 - d / NOSE_LEN) - inset(RC, d);
 const noseTop = (d: number) => NT - inset(RT, d);
 
 /** The nose's cross-section (z, y) at d: upright sides, the top's long edges rounded. */
 function section(d: number): Ring {
   const w = noseW(d), top = noseTop(d), yb = skirtAt(d);
   const out: Array<[number, number]> = [[-w, yb], [w, yb]];
-  for (let i = 0; i <= 4; i++) {
-    const a = (i * Math.PI) / 8;
+  for (let i = 0; i <= 6; i++) {
+    const a = (i * Math.PI) / 12;
     out.push([w - RS + RS * Math.cos(a), top - RS + RS * Math.sin(a)]);
   }
-  for (let i = 4; i >= 0; i--) {
-    const a = (i * Math.PI) / 8;
+  for (let i = 6; i >= 0; i--) {
+    const a = (i * Math.PI) / 12;
     out.push([-(w - RS + RS * Math.cos(a)), top - RS + RS * Math.sin(a)]);
   }
   return out;
@@ -337,9 +343,9 @@ function onNoseDecal(m: MeshBuilder, mat: string, s: number, polys: readonly Rin
 }
 
 /** A lamp pod standing out of the face: its housing, rim and lens. */
-function pod(m: MeshBuilder, mat: string, z: number, y: number, r: number, len: number, lens = "lampHead"): void {
+function pod(m: MeshBuilder, mat: string, z: number, y: number, r: number, len: number, lens = "lampHead", root = 0.12): void {
   const ring = ngon(12, r, 0, z, y);
-  m.sweep(mat, "x", ring, NF - 0.12, ring, NF + len);
+  m.sweep(mat, "x", ring, NF - root, ring, NF + len);
   const rim = ngon(12, r * 0.85, 0, z, y);
   m.scope("rim", () => m.sweep("rim", "x", rim, NF + len, rim, NF + len + 0.01));
   const glass = ngon(12, r * 0.6, 0, z, y);
@@ -376,8 +382,9 @@ function nose(m: MeshBuilder, l: Es277Livery): void {
     });
     for (const s of [-1, 1])
       m.scope(s > 0 ? "left" : "right", () => {
-        m.scope("upper lamp", () => pod(m, "body", s * 0.92, 2.86, 0.1, 0.12));
-        m.scope("lower lamp", () => pod(m, "body", s * 0.88, 1.75, 0.11, 0.14));
+        // round pods standing out of the rounded upper corners and proud of the face, the lens at their front
+        m.scope("upper lamp", () => pod(m, "body", s * 0.9, 2.84, 0.12, 0.2, "lampHead", 0.45));
+        m.scope("lower lamp", () => pod(m, "body", s * 0.86, 1.75, 0.13, 0.22));
         m.scope("jumper sockets", () => {
           for (const z of [0.46, 0.62]) {
             block(m, "steel", NF - 0.02, NF + 0.1, 2.5, 2.64, s * z - 0.06, s * z + 0.06);
@@ -410,7 +417,11 @@ function nose(m: MeshBuilder, l: Es277Livery): void {
     });
   });
   m.scope("buffer beam", () => {
-    block(m, l.beam, NF - 0.12, 9.82, 0.88, 1.38, -1.42, 1.42);
+    // the red beam between the black buffer housings, the nose's green skirt showing under it
+    block(m, l.beam, NF - 0.12, 9.82, 1.0, 1.38, -1.06, 1.06);
+    m.scope("buffer housings", () => {
+      for (const s of [-1, 1]) block(m, "frame", NF - 0.12, 9.83, 0.9, 1.27, s > 0 ? 1.06 : -1.4, s > 0 ? 1.4 : -1.06);
+    });
     block(m, l.beam, 9.82, 9.9, 1.0, 1.16, -0.16, 0.16);
     m.scope("coupling", () => {
       m.sweep("steel", "x", ngon(8, 0.05, 0, 0, 1.08), 9.9, ngon(8, 0.05, 0, 0, 1.08), 10.12);
