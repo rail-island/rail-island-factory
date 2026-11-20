@@ -6,33 +6,33 @@
 // Talgo's cars), B'B', 80 t, 2 x MTU 396 (4,171 CV), 180 km/h as delivered and 200 km/h
 // from 1986.
 //
-// A single cab at the front (+x), the rear end flat with rounded corners where the Talgo
-// set is coupled (the photographs show the rear always against the first car; the side's
-// grille rows run to the rear end, no cab door there). The cab: a lower face standing
-// upright with the cream "bumper" ledge over the buffers, the upper face bowed in plan and
-// leaning back 0.11 m over the windows, its corners rounded 0.62 m back into the sides,
-// the roof rounding down to it; three windows across the face (a wide one either side of
-// the narrow middle one, their frames aluminium with big rounded corners) and a corner
-// window on each rounded corner, the side door behind it. On the cab roof the raised
-// cooler hump, its front sloping, carrying the twin headlight in its pod.
+// A cab at each end, alike (the Arnold HN2504 model of 354 003 the user sent, and the
+// photographs of both ends): the rear cab is the front one turned about the middle. Each
+// cab: a lower face standing upright with the cream "bumper" ledge over the buffers, the
+// upper face bowed in plan and leaning back 0.11 m over the windows, its corners rounded
+// 0.62 m back into the sides, the roof rounding down to it; three windows across the face
+// (a wide one either side of the narrow middle one, their frames aluminium with big rounded
+// corners) and a corner window on each rounded corner, the side door behind it. On each
+// cab roof the raised cooler hump, its front sloping, carrying the twin headlight in its pod.
 //
 // The Talgo livery (the Talgo Pendular's dark blue and cream, as 354 001 was restored):
 // dark blue overall, the face's cream lower part and the cream number band between the
 // blue name band and the windows, both carried round the corners; on the sides the cream
 // bars at the number band's height between the grille groups and the cream band low
-// along the body. The sides carry fourteen grille panels in the upper row, the big grille
-// behind the door and four lower grilles in the middle in the row below.
+// along the body. The sides, symmetric about the middle: twelve grille panels in the upper
+// row, the big grille behind each door and four lower grilles in the middle below them.
 //
 // Scales (SOURCES.md): the side-on photo-rn-354-0031.jpg by a 1-D projective fit over the
 // buffers, the four axles (equal bogie wheelbases) - 40 px/m at the front buffer falling to
 // 12 px/m at the rear (bogies 10.3 m apart, 3.0 m wheelbase, the 14 upper grilles at a
-// 0.98 m pitch, the door 2.7 - 3.2 m behind the front buffer, the rear end 19.0 m), 31
+// 0.98 m pitch, the door 2.7 - 3.2 m behind the front buffer), 31
 // px/m vertically at the cab door; the head-on photo-talgo-madrid-coruna-...jpg at 102
 // px/m over the body's 3.04 m (the face's windows and bands); the three-quarter views for
-// the corners, the hump and the side paint.
+// the corners, the hump and the side paint; the Arnold model's side (31.5 px/m over the
+// buffers) for the symmetric layout: the cream bars either side of the middle grilles.
 //
 // Its own body (like the HXD1's section, cnHxd1.ts) lofted from the tables below; the kits'
-// parts (czElectricKit.ts: bogies, buffers, surface panels). Metres, +X toward the cab,
+// parts (czElectricKit.ts: bogies, buffers, surface panels). Metres, +X toward cab 1,
 // wheel contact at y = 0. See docs/models/spain-trains.md.
 
 import { MeshBuilder, ngon, type Ring } from "./meshBuilder.ts";
@@ -48,11 +48,10 @@ type Table = ReadonlyArray<readonly [number, number]>;
 type Span = readonly [number, number];
 type Pt = readonly [number, number];
 
-/** Length over the buffers (19.92 m), half of it; the cab's lower face and the flat rear end (|x|). */
+/** Length over the buffers (19.92 m), half of it; the cabs' lower faces (|x|). */
 export const R354_LENGTH = 19.92;
 const HALF = R354_LENGTH / 2;
 const N = HALF - 0.6;
-const XR = 9.1;
 /** The running number and the name the model carries: 354 001, restored in the Talgo livery. */
 export const R354_NUMBER = "354-001-0";
 const NAME = "VIRGEN DE COVADONGA";
@@ -76,19 +75,14 @@ const LOWER: Span = [1.78, 2.27];
 const TIP: Table = [[Y0, N], [LOW_CREAM, N], [1.75, N - 0.1], [WINDOWS[0] - 0.02, N - 0.13], [3.03, N - 0.24], [3.15, N - 0.33], [3.27, N - 0.5], [3.37, N - 0.72], [CROWN, N - 1.0]];
 /** The half width: the sides upright to the eave, the roof rounding over to the flat crown. */
 const HW: Table = [[Y0, 1.47], [1.1, 1.49], [EAVE, 1.49], [3.17, 1.44], [3.28, 1.33], [3.38, 1.14], [CROWN, 0.86]];
-/** The rear end's centre line (negative x): upright, the roof rounding down to it. */
-const REAR: Table = [[Y0, -XR], [EAVE, -XR], [3.25, -XR + 0.1], [3.38, -XR + 0.22], [CROWN, -XR + 0.35]];
 
 const tip = (y: number) => lerpTable(TIP, y);
 const hw = (y: number) => lerpTable(HW, y);
-const rearX = (y: number) => lerpTable(REAR, y);
 /** The cab's plan at half width w: bowed across the windows, the corners rounded 0.62 m back. [z, setback]. */
 const frontPlan = (w: number): Pt[] => [[0, 0], [0.35 * w, 0.025], [0.6 * w, 0.08], [0.78 * w, 0.17], [0.9 * w, 0.3], [0.97 * w, 0.45], [w, 0.62]];
 const CORNER_BACK = 0.62;
-/** The rear end's plan: flat, the corners rounded 0.32 m. */
-const rearPlan = (w: number): Pt[] => [[0, 0], [w - 0.32, 0], [w - 0.16, 0.04], [w - 0.05, 0.14], [w, 0.32]];
 
-const KINKS = kinks(TIP, HW, REAR);
+const KINKS = kinks(TIP, HW);
 
 // --- paint -------------------------------------------------------------------------------------
 
@@ -121,9 +115,10 @@ const PALETTE = {
 type Region = "front" | "side" | "rear";
 interface RingPt { x: number; z: number; region: Region; sign: number }
 
-/** The ring at height y, clockwise seen from above: front centre to -z, the -z side, the rear end, the +z side, back to the front centre. */
+/** The ring at height y, clockwise seen from above: front centre to -z, the -z side, the rear cab, the +z side, back to the front centre. */
 function ringAt(y: number): RingPt[] {
-  const t = tip(y), w = hw(y), fp = frontPlan(w), rp = rearPlan(w), r = rearX(y);
+  // the two cabs alike: the rear one the front one turned
+  const t = tip(y), w = hw(y), fp = frontPlan(w), rp = fp, r = -t;
   const out: RingPt[] = [];
   const nf = fp.length - 1, nr = rp.length - 1;
   for (let i = 0; i <= nf; i++) out.push({ x: t - fp[i]![1], z: -fp[i]![0], region: i === nf ? "side" : "front", sign: -1 });
@@ -157,8 +152,8 @@ function shell(m: MeshBuilder): void {
       const a: Vec3 = [lo[j]!.x, ya, lo[j]!.z], b: Vec3 = [lo[k]!.x, ya, lo[k]!.z];
       const cc: Vec3 = [hi[k]!.x, yb, hi[k]!.z], d: Vec3 = [hi[j]!.x, yb, hi[j]!.z];
       if (Math.hypot(b[0] - a[0], b[2] - a[2]) < 1e-6 && Math.hypot(cc[0] - d[0], cc[2] - d[2]) < 1e-6) continue;
-      const mat = bandAt(region === "front" ? FACE : SIDE, ym);
-      const where = region === "front" ? "cab face" : region === "rear" ? "rear end" : `side ${sign > 0 ? "right" : "left"}`;
+      const mat = bandAt(region === "side" ? SIDE : FACE, ym);
+      const where = region === "front" ? "cab face" : region === "rear" ? "rear cab face" : `side ${sign > 0 ? "right" : "left"}`;
       const en: Vec3 = [-(b[2] - a[2]), 0, b[0] - a[0]];
       const n: Vec3 = Math.hypot(en[0], en[2]) > 1e-9 ? en : [-(cc[2] - d[2]), 0, cc[0] - d[0]];
       if (!groups.has(where)) groups.set(where, []);
@@ -248,7 +243,7 @@ function sideWindow(m: MeshBuilder, at: Place, n: Vec3, x: Span, y: Span, r: num
 function grille(m: MeshBuilder, at: Place, n: Vec3, x: Span, y: Span): void {
   // the panel's frame in the body colour, the dark louvre and its vertical slats
   m.scope("frame", () => surfacePanel(m, "blue", at, n, rect(x[0], y[0], x[1], y[1]), -0.004, 0.008, [], KINKS));
-  m.scope("louvre", () => surfacePanel(m, "louvre", at, n, rect(x[0] + 0.05, y[0] + 0.05, x[1] - 0.05, y[1] - 0.05), -0.006, 0.01, [], KINKS));
+  m.scope("louvre", () => surfacePanel(m, "louvre", at, n, rect(x[0] + 0.03, y[0] + 0.03, x[1] - 0.03, y[1] - 0.03), -0.006, 0.01, [], KINKS));
   m.scope("slats", () => {
     const pitch = 0.07, count = Math.floor((x[1] - x[0] - 0.12) / pitch);
     const x0 = (x[0] + x[1]) / 2 - ((count - 1) * pitch) / 2;
@@ -259,18 +254,18 @@ function grille(m: MeshBuilder, at: Place, n: Vec3, x: Span, y: Span): void {
 // --- the side ------------------------------------------------------------------------------------
 
 /** The cab door, its window and handrails (x span, y). */
-const DOOR: Span = [6.72, 7.32];
+const DOOR: Span = [6.6, 7.25];
 const DOOR_Y: Span = [1.32, 2.97];
-/** The fourteen upper grilles: 0.66 m wide at a 0.995 m pitch from behind the door to the rear. */
-const PITCH = 0.995;
-const upper = (i: number): Span => [6.05 - 0.66 - i * PITCH, 6.05 - i * PITCH];
-const UPPER_COUNT = 14;
-/** The lower grilles: under the first upper one, four in the middle (under the 6th - 9th) and under the last. */
-const LOWER_AT = [0, 5, 6, 7, 8, 13];
-/** The cream bars at the number band's height: the rear one and the middle one (the cab's comes round the corner). */
-const BARS: readonly Span[] = [[upper(12)[0] + 0.05, upper(9)[1] - 0.05], [upper(4)[0] + 0.04, upper(1)[0] + 0.3]];
+/** The fourteen upper grilles between the doors, symmetric about the middle: 0.62 m wide at a 0.94 m pitch. */
+const PITCH = 0.94;
+const UPPER_X = Array.from({ length: 14 }, (_, i) => (i - 6.5) * PITCH);
+const grilleAt = (xc: number): Span => [xc - 0.31, xc + 0.31];
+/** The lower grilles: the big one behind each door and the four in the middle. */
+const LOWER_X = UPPER_X.filter((x) => Math.abs(x) < 2 || Math.abs(x) > 6);
+/** The cream bars at the number band's height either side of the middle grilles (the cabs' come round the corners). */
+const BARS: readonly Span[] = [[-5.2, -1.98], [1.98, 5.2]];
 /** The cab's bar ends just ahead of the door; the cab's low cream ends in a slant behind the corner. */
-const CAB_BAR_END = 7.42;
+const CAB_BAR_END = 7.36;
 
 /** A side x behind the corner as an arc length on the cab skin (at heights where the face is upright). */
 const arcOf = (x: number, y: number) => ARC_SIDE + (tip(y) - CORNER_BACK - x);
@@ -278,11 +273,17 @@ const arcOf = (x: number, y: number) => ARC_SIDE + (tip(y) - CORNER_BACK - x);
 function sideItems(m: MeshBuilder, sd: number): void {
   const at = onSide(sd);
   const n: Vec3 = [0, 0, sd];
-  m.scope("upper grilles", () => { for (let i = 0; i < UPPER_COUNT; i++) m.scope(`grille ${i + 1}`, () => grille(m, at, n, upper(i), UPPER)); });
-  m.scope("lower grilles", () => { for (const i of LOWER_AT) m.scope(`grille ${i + 1}`, () => grille(m, at, n, upper(i), LOWER)); });
+  m.scope("upper grilles", () => { for (const [i, x] of UPPER_X.entries()) m.scope(`grille ${i + 1}`, () => grille(m, at, n, grilleAt(x), UPPER)); });
+  m.scope("lower grilles", () => { for (const [i, x] of LOWER_X.entries()) m.scope(`grille ${i + 1}`, () => grille(m, at, n, grilleAt(x), LOWER)); });
   m.scope("cream bars", () => {
     for (const [i, x] of BARS.entries()) m.scope(`bar ${i + 1}`, () => surfacePanel(m, "cream", at, n, roundRect(x[0], x[1], NUMBER_BAND[0], NUMBER_BAND[1], 0.18, 4), 0.001, 0.003, [], KINKS));
   });
+}
+
+/** A cab's side items on side sd: the door with its window, grab rails and steps, the "200" diamond ahead of it. */
+function cabSide(m: MeshBuilder, sd: number): void {
+  const at = onSide(sd);
+  const n: Vec3 = [0, 0, sd];
   m.scope("cab door", () => {
     const [d0, d1] = DOOR, [y0, y1] = DOOR_Y;
     m.scope("seams", () => {
@@ -328,8 +329,8 @@ function cabWrap(m: MeshBuilder, s: number): void {
     cabPanel(m, "cream", flipX([[u0, y0], ...end, [u0, y1]]), 0.001, 0.003);
   });
   m.scope("low cream", () => {
-    // the face's cream lower part carried along the side below the side's band, its end leaning up to it
-    const a = arcOf(7.95, 1.2), b = arcOf(7.35, 1.2);
+    // the face's cream lower part carried along the side under the door, its end leaning up to the side's band
+    const a = arcOf(7.0, 1.2), b = arcOf(6.3, 1.2);
     const q: Ring = [[1.3, Y0 + 0.002], [a, Y0 + 0.002], [b, SIDE_CREAM[0]], [1.3, SIDE_CREAM[0]]];
     cabPanel(m, "cream", flipX(q), 0.001, 0.003);
   });
@@ -388,38 +389,13 @@ function lowerFront(m: MeshBuilder): void {
   buffers(m, 1, N - 0.06, HALF, BUFFER_Y, "rect");
 }
 
-// --- the rear end --------------------------------------------------------------------------------
-
-function rearEnd(m: MeshBuilder): void {
-  const at: Place = (z, y, d) => [rearX(y) - d, y, z];
-  const n: Vec3 = [-1, 0, 0];
-  // the end door to the Talgo's first car, its seams, and the red tail lamps low beside the buffers
-  m.scope("end door", () => {
-    const [z0, z1] = [-0.35, 0.35], [y0, y1] = [1.3, 2.95];
-    for (const q of [rect(z0, y0, z1, y0 + 0.02), rect(z0, y1 - 0.02, z1, y1), rect(z0, y0 + 0.02, z0 + 0.02, y1 - 0.02), rect(z1 - 0.02, y0 + 0.02, z1, y1 - 0.02)])
-      surfacePanel(m, "black", at, n, q, -0.002, 0.004, [], KINKS);
-  });
-  m.scope("tail lamps", () => {
-    for (const z of [-1.1, 1.1]) {
-      surfacePanel(m, "black", at, n, ngon(12, 0.09, 0, z, 1.85), -0.01, 0.02, [], KINKS);
-      surfacePanel(m, "lampRed", at, n, ngon(12, 0.065, 0, z, 1.85), 0.0, 0.035, [], KINKS);
-    }
-  });
-  m.scope("apron", () => {
-    const w = 1.44, x0 = -XR + 0.05, x1 = -7.36;
-    const ring: Ring = [[x1, -w], [x0 + 0.3, -w], [x0, -w + 0.3], [x0, w - 0.3], [x0 + 0.3, w], [x1, w]];
-    m.prism("blue", ring, 0.45, Y0 + 0.01, false);
-    m.cap("blue", ring, 0.45, false);
-  });
-  buffers(m, -1, XR - 0.06, HALF, BUFFER_Y, "rect");
-}
-
 // --- roof and running gear -----------------------------------------------------------------------
 
 /** The cab's roof hump: its foot inside the roof, the top's x span and height; the headlight pod at its front. */
 const HUMP = { x0: 6.45, x1: 8.6, top: [6.62, 8.2] as Span, y0: 3.26, y1: 3.86, w0: 1.16, w1: 0.75 };
 
-function roof(m: MeshBuilder): void {
+/** A cab's roof: the hump, the headlight pod and the horns on the hump's top. */
+function cabRoof(m: MeshBuilder): void {
   m.scope("hump", () => {
     const h = HUMP;
     // a box tapering inward and its front sloping back: lofted from its foot to its top
@@ -437,14 +413,17 @@ function roof(m: MeshBuilder): void {
       m.sweep("lampHead", "x", ngon(14, 0.088, 0, z, cy), x1 + 0.03, ngon(14, 0.088, 0, z, cy), x1 + 0.045);
     }
   });
+  m.scope("horns", () => { for (const z of [-0.3, 0.3]) horn(m, 1, HUMP.top[0] + 0.3, z, HUMP.y1 + 0.13); });
+}
+
+function roof(m: MeshBuilder): void {
   m.scope("silencers", () => {
-    // the two engines' silencers and stacks, the horns over the rear
-    for (const x of [0.6, -5.4]) {
+    // the two engines' silencers and stacks, either side of the middle
+    for (const x of [-2.6, 2.6]) {
       block(m, "silencer", x - 0.45, x + 0.45, CROWN - 0.02, CROWN + 0.16, -0.3, 0.3);
       exhaust(m, x, 0, CROWN + 0.15, CROWN + 0.28, 0.16, 0.24);
     }
   });
-  m.scope("horns", () => { horn(m, -1, -7.6, -0.25, CROWN + 0.13); horn(m, -1, -7.6, 0.25, CROWN + 0.13); });
 }
 
 /** Bogie centres 10.4 m apart, 3.0 m wheelbase, 1.0 m wheels. */
@@ -454,7 +433,7 @@ const WHEEL_R = 0.5;
 
 function underframe(m: MeshBuilder): void {
   m.scope("frame", () => {
-    const [a, b, w] = [N - 0.1, -XR + 0.1, 1.42];
+    const [a, b, w] = [N - 0.1, -N + 0.1, 1.42];
     const r: Ring = [[a, -w + 0.1], [a - 0.1, -w], [b + 0.1, -w], [b, -w + 0.1], [b, w - 0.1], [b + 0.1, w], [a - 0.1, w], [a, w - 0.1]];
     m.prism("frame", r, 0.88, Y0, false);
     m.cap("underframe", r, 0.88, false);
@@ -475,8 +454,10 @@ export function renfe354(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.scope("body", () => m.scope("shell", () => shell(m)));
   m.scope("sides", () => { for (const sd of [-1, 1]) m.scope(sd > 0 ? "right side" : "left side", () => sideItems(m, sd)); });
-  m.scope("front cab", () => { cabFace(m); lowerFront(m); });
-  m.scope("rear end", () => rearEnd(m));
+  // the cab at each end, the rear one the front one turned about the middle
+  const cab = () => { cabFace(m); lowerFront(m); for (const sd of [-1, 1]) m.scope(sd > 0 ? "right side" : "left side", () => cabSide(m, sd)); m.scope("roof", () => cabRoof(m)); };
+  m.scope("front cab", cab);
+  m.scope("rear cab", () => m.turned(0, cab));
   m.scope("underframe", () => underframe(m));
   m.scope("roof equipment", () => roof(m));
   return m;
@@ -491,11 +472,12 @@ function body(): UnitBody {
   return {
     y0: Y0, hw: HW, side: lodBands(SIDE), roof: "roof",
     front: { tip: ys.map((y) => [y, tip(y)] as const), setback: ys.map((y) => [y, CORNER_BACK] as const), paint: lodBands(FACE), windows: [{ u: [-1.07, 1.25], y: WINDOWS, mat: LOD_GLASS }] },
-    rear: { tip: ys.map((y) => [y, rearX(y)] as const) },
-    // the cab's bands carried to the door, the cream bars as a band over the middle
+    rear: { tip: ys.map((y) => [y, -tip(y)] as const), setback: ys.map((y) => [y, CORNER_BACK] as const), paint: lodBands(FACE), windows: [{ u: [-1.07, 1.25], y: WINDOWS, mat: LOD_GLASS }] },
+    // the cabs' bands carried to the doors, the cream bars as bands
     cabs: [
+      { x0: -N, x1: -CAB_BAR_END, side: lodBands(FACE) },
+      ...BARS.map(([x0, x1]) => ({ x0, x1, side: [[Y0, SIDE_CREAM[0], "blue"], [SIDE_CREAM[0], SIDE_CREAM[1], "cream"], [SIDE_CREAM[1], NUMBER_BAND[0], "blue"], [NUMBER_BAND[0], NUMBER_BAND[1], "cream"], [NUMBER_BAND[1], CROWN, "blue"]] as LodBand[] })),
       { x0: CAB_BAR_END, x1: N, side: lodBands(FACE) },
-      { x0: BARS[1]![0], x1: BARS[1]![1], side: [[Y0, SIDE_CREAM[0], "blue"], [SIDE_CREAM[0], SIDE_CREAM[1], "cream"], [SIDE_CREAM[1], NUMBER_BAND[0], "blue"], [NUMBER_BAND[0], NUMBER_BAND[1], "cream"], [NUMBER_BAND[1], CROWN, "blue"]] },
     ],
   };
 }
@@ -505,6 +487,7 @@ export function renfe354Lod(): MeshBuilder {
     ...[-PIVOT, PIVOT].map((xc): LodPart => ({ draw: (mm) => mm.scope("running gear", () => lodBogie(mm, xc, AXLE + WHEEL_R + 0.2, 0.88)) })),
     underPart(-2.95, 2.95, 0.45, Y0, 1.44, 50, undefined, "blue"),
     roofPart("hump", HUMP.x0, HUMP.x1, HUMP.w0, HUMP.w1, HUMP.y0, HUMP.y1),
+    roofPart("hump", -HUMP.x1, -HUMP.x0, HUMP.w0, HUMP.w1, HUMP.y0, HUMP.y1),
   ];
   return fitUnit({ palette: PALETTE, bodies: [body()], parts }, 100);
 }
