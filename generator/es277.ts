@@ -1,19 +1,21 @@
 // The Renfe 277 (proc-vehicle-renfe-277): English Electric / Vulcan Foundry's Co'Co'
 // 3,000 V DC electric of 1952 - 1959 ("la Inglesa", the 7701 - 7775, renumbered 277 001 -
-// 075 in 1971), built for the Pajares and Branuelas ramps. A single-cab locomotive worked
-// in pairs: a rounded nose ("morro") ahead of the cab at the front, a flat end for
-// multiple working at the rear. Its own body (the box kit's shell is the same at both
-// ends) with the kit's surface panels, three-axle bogies and diamond pantographs, measured
-// on the reference photographs (assets/renfe-277/SOURCES.md; docs/models/spain-trains.md):
+// 075 in 1971), built for the Pajares and Branuelas ramps. Double-ended: a cab with a
+// rounded nose ("morro") at each end, the -x half the +x half turned round (as the user's
+// side view of 7722 shows, assets/renfe-277/user-photomontage-7722.png). Its own body with
+// the kit's surface panels, three-axle bogies and diamond pantographs, measured on the
+// reference photographs (assets/renfe-277/SOURCES.md; docs/models/spain-trains.md):
 //
 // - the published figures: 20.567 m over the buffers, 2.953 m wide, 4.28 m high (the
 //   folded pantographs), 1.22 m wheels, 120 t, 2,208 kW (six EE 514/B), 110 km/h;
 // - the side, by a joint 1-D projective fit over the two three-quarter photographs of
-//   7766 and 7702 (the bogies' frame ends, the doors, grilles, the rear end and the nose's
-//   near corner, 3.6 px rms; 13 - 43 px/m along the side, about 66 px/m in height at the
-//   middle), checked by resampling both photos to model x: the nose 2.8 m from the cab
-//   front to its face, the cab door over the front bogie, the bogie pivots 11.0 m apart
-//   (3.7 m from the flat rear end), the machine room's grilles, plates and doors;
+//   7766 and 7702 (the bogies' frame ends, the doors, grilles and the nose's near corner,
+//   3.6 px rms; 13 - 43 px/m along the side, about 66 px/m in height at the middle): the
+//   nose 2.8 m from the cab front to its face, the cab door over the front bogie, the
+//   machine room's grilles, plates and doors. That fit took the far end for a flat end;
+//   its far half is remapped (1-D projective, the far cab door onto the near one's mirror)
+//   and agrees with the user's side view within 0.1 - 0.2 m measured from the cab doors.
+//   The bogie pivots 10.04 m apart, symmetric;
 // - the face, on the head-on 7702 (about 107 px/m across, 2.95 m wide): the face upright
 //   with corners rounded 0.5 m in plan, its top edge and the nose top's long edges
 //   rounded, the big headlight on the nose top, four lamp pods, the nose door, the two
@@ -21,12 +23,13 @@
 //   (1.7 m at the centre, 2.5 m at the sides), "RFE" and the number either side;
 // - the cab: the two windscreens on the raked cab front over the nose, the roof rounding
 //   over them, the cab door with its drop light right behind the cab front;
-// - the side (both alike): the number plate under the windscreen's corner, the three red
-//   plates, the tall grille in the middle, the three low louvres, the machine room door
-//   with its handrails, the narrow grille and the small window near the rear end, the
-//   narrow louvre low on the nose; the deep skirt round the nose and the cab, the
-//   valance between the bogies, the arches over them;
-// - two diamond pantographs on the machine room's roof, the rear one raised;
+// - the side (the other the same turned round): at each cab the door with its drop light,
+//   the number plate under the windscreen's corner and the narrow louvre low on the nose;
+//   between them the three red plates, the narrow grille, the machine room door with its
+//   handrails, the three low louvres and the wide grille; the deep skirt round each nose,
+//   the valance between the bogies, the arches over them;
+// - two diamond pantographs over the machine room's ends (+3.0 m raised, -4.0 m folded, as
+//   on the user's side view), the breaker's box between them;
 // - `green`: Renfe's dark green with the yellow line, the red buffer beam, 7701 (as
 //   277 026 and 277 047 still wore it); `blue`: the Renfe blue with the same yellow line,
 //   277 015 (no photograph of a blue 277 was found: drawn as the scheme Renfe gave its
@@ -50,8 +53,7 @@ type Pt = readonly [number, number];
 
 /** Half the length over the buffers (20.567 m). */
 const HALF = 10.2835;
-/** The flat rear end's face, the cab front (the nose's root), the nose's face. */
-const XR = -9.7;
+/** The cab front (the nose's root) and the nose's face; the -x end is the same turned round. */
 const CAB = 6.92;
 const NF = 9.72;
 const NOSE_LEN = NF - CAB;
@@ -83,12 +85,8 @@ const SCREEN: readonly [number, number] = [3.07, 3.69];
 const HW: Table = [[YB, W], [CANT, W], [3.62, W - 0.04], [3.73, W - 0.12], [3.82, W - 0.26], [3.9, W - 0.46], [3.95, W - 0.72], [CROWN, W - 0.95]];
 /** The cab front's centre line (model x): upright inside the nose, raked over it, the roof rounding back. */
 const TIP_F: Table = [[YB, CAB], [NT, CAB], [3.72, CAB - 0.22], [3.83, CAB - 0.34], [3.91, CAB - 0.5], [CROWN, CAB - 0.72]];
-/** The flat rear end's centre line (model x): upright to the cant, the roof rounding down to it. */
-const TIP_R: Table = [[YB, XR], [3.25, XR], [3.5, XR + 0.07], [3.72, XR + 0.22], [3.88, XR + 0.42], [CROWN, XR + 0.65]];
 /** The cab front's corner radius: square under the nose top (the nose covers it), rounded above. */
 const cabCorner = (y: number): number => (y <= NT + 1e-6 ? 0.01 : 0.55);
-/** The rear end's corner radius. */
-const REAR_CORNER = 0.3;
 const ANGLES = [22.5, 45, 67.5, 90].map((a) => (a * Math.PI) / 180);
 
 /** An end's plan at height y: [z, setback] from the centre line out to the side. */
@@ -99,7 +97,6 @@ function plan(w: number, r: number, bow: number): Array<readonly [number, number
 }
 const hwAt = (y: number) => lerpTable(HW, y);
 const frontPlan = (y: number) => plan(hwAt(y), cabCorner(y), y > NT + 1e-6 ? 0.02 : 0);
-const rearPlan = (y: number) => plan(hwAt(y), REAR_CORNER, 0);
 
 /** The setback of a plan at |z|. */
 function setback(p: ReadonlyArray<readonly [number, number]>, z: number): number {
@@ -112,12 +109,11 @@ function setback(p: ReadonlyArray<readonly [number, number]>, z: number): number
 }
 
 /** The heights where the body's profiles kink. */
-const KINKS = [...new Set([...HW.map(([y]) => y), ...TIP_F.map(([y]) => y), ...TIP_R.map(([y]) => y)])].sort((a, b) => a - b);
+const KINKS = [...new Set([...HW.map(([y]) => y), ...TIP_F.map(([y]) => y)])].sort((a, b) => a - b);
 
-/** Places on the body: a side (+1 right), the cab front, the rear end. */
+/** Places on the body: a side (+1 right), the cab front (the -x one drawn turned round). */
 const onSide = (s: number): Place => (x, y, d) => [x, y, s * (hwAt(y) + d)];
 const onCab: Place = (z, y, d) => [lerpTable(TIP_F, y) - setback(frontPlan(y), z) + d, y, z];
-const onRear: Place = (z, y, d) => [lerpTable(TIP_R, y) + setback(rearPlan(y), z) - d, y, z];
 
 // --- liveries ----------------------------------------------------------------------------
 
@@ -177,10 +173,10 @@ const bandAt = (bands: readonly Band[], y: number): string => (bands.find(([a, b
 
 interface RingPt { x: number; z: number; where: "front" | "rear" | "side" }
 
-/** The body's ring at height y: the cab front from its centre to -z, the -z side, the rear end, the +z side, back. */
+/** The body's ring at height y: the cab front from its centre to -z, the -z side, the -x cab front, the +z side, back. */
 function bodyRing(y: number): RingPt[] {
-  const fp = frontPlan(y), rp = rearPlan(y);
-  const xf = lerpTable(TIP_F, y), xr = lerpTable(TIP_R, y);
+  const fp = frontPlan(y), rp = fp;
+  const xf = lerpTable(TIP_F, y), xr = -xf;
   const n = fp.length - 1;
   const out: RingPt[] = [];
   for (let i = 0; i <= n; i++) out.push({ x: xf - fp[i]![1], z: -fp[i]![0], where: i === n ? "side" : "front" });
@@ -241,12 +237,12 @@ const noseTop = (d: number) => NT - inset(RT, d);
 function section(d: number): Ring {
   const w = noseW(d), top = noseTop(d), yb = skirtAt(d);
   const out: Array<[number, number]> = [[-w, yb], [w, yb]];
-  for (let i = 0; i <= 6; i++) {
-    const a = (i * Math.PI) / 12;
+  for (let i = 0; i <= 4; i++) {
+    const a = (i * Math.PI) / 8;
     out.push([w - RS + RS * Math.cos(a), top - RS + RS * Math.sin(a)]);
   }
-  for (let i = 6; i >= 0; i--) {
-    const a = (i * Math.PI) / 12;
+  for (let i = 4; i >= 0; i--) {
+    const a = (i * Math.PI) / 8;
     out.push([-(w - RS + RS * Math.cos(a)), top - RS + RS * Math.sin(a)]);
   }
   return out;
@@ -344,12 +340,14 @@ function onNoseDecal(m: MeshBuilder, mat: string, s: number, polys: readonly Rin
 
 /** A lamp pod standing out of the face: its housing, rim and lens. */
 function pod(m: MeshBuilder, mat: string, z: number, y: number, r: number, len: number, lens = "lampHead", root = 0.12): void {
-  const ring = ngon(12, r, 0, z, y);
+  const ring = ngon(10, r, 0, z, y);
   m.sweep(mat, "x", ring, NF - root, ring, NF + len);
-  const rim = ngon(12, r * 0.85, 0, z, y);
+  const rim = ngon(10, r * 0.85, 0, z, y);
   m.scope("rim", () => m.sweep("rim", "x", rim, NF + len, rim, NF + len + 0.01));
-  const glass = ngon(12, r * 0.6, 0, z, y);
-  m.scope("lens", () => m.sweep(lens, "x", glass, NF + len + 0.01, glass, NF + len + 0.02));
+  const glass = ngon(10, r * 0.6, 0, z, y);
+  // the lens a flat disc just proud of the rim
+  const x = NF + len + 0.014;
+  m.scope("lens", () => m.facets(lens, glass.flatMap((p, i) => [[x, y, z], [x, p[1], p[0]], [x, glass[(i + 1) % glass.length]![1], glass[(i + 1) % glass.length]![0]]] as Vec3[]), [1, 0, 0]));
 }
 
 function nose(m: MeshBuilder, l: Es277Livery): void {
@@ -370,12 +368,12 @@ function nose(m: MeshBuilder, l: Es277Livery): void {
   m.scope("fittings", () => {
     m.scope("headlight", () => {
       const r = 0.25, y = NT + 0.05;
-      const ring = ngon(16, r, 0, 0, y);
-      m.sweep("body", "x", ngon(16, r * 0.85, 0, 0, y), NF - 0.62, ring, NF - 0.38);
+      const ring = ngon(12, r, 0, 0, y);
+      m.sweep("body", "x", ngon(12, r * 0.85, 0, 0, y), NF - 0.62, ring, NF - 0.38);
       m.sweep("body", "x", ring, NF - 0.38, ring, NF - 0.1);
-      const rim = ngon(16, r * 0.95, 0, 0, y);
+      const rim = ngon(12, r * 0.95, 0, 0, y);
       m.scope("rim", () => m.sweep("rubber", "x", rim, NF - 0.1, rim, NF - 0.07));
-      const glass = ngon(16, r * 0.78, 0, 0, y);
+      const glass = ngon(12, r * 0.78, 0, 0, y);
       m.scope("glass", () => m.sweep("glass", "x", glass, NF - 0.07, glass, NF - 0.06));
       const lens = ngon(12, r * 0.3, 0, 0, y);
       m.scope("lens", () => m.sweep("lampHead", "x", lens, NF - 0.06, lens, NF - 0.05));
@@ -388,7 +386,7 @@ function nose(m: MeshBuilder, l: Es277Livery): void {
         m.scope("jumper sockets", () => {
           for (const z of [0.46, 0.62]) {
             block(m, "steel", NF - 0.02, NF + 0.1, 2.5, 2.64, s * z - 0.06, s * z + 0.06);
-            m.sweep("steel", "x", ngon(8, 0.05, 0, s * z, 2.52), NF + 0.02, ngon(8, 0.05, 0, s * z, 2.52), NF + 0.13);
+            block(m, "steel", NF + 0.02, NF + 0.13, 2.48, 2.56, s * z - 0.04, s * z + 0.04);
           }
         });
         m.scope("reflector", () => surfacePanel(m, "lampRed", onFace, FACE_N, rect(s * 0.66 - 0.06, 1.6, s * 0.66 + 0.06, 1.66), -0.004, 0.012));
@@ -434,8 +432,8 @@ function nose(m: MeshBuilder, l: Es277Livery): void {
 
 /** A framed window on place `at`. */
 function framedWindow(m: MeshBuilder, at: Place, n: Vec3, x0: number, x1: number, y0: number, y1: number, r: number, frame = "rubber", vB: readonly number[] = []): void {
-  m.scope("frame", () => surfacePanel(m, frame, at, n, roundRect(x0, x1, y0, y1, r), -0.01, 0.014, [], vB));
-  m.scope("glass", () => surfacePanel(m, "glass", at, n, roundRect(x0 + 0.04, x1 - 0.04, y0 + 0.04, y1 - 0.04, Math.max(0.005, r - 0.02)), -0.005, 0.022, [], vB));
+  m.scope("frame", () => surfacePanel(m, frame, at, n, roundRect(x0, x1, y0, y1, r, 2), -0.01, 0.014, [], vB));
+  m.scope("glass", () => surfacePanel(m, "glass", at, n, roundRect(x0 + 0.04, x1 - 0.04, y0 + 0.04, y1 - 0.04, Math.max(0.005, r - 0.02), 2), -0.005, 0.022, [], vB));
 }
 
 /** A louvre panel with horizontal slats. */
@@ -472,49 +470,56 @@ function door(m: MeshBuilder, s: number, x0: number, x1: number, y0: number, y1:
   if (step) m.scope("step hangers", () => { for (const hx of [x0 + 0.05, x1 - 0.09]) block(m, "steel", hx, hx + 0.04, 1.08, YB + 0.02, ...side(s, W - 0.06, W - 0.02)); });
 }
 
-/** One side's fittings (both sides alike), from the cab to the rear end. */
+/**
+ * One side's fittings, end to end: the +z side as the photographs show it (nose to the right),
+ * the -z side the same turned round. The cabs alike at both ends; the machine room's plates,
+ * grilles, louvres and door from the side fit, its far half corrected by the double-ended body
+ * (a 1-D projective remap that puts the far cab door where the near one's mirror is) and checked
+ * on the user's side view of 7722 (assets/renfe-277/user-photomontage-7722.png): within 0.1 - 0.2 m
+ * of it measured from the cab doors.
+ */
 function sideFittings(m: MeshBuilder, l: Es277Livery, s: number): void {
   const at = onSide(s);
   const n: Vec3 = [0, 0, s];
-  m.scope("cab door", () => {
-    door(m, s, 5.45, 6.2, YB + 0.04, 3.36, true);
-    m.scope("drop light", () => framedWindow(m, at, n, 5.57, 6.08, 2.62, 3.22, 0.05));
-  });
-  m.scope("number plate", () => {
-    const h = l.plate.length > 5 ? 0.08 : 0.1, w = h * 0.45, gap = h * 0.14;
-    const width = letteringWidth(l.plate, w, gap);
-    const u = 6.56, flip = s < 0;
-    surfacePanel(m, "plateDark", at, n, rect(u - width / 2 - 0.06, 2.7, u + width / 2 + 0.06, 2.86), -0.005, 0.016);
-    const tris = lettering(l.plate, flip ? u + width / 2 : u - width / 2, 2.78 - h / 2, h, w, gap, flip);
-    m.facets("brass", tris.map(([a, b]) => at(a, b, 0.02)), n);
-  });
+  for (const e of [1, -1])
+    m.scope(e > 0 ? "front cab" : "rear cab", () => {
+      const ex = (a: number, b: number): [number, number] => (e > 0 ? [a, b] : [-b, -a]);
+      m.scope("cab door", () => {
+        door(m, s, ...ex(5.45, 6.2), YB + 0.04, 3.36, true);
+        m.scope("drop light", () => framedWindow(m, at, n, ...ex(5.57, 6.08), 2.62, 3.22, 0));
+      });
+      m.scope("number plate", () => {
+        const h = l.plate.length > 5 ? 0.08 : 0.1, w = h * 0.45, gap = h * 0.14;
+        const width = letteringWidth(l.plate, w, gap);
+        const u = e * 6.56, flip = s < 0;
+        surfacePanel(m, "plateDark", at, n, rect(u - width / 2 - 0.06, 2.7, u + width / 2 + 0.06, 2.86), -0.005, 0.016);
+        const tris = lettering(l.plate, flip ? u + width / 2 : u - width / 2, 2.78 - h / 2, h, w, gap, flip);
+        m.facets("brass", tris.map(([a, b]) => at(a, b, 0.02)), n);
+      });
+      m.scope("nose louvre", () => louvre(m, at, n, ...ex(7.55, 7.92), 1.65, 2.3, 0.1));
+    });
   m.scope("red plates", () => {
-    for (const x of [-5.15, -0.2, 4.2]) m.scope(`plate ${x}`, () => surfacePanel(m, "red", at, n, rect(x - 0.08, 2.88, x + 0.08, 3.06), -0.004, 0.012));
+    for (const x of [-4.19, 0.16, 4.26]) m.scope(`plate ${x}`, () => surfacePanel(m, "red", at, n, rect(x - 0.08, 2.88, x + 0.08, 3.06), -0.004, 0.012));
   });
-  m.scope("tall grille", () => louvre(m, at, n, 1.9, 3.0, 2.62, 3.4, 0.07));
+  m.scope("tall grille", () => louvre(m, at, n, 2.09, 3.12, 2.62, 3.4, 0.09));
   m.scope("low louvres", () => {
-    for (const [i, x0] of [-1.95, -0.68, 0.59].entries()) m.scope(`louvre ${i + 1}`, () => louvre(m, at, n, x0, x0 + 1.25, 1.62, 2.18, 0.08));
+    for (const [i, x0] of [-1.4, -0.26, 0.88].entries()) m.scope(`louvre ${i + 1}`, () => louvre(m, at, n, x0, x0 + 1.13, 1.62, 2.18, 0.08));
   });
-  m.scope("machine room door", () => door(m, s, -2.85, -2.12, YB + 0.04, 3.32, true, false));
-  m.scope("narrow grille", () => louvre(m, at, n, -3.95, -3.5, 2.65, 3.4, 0.07));
-  m.scope("rear windows", () => {
-    m.scope("rear pane", () => framedWindow(m, at, n, -7.85, -7.15, 2.8, 3.38, 0.05));
-    m.scope("front pane", () => framedWindow(m, at, n, -7.05, -6.35, 2.8, 3.38, 0.05));
-  });
-  m.scope("nose louvre", () => louvre(m, at, n, 7.55, 7.92, 1.65, 2.3, 0.07));
+  m.scope("machine room door", () => door(m, s, -2.22, -1.52, YB + 0.04, 3.32, true, false));
+  m.scope("narrow grille", () => louvre(m, at, n, -3.15, -2.76, 2.65, 3.4, 0.09));
 }
 
 /** The windscreens on the raked cab front, their wipers, the horns over them. */
 function cabFront(m: MeshBuilder): void {
   const vB = KINKS;
-  const uB = [...new Set([SCREEN[0], SCREEN[1], (SCREEN[0] + SCREEN[1]) / 2].flatMap((h) => frontPlan(h).map(([z]) => z)).flatMap((z) => [z, -z]))].sort((a, b) => a - b);
+  const uB = [...new Set(frontPlan((SCREEN[0] + SCREEN[1]) / 2).map(([z]) => z).flatMap((z) => [z, -z]))].sort((a, b) => a - b);
   const n: Vec3 = [1, 0, 0];
   m.scope("windscreens", () => {
     for (const s of [-1, 1])
       m.scope(s > 0 ? "left" : "right", () => {
         const [z0, z1] = s > 0 ? [0.08, 1.36] : [-1.36, -0.08];
         const pane = (k: number): Ring => {
-          const q = roundRect(z0 + k, z1 - k, SCREEN[0] + k, SCREEN[1] - k, Math.max(0.01, 0.12 - k));
+          const q = roundRect(z0 + k, z1 - k, SCREEN[0] + k, SCREEN[1] - k, Math.max(0.01, 0.12 - k), 2);
           return q;
         };
         m.scope("frame", () => surfacePanel(m, "rubber", onCab, n, pane(0), -0.01, 0.014, uB, vB));
@@ -531,39 +536,10 @@ function cabFront(m: MeshBuilder): void {
   });
 }
 
-/** The flat rear end: the gangway door, two lamps, the beam and buffers. */
-function rearEnd(m: MeshBuilder, l: Es277Livery): void {
-  const n: Vec3 = [-1, 0, 0];
-  const vB = KINKS;
-  m.scope("end door", () => {
-    const [z0, z1, y0, y1] = [-0.3, 0.3, YB + 0.08, 3.22];
-    for (const q of [rect(z0, y0, z1, y0 + 0.02), rect(z0, y1 - 0.02, z1, y1), rect(z0, y0 + 0.02, z0 + 0.02, y1 - 0.02), rect(z1 - 0.02, y0 + 0.02, z1, y1 - 0.02)])
-      surfacePanel(m, "seam", onRear, n, q, -0.002, 0.004, [], vB);
-    m.scope("window", () => {
-      m.scope("frame", () => surfacePanel(m, "rubber", onRear, n, roundRect(-0.2, 0.2, 2.62, 3.1, 0.05), -0.01, 0.014, [], vB));
-      m.scope("glass", () => surfacePanel(m, "glass", onRear, n, roundRect(-0.16, 0.16, 2.66, 3.06, 0.03), -0.005, 0.022, [], vB));
-    });
-    for (const z of [-0.42, 0.42]) m.scope(`grab rail ${z > 0 ? "left" : "right"}`, () => {
-      m.rod("steel", [XR - 0.06, 1.6, z], [XR - 0.06, 2.9, z], 0.016, 6);
-      for (const y of [1.64, 2.86]) block(m, "steel", XR - 0.07, XR + 0.01, y - 0.012, y + 0.012, z - 0.012, z + 0.012);
-    });
-  });
-  m.scope("lamps", () => {
-    for (const z of [-0.95, 0.95])
-      m.scope(z > 0 ? "left" : "right", () => {
-        const ring = ngon(12, 0.1, 0, z, 1.62);
-        m.sweep("body", "x", ring, XR - 0.12, ring, XR + 0.05);
-        const lens = ngon(12, 0.08, 0, z, 1.62);
-        m.scope("lens", () => m.sweep("lampRed", "x", lens, XR - 0.132, lens, XR - 0.12));
-      });
-  });
-  m.scope("buffer beam", () => block(m, l.beam, -9.92, XR + 0.1, 0.88, 1.38, -1.42, 1.42));
-}
-
 // --- running gear and underframe ------------------------------------------------------------
 
-/** The bogie pivots: 2.97 m from the rear end and 9.03 m apart; the axles 2.0 m apart, 1.22 m wheels. */
-const BOGIE_X = [XR + 3.71, XR + 3.71 + 11.01] as const;
+/** The bogie pivots 10.04 m apart (the front one where the side fit put it, clear of the nose's skirt); the axles 2.2 m apart, 1.22 m wheels. */
+const BOGIE_X = [-5.02, 5.02] as const;
 const AXLES = [-2.2, 0, 2.2];
 const WHEEL_R = 0.61;
 const FRAME_TOP = 1.14;
@@ -572,8 +548,8 @@ const BOGIES: BogieSpec[] = BOGIE_X.map((xc) => ({ xc, axles: AXLES, wheelR: WHE
 /** The valance between the bogies, the frame closing the body's bottom, the equipment under it. */
 function underframe(m: MeshBuilder): void {
   m.scope("frame", () => {
-    const r: Ring = [[CAB, -1.38], [XR + 0.05, -1.38], [XR + 0.05, 1.38], [CAB, 1.38]];
-    m.prism("frame", [[CAB, 1.38], [XR + 0.05, 1.38], [XR + 0.05, -1.38], [CAB, -1.38]], 1.2, YB + 0.01, false);
+    const r: Ring = [[CAB, -1.38], [-CAB, -1.38], [-CAB, 1.38], [CAB, 1.38]];
+    m.prism("frame", [[CAB, 1.38], [-CAB, 1.38], [-CAB, -1.38], [CAB, -1.38]], 1.2, YB + 0.01, false);
     m.cap("frame", r, 1.2, false);
   });
   m.scope("valance", () => {
@@ -592,47 +568,66 @@ function underframe(m: MeshBuilder): void {
 
 // --- the roof -------------------------------------------------------------------------------
 
-/** The pantographs: the rear one raised over the machine room's middle, the front one folded behind the cab. */
-const PANTO_X = [0.8, 5.3] as const;
+/**
+ * The pantographs over the machine room's ends, as on the user's side view of 7722 (measured from
+ * the cab doors): the one toward the +x end raised, the other folded; the roof line between them
+ * and the breaker's box near the middle.
+ */
+const PANTO_X = [3.0, -4.0] as const;
 const PANTO_BASE = CROWN + 0.32;
 
 function roof(m: MeshBuilder): void {
   m.scope("pantographs", () => {
-    m.scope("rear pantograph", () => diamond(m, { xc: PANTO_X[0], roofY: CROWN, baseY: PANTO_BASE, raised: true }));
-    m.scope("front pantograph", () => diamond(m, { xc: PANTO_X[1], roofY: CROWN, baseY: PANTO_BASE, raised: false }));
+    m.scope("raised pantograph", () => diamond(m, { xc: PANTO_X[0], roofY: CROWN, baseY: PANTO_BASE, raised: true }));
+    m.scope("folded pantograph", () => diamond(m, { xc: PANTO_X[1], roofY: CROWN, baseY: PANTO_BASE, raised: false }));
   });
   m.scope("roof line", () => {
     const y = CROWN + 0.36, z = 0.32;
-    for (const x of [1.9, 3.6, -1.5]) insulator(m, x, z, CROWN - 0.01, y - 0.02);
-    tubeX(m, "copper", 0.02, -2.3, y, z, PANTO_X[1] - 0.55, y, z, 6);
+    for (const x of [-2.6, 0.6, 1.9]) insulator(m, x, z, CROWN - 0.01, y - 0.02);
+    tubeX(m, "copper", 0.02, PANTO_X[1] + 0.55, y, z, PANTO_X[0] - 0.55, y, z, 6);
     m.scope("breaker", () => {
-      block(m, "steel", -3.2, -2.3, CROWN - 0.01, CROWN + 0.18, -0.35, 0.35);
-      insulator(m, -2.75, 0, CROWN + 0.17, y - 0.02);
+      block(m, "steel", -1.6, -0.1, CROWN - 0.01, CROWN + 0.22, -0.4, 0.2);
+      insulator(m, -0.85, 0.2, CROWN + 0.21, y - 0.02);
     });
-  });
-  m.scope("roof hatch", () => {
-    const q: Ring = [[-8.6, -0.5], [-8.6, 0.5], [-6.6, 0.5], [-6.6, -0.5]];
-    m.loft("roofG", q, CROWN - 0.01, [[-8.55, -0.45], [-8.55, 0.45], [-6.65, 0.45], [-6.65, -0.45]], CROWN + 0.06);
   });
 }
 
-/** The Renfe 277 in a livery. */
+/**
+ * Draws `draw` turned round (180 degrees about the vertical axis: x and z negated), for the
+ * double-ended body's -x end. A rotation, so windings and lettering stay right; it composes with
+ * the builder's loft frame the way a sweep does.
+ */
+function turned(m: MeshBuilder, draw: () => void): void {
+  const f = m as unknown as { frame: (p: Vec3) => Vec3 };
+  const outer = f.frame;
+  f.frame = (p) => outer([-p[0], p[1], -p[2]]);
+  try {
+    draw();
+  } finally {
+    f.frame = outer;
+  }
+}
+
+/** One end: the nose with its fittings and beam, the cab front, the buffers and coupling. */
+function end(m: MeshBuilder, l: Es277Livery): void {
+  m.scope("nose", () => nose(m, l));
+  m.scope("cab front", () => cabFront(m));
+  m.scope("buffers", () => buffers(m, 1, 9.82, HALF, 1.08, "rect"));
+}
+
+/** The Renfe 277 in a livery: double-ended, the -x half the +x half turned round. */
 export function renfe277(v?: ParamValues): MeshBuilder {
   const l = liveryOf(v);
   const m = new MeshBuilder({ ...PALETTE, ...l.palette });
   m.scope("body", () => {
     m.scope("shell", () => bodyShell(m, l));
-    m.scope("nose", () => nose(m, l));
-    m.scope("cab front", () => cabFront(m));
-    m.scope("rear end", () => rearEnd(m, l));
     m.scope("underframe", () => underframe(m));
   });
+  m.scope("front end", () => end(m, l));
+  m.scope("rear end", () => turned(m, () => end(m, l)));
   m.scope("sides", () => {
-    for (const s of [-1, 1]) m.scope(s > 0 ? "right side" : "left side", () => sideFittings(m, l, s));
-  });
-  m.scope("lower ends", () => {
-    m.scope("front buffers", () => buffers(m, 1, 9.82, HALF, 1.08, "rect"));
-    m.scope("rear buffers", () => buffers(m, -1, 9.92, HALF, 1.08, "rect"));
+    m.scope("right side", () => sideFittings(m, l, 1));
+    m.scope("left side", () => turned(m, () => sideFittings(m, l, 1)));
   });
   m.scope("bogies", () => {
     for (const b of BOGIES) m.scope(b.xc > 0 ? "front bogie" : "rear bogie", () => bogie3(m, b));
@@ -643,37 +638,35 @@ export function renfe277(v?: ParamValues): MeshBuilder {
 
 // --- the distant model ----------------------------------------------------------------------
 
-/** The distant model: the body and the nose as two shells, the nose's skirt, the bogies and the pantographs. */
+/** The distant model: the body and the two noses as shells, the noses' skirts, the bogies and the raised pantograph. */
 export function renfe277Lod(v?: ParamValues): MeshBuilder {
   const l = liveryOf(v);
   const body: LodShell = {
     y0: YB, hw: HW,
-    front: { tip: TIP_F, setback: [[YB, 0], [NT, 0], [3.1, 0.55], [CROWN, 0.55]] },
-    rear: { tip: TIP_R, setback: [[YB, REAR_CORNER], [CROWN, REAR_CORNER]] },
+    tip: TIP_F, setback: [[YB, 0], [NT, 0], [3.1, 0.55], [CROWN, 0.55]],
     side: l.side, roof: l.roof,
-    endWindows: [{ u: [-1.2, 1.2], y: SCREEN, mat: LOD_GLASS, ends: [1] }],
-    sideWindows: [{ u: [5.57, 6.08], y: [2.62, 3.22], mat: LOD_GLASS, optional: 5 }],
+    endWindows: [{ u: [-1.2, 1.2], y: SCREEN, mat: LOD_GLASS }],
   };
-  const nose: LodShell = {
+  const noseAt = (e: number): LodShell => ({
     y0: SKIRT, hw: [[SKIRT, W], [NT - RS, W], [NT, W - RS]],
-    front: { tip: [[SKIRT, NF], [NT - RT, NF], [NT, NF - RT]], setback: [[SKIRT, RC], [NT, RC]] },
-    rear: { tip: [[SKIRT, CAB], [NT, CAB]] },
-    ends: [1],
+    front: e > 0 ? { tip: [[SKIRT, NF], [NT - RT, NF], [NT, NF - RT]], setback: [[SKIRT, RC], [NT, RC]] } : { tip: [[SKIRT, -CAB], [NT, -CAB]] },
+    rear: e > 0 ? { tip: [[SKIRT, CAB], [NT, CAB]] } : { tip: [[SKIRT, -NF], [NT - RT, -NF], [NT, -NF + RT]], setback: [[SKIRT, RC], [NT, RC]] },
+    ends: [e],
     side: [[SKIRT, LINE[0], "body"], [LINE[0], LINE[1], "line"], [LINE[1], NT, "body"]],
     end: [[SKIRT, NT, "body"]],
     roof: "body",
-  };
+  });
   const parts: LodPart[] = [
     { draw: (m) => m.scope("running gear", () => { for (const xc of BOGIE_X) lodBogie(m, xc, 2.2 + WHEEL_R + 0.2, YB); }) },
     { draw: (m) => m.scope("raised pantograph", () => lodPantograph(m, { x: PANTO_X[0], roofY: CROWN, baseY: PANTO_BASE, h: 1, raised: true })) },
     { optional: 20, draw: (m) => m.scope("beams", () => {
-      lodSideBox(m, l.beam, [[NF, 0.88], [9.82, 0.88], [9.82, 1.38], [NF, 1.38]], -1.42, 1.42);
-      lodSideBox(m, l.beam, [[-9.92, 0.88], [XR, 0.88], [XR, 1.38], [-9.92, 1.38]], -1.42, 1.42);
+      lodSideBox(m, l.beam, [[NF, 1.0], [9.82, 1.0], [9.82, 1.38], [NF, 1.38]], -1.42, 1.42);
+      lodSideBox(m, l.beam, [[-9.82, 1.0], [-NF, 1.0], [-NF, 1.38], [-9.82, 1.38]], -1.42, 1.42);
     }) },
     { optional: 30, draw: (m) => m.scope("valance", () => {
       const x0 = BOGIE_X[0] + 2.95, x1 = BOGIE_X[1] - 2.95;
       lodSideBox(m, "body", [[x0 + 0.22, 0.92], [x1 - 0.22, 0.92], [x1, YB], [x0, YB]], -W + 0.01, W - 0.01);
     }) },
   ];
-  return fitLod({ palette: { ...PALETTE, ...l.palette }, shells: [body, nose], parts }, 100);
+  return fitLod({ palette: { ...PALETTE, ...l.palette }, shells: [body, noseAt(1), noseAt(-1)], parts }, 100);
 }

@@ -19,6 +19,7 @@ Downloaded from Wikimedia Commons by `pnpm refs:fetch` as standard thumbnails, a
 | `photo-azaft-renfe-7702-electric-locomotive-and-franco-era-governme.jpg` | AZAFT Renfe 7702 electric locomotive and Franco era government carriage.jpg | https://commons.wikimedia.org/wiki/File:AZAFT_Renfe_7702_electric_locomotive_and_Franco_era_government_carriage.jpg | Jon Worth | CC BY 2.0 | 7702, side: the machine room's grilles and plates |
 | `photo-150-aniversari-martorell.jpg` | 150 aniversari Martorell.jpg | https://commons.wikimedia.org/wiki/File:150_aniversari_Martorell.jpg | Luis Zamora | CC BY 2.0 | 7702 at Martorell, side three-quarter: the yellow line's height, the windscreen sill over the nose top, the cab door, joint side fit |
 | `photo-mfa-taller-de-restauracion.jpg` | MFA-Taller de restauración.jpg | https://commons.wikimedia.org/wiki/File:MFA-Taller_de_restauraci%C3%B3n.jpg | David Álvarez López | CC BY 2.0 | a dark green 77xx from above: the roof, the pantograph bases and the machine room's grilles |
+| `user-photomontage-7722.png` | user-supplied | - | manufacturer's product photomontage of a model of 7722 (Renfe green), supplied by the user | for reference | both ends identical; side layout symmetric (the other side turned round): order of plates, grilles, door and louvres, the pantographs' positions; its length is foreshortened, so measured from the cab doors |
 
 ## Published figures
 
@@ -27,6 +28,9 @@ Renfe 7700 / 277 (English Electric, Vulcan Foundry and CAF, 1952 - 1959): Co'Co'
 120 t, 2,208 kW continuous (six EE 514/B motors), 110 km/h (Spanish Wikipedia, "Serie 7700 de Renfe").
 
 ## Liveries
+
+The locomotive is double-ended (a nose and cab at each end), as the user's side view of 7722
+shows; the photographs above show one nose each.
 
 `green` is the dark Renfe green with the yellow line (277 026, 277 047); the museum engines
 (7702, 277 002) wear a lighter green. No photograph of a 277 in blue was found among the Commons
