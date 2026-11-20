@@ -41,3 +41,9 @@ describe("index.html and the app's head (src/pageMeta.ts)", () => {
     expect(html).toContain(`<link rel="canonical" href="${SITE_URL}/" />`);
   });
 });
+
+describe("index.html analytics", () => {
+  it("loads Fathom with the site's id (docs/site/catalog-site.md, Analytics)", () => {
+    expect(html).toContain('<script src="https://cdn.usefathom.com/script.js" data-site="BWLMHNOA" defer></script>');
+  });
+});

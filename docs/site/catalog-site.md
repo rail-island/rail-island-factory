@@ -75,6 +75,13 @@ Crawlers need an absolute URL, which Vite does not rewrite, so the
 image's size in step. After a change, re-scrape the page with Facebook's Sharing
 Debugger, as its previews are cached.
 
+### Analytics
+
+`index.html` loads Fathom Analytics (`https://cdn.usefathom.com/script.js`, site
+id `BWLMHNOA`), so every prerendered page carries it too. Fathom sets no cookies
+and counts the app's client-side route changes on its own; the site sends no
+custom events.
+
 A footer under every page links to the site's OpenTTD page (`/openttd/`,
 [seo-pages.md](seo-pages.md)), to www.railisland.com (`HOME_URL`) and to the
 factory's GitHub repository (`REPO_URL`).
