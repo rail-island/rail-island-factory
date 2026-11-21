@@ -73,9 +73,18 @@ pnpm cs:pilot --fixtures     # each supported construct (fixtures/constructs.ts)
   happen; an assignment's value and a literal's own fresh type are never converted (that would store one
   object and hand on a copy), and a merged union narrowed to one of its members is read in place; where it
   must become the member's class, the copy is made once per object and `===` sees it as its source.
-- **An untyped object constant** every use of which wants one class (`front: rdcEnd, rear: rdcEnd` as
-  `NoseShape`) is built as that class, so the uses share one object (`front === rear` holds); a constant
-  that is spread anywhere keeps its own shape.
+- **An untyped object constant** (module or local, `x && { ... }` included) every use of which wants one
+  class (`front: rdcEnd, rear: rdcEnd` as `NoseShape`; truthiness tests aside) is built as that class, so
+  the uses share one object (`front === rear` holds); a constant that is spread anywhere keeps its own shape.
+- **Identity through conversions.** A conversion between shape classes returns one copy per source object
+  and target class while the source is unchanged (every setter bumps the object's `__ver`), and `===` sees a
+  copy as its source: a JS object passed twice stays one object.
+- **Extra keys.** An object carries the keys its class does not declare (`__extra`), as a JS object passed
+  where a narrower interface is wanted keeps them: a conversion moves them across, a cast that reads one
+  (`(b as { paint?: string }).paint`) finds it, and JSON, spreads and copies carry them. A rest pattern
+  (`const { cabPaint, ...plain } = s`) copies every key but those it names.
+- **A literal copying an optional field** (`{ end: it.end }` with `it.end` absent) leaves it out, so the
+  callee's destructuring default applies as in JS.
 - **Presence.** A shape class's fields are properties whose setters mark them present; a field that is
   always set (a required number) is always present. A key written with `undefined` is present, as in JS:
   `{ ...series, ...{ lowWell: undefined } }` clears `lowWell`. A field whose TS type admits `null` keeps
@@ -115,6 +124,20 @@ pnpm cs:pilot --fixtures     # each supported construct (fixtures/constructs.ts)
   of numbers, which cannot hold it, it throws - except where JS code can see undefined: `a[i] ?? b`, a
   comparison with a literal (`trucks[i] !== false`), a tuple element destructured as optional (the shorter
   member of `[n, n] | [n, n, n]`). `find` over numbers returns undefined when nothing matches.
+- **A class prototype patched at run time** (`recordCoach`: `const proto = Coach.prototype;
+  proto.volume = function (this: Coach, v) { ... }`, restored with `Object.assign(proto, saved)`) becomes
+  static hooks: each patched method calls its `__hook_<name>` delegate first when one is set; the patch sets
+  it (with `this` as the hook's first argument), `saved` holds the hooks and `Object.assign` puts them back.
+- **A top-level statement that changes a module variable** (`PARAMS["proc-vehicle-rocket"] = [...]`) runs
+  as a static initializer in its place among the module's fields.
+- **Number formatting and conversion follow JS**: `toFixed` rounds an exact binary tie away from zero (.NET
+  rounds it to even), `Number(undefined)` is NaN and `Number("")` 0, a number used as a record key is its JS
+  string, `Array.from({ length })` reads NaN and negatives as 0, and a template writes a missing string as
+  "null" or "undefined" by its TS type.
+- **Defaults in lambdas**: an object literal's method or an arrow function called through a delegate
+  without an optional argument takes the parameter's default; `T & {}` (NonNullable of a type parameter) is `T`.
+- **A structure preview's passenger hints** (`passengerHints.ts`) are put on `userData.passenger` by the
+  design's `BuildWith`, as the JS bundle stamps them.
 - **Unsupported constructs** are errors naming file, line and kind; all are reported before it fails.
 
 ## Speed
