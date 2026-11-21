@@ -279,6 +279,15 @@ export function spreadNullish(): unknown {
   return [endOf(nose, () => ({ tip: 0 }), false), endOf(undefined, () => ({ tip: 2 }), true), endOf(nose, () => ({ tip: 0 }), true)];
 }
 
+function capOf(mat: string, top: string | null = mat): string {
+  return top === null ? "none" : top;
+}
+
+/** A default applies to a left-out argument, not to an explicit null. */
+export function nullArgument(): unknown {
+  return [capOf("slate"), capOf("slate", null), capOf("slate", "lead")];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

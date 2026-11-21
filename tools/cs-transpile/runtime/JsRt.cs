@@ -45,6 +45,9 @@ public interface IJsObject
 
 public static class JsRt
 {
+    /** The default of a `string | null` parameter whose default is worked out in the body: "not passed". */
+    public const string UndefinedString = "\u0000undefined\u0000";
+
     // --- numbers ---------------------------------------------------------------------
 
     /** A double used as an array index or length: must be a non-negative integer. */

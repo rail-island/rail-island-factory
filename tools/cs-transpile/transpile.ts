@@ -1120,6 +1120,13 @@ export class Transpiler {
       // a default the C# signature cannot hold: null in, the default worked out in the body
       const raw = `${name}__arg`;
       names[names.length - 1] = raw;
+      // a string parameter that may be null (`top: string | null = mat`): an explicit null stays null,
+      // only a left-out argument takes the default - told apart by a sentinel default
+      if (c === "string" && t.isUnion() && t.types.some((x) => x.flags & ts.TypeFlags.Null)) {
+        list.push(`string ${raw} = JsRt.UndefinedString`);
+        prologue.push(`string ${name} = ${raw} == JsRt.UndefinedString ? ${this.exprTo(p.initializer, c)} : ${raw};`);
+        continue;
+      }
       const nullable = VALUE_TYPES.has(c) ? `${c}?` : c;
       list.push(`${nullable} ${raw} = null`);
       prologue.push(`${c} ${name} = ${raw} ?? ${this.exprTo(p.initializer, c)};`);
