@@ -2131,7 +2131,8 @@ export class Transpiler {
     }
     if (ts.isIdentifier(callee)) {
       if (this.isGlobal(callee)) return this.globalFunction(callee.text, e);
-      const fn = this.expr(callee);
+      // a declared function is called as it is; a function value (narrowed from a union) through its delegate type
+      const fn = this.isDelegateCallee(callee) ? this.expr(callee) : this.identifier(callee);
       return { code: `${fn.code}(${this.args(e).join(", ")})`, cs: this.callResultCs(e) };
     }
     const fn = this.expr(callee);
