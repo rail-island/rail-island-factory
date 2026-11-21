@@ -379,20 +379,32 @@ public static class JsRt
 
     /** `===` between values whose C# types are not both primitive. */
     /** A merged union's member copies (Narrowed), each pointing back at the object it was made from. */
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, object> copyOf = new();
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, object> sourceOf = new();
 
-    /** The member copy of a merged union's object: made once per object and target class. */
-    public static T Narrowed<T>(object src, Func<T> make) where T : class
+    private sealed class Copies { public readonly Dictionary<Type, (object copy, int ver)> byType = new(); }
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, Copies> copies = new();
+
+    /**
+     * A shape object converted to another class: one copy per object and target class while the
+     * object is unchanged (its version `ver`), so the same JS object passed twice stays one object;
+     * === sees the copy as its source.
+     */
+    public static T Converted<T>(object src, int ver, Func<T> make) where T : class
     {
-        if (copyOf.TryGetValue(src, out var c) && c is T t) return t;
+        var c = copies.GetOrCreateValue(src);
+        if (c.byType.TryGetValue(typeof(T), out var hit) && hit.ver == ver) return (T)hit.copy;
         var made = make();
-        copyOf.AddOrUpdate(src, made);
+        c.byType[typeof(T)] = (made, ver);
         sourceOf.AddOrUpdate(made, src);
         return made;
     }
 
-    private static object Source(object o) => sourceOf.TryGetValue(o, out var s) ? s : o;
+    /** The object a conversion copied from, followed back to the first. */
+    private static object Source(object o)
+    {
+        for (int i = 0; i < 16 && sourceOf.TryGetValue(o, out var s); i++) o = s;
+        return o;
+    }
 
     public static bool Eq(object? a, object? b)
     {

@@ -933,17 +933,17 @@ export class Transpiler {
       "{",
       `    internal ulong ${Array.from({ length: words }, (_, k) => `__p_${d.name}_${k}`).join(", ")};`,
       // the keys a JS object of this type carries beyond its declared fields (an untyped literal's)
-      ...(derived ? [] : [`    public JsRecord<object> __extra;`]),
+      ...(derived ? [] : [`    public JsRecord<object> __extra;`, `    /** Bumped by every write: a conversion's cached copy is good while it is unchanged. */\n    public int __ver;`]),
       ...f.map((x, i) => {
         const b = Transpiler.backing(x.js);
-        return `    internal ${x.cs} ${b};\n    public ${x.cs} ${esc(x.js)} { get => ${b}; set { ${b} = value; ${word(i)} |= ${bit(i)}; } }`;
+        return `    internal ${x.cs} ${b};\n    public ${x.cs} ${esc(x.js)} { get => ${b}; set { ${b} = value; ${word(i)} |= ${bit(i)}; __ver++; } }`;
       }),
       `    public ${mod} bool __has(string __k) => __k switch { ${f.map((x, i) => `${this.str(x.js)} => ${has(x, i)}, `).join("")}_ => ${fallback("__has(__k)", "__extra != null && __extra.has(__k)")} };`,
       `    public ${mod} object __get(string __k) => __k switch { ${f.map((x) => `${this.str(x.js)} => this.${Transpiler.backing(x.js)}, `).join("")}_ => ${fallback("__get(__k)", "__extra?[__k]")} };`,
-      `    public ${mod} void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}default: ${derived ? "base.__set(__k, __v); " : "(__extra ??= new JsRecord<object>())[__k] = __v; "}break; } }`,
+      `    public ${mod} void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}default: ${derived ? "base.__set(__k, __v); " : "(__extra ??= new JsRecord<object>())[__k] = __v; __ver++; "}break; } }`,
       `    public ${mod} bool __null(string __k) => __k switch { ${f.filter((x) => x.nullable).map((x) => `${this.str(x.js)} => true, `).join("")}_ => ${fallback("__null(__k)", "false")} };`,
       `    public ${mod} IEnumerable<string> __keys() { ${derived ? "foreach (var __b in base.__keys()) yield return __b; " : ""}${f.map((x, i) => (has(x, i) === "true" ? `yield return ${this.str(x.js)}; ` : `if (${has(x, i)}) yield return ${this.str(x.js)}; `)).join("")}${derived ? "" : "if (__extra != null) foreach (var __x in __extra.keys()) yield return __x; "}yield break; }`,
-      `    public ${mod} bool __delete(string __k) { switch (__k) { ${f.map((x, i) => `case ${this.str(x.js)}: this.${Transpiler.backing(x.js)} = default; ${word(i)} &= ~${bit(i)}; return true; `).join("")}} return ${fallback("__delete(__k)", "__extra?.delete(__k) ?? true")}; }`,
+      `    public ${mod} bool __delete(string __k) { __ver++; switch (__k) { ${f.map((x, i) => `case ${this.str(x.js)}: this.${Transpiler.backing(x.js)} = default; ${word(i)} &= ~${bit(i)}; return true; `).join("")}} return ${fallback("__delete(__k)", "__extra?.delete(__k) ?? true")}; }`,
       ...(derived ? [] : [`    public IJsObject __copy() => copy();`]),
       // a copy has its own extra keys, as a JS spread copies them
       `    public ${derived ? "new " : ""}${d.name} copy() { var __c = (${d.name})MemberwiseClone(); if (__extra != null) __c.__extra = __extra.copy(); return __c; }`,
@@ -988,8 +988,9 @@ export class Transpiler {
         lines.push(`        if (a.__extra != null) foreach (var __k in a.__extra.keys()) ${fromExtra.length ? `switch (__k) { ${fromExtra.map((y) => `case ${this.str(y.js)}: b.${Transpiler.escape(y.js)} = JsRt.As<${y.cs}>(a.__extra[__k]); break; `).join("")}default: (b.__extra ??= new JsRecord<object>())[__k] = a.__extra[__k]; break; }` : `(b.__extra ??= new JsRecord<object>())[__k] = a.__extra[__k];`}`);
         // a merged union narrowed to a member (`it.k === "tier"`): one copy per object, and `===`
         // sees the copy as its source (a stack found by `q[0] === it`)
-        if (this.mergedNames.has(from)) methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        return JsRt.Narrowed(a, () =>\n        {\n            var b = new ${to}();\n${lines.map((l) => `    ${l}`).join("\n")}\n            return b;\n        });\n    }`);
-        else methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        var b = new ${to}();\n${lines.join("\n")}\n        return b;\n    }`);
+        // one copy per object and target class while the object is unchanged: a JS object passed
+        // twice (both ends of a car the same nose) is one object, and === sees the copy as its source
+        methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        return JsRt.Converted(a, a.__ver, () =>\n        {\n            var b = new ${to}();\n${lines.map((l) => `    ${l}`).join("\n")}\n            return b;\n        });\n    }`);
       }
     }
     return `/** Conversions between shape classes, as transpile.ts emits them (coerce). */\npublic static class ShapeConvert\n{\n${methods.join("\n\n")}\n}\n`;
