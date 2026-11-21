@@ -497,6 +497,33 @@ export function extraKeys(): unknown {
   return [barrelPaint(spec), barrelPaint({ boiler: { x0: 0, r: 1 } }), JSON.stringify(copy)];
 }
 
+/** A local `x && { ... }` used as one interface at both ends stays one object. */
+export function sharedLocal(): unknown {
+  const make = (roof: number[] | undefined) => {
+    const roofEnd = roof && { len: 0.05, tip: roof[0]! };
+    const spec: { front?: Nose; rear?: Nose } = { ...(roofEnd ? { front: roofEnd, rear: roofEnd } : {}) };
+    return spec.front && spec.rear ? noseCount(spec.front, spec.rear) : 0;
+  };
+  return [make([1]), make(undefined)];
+}
+
+interface Tram {
+  paint: string;
+  cabPaint?: string;
+  width: number;
+}
+
+function cabOf(s: Tram): string {
+  return s.cabPaint ?? s.paint;
+}
+
+/** A rest pattern leaves out the keys named before it, so a later read sees them absent. */
+export function restLeavesOut(): unknown {
+  const s: Tram = { paint: "body", cabPaint: "lamp", width: 2 };
+  const { cabPaint: _fine, ...plain } = s;
+  return [cabOf(plain as Tram), Object.keys(plain), _fine];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

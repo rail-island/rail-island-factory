@@ -1090,6 +1090,16 @@ export class Transpiler {
     return index;
   }
 
+  /** Whether an expression is only tested for truth (an if's or ternary's condition, a ! operand, a && chain within one). */
+  private isConditionContext(e: ts.Expression): boolean {
+    const up = e.parent;
+    if (ts.isParenthesizedExpression(up)) return this.isConditionContext(up);
+    if ((ts.isConditionalExpression(up) && up.condition === e) || (ts.isIfStatement(up) && up.expression === e) || (ts.isWhileStatement(up) && up.expression === e)) return true;
+    if (ts.isPrefixUnaryExpression(up) && up.operator === ts.SyntaxKind.ExclamationToken) return true;
+    if (ts.isBinaryExpression(up) && [ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken].includes(up.operatorToken.kind)) return this.isConditionContext(up);
+    return false;
+  }
+
   /** The C# types of a parameter list ("Volume v, double s = 0, Shape_end opts__arg = null"). */
   private paramTypes(list: string): string[] {
     const parts: string[] = [];
@@ -1159,15 +1169,27 @@ export class Transpiler {
    * reading a field (`X.len`) is neutral, any other use must have that class as its contextual type.
    */
   private usageClass(d: ts.VariableDeclaration): string | null {
-    const init = d.initializer && this.skipParens(d.initializer);
+    const whole = d.initializer && this.skipParens(d.initializer);
+    // the literal itself, or the literal of `x.roofEnd && { ... }` / `c ? { ... } : undefined`
+    const lit = (x: ts.Expression | undefined): ts.Expression | undefined => {
+      const y = x && this.skipParens(x);
+      if (!y) return undefined;
+      if (ts.isBinaryExpression(y) && y.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) return lit(y.right);
+      if (ts.isConditionalExpression(y)) return ts.isObjectLiteralExpression(this.skipParens(y.whenTrue)) ? this.skipParens(y.whenTrue) : lit(y.whenFalse);
+      return y;
+    };
+    const init = lit(whole);
     if (d.type || !init || !ts.isObjectLiteralExpression(init) || !ts.isIdentifier(d.name) || !(d.parent.flags & ts.NodeFlags.Const)) return null;
-    const own = this.cs(this.checker.getTypeAtLocation(d.name), d);
+    const own = this.cs(this.checker.getTypeAtLocation(init), d);
     if (!this.isDataClassName(own)) return null;
     const keys = init.properties.map((p) => (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p) ? p.name.getText() : null));
     if (keys.some((k) => k === null)) return null;
     let want: string | null = null;
     for (const id of this.referencesOf(d)) {
       if (ts.isPropertyAccessExpression(id.parent) && id.parent.expression === id) continue;
+      // a truthiness test (`roofEnd ? ... : ...`, `if (roofEnd)`, `!roofEnd`, `roofEnd && ...`) wants no class
+      const up = id.parent;
+      if ((ts.isConditionalExpression(up) && up.condition === id) || (ts.isIfStatement(up) && up.expression === id) || (ts.isPrefixUnaryExpression(up) && up.operator === ts.SyntaxKind.ExclamationToken) || (ts.isBinaryExpression(up) && up.left === id && [ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken].includes(up.operatorToken.kind) && !ts.isExpressionStatement(up.parent) && this.isConditionContext(up))) continue;
       // a spread copies its keys: as a class, its number fields would all be copied too
       if (ts.isSpreadAssignment(id.parent) || ts.isSpreadElement(id.parent)) return null;
       const ctx = ts.isShorthandPropertyAssignment(id.parent) ? this.checker.getContextualType(id.parent.parent as ts.ObjectLiteralExpression)?.getProperty(id.text) : undefined;
@@ -1841,7 +1863,10 @@ export class Transpiler {
       }
       const rec = this.recordLiteral(d.initializer) ?? this.classView(d.initializer);
       if (rec) this.localCs.set(this.keyOf(sym), rec);
-      const c = rec ?? this.cs(this.checker.getTypeOfSymbol(sym), d);
+      // an untyped object constant all of whose uses want one class (`front: roofEnd, rear: roofEnd`)
+      const used = rec ? null : this.usageClass(d);
+      if (used) this.localCs.set(this.keyOf(sym), used);
+      const c = rec ?? used ?? this.cs(this.checker.getTypeOfSymbol(sym), d);
       const name = this.declName(d.name);
       if (!d.initializer) return `${ind}${c} ${name} = ${VALUE_TYPES.has(c) ? `default(${c})` : "default"};`;
       return `${ind}${c} ${name} = ${this.exprTo(d.initializer, c)};`;
@@ -1887,7 +1912,9 @@ export class Transpiler {
           out.push(`${this.fail(e, "rest element").code};`);
           continue;
         }
-        out.push(`${rc} ${this.declName(e.name)} = JsRt.Obj(new ${rc}(), (${rc} __r) => JsRt.Assign(__r, ${src}));`);
+        // every key but those the pattern names before the rest
+        const named = (pattern as ts.ObjectBindingPattern).elements.filter((x) => !x.dotDotDotToken).map((x) => this.str((x.propertyName ?? x.name).getText()));
+        out.push(`${rc} ${this.declName(e.name)} = JsRt.Obj(new ${rc}(), (${rc} __r) => JsRt.AssignExcept(__r, ${src}${named.map((k) => `, ${k}`).join("")}));`);
         continue;
       }
       const key = (e.propertyName ?? e.name).getText();

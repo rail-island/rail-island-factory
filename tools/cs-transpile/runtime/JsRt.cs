@@ -470,6 +470,13 @@ public static class JsRt
     }
 
     /** `{ ...src }` into `target`: every key `src` has, that `target` has a field for. */
+    /** `const { a, ...rest } = src`: every key of src but the named ones. */
+    public static void AssignExcept(IJsObject target, object? src, params string[] except)
+    {
+        if (src is null) return;
+        foreach (var (k, v) in KeyValues(src).ToList()) if (Array.IndexOf(except, k) < 0) target.__set(k, v);
+    }
+
     public static void Assign(IJsObject target, object? src)
     {
         if (src is null) return;
