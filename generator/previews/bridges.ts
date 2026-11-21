@@ -50,28 +50,58 @@ const DECKS: Record<string, DeckSpec> = {
 // (webapp core/rail/Bridge.ts OVERHEAD_CLEARANCE_Y)
 const SUPPORT_Y = 0.67, CLEARANCE_Y = 1.528 - 0.67 + 0.4 + 10.6 + 1.3;
 
-// the game's bridge colours and the surface each material draws with
-const COLORS: Record<bridge.BridgeMaterial, Rgb> = {
-  timber: [145, 108, 70], deck: [120, 110, 100], parapet: [150, 140, 125], pier: [95, 90, 85],
-  steel: [80, 90, 110], stone: [170, 160, 145], brick: [235, 205, 195], cable: [40, 40, 50], tower: [95, 90, 85],
-};
+// the surface each material draws with (its colour is the box's own, bridge.COLORS)
 const SURFACE: Partial<Record<bridge.BridgeMaterial, SurfaceId>> = {
   timber: "bridge-timber", deck: "bridge-deck", parapet: "bridge-parapet", pier: "bridge-pier",
   tower: "bridge-tower", stone: "bridge-stone", brick: "bridge-brick",
 };
 const KIND: Partial<Record<bridge.BridgeMaterial, string>> = { steel: "steel", cable: "cable" };
 
-interface Fixture { list: bridge.BridgeBox[]; path: bridge.BridgePathGeom; y: number; length: number; deck: DeckSpec; wires: string }
-/** The bridge the set module builds, its path raised until nothing dips below the ground. */
+// The ground the preview stands the bridge over: a valley between two banks, as
+// the game lays a bridge from bank to bank. Each bank is level with the track bed
+// behind the bridge's end, drops steeply under its abutment and then slopes down
+// to the valley floor (y = 0). Stations along x, the profile linear between them.
+interface Ground { xs: number[]; ys: number[] }
+const BANK_BELOW_DECK = 0.6, BANK_BACK = 6, BANK_SLOPE = 1.1, BANK_STEP = 6;
+function valley(length: number, y: number): Ground {
+  const top = y + SUPPORT_Y - BANK_BELOW_DECK, half = length / 2;
+  // under the breast wall the bank falls BANK_STEP studs, then slopes to the floor
+  const step = Math.min(BANK_STEP, top * 0.5), run = Math.min((top - step) * BANK_SLOPE, half - 4);
+  const toe = top - step - run / BANK_SLOPE;
+  const xs = [-half - BANK_BACK, -half - 1.6, -half + 0.4, -half + 0.4 + run, half - 0.4 - run, half - 0.4, half + 1.6, half + BANK_BACK];
+  const ys = [top, top, top - step, toe, toe, top - step, top, top];
+  return { xs, ys };
+}
+function groundAt(g: Ground, x: number): number {
+  if (x <= g.xs[0]!) return g.ys[0]!;
+  for (let i = 1; i < g.xs.length; i++) {
+    if (x <= g.xs[i]!) { const t = (x - g.xs[i - 1]!) / Math.max(g.xs[i]! - g.xs[i - 1]!, 1e-9); return g.ys[i - 1]! + (g.ys[i]! - g.ys[i - 1]!) * t; }
+  }
+  return g.ys[g.ys.length - 1]!;
+}
+// what stands on the ground is sunk a little into it, so no face lies on the ground's
+const SINK = 0.1;
+const GROUND_COLOR: Rgb = [126, 146, 92];
+
+interface Fixture { list: bridge.BridgeBox[]; path: bridge.BridgePathGeom; y: number; length: number; deck: DeckSpec; wires: string; ground: Ground }
+/** The bridge the set module builds over its valley, the path raised until nothing dips below the valley floor. */
 function fixture(values: ParamValues | undefined, type: string): Fixture {
   const p = resolveParams(BRIDGE_PARAMS, values);
   const length = LENGTHS[p.length!]!, deck = DECKS[p.deck!]!;
   const pathAt = (y: number) => bridge.pathFromPoints([{ x: -length / 2, y, z: 0 }, { x: length / 2, y, z: 0 }], deck.width, deck.shift, SUPPORT_Y, CLEARANCE_Y)!;
-  const at = (y: number): Fixture => ({ list: bridge.buildBridge(type, pathAt(y), () => 0), path: pathAt(y), y, length, deck, wires: p.wires! });
+  const at = (y: number): Fixture => {
+    const ground = valley(length, y);
+    return { list: bridge.buildBridge(type, pathAt(y), (x) => groundAt(ground, x) - SINK), path: pathAt(y), y, length, deck, wires: p.wires!, ground };
+  };
   const first = at(14);
   const s = new Sketch();
   draw(s, first.list);
-  return s.low < 0 ? at(14 - s.low) : first;
+  return s.low < -SINK - 1e-6 ? at(14 - s.low - SINK) : first;
+}
+/** The valley under the bridge: a block of ground as wide as the deck and its surroundings. */
+function drawGround(s: Sketch, f: Fixture): void {
+  const half = f.deck.width / 2 + 4, bottom = -1;
+  s.wall(s.mat("ground", GROUND_COLOR), f.ground.xs.map((x): V => [x, 0, f.deck.shift]), -half, half, f.ground.xs.map(() => bottom), f.ground.ys);
 }
 
 const WIRE_COLOR: Rgb = [60, 60, 65], MAST_COLOR: Rgb = [90, 105, 45], FOOTING_COLOR: Rgb = [226, 224, 220], INSULATOR_COLOR: Rgb = [120, 95, 55];
@@ -160,7 +190,7 @@ const v3 = (p: bridge.Vec3): V => [p.x, p.y, p.z];
 
 function draw(s: Sketch, list: readonly bridge.BridgeBox[]): void {
   for (const b of list) {
-    const mat = s.mat(KIND[b.material] ?? b.material, COLORS[b.material], SURFACE[b.material]);
+    const mat = s.mat(KIND[b.material] ?? b.material, b.color ?? bridge.COLORS[b.material], SURFACE[b.material]);
     if (b.shape === "box") s.box(mat, { cx: b.center.x, cy: b.center.y, cz: b.center.z, sx: b.size.x, sy: b.size.y, sz: b.size.z, yaw: b.yaw, topScale: b.topScale });
     else if (b.shape === "span") s.span(mat, v3(b.a), v3(b.b), b.w, b.h);
     else if (b.shape === "strut") s.bar(mat, v3(b.a), v3(b.b), b.thick);
@@ -182,6 +212,7 @@ export function bridgeMesh(list: readonly bridge.BridgeBox[]): MeshBuilder {
 export function bridgePreview(values: ParamValues | undefined, type: string): MeshBuilder {
   const f = fixture(values, type);
   const s = new Sketch();
+  drawGround(s, f);
   draw(s, f.list);
   wires(s, f, type, lanes(s, f));
   return s.build("bridge");

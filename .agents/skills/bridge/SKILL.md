@@ -25,6 +25,11 @@ Paths below are relative to the repository root. Read `docs/models/bridges.md`
 - Every box whose foot is on the terrain is tagged `ground`, and only those.
 - Tag parts: `deck`, `support`, `frame` (the silhouette), `detail` (what a middle
   level may drop).
+- Colour on purpose: every box carries a `color` - `COLORS`, the type's steel `paint`, or a
+  `tone` of its material (light caps, copings and fascia bands; a dark vault). Keep deck,
+  structure and supports apart in value, and give a new steel type its own paint.
+- Close both ends: over a bank a seated type stands on its abutment (breast wall, backwall,
+  wing walls), not an end pier; check the preview's valley shows it.
 - A member crossing over the track must clear `clearanceY`; if the catenary may
   hang from it, list it in `overheadMembers` at the same place.
 

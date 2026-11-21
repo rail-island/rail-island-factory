@@ -209,4 +209,67 @@ describe("the bridge kit", () => {
     const flat = bridge.buildBridge("beam", bridge.pathFromPoints([{ x: 0, y: 40, z: 0 }, { x: 60, y: 40, z: 0 }], 9, 0, 0.67, 13.16)!, () => 0);
     expect(plinths(flat).length).toBeGreaterThan(0);
   });
+
+  it("colours every box: a type's steel in its paint, caps and copings in a lighter band", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 20, z: 0 }, { x: 60, y: 20, z: 0 }], 9, 0, 0.67, 9.9)!;
+    for (const type of Object.keys(bridge.TYPE_META)) {
+      const boxes = bridge.buildBridge(type, path, () => 0);
+      expect(boxes.every((b) => b.color !== undefined), type).toBe(true);
+      const paint = bridge.TYPE_META[type]!.paint;
+      if (paint) expect(boxes.some((b) => b.material === "steel" && b.color === paint), type).toBe(true);
+    }
+    // the steel types tell apart by their paint
+    const paints = Object.values(bridge.TYPE_META).map((t) => t.paint?.join(",")).filter(Boolean);
+    expect(new Set(paints).size).toBe(paints.length);
+    // a concrete pier's cap is lighter than its shaft
+    const beam = bridge.buildBridge("beam", path, () => 0);
+    const light = (c: bridge.Rgb): number => c[0] + c[1] + c[2];
+    const caps = beam.filter((b) => b.part === "support" && b.material === "pier" && b.color && light(b.color) > light(bridge.COLORS.pier) + 100);
+    expect(caps.length).toBeGreaterThan(0);
+  });
+
+  it("carries a single shaft under a wider cap as a hammerhead", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 20, z: 0 }, { x: 50, y: 20, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const heads = bridge.buildBridge("beam", path, () => 0).filter((b) => b.shape === "wall" && b.part === "support" && b.material === "pier");
+    expect(heads.length).toBeGreaterThan(0);
+    for (const h of heads) {
+      if (h.shape !== "wall") continue;
+      // across the deck (stations along z), deeper at the shaft than at its tips
+      expect(Math.abs(h.points[0]!.z - h.points[h.points.length - 1]!.z)).toBeGreaterThan(5);
+      expect(Math.min(h.bottoms[1]!, h.bottoms[2]!)).toBeLessThan(h.bottoms[0]! - 0.5);
+    }
+  });
+
+  it("stands a through truss on stone piers with a capstone band", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 128, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const mid = bridge.buildBridge("truss", path, () => 0).filter((b) => b.shape === "box" && b.part === "support" && Math.abs(b.center.x - 64) < 0.01);
+    expect(mid.some((b) => b.material === "stone" && b.ground)).toBe(true);
+    const block = mid.find((b) => b.ground)!, band = mid.find((b) => !b.ground && b.material === "stone");
+    if (block?.shape !== "box" || band?.shape !== "box") throw new Error("a truss pier is a block and a band");
+    expect(band.size.x).toBeGreaterThan(block.size.x);
+    expect(bridge.COLORS.stone.reduce((a, c) => a + c)).toBeLessThan(band.color!.reduce((a, c) => a + c));
+  });
+
+  it("closes an end over a bank on an abutment, and keeps the end pier over a deep crossing", () => {
+    // a 60-stud bridge between two banks at the track bed's height: deep in the middle
+    const path = bridge.pathFromPoints([{ x: 0, y: 20, z: 0 }, { x: 60, y: 20, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const banks = (x: number): number => (x < 2 || x > 58 ? 20 - 6 : 0);
+    for (const type of ["beam", "box_girder", "plate_girder", "deck_truss", "truss", "tied_arch"]) {
+      const boxes = bridge.buildBridge(type, path, banks);
+      // no pier column right at either end: the breast wall, as wide as the deck, stands there
+      const atEnd = (b: bridge.BridgeBox, x: number): boolean => b.shape === "box" && Math.abs(b.center.x - x) < 2.5;
+      for (const x of [0, 60]) {
+        // (under a deep end -- a deck truss -- the backwall is what stands on the bank)
+        const walls = boxes.filter((b) => atEnd(b, x) && b.shape === "box" && b.ground && b.size.x > 9);
+        expect(walls.length, `${type} at ${x}`).toBeGreaterThanOrEqual(1);
+        expect(boxes.some((b) => atEnd(b, x) && b.shape === "box" && b.topScale !== undefined), `${type} end pier at ${x}`).toBe(false);
+      }
+      // a wing wall each side at each end, running back along the bank beyond the deck
+      const wings = boxes.filter((b) => b.shape === "wall" && b.part === "support" && b.points.some((p) => p.x < -3 || p.x > 63));
+      expect(wings.length, type).toBe(4);
+    }
+    // over a deep crossing the end stands on its pier, as before
+    const deep = bridge.buildBridge("beam", path, () => 0);
+    expect(deep.some((b) => b.shape === "box" && b.topScale !== undefined && Math.abs(b.center.x) < 0.01)).toBe(true);
+  });
 });

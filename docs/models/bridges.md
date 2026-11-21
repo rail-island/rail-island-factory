@@ -34,6 +34,19 @@ perpendicular, `(tz, -tx)`; the module's own lateral direction (`pathRight`) is 
 an offset flips sign on the way into a section. The site's sketch sweeps along `(-tz, tx)` and
 flips every section back (`previews/bridges.ts`).
 
+**Colours.** Every box carries its own `color` (`Rgb`, sRGB 0-255), which the game draws it with;
+its `material` still picks the surface (photo) and the part's kind. The palette is the module's
+`COLORS` (one colour per material); a type's steelwork wears its `TYPE_META` `paint` (the
+through truss and cantilever oxide red, the plate girder green, the deck truss dark grey, the
+tied arch blue, the network arch light grey, the suspension bridge's girders orange; the other
+types keep `COLORS.steel` on their bearings), so the types tell apart at any zoom. Some parts take
+a tone of their material instead: the deck's cornice (its fascia) and the parapet coping are
+lighter than the slab, a concrete pier's cap or hammerhead is the light band at its head (1.45 of
+the way to white less one), its footing darker, a masonry pier's impost and an arch's ring and
+keystone lighter, and the masonry vault dark (0.62), so the opening under an arch reads as depth.
+The game drew the material's colour before; a game build that ignores `color` still draws every
+box, in its material's colour.
+
 **The lateral frame.** A lateral offset is taken along the mitre at each path vertex, blended
 along each segment (`pathRightAt`), so a constant offset is a straight line on every segment that
 meets its neighbours exactly - where the renderer's mitred sweep puts the deck. The curve sampler
@@ -46,7 +59,7 @@ meets its neighbours exactly - where the renderer's mitred sweep puts the deck. 
 | `beam` | plain | - | slab with two concrete girders underneath | concrete every ~25 studs |
 | `box_girder` | plain | 65 | trapezoidal concrete box under the slab, haunched: a parabolic soffit from 3.4 studs deep over the piers to 1.8 at mid-span | concrete at span boundaries, under the haunch |
 | `plate_girder` | framed | 60 | steel through-girders span / 11 deep (2.6 to 5 studs) along the deck edges - the railing too, no parapet or cornice - a quarter of their depth below the slab, top flanges rounding down at the ends, stiffeners on both faces of the web, cross girders under the slab | concrete, cap under the girders |
-| `truss` | framed | 64 | Pratt through truss: inclined end posts with portal frames, verticals, diagonals sloping down toward mid-span, a polygonal (Parker) top chord rising up to 4 studs on spans over 40, a crossbeam at every top node with X bracing between | concrete at span boundaries only |
+| `truss` | framed | 64 | Pratt through truss (oxide red): inclined end posts with portal frames, verticals, diagonals sloping down toward mid-span, a polygonal (Parker) top chord rising up to 4 studs on spans over 40, a crossbeam at every top node with X bracing between | dressed stone at span boundaries only: a block as wide as the deck under a capstone band |
 | `deck_truss` | framed | 65 | Warren truss with verticals under the deck, a cross frame between the trusses at every other panel point and X bracing in the bottom plane | concrete under the truss |
 | `timber_trestle` | framed | - | plank deck on two stringers and a post-and-rail guard; a bent every ~8 studs of two plumb and two battered posts on footings under a cap, X braced in stories of 10 studs with girts at the story lines and along the bridge at the first one | the bents |
 | `arch` | framed | 80 | concrete deck arch: two ribs thickening toward the springings, pairs of spandrel columns every ~5 studs with a cap beam under the slab, struts between the ribs | a concrete block under each rib, the two tied by a cap beam (`PierSpec.columns`) |
@@ -138,18 +151,41 @@ planes. The masonry types build them of their masonry; the trestle of timber.
   (the game samples a cell's corners against the charted rect; a wide footing blocked four). A deck 14 or more studs wide (two tracks, a road) stands on twin columns. The
   cap is as wide as what stands on it (`capWidth`): the girders, the truss, both tower legs. The
   bearings sit under the members (`bearings`). `under` stops the pier below a superstructure
-  hanging under the slab (girders, box, deck truss, cantilever towers).
+  hanging under the slab (girders, box, deck truss, cantilever towers). A single shaft under a
+  cap at least 1.2 wider carries it as a **hammerhead**: a wall across the deck whose underside
+  rises from the shaft (up to 1.4 deeper there, `HAMMER_HAUNCH`) out to the tips; twin columns
+  and a narrow cap keep the box cap. The cap is lighter than the shaft, the footing darker.
 - masonry (`stone`, `brick`): one block 0.4 wider than the deck. An intermediate pier gets a
   cutwater at each face (a square column turned 45 degrees, up to the arch springing) and a
-  pilaster above it up to the coping; the two abutments get neither. In water an intermediate
+  pilaster above it up to the coping; the two abutments get neither. A pier with an `impost`
+  (the masonry arches at their springing; the through truss just under the slab) wears a band
+  of lighter stone there, 0.4 tall and 0.15 proud all round. In water an intermediate
   pier stands on a starling: the block and its cutwaters again, 0.5 wider all round, from the
   bed up to 0.8 above the waterline, stopping 0.3 short of the springing (none when the water
   reaches within 0.5 of it).
   Footings, caissons and starlings are not tagged `ground`: ships are charted against the slim
   pier, not the ledge round it.
 
-**Abutments** (`buildAbutments`): a wing wall at each corner, reaching the local ground or cut
-short 3.5 studs down on a steep crossing.
+**Abutments** (`buildAbutments`): what each end stands on, where the deck meets the bank. Over a
+bank - the lowest ground under the abutment's footprint within 8 studs (`ABUTMENT_MAX_DROP`) of
+its seat - each end gets:
+
+- a **breast wall** under the types that bear on a seat at their ends (`SEATED_TYPES`: beam,
+  box girder, plate girder, deck truss, truss, tied and network arch, cantilever) and the cable
+  types: as wide as the deck and 0.4 more each side, from 0.6 under the deck to 2 studs back into
+  the bank, from the seat (`under` below the slab, as the type's end pier would bear: under the
+  beam's girders, the box, the deck truss) down to the ground, tagged `ground`, with a lighter
+  coping along its front edge. The seated types' end piers give way to it (`endOnAbutment`);
+- a **backwall** behind the deck's end from inside the breast wall up to just under the deck top;
+- a **wing wall** each side, running 6 studs back along the bank from inside the parapet's end,
+  its top falling from just under the parapet's coping to 0.5 over the ground, sunk 0.3 into it,
+  with a lighter coping. These are walls through stations beyond the path's end (`endPoint`,
+  straight on along the end's level tangent).
+
+The concrete arch and the masonry arches spring from their own end blocks and keep them (no
+breast wall), with the wing walls in their own material. The trestle, and any end over a deeper
+drop, keep the short wing wall at each corner beside the end pier, reaching the local ground or
+cut short 3.5 studs down.
 
 **Ground.** Every box standing on the terrain is tagged `ground`; the game charts those for
 ships. `test/bridgeSet.test.ts` holds the tag to exactly the boxes whose foot is on the terrain.
@@ -227,8 +263,11 @@ The distant level is held to the previews' 500 triangles ([previews.md](previews
 
 ## The site preview
 
-`previews/bridges.ts` builds each type over a straight crossing of flat ground, raised until
-nothing dips below it, with three preview parameters: the span (60 or 160 studs), what the deck
+`previews/bridges.ts` builds each type over a straight crossing of a valley - two banks level with
+the track bed behind the ends (0.6 under the deck top), each falling 6 studs under its abutment
+and then sloping 1:1.1 to a flat floor - raised until nothing dips below the floor, and draws
+that ground as a block 4 studs wider than the deck each side; what stands on it is sunk 0.1 into
+it. It has three preview parameters: the span (60 or 160 studs), what the deck
 carries and its wires. The decks follow the game: n tracks 8 apart on a deck 8n + 1 wide, the
 path along the first track and the deck recentred over them (`shiftAmount` 4(n - 1)); a narrow
 or wide road (8 or 16 studs, the road types' widths) plus 2, centred. Tracks are drawn by the

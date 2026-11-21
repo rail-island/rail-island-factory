@@ -19,6 +19,8 @@
 // Pure data and functions, no imports: bundled into export/sets/bridge.js.
 
 export interface Vec3 { x: number; y: number; z: number }
+/** A colour, 0-255 per channel (sRGB). */
+export type Rgb = [number, number, number];
 
 /** The bridge's path as the game hands it: its points, their distances, the deck and the game's heights. */
 export interface BridgePathGeom {
@@ -39,8 +41,11 @@ export type TerrainHeightFn = (x: number, z: number) => number;
 export type WaterLevelFn = (x: number, z: number) => number | undefined;
 export interface SpanRange { fromDistance: number; toDistance: number }
 
-/** One type's span policy: the longest structural span before its superstructure repeats, or none. */
-export interface BridgeTypeData { maxSpan: number | null }
+/**
+ * One type's span policy (the longest structural span before its superstructure
+ * repeats, or none) and the colour its steelwork is painted (`COLORS.steel` without).
+ */
+export interface BridgeTypeData { maxSpan: number | null; paint?: Rgb }
 
 // --- dimensions (studs) ---
 export const DECK_THICKNESS = 0.8;
@@ -51,23 +56,44 @@ const PIER_WIDTH = 1.6;
 const MIN_PIER_DROP = 1; // min drop from deck bottom to terrain before a pier renders
 const MIN_WATER_DEPTH = 0.2; // shallower than this a pier stands on the bed, not in water
 
+// Each steel type wears its own paint, so the types tell apart at any zoom: the
+// historic trusses oxide red, the plate girder bridge green, the deck truss dark
+// grey, the tied arch blue, the network arch light grey, the suspension bridge's
+// girders orange (the cable-stayed decks are concrete).
 export const TYPE_META: Record<string, BridgeTypeData> = {
   beam: { maxSpan: null },
-  truss: { maxSpan: 64 },
-  cantilever: { maxSpan: 90 },
+  truss: { maxSpan: 64, paint: [150, 62, 45] },
+  cantilever: { maxSpan: 90, paint: [132, 56, 42] },
   arch: { maxSpan: 80 },
   stone_arch: { maxSpan: 28 },
   brick_arch: { maxSpan: 28 },
-  tied_arch: { maxSpan: 100 },
-  suspension: { maxSpan: 140 },
+  tied_arch: { maxSpan: 100, paint: [56, 98, 150] },
+  suspension: { maxSpan: 140, paint: [170, 78, 46] },
   cable_stayed: { maxSpan: 120 },
   cable_stayed_y: { maxSpan: 120 },
-  plate_girder: { maxSpan: 60 },
+  plate_girder: { maxSpan: 60, paint: [60, 92, 68] },
   timber_trestle: { maxSpan: null },
   box_girder: { maxSpan: 65 },
-  deck_truss: { maxSpan: 65 },
-  network_arch: { maxSpan: 100 },
+  deck_truss: { maxSpan: 65, paint: [72, 78, 84] },
+  network_arch: { maxSpan: 100, paint: [210, 212, 206] },
 };
+
+/**
+ * The colour of each material. Every box `buildBridge` returns carries its own
+ * `color`: this one, a type's steel paint, or a tone of it -- a lighter cap, coping
+ * or fascia band, a darker vault -- so deck, structure and supports read apart. The
+ * material still picks the surface (photo) a box draws with.
+ */
+export const COLORS: Record<BridgeMaterial, Rgb> = {
+  timber: [145, 108, 70], deck: [120, 110, 100], parapet: [150, 140, 125], pier: [95, 90, 85],
+  steel: [80, 90, 110], stone: [170, 160, 145], brick: [235, 205, 195], cable: [40, 40, 50], tower: [95, 90, 85],
+};
+// A material's colour lifted toward white (k > 1, by k - 1 of the way) or darkened (k < 1).
+function tone(material: BridgeMaterial, k: number): Rgb {
+  return COLORS[material].map((c) => Math.round(k >= 1 ? c + (255 - c) * (k - 1) : c * k)) as Rgb;
+}
+const LIGHT_BAND = 1.45; // a concrete cap, a coping: the band that catches the light
+const MASONRY_BAND = 1.25; // a stone or brick band (arch ring, impost, coping)
 
 // The two cable types are one structure over the whole bridge: their towers stand
 // at the ends of one or more MAIN spans (each at most the type's maxSpan), shared
@@ -395,7 +421,7 @@ export type BridgeMaterial = "timber" | "deck" | "parapet" | "pier" | "steel" | 
 // square cross-section, length on local Y from a->b. "box": yaw-aligned size box.
 // "ribbon": a cross-section swept along a centerline -- see below.
 export type BridgePart = "deck" | "support" | "frame" | "detail";
-export type BridgeBox = { part?: BridgePart; ground?: true } & (
+export type BridgeBox = { part?: BridgePart; ground?: true; color?: Rgb } & (
   | { shape: "span"; a: Vec3; b: Vec3; w: number; h: number; material: BridgeMaterial }
   | { shape: "strut"; a: Vec3; b: Vec3; thick: number; material: BridgeMaterial }
   | { shape: "box"; center: Vec3; size: Vec3; yaw: number; material: BridgeMaterial; topScale?: number }
@@ -427,8 +453,8 @@ function pushStrut(out: BridgeBox[], a: Vec3, b: Vec3, thick: number, material: 
   if (dist3(a, b) < 0.05) return;
   out.push({ shape: "strut", a, b, thick, material, part });
 }
-function pushBox(out: BridgeBox[], g: BridgePathGeom, distance: number, lx: number, ly: number, size: Vec3, material: BridgeMaterial, part: BridgePart = "detail"): void {
-  out.push({ shape: "box", center: pathWorldPoint(g, distance, lx, ly), size, yaw: pathYaw(g, distance), material, part });
+function pushBox(out: BridgeBox[], g: BridgePathGeom, distance: number, lx: number, ly: number, size: Vec3, material: BridgeMaterial, part: BridgePart = "detail", color?: Rgb): void {
+  out.push({ shape: "box", center: pathWorldPoint(g, distance, lx, ly), size, yaw: pathYaw(g, distance), material, part, ...(color ? { color } : {}) });
 }
 // One varying-height wall along the path: a station at every `distances[i]`,
 // `w` wide about lateral offset `lx` (this module's frame, so the sign flips on
@@ -436,7 +462,7 @@ function pushBox(out: BridgeBox[], g: BridgePathGeom, distance: number, lx: numb
 // in deck-local Y (relative to the slab centre, like every other localY here).
 // The stations are the descriptor's points; the renderer mitres between them,
 // so consecutive stations butt exactly instead of overlapping like box slices.
-function pushWall(out: BridgeBox[], g: BridgePathGeom, distances: number[], lx: number, w: number, bottoms: number[], tops: number[], material: BridgeMaterial, part: BridgePart = "frame"): void {
+function pushWall(out: BridgeBox[], g: BridgePathGeom, distances: number[], lx: number, w: number, bottoms: number[], tops: number[], material: BridgeMaterial, part: BridgePart = "frame", color?: Rgb): void {
   if (distances.length < 2) return;
   const points: Vec3[] = [];
   const bottomYs: number[] = [];
@@ -448,7 +474,13 @@ function pushWall(out: BridgeBox[], g: BridgePathGeom, distances: number[], lx: 
     topYs.push(p.y + tops[i]);
   }
   const u = -lx; // renderer's perpendicular is the opposite of pathRight
-  out.push({ shape: "wall", points, u0: u - w / 2, u1: u + w / 2, bottoms: bottomYs, tops: topYs, material, part });
+  out.push({ shape: "wall", points, u0: u - w / 2, u1: u + w / 2, bottoms: bottomYs, tops: topYs, material, part, ...(color ? { color } : {}) });
+}
+// A wall through world-space stations `points`, `w` thick about them, from
+// bottoms[i] to tops[i] (absolute Y): a pier's hammerhead across the deck, an
+// abutment's wing wall beyond the path's end.
+function pushWallAt(out: BridgeBox[], points: Vec3[], w: number, bottoms: number[], tops: number[], material: BridgeMaterial, part: BridgePart, color?: Rgb): void {
+  out.push({ shape: "wall", points, u0: -w / 2, u1: w / 2, bottoms, tops, material, part, ...(color ? { color } : {}) });
 }
 
 // The deck centerline: every path point lifted to the middle of the slab. The
@@ -466,7 +498,7 @@ function deckCenterline(g: BridgePathGeom): Vec3[] {
 // every swept face winds inward and is culled. Getting this wrong is invisible on
 // a single-lane deck, which is centred (lx = 0) -- it throws a MULTI-LANE deck to
 // the wrong side of the track by twice the lane recentering.
-function pushRibbon(out: BridgeBox[], g: BridgePathGeom, lx: number, v: number, w: number, h: number, material: BridgeMaterial, part?: BridgePart): void {
+function pushRibbon(out: BridgeBox[], g: BridgePathGeom, lx: number, v: number, w: number, h: number, material: BridgeMaterial, part?: BridgePart, color?: Rgb): void {
   const points = deckCenterline(g);
   if (points.length < 2) return;
   const u = -lx;
@@ -484,6 +516,7 @@ function pushRibbon(out: BridgeBox[], g: BridgePathGeom, lx: number, v: number, 
     ],
     material,
     part,
+    ...(color ? { color } : {}),
   });
 }
 
@@ -493,20 +526,104 @@ function pushCurve(out: BridgeBox[], g: BridgePathGeom, lx: number, y: (t: numbe
   out.push({ shape: "ribbon", points, sampled: true, profile: [{ u: w / 2, v: -h / 2 }, { u: w / 2, v: h / 2 }, { u: -w / 2, v: h / 2 }, { u: -w / 2, v: -h / 2 }], material, part });
 }
 
-function buildAbutments(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHeightFn, material: BridgeMaterial): void {
-  for (const d of [0, g.length]) {
-    // Wing walls reach the local ground independently, so an approach bank does
-    // not leave them floating. Keep them short on steep valley crossings.
-    const inward = d === 0 ? 1 : -1;
-    for (const side of [-1, 1]) {
-      const at = pathWorldPoint(g, d + inward * 1.2, side * (g.deckWidth / 2 - 0.3), 0);
-      const bottom = Math.max(heightAt(at.x, at.z), at.y - 3.5);
-      const top = at.y + DECK_THICKNESS / 2;
-      if (top - heightAt(at.x, at.z) <= MIN_PIER_DROP) continue;
-      // a wing wall reaching the ground stands on it (one cut short on a steep crossing does not)
-      const ground = bottom === heightAt(at.x, at.z) ? { ground: true as const } : {};
-      out.push({ shape: "box", center: { x: at.x, y: (bottom + top) / 2, z: at.z }, size: { x: 0.65, y: top - bottom, z: Math.min(2.4, g.length / 4) }, yaw: pathYaw(g, d), material, part: "detail", ...ground });
+// The abutments: what each end of the bridge stands on, where the deck meets the
+// bank. Over a bank (the ground under the end within ABUTMENT_MAX_DROP of the deck)
+// a concrete or steel bridge closes on a real abutment instead of an end pier:
+//
+// - the breast wall, as wide as the deck and a little more, from the bank down to
+//   the ground in front, reaching ABUTMENT_FRONT under the deck (the bridge seat it
+//   bears on, `under` below the slab: under its girders, box or truss) and
+//   ABUTMENT_BACK into the bank; a lighter coping band along its front edge;
+// - the backwall behind the deck's end, up to the deck top, closing the joint;
+// - a wing wall each side running back along the bank, its top falling from just
+//   under the parapet's coping to the ground, with a lighter coping.
+//
+// A masonry arch keeps its end block (it is the abutment) and takes the wing walls
+// in its own stone or brick. Over a deep crossing -- an end high above the ground --
+// the old short wing walls stand beside the end pier instead.
+const ABUTMENT_FRONT = 0.6, ABUTMENT_BACK = 2.0, ABUTMENT_MAX_DROP = 8, ABUTMENT_OUT = 0.4;
+const WING_RUN = 6, WING_W = 0.7, WING_TOP = DECK_THICKNESS / 2 + PARAPET_HEIGHT - 0.1, WING_COPING = 0.22;
+// A point beyond (outward > 0) or just inside (outward < 0) one end of the path,
+// straight on along the end's level tangent.
+function endPoint(g: BridgePathGeom, end: 0 | 1, outward: number, lx: number, ly: number): Vec3 {
+  const d = end ? g.length : 0;
+  const p = pathWorldPoint(g, d, lx, ly);
+  const { tangent } = pathSample(g, d);
+  const t = unit(tangent.x, 0, tangent.z), s = end ? outward : -outward;
+  return { x: p.x + t.x * s, y: p.y, z: p.z + t.z * s };
+}
+// The breast wall's footprint at one end: its lowest ground, and the seat's height.
+function abutmentAt(g: BridgePathGeom, end: 0 | 1, under: number, heightAt: TerrainHeightFn): { seat: number; foot: number } {
+  const seatY = -DECK_THICKNESS / 2 - under - 0.06;
+  const half = g.deckWidth / 2 + ABUTMENT_OUT;
+  let foot = Infinity;
+  for (const o of [-ABUTMENT_FRONT, (ABUTMENT_BACK - ABUTMENT_FRONT) / 2, ABUTMENT_BACK]) for (const lx of [-half, 0, half]) {
+    const p = endPoint(g, end, o, lx, 0);
+    foot = Math.min(foot, heightAt(p.x, p.z));
+  }
+  return { seat: endPoint(g, end, 0, 0, seatY).y, foot };
+}
+/** Does the end at `distance` stand on an abutment (no end pier)? */
+function endOnAbutment(g: BridgePathGeom, distance: number, under: number, heightAt: TerrainHeightFn): boolean {
+  const end = distance < 0.05 ? 0 : distance > g.length - 0.05 ? 1 : -1;
+  if (end < 0) return false;
+  const { seat, foot } = abutmentAt(g, end as 0 | 1, under, heightAt);
+  return seat - foot <= ABUTMENT_MAX_DROP;
+}
+function buildAbutments(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHeightFn, material: BridgeMaterial, under: number, breast: boolean): void {
+  const masonry = material === "stone" || material === "brick";
+  for (const end of [0, 1] as const) {
+    const { seat, foot } = abutmentAt(g, end, under, heightAt);
+    if (material === "timber" || seat - foot > ABUTMENT_MAX_DROP) {
+      pushWingStubs(out, g, end ? g.length : 0, heightAt, material === "timber" ? "timber" : masonry ? material : "pier");
+      continue;
     }
+    const yaw = pathYaw(g, end ? g.length : 0), width = g.deckWidth + 2 * ABUTMENT_OUT;
+    const light = tone(material, masonry ? MASONRY_BAND : LIGHT_BAND);
+    if (breast && seat - foot > 0.3) {
+      const c = endPoint(g, end, (ABUTMENT_BACK - ABUTMENT_FRONT) / 2, 0, 0);
+      out.push({ shape: "box", center: { x: c.x, y: (seat + foot) / 2, z: c.z }, size: { x: width, y: seat - foot, z: ABUTMENT_BACK + ABUTMENT_FRONT }, yaw, material, part: "support", ground: true });
+      // the coping along the seat's front edge, standing a little proud of the face
+      if (seat - foot > 0.8) {
+        const k = endPoint(g, end, -ABUTMENT_FRONT - 0.05, 0, 0);
+        out.push({ shape: "box", center: { x: k.x, y: seat - 0.08 - 0.15, z: k.z }, size: { x: width + 0.2, y: 0.3, z: 0.3 }, yaw, material, part: "detail", color: light });
+      }
+    }
+    if (breast) {
+      // the backwall: from inside the breast wall up to (just under) the deck top
+      const top = endPoint(g, end, 0, 0, DECK_THICKNESS / 2 - 0.03).y, bottom = seat - 0.3;
+      if (top - Math.max(bottom, foot) > 0.1) {
+        const c = endPoint(g, end, 0.35, 0, 0);
+        const b = Math.max(bottom, foot);
+        out.push({ shape: "box", center: { x: c.x, y: (b + top) / 2, z: c.z }, size: { x: width, y: top - b, z: 0.5 }, yaw, material, part: "support", ...(b === foot ? { ground: true as const } : {}) });
+      }
+    }
+    // the wing walls: back along the bank from inside the parapet's end
+    const stations = [-0.3, 1.6, WING_RUN];
+    for (const side of [-1, 1]) {
+      const lx = side * (g.deckWidth / 2 + ABUTMENT_OUT + 0.05 - WING_W / 2);
+      const points = stations.map((o) => endPoint(g, end, o, lx, 0));
+      const deckLocal = endPoint(g, end, 0, 0, 0).y;
+      const grounds = points.map((p) => heightAt(p.x, p.z));
+      const tops = stations.map((_, i) => i < 2 ? deckLocal + WING_TOP : Math.min(deckLocal + WING_TOP, Math.max(grounds[i]! + 0.5, deckLocal - DECK_THICKNESS / 2)));
+      const bottoms = tops.map((t, i) => Math.min(grounds[i]! - 0.3, t - 0.3));
+      pushWallAt(out, points, WING_W, bottoms, tops, material, "support");
+      pushWallAt(out, points, WING_W + 0.2, tops, tops.map((t) => t + WING_COPING), material, "detail", light);
+    }
+  }
+}
+// Over a deep crossing: a short wing wall at each corner, reaching the local ground
+// or cut short 3.5 studs down.
+function pushWingStubs(out: BridgeBox[], g: BridgePathGeom, d: number, heightAt: TerrainHeightFn, material: BridgeMaterial): void {
+  const inward = d === 0 ? 1 : -1;
+  for (const side of [-1, 1]) {
+    const at = pathWorldPoint(g, d + inward * 1.2, side * (g.deckWidth / 2 - 0.3), 0);
+    const bottom = Math.max(heightAt(at.x, at.z), at.y - 3.5);
+    const top = at.y + DECK_THICKNESS / 2;
+    if (top - heightAt(at.x, at.z) <= MIN_PIER_DROP) continue;
+    // a wing wall reaching the ground stands on it (one cut short on a steep crossing does not)
+    const ground = bottom === heightAt(at.x, at.z) ? { ground: true as const } : {};
+    out.push({ shape: "box", center: { x: at.x, y: (bottom + top) / 2, z: at.z }, size: { x: 0.65, y: top - bottom, z: Math.min(2.4, g.length / 4) }, yaw: pathYaw(g, d), material, part: "detail", ...ground });
   }
 }
 
@@ -529,7 +646,10 @@ function buildPathDeck(out: BridgeBox[], g: BridgePathGeom, material: BridgeMate
   if (!cornice) return;
   const top = DECK_THICKNESS / 2 + CORNICE_RISE, bottom = -DECK_THICKNESS / 2 - CORNICE_DEPTH;
   const w = CORNICE_IN + CORNICE_OUT, x = g.deckWidth / 2 - CORNICE_IN + w / 2;
-  for (const side of [1, -1]) pushRibbon(out, g, g.shiftAmount + side * x, (top + bottom) / 2, w, top - bottom, material, "detail");
+  // the cornice is the deck's fascia: a lighter band than the slab, the one crisp
+  // line that draws the bridge's alignment from afar
+  const fascia = tone(material, material === "deck" ? 1.3 : 1.15);
+  for (const side of [1, -1]) pushRibbon(out, g, g.shiftAmount + side * x, (top + bottom) / 2, w, top - bottom, material, "detail", fascia);
 }
 // The railing is built of the same material as the slab it stands on: concrete
 // ("parapet", the concrete railing's own lighter shade) over a concrete deck, and
@@ -543,7 +663,7 @@ function buildPathParapets(out: BridgeBox[], g: BridgePathGeom, material: Bridge
   const parapetX = g.deckWidth / 2 - PARAPET_THICKNESS / 2;
   for (const side of [1, -1]) {
     pushRibbon(out, g, g.shiftAmount + side * parapetX, parapetY, PARAPET_THICKNESS, PARAPET_HEIGHT, material);
-    pushRibbon(out, g, g.shiftAmount + side * parapetX, DECK_THICKNESS / 2 + PARAPET_HEIGHT, PARAPET_THICKNESS + 2 * COPING_OVERHANG, COPING_HEIGHT, material, "detail");
+    pushRibbon(out, g, g.shiftAmount + side * parapetX, DECK_THICKNESS / 2 + PARAPET_HEIGHT, PARAPET_THICKNESS + 2 * COPING_OVERHANG, COPING_HEIGHT, material, "detail", tone(material, 1.2));
   }
 }
 
@@ -572,11 +692,15 @@ export interface PierSpec {
   under?: number;
   /** Columns at these lateral offsets (each `w` wide), whatever the deck's width. */
   columns?: number[];
+  /** A masonry pier's impost: the lighter band of stone round it at this height, deck-local. */
+  impost?: number;
 }
 // A tall pier's footing is a plinth sunk into the ground, showing FOOTING_RISE: the
 // column standing on the terrain is the box tagged `ground`, so what the game charts
 // for ships stays the slim column and not the wider footing round it.
 const FOOTING_HEIGHT = 0.8, FOOTING_RISE = 0.3, FOOTING_MARGIN = 0.6;
+const HAMMER_HAUNCH = 1.4; // how far a hammerhead's underside drops at the shaft, at most
+const IMPOST_HEIGHT = 0.4, IMPOST_OUT = 0.15;
 const TWIN_DECK_WIDTH = 14; // a deck this wide stands on two columns
 // The terrain under a footprint `w` across and `d` along the path, centred `lx`
 // across it at `distance`: its lowest and highest point over the four corners and
@@ -612,6 +736,11 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
     const foot = footprintTerrain(g, distance, 0, spec.w, spec.d, heightAt).low;
     out.push({ shape: "box", center: { x: railPoint.x, y: (foot + railPoint.y) / 2, z: railPoint.z }, size: { x: spec.w, y: railPoint.y - foot, z: spec.d }, yaw, material, part: "support", ground: true });
     if (spec.cutwaterTop !== undefined) pushCutwaters(out, g, distance, spec, heightAt, waterY);
+    // the impost: a band of lighter stone standing proud all round, where an arch
+    // springs or a girder bears -- the line that makes a block read as a pier
+    if (spec.impost !== undefined && pathWorldPoint(g, distance, 0, spec.impost).y - IMPOST_HEIGHT / 2 > foot + 0.5) {
+      pushBox(out, g, distance, 0, spec.impost, { x: spec.w + 2 * IMPOST_OUT, y: IMPOST_HEIGHT, z: spec.d + 2 * IMPOST_OUT }, material, "support", tone(material, MASONRY_BAND));
+    }
     return;
   }
   const capWidth = spec.capWidth ?? Math.max(spec.w, g.deckWidth * 0.78);
@@ -637,11 +766,12 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
     const span = twin ? columns[1]! - columns[0]! + colW * grow : spec.w * grow;
     const size = { x: span + 2 * FOOTING_MARGIN, y: footing, z: spec.d * grow + 2 * FOOTING_MARGIN };
     const under = footprintTerrain(g, distance, 0, size.x, size.z, heightAt);
+    const plinth = tone(material, 0.85);
     if (waterY !== undefined) {
       const top = waterY + FOOTING_RISE, bottom = Math.min(under.low - 0.2, top - footing);
-      if (shaftTop - top > FOOTING_HEIGHT) out.push({ shape: "box", center: centreAt(0, (top + bottom) / 2), size: { ...size, y: top - bottom }, yaw, material, part: "support" });
+      if (shaftTop - top > FOOTING_HEIGHT) out.push({ shape: "box", center: centreAt(0, (top + bottom) / 2), size: { ...size, y: top - bottom }, yaw, material, part: "support", color: plinth });
     } else if (under.high - under.low <= FLAT_TOLERANCE) {
-      out.push({ shape: "box", center: centreAt(0, under.low + FOOTING_RISE - footing / 2), size, yaw, material, part: "support" });
+      out.push({ shape: "box", center: centreAt(0, under.low + FOOTING_RISE - footing / 2), size, yaw, material, part: "support", color: plinth });
     }
   }
   // each column from the lowest ground under its own footprint
@@ -650,7 +780,18 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
     out.push({ shape: "box", center: centreAt(lx, (foot + shaftTop) / 2), size: { x: colW * grow, y: shaftTop - foot, z: spec.d * grow }, yaw, material, part: "support", topScale: 1 / grow, ground: true });
   }
   if (capHeight) {
-    pushBox(out, g, distance, 0, -DECK_THICKNESS / 2 - under - BEARING - capHeight / 2, { x: capWidth, y: capHeight, z: spec.d + 0.45 }, material, "support");
+    // the cap is the pier's light band; a single shaft under a wider cap carries it
+    // as a hammerhead, its underside rising from the shaft out to the tips
+    const capTop = -DECK_THICKNESS / 2 - under - BEARING, capDepth = spec.d + 0.45, light = tone(material, LIGHT_BAND);
+    const haunch = Math.min(HAMMER_HAUNCH, ((capWidth - colW) / 2) * 0.45, shaftH * 0.3);
+    if (columns.length === 1 && capWidth - colW >= 1.2 && haunch > 0.2) {
+      const xs = [-capWidth / 2, -colW / 2, colW / 2, capWidth / 2];
+      const lift = pathWorldPoint(g, distance, 0, capTop).y;
+      pushWallAt(out, xs.map((lx) => pathWorldPoint(g, distance, lx, capTop)), capDepth,
+        xs.map((_, i) => lift - capHeight - (i === 1 || i === 2 ? haunch : 0)), xs.map(() => lift), material, "support", light);
+    } else {
+      pushBox(out, g, distance, 0, capTop - capHeight / 2, { x: capWidth, y: capHeight, z: capDepth }, material, "support", light);
+    }
     for (const lx of spec.bearings ?? [-g.deckWidth * BEAM_GIRDER_X, g.deckWidth * BEAM_GIRDER_X]) {
       pushBox(out, g, distance, lx, -DECK_THICKNESS / 2 - under - BEARING / 2, { x: 0.9, y: BEARING, z: spec.d * 0.7 }, "steel");
     }
@@ -707,12 +848,14 @@ function boundaryPierStyle(bridgeType: string, deckWidth: number, spanLength: nu
     case "box_girder": return { w: Math.max(2.8, deckWidth * 0.28), d: 3, material: "pier", under: BOX_GIRDER_END_DEPTH + BOX_GIRDER_LIP };
     case "plate_girder": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: plateGirderUnder(spanLength), capWidth: deckWidth + 0.4, bearings: [-(deckWidth / 2 - PLATE_GIRDER_X), deckWidth / 2 - PLATE_GIRDER_X] };
     case "deck_truss": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: deckTrussDepth(spanLength) - DECK_THICKNESS / 2, capWidth: deckWidth, bearings: [-(deckWidth / 2 - 0.55), deckWidth / 2 - 0.55] };
-    case "truss": return { w: Math.max(2.4, deckWidth * 0.26), d: 2.8, material: "pier", capWidth: deckWidth + 0.2, bearings: [-(deckWidth / 2 - 0.3), deckWidth / 2 - 0.3] };
+    // the historic through truss stands on dressed stone, as the 19th-century ones
+    // did: a block as wide as the deck under a capstone band
+    case "truss": return { w: deckWidth + 0.6, d: 3.2, material: "stone", under: 0.06, impost: -DECK_THICKNESS / 2 - 0.06 - IMPOST_HEIGHT / 2 - 0.1 };
     // the concrete arch springs from a block under each rib, the two tied by a cap
     // beam under the deck (a deck-wide wall read as the arch balancing on a dam)
     case "arch": return { w: ARCH_RIB_W + 1.0, d: 3.4, material: "pier", columns: [-(deckWidth / 2 - ARCH_RIB_INSET), deckWidth / 2 - ARCH_RIB_INSET], capWidth: deckWidth - 0.2, bearings: [] };
-    case "stone_arch": return { w: deckWidth + 0.4, d: 4.5, material: "stone", cutwaterTop: masonryArchSpringY(spanLength) };
-    case "brick_arch": return { w: deckWidth + 0.4, d: 4.5, material: "brick", cutwaterTop: masonryArchSpringY(spanLength) };
+    case "stone_arch": return { w: deckWidth + 0.4, d: 4.5, material: "stone", cutwaterTop: masonryArchSpringY(spanLength), impost: masonryArchSpringY(spanLength) };
+    case "brick_arch": return { w: deckWidth + 0.4, d: 4.5, material: "brick", cutwaterTop: masonryArchSpringY(spanLength), impost: masonryArchSpringY(spanLength) };
     case "network_arch":
     case "tied_arch": return { w: 2.6, d: 2.6, material: "tower", capWidth: deckWidth + 0.2, bearings: [-(deckWidth / 2 - TIED_ARCH_THICKNESS / 2), deckWidth / 2 - TIED_ARCH_THICKNESS / 2] };
     case "suspension": return { ...legs(suspensionCableHalfWidth(deckWidth), SUSPENSION_TOWER_WIDTH), w: 4.0, d: 4.0 };
@@ -720,10 +863,11 @@ function boundaryPierStyle(bridgeType: string, deckWidth: number, spanLength: nu
     default: return { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier" };
   }
 }
-function buildSpanBoundaryPiers(out: BridgeBox[], g: BridgePathGeom, ranges: SpanRange[], bridgeType: string, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn): void {
+function buildSpanBoundaryPiers(out: BridgeBox[], g: BridgePathGeom, ranges: SpanRange[], bridgeType: string, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn, onAbutment?: (distance: number) => boolean): void {
   const distances: number[] = [];
   for (const range of ranges) {
     for (const distance of [range.fromDistance, range.toDistance]) {
+      if (onAbutment?.(distance)) continue;
       if (!distances.some((d) => Math.abs(d - distance) < 0.05)) distances.push(distance);
     }
   }
@@ -1018,7 +1162,8 @@ export function planSupports(type: string, g: BridgePathGeom, options: SupportOp
 // `supports` / `towers`: the planned stations (planSupports) of a type that lays its
 // own piers, bents or towers over the whole path; absent, the type's default.
 // `openings`: a trestle's stretches over blocked ground (SupportPlan.openings).
-type BuildOpts = { suppressGroundPiers?: boolean; waterAt?: WaterLevelFn; supports?: number[]; towers?: number[]; openings?: SpanRange[] };
+// `onAbutment`: does the support at this distance stand on an abutment instead (an end over a bank)?
+type BuildOpts = { suppressGroundPiers?: boolean; waterAt?: WaterLevelFn; supports?: number[]; towers?: number[]; openings?: SpanRange[]; onAbutment?: (distance: number) => boolean };
 type Builder = (out: BridgeBox[], g: BridgePathGeom, opts: BuildOpts, heightAt: TerrainHeightFn) => void;
 
 // Two concrete girders under the slab, over the bearings of the hammerhead piers.
@@ -1026,7 +1171,8 @@ const buildBeam: Builder = (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
   buildPathParapets(out, g);
   for (const side of [-1, 1]) pushRibbon(out, g, g.shiftAmount + side * g.deckWidth * BEAM_GIRDER_X, -DECK_THICKNESS / 2 - BEAM_GIRDER_DEPTH / 2, BEAM_GIRDER_WIDTH, BEAM_GIRDER_DEPTH, "pier", "frame");
-  buildPathPiers(out, g, heightAt, undefined, { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier", under: BEAM_GIRDER_DEPTH }, opts.waterAt, opts.supports);
+  const at = (opts.supports ?? defaultPierDistances(g)).filter((d) => !opts.onAbutment?.(d));
+  buildPathPiers(out, g, heightAt, undefined, { w: PIER_WIDTH, d: PIER_WIDTH, material: "pier", under: BEAM_GIRDER_DEPTH }, opts.waterAt, at);
 };
 
 // A truss carries its own span: it stands on the boundary piers only.
@@ -1229,15 +1375,16 @@ const makeArchMasonry = (masonry: BridgeMaterial): Builder => (out, g) => {
     // spandrel wall: from the arch opening's top up to the deck underside
     pushWall(out, g, distances, sx, FACE, openTops, spandrelTops, masonry);
     // arch band tracing the opening, slightly proud of the wall face
-    pushWall(out, g, distances, sx, FACE + 0.18, bandBottoms, openTops, masonry);
+    pushWall(out, g, distances, sx, FACE + 0.18, bandBottoms, openTops, masonry, "frame", tone(masonry, 1.12));
   }
   // the barrel vault between the two faces, its underside flush with the band's:
   // without it the arch was two face walls, open to the deck from below
   const innerHalf = sideX - (FACE + 0.18) / 2;
-  pushWall(out, g, distances, 0, 2 * innerHalf, bandBottoms, openTops, masonry, "detail"); // unseen from afar
+  // in shadow under the arch: darker, so the opening reads as depth
+  pushWall(out, g, distances, 0, 2 * innerHalf, bandBottoms, openTops, masonry, "detail", tone(masonry, 0.62)); // unseen from afar
   // a keystone at the crown, standing proud of the band on both faces
   const crown = openingTopY(0.5);
-  for (const sx of [sideX, -sideX]) pushBox(out, g, g.length / 2, sx, crown - ARCH_BAND / 2 + 0.25, { x: FACE + 0.4, y: ARCH_BAND + 0.5, z: 1.1 }, masonry);
+  for (const sx of [sideX, -sideX]) pushBox(out, g, g.length / 2, sx, crown - ARCH_BAND / 2 + 0.25, { x: FACE + 0.4, y: ARCH_BAND + 0.5, z: 1.1 }, masonry, "detail", tone(masonry, MASONRY_BAND));
 };
 const buildStoneArch = makeArchMasonry("stone");
 const buildBrickArch = makeArchMasonry("brick");
@@ -1247,6 +1394,7 @@ const buildBrickArch = makeArchMasonry("brick");
 // (crossing each other on a network arch), and between the arches, wherever they
 // stand clear above the wires, transverse struts with X bracing between them.
 const TIE_GIRDER_TOP = DECK_THICKNESS / 2 + 1.4;
+const ARCH_END_INSET = 0.05;
 const makeTiedArch = (network: boolean): Builder => (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
   if (!opts.suppressGroundPiers) buildPathPiers(out, g, heightAt, undefined, undefined, opts.waterAt);
@@ -1257,7 +1405,9 @@ const makeTiedArch = (network: boolean): Builder => (out, g, opts, heightAt) => 
   const tieBottom = -DECK_THICKNESS / 2 - CORNICE_DEPTH - 0.2;
   for (const sx of [sideX, -sideX]) {
     pushRibbon(out, g, g.shiftAmount + sx, (TIE_GIRDER_TOP + tieBottom) / 2, 0.9, TIE_GIRDER_TOP - tieBottom, "steel", "frame");
-    pushCurve(out, g, sx, archTopY, ARCH_THICKNESS * 1.5, ARCH_THICKNESS * 1.1, "steel", struts);
+    // the arch ends just inside its knuckles (buried in them), not flush with the deck's end
+    const inset = ARCH_END_INSET / g.length;
+    pushCurve(out, g, sx, archTopY, ARCH_THICKNESS * 1.5, ARCH_THICKNESS * 1.1, "steel", struts, "frame", inset, 1 - inset);
     // the knuckles where each arch lands on its tie
     for (const d of [0.9, g.length - 0.9]) pushBox(out, g, d, sx, TIE_GIRDER_TOP + 0.3, { x: 1.3, y: 1.6, z: 2.2 }, "steel", "frame");
   }
@@ -1632,24 +1782,42 @@ export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHe
   const known = BUILDERS[type] ? type : "beam";
   const plan = "supports" in options && Array.isArray(options.supports) && "spans" in options ? options as SupportPlan : planSupports(known, g, options as SupportOptions);
   const maxSpan = TYPE_META[known]?.maxSpan;
+  // the ends: an abutment's breast wall under the types that bear on a seat there
+  const under = abutmentUnder(known, g, plan.spans);
+  const breast = SEATED_TYPES.has(known) || CABLE_TYPES.has(known);
+  const onAbutment = SEATED_TYPES.has(known) ? (d: number): boolean => endOnAbutment(g, d, under, heightAt) : undefined;
+  const material: BridgeMaterial = known === "timber_trestle" ? "timber" : known === "stone_arch" ? "stone" : known === "brick_arch" ? "brick" : "pier";
   if (!maxSpan || CABLE_TYPES.has(known)) {
-    builder(out, g, { waterAt, supports: plan.supports, towers: plan.towers.length ? plan.towers : undefined, openings: plan.openings }, heightAt);
-    buildAbutments(out, g, heightAt, known === "timber_trestle" ? "timber" : "pier");
-    return out;
+    builder(out, g, { waterAt, supports: plan.supports, towers: plan.towers.length ? plan.towers : undefined, openings: plan.openings, onAbutment }, heightAt);
+  } else {
+    const ranges = plan.spans;
+    for (const range of ranges) {
+      const spanGeom = clipPathGeom(g, range.fromDistance, range.toDistance);
+      if (spanGeom) builder(out, spanGeom, { suppressGroundPiers: known !== "cantilever", waterAt }, heightAt);
+    }
+    // a cantilever stands on its two tower piers alone: its anchor arms reach the
+    // abutments (or the next span's arms), with no pier of their own under them --
+    // except where the player put a pylon, which stands as a plain boundary pier
+    if (known !== "cantilever") buildSpanBoundaryPiers(out, g, ranges, known, heightAt, waterAt, onAbutment);
+    else {
+      const inner = new Set(ranges.flatMap((r) => CANTILEVER_TOWER_T.map((t) => Math.round((r.fromDistance + t * (r.toDistance - r.fromDistance)) * 1000))));
+      for (const d of plan.supports) if (!inner.has(Math.round(d * 1000)) && !onAbutment?.(d)) pushPier(out, g, d, boundaryPierStyle("truss", g.deckWidth, TYPE_META.cantilever!.maxSpan!), heightAt, waterAt);
+    }
   }
-  const ranges = plan.spans;
-  for (const range of ranges) {
-    const spanGeom = clipPathGeom(g, range.fromDistance, range.toDistance);
-    if (spanGeom) builder(out, spanGeom, { suppressGroundPiers: known !== "cantilever", waterAt }, heightAt);
-  }
-  // a cantilever stands on its two tower piers alone: its anchor arms reach the
-  // abutments (or the next span's arms), with no pier of their own under them --
-  // except where the player put a pylon, which stands as a plain boundary pier
-  if (known !== "cantilever") buildSpanBoundaryPiers(out, g, ranges, known, heightAt, waterAt);
-  else {
-    const inner = new Set(ranges.flatMap((r) => CANTILEVER_TOWER_T.map((t) => Math.round((r.fromDistance + t * (r.toDistance - r.fromDistance)) * 1000))));
-    for (const d of plan.supports) if (!inner.has(Math.round(d * 1000))) pushPier(out, g, d, boundaryPierStyle("truss", g.deckWidth, TYPE_META.cantilever!.maxSpan!), heightAt, waterAt);
-  }
-  buildAbutments(out, g, heightAt, known === "stone_arch" ? "stone" : known === "brick_arch" ? "brick" : "pier");
-  return out;
+  buildAbutments(out, g, heightAt, material, under, breast);
+  // every box carries its colour: its own tone, else the type's paint on steel, else its material's
+  const paint = TYPE_META[known]?.paint;
+  return out.map((b) => (b.color ? b : { ...b, color: b.material === "steel" && paint ? paint : COLORS[b.material] }));
+}
+// The types whose ends bear on an abutment's seat (their end piers give way to it);
+// the cable types close on a breast wall too, under their anchorages. The arches
+// spring from their own end blocks and keep them.
+const SEATED_TYPES = new Set(["beam", "box_girder", "plate_girder", "deck_truss", "truss", "tied_arch", "network_arch", "cantilever"]);
+// How far below the slab the seat lies: under the girders, box or truss at the ends.
+function abutmentUnder(type: string, g: BridgePathGeom, spans: SpanRange[]): number {
+  if (type === "beam") return BEAM_GIRDER_DEPTH;
+  if (CABLE_TYPES.has(type)) return CORNICE_DEPTH + 0.15;
+  if (!SEATED_TYPES.has(type) || type === "cantilever" || !spans.length) return 0;
+  const length = (r: SpanRange): number => r.toDistance - r.fromDistance;
+  return boundaryPierStyle(type, g.deckWidth, Math.max(length(spans[0]!), length(spans[spans.length - 1]!))).under ?? 0;
 }
