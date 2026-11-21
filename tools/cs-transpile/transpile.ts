@@ -957,12 +957,81 @@ export class Transpiler {
         const sym = this.checker.getSymbolAtLocation(d.name)!;
         const rec = this.recordLiteral(d.initializer);
         if (rec) this.localCs.set(this.keyOf(sym), rec);
-        const c = rec ?? this.cs(this.checker.getTypeOfSymbol(sym), d);
+        // an untyped object constant every use of which wants one class (`front: rdcEnd, rear: rdcEnd`
+        // as NoseShape) is that class: one object, not a converted copy per use
+        const used = rec ? null : this.usageClass(d);
+        if (used) this.localCs.set(this.keyOf(sym), used);
+        const c = rec ?? used ?? this.cs(this.checker.getTypeOfSymbol(sym), d);
         const value = init ? this.exprTo(init, c) : VALUE_TYPES.has(c) ? `default(${c})` : "null";
         return `    public static ${c} ${Transpiler.escape(d.name.getText())} = ${value};`;
       }));
     }
     return out.join("\n");
+  }
+
+  /** Every identifier in the generator's sources, by the declaration it refers to. */
+  private referenceIndex: Map<ts.Node, ts.Identifier[]> | null = null;
+
+  private referencesOf(decl: ts.Node): ts.Identifier[] {
+    if (!this.referenceIndex) {
+      const index = new Map<ts.Node, ts.Identifier[]>();
+      for (const sf of this.program.getSourceFiles()) {
+        if (!sf.fileName.startsWith(this.generatorDir)) continue;
+        const visit = (n: ts.Node): void => {
+          if (ts.isIdentifier(n)) {
+            const sym = ts.isShorthandPropertyAssignment(n.parent) && n.parent.name === n ? this.checker.getShorthandAssignmentValueSymbol(n.parent) : this.checker.getSymbolAtLocation(n);
+            const target = sym && (sym.flags & ts.SymbolFlags.Alias ? this.checker.getAliasedSymbol(sym) : sym);
+            const at = target?.valueDeclaration;
+            if (at && (at as ts.NamedDeclaration).name !== n && !ts.isImportSpecifier(n.parent) && !ts.isExportSpecifier(n.parent)) {
+              const list = index.get(at) ?? [];
+              list.push(n);
+              index.set(at, list);
+            }
+          }
+          ts.forEachChild(n, visit);
+        };
+        visit(sf);
+      }
+      this.referenceIndex = index;
+    }
+    return this.referenceIndex.get(decl) ?? [];
+  }
+
+  /**
+   * The one data class all uses of an untyped `const X = { ... }` convert it to, or null: a use
+   * reading a field (`X.len`) is neutral, any other use must have that class as its contextual type.
+   */
+  private usageClass(d: ts.VariableDeclaration): string | null {
+    const init = d.initializer && this.skipParens(d.initializer);
+    if (d.type || !init || !ts.isObjectLiteralExpression(init) || !ts.isIdentifier(d.name) || !(d.parent.flags & ts.NodeFlags.Const)) return null;
+    const own = this.cs(this.checker.getTypeAtLocation(d.name), d);
+    if (!this.isDataClassName(own)) return null;
+    const keys = init.properties.map((p) => (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p) ? p.name.getText() : null));
+    if (keys.some((k) => k === null)) return null;
+    let want: string | null = null;
+    for (const id of this.referencesOf(d)) {
+      if (ts.isPropertyAccessExpression(id.parent) && id.parent.expression === id) continue;
+      // a spread copies its keys: as a class, its number fields would all be copied too
+      if (ts.isSpreadAssignment(id.parent) || ts.isSpreadElement(id.parent)) return null;
+      const ctx = ts.isShorthandPropertyAssignment(id.parent) ? this.checker.getContextualType(id.parent.parent as ts.ObjectLiteralExpression)?.getProperty(id.text) : undefined;
+      const t = ctx ? this.checker.getTypeOfSymbol(ctx) : this.checker.getContextualType(id);
+      if (!t) return null;
+      let c: string;
+      try {
+        c = this.cs(t.getNonNullableType(), id);
+      } catch {
+        return null;
+      }
+      if (!this.isDataClassName(c) || (want && want !== c)) return null;
+      want = c;
+    }
+    if (!want || want === own) return null;
+    const fields = new Map(this.dataClasses.get(want)!.fields.map((f) => [f.js, f]));
+    const mine = this.dataClasses.get(own)!.fields;
+    // every key of the literal a field of the class, of the same C# type
+    const ok = mine.every((f) => fields.get(f.js)?.cs.replace(/\?$/, "") === f.cs.replace(/\?$/, "")) ? want : null;
+    if (ok && process.env.USAGE_LOG) console.error(`usage class ${d.name.getText()} ${own} -> ${want} at ${this.where(d)}`);
+    return ok;
   }
 
   /**
@@ -3232,16 +3301,29 @@ export class Transpiler {
           return;
         }
       }
-      // `...(o.front ?? fallback)`: each side copied as the object it is - the union type of the
-      // whole would convert o.front to the narrower shape both share, and drop its other keys
+      // `...(o.front ?? fallback)`, `...(c ? a : b)`: the chosen side copied as the object it is - the
+      // type of the whole would convert o.front to the narrower shape both share, and drop its other
+      // keys; a literal side is inlined (built as a class, its number fields would all be copied)
+      const branch = (b: ts.Expression, guard: string): void => {
+        const bx = this.skipParensKeepAs(b);
+        if (ts.isObjectLiteralExpression(bx)) {
+          if (bx.properties.length) inline(bx, guard);
+          return;
+        }
+        assigns.push(`if (${guard}) { JsRt.Assign(${o}, ${this.expr(b).code}); }`);
+      };
       if (!record && ts.isBinaryExpression(x) && x.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
-        const l = this.expr(x.left), r = this.expr(x.right);
-        assigns.push(`JsRt.Assign(${o}, ((object)(${l.code}) ?? (object)(${r.code})));`);
+        const t = `__s${++this.ctx.temps}`;
+        assigns.push(`var ${t} = (object)(${this.expr(x.left).code});`);
+        assigns.push(`if (${t} != null) { JsRt.Assign(${o}, ${t}); }`);
+        branch(x.right, `${t} == null`);
         return;
       }
       if (!record && ts.isConditionalExpression(x)) {
-        const wt = this.expr(x.whenTrue), wf = this.expr(x.whenFalse);
-        assigns.push(`JsRt.Assign(${o}, (${this.cond(x.condition)} ? (object)(${wt.code}) : (object)(${wf.code})));`);
+        const t = `__c${++this.ctx.temps}`;
+        assigns.push(`var ${t} = ${this.cond(x.condition)};`);
+        branch(x.whenTrue, t);
+        branch(x.whenFalse, `!${t}`);
         return;
       }
       const src = this.expr(expr);

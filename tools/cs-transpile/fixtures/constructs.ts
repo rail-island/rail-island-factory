@@ -261,7 +261,7 @@ export function recordValueTypes(): unknown {
 export function findNumbers(): unknown {
   const kinks = [0.27, 1, 2.92];
   const snap = (y: number) => kinks.find((k) => Math.abs(k - y) < 0.04) ?? y;
-  return [snap(0.62), snap(0.99), kinks.find((k, i) => i > 5) === undefined, [0, 3].find((x) => x === 0)];
+  return [snap(0.62), snap(0.99), kinks.find((_k, i) => i > 5) === undefined, [0, 3].find((x) => x === 0)];
 }
 
 interface End {
@@ -270,7 +270,7 @@ interface End {
 }
 
 function endOf(front: End | undefined, fallback: () => { tip: number }, flip: boolean): End {
-  return { ...(front ?? fallback()), ...(flip ? front : { tip: 7 }) };
+  return { ...(front ?? fallback()), ...(flip ? front : { tip: 7 }), ...(flip ? {} : fallback()) };
 }
 
 /** A spread of `a ?? b` or `c ? a : b` copies the chosen object whole. */
@@ -286,6 +286,24 @@ function capOf(mat: string, top: string | null = mat): string {
 /** A default applies to a left-out argument, not to an explicit null. */
 export function nullArgument(): unknown {
   return [capOf("slate"), capOf("slate", null), capOf("slate", "lead")];
+}
+
+interface Nose {
+  len: number;
+  tip?: number;
+}
+
+const SHARED_NOSE = { len: 0.3, tip: 0.88 };
+
+function noseCount(front: Nose, rear: Nose): number {
+  // the same object at both ends counts once
+  return front === rear ? 1 : 2;
+}
+
+/** An untyped constant used as one interface everywhere stays one object. */
+export function sharedConstant(): unknown {
+  const spec: { front: Nose; rear: Nose } = { front: SHARED_NOSE, rear: SHARED_NOSE };
+  return [noseCount(spec.front, spec.rear), noseCount(SHARED_NOSE, { len: 1 }), SHARED_NOSE.len];
 }
 
 export function late(): unknown {
