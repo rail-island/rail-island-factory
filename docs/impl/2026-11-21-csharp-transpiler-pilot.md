@@ -114,6 +114,32 @@ Checks: `pnpm typecheck` and `pnpm build`'s `tsc` do not see `tools/` (the root 
    missed. Of those designs' 16 builds two compare identical so far (the White House's and the cruise
    ferry's distant models); the rest are listed under "Known problems". The pilot stays 22 of 22.
 
+3. **"Switch to tolerance comparison and keep native sin/cos; clear the remaining kinds; run every clean
+   design through the full comparison, family by family, fixing what each finds."** The runtime keeps .NET's
+   `Math.Sin`/`Cos`; `compare.ts` judges numbers within 2^-22 relative plus 1e-6 absolute and reports each
+   build as identical, within tolerance or different. The survey now finds no unsupported construct: all
+   1,074 designs transpile. The last construct, `recordCoach`'s run-time patching of `Coach.prototype`, is
+   emulated with static hooks. Every design then ran, its families kept together, in 15 batches of up to
+   100 designs with three parameter combinations each at both levels: 4,466 builds, 4,455 matching (3,787
+   bit-identical, 668 within tolerance). The 11 that differ are four ships' railings (below). The batches
+   found, and the transpiler or runtime now handles:
+   - interfaces extending one interface as C# subclasses; keys set to `undefined` staying present; an
+     absent optional field copied into a literal staying absent;
+   - reads past a tuple's end and `find` over numbers giving undefined;
+   - record spreads (nested constants, wanted value types, functions returning them, number keys);
+   - spreads of `a ?? b` and `c ? a : b`, and a spread leaving out keys its literal sets again;
+   - object identity: an untyped constant (module or local) built as the class its uses want, a merged
+     union's member copy, and one cached copy per object for every conversion while the object is
+     unchanged; keys a class does not declare kept as extra keys; a rest leaving out the named keys;
+   - parameter defaults: an explicit `null` argument, a function used as a value, lambdas, an `object`
+     parameter's constant default;
+   - JS's number rules: exact `toFixed` ties, `Number(undefined)`, `Array.from` lengths, number keys,
+     `null`/`undefined` in templates; `T & {}`;
+   - top-level statements that change a module variable, prototype patching, passenger hints on previews.
+
+   The fixtures grew from 16 to 43 cases, one per construct. The pilot stays 22 of 22 identical, C# still
+   0.7x the time of Node.
+
 ## How to test
 
 **Automated coverage.** None in `pnpm test`, by the spec (the pilot adds no factory test). The pilot is
@@ -132,7 +158,9 @@ is no user surface.
 4. Open `export/cs/report.json`: `identical` equals `compared`; each result has `match: true`.
 5. Run `pnpm cs:pilot --survey`. Expect 1,074 designs, about 187 unsupported sites by kind and
    `cleanDesigns` 134; `export/cs/survey.json` lists each site with file and line, and the clean designs.
-6. Run `pnpm cs:pilot --fixtures`. Expect nine cases, each "same", and "fixtures: 9 of 9 identical".
+6. Run `pnpm cs:pilot --fixtures`. Expect 43 cases, each "same", and "fixtures: 43 of 43 identical".
+7. Run a family through the comparison, e.g. `pnpm cs:pilot --ids=proc-vehicle-ns-v250,proc-vehicle-db-628
+   --max-combos=3 --no-bench`. Expect every build identical or within tolerance.
 
 **Also worth trying.**
 - Break the runtime on purpose - make `JsRt.Round` round half to even - and rerun: the pyramid's
@@ -155,19 +183,21 @@ as the spec said.
 - A union of separately named object types is `object`, not a merged class as the spec proposed: merging copied the objects (difference 3).
 - A conversion between shape classes is a copy (24 in the truck run); any later identity test or mutation through one of them would diverge. None does in these designs, but nothing checks it.
 - A JS value explicitly set to `undefined` on a field whose type admits `null` reads as present (null), not absent.
-- A parameter default applies on `null` as well as `undefined`; JS applies it on `undefined` only.
+- A parameter default other than a `string | null` one still applies on `null` as well as `undefined`.
 - A closure that outlives its `for` loop iteration would see the shared C# loop variable, not JS's per-iteration binding; none in the pilot designs.
 - userData's JSON key order is the class's field order, not the literal's (the comparison ignores order).
 - `JsRt.As` (its generic-array path, `Activator`) and `JsJson` still use reflection: not trimming- or NativeAOT-safe as written (Godot's iOS export); shape conversions no longer do.
-- The White House and Prague main station differ from JS in a few normals by about 1e-14 (18 of 159,255 numbers; 24 of 20,718), where JS gets exactly 0: almost certainly `Math.sin`/`cos`, whose last bit .NET (glibc) and V8 (fdlibm) do not always agree on. Positions still match as Float32.
-- Of the seven designs tried after follow-up 2: Prague main station's distant model draws 24 fewer triangles; the DF11 and HXD1 pass their palette record where a shape class is expected; the P42DC meets a `string | string[]` value and a nullable read; the cruise ferry converts a two-parameter delegate to a three-parameter one; the road-station preview uses named surfaces, which the seam leaves out.
-- A read past the end of an array of numbers throws (JS gives undefined), except under `??`.
+- `Math.sin`/`cos` are .NET's (the user's choice): their last bit differs from V8's now and then, so 668 of 4,466 builds match only within the tolerance.
+- Four ships (the Aframax, the VLCC, the MSC Gulsun, the sailing yacht: 11 builds) differ in their railings' normals, which flip. `hullKit.ts`'s `TriBatch.draw` faces a batch by the sum of its normals, which for a railing's two opposite faces is about 1e-16: rounding noise, so any last-bit difference picks the other side. A factory fix (no hint below a threshold) would settle it; the pilot does not change the generator.
+- A read past the end of an array of numbers throws (JS gives undefined), except under `??`, a comparison with a literal, an optional tuple element and `find`.
+- A conversion's cached copy is shared while its source is unchanged; a write to the copy is not seen by the source (or the reverse), as before.
+- A record of numbers is `JsRecord<double?>`, so it does not fit a generic `JsRecord<T>` with `T = double`; no design does that.
 - Timings on this shared container move 10-20 % between runs; the margins hold over three runs per side, but a single run can show less.
 
 ## Recommended follow-ups
 
 1. Decide C# transpilation against the embedded Jint on these numbers: exact output either way; C# ~100x faster than Jint and faster than Node; transpilation costs weeks plus upkeep.
-2. If C#: port fdlibm's `sin`, `cos` (and `atan2`, `pow`) into the runtime, so every number matches V8 rather than glibc; then work through the seven designs' remaining traps and the survey's next kinds, and add a factory test that runs the transpiler over every design so new code stays inside the subset.
+2. If C#: add a factory test that runs the transpiler over every design (the survey) so new code stays inside the subset, and run the family batches in CI; fix the railing instability in `hullKit.ts`.
 3. If C# needs more speed: scalar-replace points passed between functions too (a struct for fixed-length numeric tuples, a signature change the transpiler would derive), and pre-size each material's buffers from the previous build.
 4. Make the runtime reflection-free (generated converters instead of `JsRt.As`'s array path, generated JSON writers) before targeting NativeAOT.
 5. Write the Godot adapter: `ModelNode` to `Node3D`/`ArrayMesh`, swapping each triangle's winding, `AnimationPlayer` for the clips.
