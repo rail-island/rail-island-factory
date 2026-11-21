@@ -152,7 +152,7 @@ const PIER_TITLES: Record<PierChoice, string> = { concrete: "Concrete", stone: "
 const SHAPE_PARAMS: Record<string, { title: string; values: Record<string, string> }> = {
   hangers: { title: "Hangers", values: { vertical: "Vertical", network: "Network" } },
   towers: { title: "Towers", values: { h: "H-frame", y: "Inverted Y" } },
-  girders: { title: "Girders", values: { concrete: "Concrete beams", box: "Concrete box", plate: "Steel plate girders" } },
+  girders: { title: "Girders", values: { concrete: "Concrete beams", box: "Concrete box", plate: "Steel plate" } },
   statues: { title: "Statues", values: { none: "None", piers: "On the piers" } },
   gates: { title: "Gate towers", values: { none: "None", one: "One end", both: "Both ends" } },
 };
