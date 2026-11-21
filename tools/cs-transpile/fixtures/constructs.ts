@@ -433,6 +433,15 @@ export function arrayFromLength(): unknown {
   return [Array.from({ length: n }, (_, i) => i), Array.from({ length: -2 }, (_, i) => i), Array.from({ length: 2.7 }, (_, i) => i * 2)];
 }
 
+const TABLE: Record<string, number[]> = Object.fromEntries([["a", [1]]]);
+TABLE["b"] = [2, 3];
+const AFTER = Object.keys(TABLE).length;
+
+/** A module table extended by a top-level statement, read by a later constant too. */
+export function topLevelStatement(): unknown {
+  return [TABLE["b"], AFTER];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

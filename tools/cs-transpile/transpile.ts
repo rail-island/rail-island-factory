@@ -173,6 +173,25 @@ export class Transpiler {
     if (ts.isInterfaceDeclaration(stmt) || ts.isTypeAliasDeclaration(stmt) || ts.isImportDeclaration(stmt) || ts.isExportDeclaration(stmt)) return;
     this.reached.add(stmt);
     this.queue.push(stmt);
+    // a module variable changed by a later top-level statement (`PARAMS["proc-vehicle-rocket"] = ...`):
+    // that statement too, run in its place among the module's initializers
+    if (ts.isVariableStatement(stmt) && ts.isSourceFile(stmt.parent)) {
+      const decls = new Set<ts.Node>(stmt.declarationList.declarations);
+      for (const other of stmt.parent.statements) {
+        if (!ts.isExpressionStatement(other) || other.pos < stmt.pos) continue;
+        let touches = false;
+        const look = (n: ts.Node): void => {
+          if (touches) return;
+          if (ts.isIdentifier(n)) {
+            const d = this.resolve(this.symbolOf(n))?.valueDeclaration;
+            if (d && decls.has(d)) touches = true;
+          }
+          ts.forEachChild(n, look);
+        };
+        look(other);
+        if (touches) this.enqueue(other);
+      }
+    }
   }
 
   private resolve(sym: ts.Symbol | undefined): ts.Symbol | undefined {
@@ -861,7 +880,10 @@ export class Transpiler {
         modules.set(file, out);
         if (ts.isFunctionDeclaration(s)) out.push(this.emitFunctionDecl(s, true));
         else if (ts.isVariableStatement(s)) out.push(this.emitModuleVars(s));
-        else this.fail(s, "top-level statement");
+        else if (ts.isExpressionStatement(s)) {
+          // a top-level statement: run as a static initializer, in its place among the fields
+          out.push(this.member(null, () => `    private static readonly JsVoid __init_${s.pos} = ((global::System.Func<JsVoid>)(() =>\n    {\n${this.stmt(s, "        ")}\n        return JsVoid.I;\n    }))();`));
+        } else this.fail(s, "top-level statement");
       } catch (e) {
         if (e instanceof TranspileError) this.errors.push(e.message);
         else this.errors.push(`${this.where(s)}: transpiler failure in this declaration: ${(e as Error).message}`);
