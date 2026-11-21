@@ -29,9 +29,9 @@ Results:
 | | Windsock + pyramid | + American truck (stretch) |
 |---|---|---|
 | Declarations / modules reached | 29 / 6 | 96 / 11 (esbuild's bundle keeps 43) |
-| C# generated | 2,280 lines | 4,478 lines |
-| Shape classes (anonymous, merged unions) | 47 (24, 3) | 75 (42, 4) |
-| Conversions between shape classes emitted | 20 | 45 |
+| C# generated | 2,290 lines | 4,484 lines |
+| Shape classes (anonymous, merged unions) | 46 (23, 3) | 71 (38, 4) |
+| Conversions between shape classes emitted | 4 | 24 |
 | Builds compared | 20 | 22 |
 | Identical (every Float32, material, clip, userData) | 20 | 22 |
 
@@ -39,20 +39,20 @@ No tolerance was needed: every number is bit-identical, `Math.sin`/`cos` include
 V8 agreed on every value these designs compute). The syntax-kind inventory (112 kinds) is in
 `export/cs/transpile.json`.
 
-Milliseconds per build, default parameters (one run of `pnpm cs:pilot --truck`, this container):
+Milliseconds per build, default parameters, steady state (after follow-up 1; Node and C# are medians
+of three runs per side, each the median of five 200 ms rounds after 300 ms of warm-up; Jint one run):
 
-| Design | Triangles | Node | C# | Jint |
-|---|---|---|---|---|
-| windsock | 80 | 0.08 | 0.35 | 12.3 |
-| windsock, LOD | 40 | 0.04 | 0.10 | 2.7 |
-| pyramid | 2,480 | 1.62 | 3.94 | 103.8 |
-| pyramid, LOD | 220 | 0.13 | 0.37 | 8.2 |
-| truck | 4,936 | 4.13 | 7.02 | 211.2 |
-| truck, LOD (fitted to 200) | 200 | 0.60 | 1.04 | 25.8 |
+| Design | Triangles | Node | C# | C# faster by | Jint |
+|---|---|---|---|---|---|
+| windsock | 80 | 0.051 | 0.035 | 1.45x | 5.5 |
+| windsock, LOD | 40 | 0.030 | 0.018 | 1.71x | 1.6 |
+| pyramid | 2,480 | 1.44 | 0.97 | 1.48x | 98 |
+| pyramid, LOD | 220 | 0.098 | 0.073 | 1.33x | 11 |
+| truck | 4,936 | 2.51 | 1.92 | 1.31x | 259 |
+| truck, LOD (fitted to 200) | 200 | 0.46 | 0.27 | 1.71x | 22 |
 
-The transpiled C# is 1.7-4x slower than Node: every point is a list-backed `JsArray<double>`, `JsRt.Hypot`
-allocates its arguments, every scope is a closure. Jint runs the unchanged JS bundle 25-50x slower than the
-C# and about 50x slower than Node.
+In every row C#'s slowest run beat Node's fastest. Jint runs the unchanged JS bundle about 100x slower
+than the C#. As first built, the C# was 1.7-4x slower than Node; follow-up 1 says what changed.
 
 Semantic differences the comparison caught, each now handled in the transpiler:
 
@@ -85,6 +85,18 @@ Checks: `pnpm typecheck` and `pnpm build`'s `tsc` do not see `tools/` (the root 
 `src`, `generator`, `test`); `pnpm exec tsc -p tools/cs-transpile` type-checks the tool, clean.
 `pnpm test` passes (no factory file changed). `pnpm cs:pilot --truck` exits 0 with 22 of 22 identical.
 
+## Follow-up changes
+
+1. **"Make the C# runtime faster than Node."** Profiled (`dotnet-trace`, with tiering off for stable
+   addresses) and measured allocations per build (`bench`'s `allocKb`: 7.6 MB for the truck at first).
+   `JsArray` became a `T[]` with up to four elements inline (.NET 8 `InlineArray`), array literals are
+   built at their exact size, iteration and `Hypot` allocate nothing, and `ToModelNode` fills exact-size
+   buffers. The transpiler scalar-replaces `const` array literals read only by constant index, makes only
+   overridden members virtual, iterates array literals as C# arrays, unifies an anonymous shape with a named
+   class of the same fields, copies `{ ...src }` of the same class memberwise, reads a narrowed merged union
+   in place and emits typed `ShapeConvert` methods instead of reflection. Both benchmarks now warm up for
+   300 ms and report the median of five rounds. Still 22 of 22 identical; C# is 1.3-1.7x faster than Node.
+
 ## How to test
 
 **Automated coverage.** None in `pnpm test`, by the spec (the pilot adds no factory test). The pilot is
@@ -97,7 +109,8 @@ is no user surface.
 **Steps.**
 1. Run `pnpm cs:pilot`. Expect "transpiled 29 declarations from 6 modules", "compared 20 builds: 20
    identical, 0 different" and a timing table of four rows.
-2. Run `pnpm cs:pilot --truck`. Expect "compared 22 builds: 22 identical" and six timing rows.
+2. Run `pnpm cs:pilot --truck`. Expect "compared 22 builds: 22 identical" and six timing rows with the
+   C# column below the Node column (single runs are noisy; rerun if one row is close).
 3. Open `export/cs/Generated/Designs.g.cs`: a class per design, an enum per parameter, `Build(...)`.
 4. Open `export/cs/report.json`: `identical` equals `compared`; each result has `match: true`.
 5. Run `pnpm cs:pilot --survey`. Expect 1,074 designs and about 518 unsupported sites by kind;
@@ -120,19 +133,19 @@ as the spec said.
 - Tuples are `JsArray<double>` (heterogeneous: `JsArray<object>`), not the spec's `double[]`/`ValueTuple`: one array type keeps every array method and spread working.
 - A record or map of numbers holds `double?` (a missing key reads as undefined), beyond the spec's rules.
 - A union of separately named object types is `object`, not a merged class as the spec proposed: merging copied the objects (difference 3).
-- A conversion between shape classes is a copy (45 in the truck run); any later identity test or mutation through one of them would diverge. None does in these designs, but nothing checks it.
+- A conversion between shape classes is a copy (24 in the truck run); any later identity test or mutation through one of them would diverge. None does in these designs, but nothing checks it.
 - A JS value explicitly set to `undefined` on a field whose type admits `null` reads as present (null), not absent.
 - A parameter default applies on `null` as well as `undefined`; JS applies it on `undefined` only.
 - A closure that outlives its `for` loop iteration would see the shared C# loop variable, not JS's per-iteration binding; none in the pilot designs.
 - userData's JSON key order is the class's field order, not the literal's (the comparison ignores order).
-- `JsRt.As` and `JsJson` use reflection for generic arrays and records: not trimming- or NativeAOT-safe as written (Godot's iOS export).
-- The C# is slower than Node; the runtime was written for correctness, not speed.
+- `JsRt.As` (its generic-array path, `Activator`) and `JsJson` still use reflection: not trimming- or NativeAOT-safe as written (Godot's iOS export); shape conversions no longer do.
+- Timings on this shared container move 10-20 % between runs; the margins hold over three runs per side, but a single run can show less.
 
 ## Recommended follow-ups
 
-1. Decide C# transpilation against the embedded Jint on these numbers: exact output either way; C# ~25-50x faster than Jint today; transpilation costs weeks plus upkeep.
+1. Decide C# transpilation against the embedded Jint on these numbers: exact output either way; C# ~100x faster than Jint and faster than Node; transpilation costs weeks plus upkeep.
 2. If C#: support the survey's six largest kinds, then add a factory test that runs the transpiler over every design so new code stays inside the subset.
-3. If C#: make points cheap (a struct or array-backed vector for fixed-length numeric tuples) and drop the per-call allocations in `JsRt.Hypot`; that is where the 1.7-4x goes.
+3. If C# needs more speed: scalar-replace points passed between functions too (a struct for fixed-length numeric tuples, a signature change the transpiler would derive), and pre-size each material's buffers from the previous build.
 4. Make the runtime reflection-free (generated converters instead of `JsRt.As`'s array path, generated JSON writers) before targeting NativeAOT.
 5. Write the Godot adapter: `ModelNode` to `Node3D`/`ArrayMesh`, swapping each triangle's winding, `AnimationPlayer` for the clips.
 
