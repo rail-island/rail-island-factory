@@ -347,9 +347,27 @@ public static class JsRt
     };
 
     /** `===` between values whose C# types are not both primitive. */
+    /** A merged union's member copies (Narrowed), each pointing back at the object it was made from. */
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, object> copyOf = new();
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, object> sourceOf = new();
+
+    /** The member copy of a merged union's object: made once per object and target class. */
+    public static T Narrowed<T>(object src, Func<T> make) where T : class
+    {
+        if (copyOf.TryGetValue(src, out var c) && c is T t) return t;
+        var made = make();
+        copyOf.AddOrUpdate(src, made);
+        sourceOf.AddOrUpdate(made, src);
+        return made;
+    }
+
+    private static object Source(object o) => sourceOf.TryGetValue(o, out var s) ? s : o;
+
     public static bool Eq(object? a, object? b)
     {
         if (a is null || b is null) return a is null && b is null;
+        if (ReferenceEquals(a, b)) return true;
+        if (!a.GetType().IsValueType && !b.GetType().IsValueType && a is not string && b is not string) return ReferenceEquals(Source(a), Source(b));
         if (a is double x && b is double y) return x == y;
         if (a is string s && b is string t) return s == t;
         if (a is bool p && b is bool q) return p == q;

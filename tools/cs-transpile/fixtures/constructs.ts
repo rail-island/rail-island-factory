@@ -314,6 +314,22 @@ export function defaultThroughAlias(): unknown {
   return [alias(1, 2), alias(1, 2, 3), lifted(1, 1)];
 }
 
+type Piece = { k: "tier"; u: [number, number]; y: [number, number] } | { k: "mast"; u: [number, number]; h: number };
+
+/** Items narrowed to one member and found again by identity (a ship's stacked tiers). */
+export function narrowedIdentity(): unknown {
+  const items: Piece[] = [{ k: "tier", u: [0, 4], y: [0, 2] }, { k: "mast", u: [1, 2], h: 5 }, { k: "tier", u: [0, 4], y: [2, 4] }];
+  const out: Piece[] = [];
+  const stacks: Array<Array<Extract<Piece, { k: "tier" }>>> = [];
+  for (const it of items) {
+    if (it.k !== "tier") { out.push(it); continue; }
+    const st = stacks.find((g) => Math.abs(g[g.length - 1]!.y[1] - it.y[0]) < 0.6);
+    if (st) st.push(it);
+    else { stacks.push([it]); out.push(it); }
+  }
+  return out.map((it) => (it.k === "tier" ? stacks.find((q) => q[0] === it)?.length ?? -1 : 0));
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

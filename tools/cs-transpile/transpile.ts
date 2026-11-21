@@ -936,7 +936,10 @@ export class Transpiler {
           if (!y) return [];
           return [`        if (${this.presentOn("a", x, i, from)}) b.${Transpiler.escape(x.js)} = ${this.coerce(`a.${Transpiler.backing(x.js)}`, x.cs, y.cs)};`];
         });
-        methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        var b = new ${to}();\n${lines.join("\n")}\n        return b;\n    }`);
+        // a merged union narrowed to a member (`it.k === "tier"`): one copy per object, and `===`
+        // sees the copy as its source (a stack found by `q[0] === it`)
+        if (this.mergedNames.has(from)) methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        return JsRt.Narrowed(a, () =>\n        {\n            var b = new ${to}();\n${lines.map((l) => `    ${l}`).join("\n")}\n            return b;\n        });\n    }`);
+        else methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        var b = new ${to}();\n${lines.join("\n")}\n        return b;\n    }`);
       }
     }
     return `/** Conversions between shape classes, as transpile.ts emits them (coerce). */\npublic static class ShapeConvert\n{\n${methods.join("\n\n")}\n}\n`;
