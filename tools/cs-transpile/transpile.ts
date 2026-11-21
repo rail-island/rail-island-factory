@@ -997,6 +997,102 @@ export class Transpiler {
   /** Object literals whose record-ness is being worked out (a literal typed by itself). */
   private readonly recordTypeGuard = new Set<ts.Node>();
 
+  /** `this` inside a hook lambda: the hooked object, its first argument. */
+  private thisAs: Out | null = null;
+  /** The static hook field of each patched method, by "Class.method". */
+  private readonly hookFields = new Map<string, string>();
+  private protoHookIndex: Map<ts.ClassDeclaration, Set<string>> | null = null;
+  /** Locals holding a class's prototype (`const proto = Coach.prototype`), by declaration. */
+  private readonly protoLocals = new Map<ts.Node, ts.ClassDeclaration>();
+
+  /** The class a `X.prototype` expression names, or undefined. */
+  private prototypeOf(e: ts.Expression | undefined): ts.ClassDeclaration | undefined {
+    const x = e && this.skipParens(e);
+    if (!x || !ts.isPropertyAccessExpression(x) || x.name.text !== "prototype") return undefined;
+    const sym = this.checker.getSymbolAtLocation(x.expression);
+    const t = sym && (sym.flags & ts.SymbolFlags.Alias ? this.checker.getAliasedSymbol(sym) : sym);
+    return t?.valueDeclaration && ts.isClassDeclaration(t.valueDeclaration) ? t.valueDeclaration : undefined;
+  }
+
+  /** The class whose prototype a local holds (`proto` of `const proto = Coach.prototype`). */
+  private protoLocal(e: ts.Expression): ts.ClassDeclaration | undefined {
+    if (!ts.isIdentifier(e)) return undefined;
+    const d = this.resolve(this.symbolOf(e))?.valueDeclaration;
+    return d ? this.protoLocals.get(d) : undefined;
+  }
+
+  /**
+   * The methods each class has patched at run time (`proto.volume = function (this: Coach, v) ...`
+   * with `const proto = Coach.prototype`): each gets a static hook it calls first.
+   */
+  private protoHooks(): Map<ts.ClassDeclaration, Set<string>> {
+    if (this.protoHookIndex) return this.protoHookIndex;
+    const index = new Map<ts.ClassDeclaration, Set<string>>();
+    for (const sf of this.program.getSourceFiles()) {
+      if (!sf.fileName.startsWith(this.generatorDir)) continue;
+      const visit = (n: ts.Node): void => {
+        if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name)) {
+          const cls = this.prototypeOf(n.initializer);
+          if (cls) this.protoLocals.set(n, cls);
+        }
+        if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isPropertyAccessExpression(n.left)) {
+          const cls = this.protoLocal(n.left.expression) ?? this.prototypeOf(n.left.expression);
+          if (cls) {
+            const set = index.get(cls) ?? new Set<string>();
+            set.add(n.left.name.text);
+            index.set(cls, set);
+          }
+        }
+        ts.forEachChild(n, visit);
+      };
+      // the locals first: an assignment may come before its local in the walk
+      const locals = (n: ts.Node): void => {
+        if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name)) {
+          const cls = this.prototypeOf(n.initializer);
+          if (cls) this.protoLocals.set(n, cls);
+        }
+        ts.forEachChild(n, locals);
+      };
+      locals(sf);
+      visit(sf);
+    }
+    this.protoHookIndex = index;
+    return index;
+  }
+
+  /** The C# types of a parameter list ("Volume v, double s = 0, Shape_end opts__arg = null"). */
+  private paramTypes(list: string): string[] {
+    const parts: string[] = [];
+    let depth = 0, cur = "";
+    for (const ch of list) {
+      if (ch === "<" || ch === "(" || ch === "[") depth++;
+      if (ch === ">" || ch === ")" || ch === "]") depth--;
+      if (ch === "," && depth === 0) { parts.push(cur.trim()); cur = ""; } else cur += ch;
+    }
+    if (cur.trim()) parts.push(cur.trim());
+    return parts.map((x) => x.replace(/\s*=.*$/, "").replace(/\s+\S+$/, ""));
+  }
+
+  /** `proto.m = function (this: C, ...) { ... }`: the hook set to a lambda whose `this` is its first argument. */
+  private hookAssignment(cls: ts.ClassDeclaration, method: string, fn: ts.Expression): Out {
+    const f = this.skipParens(fn);
+    const cn = this.className(cls);
+    if (!ts.isFunctionExpression(f) && !ts.isArrowFunction(f)) return this.fail(fn, "a patched method that is no function expression");
+    const { list, prologue } = this.params(f);
+    const self = `__self${++this.ctx.temps}`;
+    const saved = this.thisAs;
+    this.thisAs = { code: self, cs: cn };
+    try {
+      const types = this.paramTypes(list);
+      const plain = list ? list.split(/,(?![^<(\[]*[>)\]])/).map((x) => x.trim().replace(/\s*=.*$/, "")).join(", ") : "";
+      const act = `global::System.Action<${[cn, ...types].join(", ")}>`;
+      const body = ts.isBlock(f.body) ? this.functionBody(f.body, "void", prologue, "        ") : `        {\n${prologue.map((l) => `            ${l}\n`).join("")}            ${this.expr(f.body).code};\n        }`;
+      return { code: `${cn}.__hook_${Transpiler.escape(method)} = (${act})((${[`${cn} ${self}`, plain].filter(Boolean).join(", ")}) =>\n${body})`, cs: "void" };
+    } finally {
+      this.thisAs = saved;
+    }
+  }
+
   /** The constant defaults of a method's number and boolean parameters, by its C# name and index. */
   private readonly methodDefaults = new Map<string, Map<number, string>>();
 
@@ -1176,6 +1272,8 @@ export class Transpiler {
     const names: string[] = [];
     let optionalSeen = false;
     for (const p of fn.parameters) {
+      // a `this` parameter (`function (this: Coach, v)`) is no argument
+      if (ts.isIdentifier(p.name) && p.name.text === "this") continue;
       if (p.dotDotDotToken) {
         // ...rest: C# params, wrapped as the JsArray the body expects
         if (!ts.isIdentifier(p.name)) {
@@ -1251,7 +1349,15 @@ export class Transpiler {
     const savedUnit = this.ctx.voidAsUnit;
     this.ctx.voidAsUnit = false;
     try {
-      const { list, prologue } = this.params(fn);
+      const { list, prologue, names: argNames } = this.params(fn);
+      // a method patched at run time (recordCoach's Coach.prototype.volume = ...): its hook first
+      const owner = ts.isMethodDeclaration(fn) && ts.isClassDeclaration(fn.parent) ? fn.parent : undefined;
+      if (owner && this.protoHooks().get(owner)?.has(name)) {
+        if (ret !== "void") this.fail(fn, "a patched method that returns a value");
+        const act = `global::System.Action<${[this.className(owner), ...this.paramTypes(list)].join(", ")}>`;
+        this.hookFields.set(`${this.className(owner)}.${name}`, `    /** Set while ${name} is patched at run time (a recording kit): called instead of the method. */\n    public static global::System.Delegate __hook_${name};`);
+        prologue.unshift(`if (__hook_${name} != null) { ((${act})__hook_${name})(this${argNames.map((a) => `, ${a}`).join("")}); return; }`);
+      }
       // a number or boolean parameter's constant default, for a delegate adapter handed undefined
       const defaults = new Map<number, string>();
       list.split(/,\s*(?![^<(]*[>)])/).forEach((p, i) => {
@@ -1430,6 +1536,8 @@ export class Transpiler {
         const mn = Transpiler.escape(m.name.getText());
         const mod = isStatic ? "public static " : this.hasBaseMember(c, m.name.getText()) ? "public override " : this.overridden.has(m.name.getText()) ? "public virtual " : "public ";
         out.push(this.member(name, () => this.emitFunctionLike(m, mn, `    ${mod}`)));
+        const hook = this.hookFields.get(`${name}.${mn}`);
+        if (hook) statics.push(hook);
       } else if (ts.isGetAccessorDeclaration(m) || ts.isSetAccessorDeclaration(m)) {
         const e = accessors.get(m.name.getText()) ?? {};
         if (ts.isGetAccessorDeclaration(m)) e.get = m;
@@ -1639,6 +1747,15 @@ export class Transpiler {
     const isConst = !!(list.flags & ts.NodeFlags.Const);
     return list.declarations.map((d) => {
       const init = d.initializer && this.skipParens(d.initializer);
+      // `const proto = Coach.prototype`: nothing to hold; its patched methods are the class's hooks
+      if (this.prototypeOf(init)) return `${ind}// ${d.name.getText()}: ${init!.getText()} (patched through the class's hooks)`;
+      // `const saved = { volume: proto.volume, ... }`: the hooks as they are, by method name
+      if (ts.isIdentifier(d.name) && init && ts.isObjectLiteralExpression(init) && init.properties.length && init.properties.every((p) => ts.isPropertyAssignment(p) && ts.isPropertyAccessExpression(p.initializer) && this.protoLocal(p.initializer.expression))) {
+        const sym = this.checker.getSymbolAtLocation(d.name)!;
+        this.localCs.set(this.keyOf(sym), "JsRecord<object>");
+        const items = init.properties.map((p) => `[${this.str((p as ts.PropertyAssignment).name.getText())}] = ${this.expr((p as ts.PropertyAssignment).initializer).code}`);
+        return `${ind}JsRecord<object> ${this.declName(d.name)} = new JsRecord<object> { ${items.join(", ")} };`;
+      }
       if (ts.isIdentifier(d.name) && init && isConst && (ts.isArrowFunction(init) || ts.isFunctionExpression(init))) {
         // a const arrow function: a local function (defaults, recursion, no delegate type)
         return this.indentBlock(this.emitFunctionLike(init, this.declName(d.name), ""), ind);
@@ -2021,7 +2138,7 @@ export class Transpiler {
       case ts.SyntaxKind.TrueKeyword: return { code: "true", cs: "bool" };
       case ts.SyntaxKind.FalseKeyword: return { code: "false", cs: "bool" };
       case ts.SyntaxKind.NullKeyword: return { code: "null", cs: "null" };
-      case ts.SyntaxKind.ThisKeyword: return { code: "this", cs: this.ctx.className ?? "object" };
+      case ts.SyntaxKind.ThisKeyword: return this.thisAs ?? { code: "this", cs: this.ctx.className ?? "object" };
       case ts.SyntaxKind.SuperKeyword: return { code: "base", cs: "object" };
       default: break;
     }
@@ -2251,8 +2368,10 @@ export class Transpiler {
       const it = this.expr(e.expression.expression.expression);
       if (it.cs.startsWith("JsArray<")) return { code: `${it.code}.at(0)`, cs: it.cs.slice(8, -1) };
     }
-    // patching a class's methods at run time (lodClassic's recordCoach) has no C# equivalent yet
-    if (name === "prototype") return this.fail(e, "a class prototype patched at run time");
+    // a patched method read from a prototype (`proto.volume` saved before patching): its hook
+    const pcls = this.protoLocal(e.expression);
+    if (pcls && this.protoHooks().get(pcls)?.has(name)) return { code: `((object)${this.className(pcls)}.__hook_${Transpiler.escape(name)})`, cs: "object" };
+    if (name === "prototype") return this.fail(e, "a class prototype read other than into a local");
     const obj = this.expr(e.expression);
     const chained = !!e.questionDotToken || ts.isOptionalChain(e);
     const num = chained ? "double?" : "double";
@@ -2671,6 +2790,14 @@ export class Transpiler {
         }
         case "freeze": return src!;
         case "assign": {
+          // Object.assign(proto, saved): the saved hooks put back
+          const pcls = a[0] ? this.protoLocal(this.skipParens(a[0])) : undefined;
+          if (pcls && a.length === 2) {
+            const saved = this.expr(a[1]!);
+            const t = `__saved${++this.ctx.temps}`;
+            const sets = [...(this.protoHooks().get(pcls) ?? [])].map((m) => `${this.className(pcls)}.__hook_${Transpiler.escape(m)} = (global::System.Delegate)${t}[${this.str(m)}];`);
+            return { code: `((global::System.Func<JsVoid>)(() => { var ${t} = ${saved.code}; ${sets.join(" ")} return JsVoid.I; }))()`, cs: "JsVoid" };
+          }
           // Object.assign(target, ...sources): every source's keys copied in, in order; the target returned
           let target = src!;
           // Object.assign({}, ...records): the empty target is a record of the sources' kind
@@ -3138,6 +3265,11 @@ export class Transpiler {
     const k = e.operatorToken.kind;
     if (k === S.EqualsToken && (ts.isArrayLiteralExpression(e.left) || ts.isObjectLiteralExpression(e.left))) {
       return { code: this.destructuringAssign(e.left, e.right), cs: "void" };
+    }
+    // `proto.volume = function (this: Coach, v) { ... }`: the method's hook
+    if (k === S.EqualsToken && ts.isPropertyAccessExpression(e.left)) {
+      const cls = this.protoLocal(e.left.expression) ?? this.prototypeOf(e.left.expression);
+      if (cls) return this.hookAssignment(cls, e.left.name.text, e.right);
     }
     const target = this.expr(e.left, true);
     const tc = target.cs;

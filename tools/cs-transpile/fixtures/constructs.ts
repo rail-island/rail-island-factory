@@ -389,6 +389,43 @@ export function recordReturn(): unknown {
   return use(tramPalette({ red: "r", white: "w" }));
 }
 
+class Kit {
+  centre: number;
+  drawn: string[] = [];
+  constructor(centre: number) {
+    this.centre = centre;
+  }
+  volume(v: number): void {
+    this.drawn.push(`volume ${v}`);
+  }
+  door(x: number, paint: string, opts: { end?: boolean } = {}): void {
+    this.drawn.push(`door ${x} ${paint} ${opts.end === true}`);
+  }
+  build(): void {
+    this.volume(1);
+    this.door(2, "red", { end: true });
+    this.door(3, "blue");
+  }
+}
+
+/** A class's methods patched on its prototype to record calls, then restored (lodClassic's recordCoach). */
+export function prototypePatch(): unknown {
+  const rec: string[] = [];
+  const proto = Kit.prototype;
+  const saved = { volume: proto.volume, door: proto.door };
+  proto.volume = function (this: Kit, v) { rec.push(`v${v}@${this.centre}`); };
+  proto.door = function (this: Kit, x, paint, opts = {}) { rec.push(`d${x}${paint}${!!opts.end}`); };
+  const k = new Kit(7);
+  try {
+    k.build();
+  } finally {
+    Object.assign(proto, saved);
+  }
+  const after = new Kit(1);
+  after.build();
+  return [rec, k.drawn, after.drawn];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
