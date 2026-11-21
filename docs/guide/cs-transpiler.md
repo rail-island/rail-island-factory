@@ -164,7 +164,7 @@ whenever the transpiler learns a construct; it checks the construct without a de
 and low detail, twice: through the design's JS bundle (`bundleDesign`) with the real three.js, and through
 the transpiled C#. The dumps are compared with a tolerance: the node tree, each material, the clips and
 the userData (key order aside) exactly; every position, normal, colour and UV (Float32 on both sides) to
-within 2^-22 relative plus 1e-9 absolute. The runtime keeps .NET's native `Math.Sin`/`Cos`, whose last bit
+within 2^-22 relative plus 1e-6 absolute (a micron; cancellation can magnify a last-bit difference to a few ulps of a small value). The runtime keeps .NET's native `Math.Sin`/`Cos`, whose last bit
 differs from V8's now and then; a build is "identical" when every number matches bit for bit, "within
 tolerance" when only such last bits differ. `report.json` lists each comparison and the first difference
 of any that differ. `--ids=a,b` runs the comparison for any designs, `--max-combos=N` limits each to its

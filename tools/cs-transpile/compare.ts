@@ -76,12 +76,13 @@ export function dumpGroup(o: THREE.Object3D, root = true): Json {
 
 /**
  * Whether two numbers agree within the comparison's tolerance: a couple of Float32 ulps of
- * their size, plus 1e-9 for values near zero. C#'s Math.Sin/Cos may differ from V8's in the
- * last bit (the runtime keeps .NET's own), which can tip a Float32 rounding by one ulp;
- * a transpiler bug moves a number by orders of magnitude more.
+ * their size, plus 1e-6 absolute (a micron; a millionth of a unit normal). C#'s Math.Sin/Cos
+ * may differ from V8's in the last bit (the runtime keeps .NET's own); a subtraction of
+ * nearly equal values can magnify that to a few Float32 ulps of a small result. A transpiler
+ * bug moves a number by orders of magnitude more.
  */
 export function close(x: number, y: number): boolean {
-  return x === y || Math.abs(x - y) <= 1e-9 + Math.max(Math.abs(x), Math.abs(y)) * 2 ** -22;
+  return x === y || Math.abs(x - y) <= 1e-6 + Math.max(Math.abs(x), Math.abs(y)) * 2 ** -22;
 }
 
 /**
