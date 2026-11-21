@@ -380,6 +380,15 @@ export function numberKeys(): unknown {
   return [BY_SIDE[1], BY_SIDE[-1], Object.keys(BY_SIDE)];
 }
 
+const colorsOf = (c: Record<string, string>): Record<string, { color: string }> => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, { color: v }]));
+const tramPalette = (c: Record<string, string>) => ({ ...colorsOf(c), darkGrey: { color: "g" } });
+
+/** A function returning a literal that spreads a record returns the record. */
+export function recordReturn(): unknown {
+  const use = (r: Record<string, { color: string }>) => [Object.keys(r), r["red"]?.color];
+  return use(tramPalette({ red: "r", white: "w" }));
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

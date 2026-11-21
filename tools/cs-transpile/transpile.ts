@@ -505,6 +505,19 @@ export class Transpiler {
     }
     if (props.length && !index.length && props.every((p) => this.checker.getTypeOfSymbol(p).getCallSignatures().length) && props.every((p) => this.meshCoreMembers().has(p.name))) return "MeshBuilder";
     if (index.length && !props.length) return `JsRecord<${this.elementCs(index[0]!.type, node)}>`;
+    // the type of an object literal that spreads a record (`({ ...colors(p), darkGrey })`, a function's
+    // inferred return): TypeScript keeps only its named keys, but it is the record
+    // (a spread's result is an anonymous type whose symbol points at the literal)
+    const lit = (t as ts.ObjectType).objectFlags & (ts.ObjectFlags.ObjectLiteral | ts.ObjectFlags.Anonymous) ? t.symbol?.declarations?.find(ts.isObjectLiteralExpression) : undefined;
+    if (lit && !this.recordTypeGuard.has(lit)) {
+      this.recordTypeGuard.add(lit);
+      try {
+        const rec = this.recordLiteral(lit);
+        if (rec) return rec;
+      } finally {
+        this.recordTypeGuard.delete(lit);
+      }
+    }
     // a Record over a finite key union (Record<LampRole, ...>): a record, not a shape
     const isRecordAlias = (x: ts.Type | undefined): boolean => !!x && (x.aliasSymbol?.name === "Record" || ((x.aliasSymbol?.name === "Readonly" || x.aliasSymbol?.name === "Partial") && isRecordAlias(x.aliasTypeArguments?.[0])));
     if (props.length && ((t as ts.ObjectType).objectFlags & ts.ObjectFlags.Mapped) && isRecordAlias(t)) {
@@ -980,6 +993,9 @@ export class Transpiler {
     }
     return out.join("\n");
   }
+
+  /** Object literals whose record-ness is being worked out (a literal typed by itself). */
+  private readonly recordTypeGuard = new Set<ts.Node>();
 
   /** The constant defaults of a method's number and boolean parameters, by its C# name and index. */
   private readonly methodDefaults = new Map<string, Map<number, string>>();
