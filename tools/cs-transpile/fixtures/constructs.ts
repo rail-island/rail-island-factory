@@ -524,6 +524,13 @@ export function restLeavesOut(): unknown {
   return [cabOf(plain as Tram), Object.keys(plain), _fine];
 }
 
+/** A spread's key set again later in the literal with another type (`{ ...opts, sash: opts.sash?.(b) }`). */
+export function spreadOverridden(): unknown {
+  const opts: { fw?: number; sash?: (b: number) => number | undefined } = { fw: 2, sash: (b) => b * 2 };
+  const win: { fw?: number; sash?: number; glass: string } = { ...opts, glass: "g", sash: opts.sash?.(3) };
+  return win;
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

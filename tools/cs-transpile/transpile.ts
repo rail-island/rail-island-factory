@@ -3594,12 +3594,12 @@ export class Transpiler {
           if (bx.properties.length) inline(bx, guard);
           return;
         }
-        assigns.push(`if (${guard}) { JsRt.Assign(${o}, ${this.expr(b).code}); }`);
+        assigns.push(`if (${guard}) { ${assignFrom(this.expr(b).code)} }`);
       };
       if (!record && ts.isBinaryExpression(x) && x.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
         const t = `__s${++this.ctx.temps}`;
         assigns.push(`var ${t} = (object)(${this.expr(x.left).code});`);
-        assigns.push(`if (${t} != null) { JsRt.Assign(${o}, ${t}); }`);
+        assigns.push(`if (${t} != null) { ${assignFrom(t)} }`);
         branch(x.right, `${t} == null`);
         return;
       }
@@ -3612,9 +3612,15 @@ export class Transpiler {
       }
       const src = this.expr(expr);
       if (record) assigns.push(`${o}.assign(${this.coerce(src.code, src.cs, c)});`);
-      else assigns.push(`JsRt.Assign(${o}, ${src.code});`);
+      else assigns.push(assignFrom(src.code));
     };
+    // a spread's keys that the literal sets again after it (`{ ...opts, sash: f(box) }`) are left
+    // out: the later value wins in JS, and the spread one may not even fit the field's C# type
+    let later: string[] = [];
+    const assignFrom = (src: string): string => (later.length ? `JsRt.AssignExcept(${o}, ${src}${later.map((k) => `, ${this.str(k)}`).join("")});` : `JsRt.Assign(${o}, ${src});`);
     for (const p of e.properties) {
+      const at = e.properties.indexOf(p);
+      later = e.properties.slice(at + 1).filter((q): q is ts.PropertyAssignment | ts.ShorthandPropertyAssignment => (ts.isPropertyAssignment(q) && !ts.isComputedPropertyName(q.name)) || ts.isShorthandPropertyAssignment(q)).map((q) => q.name.getText().replace(/^["']|["']$/g, ""));
       if (baseCopy !== null && p === first) {
         needsInit = true;
         continue;
