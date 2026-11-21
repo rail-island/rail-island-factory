@@ -70,7 +70,9 @@ A type the module does not know builds as `beam`.
 ## Parameters
 
 A player picks a bridge's look as they pick a building's. `TYPE_PARAMS[type]` lists each type's
-own parameters - a name, an English title, values with titles, a default - and the game passes
+own parameters - a name, an English title, values with titles, a default, and `when` for one
+that applies only under some values of an earlier one (the factory's `ParamSpec.when`: not
+shown elsewhere, and built as its default) - and the game passes
 the chosen values to `buildBridge(type, path, heightAt, waterAt, options, params)`, and to
 `planSupports` and `supportFootprint` (the piers' footprint follows their material). A value
 missing or unknown builds as the default, and every type's defaults draw it as it was drawn
@@ -79,12 +81,12 @@ before it had parameters. Their titles are exported text, `set.bridge.<type>.par
 
 | Type | Parameters (first value the default) |
 |---|---|
-| `beam` | `girders`: concrete, box, plate; `concrete`: warm, light, weathered; `paint`: grey, green, oxideRed, black, blue (the plate girders, the bearings, steel piers); `piers`: concrete, stone, brick, steel |
+| `beam` | `girders`: concrete, box, plate; `concrete`: warm, light, weathered; `paint`: grey, green, oxideRed, black, blue - only with `girders: plate` (`when`: the plate girders, the bearings, steel piers; elsewhere grey); `piers`: concrete, stone, brick, steel |
 | `truss` | `paint`: oxideRed, green, black, silver; `piers`: stone, brick, concrete |
 | `deck_truss` | `paint`: grey, oxideRed, green; `piers`: concrete, stone, brick |
 | `cantilever` | `paint`: oxideRed, grey, black; `piers`: concrete, stone |
 | `arch` | `concrete`: warm, light, weathered; `piers`: concrete, stone, brick |
-| `stone_arch` | `masonry`: sandstone, granite, limestone, redBrick, yellowBrick, blueBrick (the material and the photo too); `statues`: none, piers; `gates`: none, one, both |
+| `stone_arch` | `masonry`: sandstone, granite, limestone, cobble, fieldstone, ashlar, basalt, redBrick, yellowBrick, blueBrick (the material and the photo too); `statues`: none, piers; `gates`: none, one (the first end, at distance 0), two (the second, at the path's end), both |
 | `tied_arch` | `hangers`: vertical, network; `paint`: blue, silver, oxideRed, green; `piers`: concrete, stone, brick |
 | `suspension` | `paint`: orange, green, grey (the girders); `cables`: black, white; `piers`: concrete, stone |
 | `cable_stayed` | `towers`: h, y; `concrete`: warm, light, weathered; `cables`: black, white, orange |
@@ -98,7 +100,9 @@ the parameters too).
 
 **Masonry photos.** A `masonry` swatch picks the material (stone or brick), its honest colour
 and the surface its boxes draw with (`BridgeBox.surface`): `bridge-sandstone`,
-`bridge-limestone`, `bridge-granite` (the cobblestone photo, grey), `bridge-brick`,
+`bridge-limestone`, `bridge-granite` (the granite boulder photo), `bridge-cobble` (the setts),
+`bridge-fieldstone` (rough rubble), `bridge-ashlar` (dressed blocks), `bridge-basalt` (dark
+rock), `bridge-brick`,
 `bridge-brick-yellow`, `bridge-brick-blue` - each a photo with a `balance` that corrects it
 toward that colour ([surfaces.md](surfaces.md)), so a tone of the colour (a keystone, the vault,
 a gate tower's darker walls) still scales the photo, and a yellow or blue brick is not the red
@@ -110,9 +114,11 @@ tapering robe, the head, a cross held on the deck's side) - the Charles Bridge i
 
 **Gate towers** (`gates: one` / `both`, `pushGateTower`): a tower just inside the bridge's
 end, over its abutment (the Old Town Bridge Tower): two side walls 1.2 studs beyond the deck's
-edges standing on the ground (tagged `ground`), the passage between the parapets clear up to
-the overhead clearance with a pointed arch over it (a wall across the deck whose underside
-traces the arch), 5.5 studs of wall over the crown, a cornice band, a steep pyramid roof 9
+edges standing on the ground (tagged `ground`), the passage between the parapets only as tall
+as it must be: a pointed arch (a wall across the deck whose underside traces it) springing as
+low as lets it clear the overhead clearance wherever a track's wires run (to 3.5 studs inside
+the deck's edge) and a vehicle's roof corner (2.4 studs beside the outermost track, 8.2 over
+the deck), and never below 4 - 5.5 studs of wall over the crown, a cornice band, a steep pyramid roof 9
 studs tall, four corner turrets with spires and three dark windows on each face. The
 passage clears the wires, so the catenary runs through on its deck masts.
 

@@ -40,7 +40,7 @@ const LENGTHS: Record<string, number> = { short: 60, long: 160 };
  * parameters, as the game passes them), then the preview's fixture.
  */
 export function bridgeParams(type: string): ParamSpec[] {
-  return [...(bridge.TYPE_PARAMS[type] ?? []).map((p): ParamSpec => ({ name: p.name, title: p.title, default: p.default, values: p.values.map((v) => ({ ...v })) })), ...BRIDGE_PARAMS];
+  return [...(bridge.TYPE_PARAMS[type] ?? []).map((p): ParamSpec => ({ name: p.name, title: p.title, default: p.default, values: p.values.map((v) => ({ ...v })), ...(p.when ? { when: { name: p.when.name, values: [...p.when.values] } } : {}) })), ...BRIDGE_PARAMS];
 }
 // the values the set module builds with: the type's own parameters, not the fixture's
 function typeValues(type: string, p: Record<string, string>): bridge.BridgeParams {

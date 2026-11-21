@@ -102,8 +102,14 @@ function tone(material: BridgeMaterial, k: number): Rgb {
 
 /** One value of a bridge parameter: its stable key and its English title. */
 export interface BridgeParamValue { value: string; title: string }
-/** A parameter a player sets on a bridge of one type: its stable name, English title, values and default. */
-export interface BridgeParam { name: string; title: string; values: BridgeParamValue[]; default: string }
+/** The values of an earlier parameter under which a parameter applies. */
+export interface BridgeParamCondition { name: string; values: string[] }
+/**
+ * A parameter a player sets on a bridge of one type: its stable name, English title,
+ * values and default; `when` names the earlier parameter's values it applies under
+ * (elsewhere it is not shown and builds as its default).
+ */
+export interface BridgeParam { name: string; title: string; values: BridgeParamValue[]; default: string; when?: BridgeParamCondition }
 /** The values a player chose, by parameter name. */
 export type BridgeParams = Readonly<Record<string, string>>;
 
@@ -133,6 +139,10 @@ const MASONRY: Record<string, Swatch> = {
   sandstone: { title: "Sandstone", colors: { stone: [196, 170, 128] }, masonry: "stone", surface: "bridge-sandstone" },
   granite: { title: "Granite", colors: { stone: [150, 150, 148] }, masonry: "stone", surface: "bridge-granite" },
   limestone: { title: "Limestone", colors: { stone: [212, 204, 184] }, masonry: "stone", surface: "bridge-limestone" },
+  cobble: { title: "Cobblestone", colors: { stone: [150, 138, 112] }, masonry: "stone", surface: "bridge-cobble" },
+  fieldstone: { title: "Fieldstone", colors: { stone: [160, 148, 128] }, masonry: "stone", surface: "bridge-fieldstone" },
+  ashlar: { title: "Ashlar", colors: { stone: [205, 196, 176] }, masonry: "stone", surface: "bridge-ashlar" },
+  basalt: { title: "Basalt", colors: { stone: [88, 88, 92] }, masonry: "stone", surface: "bridge-basalt" },
   redBrick: { title: "Red brick", colors: { brick: [150, 80, 64] }, masonry: "brick", surface: "bridge-brick" },
   yellowBrick: { title: "Yellow brick", colors: { brick: [196, 166, 112] }, masonry: "brick", surface: "bridge-brick-yellow" },
   blueBrick: { title: "Blue brick", colors: { brick: [82, 84, 104] }, masonry: "brick", surface: "bridge-brick-blue" },
@@ -154,7 +164,7 @@ const SHAPE_PARAMS: Record<string, { title: string; values: Record<string, strin
   towers: { title: "Towers", values: { h: "H-frame", y: "Inverted Y" } },
   girders: { title: "Girders", values: { concrete: "Concrete beams", box: "Concrete box", plate: "Steel plate" } },
   statues: { title: "Statues", values: { none: "None", piers: "On the piers" } },
-  gates: { title: "Gate towers", values: { none: "None", one: "One end", both: "Both ends" } },
+  gates: { title: "Gate towers", values: { none: "None", one: "First end", two: "Second end", both: "Both ends" } },
 };
 
 // The colour parameters by name: their title and their swatches.
@@ -167,13 +177,15 @@ const COLOUR_PARAMS: Record<string, { title: string; swatches: Record<string, Sw
 };
 // Each type's choices, the first of each its default.
 // `shapesAfter`: the shape parameters follow the colours (a masonry arch's material first).
-const TYPE_CHOICES: Record<string, { colours: Array<[string, string[]]>; shapes?: Array<[string, string[]]>; piers?: PierChoice[]; shapesAfter?: true }> = {
-  beam: { shapes: [["girders", ["concrete", "box", "plate"]]], colours: [["concrete", ["warm", "light", "weathered"]], ["paint", ["grey", "green", "oxideRed", "black", "blue"]]], piers: ["concrete", "stone", "brick", "steel"] },
+// `when`: a parameter that applies only under some values of an earlier one (a beam's
+// paint only on its steel plate girders); elsewhere it is not shown and builds as its default.
+const TYPE_CHOICES: Record<string, { colours: Array<[string, string[]]>; shapes?: Array<[string, string[]]>; piers?: PierChoice[]; shapesAfter?: true; when?: Record<string, BridgeParamCondition> }> = {
+  beam: { shapes: [["girders", ["concrete", "box", "plate"]]], colours: [["concrete", ["warm", "light", "weathered"]], ["paint", ["grey", "green", "oxideRed", "black", "blue"]]], piers: ["concrete", "stone", "brick", "steel"], when: { paint: { name: "girders", values: ["plate"] } } },
   truss: { colours: [["paint", ["oxideRed", "green", "black", "silver"]]], piers: ["stone", "brick", "concrete"] },
   deck_truss: { colours: [["paint", ["grey", "oxideRed", "green"]]], piers: ["concrete", "stone", "brick"] },
   cantilever: { colours: [["paint", ["oxideRed", "grey", "black"]]], piers: ["concrete", "stone"] },
   arch: { colours: [["concrete", ["warm", "light", "weathered"]]], piers: ["concrete", "stone", "brick"] },
-  stone_arch: { colours: [["masonry", ["sandstone", "granite", "limestone", "redBrick", "yellowBrick", "blueBrick"]]], shapes: [["statues", ["none", "piers"]], ["gates", ["none", "one", "both"]]], shapesAfter: true },
+  stone_arch: { colours: [["masonry", ["sandstone", "granite", "limestone", "cobble", "fieldstone", "ashlar", "basalt", "redBrick", "yellowBrick", "blueBrick"]]], shapes: [["statues", ["none", "piers"]], ["gates", ["none", "one", "two", "both"]]], shapesAfter: true },
   tied_arch: { shapes: [["hangers", ["vertical", "network"]]], colours: [["paint", ["blue", "silver", "oxideRed", "green"]]], piers: ["concrete", "stone", "brick"] },
   suspension: { colours: [["paint", ["orange", "green", "grey"]], ["cables", ["black", "white"]]], piers: ["concrete", "stone"] },
   cable_stayed: { shapes: [["towers", ["h", "y"]]], colours: [["concrete", ["warm", "light", "weathered"]], ["cables", ["black", "white", "orange"]]] },
@@ -192,7 +204,7 @@ export const TYPE_PARAMS: Readonly<Record<string, readonly BridgeParam[]>> = Obj
       name, title: COLOUR_PARAMS[name]!.title, default: keys[0]!,
       values: keys.map((value) => ({ value, title: COLOUR_PARAMS[name]!.swatches[value]!.title })),
     }));
-    const params = c.shapesAfter ? [...colours, ...shapes] : [...shapes, ...colours];
+    const params = (c.shapesAfter ? [...colours, ...shapes] : [...shapes, ...colours]).map((p) => (c.when?.[p.name] ? { ...p, when: c.when[p.name]! } : p));
     if (c.piers) params.push({ name: "piers", title: "Piers", default: c.piers[0]!, values: c.piers.map((value) => ({ value, title: PIER_TITLES[value] })) });
     return [type, params];
   }),
@@ -204,20 +216,23 @@ export const TYPE_PARAMS: Readonly<Record<string, readonly BridgeParam[]>> = Obj
 // single-threaded and every call restores the previous style.
 interface BuildStyle {
   palette: Record<BridgeMaterial, Rgb>; piers: PierChoice; masonry: "stone" | "brick"; masonrySurface?: string;
-  network: boolean; yTowers: boolean; statues: boolean; gates: 0 | 1 | 2;
+  network: boolean; yTowers: boolean; statues: boolean; gates: Array<0 | 1>;
 }
-const plainStyle = (): BuildStyle => ({ palette: { ...COLORS }, piers: "concrete", masonry: "stone", network: false, yTowers: false, statues: false, gates: 0 });
+const plainStyle = (): BuildStyle => ({ palette: { ...COLORS }, piers: "concrete", masonry: "stone", network: false, yTowers: false, statues: false, gates: [] });
 let style: BuildStyle = plainStyle();
 /** The style a `type` bridge with these parameters draws with. */
 function resolveStyle(type: string, params: BridgeParams = {}): BuildStyle {
   const out = plainStyle();
+  const resolved: Record<string, string> = {};
   for (const p of TYPE_PARAMS[type] ?? []) {
-    const chosen = p.values.some((v) => v.value === params[p.name]) ? params[p.name]! : p.default;
+    const applies = !p.when || p.when.values.includes(resolved[p.when.name] ?? "");
+    const chosen = applies && p.values.some((v) => v.value === params[p.name]) ? params[p.name]! : p.default;
+    resolved[p.name] = chosen;
     if (p.name === "piers") out.piers = chosen as PierChoice;
     else if (p.name === "hangers") out.network = chosen === "network";
     else if (p.name === "towers") out.yTowers = chosen === "y";
     else if (p.name === "statues") out.statues = chosen === "piers";
-    else if (p.name === "gates") out.gates = chosen === "both" ? 2 : chosen === "one" ? 1 : 0;
+    else if (p.name === "gates") out.gates = chosen === "both" ? [0, 1] : chosen === "one" ? [0] : chosen === "two" ? [1] : [];
     else if (p.name === "girders") continue; // picks the structure (structureOf)
     else {
       const swatch = COLOUR_PARAMS[p.name]!.swatches[chosen]!;
@@ -1089,13 +1104,19 @@ function pushStatue(out: BridgeBox[], g: BridgePathGeom, distance: number, lx: n
 // wall across the deck whose underside traces the arch), a cornice band, a steep
 // pyramid roof, four corner turrets with spires and a row of dark windows on both
 // faces. It stands just inside the bridge's end, over its abutment.
-const GATE_DEPTH = 7, GATE_OUT = 1.2, GATE_BODY = 5.5, GATE_ROOF = 9, ROOF_COLOR: Rgb = [62, 66, 74];
+const GATE_DEPTH = 7, GATE_OUT = 1.2, GATE_BODY = 5.5, GATE_ROOF = 9, GATE_JAMB_MIN = 4, GATE_VEHICLE_TOP = 8.2, GATE_VEHICLE_HALF = 2.4, ROOF_COLOR: Rgb = [62, 66, 74];
 function pushGateTower(out: BridgeBox[], g: BridgePathGeom, end: 0 | 1, heightAt: TerrainHeightFn): void {
   const m = style.masonry, wall = tone(m, 0.78), band = tone(m, MASONRY_BAND), dark: Rgb = [40, 38, 36];
   const half = g.deckWidth / 2, pass = half - PARAPET_THICKNESS - 0.1, outer = half + GATE_OUT;
   const dc = end ? g.length - (GATE_DEPTH / 2 - 0.3) : GATE_DEPTH / 2 - 0.3, yaw = pathYaw(g, dc);
-  const spring = g.clearanceY + 0.3, r = pass * 1.3, xc = pass - r;
-  const archAt = (x: number): number => (Math.abs(x) >= pass ? spring : spring + Math.sqrt(Math.max(0, r * r - (Math.abs(x) - xc) ** 2)));
+  // The passage only as tall as the wires need: the pointed arch clears the overhead
+  // clearance wherever a track's wires (and a pantograph's width) run - out to 3.5 studs
+  // inside the deck's edge, the outermost track 4.5 in - and a vehicle's roof corner
+  // (GATE_VEHICLE_HALF beside the outermost track, GATE_VEHICLE_TOP over the deck).
+  const r = pass * 1.3, xc = pass - r, track = Math.max(0, half - 4.5);
+  const rise = (x: number): number => Math.sqrt(Math.max(0, r * r - (Math.abs(x) - xc) ** 2));
+  const spring = Math.max(GATE_JAMB_MIN, g.clearanceY + 0.3 - rise(Math.min(pass, track + 1)), GATE_VEHICLE_TOP - rise(Math.min(pass, track + GATE_VEHICLE_HALF)));
+  const archAt = (x: number): number => (Math.abs(x) >= pass ? spring : spring + rise(x));
   const crown = archAt(0), top = crown + GATE_BODY;
   // the side walls, on the ground
   for (const sd of [-1, 1]) {
@@ -2129,7 +2150,8 @@ function buildStyled(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn,
       for (const d of plan.supports) if (!inner.has(Math.round(d * 1000)) && !onAbutment?.(d)) pushPier(out, g, d, boundaryPierStyle("truss", g.deckWidth, STRUCTURE_META.cantilever!.maxSpan!), heightAt, waterAt);
     }
   }
-  if (known === "stone_arch" && style.gates) for (const end of style.gates === 2 ? [0, 1] as const : [0] as const) pushGateTower(out, g, end, heightAt);
+  // a gate tower over each end chosen: the first (distance 0) and the second (the path's end)
+  if (known === "stone_arch") for (const end of style.gates) pushGateTower(out, g, end, heightAt);
   buildAbutments(out, g, heightAt, material, under, breast);
   // every box carries its colour: its own tone, else its material's in the chosen palette;
   // the masonry draws with the photo its swatch chose

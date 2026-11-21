@@ -130,7 +130,11 @@ export const SURFACES = {
   // brick, balanced toward the honest colour the swatch carries
   "bridge-sandstone": { texture: "sandstone", tile: 7, tintLift: 0, balance: [2.37, 3.2, 4.02], fill: 0.35, flat: "#c4aa80" },
   "bridge-limestone": { texture: "limestone", tile: 7, tintLift: 0, balance: [1.44, 2.06, 2.8], fill: 0.35, flat: "#d4ccb8" },
-  "bridge-granite": { texture: "cobblestone", tile: 6, tintLift: 0, balance: [1.53, 1.9, 3.14], fill: 0.35, flat: "#969694" },
+  "bridge-granite": { texture: "boulder", tile: 7, tintLift: 0, balance: [0.99, 1.19, 1.46], fill: 0.35, flat: "#969694" },
+  "bridge-cobble": { texture: "cobblestone", tile: 6, tintLift: 0, balance: [1.53, 1.72, 2.27], fill: 0.35, flat: "#968a70" },
+  "bridge-fieldstone": { texture: "bigstone", tile: 7, tintLift: 0, balance: [1.46, 1.69, 1.88], fill: 0.35, flat: "#a09480" },
+  "bridge-ashlar": { texture: "pavement", tile: 6, tintLift: 0, balance: [1.64, 1.93, 2.22], fill: 0.35, flat: "#cdc4b0" },
+  "bridge-basalt": { texture: "rock", tile: 6, tintLift: 0, balance: [1.26, 1.5, 1.9], fill: 0.35, flat: "#58585c" },
   "bridge-brick": { texture: "wall", tile: 6, tintLift: 0, balance: [1.57, 2.56, 3.05], fill: 0.55, flat: "#995848" },
   "bridge-brick-yellow": { texture: "wall", tile: 6, tintLift: 0, balance: [3.66, 5.08, 3.83], fill: 0.4, flat: "#c4a670" },
   "bridge-brick-blue": { texture: "wall", tile: 6, tintLift: 0, balance: [1.34, 2.33, 3.53], fill: 0.4, flat: "#525468" },

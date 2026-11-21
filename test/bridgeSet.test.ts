@@ -342,13 +342,21 @@ describe("the bridge kit", () => {
     // a gate tower: two walls on the ground beside the deck, the passage clear to the wires
     const walls = (boxes: bridge.BridgeBox[]) => boxes.filter((b) => b.shape === "box" && b.ground && b.part === "frame" && b.size.z === 7);
     expect(walls(build({}))).toHaveLength(0);
-    expect(walls(build({ gates: "one" }))).toHaveLength(2);
+    // the first end, the second end, both
+    const at = (boxes: bridge.BridgeBox[]) => walls(boxes).map((b) => (b.shape === "box" && b.center.x < 50 ? "first" : "second"));
+    expect(new Set(at(build({ gates: "one" })))).toEqual(new Set(["first"]));
+    expect(new Set(at(build({ gates: "two" })))).toEqual(new Set(["second"]));
     const both = build({ gates: "both" });
     expect(walls(both)).toHaveLength(4);
+    // the passage just tall enough: the arch clears the wires over the track (the
+    // deck's middle, within 1 stud), and springs low, above a vehicle's roof
     const arch = both.find((b) => b.shape === "wall" && b.part === "frame" && b.u1 - b.u0 === 7);
     if (arch?.shape !== "wall") throw new Error("the arch over the passage is a wall");
     const deckCentre = 24 + 0.67 - bridge.DECK_THICKNESS / 2;
-    expect(Math.min(...arch.bottoms) - deckCentre).toBeGreaterThanOrEqual(9.9);
+    const over = arch.points.map((p, i) => ({ z: p.z, y: arch.bottoms[i]! - deckCentre })).filter((q) => Math.abs(q.z) <= 1);
+    expect(Math.min(...over.map((q) => q.y))).toBeGreaterThanOrEqual(9.9);
+    expect(Math.min(...arch.bottoms) - deckCentre).toBeLessThan(9.9);
+    expect(Math.max(...arch.bottoms) - deckCentre).toBeLessThan(9.9 + 3);
   });
 
   it("builds a beam bridge as the structure its girders choose, the retired types as before", () => {
