@@ -309,6 +309,9 @@ describe("the bridge kit", () => {
       const wings = boxes.filter((b) => b.shape === "wall" && b.part === "support" && b.points.some((p) => p.x < -3 || p.x > 63));
       expect(wings.length, type).toBe(4);
     }
+    // where the deck lies on the ground (the bank level with it) nothing at the ends is charted
+    const level = bridge.buildBridge("beam", path, (x) => (x < 2 || x > 58 ? 20 + 0.67 : 0));
+    expect(level.filter((b) => b.shape === "box" && b.ground && (b.center.x < 3 || b.center.x > 57))).toHaveLength(0);
     // over a deep crossing the end stands on its pier, as before
     const deep = bridge.buildBridge("beam", path, () => 0);
     expect(deep.some((b) => b.shape === "box" && b.topScale !== undefined && Math.abs(b.center.x) < 0.01)).toBe(true);

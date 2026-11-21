@@ -736,6 +736,11 @@ function buildAbutments(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHe
     }
     const yaw = pathYaw(g, end ? g.length : 0), width = g.deckWidth + 2 * ABUTMENT_OUT;
     const light = tone(material, masonry ? MASONRY_BAND : LIGHT_BAND);
+    // where the deck lies on the ground there is nothing to stand on: no breast wall,
+    // no backwall (a box on the ground is charted as a pier); under a deep end (a deck
+    // truss) the seat may lie on the bank while the backwall still closes the joint
+    const underside = endPoint(g, end, 0, 0, -DECK_THICKNESS / 2).y;
+    const raised = breast && underside - foot > 0.3;
     if (breast && seat - foot > 0.3) {
       const c = endPoint(g, end, (ABUTMENT_BACK - ABUTMENT_FRONT) / 2, 0, 0);
       out.push({ shape: "box", center: { x: c.x, y: (seat + foot) / 2, z: c.z }, size: { x: width, y: seat - foot, z: ABUTMENT_BACK + ABUTMENT_FRONT }, yaw, material, part: "support", ground: true });
@@ -745,7 +750,7 @@ function buildAbutments(out: BridgeBox[], g: BridgePathGeom, heightAt: TerrainHe
         out.push({ shape: "box", center: { x: k.x, y: seat - 0.08 - 0.15, z: k.z }, size: { x: width + 0.2, y: 0.3, z: 0.3 }, yaw, material, part: "detail", color: light });
       }
     }
-    if (breast) {
+    if (raised) {
       // the backwall: from inside the breast wall up to (just under) the deck top
       const top = endPoint(g, end, 0, 0, DECK_THICKNESS / 2 - 0.03).y, bottom = seat - 0.3;
       if (top - Math.max(bottom, foot) > 0.1) {

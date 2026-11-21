@@ -222,7 +222,10 @@ its seat - each end gets:
   the bank, from the seat (`under` below the slab, as the type's end pier would bear: under the
   beam's girders, the box, the deck truss) down to the ground, tagged `ground`, with a lighter
   coping along its front edge. The seated types' end piers give way to it (`endOnAbutment`);
-- a **backwall** behind the deck's end from inside the breast wall up to just under the deck top;
+- a **backwall** behind the deck's end from inside the breast wall up to just under the deck top,
+  wherever the deck's underside stands more than 0.3 over the ground (under a deep deck truss the
+  seat may lie on the bank while the backwall still closes the joint); where the deck lies on the
+  ground neither wall stands, so nothing there is charted as a pier;
 - a **wing wall** each side, running 6 studs back along the bank from inside the parapet's end,
   its top falling from just under the parapet's coping to 0.5 over the ground, sunk 0.3 into it,
   with a lighter coping. These are walls through stations beyond the path's end (`endPoint`,
