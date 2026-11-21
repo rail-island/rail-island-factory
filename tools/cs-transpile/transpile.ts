@@ -3225,6 +3225,18 @@ export class Transpiler {
           return;
         }
       }
+      // `...(o.front ?? fallback)`: each side copied as the object it is - the union type of the
+      // whole would convert o.front to the narrower shape both share, and drop its other keys
+      if (!record && ts.isBinaryExpression(x) && x.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
+        const l = this.expr(x.left), r = this.expr(x.right);
+        assigns.push(`JsRt.Assign(${o}, ((object)(${l.code}) ?? (object)(${r.code})));`);
+        return;
+      }
+      if (!record && ts.isConditionalExpression(x)) {
+        const wt = this.expr(x.whenTrue), wf = this.expr(x.whenFalse);
+        assigns.push(`JsRt.Assign(${o}, (${this.cond(x.condition)} ? (object)(${wt.code}) : (object)(${wf.code})));`);
+        return;
+      }
       const src = this.expr(expr);
       if (record) assigns.push(`${o}.assign(${this.coerce(src.code, src.cs, c)});`);
       else assigns.push(`JsRt.Assign(${o}, ${src.code});`);
@@ -3257,9 +3269,7 @@ export class Transpiler {
             continue;
           }
         }
-        const src = this.expr(p.expression);
-        if (record) assigns.push(`${o}.assign(${this.coerce(src.code, src.cs, c)});`);
-        else assigns.push(`JsRt.Assign(${o}, ${src.code});`);
+        spread(p.expression);
         continue;
       }
       let key: string;

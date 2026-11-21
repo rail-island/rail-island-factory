@@ -264,6 +264,21 @@ export function findNumbers(): unknown {
   return [snap(0.62), snap(0.99), kinks.find((k, i) => i > 5) === undefined, [0, 3].find((x) => x === 0)];
 }
 
+interface End {
+  tip: number;
+  windows?: string[];
+}
+
+function endOf(front: End | undefined, fallback: () => { tip: number }, flip: boolean): End {
+  return { ...(front ?? fallback()), ...(flip ? front : { tip: 7 }) };
+}
+
+/** A spread of `a ?? b` or `c ? a : b` copies the chosen object whole. */
+export function spreadNullish(): unknown {
+  const nose: End = { tip: 1, windows: ["w"] };
+  return [endOf(nose, () => ({ tip: 0 }), false), endOf(undefined, () => ({ tip: 2 }), true), endOf(nose, () => ({ tip: 0 }), true)];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
