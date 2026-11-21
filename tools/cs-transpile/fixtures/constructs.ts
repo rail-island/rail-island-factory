@@ -330,6 +330,15 @@ export function narrowedIdentity(): unknown {
   return out.map((it) => (it.k === "tier" ? stacks.find((q) => q[0] === it)?.length ?? -1 : 0));
 }
 
+function leaf(paint: string | Array<[number, number, string]> = "orange"): string {
+  return typeof paint === "string" ? paint : paint.map((b) => b[2]).join("+");
+}
+
+/** A default of a parameter whose type is a union (an object in C#). */
+export function unionDefault(): unknown {
+  return [leaf(), leaf("green"), leaf([[0, 1, "red"], [1, 2, "blue"]])];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

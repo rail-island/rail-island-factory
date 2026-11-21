@@ -1213,8 +1213,9 @@ export class Transpiler {
 
   private constantDefault(e: ts.Expression, c: string): string | null {
     const x = this.skipParens(e);
-    if (ts.isNumericLiteral(x) || (ts.isPrefixUnaryExpression(x) && x.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(x.operand))) return this.exprTo(x, c);
-    if (ts.isStringLiteral(x) || ts.isNoSubstitutionTemplateLiteral(x)) return this.exprTo(x, c);
+    // C# takes a constant default only of the parameter's own type (an `object` parameter: null only)
+    if (ts.isNumericLiteral(x) || (ts.isPrefixUnaryExpression(x) && x.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(x.operand))) return c === "double" || c === "double?" ? this.exprTo(x, c) : null;
+    if (ts.isStringLiteral(x) || ts.isNoSubstitutionTemplateLiteral(x)) return c === "string" ? this.exprTo(x, c) : null;
     if (x.kind === ts.SyntaxKind.TrueKeyword || x.kind === ts.SyntaxKind.FalseKeyword) return c === "bool" || c === "bool?" ? x.getText() : null;
     if (x.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(x) && x.text === "undefined")) return "null";
     return null;
