@@ -115,16 +115,26 @@ function triangles(g: THREE.Object3D): number {
   return n;
 }
 
-/** Milliseconds per build: warmed up, then repeated for at least 400 ms (as Program.cs Bench does). */
+/**
+ * Milliseconds per build: warmed up for 300 ms, then the median of five rounds of at
+ * least 200 ms each (as Program.cs Bench does), so a burst of noise moves one round only.
+ */
 function bench(run: () => void): { ms: number; runs: number } {
-  for (let i = 0; i < 3; i++) run();
-  const t0 = performance.now();
-  let n = 0;
-  while (n < 3 || performance.now() - t0 < 400) {
-    run();
-    n++;
+  for (const w0 = performance.now(); performance.now() - w0 < 300;) run();
+  const rounds: number[] = [];
+  let runs = 0;
+  for (let r = 0; r < 5; r++) {
+    const t0 = performance.now();
+    let n = 0;
+    while (n < 3 || performance.now() - t0 < 200) {
+      run();
+      n++;
+    }
+    rounds.push((performance.now() - t0) / n);
+    runs += n;
   }
-  return { ms: (performance.now() - t0) / n, runs: n };
+  rounds.sort((a, b) => a - b);
+  return { ms: rounds[2]!, runs };
 }
 
 const fileOf = (id: string, i: number, lod: boolean) => `${id}__${i}${lod ? "__lod" : ""}.json`;

@@ -100,12 +100,23 @@ export class Transpiler {
   private readonly pendingData: Array<() => void> = [];
   private readonly classNames = new Map<ts.ClassDeclaration, string>();
   private anonymousShapes = 0;
+  /** The shape-to-shape conversions emitted ("From|To"), each a generated ShapeConvert method. */
+  private readonly converters = new Set<string>();
+  /** Classes merged from a union of shapes: a narrowing to one member reads the merged object itself. */
+  private readonly mergedNames = new Set<string>();
+  /**
+   * Member names some reached subclass declares: only those are virtual. The rest are
+   * plain methods the JIT can inline (tri, quad, cap on every triangle).
+   */
+  private readonly overridden = new Set<string>();
   private mergedUnions = 0;
   private conversions = 0;
 
   private readonly localNames = new Map<ts.Symbol, string>();
   /** Locals whose C# type is wider than their TS type: `const a = x!` where x is a nullable number. */
   private readonly localCs = new Map<ts.Symbol, string>();
+  /** Locals replaced by scalars: `const u = [a, b, c]` read only as u[0], u[1], u[2] -> u__0, u__1, u__2. */
+  private readonly scalarized = new Map<ts.Symbol, string[]>();
   private ctx: MemberContext = { used: new Set(), temps: 0, voidAsUnit: false, className: null };
 
   constructor(generatorDir: string, tsconfig: string) {
@@ -437,13 +448,16 @@ export class Transpiler {
       if (known) return known;
       const name = this.uniqueTypeName(named.name);
       this.typeNameOf.set(named, name);
-      this.pendingData.push(() => this.dataClasses.set(name, { name, fields: this.fieldsOf(t, node), origin: this.originOf(named) }));
-      this.flushData();
+      const fields = this.fieldsOf(t, node);
+      this.dataClasses.set(name, { name, fields, origin: this.originOf(named) });
+      // an anonymous shape with exactly these fields is this class ({ ...spec } of a MaterialSpec)
+      const key = this.shapeKey(fields);
+      if (!this.shapeNames.has(key)) this.shapeNames.set(key, name);
       return name;
     }
     // an anonymous shape: one class per distinct field list
     const fields = this.fieldsOf(t, node);
-    const key = fields.map((f) => `${f.js}:${f.cs}${f.nullable ? "|null" : ""}`).sort().join(";");
+    const key = this.shapeKey(fields);
     const known = this.shapeNames.get(key);
     if (known) return known;
     const label = fields.map((f) => f.js).slice(0, 4).join("_") || "empty";
@@ -452,6 +466,11 @@ export class Transpiler {
     this.anonymousShapes++;
     this.dataClasses.set(name, { name, fields, origin: node ? this.where(node) : "inferred" });
     return name;
+  }
+
+  /** What makes two shapes one class: their field names, C# types and null-ness. */
+  private shapeKey(fields: DataField[]): string {
+    return fields.map((f) => `${f.js}:${f.cs}${f.nullable ? "|null" : ""}`).sort().join(";");
   }
 
   private mergedClass(parts: ts.Type[], whole: ts.Type): string {
@@ -484,6 +503,7 @@ export class Transpiler {
     const name = this.uniqueTypeName(alias ? alias.name : `Union_${fields.map((f) => f.js).slice(0, 3).join("_")}`);
     if (alias) this.typeNameOf.set(alias, name);
     this.shapeNames.set(key, name);
+    this.mergedNames.add(name);
     this.mergedUnions++;
     this.dataClasses.set(name, { name, fields, origin: alias ? this.originOf(alias) : "union" });
     return name;
@@ -535,7 +555,9 @@ export class Transpiler {
     }
     if (this.isDataClassName(from) && this.isDataClassName(to)) {
       this.conversions++;
-      return `JsRt.As<${to}>(${code})`;
+      // a generated converter: the present fields copied as they are typed, no reflection
+      this.converters.add(`${from}|${to}`);
+      return `ShapeConvert.${from}__${to}(${code})`;
     }
     const delegate = /^global::System\.(Func|Action)(?:<(.*)>)?$/;
     const fd = from.match(delegate), td = to.match(delegate);
@@ -564,6 +586,10 @@ export class Transpiler {
   transpile(entries: Entry[], extraClasses: Array<{ source: string; name: string }>): TranspileResult {
     const stmts = this.reach(entries, extraClasses);
     for (const s of stmts) this.count(s);
+    for (const s of stmts) {
+      if (!ts.isClassDeclaration(s) || !this.baseClassDecl(s)) continue;
+      for (const m of s.members) if (m.name && !ts.isConstructorDeclaration(m)) this.overridden.add(m.name.getText());
+    }
     const modules = new Map<string, string[]>();
     const classes: string[] = [];
     for (const s of stmts) {
@@ -590,6 +616,7 @@ export class Transpiler {
     const mod = [...modules].map(([file, members]) => `public static partial class ${this.moduleClass(file)}\n{\n${members.join("\n\n")}\n}\n`).join("\n");
     files.set("Modules.g.cs", header + mod);
     files.set("Classes.g.cs", header + classes.join("\n"));
+    files.set("Convert.g.cs", header + this.emitConverters());
     files.set("Types.g.cs", header + [...this.dataClasses.values()].sort((a, b) => a.name.localeCompare(b.name)).map((d) => this.emitDataClass(d)).join("\n"));
     const lines = [...files.values()].reduce((n, s) => n + s.split("\n").length, 0);
     const moduleFiles = [...new Set(stmts.map((s) => path.relative(this.generatorDir, s.getSourceFile().fileName)))].sort();
@@ -617,8 +644,8 @@ export class Transpiler {
       `/** From ${d.origin}. */`,
       `public partial class ${d.name} : IJsObject`,
       "{",
-      "    private ulong __p;",
-      ...f.map((x, i) => `    private ${x.cs} _${x.js};\n    public ${x.cs} ${esc(x.js)} { get => _${x.js}; set { _${x.js} = value; __p |= ${bit(i)}; } }`),
+      "    internal ulong __p;",
+      ...f.map((x, i) => `    internal ${x.cs} _${x.js};\n    public ${x.cs} ${esc(x.js)} { get => _${x.js}; set { _${x.js} = value; __p |= ${bit(i)}; } }`),
       `    public bool __has(string __k) => __k switch { ${f.map((x, i) => `"${x.js}" => ${has(x, i)}, `).join("")}_ => false };`,
       `    public object __get(string __k) => __k switch { ${f.map((x) => `"${x.js}" => this._${x.js}, `).join("")}_ => null };`,
       `    public void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case "${x.js}": this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}} }`,
@@ -628,6 +655,37 @@ export class Transpiler {
       "}",
     ];
     return lines.join("\n") + "\n";
+  }
+
+  /** Whether field `x` (index `i`) of a shape object `o` is present, read off its backing field. */
+  private presentOn(o: string, x: DataField, i: number): string {
+    if (x.nullable) return `(${o}.__p & ${(1n << BigInt(i)).toString()}UL) != 0`;
+    return VALUE_TYPES.has(x.cs) ? "true" : `${o}._${x.js} != null`;
+  }
+
+  /**
+   * One method per shape-to-shape conversion: a new object of the target class with
+   * each present field of the source the target also has, converted to its type. A
+   * field's conversion may ask for another converter; they are emitted until none is new.
+   */
+  private emitConverters(): string {
+    const done = new Set<string>();
+    const methods: string[] = [];
+    for (let pending = [...this.converters]; pending.length; pending = [...this.converters].filter((c) => !done.has(c))) {
+      for (const pair of pending.sort()) {
+        done.add(pair);
+        const [from, to] = pair.split("|") as [string, string];
+        const src = this.dataClasses.get(from)!.fields;
+        const dst = new Map(this.dataClasses.get(to)!.fields.map((f) => [f.js, f]));
+        const lines = src.flatMap((x, i) => {
+          const y = dst.get(x.js);
+          if (!y) return [];
+          return [`        if (${this.presentOn("a", x, i)}) b.${Transpiler.escape(x.js)} = ${this.coerce(`a._${x.js}`, x.cs, y.cs)};`];
+        });
+        methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        var b = new ${to}();\n${lines.join("\n")}\n        return b;\n    }`);
+      }
+    }
+    return `/** Conversions between shape classes, as transpile.ts emits them (coerce). */\npublic static class ShapeConvert\n{\n${methods.join("\n\n")}\n}\n`;
   }
 
   private emitModuleVars(s: ts.VariableStatement): string {
@@ -838,7 +896,7 @@ export class Transpiler {
       } else if (ts.isMethodDeclaration(m)) {
         const isStatic = m.modifiers?.some((x) => x.kind === ts.SyntaxKind.StaticKeyword);
         const mn = Transpiler.escape(m.name.getText());
-        const mod = isStatic ? "public static " : this.hasBaseMember(c, m.name.getText()) ? "public override " : "public virtual ";
+        const mod = isStatic ? "public static " : this.hasBaseMember(c, m.name.getText()) ? "public override " : this.overridden.has(m.name.getText()) ? "public virtual " : "public ";
         out.push(this.member(name, () => this.emitFunctionLike(m, mn, `    ${mod}`)));
       } else if (ts.isGetAccessorDeclaration(m) || ts.isSetAccessorDeclaration(m)) {
         const e = accessors.get(m.name.getText()) ?? {};
@@ -861,7 +919,8 @@ export class Transpiler {
           const pn = this.declName(p.name as ts.Identifier);
           parts.push(`        set\n${this.functionBody(set.body!, "void", [`${t} ${pn} = value;`], "        ")}`);
         }
-        return `    public ${this.hasBaseMember(c, an) ? "override" : "virtual"} ${t} ${Transpiler.escape(an)}\n    {\n${parts.join("\n")}\n    }`;
+        const mod = this.hasBaseMember(c, an) ? "override " : this.overridden.has(an) ? "virtual " : "";
+        return `    public ${mod}${t} ${Transpiler.escape(an)}\n    {\n${parts.join("\n")}\n    }`;
       }));
     }
 
@@ -1050,6 +1109,17 @@ export class Transpiler {
         return [`${ind}var ${t} = ${src.code};`, ...this.destructure(d.name, t, src.cs).map((x) => ind + x)].join("\n");
       }
       const sym = this.checker.getSymbolAtLocation(d.name)!;
+      const width = this.scalarizable(d, list);
+      if (width) {
+        const lit = this.skipParensKeepAs(d.initializer!) as ts.ArrayLiteralExpression;
+        const arr = this.cs(this.checker.getTypeOfSymbol(sym), d);
+        const elem = arr.match(/^JsArray<(.*)>$/)?.[1] ?? "object";
+        const base = this.declName(d.name);
+        const names = lit.elements.map((_, i) => `${base}__${i}`);
+        this.scalarized.set(sym, names);
+        // evaluated in order into the scalars, as the literal would be
+        return lit.elements.map((el, i) => `${ind}${elem} ${names[i]} = ${this.exprTo(el, elem)};`).join("\n");
+      }
       const asserted = this.assertedNullable(d.initializer);
       if (asserted) {
         this.localCs.set(sym, asserted.cs);
@@ -1155,7 +1225,13 @@ export class Transpiler {
   }
 
   private forOf(s: ts.ForOfStatement, ind: string): string {
-    const src = this.expr(s.expression);
+    const lit = this.skipParensKeepAs(s.expression);
+    let src = this.expr(s.expression);
+    if (ts.isArrayLiteralExpression(lit) && !lit.elements.some(ts.isSpreadElement) && src.cs.startsWith("JsArray<")) {
+      // nothing else can see the literal, so a plain C# array: one allocation, the same order
+      const elem = src.cs.slice(8, -1);
+      src = { code: `new ${elem}[] { ${lit.elements.map((el) => this.exprTo(el, elem)).join(", ")} }`, cs: src.cs };
+    }
     const elem = this.iterElement(src.cs, s.expression);
     const decl = s.initializer;
     if (!ts.isVariableDeclarationList(decl)) return `${ind}${this.fail(s, "for-of without a declaration").code};`;
@@ -1293,6 +1369,11 @@ export class Transpiler {
       return raw;
     }
     if (want === "void") return raw;
+    // a merged union narrowed to one of its members (`"spire" in s`): the same object, read as it is
+    if (this.mergedNames.has(raw.cs) && this.isDataClassName(want) && want !== raw.cs) {
+      const has = new Set(this.dataClasses.get(raw.cs)!.fields.map((f) => f.js));
+      if (this.dataClasses.get(want)!.fields.every((f) => has.has(f.js))) return raw;
+    }
     return { code: this.coerce(raw.code, raw.cs, want), cs: want };
   }
 
@@ -1411,6 +1492,35 @@ export class Transpiler {
   }
 
   /**
+   * Whether a `const` array-literal local can live as scalars: every use is a read of a
+   * constant in-range index (`u[1]`), never the array itself (passed, returned, iterated,
+   * assigned into, captured as a whole). Its elements are then one local each - the same
+   * values and arithmetic, and no array allocated (every triangle's edge and normal vectors).
+   */
+  private scalarizable(d: ts.VariableDeclaration, list: ts.VariableDeclarationList): number {
+    if (!(list.flags & ts.NodeFlags.Const) || !ts.isIdentifier(d.name) || !d.initializer) return 0;
+    const init = this.skipParensKeepAs(d.initializer);
+    if (!ts.isArrayLiteralExpression(init) || !init.elements.length || init.elements.some(ts.isSpreadElement)) return 0;
+    const n = init.elements.length;
+    const sym = this.checker.getSymbolAtLocation(d.name);
+    const scope = ts.findAncestor(d, (x) => ts.isBlock(x) || ts.isSourceFile(x));
+    if (!sym || !scope) return 0;
+    let ok = true;
+    const visit = (node: ts.Node): void => {
+      if (!ok) return;
+      if (ts.isIdentifier(node) && node !== d.name && this.checker.getSymbolAtLocation(node) === sym) {
+        const p = node.parent;
+        const read = ts.isElementAccessExpression(p) && p.expression === node && ts.isNumericLiteral(p.argumentExpression) && Number(p.argumentExpression.text) < n && Number.isInteger(Number(p.argumentExpression.text));
+        const written = read && ((ts.isBinaryExpression(p.parent) && p.parent.left === p && p.parent.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && p.parent.operatorToken.kind <= ts.SyntaxKind.LastAssignment) || ts.isPrefixUnaryExpression(p.parent) || ts.isPostfixUnaryExpression(p.parent));
+        if (!read || written) ok = false;
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(scope);
+    return ok ? n : 0;
+  }
+
+  /**
    * An initializer `x!` whose value is a nullable number or boolean: TypeScript's `!`
    * drops null as well as undefined, and some code asserts a value that is really null
    * and then tests it (lodKit's cells). The local keeps the nullable C# type.
@@ -1461,6 +1571,14 @@ export class Transpiler {
   }
 
   private elementAccess(e: ts.ElementAccessExpression): Out {
+    if (ts.isIdentifier(e.expression) && ts.isNumericLiteral(e.argumentExpression)) {
+      const sym = this.checker.getSymbolAtLocation(e.expression);
+      const names = sym && this.scalarized.get(sym);
+      if (names) {
+        const arr = this.cs(this.checker.getTypeOfSymbol(sym!), e);
+        return { code: names[Number(e.argumentExpression.text)]!, cs: arr.match(/^JsArray<(.*)>$/)?.[1] ?? "object" };
+      }
+    }
     const obj = this.expr(e.expression);
     const q = e.questionDotToken ? "?" : "";
     const arg = this.skipParensKeepAs(e.argumentExpression);
@@ -1621,7 +1739,7 @@ export class Transpiler {
       if (!f) return this.fail(e, `Math.${name}`);
       if (a.length === 1 && ts.isSpreadElement(a[0]!)) {
         if (name !== "min" && name !== "max") return this.fail(e, `Math.${name}(...spread)`);
-        return { code: `${f}(${this.exprTo(a[0].expression, "JsArray<double>")}.items.ToArray())`, cs: "double" };
+        return { code: `${f}(${this.exprTo(a[0].expression, "JsArray<double>")}.ToArray())`, cs: "double" };
       }
       return { code: `${f}(${a.map((x) => this.exprTo(x, "double")).join(", ")})`, cs: "double" };
     }
@@ -1641,6 +1759,8 @@ export class Transpiler {
           if (src!.cs.startsWith("JsRecord<")) return { code: `${src!.code}.values()`, cs: `JsArray<${src!.cs.slice(9, -1)}>` };
           break;
         case "entries":
+          // a record of strings gives string pairs as they are, not boxed and converted back
+          if (src!.cs === "JsRecord<string>" && result === "JsArray<JsArray<string>>") return { code: `${src!.code}.stringEntries()`, cs: result };
           if (src!.cs.startsWith("JsRecord<")) return { code: `${src!.code}.entries()`, cs: "JsArray<JsArray<object>>" };
           if (this.isDataClassName(src!.cs)) return { code: `JsRt.Entries(${src!.code})`, cs: "JsArray<JsArray<object>>" };
           break;
@@ -1983,6 +2103,14 @@ export class Transpiler {
     let needsInit = false;
     const fieldOf = (key: string) => (record ? record[1]! : this.fieldCs(c, key));
     const set = (key: string, value: string) => (record ? `${o}[${this.str(key)}] = ${value};` : `${o}.${Transpiler.escape(key)} = ${value};`);
+    // { ...src, a: x } where src is already this class: start from a copy of it (memberwise,
+    // presence included) instead of a new object filled key by key
+    let baseCopy: string | null = null;
+    const first = e.properties[0];
+    if (!record && first && ts.isSpreadAssignment(first) && !ts.isObjectLiteralExpression(this.skipParensKeepAs(first.expression)) && !ts.isConditionalExpression(this.skipParensKeepAs(first.expression))) {
+      const src = this.expr(first.expression);
+      if (src.cs === c) baseCopy = `(${src.code}?.copy() ?? new ${c}())`;
+    }
     const inline = (lit: ts.ObjectLiteralExpression, guard: string | null) => {
       const inner: string[] = [];
       for (const p of lit.properties) {
@@ -1993,6 +2121,10 @@ export class Transpiler {
       assigns.push(guard ? `if (${guard}) { ${inner.join(" ")} }` : inner.join(" "));
     };
     for (const p of e.properties) {
+      if (baseCopy !== null && p === first) {
+        needsInit = true;
+        continue;
+      }
       if (ts.isSpreadAssignment(p)) {
         needsInit = true;
         const x = this.skipParensKeepAs(p.expression);
@@ -2046,8 +2178,11 @@ export class Transpiler {
       if (needsInit) assigns.push(set(key, v));
       else simple.push(record ? `[${this.str(key)}] = ${v}` : `${Transpiler.escape(key)} = ${v}`);
     }
-    const created = `new ${c}${simple.length ? ` { ${simple.join(", ")} }` : "()"}`;
-    if (!assigns.length) return { code: created, cs: c };
+    let created = `new ${c}${simple.length ? ` { ${simple.join(", ")} }` : "()"}`;
+    if (baseCopy !== null) created = baseCopy;
+    if (!assigns.length && !simple.length) return { code: created, cs: c };
+    if (!assigns.length && baseCopy === null) return { code: created, cs: c };
+    if (baseCopy !== null && simple.length) assigns.unshift(...simple.map((x) => `${o}.${x};`));
     return { code: `JsRt.Obj(${created}, (${c} ${o}) => { ${assigns.join(" ")} })`, cs: c };
   }
 
@@ -2065,6 +2200,8 @@ export class Transpiler {
     c ??= this.tsCs(e);
     if (!c.startsWith("JsArray<")) c = "JsArray<object>";
     const elem = c.slice(8, -1);
+    // no spread: one call at the exact size (JsArray.Of), the common case of every point drawn
+    if (!e.elements.some(ts.isSpreadElement)) return { code: `${c}.Of(${e.elements.map((el) => this.exprTo(el, elem)).join(", ")})`, cs: c };
     const parts = e.elements.map((el) => {
       if (ts.isSpreadElement(el)) {
         const src = this.expr(el.expression);

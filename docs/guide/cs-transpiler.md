@@ -30,6 +30,7 @@ pnpm cs:pilot --survey       # every design, transpiled only: what the supported
 | `export/cs/Generated/Modules.g.cs` | a static class per generator module (`Mod_skyscrapers`): its reached functions and module constants |
 | `export/cs/Generated/Classes.g.cs` | the reached TS classes (`MeshCore`, `TowerMesh`) |
 | `export/cs/Generated/Types.g.cs` | a class per object type: interfaces and type aliases by name, anonymous shapes and merged unions by their fields |
+| `export/cs/Generated/Convert.g.cs` | `ShapeConvert`: a method per conversion between two shape classes the code needs |
 | `export/cs/Generated/Designs.g.cs` | the API: a class per design (`BuildingSkyPyramid`), an enum per parameter, `Build(...)` and `BuildWith(values, lod)` returning a `ModelNode` |
 | `export/cs/Runtime/*.cs` | the runtime, copied from `tools/cs-transpile/runtime/` |
 | `export/cs/Program.cs`, `RailIsland.Models.csproj` | the dump and bench console |
@@ -57,11 +58,13 @@ pnpm cs:pilot --survey       # every design, transpiled only: what the supported
   anonymous shape interned by its field list, an intersection as one class. A union of anonymous shapes
   (`LodMass`, `ClipDrive`) is merged into one class with every field; a union of separately named types
   (`LodPart | LodRect`) stays `object`, because its values are existing objects whose identity matters.
+  An anonymous shape with exactly a named class's fields is that class (`{ ...spec }` of a `MaterialSpec`).
 - **Every expression** is emitted with its C# type and then converted to the C# mapping of its narrowed
   TS type (`coerce`): `double?` to `double` after a narrowing, a tuple element out of `JsArray<object>`, a
-  delegate through an adapter lambda, one shape class into another (`JsRt.As`, a copy). An object literal
-  takes its contextual type's class, so most copies never happen; an assignment's value and a literal's
-  own fresh type are never converted (that would store one object and hand on a copy).
+  delegate through an adapter lambda, one shape class into another (a generated `ShapeConvert` method, a
+  copy of the present fields). An object literal takes its contextual type's class, so most copies never
+  happen; an assignment's value and a literal's own fresh type are never converted (that would store one
+  object and hand on a copy), and a merged union narrowed to one of its members is read in place.
 - **Presence.** A shape class's fields are properties whose setters mark them present. A field whose TS
   type admits `null` keeps "set to null" apart from "left out" (`{ end: null }` against `{}`), so a
   destructuring default, `in`, `=== undefined`, a spread and JSON follow JS; for other fields null is absence.
@@ -76,6 +79,30 @@ pnpm cs:pilot --survey       # every design, transpiled only: what the supported
 - **A tuple spread into arguments** (`m.box(mat, ...side(s, a, b), y0, y1)`) keeps the tuple in an
   `out var` for the following positions (`JsRt.First`).
 - **Unsupported constructs** are errors naming file, line and kind; all are reported before it fails.
+
+## Speed
+
+The generated C# is faster than the same design's JS bundle in Node: 1.3-1.7x in steady state across
+the pilot designs (`report.json`'s `timing`; on this container, medians of three runs per side, the
+American truck 1.92 ms against 2.51 ms). What makes it so, in the order it mattered:
+
+- **`JsArray<T>`** keeps up to four elements inside the object (a .NET 8 inline array), so a point - a
+  `Vec3` of three, a ring corner of two - is one allocation, not an object and a buffer; a longer array
+  moves to a `T[]` that doubles (16 first). Array literals are one `JsArray.Of(...)` call at their exact
+  size; `map`, `filter` and `slice` write straight into the result; the enumerator is a struct.
+- **Scalar replacement**: a `const` array literal read only as `x[<constant>]` (a triangle's edge
+  vectors `u`, `v` and normal `n`) becomes one local per element, with no array at all.
+- **Non-virtual members**: only a member some reached subclass declares is `virtual`, so the JIT can
+  inline `tri`, `quad` and `cap`. `for (const p of [a, b, c])` walks a plain C# array.
+- **No reflection in conversions** (`ShapeConvert`), `{ ...src }` of the same class is a memberwise
+  `copy()`, a merged union is read in place when narrowed, a record of strings gives string pairs.
+- `ToModelNode` fills exact-size `float[]` buffers; `Math.hypot` with two or three arguments allocates
+  nothing; `JsRecord.keys()` sorts integer-like keys only when it has one.
+
+Timing method, both sides alike: 300 ms of warm-up (the JIT's tiers settle), then the median of five
+rounds of at least 200 ms. Times on a shared container move by 10-20 % between runs, so compare several.
+`bench` also reports the bytes a build allocates (`allocKb`). The GC's defaults are kept: a larger young
+generation or non-concurrent collection changed nothing beyond the noise.
 
 ## The runtime
 
@@ -93,4 +120,4 @@ and low detail, twice: through the design's JS bundle (`bundleDesign`) with the 
 the transpiled C#. The dumps are compared exactly: the node tree, each material, every position, normal and
 colour as Float32 (both write Float32), the clips and the userData (key order aside). `report.json` lists
 each comparison and the first difference of any that differ. Then the default combination of each design
-is timed in Node, in C# and as the JS bundle inside Jint 4.1 (with a three.js stub).
+is timed in Node, in C# and as the JS bundle inside Jint 4.1 (with a three.js stub), as "Speed" describes.

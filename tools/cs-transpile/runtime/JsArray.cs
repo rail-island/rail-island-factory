@@ -1,190 +1,416 @@
-// The JavaScript array as the transpiled code uses it: a growable list indexed by
-// double, with the Array.prototype methods the factory's code calls, under their JS
-// names. Iteration is live and by index, as a JS for...of over an array is.
-// Part of the C# transpiler pilot (docs/specs/2026-11-21-csharp-transpiler-pilot.md).
+// The JavaScript array as the transpiled code uses it: indexed by double, with the
+// Array.prototype methods the factory's code calls, under their JS names. Iteration
+// is live and by index, as a JS for...of over an array is.
+//
+// Built for speed, since every point of a model is one (a Vec3 is a JsArray<double>
+// of three, a ring corner one of two): up to four elements live inside the object
+// itself (a .NET 8 inline array), so a point is one allocation, not an object and a
+// buffer; a longer array moves to a T[] that doubles. Array literals are built at
+// their exact size (`Of`), map/filter/slice write straight into the result, the
+// enumerator is a struct, and the indexer's check is one comparison in the common case.
+// Part of the C# transpiler pilot (docs/guide/cs-transpiler.md).
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace RailIsland.Factory.Runtime;
 
+/** Four elements stored inline in the array object. */
+[InlineArray(4)]
+internal struct Small4<T>
+{
+    private T e0;
+}
+
 public sealed class JsArray<T> : IEnumerable<T>
 {
-    public readonly List<T> items;
+    private const int SmallCapacity = 4;
 
-    public JsArray() { items = new List<T>(); }
-    public JsArray(IEnumerable<T> source) { items = new List<T>(source); }
+    /** Null while the elements fit in `small`. */
+    private T[]? buf;
+    private Small4<T> small;
+    private int count;
+
+    public JsArray() { }
+
+    public JsArray(int capacity)
+    {
+        if (capacity > SmallCapacity) buf = new T[capacity];
+    }
+
+    public JsArray(IEnumerable<T> source)
+    {
+        if (source is JsArray<T> a)
+        {
+            Reserve(a.count);
+            a.Items.CopyTo(Store);
+            count = a.count;
+            return;
+        }
+        if (source is ICollection<T> c && c.Count > SmallCapacity)
+        {
+            buf = new T[c.Count];
+            c.CopyTo(buf, 0);
+            count = buf.Length;
+            return;
+        }
+        foreach (var x in source) add(x);
+    }
+
+    /** Adopts `items` as the buffer, no copy: the caller hands it over. */
+    private JsArray(T[] items) { buf = items; count = items.Length; }
+
+    /** The storage, `count` used. */
+    private Span<T> Store
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => buf ?? (Span<T>)small;
+    }
+
+    /** The elements. */
+    private Span<T> Items
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Store[..count];
+    }
+
+    // array literals at their exact size
+    public static JsArray<T> Of() => new();
+
+    public static JsArray<T> Of(T a)
+    {
+        var o = new JsArray<T> { count = 1 };
+        o.small[0] = a;
+        return o;
+    }
+
+    public static JsArray<T> Of(T a, T b)
+    {
+        var o = new JsArray<T> { count = 2 };
+        o.small[0] = a;
+        o.small[1] = b;
+        return o;
+    }
+
+    public static JsArray<T> Of(T a, T b, T c)
+    {
+        var o = new JsArray<T> { count = 3 };
+        o.small[0] = a;
+        o.small[1] = b;
+        o.small[2] = c;
+        return o;
+    }
+
+    public static JsArray<T> Of(T a, T b, T c, T d)
+    {
+        var o = new JsArray<T> { count = 4 };
+        o.small[0] = a;
+        o.small[1] = b;
+        o.small[2] = c;
+        o.small[3] = d;
+        return o;
+    }
+
+    public static JsArray<T> Of(params T[] items)
+    {
+        if (items.Length > SmallCapacity) return new JsArray<T>(items);
+        var o = new JsArray<T> { count = items.Length };
+        items.CopyTo(o.Store);
+        return o;
+    }
+
+    public int Count => count;
 
     public double length
     {
-        get => items.Count;
+        get => count;
         set
         {
             int n = JsRt.Index(value);
-            if (n < items.Count) items.RemoveRange(n, items.Count - n);
-            while (items.Count < n) items.Add(default!);
+            if (n < count) Store[n..count].Clear();
+            else Reserve(n);
+            count = n;
         }
     }
 
     public T this[double i]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            int k = JsRt.Index(i);
-            if (k >= items.Count) throw new JsError($"array index {k} out of range ({items.Count})");
-            return items[k];
+            int k = (int)i;
+            if ((uint)k >= (uint)count || k != i) return Miss(i);
+            return buf != null ? buf[k] : small[k];
         }
         set
         {
-            int k = JsRt.Index(i);
-            while (items.Count <= k) items.Add(default!);
-            items[k] = value;
+            int k = (int)i;
+            if ((uint)k >= (uint)count || k != i)
+            {
+                k = JsRt.Index(i);
+                if (k >= count)
+                {
+                    Reserve(k + 1);
+                    count = k + 1;
+                }
+            }
+            if (buf != null) buf[k] = value;
+            else small[k] = value;
         }
     }
 
-    // --- building (array literals and spreads) --------------------------------------
+    private T Miss(double i)
+    {
+        int k = JsRt.Index(i);
+        throw new JsError($"array index {k} out of range ({count})");
+    }
 
-    public JsArray<T> add(T x) { items.Add(x); return this; }
-    public JsArray<T> addAll(IEnumerable<T> xs) { items.AddRange(xs); return this; }
+    private void Reserve(int n)
+    {
+        int capacity = buf?.Length ?? SmallCapacity;
+        if (n <= capacity) return;
+        // 16 first: a growing array (a material's positions) skips the smallest reallocations
+        var next = new T[Math.Max(n, Math.Max(16, capacity * 2))];
+        Items.CopyTo(next);
+        if (buf == null) small = default;
+        buf = next;
+    }
+
+    public T[] ToArray() => Items.ToArray();
+
+    // --- building (array literals with spreads) -------------------------------------
+
+    public JsArray<T> add(T x)
+    {
+        Reserve(count + 1);
+        Store[count++] = x;
+        return this;
+    }
+
+    public JsArray<T> addAll(IEnumerable<T> xs)
+    {
+        if (xs is JsArray<T> a)
+        {
+            // read the source first: it may be this array
+            Reserve(count + a.count);
+            a.Items.CopyTo(Store[count..]);
+            count += a.count;
+            return this;
+        }
+        foreach (var x in xs) add(x);
+        return this;
+    }
 
     // --- mutators --------------------------------------------------------------------
 
-    public double push(T x) { items.Add(x); return items.Count; }
-    public double push(T x, T y) { items.Add(x); items.Add(y); return items.Count; }
-    public double push(T x, T y, T z) { items.Add(x); items.Add(y); items.Add(z); return items.Count; }
-    public double pushAll(IEnumerable<T> xs) { items.AddRange(xs.ToList()); return items.Count; }
+    public double push(T x) { add(x); return count; }
+
+    public double push(T x, T y)
+    {
+        Reserve(count + 2);
+        var s = Store;
+        s[count++] = x;
+        s[count++] = y;
+        return count;
+    }
+
+    public double push(T x, T y, T z)
+    {
+        Reserve(count + 3);
+        var s = Store;
+        s[count++] = x;
+        s[count++] = y;
+        s[count++] = z;
+        return count;
+    }
+
+    public double pushAll(IEnumerable<T> xs)
+    {
+        addAll(xs);
+        return count;
+    }
 
     public T pop()
     {
-        if (items.Count == 0) return default!;
-        var x = items[^1];
-        items.RemoveAt(items.Count - 1);
+        if (count == 0) return default!;
+        var s = Store;
+        var x = s[--count];
+        s[count] = default!;
         return x;
     }
 
     public T shift()
     {
-        if (items.Count == 0) return default!;
-        var x = items[0];
-        items.RemoveAt(0);
+        if (count == 0) return default!;
+        var s = Store;
+        var x = s[0];
+        s[1..count].CopyTo(s);
+        s[--count] = default!;
         return x;
     }
 
-    public JsArray<T> reverse() { items.Reverse(); return this; }
-
-    public JsArray<T> fill(T x)
+    public JsArray<T> reverse()
     {
-        for (int i = 0; i < items.Count; i++) items[i] = x;
+        Items.Reverse();
         return this;
     }
 
-    /** Stable, as Array.prototype.sort is (List.Sort is not). */
+    public JsArray<T> fill(T x)
+    {
+        Items.Fill(x);
+        return this;
+    }
+
+    /** Stable, as Array.prototype.sort is (Array.Sort is not). */
     public JsArray<T> sort(Func<T, T, double> compare)
     {
-        var sorted = JsRt.StableSort(items, compare);
-        items.Clear();
-        items.AddRange(sorted);
+        if (count < 2) return this;
+        var a = ToArray();
+        JsRt.StableSort(a, a.Length, compare);
+        a.CopyTo(Store);
         return this;
     }
 
     /** The default sort: by the elements' string forms, UTF-16 code unit order. */
-    public JsArray<T> sort()
-    {
-        return sort((a, b) => string.CompareOrdinal(JsRt.Str(a), JsRt.Str(b)));
-    }
+    public JsArray<T> sort() => sort((a, b) => string.CompareOrdinal(JsRt.Str(a), JsRt.Str(b)));
 
     // --- readers ---------------------------------------------------------------------
 
     public JsArray<U> map<U>(Func<T, U> f)
     {
-        var o = new List<U>(items.Count);
-        for (int i = 0; i < items.Count; i++) o.Add(f(items[i]));
-        return new JsArray<U>(o);
+        var o = new JsArray<U>(count);
+        var src = Items;
+        var dst = o.Store;
+        for (int i = 0; i < src.Length; i++) dst[i] = f(src[i]);
+        o.count = src.Length;
+        return o;
     }
 
     public JsArray<U> map<U>(Func<T, double, U> f)
     {
-        var o = new List<U>(items.Count);
-        for (int i = 0; i < items.Count; i++) o.Add(f(items[i], i));
-        return new JsArray<U>(o);
+        var o = new JsArray<U>(count);
+        var src = Items;
+        var dst = o.Store;
+        for (int i = 0; i < src.Length; i++) dst[i] = f(src[i], i);
+        o.count = src.Length;
+        return o;
     }
 
     public JsArray<U> flatMap<U>(Func<T, JsArray<U>> f)
     {
         var o = new JsArray<U>();
-        for (int i = 0; i < items.Count; i++) o.items.AddRange(f(items[i]).items);
+        for (int i = 0; i < count; i++) o.addAll(f(this[i]));
         return o;
     }
 
     public JsArray<U> flatMap<U>(Func<T, double, JsArray<U>> f)
     {
         var o = new JsArray<U>();
-        for (int i = 0; i < items.Count; i++) o.items.AddRange(f(items[i], i).items);
+        for (int i = 0; i < count; i++) o.addAll(f(this[i], i));
         return o;
     }
 
-    public JsArray<T> filter(Func<T, bool> f) => new(items.Where(f));
-    public JsArray<T> filter(Func<T, double, bool> f) => new(items.Where((x, i) => f(x, i)));
+    public JsArray<T> filter(Func<T, bool> f)
+    {
+        var o = new JsArray<T>(count);
+        var dst = o.Store;
+        int n = 0;
+        foreach (var x in Items) if (f(x)) dst[n++] = x;
+        o.count = n;
+        return o;
+    }
 
-    public void forEach(Action<T> f) { for (int i = 0; i < items.Count; i++) f(items[i]); }
-    public void forEach(Action<T, double> f) { for (int i = 0; i < items.Count; i++) f(items[i], i); }
+    public JsArray<T> filter(Func<T, double, bool> f)
+    {
+        var o = new JsArray<T>(count);
+        var dst = o.Store;
+        var src = Items;
+        int n = 0;
+        for (int i = 0; i < src.Length; i++) if (f(src[i], i)) dst[n++] = src[i];
+        o.count = n;
+        return o;
+    }
 
-    public bool some(Func<T, bool> f) { for (int i = 0; i < items.Count; i++) if (f(items[i])) return true; return false; }
-    public bool some(Func<T, double, bool> f) { for (int i = 0; i < items.Count; i++) if (f(items[i], i)) return true; return false; }
-    public bool every(Func<T, bool> f) { for (int i = 0; i < items.Count; i++) if (!f(items[i])) return false; return true; }
-    public bool every(Func<T, double, bool> f) { for (int i = 0; i < items.Count; i++) if (!f(items[i], i)) return false; return true; }
+    // callbacks may push into this array (as JS lets them): index access, re-read each step
+    public void forEach(Action<T> f) { for (int i = 0; i < count; i++) f(this[i]); }
+    public void forEach(Action<T, double> f) { for (int i = 0; i < count; i++) f(this[i], i); }
 
-    public T find(Func<T, bool> f) { for (int i = 0; i < items.Count; i++) if (f(items[i])) return items[i]; return default!; }
-    public double findIndex(Func<T, bool> f) { for (int i = 0; i < items.Count; i++) if (f(items[i])) return i; return -1; }
+    public bool some(Func<T, bool> f) { for (int i = 0; i < count; i++) if (f(this[i])) return true; return false; }
+    public bool some(Func<T, double, bool> f) { for (int i = 0; i < count; i++) if (f(this[i], i)) return true; return false; }
+    public bool every(Func<T, bool> f) { for (int i = 0; i < count; i++) if (!f(this[i])) return false; return true; }
+    public bool every(Func<T, double, bool> f) { for (int i = 0; i < count; i++) if (!f(this[i], i)) return false; return true; }
 
-    public double indexOf(T x) { for (int i = 0; i < items.Count; i++) if (JsRt.Eq(items[i], x)) return i; return -1; }
+    public T find(Func<T, bool> f) { for (int i = 0; i < count; i++) if (f(this[i])) return this[i]; return default!; }
+    public double findIndex(Func<T, bool> f) { for (int i = 0; i < count; i++) if (f(this[i])) return i; return -1; }
+
+    public double indexOf(T x)
+    {
+        var s = Items;
+        if (typeof(T) == typeof(double))
+        {
+            double v = (double)(object)x!;
+            for (int i = 0; i < s.Length; i++) if ((double)(object)s[i]! == v) return i;
+            return -1;
+        }
+        for (int i = 0; i < s.Length; i++) if (JsRt.Eq(s[i], x)) return i;
+        return -1;
+    }
+
     public bool includes(T x) => indexOf(x) >= 0;
 
     public U reduce<U>(Func<U, T, U> f, U init)
     {
         var acc = init;
-        for (int i = 0; i < items.Count; i++) acc = f(acc, items[i]);
+        for (int i = 0; i < count; i++) acc = f(acc, this[i]);
         return acc;
     }
 
     public U reduce<U>(Func<U, T, double, U> f, U init)
     {
         var acc = init;
-        for (int i = 0; i < items.Count; i++) acc = f(acc, items[i], i);
+        for (int i = 0; i < count; i++) acc = f(acc, this[i], i);
         return acc;
     }
 
     /** reduce without an initial value: the first element is the start. */
     public T reduce(Func<T, T, T> f)
     {
-        if (items.Count == 0) throw new JsError("Reduce of empty array with no initial value");
-        var acc = items[0];
-        for (int i = 1; i < items.Count; i++) acc = f(acc, items[i]);
+        if (count == 0) throw new JsError("Reduce of empty array with no initial value");
+        var acc = this[0];
+        for (int i = 1; i < count; i++) acc = f(acc, this[i]);
         return acc;
     }
 
-    public string join(string sep = ",") => string.Join(sep, items.Select(x => x is null ? "" : JsRt.Str(x)));
+    public string join(string sep = ",")
+    {
+        var parts = new string[count];
+        for (int i = 0; i < count; i++) parts[i] = this[i] is null ? "" : JsRt.Str(this[i]);
+        return string.Join(sep, parts);
+    }
 
     public JsArray<T> slice(double start = 0, double? end = null)
     {
-        int n = items.Count;
-        int s = Clamp(start, n);
-        int e = end is null ? n : Clamp(end.Value, n);
-        return new JsArray<T>(e > s ? items.GetRange(s, e - s) : new List<T>());
+        int s = Clamp(start, count);
+        int e = end is null ? count : Clamp(end.Value, count);
+        int n = Math.Max(0, e - s);
+        var o = new JsArray<T>(n);
+        Items.Slice(s, n).CopyTo(o.Store);
+        o.count = n;
+        return o;
     }
 
-    public JsArray<T> concat(JsArray<T> other) => new JsArray<T>(items).addAll(other.items);
+    public JsArray<T> concat(JsArray<T> other) => new JsArray<T>(count + other.count).addAll(this).addAll(other);
 
     public T at(double i)
     {
         int k = (int)Math.Truncate(i);
-        if (k < 0) k += items.Count;
-        return k >= 0 && k < items.Count ? items[k] : default!;
+        if (k < 0) k += count;
+        return k >= 0 && k < count ? this[k] : default!;
     }
 
-    public JsArray<T> copy() => new(items);
+    public JsArray<T> copy() => slice();
 
     private static int Clamp(double v, int n)
     {
@@ -193,11 +419,21 @@ public sealed class JsArray<T> : IEnumerable<T>
         return Math.Min(k, n);
     }
 
-    // live, index-based: an element pushed during the loop is visited, as in JS
-    public IEnumerator<T> GetEnumerator()
+    /** Live and by index: an element pushed during the loop is visited, as in JS. No allocation. */
+    public struct Enumerator : IEnumerator<T>
     {
-        for (int i = 0; i < items.Count; i++) yield return items[i];
+        private readonly JsArray<T> a;
+        private int i;
+
+        internal Enumerator(JsArray<T> a) { this.a = a; i = -1; }
+        public T Current => a[i];
+        object IEnumerator.Current => Current!;
+        public bool MoveNext() => ++i < a.count;
+        public void Reset() => i = -1;
+        public void Dispose() { }
     }
 
+    public Enumerator GetEnumerator() => new(this);
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

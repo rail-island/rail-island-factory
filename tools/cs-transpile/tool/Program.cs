@@ -155,12 +155,25 @@ public static class Program
         var results = new List<object>();
         foreach (var j in jobs)
         {
-            double tris = 0;
-            for (int i = 0; i < 3; i++) tris = run(j);
-            var sw = Stopwatch.StartNew();
+            // warmed up for 300 ms (the JIT's tiers settle), then the median of five rounds of
+            // at least 200 ms each, as compare.ts times Node
+            double tris = run(j);
+            for (var w = Stopwatch.StartNew(); w.ElapsedMilliseconds < 300;) tris = run(j);
+            var rounds = new List<double>();
             int n = 0;
-            while (n < 3 || sw.ElapsedMilliseconds < 400) { run(j); n++; }
-            results.Add(new { j.file, ms = sw.Elapsed.TotalMilliseconds / n, runs = n, triangles = tris });
+            for (int r = 0; r < 5; r++)
+            {
+                var round = Stopwatch.StartNew();
+                int k = 0;
+                while (k < 3 || round.ElapsedMilliseconds < 200) { run(j); k++; }
+                rounds.Add(round.Elapsed.TotalMilliseconds / k);
+                n += k;
+            }
+            rounds.Sort();
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            run(j);
+            double allocKb = (GC.GetAllocatedBytesForCurrentThread() - before) / 1024.0;
+            results.Add(new { j.file, ms = rounds[2], runs = n, triangles = tris, allocKb });
         }
         return JsonSerializer.Serialize(results);
     }

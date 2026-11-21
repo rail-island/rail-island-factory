@@ -63,16 +63,29 @@ public static class JsRt
     }
 
     /** Math.hypot as V8 computes it: scaled by the largest, Kahan-summed. */
-    public static double Hypot(params double[] xs)
+    public static double Hypot(params double[] xs) => Hypot((ReadOnlySpan<double>)xs);
+
+    // the common arities without a params array (same arithmetic, same results)
+    public static double Hypot(double a, double b)
+    {
+        Span<double> s = stackalloc double[2] { a, b };
+        return Hypot((ReadOnlySpan<double>)s);
+    }
+
+    public static double Hypot(double a, double b, double c)
+    {
+        Span<double> s = stackalloc double[3] { a, b, c };
+        return Hypot((ReadOnlySpan<double>)s);
+    }
+
+    public static double Hypot(ReadOnlySpan<double> xs)
     {
         if (xs.Length == 0) return 0;
         double max = 0;
         bool nan = false;
-        var abs = new double[xs.Length];
         for (int i = 0; i < xs.Length; i++)
         {
             double v = Math.Abs(xs[i]);
-            abs[i] = v;
             if (double.IsNaN(v)) nan = true;
             else if (v > max) max = v;
         }
@@ -80,9 +93,9 @@ public static class JsRt
         if (nan) return double.NaN;
         if (max == 0) return 0;
         double sum = 0, compensation = 0;
-        for (int i = 0; i < abs.Length; i++)
+        for (int i = 0; i < xs.Length; i++)
         {
-            double n = abs[i] / max;
+            double n = Math.Abs(xs[i]) / max;
             double summand = n * n - compensation;
             double preliminary = sum + summand;
             compensation = (preliminary - sum) - summand;
@@ -90,6 +103,11 @@ public static class JsRt
         }
         return Math.Sqrt(sum) * max;
     }
+
+    public static double Min(double a, double b) => Math.Min(a, b);
+    public static double Max(double a, double b) => Math.Max(a, b);
+    public static double Min(double a, double b, double c) => Math.Min(Math.Min(a, b), c);
+    public static double Max(double a, double b, double c) => Math.Max(Math.Max(a, b), c);
 
     public static double Min(params double[] xs)
     {
@@ -161,9 +179,11 @@ public static class JsRt
         long n = (long)Math.Abs(v);
         int b = (int)radix;
         if (n == 0) return "0";
-        var sb = new StringBuilder();
-        while (n > 0) { sb.Insert(0, "0123456789abcdefghijklmnopqrstuvwxyz"[(int)(n % b)]); n /= b; }
-        return (v < 0 ? "-" : "") + sb;
+        Span<char> digits = stackalloc char[66];
+        int at = digits.Length;
+        while (n > 0) { digits[--at] = "0123456789abcdefghijklmnopqrstuvwxyz"[(int)(n % b)]; n /= b; }
+        if (v < 0) digits[--at] = '-';
+        return new string(digits[at..]);
     }
 
     public static string toString(this double v) => NumStr(v);
@@ -270,24 +290,28 @@ public static class JsRt
 
     // --- arrays ----------------------------------------------------------------------
 
-    /** A stable merge sort by a JS comparator (negative, zero or positive; NaN as zero). */
-    public static List<T> StableSort<T>(List<T> items, Func<T, T, double> compare)
+    /** A stable merge sort of the first `n` items, in place, by a JS comparator (NaN as zero). */
+    public static void StableSort<T>(T[] items, int n, Func<T, T, double> compare)
     {
-        var a = items.ToArray();
-        var tmp = new T[a.Length];
-        for (int width = 1; width < a.Length; width *= 2)
+        if (n < 2) return;
+        var a = items;
+        var tmp = new T[n];
+        bool inTmp = false;
+        for (int width = 1; width < n; width *= 2)
         {
-            for (int lo = 0; lo < a.Length; lo += 2 * width)
+            var src = inTmp ? tmp : a;
+            var dst = inTmp ? a : tmp;
+            for (int lo = 0; lo < n; lo += 2 * width)
             {
-                int mid = Math.Min(lo + width, a.Length), hi = Math.Min(lo + 2 * width, a.Length);
+                int mid = Math.Min(lo + width, n), hi = Math.Min(lo + 2 * width, n);
                 int i = lo, j = mid, k = lo;
-                while (i < mid && j < hi) tmp[k++] = compare(a[j], a[i]) < 0 ? a[j++] : a[i++];
-                while (i < mid) tmp[k++] = a[i++];
-                while (j < hi) tmp[k++] = a[j++];
+                while (i < mid && j < hi) dst[k++] = compare(src[j], src[i]) < 0 ? src[j++] : src[i++];
+                while (i < mid) dst[k++] = src[i++];
+                while (j < hi) dst[k++] = src[j++];
             }
-            (a, tmp) = (tmp, a);
+            inTmp = !inTmp;
         }
-        return a.ToList();
+        if (inTmp) Array.Copy(tmp, items, n);
     }
 
     /** `f(...tuple)`: the tuple's first element, and the tuple kept for the following arguments. */

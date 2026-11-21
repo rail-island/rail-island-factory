@@ -19,13 +19,19 @@ public sealed class JsRecord<T> : IEnumerable<KeyValuePair<string, T>>
 {
     private readonly Dictionary<string, T> map = new();
     private readonly List<string> order = new();
+    /** Whether an integer-like key was ever stored: only then do keys() need reordering. */
+    private bool anyIndexKey;
 
     public T this[string key]
     {
         get => map.TryGetValue(key, out var v) ? v : default!;
         set
         {
-            if (!map.ContainsKey(key)) order.Add(key);
+            if (!map.ContainsKey(key))
+            {
+                order.Add(key);
+                if (!anyIndexKey && key.Length > 0 && char.IsAsciiDigit(key[0])) anyIndexKey = IsIndex(key);
+            }
             map[key] = value;
         }
     }
@@ -41,13 +47,17 @@ public sealed class JsRecord<T> : IEnumerable<KeyValuePair<string, T>>
 
     public JsArray<string> keys()
     {
+        if (!anyIndexKey) return JsArray<string>.Of(order.ToArray());
         var ints = order.Where(IsIndex).OrderBy(k => uint.Parse(k));
         return new JsArray<string>(ints.Concat(order.Where(k => !IsIndex(k))));
     }
 
     public JsArray<T> values() => keys().map(k => map[k]);
 
-    public JsArray<JsArray<object>> entries() => keys().map(k => new JsArray<object>().add(k).add(map[k]!));
+    public JsArray<JsArray<object>> entries() => keys().map(k => JsArray<object>.Of(k, map[k]!));
+
+    /** Object.entries of a record of strings: the pairs as string arrays. */
+    public JsArray<JsArray<string>> stringEntries() => keys().map(k => JsArray<string>.Of(k, (string)(object)map[k]!));
 
     public double count => map.Count;
 

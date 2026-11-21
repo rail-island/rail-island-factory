@@ -64,28 +64,35 @@ public class MeshBuilder : MeshCore
             {
                 var mat = materials[m];
                 var g = groups.get(mat);
-                var pos = new List<float>();
-                var nrm = new List<float>();
-                var col = new List<float>();
-                for (int t = 0; t < (int)g.part.length; t++)
+                // exact-size buffers: count this unit's triangles first
+                int tris = (int)g.part.length, mine = 0;
+                bool all = !(unit.index >= 0 || units.length > 1);
+                for (int t = 0; t < tris; t++) if (all || g.part[t] == unit.index) mine++;
+                if (mine == 0) continue;
+                var pos = new float[mine * 9];
+                var nrm = new float[mine * 9];
+                var col = g.col != null ? new float[mine * 9] : null;
+                double px = unit.pivot[0], py = unit.pivot[1], pz = unit.pivot[2];
+                int o = 0;
+                for (int t = 0; t < tris; t++)
                 {
-                    if (g.part[t] != unit.index && (unit.index >= 0 || units.length > 1)) continue;
+                    if (!all && g.part[t] != unit.index) continue;
                     for (int k = 0; k < 9; k++)
                     {
                         // the JS model writes Float32Arrays: the same rounding of the same doubles
-                        pos.Add((float)(g.pos[t * 9 + k] - unit.pivot[k % 3]));
-                        nrm.Add((float)g.nrm[t * 9 + k]);
-                        if (g.col != null) col.Add((float)g.col[t * 9 + k]);
+                        pos[o + k] = (float)(g.pos[t * 9 + k] - (k % 3 == 0 ? px : k % 3 == 1 ? py : pz));
+                        nrm[o + k] = (float)g.nrm[t * 9 + k];
+                        if (col != null) col[o + k] = (float)g.col[t * 9 + k];
                     }
+                    o += 9;
                 }
-                if (pos.Count == 0) continue;
                 holder.meshes.Add(new MeshData
                 {
                     name = mat,
                     material = standard[m],
-                    positions = pos.ToArray(),
-                    normals = nrm.ToArray(),
-                    colors = g.col != null ? col.ToArray() : null,
+                    positions = pos,
+                    normals = nrm,
+                    colors = col,
                 });
             }
         }
