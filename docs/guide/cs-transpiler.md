@@ -1,0 +1,96 @@
+# The C# transpiler pilot
+
+**Covers** - `pnpm cs:pilot`: the pilot that transpiles the TypeScript a design's build reaches into C#,
+the C# runtime it targets, the hand-written `MeshBuilder` seam, how its output is proved equal to the JS
+model, its timing against Node and Jint, and the whole-catalog survey.
+**Code** - `tools/cs-transpile/` (`main.ts`, `transpile.ts`, `inputs.ts`, `compare.ts`, `common.ts`,
+`runtime/*.cs`, `tool/Program.cs`, `tool/RailIsland.Models.csproj`)
+**See also** - [../specs/2026-11-21-csharp-transpiler-pilot.md](../specs/2026-11-21-csharp-transpiler-pilot.md),
+[../impl/2026-11-21-csharp-transpiler-pilot.md](../impl/2026-11-21-csharp-transpiler-pilot.md),
+[../models/js-format.md](../models/js-format.md), [setup-and-build.md](setup-and-build.md)
+
+## What it is
+
+A spike, not a product: it answers whether the factory's models could ship as C# (for a Godot
+consumer) by transpiling the TypeScript itself rather than running the JS model in an embedded engine.
+It touches nothing the game imports: no file in `generator/`, no export the webapp reads, no test in
+`pnpm test`. It writes only to the gitignored `export/cs/`. It needs the .NET 8 SDK (`dotnet`).
+
+```bash
+pnpm cs:pilot                # the windsock and the pyramid tower: transpile, build, compare, time
+pnpm cs:pilot --truck        # the same with the American truck (parts, steered wheels, a rig, the LOD kit)
+pnpm cs:pilot --no-run       # transpile and write the C# project only
+pnpm cs:pilot --survey       # every design, transpiled only: what the supported subset does not cover yet
+```
+
+## What it writes
+
+| Path | What |
+|---|---|
+| `export/cs/Generated/Modules.g.cs` | a static class per generator module (`Mod_skyscrapers`): its reached functions and module constants |
+| `export/cs/Generated/Classes.g.cs` | the reached TS classes (`MeshCore`, `TowerMesh`) |
+| `export/cs/Generated/Types.g.cs` | a class per object type: interfaces and type aliases by name, anonymous shapes and merged unions by their fields |
+| `export/cs/Generated/Designs.g.cs` | the API: a class per design (`BuildingSkyPyramid`), an enum per parameter, `Build(...)` and `BuildWith(values, lod)` returning a `ModelNode` |
+| `export/cs/Runtime/*.cs` | the runtime, copied from `tools/cs-transpile/runtime/` |
+| `export/cs/Program.cs`, `RailIsland.Models.csproj` | the dump and bench console |
+| `export/cs/transpile.json` | the designs, their esbuild bundle modules, the modules the transpiler reached, the syntax-kind inventory and the counts |
+| `export/cs/report.json` | every comparison and the timing |
+| `export/cs/survey.json` | the survey: unsupported constructs by kind and file, each with its location |
+| `export/cs/bundles/<id>.js`, `export/cs/run/` | the JS bundles compared against, the jobs and the C# dumps |
+
+## How it transpiles
+
+- **Reachability** is per declaration, starting from each design's `build` and `buildLod` and from
+  `MeshCore`: an identifier's declaration in `generator/` pulls in its top-level statement (a whole class
+  for a member). A module's other code is never looked at. `inputs.ts` lists the modules esbuild keeps for
+  the same entry, for comparison: the truck's bundle keeps 43 modules, the transpiler needs 11.
+- **The seam.** Symbols of `meshBuilder.ts` and `threeBuilder.ts` are not transpiled. The designs'
+  `MeshBuilder` is `runtime/MeshBuilder.cs`: the transpiled `MeshCore` plus `ToModelNode`, which does what
+  `toGroup` does with three.js - a mesh per material in name order, a node per part at its pivot, the
+  clips and the userData - into the engine-neutral `ModelNode`. Named surfaces and interiors throw.
+- **Types** come from the TypeScript checker. `number` is `double`; string literal unions are `string`;
+  `T | undefined` of a number is `double?`; arrays and tuples are `JsArray<T>` (a heterogeneous tuple
+  `JsArray<object>`); `Map`/`Set` are `JsMap`/`JsSet`; `Record<string, T>` (and a `Record` over a finite
+  key union) is `JsRecord<T>`, whose number values are `double?` so a missing key reads as undefined;
+  function types are `Func`/`Action`; a generic `T` that TypeScript instantiates as `void` is `JsVoid`.
+- **Object types** become classes implementing `IJsObject`: an interface or type alias by its name, an
+  anonymous shape interned by its field list, an intersection as one class. A union of anonymous shapes
+  (`LodMass`, `ClipDrive`) is merged into one class with every field; a union of separately named types
+  (`LodPart | LodRect`) stays `object`, because its values are existing objects whose identity matters.
+- **Every expression** is emitted with its C# type and then converted to the C# mapping of its narrowed
+  TS type (`coerce`): `double?` to `double` after a narrowing, a tuple element out of `JsArray<object>`, a
+  delegate through an adapter lambda, one shape class into another (`JsRt.As`, a copy). An object literal
+  takes its contextual type's class, so most copies never happen; an assignment's value and a literal's
+  own fresh type are never converted (that would store one object and hand on a copy).
+- **Presence.** A shape class's fields are properties whose setters mark them present. A field whose TS
+  type admits `null` keeps "set to null" apart from "left out" (`{ end: null }` against `{}`), so a
+  destructuring default, `in`, `=== undefined`, a spread and JSON follow JS; for other fields null is absence.
+- **Classes**: a TS constructor may run code before `super()`, which a C# constructor cannot, so each class
+  gets `__ctor_<Name>` (the TS body, with `super(...)` calling the base's `__ctor`) and `__fields_<Name>` (the
+  field initializers); the C# constructor only forwards to it, passing `JsCtor.Skip` to its base.
+- **Locals** are renamed to be unique within their C# member (C# forbids a local hiding another); a `const`
+  arrow function becomes a local function (default parameters, recursion). A default parameter that is no
+  compile-time constant becomes a `null` default worked out in the body. `const a = x!` over a nullable
+  number keeps the local nullable: TypeScript's `!` drops `null` too, and `lodKit.ts`'s `cells` tests
+  such a value for null.
+- **A tuple spread into arguments** (`m.box(mat, ...side(s, a, b), y0, y1)`) keeps the tuple in an
+  `out var` for the following positions (`JsRt.First`).
+- **Unsupported constructs** are errors naming file, line and kind; all are reported before it fails.
+
+## The runtime
+
+`runtime/JsRt.cs` holds what .NET does differently from JS: `Math.round` (a tie towards +infinity),
+`Math.hypot` as V8 computes it (scaled by the largest, Kahan-summed), number to string by JS's rules
+(shortest round-trip digits, exponent past 1e21 or below 1e-6), `toString(16)`, `toFixed`, truthiness,
+strict equality, a stable merge sort (`List.Sort` is not stable), regular expressions in ECMAScript mode
+and the structural conversion. `JsArray<T>` iterates live by index, as a JS `for...of` does;
+`JsRecord<T>` returns integer-like keys first, as JS objects do.
+
+## How it is proved
+
+`compare.ts` builds every combination `coverageCombinations` gives (the factory tests' sample), at full
+and low detail, twice: through the design's JS bundle (`bundleDesign`) with the real three.js, and through
+the transpiled C#. The dumps are compared exactly: the node tree, each material, every position, normal and
+colour as Float32 (both write Float32), the clips and the userData (key order aside). `report.json` lists
+each comparison and the first difference of any that differ. Then the default combination of each design
+is timed in Node, in C# and as the JS bundle inside Jint 4.1 (with a three.js stub).

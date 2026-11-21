@@ -1,0 +1,2083 @@
+// The C# transpiler pilot (docs/specs/2026-11-21-csharp-transpiler-pilot.md): turns
+// the generator's TypeScript a design's build reaches into C#, using the TypeScript
+// checker for every type decision.
+//
+// - Reachability is per declaration, from the designs' build and LOD functions (and
+//   MeshCore, which the hand-written seam extends): a module's other code is left out.
+// - Every expression is emitted with its C# type, then converted to the C# mapping of
+//   its (narrowed) TypeScript type (`coerce`): double? to double after a narrowing, a
+//   tuple element out of a JsArray<object>, one shape class into another.
+// - Object types become classes: an interface or type alias by its name, an
+//   anonymous shape by its fields (interned), a union of object types merged.
+// - A construct outside the supported subset is an error naming file, line and
+//   kind; the transpiler reports every one before failing.
+// Node-only; run with tsx (main.ts).
+
+import ts from "typescript";
+import path from "node:path";
+
+interface Out {
+  code: string;
+  cs: string;
+}
+
+interface DataField {
+  js: string;
+  cs: string;
+  /** The TS type admits null as a value of its own: a field set to null is present, unlike one left out. */
+  nullable?: boolean;
+}
+
+interface DataClass {
+  name: string;
+  fields: DataField[];
+  origin: string;
+}
+
+/** Per C# member: the local names in use (C# forbids a local hiding another in the same member). */
+interface MemberContext {
+  used: Set<string>;
+  temps: number;
+  /** Inside a lambda whose delegate returns JsVoid (a generic T TypeScript made void). */
+  voidAsUnit: boolean;
+  /** The enclosing class's C# name, for `this` types. */
+  className: string | null;
+}
+
+const VALUE_TYPES = new Set(["double", "bool", "float", "int"]);
+
+const CS_KEYWORDS = new Set(`abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while value var dynamic`.split(" "));
+
+/** Names the runtime owns: a generated type must not take them. */
+const RESERVED_TYPES = new Set(["JsArray", "JsRecord", "JsMap", "JsSet", "JsRt", "JsError", "JsVoid", "IJsObject", "JsCtor", "MeshBuilder", "ModelNode", "MeshData", "MaterialData", "ClipData", "ClipTrackData", "JsJson", "Math", "Object", "String", "Action", "Func", "Exception"]);
+
+const MATH: Record<string, string> = {
+  floor: "global::System.Math.Floor", ceil: "global::System.Math.Ceiling", abs: "global::System.Math.Abs", sqrt: "global::System.Math.Sqrt",
+  sin: "global::System.Math.Sin", cos: "global::System.Math.Cos", tan: "global::System.Math.Tan", atan: "global::System.Math.Atan",
+  atan2: "global::System.Math.Atan2", asin: "global::System.Math.Asin", acos: "global::System.Math.Acos", exp: "global::System.Math.Exp",
+  log: "global::System.Math.Log", log2: "global::System.Math.Log2", log10: "global::System.Math.Log10", pow: "global::System.Math.Pow", cbrt: "global::System.Math.Cbrt",
+  round: "JsRt.Round", hypot: "JsRt.Hypot", min: "JsRt.Min", max: "JsRt.Max", sign: "JsRt.Sign", trunc: "JsRt.Trunc",
+};
+const MATH_CONST: Record<string, string> = { PI: "global::System.Math.PI", E: "global::System.Math.E", SQRT2: "1.4142135623730951", SQRT1_2: "0.7071067811865476" };
+
+export class TranspileError extends Error {}
+
+export interface TranspileResult {
+  /** File name -> C# source. */
+  files: Map<string, string>;
+  /** Syntax kind -> how many nodes of it the transpiled declarations hold. */
+  inventory: Map<string, number>;
+  /** The generator files (relative to generator/) declarations were taken from. */
+  modules: string[];
+  /** How many anonymous shapes became classes, and how many conversions between shape classes were emitted. */
+  stats: { declarations: number; dataClasses: number; anonymousShapes: number; mergedUnions: number; conversions: number; lines: number };
+}
+
+export interface Entry {
+  /** generator/-relative module. */
+  source: string;
+  /** Exported functions to start from. */
+  names: string[];
+}
+
+export class Transpiler {
+  readonly program: ts.Program;
+  readonly checker: ts.TypeChecker;
+  private readonly generatorDir: string;
+  /** The files the seam replaces: their classes map to the runtime's MeshBuilder. */
+  private readonly seamFiles: Set<string>;
+  private readonly errors: string[] = [];
+  private readonly inventory = new Map<string, number>();
+
+  /** Reached top-level statements, in a deterministic order once sorted. */
+  private readonly reached = new Set<ts.Statement>();
+  private readonly queue: ts.Statement[] = [];
+
+  private readonly dataClasses = new Map<string, DataClass>();
+  private readonly typeNameOf = new Map<ts.Symbol, string>();
+  private readonly shapeNames = new Map<string, string>();
+  private readonly usedTypeNames = new Set<string>();
+  private readonly pendingData: Array<() => void> = [];
+  private readonly classNames = new Map<ts.ClassDeclaration, string>();
+  private anonymousShapes = 0;
+  private mergedUnions = 0;
+  private conversions = 0;
+
+  private readonly localNames = new Map<ts.Symbol, string>();
+  /** Locals whose C# type is wider than their TS type: `const a = x!` where x is a nullable number. */
+  private readonly localCs = new Map<ts.Symbol, string>();
+  private ctx: MemberContext = { used: new Set(), temps: 0, voidAsUnit: false, className: null };
+
+  constructor(generatorDir: string, tsconfig: string) {
+    this.generatorDir = generatorDir;
+    const config = ts.readConfigFile(tsconfig, ts.sys.readFile);
+    const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, path.dirname(tsconfig));
+    const roots = parsed.fileNames.filter((f) => f.startsWith(generatorDir));
+    this.program = ts.createProgram(roots, { ...parsed.options, noEmit: true });
+    this.checker = this.program.getTypeChecker();
+    this.seamFiles = new Set(["meshBuilder.ts", "threeBuilder.ts"].map((f) => path.join(generatorDir, f)));
+  }
+
+  // --- reachability --------------------------------------------------------------------
+
+  private sourceFile(rel: string): ts.SourceFile {
+    const sf = this.program.getSourceFile(path.join(this.generatorDir, rel));
+    if (!sf) throw new TranspileError(`no source file ${rel}`);
+    return sf;
+  }
+
+  private topLevel(node: ts.Node): ts.Statement | null {
+    let n: ts.Node = node;
+    while (n.parent && !ts.isSourceFile(n.parent)) n = n.parent;
+    return n.parent && ts.isSourceFile(n.parent) ? (n as ts.Statement) : null;
+  }
+
+  private inGenerator(node: ts.Node): boolean {
+    const f = node.getSourceFile().fileName;
+    return f.startsWith(this.generatorDir) && !this.seamFiles.has(f);
+  }
+
+  private enqueue(stmt: ts.Statement): void {
+    if (this.reached.has(stmt)) return;
+    // types are emitted on demand, as the type mapping meets them
+    if (ts.isInterfaceDeclaration(stmt) || ts.isTypeAliasDeclaration(stmt) || ts.isImportDeclaration(stmt) || ts.isExportDeclaration(stmt)) return;
+    this.reached.add(stmt);
+    this.queue.push(stmt);
+  }
+
+  private resolve(sym: ts.Symbol | undefined): ts.Symbol | undefined {
+    if (sym && sym.flags & ts.SymbolFlags.Alias) return this.checker.getAliasedSymbol(sym);
+    return sym;
+  }
+
+  private walkReach(node: ts.Node): void {
+    if (ts.isIdentifier(node)) {
+      const sym = this.resolve(this.checker.getSymbolAtLocation(node));
+      for (const d of sym?.declarations ?? []) {
+        if (!this.inGenerator(d)) continue;
+        const top = this.topLevel(d);
+        if (top) this.enqueue(top);
+      }
+    }
+    ts.forEachChild(node, (c) => this.walkReach(c));
+  }
+
+  /** Every top-level statement the entries reach, in file and position order. */
+  reach(entries: Entry[], extraClasses: Array<{ source: string; name: string }>): ts.Statement[] {
+    const find = (source: string, name: string): ts.Statement => {
+      const sf = this.sourceFile(source);
+      const sym = this.checker.getSymbolAtLocation(sf);
+      const exp = sym && this.checker.getExportsOfModule(sym).find((s) => s.name === name);
+      const decl = this.resolve(exp)?.declarations?.[0];
+      const top = decl && this.topLevel(decl);
+      if (!top) throw new TranspileError(`${source}: no export ${name}`);
+      return top;
+    };
+    for (const c of extraClasses) this.enqueue(find(c.source, c.name));
+    for (const e of entries) for (const n of e.names) this.enqueue(find(e.source, n));
+    while (this.queue.length) this.walkReach(this.queue.shift()!);
+    const files = this.program.getSourceFiles();
+    const fileIndex = new Map(files.map((f, i) => [f.fileName, i]));
+    return [...this.reached].sort((a, b) => {
+      const fa = a.getSourceFile().fileName, fb = b.getSourceFile().fileName;
+      return fa === fb ? a.pos - b.pos : fa < fb ? -1 : 1;
+    }).filter((s) => fileIndex.has(s.getSourceFile().fileName));
+  }
+
+  // --- errors and inventory ------------------------------------------------------------
+
+  private where(node: ts.Node): string {
+    const sf = node.getSourceFile();
+    const { line, character } = sf.getLineAndCharacterOfPosition(node.getStart());
+    return `${path.relative(this.generatorDir, sf.fileName)}:${line + 1}:${character + 1}`;
+  }
+
+  private fail(node: ts.Node, what: string): Out {
+    this.errors.push(`${this.where(node)}: unsupported ${what} (${ts.SyntaxKind[node.kind]}): ${node.getText().slice(0, 100).replace(/\s+/g, " ")}`);
+    return { code: "default!", cs: "object" };
+  }
+
+  private count(node: ts.Node): void {
+    const k = ts.SyntaxKind[node.kind]!;
+    this.inventory.set(k, (this.inventory.get(k) ?? 0) + 1);
+    ts.forEachChild(node, (c) => this.count(c));
+  }
+
+  // --- names ---------------------------------------------------------------------------
+
+  static escape(name: string): string {
+    return CS_KEYWORDS.has(name) ? `@${name}` : name;
+  }
+
+  private moduleClass(file: string): string {
+    const rel = path.relative(this.generatorDir, file).replace(/\.ts$/, "");
+    return `Mod_${rel.replace(/[^A-Za-z0-9]/g, "_")}`;
+  }
+
+  private uniqueTypeName(base: string): string {
+    let name = base.replace(/[^A-Za-z0-9_]/g, "_");
+    if (RESERVED_TYPES.has(name)) name = `${name}_`;
+    let n = name;
+    for (let i = 2; this.usedTypeNames.has(n); i++) n = `${name}_${i}`;
+    this.usedTypeNames.add(n);
+    return n;
+  }
+
+  private className(decl: ts.ClassDeclaration): string {
+    if (this.seamFiles.has(decl.getSourceFile().fileName)) return "MeshBuilder";
+    let n = this.classNames.get(decl);
+    if (!n) {
+      n = this.uniqueTypeName(decl.name?.text ?? "Anon");
+      this.classNames.set(decl, n);
+    }
+    return n;
+  }
+
+  /** The C# name of a local (variable, parameter, local function): unique within the member. */
+  private localName(sym: ts.Symbol, js: string): string {
+    let n = this.localNames.get(sym);
+    if (n) return n;
+    const base = Transpiler.escape(js);
+    n = base;
+    for (let i = 2; this.ctx.used.has(n); i++) n = `${js}_${i}`;
+    this.ctx.used.add(n);
+    this.localNames.set(sym, n);
+    return n;
+  }
+
+  private declName(id: ts.Identifier): string {
+    const sym = this.checker.getSymbolAtLocation(id);
+    if (!sym) throw new TranspileError(`${this.where(id)}: no symbol`);
+    return this.localName(sym, id.text);
+  }
+
+  private temp(): string {
+    return `__t${++this.ctx.temps}`;
+  }
+
+  private member(className: string | null, fn: () => string): string {
+    const saved = this.ctx;
+    this.ctx = { used: new Set(), temps: 0, voidAsUnit: false, className };
+    try {
+      return fn();
+    } finally {
+      this.ctx = saved;
+    }
+  }
+
+  // --- types ---------------------------------------------------------------------------
+
+  private isVoidLike(t: ts.Type): boolean {
+    return !!(t.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined | ts.TypeFlags.Null));
+  }
+
+  /** The C# type of a TypeScript type. `element`: as a record's or a map's value (value types nullable). */
+  cs(t: ts.Type, node?: ts.Node): string {
+    const f = t.flags;
+    if (f & (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Never)) return "object";
+    if (f & ts.TypeFlags.Void) return "void";
+    if (f & (ts.TypeFlags.Undefined | ts.TypeFlags.Null)) return "object";
+    if (f & (ts.TypeFlags.Boolean | ts.TypeFlags.BooleanLiteral)) return "bool";
+    if (f & (ts.TypeFlags.Number | ts.TypeFlags.NumberLiteral)) return "double";
+    if (f & (ts.TypeFlags.String | ts.TypeFlags.StringLiteral | ts.TypeFlags.TemplateLiteral)) return "string";
+    if (t.isUnion()) {
+      const parts = t.types.filter((x) => !this.isVoidLike(x));
+      const optional = parts.length !== t.types.length;
+      if (!parts.length) return "object";
+      const base = this.unionCs(parts, t, node);
+      return optional && VALUE_TYPES.has(base) ? `${base}?` : base;
+    }
+    if (f & ts.TypeFlags.TypeParameter) {
+      if ((t as { isThisType?: boolean }).isThisType) {
+        const c = t.getConstraint() ?? this.checker.getBaseConstraintOfType(t);
+        return c ? this.cs(c, node) : this.ctx.className ?? "object";
+      }
+      return t.symbol.name;
+    }
+    if (f & ts.TypeFlags.Object) return this.objectCs(t as ts.ObjectType, node);
+    if (f & ts.TypeFlags.Intersection) {
+      const it = t as ts.IntersectionType;
+      // a branded or widened intersection: its object part
+      const objs = it.types.filter((x) => x.flags & ts.TypeFlags.Object);
+      if (objs.length === 1) return this.cs(objs[0]!, node);
+      if (objs.length === it.types.length) return this.dataClass(t as unknown as ts.ObjectType, node);
+    }
+    throw new TranspileError(`unsupported type ${this.checker.typeToString(t)}${node ? ` at ${this.where(node)}` : ""}`);
+  }
+
+  private kindOf(t: ts.Type): "number" | "string" | "bool" | "object" | "param" | "other" {
+    const f = t.flags;
+    if (f & (ts.TypeFlags.Number | ts.TypeFlags.NumberLiteral)) return "number";
+    if (f & (ts.TypeFlags.String | ts.TypeFlags.StringLiteral | ts.TypeFlags.TemplateLiteral)) return "string";
+    if (f & (ts.TypeFlags.Boolean | ts.TypeFlags.BooleanLiteral)) return "bool";
+    if (f & ts.TypeFlags.Object) return "object";
+    if (f & ts.TypeFlags.TypeParameter) return "param";
+    return "other";
+  }
+
+  private unionCs(parts: ts.Type[], whole: ts.Type, node?: ts.Node): string {
+    const kinds = new Set(parts.map((p) => this.kindOf(p)));
+    if (kinds.size === 1) {
+      const k = [...kinds][0]!;
+      if (k === "number") return "double";
+      if (k === "string") return "string";
+      if (k === "bool") return "bool";
+      if (k === "param" && parts.length === 1) return this.cs(parts[0]!, node);
+      if (k === "object") {
+        const each = parts.map((p) => this.cs(p, node));
+        if (new Set(each).size === 1) return each[0]!;
+        if (each.every((c) => c.startsWith("JsArray<"))) {
+          const elems = new Set(each.map((c) => c.slice(8, -1)));
+          return elems.size === 1 ? each[0]! : "JsArray<object>";
+        }
+        if (parts.every((p) => this.isDataType(p))) {
+          // a union of separately named types holds existing objects (a Set of parts and windows):
+          // a merged class would copy them and lose their identity, so it stays an object
+          const named = parts.filter((p) => p.aliasSymbol || (p.symbol && p.symbol.flags & ts.SymbolFlags.Interface));
+          if (named.length > 1) return "object";
+          return this.mergedClass(parts, whole);
+        }
+      }
+    }
+    return "object";
+  }
+
+  private isDataType(t: ts.Type): boolean {
+    if (!(t.flags & ts.TypeFlags.Object)) return false;
+    const o = t as ts.ObjectType;
+    if (this.checker.isArrayType(o) || this.checker.isTupleType(o)) return false;
+    if (o.getCallSignatures().length) return false;
+    if (o.symbol && o.symbol.flags & ts.SymbolFlags.Class) return false;
+    if (this.checker.getIndexInfosOfType(o).length) return false;
+    return true;
+  }
+
+  private typeArgs(t: ts.Type): readonly ts.Type[] {
+    return this.checker.getTypeArguments(t as ts.TypeReference);
+  }
+
+  private elementCs(t: ts.Type, node?: ts.Node): string {
+    const c = this.cs(t, node);
+    return VALUE_TYPES.has(c) ? `${c}?` : c;
+  }
+
+  /** A type argument as C# accepts it: void becomes JsVoid. */
+  typeArgCs(t: ts.Type, node?: ts.Node): string {
+    const c = this.cs(t, node);
+    return c === "void" ? "JsVoid" : c;
+  }
+
+  private objectCs(t: ts.ObjectType, node?: ts.Node): string {
+    if (this.checker.isTupleType(t)) {
+      const elems = this.typeArgs(t).map((e) => this.cs(e, node));
+      const set = new Set(elems);
+      return `JsArray<${set.size === 1 ? elems[0] : "object"}>`;
+    }
+    if (this.checker.isArrayType(t)) return `JsArray<${this.typeArgCs(this.typeArgs(t)[0]!, node)}>`;
+    const sym = t.symbol ?? t.aliasSymbol;
+    const lib = sym?.declarations?.some((d) => d.getSourceFile().hasNoDefaultLib || /node_modules[\\/](typescript|@types)/.test(d.getSourceFile().fileName));
+    if (sym && lib) {
+      const args = this.typeArgs(t);
+      switch (sym.name) {
+        case "Map": case "ReadonlyMap": return `JsMap<${this.cs(args[0]!, node)}, ${this.elementCs(args[1]!, node)}>`;
+        case "Set": case "ReadonlySet": return `JsSet<${this.cs(args[0]!, node)}>`;
+        case "IterableIterator": case "Iterable": case "MapIterator": case "SetIterator": case "ArrayIterator": case "IteratorObject": case "Generator":
+          return `JsArray<${this.typeArgCs(args[0]!, node)}>`;
+        case "ReadonlyArray": case "Array": case "ArrayLike": return `JsArray<${this.typeArgCs(args[0]!, node)}>`;
+        case "RegExp": return "global::System.Text.RegularExpressions.Regex";
+        case "Error": return "JsError";
+        default: break;
+      }
+    }
+    const calls = t.getCallSignatures();
+    if (calls.length && !t.getProperties().length) return this.funcCs(calls[0]!, node);
+    if (t.symbol && t.symbol.flags & ts.SymbolFlags.Class) {
+      const decl = t.symbol.declarations?.find(ts.isClassDeclaration);
+      if (decl) return this.className(decl);
+    }
+    const index = this.checker.getIndexInfosOfType(t);
+    const props = t.getProperties();
+    if (index.length && !props.length) return `JsRecord<${this.elementCs(index[0]!.type, node)}>`;
+    // a Record over a finite key union (Record<LampRole, ...>): a record, not a shape
+    if (props.length && ((t as ts.ObjectType).objectFlags & ts.ObjectFlags.Mapped)) {
+      const each = new Set(props.map((p) => this.cs(this.checker.getTypeOfSymbol(p), node)));
+      if (each.size === 1) return `JsRecord<${this.elementCs(this.checker.getTypeOfSymbol(props[0]!), node)}>`;
+    }
+    if (index.length) throw new TranspileError(`a type with both an index signature and fields: ${this.checker.typeToString(t)}`);
+    return this.dataClass(t, node);
+  }
+
+  private funcCs(sig: ts.Signature, node?: ts.Node): string {
+    const params = sig.getParameters().map((p) => {
+      const decl = p.valueDeclaration;
+      if (decl && ts.isParameter(decl) && decl.dotDotDotToken) throw new TranspileError(`rest parameter in a function type${node ? ` at ${this.where(node)}` : ""}`);
+      return this.typeArgCs(this.checker.getTypeOfSymbol(p), node);
+    });
+    const ret = this.cs(sig.getReturnType(), node);
+    if (ret === "void") return params.length ? `global::System.Action<${params.join(", ")}>` : "global::System.Action";
+    return `global::System.Func<${[...params, ret].join(", ")}>`;
+  }
+
+  private fieldsOf(t: ts.Type, node?: ts.Node): DataField[] {
+    return t.getProperties().map((p) => {
+      const pt = this.checker.getTypeOfSymbol(p);
+      let c = this.cs(pt, node);
+      if (c === "void") c = "object";
+      // an optional field of a value type may be absent
+      if (p.flags & ts.SymbolFlags.Optional && VALUE_TYPES.has(c)) c = `${c}?`;
+      const nullable = pt.isUnion() && pt.types.some((x) => x.flags & ts.TypeFlags.Null);
+      return { js: p.name, cs: c, ...(nullable ? { nullable } : {}) };
+    });
+  }
+
+  private dataClass(t: ts.ObjectType, node?: ts.Node): string {
+    const named = t.aliasSymbol ?? (t.symbol && t.symbol.flags & ts.SymbolFlags.Interface ? t.symbol : undefined);
+    if (named && !t.aliasTypeArguments?.length) {
+      const known = this.typeNameOf.get(named);
+      if (known) return known;
+      const name = this.uniqueTypeName(named.name);
+      this.typeNameOf.set(named, name);
+      this.pendingData.push(() => this.dataClasses.set(name, { name, fields: this.fieldsOf(t, node), origin: this.originOf(named) }));
+      this.flushData();
+      return name;
+    }
+    // an anonymous shape: one class per distinct field list
+    const fields = this.fieldsOf(t, node);
+    const key = fields.map((f) => `${f.js}:${f.cs}${f.nullable ? "|null" : ""}`).sort().join(";");
+    const known = this.shapeNames.get(key);
+    if (known) return known;
+    const label = fields.map((f) => f.js).slice(0, 4).join("_") || "empty";
+    const name = this.uniqueTypeName(`Shape_${label}`);
+    this.shapeNames.set(key, name);
+    this.anonymousShapes++;
+    this.dataClasses.set(name, { name, fields, origin: node ? this.where(node) : "inferred" });
+    return name;
+  }
+
+  private mergedClass(parts: ts.Type[], whole: ts.Type): string {
+    const alias = whole.aliasSymbol;
+    if (alias) {
+      const known = this.typeNameOf.get(alias);
+      if (known) return known;
+    }
+    const byName = new Map<string, { cs: Set<string>; count: number; nullable: boolean }>();
+    for (const p of parts) {
+      for (const f of this.fieldsOf(p)) {
+        const e = byName.get(f.js) ?? { cs: new Set(), count: 0, nullable: false };
+        e.cs.add(f.cs.replace(/\?$/, ""));
+        e.count++;
+        e.nullable ||= !!f.nullable;
+        byName.set(f.js, e);
+      }
+    }
+    const fields: DataField[] = [...byName].map(([js, e]) => {
+      let c = e.cs.size === 1 ? [...e.cs][0]! : "object";
+      if (VALUE_TYPES.has(c)) c = `${c}?`; // absent in some members, or optional
+      return { js, cs: c, ...(e.nullable ? { nullable: true } : {}) };
+    });
+    const key = `union|${fields.map((f) => `${f.js}:${f.cs}`).sort().join(";")}`;
+    const known = this.shapeNames.get(key);
+    if (known) {
+      if (alias) this.typeNameOf.set(alias, known);
+      return known;
+    }
+    const name = this.uniqueTypeName(alias ? alias.name : `Union_${fields.map((f) => f.js).slice(0, 3).join("_")}`);
+    if (alias) this.typeNameOf.set(alias, name);
+    this.shapeNames.set(key, name);
+    this.mergedUnions++;
+    this.dataClasses.set(name, { name, fields, origin: alias ? this.originOf(alias) : "union" });
+    return name;
+  }
+
+  private originOf(sym: ts.Symbol): string {
+    const d = sym.declarations?.[0];
+    return d ? this.where(d) : sym.name;
+  }
+
+  private flushData(): void {
+    while (this.pendingData.length) this.pendingData.shift()!();
+  }
+
+  private isDataClassName(cs: string): boolean {
+    return this.dataClasses.has(cs);
+  }
+
+  /** The C# type of a node's TypeScript type at that location (narrowed). */
+  private tsCs(node: ts.Node): string {
+    return this.cs(this.checker.getTypeAtLocation(node), node);
+  }
+
+  // --- coercion ------------------------------------------------------------------------
+
+  /** Converts `code` of C# type `from` to C# type `to`. */
+  coerce(code: string, from: string, to: string): string {
+    if (from === to || to === "void" || from === "void") return code;
+    if (from === "null") return VALUE_TYPES.has(to) ? `default(${to})` : "null";
+    if (to === "object") return VALUE_TYPES.has(from) || from.endsWith("?") || from === "string" ? `((object)(${code}))` : code;
+    if (from === "object") {
+      if (VALUE_TYPES.has(to) || to.endsWith("?")) return `((${to})(${code}))`;
+      return `JsRt.As<${to}>(${code})`;
+    }
+    if (`${from}?` === to) return code; // double -> double?: implicit
+    if (`${to}?` === from) return `((${to})(${code}))`; // a narrowed double?
+    if (to === "JsVoid" || from === "JsVoid") return code;
+    const arr = /^JsArray<(.*)>$/;
+    const fa = from.match(arr), ta = to.match(arr);
+    if (fa && ta) {
+      this.conversions++;
+      return `(${code}).map<${ta[1]}>((${fa[1]} __e) => ${this.coerce("__e", fa[1]!, ta[1]!)})`;
+    }
+    const rec = /^JsRecord<(.*)>$/;
+    const fr = from.match(rec), tr = to.match(rec);
+    if (fr && tr) {
+      this.conversions++;
+      return `(${code}).mapValues<${tr[1]}>((${fr[1]} __v) => ${this.coerce("__v", fr[1]!, tr[1]!)})`;
+    }
+    if (this.isDataClassName(from) && this.isDataClassName(to)) {
+      this.conversions++;
+      return `JsRt.As<${to}>(${code})`;
+    }
+    const delegate = /^global::System\.(Func|Action)(?:<(.*)>)?$/;
+    const fd = from.match(delegate), td = to.match(delegate);
+    if (fd && td) {
+      // an adapter lambda: C# delegates do not convert the way TS function types assign
+      const fargs = fd[2] ? this.splitAll(fd[2]) : [];
+      const targs = td[2] ? this.splitAll(td[2]) : [];
+      const fret = fd[1] === "Func" ? fargs.pop()! : "void";
+      const tret = td[1] === "Func" ? targs.pop()! : "void";
+      if (fargs.length === targs.length) {
+        this.conversions++;
+        const names = targs.map((_, i) => `__a${i}`);
+        const argList = names.map((n, i) => this.coerce(n, targs[i]!, fargs[i]!)).join(", ");
+        // `(f)(x)` would read as a cast: a plain name is called as it is, anything else through Invoke
+        const call = /^[\w.@]+$/.test(code) ? `${code}(${argList})` : `(${code}).Invoke(${argList})`;
+        const body = tret === "void" ? call : this.coerce(call, fret, tret);
+        return `((${to})((${targs.map((t, i) => `${t} ${names[i]}`).join(", ")}) => ${body}))`;
+      }
+    }
+    // classes (an `as` downcast, a subclass to its base), type parameters
+    return `((${to})(object)(${code}))`;
+  }
+
+  // --- emission: modules ---------------------------------------------------------------
+
+  transpile(entries: Entry[], extraClasses: Array<{ source: string; name: string }>): TranspileResult {
+    const stmts = this.reach(entries, extraClasses);
+    for (const s of stmts) this.count(s);
+    const modules = new Map<string, string[]>();
+    const classes: string[] = [];
+    for (const s of stmts) {
+      const file = s.getSourceFile().fileName;
+      try {
+        if (ts.isClassDeclaration(s)) {
+          classes.push(this.emitClass(s));
+          continue;
+        }
+        const out = modules.get(file) ?? [];
+        modules.set(file, out);
+        if (ts.isFunctionDeclaration(s)) out.push(this.emitFunctionDecl(s, true));
+        else if (ts.isVariableStatement(s)) out.push(this.emitModuleVars(s));
+        else this.fail(s, "top-level statement");
+      } catch (e) {
+        if (e instanceof TranspileError) this.errors.push(e.message);
+        else this.errors.push(`${this.where(s)}: transpiler failure in this declaration: ${(e as Error).message}`);
+      }
+    }
+    this.flushData();
+    if (this.errors.length) throw new TranspileError(`${this.errors.length} unsupported construct(s):\n${this.errors.join("\n")}`);
+    const header = "// Generated by tools/cs-transpile from generator/*.ts - do not edit.\n#nullable disable\n#pragma warning disable CS0108, CS0162, CS0168, CS0219, CS0649, CS1717, CS8981\nusing System.Collections.Generic;\nusing RailIsland.Factory.Runtime;\n\nnamespace RailIsland.Factory.Generated;\n\n";
+    const files = new Map<string, string>();
+    const mod = [...modules].map(([file, members]) => `public static partial class ${this.moduleClass(file)}\n{\n${members.join("\n\n")}\n}\n`).join("\n");
+    files.set("Modules.g.cs", header + mod);
+    files.set("Classes.g.cs", header + classes.join("\n"));
+    files.set("Types.g.cs", header + [...this.dataClasses.values()].sort((a, b) => a.name.localeCompare(b.name)).map((d) => this.emitDataClass(d)).join("\n"));
+    const lines = [...files.values()].reduce((n, s) => n + s.split("\n").length, 0);
+    const moduleFiles = [...new Set(stmts.map((s) => path.relative(this.generatorDir, s.getSourceFile().fileName)))].sort();
+    return {
+      files,
+      inventory: new Map([...this.inventory].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+      modules: moduleFiles,
+      stats: { declarations: stmts.length, dataClasses: this.dataClasses.size, anonymousShapes: this.anonymousShapes, mergedUnions: this.mergedUnions, conversions: this.conversions, lines },
+    };
+  }
+
+  /**
+   * A shape class: a property per field over a backing field, each setter marking the
+   * field present. A field whose TS type admits null keeps "set to null" apart from
+   * "left out" (`{ end: null }` against `{}`), as JS's destructuring defaults, `in`,
+   * spreads and JSON.stringify tell them apart; for the others null is absence.
+   */
+  private emitDataClass(d: DataClass): string {
+    const f = d.fields;
+    if (f.length > 64) throw new TranspileError(`${d.name}: more than 64 fields`);
+    const esc = (js: string) => Transpiler.escape(js);
+    const bit = (i: number) => `${(1n << BigInt(i)).toString()}UL`;
+    const has = (x: DataField, i: number) => (x.nullable ? `(__p & ${bit(i)}) != 0` : VALUE_TYPES.has(x.cs) ? "true" : `this._${x.js} != null`);
+    const lines = [
+      `/** From ${d.origin}. */`,
+      `public partial class ${d.name} : IJsObject`,
+      "{",
+      "    private ulong __p;",
+      ...f.map((x, i) => `    private ${x.cs} _${x.js};\n    public ${x.cs} ${esc(x.js)} { get => _${x.js}; set { _${x.js} = value; __p |= ${bit(i)}; } }`),
+      `    public bool __has(string __k) => __k switch { ${f.map((x, i) => `"${x.js}" => ${has(x, i)}, `).join("")}_ => false };`,
+      `    public object __get(string __k) => __k switch { ${f.map((x) => `"${x.js}" => this._${x.js}, `).join("")}_ => null };`,
+      `    public void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case "${x.js}": this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}} }`,
+      `    public IEnumerable<string> __keys() { ${f.map((x, i) => (has(x, i) === "true" ? `yield return "${x.js}"; ` : `if (${has(x, i)}) yield return "${x.js}"; `)).join("")}yield break; }`,
+      `    public IJsObject __copy() => (IJsObject)MemberwiseClone();`,
+      `    public ${d.name} copy() => (${d.name})MemberwiseClone();`,
+      "}",
+    ];
+    return lines.join("\n") + "\n";
+  }
+
+  private emitModuleVars(s: ts.VariableStatement): string {
+    const out: string[] = [];
+    for (const d of s.declarationList.declarations) {
+      if (!ts.isIdentifier(d.name)) {
+        out.push(this.fail(d, "module-level destructuring").code);
+        continue;
+      }
+      const init = d.initializer && this.skipParens(d.initializer);
+      const isConst = !!(s.declarationList.flags & ts.NodeFlags.Const);
+      if (init && isConst && (ts.isArrowFunction(init) || ts.isFunctionExpression(init))) {
+        out.push(this.member(null, () => this.emitFunctionLike(init, Transpiler.escape(d.name.getText()), "    public static ")));
+        continue;
+      }
+      out.push(this.member(null, () => {
+        const sym = this.checker.getSymbolAtLocation(d.name)!;
+        const c = this.cs(this.checker.getTypeOfSymbol(sym), d);
+        const value = init ? this.exprTo(init, c) : VALUE_TYPES.has(c) ? `default(${c})` : "null";
+        return `    public static ${c} ${Transpiler.escape(d.name.getText())} = ${value};`;
+      }));
+    }
+    return out.join("\n");
+  }
+
+  private skipParens(e: ts.Expression): ts.Expression {
+    while (ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isSatisfiesExpression(e) || ts.isTypeAssertionExpression(e)) {
+      if (ts.isAsExpression(e) && !this.isConstAssertion(e)) break;
+      e = e.expression;
+    }
+    return e;
+  }
+
+  private isConstAssertion(e: ts.AsExpression): boolean {
+    return ts.isTypeReferenceNode(e.type) && e.type.typeName.getText() === "const";
+  }
+
+  private emitFunctionDecl(fd: ts.FunctionDeclaration, top: boolean): string {
+    if (!fd.body || !fd.name) return this.fail(fd, "function without body or name").code;
+    if (top) return this.member(null, () => this.emitFunctionLike(fd, Transpiler.escape(fd.name!.text), "    public static "));
+    return this.emitFunctionLike(fd, this.declName(fd.name), "");
+  }
+
+  // --- emission: functions -------------------------------------------------------------
+
+  private signatureOf(fn: ts.SignatureDeclaration): ts.Signature {
+    const sig = this.checker.getSignatureFromDeclaration(fn);
+    if (!sig) throw new TranspileError(`${this.where(fn)}: no signature`);
+    return sig;
+  }
+
+  private returnCs(fn: ts.SignatureDeclaration): string {
+    return this.cs(this.signatureOf(fn).getReturnType(), fn);
+  }
+
+  private typeParams(fn: ts.SignatureDeclaration): string {
+    return fn.typeParameters?.length ? `<${fn.typeParameters.map((p) => p.name.text).join(", ")}>` : "";
+  }
+
+  /**
+   * The parameter list, and the statements the body starts with: a destructured
+   * parameter's bindings, a default that is no compile-time constant.
+   */
+  private params(fn: ts.SignatureDeclaration): { list: string; prologue: string[]; names: string[] } {
+    const list: string[] = [];
+    const prologue: string[] = [];
+    const names: string[] = [];
+    let optionalSeen = false;
+    for (const p of fn.parameters) {
+      if (p.dotDotDotToken) {
+        this.fail(p, "rest parameter");
+        continue;
+      }
+      const t = this.checker.getTypeAtLocation(p);
+      let c = this.cs(t, p);
+      if (c === "void") c = "object";
+      const optional = !!p.questionToken || !!p.initializer;
+      if (optional) optionalSeen = true;
+      if (!ts.isIdentifier(p.name)) {
+        const name = this.temp();
+        names.push(name);
+        list.push(`${c} ${name}${optional ? " = default" : ""}`);
+        prologue.push(...this.destructure(p.name, name, c));
+        continue;
+      }
+      const name = this.declName(p.name);
+      names.push(name);
+      if (!p.initializer) {
+        list.push(`${c} ${name}${p.questionToken || optionalSeen ? (VALUE_TYPES.has(c) ? " = null" : " = null") : ""}`.replace(/^(double|bool) (\S+) = null$/, "$1? $2 = null"));
+        continue;
+      }
+      const constant = this.constantDefault(p.initializer, c);
+      if (constant !== null) {
+        list.push(`${c} ${name} = ${constant}`);
+        continue;
+      }
+      // a default the C# signature cannot hold: null in, the default worked out in the body
+      const raw = `${name}__arg`;
+      names[names.length - 1] = raw;
+      const nullable = VALUE_TYPES.has(c) ? `${c}?` : c;
+      list.push(`${nullable} ${raw} = null`);
+      prologue.push(`${c} ${name} = ${raw} ?? ${this.exprTo(p.initializer, c)};`);
+    }
+    return { list: list.join(", "), prologue, names };
+  }
+
+  private constantDefault(e: ts.Expression, c: string): string | null {
+    const x = this.skipParens(e);
+    if (ts.isNumericLiteral(x) || (ts.isPrefixUnaryExpression(x) && x.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(x.operand))) return this.exprTo(x, c);
+    if (ts.isStringLiteral(x) || ts.isNoSubstitutionTemplateLiteral(x)) return this.exprTo(x, c);
+    if (x.kind === ts.SyntaxKind.TrueKeyword || x.kind === ts.SyntaxKind.FalseKeyword) return c === "bool" || c === "bool?" ? x.getText() : null;
+    if (x.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(x) && x.text === "undefined")) return "null";
+    return null;
+  }
+
+  /** A function declaration, method or const arrow function as a C# method or local function. */
+  private emitFunctionLike(fn: ts.SignatureDeclaration & { body?: ts.ConciseBody }, name: string, prefix: string): string {
+    const ret = this.returnCs(fn);
+    const { list, prologue } = this.params(fn);
+    const head = `${prefix}${ret} ${name}${this.typeParams(fn)}(${list})`;
+    if (!fn.body) return `${head};`;
+    const body = this.functionBody(fn.body, ret, prologue, "    ".repeat(prefix ? 2 : 1));
+    return `${head}\n${body}`;
+  }
+
+  private functionBody(body: ts.ConciseBody, ret: string, prologue: string[], indent: string): string {
+    const inner = indent + "    ";
+    const lines = prologue.map((p) => inner + p);
+    if (ts.isBlock(body)) {
+      for (const s of body.statements) lines.push(this.stmt(s, inner));
+    } else if (ret === "void") {
+      lines.push(`${inner}${this.exprStatement(body)};`);
+    } else {
+      lines.push(`${inner}return ${this.exprTo(body, ret)};`);
+    }
+    if (this.ctx.voidAsUnit && ts.isBlock(body)) lines.push(`${inner}return JsVoid.I;`);
+    return `${indent}{\n${lines.join("\n")}\n${indent}}`;
+  }
+
+  /** A lambda (an arrow function or function expression used as a value). */
+  private lambda(fn: ts.ArrowFunction | ts.FunctionExpression, unit = false): Out {
+    const sig = this.signatureOf(fn);
+    let ret = this.cs(sig.getReturnType(), fn);
+    const saved = this.ctx.voidAsUnit;
+    this.ctx.voidAsUnit = unit && ret === "void";
+    try {
+      const { list, prologue } = this.params(fn);
+      const typed = list.replace(/ = [^,]+/g, "");
+      if (!ts.isBlock(fn.body) && !prologue.length) {
+        if (this.ctx.voidAsUnit) return { code: `(${typed}) => { ${this.exprStatement(fn.body)}; return JsVoid.I; }`, cs: this.lambdaCs(fn, "JsVoid") };
+        const body = ret === "void" ? this.exprStatement(fn.body) : this.exprTo(fn.body, ret);
+        return { code: `(${typed}) => ${body}`, cs: this.lambdaCs(fn, ret) };
+      }
+      const body = this.functionBody(fn.body, ret, prologue, "");
+      if (this.ctx.voidAsUnit) ret = "JsVoid";
+      return { code: `(${typed}) =>\n${body}`, cs: this.lambdaCs(fn, ret) };
+    } finally {
+      this.ctx.voidAsUnit = saved;
+    }
+  }
+
+  private lambdaCs(fn: ts.SignatureDeclaration, ret: string): string {
+    const params = fn.parameters.map((p) => this.typeArgCs(this.checker.getTypeAtLocation(p), p));
+    if (ret === "void") return params.length ? `global::System.Action<${params.join(", ")}>` : "global::System.Action";
+    return `global::System.Func<${[...params, ret].join(", ")}>`;
+  }
+
+  // --- emission: classes ---------------------------------------------------------------
+
+  private baseClassDecl(c: ts.ClassDeclaration): ts.ClassDeclaration | null {
+    const ext = c.heritageClauses?.find((h) => h.token === ts.SyntaxKind.ExtendsKeyword)?.types[0];
+    if (!ext) return null;
+    const sym = this.resolve(this.checker.getSymbolAtLocation(ext.expression));
+    return sym?.declarations?.find(ts.isClassDeclaration) ?? null;
+  }
+
+  private hasBaseMember(c: ts.ClassDeclaration, name: string): boolean {
+    for (let b = this.baseClassDecl(c); b; b = this.baseClassDecl(b)) {
+      if (b.members.some((m) => m.name && m.name.getText() === name)) return true;
+    }
+    return false;
+  }
+
+  private emitClass(c: ts.ClassDeclaration): string {
+    const name = this.className(c);
+    const baseDecl = this.baseClassDecl(c);
+    const base = baseDecl ? this.className(baseDecl) : null;
+    const out: string[] = [];
+    const fields: string[] = [];
+    const fieldInits: string[] = [];
+    const statics: string[] = [];
+    const ctor = c.members.find(ts.isConstructorDeclaration);
+    const accessors = new Map<string, { get?: ts.GetAccessorDeclaration; set?: ts.SetAccessorDeclaration }>();
+
+    for (const m of c.members) {
+      if (ts.isPropertyDeclaration(m)) {
+        const pn = Transpiler.escape(m.name.getText());
+        const sym = this.checker.getSymbolAtLocation(m.name)!;
+        let ft = this.cs(this.checker.getTypeOfSymbol(sym), m);
+        if (m.questionToken && VALUE_TYPES.has(ft)) ft = `${ft}?`;
+        const isStatic = m.modifiers?.some((x) => x.kind === ts.SyntaxKind.StaticKeyword);
+        if (isStatic) {
+          statics.push(this.member(name, () => `    public static ${ft} ${pn}${m.initializer ? ` = ${this.exprTo(m.initializer, ft)}` : ""};`));
+          continue;
+        }
+        fields.push(`    public ${ft} ${pn};`);
+        if (m.initializer) fieldInits.push(this.member(name, () => `        this.${pn} = ${this.exprTo(m.initializer!, ft)};`));
+      } else if (ts.isMethodDeclaration(m)) {
+        const isStatic = m.modifiers?.some((x) => x.kind === ts.SyntaxKind.StaticKeyword);
+        const mn = Transpiler.escape(m.name.getText());
+        const mod = isStatic ? "public static " : this.hasBaseMember(c, m.name.getText()) ? "public override " : "public virtual ";
+        out.push(this.member(name, () => this.emitFunctionLike(m, mn, `    ${mod}`)));
+      } else if (ts.isGetAccessorDeclaration(m) || ts.isSetAccessorDeclaration(m)) {
+        const e = accessors.get(m.name.getText()) ?? {};
+        if (ts.isGetAccessorDeclaration(m)) e.get = m;
+        else e.set = m;
+        accessors.set(m.name.getText(), e);
+      } else if (ts.isConstructorDeclaration(m) || ts.isSemicolonClassElement(m)) {
+        // below
+      } else {
+        this.fail(m, "class member");
+      }
+    }
+    for (const [an, { get, set }] of accessors) {
+      const t = get ? this.returnCs(get) : this.cs(this.checker.getTypeAtLocation(set!.parameters[0]!), set);
+      out.push(this.member(name, () => {
+        const parts: string[] = [];
+        if (get) parts.push(`        get\n${this.functionBody(get.body!, t, [], "        ")}`);
+        if (set) {
+          const p = set.parameters[0]!;
+          const pn = this.declName(p.name as ts.Identifier);
+          parts.push(`        set\n${this.functionBody(set.body!, "void", [`${t} ${pn} = value;`], "        ")}`);
+        }
+        return `    public ${this.hasBaseMember(c, an) ? "override" : "virtual"} ${t} ${Transpiler.escape(an)}\n    {\n${parts.join("\n")}\n    }`;
+      }));
+    }
+
+    // constructors: the C# one only forwards to __ctor_<name>, which runs the TS body
+    // (code before super() included), the base's __ctor and the field initializers
+    const ctorCode = this.member(name, () => {
+      let paramList = "";
+      let callArgs = "";
+      const body: string[] = [];
+      const fieldsCall = `        __fields_${name}();`;
+      if (ctor) {
+        const { list, prologue, names } = this.params(ctor);
+        paramList = list;
+        callArgs = names.join(", ");
+        body.push(...prologue.map((p) => `        ${p}`));
+        // parameter properties
+        const paramProps = ctor.parameters.filter((p) => ts.getModifiers(p)?.some((x) => [ts.SyntaxKind.PublicKeyword, ts.SyntaxKind.PrivateKeyword, ts.SyntaxKind.ProtectedKeyword, ts.SyntaxKind.ReadonlyKeyword].includes(x.kind)));
+        for (const p of paramProps) {
+          const pn = (p.name as ts.Identifier).text;
+          const ft = this.cs(this.checker.getTypeAtLocation(p), p);
+          fields.push(`    public ${ft} ${Transpiler.escape(pn)};`);
+        }
+        const propAssigns = paramProps.map((p) => `        this.${Transpiler.escape((p.name as ts.Identifier).text)} = ${this.declName(p.name as ts.Identifier)};`);
+        let superSeen = false;
+        if (!base) {
+          body.push(fieldsCall, ...propAssigns);
+          superSeen = true;
+        }
+        for (const s of ctor.body!.statements) {
+          if (ts.isExpressionStatement(s) && ts.isCallExpression(s.expression) && s.expression.expression.kind === ts.SyntaxKind.SuperKeyword) {
+            const baseCtor = this.baseCtorParams(baseDecl!);
+            const args = s.expression.arguments.map((a, i) => this.exprTo(a, baseCtor[i] ?? "object")).join(", ");
+            body.push(`        __ctor_${base}(${args});`, fieldsCall, ...propAssigns);
+            superSeen = true;
+            continue;
+          }
+          body.push(this.stmt(s, "        "));
+        }
+        if (!superSeen) this.fail(ctor, "constructor without super()");
+      } else if (base) {
+        const ps = this.baseCtorParamDecl(baseDecl!);
+        paramList = ps.list;
+        callArgs = ps.names.join(", ");
+        body.push(`        __ctor_${base}(${ps.names.join(", ")});`, fieldsCall);
+      } else {
+        body.push(fieldsCall);
+      }
+      const baseInit = base ? " : base(JsCtor.Skip)" : "";
+      const skipCtor = base ? `    protected ${name}(JsCtor skip) : base(skip) { }` : `    protected ${name}(JsCtor skip) { }`;
+      return [
+        `    public ${name}(${paramList})${baseInit} { __ctor_${name}(${callArgs}); }`,
+        skipCtor,
+        `    public void __ctor_${name}(${paramList.replace(/(\w+)__arg = null/g, "$1__arg = null")})\n    {\n${body.join("\n")}\n    }`,
+      ].join("\n");
+    });
+    const fieldsMethod = `    private void __fields_${name}()\n    {\n${fieldInits.join("\n")}\n    }`;
+    const head = `public partial class ${name}${base ? ` : ${base}` : ""}`;
+    return `${head}\n{\n${[...statics, ...fields].join("\n")}\n\n${ctorCode}\n\n${fieldsMethod}\n\n${out.join("\n\n")}\n}\n`;
+  }
+
+  /** The C# types of a class's constructor parameters (for super(...) arguments). */
+  private baseCtorParams(c: ts.ClassDeclaration): string[] {
+    if (this.seamFiles.has(c.getSourceFile().fileName)) return ["JsRecord<MaterialSpec>"];
+    const ctor = c.members.find(ts.isConstructorDeclaration);
+    if (!ctor) {
+      const b = this.baseClassDecl(c);
+      return b ? this.baseCtorParams(b) : [];
+    }
+    return ctor.parameters.map((p) => this.cs(this.checker.getTypeAtLocation(p), p));
+  }
+
+  private baseCtorParamDecl(c: ts.ClassDeclaration): { list: string; names: string[] } {
+    const types = this.baseCtorParams(c);
+    const names = types.map((_, i) => `a${i}`);
+    return { list: types.map((t, i) => `${t} ${names[i]}`).join(", "), names };
+  }
+
+  // --- emission: statements ------------------------------------------------------------
+
+  private stmt(s: ts.Statement, ind: string): string {
+    try {
+      return this.stmtInner(s, ind);
+    } catch (e) {
+      this.errors.push(e instanceof TranspileError ? e.message : `${this.where(s)}: transpiler failure: ${(e as Error).message}`);
+      return `${ind}/* error */`;
+    }
+  }
+
+  private block(s: ts.Statement, ind: string): string {
+    if (ts.isBlock(s)) return `${ind}{\n${s.statements.map((x) => this.stmt(x, ind + "    ")).join("\n")}\n${ind}}`;
+    return `${ind}{\n${this.stmt(s, ind + "    ")}\n${ind}}`;
+  }
+
+  private stmtInner(s: ts.Statement, ind: string): string {
+    if (ts.isExpressionStatement(s)) return `${ind}${this.exprStatement(s.expression)};`;
+    if (ts.isVariableStatement(s)) return this.varDecls(s.declarationList, ind);
+    if (ts.isReturnStatement(s)) {
+      if (!s.expression) return `${ind}return${this.ctx.voidAsUnit ? " JsVoid.I" : ""};`;
+      const fn = ts.findAncestor(s, ts.isFunctionLike) as ts.SignatureDeclaration | undefined;
+      const ret = fn && !ts.isClassStaticBlockDeclaration(fn) ? this.returnCs(fn) : "object";
+      if (ret === "void") return `${ind}{ ${this.exprStatement(s.expression)}; return${this.ctx.voidAsUnit ? " JsVoid.I" : ""}; }`;
+      return `${ind}return ${this.exprTo(s.expression, ret)};`;
+    }
+    if (ts.isIfStatement(s)) {
+      let out = `${ind}if (${this.cond(s.expression)})\n${this.block(s.thenStatement, ind)}`;
+      if (s.elseStatement) {
+        out += ts.isIfStatement(s.elseStatement) ? `\n${ind}else ${this.stmt(s.elseStatement, ind).trimStart()}` : `\n${ind}else\n${this.block(s.elseStatement, ind)}`;
+      }
+      return out;
+    }
+    if (ts.isBlock(s)) return this.block(s, ind);
+    if (ts.isForStatement(s)) return this.forStmt(s, ind);
+    if (ts.isForOfStatement(s)) return this.forOf(s, ind);
+    if (ts.isWhileStatement(s)) return `${ind}while (${this.cond(s.expression)})\n${this.block(s.statement, ind)}`;
+    if (ts.isDoStatement(s)) return `${ind}do\n${this.block(s.statement, ind)}\n${ind}while (${this.cond(s.expression)});`;
+    if (ts.isThrowStatement(s)) return `${ind}throw ${this.expr(s.expression).code};`;
+    if (ts.isTryStatement(s)) {
+      let out = `${ind}try\n${this.block(s.tryBlock, ind)}`;
+      if (s.catchClause) {
+        const v = s.catchClause.variableDeclaration;
+        const vn = v && ts.isIdentifier(v.name) ? this.declName(v.name) : null;
+        out += `\n${ind}catch (global::System.Exception${vn ? ` ${vn}` : ""})\n${this.block(s.catchClause.block, ind)}`;
+      }
+      if (s.finallyBlock) out += `\n${ind}finally\n${this.block(s.finallyBlock, ind)}`;
+      return out;
+    }
+    if (ts.isBreakStatement(s) && !s.label) return `${ind}break;`;
+    if (ts.isContinueStatement(s) && !s.label) return `${ind}continue;`;
+    if (ts.isEmptyStatement(s)) return `${ind};`;
+    if (ts.isFunctionDeclaration(s)) return this.indentBlock(this.emitFunctionDecl(s, false), ind);
+    if (ts.isSwitchStatement(s)) return this.switchStmt(s, ind);
+    if (ts.isTypeAliasDeclaration(s) || ts.isInterfaceDeclaration(s)) return `${ind}// type ${s.name.text}: a class of its own`;
+    return `${ind}${this.fail(s, "statement").code};`;
+  }
+
+  private indentBlock(code: string, ind: string): string {
+    return code.split("\n").map((l) => ind + l).join("\n");
+  }
+
+  private switchStmt(s: ts.SwitchStatement, ind: string): string {
+    // as an if-chain: C# has no fall-through into a non-empty case
+    const subject = this.temp();
+    const st = this.expr(s.expression);
+    const lines = [`${ind}{`, `${ind}    var ${subject} = ${st.code};`];
+    let pending: string[] = [];
+    let first = true;
+    for (const clause of s.caseBlock.clauses) {
+      if (ts.isCaseClause(clause)) pending.push(`JsRt.Eq(${subject}, ${this.expr(clause.expression).code})`);
+      else pending.push("true");
+      if (!clause.statements.length) continue;
+      const stmts = clause.statements.filter((x, i) => !(ts.isBreakStatement(x) && i === clause.statements.length - 1));
+      const last = clause.statements[clause.statements.length - 1]!;
+      if (!ts.isBreakStatement(last) && !ts.isReturnStatement(last) && !ts.isThrowStatement(last) && !ts.isContinueStatement(last)) this.fail(clause, "switch fall-through");
+      lines.push(`${ind}    ${first ? "" : "else "}if (${pending.join(" || ")})`, `${ind}    {`, ...stmts.map((x) => this.stmt(x, ind + "        ")), `${ind}    }`);
+      pending = [];
+      first = false;
+    }
+    lines.push(`${ind}}`);
+    return lines.join("\n");
+  }
+
+  private varDecls(list: ts.VariableDeclarationList, ind: string): string {
+    const isConst = !!(list.flags & ts.NodeFlags.Const);
+    return list.declarations.map((d) => {
+      const init = d.initializer && this.skipParens(d.initializer);
+      if (ts.isIdentifier(d.name) && init && isConst && (ts.isArrowFunction(init) || ts.isFunctionExpression(init))) {
+        // a const arrow function: a local function (defaults, recursion, no delegate type)
+        return this.indentBlock(this.emitFunctionLike(init, this.declName(d.name), ""), ind);
+      }
+      if (ts.isArrayBindingPattern(d.name) && init && ts.isArrayLiteralExpression(init) && init.elements.length >= d.name.elements.length && !init.elements.some(ts.isSpreadElement) && d.name.elements.every((b) => ts.isBindingElement(b) && ts.isIdentifier(b.name) && !b.dotDotDotToken && !b.initializer)) {
+        // const [a, b] = [x, y]: element by element, through temps (the right side reads the old values)
+        const temps = d.name.elements.map((b, i) => {
+          const el = init.elements[i]!;
+          const be = b as ts.BindingElement;
+          const sym = this.checker.getSymbolAtLocation(be.name)!;
+          const asserted = this.assertedNullable(el);
+          const c = asserted ? asserted.cs : this.cs(this.checker.getTypeAtLocation(be), be);
+          if (asserted) this.localCs.set(sym, c);
+          return { t: this.temp(), c, value: asserted ? asserted.code : this.exprTo(el, c), name: this.declName(be.name as ts.Identifier) };
+        });
+        return [...temps.map((x) => `${ind}var ${x.t} = ${x.value};`), ...temps.map((x) => `${ind}${x.c} ${x.name} = ${x.t};`)].join("\n");
+      }
+      if (!ts.isIdentifier(d.name)) {
+        const t = this.temp();
+        const src = this.expr(d.initializer!);
+        return [`${ind}var ${t} = ${src.code};`, ...this.destructure(d.name, t, src.cs).map((x) => ind + x)].join("\n");
+      }
+      const sym = this.checker.getSymbolAtLocation(d.name)!;
+      const asserted = this.assertedNullable(d.initializer);
+      if (asserted) {
+        this.localCs.set(sym, asserted.cs);
+        return `${ind}${asserted.cs} ${this.declName(d.name)} = ${asserted.code};`;
+      }
+      const c = this.cs(this.checker.getTypeOfSymbol(sym), d);
+      const name = this.declName(d.name);
+      if (!d.initializer) return `${ind}${c} ${name} = ${VALUE_TYPES.has(c) ? `default(${c})` : "default"};`;
+      return `${ind}${c} ${name} = ${this.exprTo(d.initializer, c)};`;
+    }).join("\n");
+  }
+
+  /** Declarations binding a destructuring pattern from `src` (a temp of C# type `srcCs`). */
+  private destructure(pattern: ts.BindingName, src: string, srcCs: string): string[] {
+    const out: string[] = [];
+    if (ts.isArrayBindingPattern(pattern)) {
+      const elem = srcCs.match(/^JsArray<(.*)>$/)?.[1] ?? "object";
+      pattern.elements.forEach((e, i) => {
+        if (ts.isOmittedExpression(e)) return;
+        if (e.dotDotDotToken) {
+          if (!ts.isIdentifier(e.name)) {
+            out.push(`${this.fail(e, "nested rest pattern").code};`);
+            return;
+          }
+          const rc = this.cs(this.checker.getTypeAtLocation(e), e);
+          out.push(`${rc} ${this.declName(e.name)} = ${this.coerce(`${src}.slice(${i})`, srcCs, rc)};`);
+          return;
+        }
+        const access = `${src}[${i}]`;
+        if (ts.isIdentifier(e.name)) {
+          const c = this.cs(this.checker.getTypeAtLocation(e), e);
+          let value = this.coerce(access, elem, c);
+          if (e.initializer) value = `(${src}.length > ${i} ? ${value} : ${this.exprTo(e.initializer, c)})`;
+          out.push(`${c} ${this.declName(e.name)} = ${value};`);
+        } else {
+          const t = this.temp();
+          out.push(`var ${t} = ${access};`, ...this.destructure(e.name, t, elem));
+        }
+      });
+      return out;
+    }
+    for (const e of (pattern as ts.ObjectBindingPattern).elements) {
+      if (e.dotDotDotToken) {
+        // a fresh object with the fields the rest type has (the others are not copied)
+        const rc = this.cs(this.checker.getTypeAtLocation(e), e);
+        if (!this.isDataClassName(rc) || !ts.isIdentifier(e.name)) {
+          out.push(`${this.fail(e, "rest element").code};`);
+          continue;
+        }
+        out.push(`${rc} ${this.declName(e.name)} = JsRt.Obj(new ${rc}(), (${rc} __r) => JsRt.Assign(__r, ${src}));`);
+        continue;
+      }
+      const key = (e.propertyName ?? e.name).getText();
+      const field = this.isDataClassName(srcCs) ? `${src}.${Transpiler.escape(key)}` : srcCs.startsWith("JsRecord<") ? `${src}["${key}"]` : `${src}.${Transpiler.escape(key)}`;
+      const fieldCs = this.fieldCs(srcCs, key);
+      if (ts.isIdentifier(e.name)) {
+        const c = this.cs(this.checker.getTypeAtLocation(e), e);
+        let value = this.coerce(field, fieldCs, c);
+        // the default applies when the key is absent (undefined), not when it holds null
+        if (e.initializer) value = this.isDataClassName(srcCs) ? `(${src}.__has(${this.str(key)}) ? ${value} : ${this.exprTo(e.initializer, c)})` : `(${field} ?? ${this.exprTo(e.initializer, c)})`;
+        out.push(`${c} ${this.declName(e.name)} = ${value};`);
+      } else {
+        const t = this.temp();
+        out.push(`var ${t} = ${field};`, ...this.destructure(e.name, t, fieldCs));
+      }
+    }
+    return out;
+  }
+
+  private fieldCs(classCs: string, key: string): string {
+    const d = this.dataClasses.get(classCs);
+    if (d) return d.fields.find((f) => f.js === key)?.cs ?? "object";
+    const rec = classCs.match(/^JsRecord<(.*)>$/);
+    return rec ? rec[1]! : "object";
+  }
+
+  private forStmt(s: ts.ForStatement, ind: string): string {
+    let init = "";
+    let hoisted = "";
+    if (s.initializer) {
+      if (ts.isVariableDeclarationList(s.initializer)) {
+        const decls = s.initializer.declarations.map((d) => {
+          if (!ts.isIdentifier(d.name)) throw new TranspileError(`${this.where(d)}: destructuring in a for initializer`);
+          const sym = this.checker.getSymbolAtLocation(d.name)!;
+          const c = this.cs(this.checker.getTypeOfSymbol(sym), d);
+          return { c, name: this.declName(d.name), value: d.initializer ? this.exprTo(d.initializer, c) : `default(${c})` };
+        });
+        if (new Set(decls.map((d) => d.c)).size === 1) init = `${decls[0]!.c} ${decls.map((d) => `${d.name} = ${d.value}`).join(", ")}`;
+        else hoisted = decls.map((d) => `${ind}${d.c} ${d.name} = ${d.value};\n`).join("");
+      } else {
+        init = this.commaList(s.initializer).join(", ");
+      }
+    }
+    const cond = s.condition ? this.cond(s.condition) : "";
+    const inc = s.incrementor ? this.commaList(s.incrementor).join(", ") : "";
+    const loop = `${hoisted ? ind + "    " : ind}for (${init}; ${cond}; ${inc})\n${this.block(s.statement, hoisted ? ind + "    " : ind)}`;
+    return hoisted ? `${ind}{\n${hoisted.replace(/^/gm, "    ")}${loop}\n${ind}}` : loop;
+  }
+
+  private commaList(e: ts.Expression): string[] {
+    if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.CommaToken) return [...this.commaList(e.left), ...this.commaList(e.right)];
+    return [this.exprStatement(e)];
+  }
+
+  private forOf(s: ts.ForOfStatement, ind: string): string {
+    const src = this.expr(s.expression);
+    const elem = this.iterElement(src.cs, s.expression);
+    const decl = s.initializer;
+    if (!ts.isVariableDeclarationList(decl)) return `${ind}${this.fail(s, "for-of without a declaration").code};`;
+    const binding = decl.declarations[0]!.name;
+    if (ts.isIdentifier(binding)) {
+      const c = this.cs(this.checker.getTypeAtLocation(binding), binding);
+      const name = this.declName(binding);
+      if (c === elem) return `${ind}foreach (${c} ${name} in ${src.code})\n${this.block(s.statement, ind)}`;
+      const t = this.temp();
+      const body = ts.isBlock(s.statement) ? s.statement.statements : [s.statement];
+      return `${ind}foreach (${elem} ${t} in ${src.code})\n${ind}{\n${ind}    ${c} ${name} = ${this.coerce(t, elem, c)};\n${body.map((x) => this.stmt(x, ind + "    ")).join("\n")}\n${ind}}`;
+    }
+    const t = this.temp();
+    const body = ts.isBlock(s.statement) ? s.statement.statements : [s.statement];
+    return `${ind}foreach (${elem} ${t} in ${src.code})\n${ind}{\n${this.destructure(binding, t, elem).map((x) => `${ind}    ${x}`).join("\n")}\n${body.map((x) => this.stmt(x, ind + "    ")).join("\n")}\n${ind}}`;
+  }
+
+  /** What iterating a C# value yields. */
+  private iterElement(cs: string, node: ts.Node): string {
+    let m = cs.match(/^JsArray<(.*)>$/) ?? cs.match(/^JsSet<(.*)>$/);
+    if (m) return m[1]!;
+    if (cs.startsWith("JsMap<")) return "JsArray<object>";
+    m = cs.match(/^JsRecord<(.*)>$/);
+    if (m) throw new TranspileError(`${this.where(node)}: for-of over a record`);
+    throw new TranspileError(`${this.where(node)}: for-of over ${cs}`);
+  }
+
+  // --- emission: expressions -----------------------------------------------------------
+
+  /** An expression whose value is discarded (an expression statement, a for incrementor). */
+  private exprStatement(e: ts.Expression): string {
+    const x = ts.isParenthesizedExpression(e) ? e.expression : e;
+    if (ts.isBinaryExpression(x) && x.operatorToken.kind === ts.SyntaxKind.EqualsToken && (ts.isArrayLiteralExpression(x.left) || ts.isObjectLiteralExpression(x.left))) {
+      return this.destructuringAssign(x.left, x.right);
+    }
+    if (ts.isBinaryExpression(x) && (x.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken || x.operatorToken.kind === ts.SyntaxKind.BarBarToken)) {
+      const neg = x.operatorToken.kind === ts.SyntaxKind.BarBarToken ? "!" : "";
+      return `if (${neg}(${this.cond(x.left)})) { ${this.exprStatement(x.right)}; }`;
+    }
+    if (ts.isConditionalExpression(x)) return `if (${this.cond(x.condition)}) { ${this.exprStatement(x.whenTrue)}; } else { ${this.exprStatement(x.whenFalse)}; }`;
+    const out = this.expr(x);
+    // C# accepts only calls, assignments, increments and `new` as statements
+    if (ts.isCallExpression(x) || ts.isNewExpression(x) || ts.isPostfixUnaryExpression(x) || ts.isPrefixUnaryExpression(x) && (x.operator === ts.SyntaxKind.PlusPlusToken || x.operator === ts.SyntaxKind.MinusMinusToken) || (ts.isBinaryExpression(x) && x.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && x.operatorToken.kind <= ts.SyntaxKind.LastAssignment)) {
+      return out.code.replace(/^\((.*)\)$/s, (all, inner) => (this.balanced(inner) ? inner : all));
+    }
+    return `_ = ${out.code}`;
+  }
+
+  private balanced(s: string): boolean {
+    let depth = 0;
+    for (const ch of s) {
+      if (ch === "(") depth++;
+      else if (ch === ")" && --depth < 0) return false;
+    }
+    return depth === 0;
+  }
+
+  /** `[a, b] = [x, y]` and `[this.h, this.p] = tuple`: through temps. */
+  private destructuringAssign(left: ts.ArrayLiteralExpression | ts.ObjectLiteralExpression, right: ts.Expression): string {
+    if (!ts.isArrayLiteralExpression(left)) return this.fail(left, "object destructuring assignment").code;
+    const targets = left.elements.map((el) => this.lvalue(el));
+    const r = this.skipParens(right);
+    if (ts.isArrayLiteralExpression(r) && r.elements.length === left.elements.length) {
+      const temps = r.elements.map((el, i) => {
+        const t = this.temp();
+        return { t, code: `var ${t} = ${this.exprTo(el, targets[i]!.cs)};` };
+      });
+      return `{ ${temps.map((x) => x.code).join(" ")} ${targets.map((tg, i) => `${tg.code} = ${temps[i]!.t};`).join(" ")} }`;
+    }
+    const src = this.expr(right);
+    const t = this.temp();
+    const elem = src.cs.match(/^JsArray<(.*)>$/)?.[1] ?? "object";
+    return `{ var ${t} = ${src.code}; ${targets.map((tg, i) => `${tg.code} = ${this.coerce(`${t}[${i}]`, elem, tg.cs)};`).join(" ")} }`;
+  }
+
+  /** An assignment target and its C# type. */
+  private lvalue(e: ts.Expression): Out {
+    const x = this.expr(e, true);
+    return x;
+  }
+
+  /** An expression converted to the C# type `to`. */
+  exprTo(e: ts.Expression, to: string): string {
+    const x = this.skipParensKeepAs(e);
+    if (ts.isObjectLiteralExpression(x)) return this.coerce(this.objectLiteral(x, to).code, this.objectLiteral(x, to).cs, to);
+    if (ts.isArrayLiteralExpression(x)) {
+      const out = this.arrayLiteral(x, to);
+      return this.coerce(out.code, out.cs, to);
+    }
+    if (ts.isArrowFunction(x) || ts.isFunctionExpression(x)) {
+      const out = this.lambda(x, /Func<.*JsVoid>$/.test(to) || to === "global::System.Func<JsVoid>");
+      return out.code;
+    }
+    if (to === "bool" || to === "bool?") {
+      const t = this.tsCs(x);
+      if (t !== "bool" && t !== "bool?") return this.cond(x);
+    }
+    const out = this.expr(x);
+    return this.coerce(out.code, out.cs, to);
+  }
+
+  private skipParensKeepAs(e: ts.Expression): ts.Expression {
+    while (ts.isParenthesizedExpression(e) || ts.isSatisfiesExpression(e) || (ts.isAsExpression(e) && this.isConstAssertion(e))) e = e.expression;
+    return e;
+  }
+
+  /** A condition: JS truthiness, made a C# bool. */
+  cond(e: ts.Expression): string {
+    const x = this.skipParensKeepAs(e);
+    if (ts.isPrefixUnaryExpression(x) && x.operator === ts.SyntaxKind.ExclamationToken) return `!(${this.cond(x.operand)})`;
+    if (ts.isBinaryExpression(x)) {
+      const k = x.operatorToken.kind;
+      if (k === ts.SyntaxKind.AmpersandAmpersandToken) return `(${this.cond(x.left)} && ${this.cond(x.right)})`;
+      if (k === ts.SyntaxKind.BarBarToken) return `(${this.cond(x.left)} || ${this.cond(x.right)})`;
+    }
+    const out = this.expr(x);
+    if (out.cs === "bool") return out.code;
+    return `JsRt.Truthy(${out.code})`;
+  }
+
+  /** An expression with its C# type converted to the C# mapping of its TS type. */
+  expr(e: ts.Expression, lvalue = false): Out {
+    const raw = this.exprRaw(e, lvalue);
+    if (lvalue || raw.cs === "null") return raw;
+    if (ts.isObjectLiteralExpression(e) || ts.isArrayLiteralExpression(e) || ts.isArrowFunction(e) || ts.isFunctionExpression(e)) return raw;
+    // an assignment's value is the target's: converting it would store one object and hand on a copy
+    if (ts.isBinaryExpression(e) && e.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && e.operatorToken.kind <= ts.SyntaxKind.LastAssignment) return raw;
+    const t = this.checker.getTypeAtLocation(e);
+    // a literal's own (fresh) type never asks for a conversion of a value already built as its contextual class
+    if (t.flags & ts.TypeFlags.Object && (t as ts.ObjectType).objectFlags & ts.ObjectFlags.ObjectLiteral && this.isDataClassName(raw.cs)) return raw;
+    let want: string;
+    try {
+      want = this.cs(t, e);
+    } catch {
+      return raw;
+    }
+    if (want === "void") return raw;
+    return { code: this.coerce(raw.code, raw.cs, want), cs: want };
+  }
+
+  private exprRaw(e: ts.Expression, lvalue: boolean): Out {
+    this.flushData();
+    switch (e.kind) {
+      case ts.SyntaxKind.NumericLiteral: return { code: this.num(Number((e as ts.NumericLiteral).text)), cs: "double" };
+      case ts.SyntaxKind.StringLiteral:
+      case ts.SyntaxKind.NoSubstitutionTemplateLiteral: return { code: this.str((e as ts.StringLiteral).text), cs: "string" };
+      case ts.SyntaxKind.TrueKeyword: return { code: "true", cs: "bool" };
+      case ts.SyntaxKind.FalseKeyword: return { code: "false", cs: "bool" };
+      case ts.SyntaxKind.NullKeyword: return { code: "null", cs: "null" };
+      case ts.SyntaxKind.ThisKeyword: return { code: "this", cs: this.ctx.className ?? "object" };
+      case ts.SyntaxKind.SuperKeyword: return { code: "base", cs: "object" };
+      default: break;
+    }
+    if (ts.isIdentifier(e)) return this.identifier(e);
+    if (ts.isParenthesizedExpression(e)) {
+      const inner = this.expr(e.expression, lvalue);
+      return { code: `(${inner.code})`, cs: inner.cs };
+    }
+    if (ts.isAsExpression(e) || ts.isTypeAssertionExpression(e)) {
+      if (ts.isAsExpression(e) && this.isConstAssertion(e)) return this.exprRaw(e.expression, lvalue);
+      const inner = this.expr(e.expression);
+      const to = this.cs(this.checker.getTypeFromTypeNode(e.type), e);
+      return { code: this.coerce(inner.code, inner.cs, to), cs: to };
+    }
+    if (ts.isSatisfiesExpression(e)) return this.exprRaw(e.expression, lvalue);
+    if (ts.isNonNullExpression(e)) {
+      const inner = this.exprRaw(e.expression, lvalue);
+      return inner;
+    }
+    if (ts.isTemplateExpression(e)) {
+      const parts: string[] = [];
+      if (e.head.text) parts.push(this.str(e.head.text));
+      for (const span of e.templateSpans) {
+        parts.push(this.strOf(span.expression));
+        if (span.literal.text) parts.push(this.str(span.literal.text));
+      }
+      return { code: parts.length ? `(${parts.join(" + ")})` : `""`, cs: "string" };
+    }
+    if (ts.isPropertyAccessExpression(e)) return this.propertyAccess(e);
+    if (ts.isElementAccessExpression(e)) return this.elementAccess(e);
+    if (ts.isCallExpression(e)) return this.call(e);
+    if (ts.isNewExpression(e)) return this.newExpr(e);
+    if (ts.isBinaryExpression(e)) return this.binary(e);
+    if (ts.isPrefixUnaryExpression(e)) return this.prefix(e);
+    if (ts.isPostfixUnaryExpression(e)) {
+      const op = e.operator === ts.SyntaxKind.PlusPlusToken ? "++" : "--";
+      return { code: `${this.expr(e.operand, true).code}${op}`, cs: "double" };
+    }
+    if (ts.isConditionalExpression(e)) {
+      const c = this.tsCs(e);
+      return { code: `(${this.cond(e.condition)} ? ${this.exprTo(e.whenTrue, c)} : ${this.exprTo(e.whenFalse, c)})`, cs: c };
+    }
+    if (ts.isObjectLiteralExpression(e)) return this.objectLiteral(e, null);
+    if (ts.isArrayLiteralExpression(e)) return this.arrayLiteral(e, null);
+    if (ts.isArrowFunction(e) || ts.isFunctionExpression(e)) return this.lambda(e, false);
+    if (ts.isDeleteExpression(e)) {
+      const target = this.skipParensKeepAs(e.expression);
+      if (ts.isElementAccessExpression(target)) {
+        const obj = this.expr(target.expression);
+        if (obj.cs.startsWith("JsRecord<") || obj.cs.startsWith("JsMap<")) return { code: `${obj.code}.delete(${this.exprTo(target.argumentExpression, "string")})`, cs: "bool" };
+      }
+      return this.fail(e, "delete of anything but a record key");
+    }
+    if (ts.isRegularExpressionLiteral(e)) return this.fail(e, "regular expression outside .test()");
+    return this.fail(e, "expression");
+  }
+
+  private num(v: number): string {
+    if (Number.isNaN(v)) return "double.NaN";
+    if (!Number.isFinite(v)) return v > 0 ? "double.PositiveInfinity" : "double.NegativeInfinity";
+    const s = String(v);
+    // a C# literal with a point or an exponent is a double; 1 would be an int (1 / 2 == 0)
+    return /[.e]/.test(s) ? s : `${s}.0`;
+  }
+
+  private str(s: string): string {
+    return JSON.stringify(s).replace(/\\u2028/g, "\\u2028");
+  }
+
+  /** A value as a string, as a template literal or `+` with a string converts it. */
+  private strOf(e: ts.Expression): string {
+    const out = this.expr(e);
+    if (out.cs === "string") return out.code;
+    return `JsRt.Str(${out.code})`;
+  }
+
+  private identifier(e: ts.Identifier): Out {
+    if (e.text === "undefined") return { code: "null", cs: "null" };
+    if (e.text === "Infinity") return { code: "double.PositiveInfinity", cs: "double" };
+    if (e.text === "NaN") return { code: "double.NaN", cs: "double" };
+    const shorthand = ts.isShorthandPropertyAssignment(e.parent) && e.parent.name === e;
+    const sym = this.resolve(shorthand ? this.checker.getShorthandAssignmentValueSymbol(e.parent) : this.checker.getSymbolAtLocation(e));
+    if (!sym) return this.fail(e, "identifier without a symbol");
+    const decl = sym.valueDeclaration ?? sym.declarations?.[0];
+    if (!decl) return this.fail(e, "identifier without a declaration");
+    // a class used as a value: its name
+    if (ts.isClassDeclaration(decl)) return { code: this.className(decl), cs: "object" };
+    const top = this.topLevel(decl);
+    const declaredCs = () => this.cs(this.checker.getTypeOfSymbol(sym), e);
+    if ((top as ts.Node | null) === decl || (top && ts.isVariableStatement(top) && decl.parent?.parent === top)) {
+      if (!this.inGenerator(decl)) return this.fail(e, "a global outside the supported set");
+      const mod = this.moduleClass(decl.getSourceFile().fileName);
+      const init = ts.isVariableDeclaration(decl) && decl.initializer ? this.skipParens(decl.initializer) : null;
+      const isMethod = ts.isFunctionDeclaration(decl) || (init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init)));
+      return { code: `${mod}.${Transpiler.escape(sym.name)}`, cs: isMethod ? this.methodGroupCs(decl, init) : declaredCs() };
+    }
+    const local = this.localNames.get(sym) ?? this.localName(sym, sym.name);
+    const init = ts.isVariableDeclaration(decl) && decl.initializer ? this.skipParens(decl.initializer) : null;
+    if (ts.isFunctionDeclaration(decl) || (init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) && decl.parent.flags & ts.NodeFlags.Const)) {
+      return { code: local, cs: this.methodGroupCs(decl, init) };
+    }
+    return { code: local, cs: this.localCs.get(sym) ?? declaredCs() };
+  }
+
+  /**
+   * An initializer `x!` whose value is a nullable number or boolean: TypeScript's `!`
+   * drops null as well as undefined, and some code asserts a value that is really null
+   * and then tests it (lodKit's cells). The local keeps the nullable C# type.
+   */
+  private assertedNullable(init: ts.Expression | undefined): Out | null {
+    if (!init) return null;
+    const x = this.skipParensKeepAs(init);
+    if (!ts.isNonNullExpression(x)) return null;
+    const raw = this.exprRaw(x.expression, false);
+    return raw.cs.endsWith("?") && VALUE_TYPES.has(raw.cs.slice(0, -1)) ? raw : null;
+  }
+
+  private methodGroupCs(decl: ts.Node, init: ts.Expression | null): string {
+    const fn = (ts.isFunctionDeclaration(decl) ? decl : init) as ts.SignatureDeclaration;
+    const ret = this.returnCs(fn);
+    return this.lambdaCs(fn, ret);
+  }
+
+  /** The C# type of a member as declared (before any narrowing at the use). */
+  private declaredMemberCs(sym: ts.Symbol, node: ts.Node): string {
+    const decl = sym.valueDeclaration ?? sym.declarations?.[0];
+    if (decl && (ts.isMethodDeclaration(decl) || ts.isMethodSignature(decl))) return "object";
+    let c = this.cs(this.checker.getTypeOfSymbol(sym), node);
+    if (sym.flags & ts.SymbolFlags.Optional && VALUE_TYPES.has(c)) c = `${c}?`;
+    return c;
+  }
+
+  private propertyAccess(e: ts.PropertyAccessExpression): Out {
+    const name = e.name.text;
+    const q = e.questionDotToken ? "?." : ".";
+    // Math.PI and the other constants
+    if (ts.isIdentifier(e.expression) && e.expression.text === "Math" && MATH_CONST[name]) return { code: MATH_CONST[name]!, cs: "double" };
+    if (ts.isIdentifier(e.expression) && e.expression.text === "Number") {
+      if (name === "EPSILON") return { code: "double.Epsilon * 0 + 2.220446049250313E-16", cs: "double" };
+      if (name === "POSITIVE_INFINITY") return { code: "double.PositiveInfinity", cs: "double" };
+      if (name === "MAX_SAFE_INTEGER") return { code: "9007199254740991.0", cs: "double" };
+    }
+    const obj = this.expr(e.expression);
+    if (name === "length" && (obj.cs.startsWith("JsArray<"))) return { code: `${obj.code}${q}length`, cs: "double" };
+    if (name === "length" && obj.cs === "string") return { code: `((double)${obj.code}${q}Length)`, cs: "double" };
+    if (name === "size" && (obj.cs.startsWith("JsMap<") || obj.cs.startsWith("JsSet<"))) return { code: `${obj.code}${q}size`, cs: "double" };
+    if (obj.cs.startsWith("JsRecord<")) return { code: `${obj.code}${q.replace(".", "")}["${name}"]`.replace("?[", "?["), cs: obj.cs.slice(9, -1) };
+    // a shape class's field: its C# type as declared there (a merged union's is nullable)
+    if (this.isDataClassName(obj.cs)) return { code: `${obj.code}${q}${Transpiler.escape(name)}`, cs: this.fieldCs(obj.cs, name) };
+    const sym = this.checker.getSymbolAtLocation(e.name);
+    const memberCs = sym ? this.declaredMemberCs(sym, e) : "object";
+    return { code: `${obj.code}${q}${Transpiler.escape(name)}`, cs: memberCs };
+  }
+
+  private elementAccess(e: ts.ElementAccessExpression): Out {
+    const obj = this.expr(e.expression);
+    const q = e.questionDotToken ? "?" : "";
+    const arg = this.skipParensKeepAs(e.argumentExpression);
+    const m = obj.cs.match(/^JsArray<(.*)>$/);
+    if (m) return { code: `${obj.code}${q}[${this.exprTo(arg, "double")}]`, cs: m[1]! };
+    const r = obj.cs.match(/^JsRecord<(.*)>$/);
+    if (r) return { code: `${obj.code}${q}[${this.exprTo(arg, "string")}]`, cs: r[1]! };
+    if (obj.cs === "string") return { code: `JsRt.Str(${obj.code}[(int)(${this.exprTo(arg, "double")})])`, cs: "string" };
+    if (this.isDataClassName(obj.cs)) {
+      if (ts.isStringLiteral(arg)) return { code: `${obj.code}${q}.${Transpiler.escape(arg.text)}`, cs: this.fieldCs(obj.cs, arg.text) };
+      return { code: `${obj.code}${q}.__get(${this.exprTo(arg, "string")})`, cs: "object" };
+    }
+    return this.fail(e, `element access on ${obj.cs}`);
+  }
+
+  // --- calls ---------------------------------------------------------------------------
+
+  private args(call: ts.CallExpression | ts.NewExpression): string[] {
+    const sig = this.checker.getResolvedSignature(call);
+    const decl = sig?.getDeclaration();
+    const params = sig?.getParameters() ?? [];
+    const out: string[] = [];
+    let slot = 0;
+    for (const a of call.arguments ?? []) {
+      if (ts.isSpreadElement(a)) {
+        const t = this.checker.getTypeAtLocation(a.expression);
+        if (!this.checker.isTupleType(t)) {
+          out.push(this.fail(a, "spread argument of a non-tuple").code);
+          continue;
+        }
+        const n = this.typeArgs(t).length;
+        const src = this.expr(a.expression);
+        const elem = src.cs.match(/^JsArray<(.*)>$/)?.[1] ?? "object";
+        const keep = this.temp();
+        for (let k = 0; k < n; k++, slot++) {
+          const p = params[slot];
+          let pc = p ? this.cs(this.checker.getTypeOfSymbol(p), a) : elem;
+          if (pc === "void") pc = "object";
+          const item = k === 0 ? `JsRt.First(${src.code}, out var ${keep})` : `${keep}[${k}]`;
+          out.push(this.coerce(item, elem, pc));
+        }
+        continue;
+      }
+      out.push(this.argument(a, slot, params, decl));
+      slot++;
+    }
+    return out;
+  }
+
+  private argument(a: ts.Expression, i: number, params: readonly ts.Symbol[], decl: ts.SignatureDeclaration | ts.JSDocSignature | undefined): string {
+    {
+      const p = params[i];
+      if (!p) return this.expr(a).code;
+      let pc = this.cs(this.checker.getTypeOfSymbol(p), a);
+      if (pc === "void") pc = "object";
+      const pdecl = p.valueDeclaration;
+      if (pdecl && ts.isParameter(pdecl) && (pdecl.questionToken || pdecl.initializer) && VALUE_TYPES.has(pc)) pc = `${pc}?`;
+      const x = this.skipParensKeepAs(a);
+      if ((ts.isArrowFunction(x) || ts.isFunctionExpression(x)) && decl && this.returnsTypeParam(decl, i)) return this.lambda(x, true).code;
+      return this.exprTo(a, pc);
+    }
+  }
+
+  /** Whether the declared parameter `i` is a function returning a type parameter of `decl` (a generic T a void lambda fills). */
+  private returnsTypeParam(decl: ts.SignatureDeclaration | ts.JSDocSignature, i: number): boolean {
+    if (!ts.isFunctionLike(decl) || !("parameters" in decl)) return false;
+    const p = (decl as ts.SignatureDeclaration).parameters[i];
+    const tn = p?.type;
+    if (!tn || !ts.isFunctionTypeNode(tn) || !ts.isTypeReferenceNode(tn.type)) return false;
+    const tps = (decl as ts.SignatureDeclaration).typeParameters?.map((t) => t.name.text) ?? [];
+    return tps.includes(tn.type.typeName.getText());
+  }
+
+  private call(e: ts.CallExpression): Out {
+    const callee = e.expression;
+    const resultCs = (): string => {
+      const c = this.tsCs(e);
+      return c;
+    };
+    if (ts.isPropertyAccessExpression(callee)) {
+      const name = callee.name.text;
+      const target = callee.expression;
+      // Math.*, Object.*, Array.*, Number.*, JSON.*
+      if (ts.isIdentifier(target) && this.isGlobal(target)) return this.globalCall(target.text, name, e);
+      // a regular expression literal's .test(s)
+      if (ts.isRegularExpressionLiteral(target) && name === "test") {
+        const lit = target.text;
+        const end = lit.lastIndexOf("/");
+        return { code: `JsRt.Test(${this.str(lit.slice(1, end))}, ${this.str(lit.slice(end + 1))}, ${this.exprTo(e.arguments[0]!, "string")})`, cs: "bool" };
+      }
+      if (target.kind === ts.SyntaxKind.SuperKeyword) return { code: `base.${Transpiler.escape(name)}(${this.args(e).join(", ")})`, cs: resultCs() };
+      const obj = this.expr(target);
+      const q = callee.questionDotToken ? "?." : ".";
+      if (obj.cs.startsWith("JsArray<")) return this.arrayCall(obj, name, e, q);
+      if (obj.cs.startsWith("JsMap<") || obj.cs.startsWith("JsSet<")) return this.collectionCall(obj, name, e, q);
+      if (obj.cs === "string" || obj.cs === "double") {
+        if (name === "toString" && !e.arguments.length) return { code: obj.cs === "string" ? obj.code : `JsRt.NumStr(${obj.code})`, cs: "string" };
+        const args = e.arguments.map((a) => this.expr(a).code);
+        return { code: `${obj.code}${q}${name}(${args.join(", ")})`, cs: resultCs() };
+      }
+      if (obj.cs.startsWith("JsRecord<")) return this.fail(e, `a method of a record (${name})`);
+      const sym = this.checker.getSymbolAtLocation(callee.name);
+      const decl = sym?.valueDeclaration;
+      const call = `${obj.code}${q}${Transpiler.escape(name)}(${this.args(e).join(", ")})`;
+      if (decl && (ts.isPropertyDeclaration(decl) || ts.isPropertySignature(decl) || ts.isParameter(decl))) {
+        // a field holding a function
+        return { code: call, cs: this.callResultCs(e) };
+      }
+      return { code: call, cs: this.callResultCs(e) };
+    }
+    if (ts.isIdentifier(callee)) {
+      if (this.isGlobal(callee)) return this.globalFunction(callee.text, e);
+      const fn = this.expr(callee);
+      return { code: `${fn.code}(${this.args(e).join(", ")})`, cs: this.callResultCs(e) };
+    }
+    const fn = this.expr(callee);
+    return { code: `${fn.code}(${this.args(e).join(", ")})`, cs: this.callResultCs(e) };
+  }
+
+  /** What a call to a transpiled function returns in C#: its declared return type, generic T as instantiated. */
+  private callResultCs(e: ts.CallExpression): string {
+    const sig = this.checker.getResolvedSignature(e);
+    const decl = sig?.getDeclaration();
+    if (decl && ts.isFunctionLike(decl) && (decl as ts.SignatureDeclaration).type && ts.isTypeReferenceNode((decl as ts.SignatureDeclaration).type!)) {
+      const tps = (decl as ts.SignatureDeclaration).typeParameters?.map((t) => t.name.text) ?? [];
+      if (tps.includes((decl as ts.SignatureDeclaration).type!.getText())) return this.typeArgCs(this.checker.getTypeAtLocation(e), e);
+    }
+    if (decl && ts.isFunctionLike(decl)) {
+      const declared = this.checker.getSignatureFromDeclaration(decl as ts.SignatureDeclaration);
+      if (declared && !(decl as ts.SignatureDeclaration).typeParameters?.length) return this.cs(declared.getReturnType(), e);
+    }
+    return this.tsCs(e);
+  }
+
+  private isGlobal(id: ts.Identifier): boolean {
+    const sym = this.checker.getSymbolAtLocation(id);
+    const decl = sym?.declarations?.[0];
+    return !!decl && !this.inGenerator(decl) && !this.seamFiles.has(decl.getSourceFile().fileName);
+  }
+
+  private globalFunction(name: string, e: ts.CallExpression): Out {
+    const a = e.arguments;
+    switch (name) {
+      case "String": return { code: this.strOf(a[0]!), cs: "string" };
+      case "Number": return { code: this.tsCs(a[0]!) === "string" ? `JsRt.Num(${this.exprTo(a[0]!, "string")})` : this.exprTo(a[0]!, "double"), cs: "double" };
+      case "parseFloat": return { code: `JsRt.Num(${this.exprTo(a[0]!, "string")})`, cs: "double" };
+      case "isNaN": return { code: `double.IsNaN(${this.exprTo(a[0]!, "double")})`, cs: "bool" };
+      case "isFinite": return { code: `double.IsFinite(${this.exprTo(a[0]!, "double")})`, cs: "bool" };
+      case "Boolean": return { code: this.cond(a[0]!), cs: "bool" };
+      default: return this.fail(e, `global function ${name}`);
+    }
+  }
+
+  private globalCall(ns: string, name: string, e: ts.CallExpression): Out {
+    const a = e.arguments;
+    if (ns === "Math") {
+      const f = MATH[name];
+      if (!f) return this.fail(e, `Math.${name}`);
+      if (a.length === 1 && ts.isSpreadElement(a[0]!)) {
+        if (name !== "min" && name !== "max") return this.fail(e, `Math.${name}(...spread)`);
+        return { code: `${f}(${this.exprTo(a[0].expression, "JsArray<double>")}.items.ToArray())`, cs: "double" };
+      }
+      return { code: `${f}(${a.map((x) => this.exprTo(x, "double")).join(", ")})`, cs: "double" };
+    }
+    if (ns === "Number") {
+      if (name === "isFinite") return { code: `JsRt.IsFinite(${this.exprTo(a[0]!, "double")})`, cs: "bool" };
+      if (name === "isInteger") return { code: `JsRt.IsInteger(${this.exprTo(a[0]!, "double")})`, cs: "bool" };
+    }
+    if (ns === "Object") {
+      const src = a[0] && this.expr(a[0]);
+      const result = this.tsCs(e);
+      switch (name) {
+        case "keys":
+          if (src!.cs.startsWith("JsRecord<")) return { code: `${src!.code}.keys()`, cs: "JsArray<string>" };
+          if (this.isDataClassName(src!.cs)) return { code: `JsRt.Keys(${src!.code})`, cs: "JsArray<string>" };
+          break;
+        case "values":
+          if (src!.cs.startsWith("JsRecord<")) return { code: `${src!.code}.values()`, cs: `JsArray<${src!.cs.slice(9, -1)}>` };
+          break;
+        case "entries":
+          if (src!.cs.startsWith("JsRecord<")) return { code: `${src!.code}.entries()`, cs: "JsArray<JsArray<object>>" };
+          if (this.isDataClassName(src!.cs)) return { code: `JsRt.Entries(${src!.code})`, cs: "JsArray<JsArray<object>>" };
+          break;
+        case "fromEntries": {
+          const rec = result.match(/^JsRecord<(.*)>$/);
+          if (rec) return { code: `JsRecord<${rec[1]}>.fromEntries(${this.coerce(src!.code, src!.cs, "JsArray<JsArray<object>>")})`, cs: result };
+          break;
+        }
+        case "freeze": return src!;
+        default: break;
+      }
+      return this.fail(e, `Object.${name}`);
+    }
+    if (ns === "Array") {
+      if (name === "from" && a.length === 2 && ts.isObjectLiteralExpression(a[0]!)) {
+        const len = (a[0] as ts.ObjectLiteralExpression).properties.find((p) => p.name?.getText() === "length");
+        const f = this.skipParensKeepAs(a[1]!);
+        if (len && ts.isPropertyAssignment(len) && (ts.isArrowFunction(f) || ts.isFunctionExpression(f))) {
+          const elem = this.tsCs(e).match(/^JsArray<(.*)>$/)![1]!;
+          const idx = f.parameters[1];
+          const iName = idx && ts.isIdentifier(idx.name) ? this.declName(idx.name) : this.temp();
+          const body = ts.isBlock(f.body) ? this.functionBody(f.body, elem, [], "") : this.exprTo(f.body, elem);
+          return { code: `JsRt.ArrayFrom<${elem}>(${this.exprTo(len.initializer, "double")}, (double ${iName}) => ${body})`, cs: `JsArray<${elem}>` };
+        }
+      }
+      if (name === "from" && a.length === 1) {
+        const c = this.tsCs(e);
+        const src = this.expr(a[0]!);
+        return { code: `new ${c}(${src.code})`, cs: c };
+      }
+      if (name === "isArray") return { code: `(${this.expr(a[0]!).code} is global::System.Collections.IEnumerable)`, cs: "bool" };
+    }
+    return this.fail(e, `${ns}.${name}`);
+  }
+
+  private arrayCall(obj: Out, name: string, e: ts.CallExpression, q: string): Out {
+    const elem = obj.cs.slice(8, -1);
+    const a = e.arguments;
+    const self = `${obj.code}${q}`;
+    switch (name) {
+      case "push": {
+        if (a.length === 1 && ts.isSpreadElement(a[0]!)) return { code: `${self}pushAll(${this.exprTo(a[0].expression, obj.cs)})`, cs: "double" };
+        if (a.some(ts.isSpreadElement)) return this.fail(e, "push with spreads");
+        if (a.length <= 3) return { code: `${self}push(${a.map((x) => this.exprTo(x, elem)).join(", ")})`, cs: "double" };
+        return { code: `${self}pushAll(new ${obj.cs}()${a.map((x) => `.add(${this.exprTo(x, elem)})`).join("")})`, cs: "double" };
+      }
+      case "map": case "flatMap": {
+        const result = this.tsCs(e);
+        const u = result.slice(8, -1);
+        const f = this.skipParensKeepAs(a[0]!);
+        let fn: string;
+        if (ts.isArrowFunction(f) || ts.isFunctionExpression(f)) fn = this.lambdaTo(f, name === "map" ? u : result);
+        else fn = this.expr(a[0]!).code;
+        return { code: `${self}${name}<${u}>(${fn})`, cs: result };
+      }
+      case "reduce": {
+        const result = this.tsCs(e);
+        if (a.length < 2) {
+          const f1 = this.skipParensKeepAs(a[0]!);
+          const fn1 = ts.isArrowFunction(f1) || ts.isFunctionExpression(f1) ? this.lambdaTo(f1, elem) : this.expr(a[0]!).code;
+          return { code: this.coerce(`${self}reduce(${fn1})`, elem, result), cs: result };
+        }
+        const f = this.skipParensKeepAs(a[0]!);
+        const fn = ts.isArrowFunction(f) || ts.isFunctionExpression(f) ? this.lambdaTo(f, result) : this.expr(a[0]!).code;
+        return { code: `${self}reduce<${result}>(${fn}, ${this.exprTo(a[1]!, result)})`, cs: result };
+      }
+      case "filter": case "some": case "every": case "find": case "findIndex": {
+        const f = this.skipParensKeepAs(a[0]!);
+        const fn = ts.isArrowFunction(f) || ts.isFunctionExpression(f) ? this.lambdaTo(f, "bool") : this.expr(a[0]!).code;
+        const cs = name === "filter" ? obj.cs : name === "find" ? elem : name === "findIndex" ? "double" : "bool";
+        return { code: `${self}${name}(${fn})`, cs };
+      }
+      case "forEach": {
+        const f = this.skipParensKeepAs(a[0]!);
+        const fn = ts.isArrowFunction(f) || ts.isFunctionExpression(f) ? this.lambdaTo(f, "void") : this.expr(a[0]!).code;
+        return { code: `${self}forEach(${fn})`, cs: "void" };
+      }
+      case "sort": {
+        if (!a.length) return { code: `${self}sort()`, cs: obj.cs };
+        const f = this.skipParensKeepAs(a[0]!);
+        const fn = ts.isArrowFunction(f) || ts.isFunctionExpression(f) ? this.lambdaTo(f, "double") : this.expr(a[0]!).code;
+        return { code: `${self}sort(${fn})`, cs: obj.cs };
+      }
+      case "includes": case "indexOf": return { code: `${self}${name}(${this.exprTo(a[0]!, elem)})`, cs: name === "includes" ? "bool" : "double" };
+      case "join": return { code: `${self}join(${a.length ? this.exprTo(a[0]!, "string") : ""})`, cs: "string" };
+      case "slice": return { code: `${self}slice(${a.map((x) => this.exprTo(x, "double")).join(", ")})`, cs: obj.cs };
+      case "concat": return { code: `${self}${a.map((x) => `concat(${this.exprTo(x, obj.cs)})`).join(".")}`, cs: obj.cs };
+      case "reverse": case "pop": case "shift": return { code: `${self}${name}()`, cs: name === "reverse" ? obj.cs : elem };
+      case "fill": return { code: `${self}fill(${this.exprTo(a[0]!, elem)})`, cs: obj.cs };
+      case "at": return { code: `${self}at(${this.exprTo(a[0]!, "double")})`, cs: elem };
+      default: return this.fail(e, `array method ${name}`);
+    }
+  }
+
+  /** A callback with its body converted to `ret` (a lambda's own inference may differ). */
+  private lambdaTo(f: ts.ArrowFunction | ts.FunctionExpression, ret: string): string {
+    const saved = this.ctx.voidAsUnit;
+    this.ctx.voidAsUnit = false;
+    try {
+      const { list, prologue } = this.params(f);
+      const typed = list.replace(/ = [^,]+/g, "");
+      if (!ts.isBlock(f.body) && !prologue.length) {
+        if (ret === "void") return `(${typed}) => ${this.exprStatement(f.body)}`;
+        const body = ret === "bool" ? this.cond(f.body) : this.exprTo(f.body, ret);
+        return `(${typed}) => ${body}`;
+      }
+      return `(${typed}) =>\n${this.functionBodyTo(f.body, ret, prologue)}`;
+    } finally {
+      this.ctx.voidAsUnit = saved;
+    }
+  }
+
+  private functionBodyTo(body: ts.ConciseBody, ret: string, prologue: string[]): string {
+    if (!ts.isBlock(body)) return `{\n${prologue.join("\n")}\n${ret === "void" ? this.exprStatement(body) + ";" : `return ${ret === "bool" ? this.cond(body) : this.exprTo(body, ret)};`}\n}`;
+    // a block: its own return statements convert to the function's declared type
+    return this.functionBody(body, ret, prologue, "");
+  }
+
+  private collectionCall(obj: Out, name: string, e: ts.CallExpression, q: string): Out {
+    const a = e.arguments;
+    const self = `${obj.code}${q}`;
+    const isMap = obj.cs.startsWith("JsMap<");
+    const inner = obj.cs.slice(obj.cs.indexOf("<") + 1, -1);
+    const [k, v] = isMap ? this.splitTypeArgs(inner) : [inner, inner];
+    switch (name) {
+      case "get": return { code: `${self}get(${this.exprTo(a[0]!, k!)})`, cs: v! };
+      case "has": case "delete": return { code: `${self}${name}(${this.exprTo(a[0]!, k!)})`, cs: "bool" };
+      case "set": return { code: `${self}set(${this.exprTo(a[0]!, k!)}, ${this.exprTo(a[1]!, v!)})`, cs: obj.cs };
+      case "add": return { code: `${self}add(${this.exprTo(a[0]!, k!)})`, cs: obj.cs };
+      case "keys": return { code: `${self}keys()`, cs: `JsArray<${k}>` };
+      case "values": return { code: `${self}values()`, cs: `JsArray<${v}>` };
+      case "entries": return { code: `${self}entries()`, cs: "JsArray<JsArray<object>>" };
+      case "forEach": {
+        const f = this.skipParensKeepAs(a[0]!);
+        return { code: `${self}forEach(${ts.isArrowFunction(f) || ts.isFunctionExpression(f) ? this.lambdaTo(f, "void") : this.expr(a[0]!).code})`, cs: "void" };
+      }
+      default: return this.fail(e, `${isMap ? "Map" : "Set"}.${name}`);
+    }
+  }
+
+  /** A C# type argument list split at its top-level commas. */
+  private splitAll(s: string): string[] {
+    const out: string[] = [];
+    let depth = 0, start = 0;
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === "<") depth++;
+      else if (s[i] === ">") depth--;
+      else if (s[i] === "," && depth === 0) {
+        out.push(s.slice(start, i).trim());
+        start = i + 1;
+      }
+    }
+    out.push(s.slice(start).trim());
+    return out;
+  }
+
+  private splitTypeArgs(s: string): string[] {
+    let depth = 0;
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === "<") depth++;
+      else if (s[i] === ">") depth--;
+      else if (s[i] === "," && depth === 0) return [s.slice(0, i).trim(), s.slice(i + 1).trim()];
+    }
+    return [s];
+  }
+
+  private newExpr(e: ts.NewExpression): Out {
+    const c = this.tsCs(e);
+    const callee = e.expression;
+    const a = e.arguments ?? [];
+    if (ts.isIdentifier(callee) && this.isGlobal(callee)) {
+      switch (callee.text) {
+        case "Map": return { code: a.length ? `new ${c}(${this.coerce(this.expr(a[0]!).code, this.expr(a[0]!).cs, "JsArray<JsArray<object>>")})` : `new ${c}()`, cs: c };
+        case "Set": return { code: a.length ? `new ${c}(${this.exprTo(a[0]!, `JsArray<${c.slice(6, -1)}>`)})` : `new ${c}()`, cs: c };
+        case "Array": return { code: `JsRt.NewArray<${c.slice(8, -1)}>(${this.exprTo(a[0]!, "double")})`, cs: c };
+        case "Error": return { code: `new JsError(${a.length ? this.strOf(a[0]!) : '""'})`, cs: "JsError" };
+        default: return this.fail(e, `new ${callee.text}`);
+      }
+    }
+    // new (this.constructor as ...)(args): another instance of the object's own class
+    let inner: ts.Expression = callee;
+    while (ts.isParenthesizedExpression(inner) || ts.isAsExpression(inner)) inner = inner.expression;
+    if (ts.isPropertyAccessExpression(inner) && inner.name.text === "constructor") {
+      return { code: `JsRt.NewLike(${this.expr(inner.expression).code}, ${a.map((x) => this.expr(x).code).join(", ")})`, cs: c };
+    }
+    const fn = this.exprRaw(callee, false);
+    return { code: `new ${fn.code}(${this.args(e).join(", ")})`, cs: c };
+  }
+
+  // --- operators -----------------------------------------------------------------------
+
+  private binary(e: ts.BinaryExpression): Out {
+    const k = e.operatorToken.kind;
+    const op = e.operatorToken.getText();
+    const S = ts.SyntaxKind;
+    if (k === S.PlusToken) {
+      if (this.tsCs(e) === "string") return { code: `(${this.strOf(e.left)} + ${this.strOf(e.right)})`, cs: "string" };
+      return { code: `(${this.exprTo(e.left, "double")} + ${this.exprTo(e.right, "double")})`, cs: "double" };
+    }
+    if ([S.MinusToken, S.AsteriskToken, S.SlashToken, S.PercentToken].includes(k)) return { code: `(${this.exprTo(e.left, "double")} ${op} ${this.exprTo(e.right, "double")})`, cs: "double" };
+    if (k === S.AsteriskAsteriskToken) return { code: `global::System.Math.Pow(${this.exprTo(e.left, "double")}, ${this.exprTo(e.right, "double")})`, cs: "double" };
+    if ([S.LessThanToken, S.GreaterThanToken, S.LessThanEqualsToken, S.GreaterThanEqualsToken].includes(k)) {
+      const lc = this.tsCs(e.left);
+      if (lc === "string") return { code: `(string.CompareOrdinal(${this.exprTo(e.left, "string")}, ${this.exprTo(e.right, "string")}) ${op} 0)`, cs: "bool" };
+      return { code: `(${this.exprTo(e.left, "double")} ${op} ${this.exprTo(e.right, "double")})`, cs: "bool" };
+    }
+    if ([S.EqualsEqualsEqualsToken, S.ExclamationEqualsEqualsToken, S.EqualsEqualsToken, S.ExclamationEqualsToken].includes(k)) return this.equality(e);
+    if (k === S.AmpersandAmpersandToken || k === S.BarBarToken) {
+      const c = this.tsCs(e);
+      if (c === "bool") return { code: `(${this.cond(e.left)} ${k === S.AmpersandAmpersandToken ? "&&" : "||"} ${this.cond(e.right)})`, cs: "bool" };
+      const f = k === S.AmpersandAmpersandToken ? "And" : "Or";
+      return { code: `JsRt.${f}<${c}>(${this.exprTo(e.left, c)}, () => ${this.exprTo(e.right, c)})`, cs: c };
+    }
+    if (k === S.QuestionQuestionToken) {
+      const c = this.tsCs(e);
+      const left = this.exprRaw(e.left, false);
+      const nullable = VALUE_TYPES.has(c) ? `${c}?` : c;
+      const l = left.cs === nullable || left.cs === "null" ? left.code : this.coerce(left.code, left.cs, nullable);
+      return { code: `(${l} ?? ${this.exprTo(e.right, c)})`, cs: c };
+    }
+    if (k === S.InKeyword) {
+      const obj = this.expr(e.right);
+      if (!ts.isStringLiteral(e.left)) return this.fail(e, "`in` with a computed key");
+      if (obj.cs.startsWith("JsRecord<")) return { code: `${obj.code}.has(${this.str(e.left.text)})`, cs: "bool" };
+      // a shape: the field is present (an absent key is null)
+      return { code: `${obj.code}.__has(${this.str(e.left.text)})`, cs: "bool" };
+    }
+    if (k === S.InstanceOfKeyword) return { code: `(${this.expr(e.left).code} is ${this.cs(this.checker.getTypeAtLocation(e.right), e)})`, cs: "bool" };
+    if (k >= S.FirstAssignment && k <= S.LastAssignment) return this.assignment(e);
+    if (k === S.CommaToken) return this.fail(e, "comma operator");
+    if ([S.AmpersandToken, S.BarToken, S.CaretToken, S.LessThanLessThanToken, S.GreaterThanGreaterThanToken].includes(k)) {
+      return { code: `((double)((int)(${this.exprTo(e.left, "double")}) ${op} (int)(${this.exprTo(e.right, "double")})))`, cs: "double" };
+    }
+    return this.fail(e, `operator ${op}`);
+  }
+
+  private isNullish(e: ts.Expression): boolean {
+    const x = this.skipParens(e);
+    return x.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(x) && x.text === "undefined");
+  }
+
+  private equality(e: ts.BinaryExpression): Out {
+    const neg = e.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken || e.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken;
+    const op = neg ? "!=" : "==";
+    const tyof = ts.isTypeOfExpression(e.left) ? e.left : ts.isTypeOfExpression(e.right) ? e.right : null;
+    const tag = tyof === e.left ? e.right : e.left;
+    if (tyof && ts.isStringLiteral(tag)) {
+      const v = this.exprRaw(tyof.expression, false).code;
+      const test: Record<string, string> = {
+        number: `(${v} is double)`, string: `(${v} is string)`, boolean: `(${v} is bool)`, undefined: `(${v} == null)`,
+        function: `(${v} is global::System.Delegate)`, object: `(${v} != null && !(${v} is double || ${v} is string || ${v} is bool || ${v} is global::System.Delegate))`,
+      };
+      const t = test[tag.text];
+      if (!t) return this.fail(e, `typeof ... === "${tag.text}"`);
+      return { code: neg ? `!${t}` : t, cs: "bool" };
+    }
+    if (this.isNullish(e.right) || this.isNullish(e.left)) {
+      const side = this.isNullish(e.right) ? e.left : e.right;
+      const lit = this.skipParens(this.isNullish(e.right) ? e.right : e.left);
+      const strict = e.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken || e.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken;
+      const sx = this.skipParensKeepAs(side);
+      if (strict && ts.isPropertyAccessExpression(sx) && !sx.questionDotToken) {
+        const obj = this.expr(sx.expression);
+        const field = this.dataClasses.get(obj.cs)?.fields.find((x) => x.js === sx.name.text);
+        if (field?.nullable) {
+          // undefined is absence, null a value of its own
+          const present = `${obj.code}.__has(${this.str(sx.name.text)})`;
+          const test = lit.kind === ts.SyntaxKind.NullKeyword ? `(${present} && ${obj.code}.${Transpiler.escape(sx.name.text)} == null)` : `!${present}`;
+          return { code: neg ? `!${test}` : test, cs: "bool" };
+        }
+      }
+      const raw = this.exprRaw(side, false);
+      if (VALUE_TYPES.has(raw.cs)) return this.fail(e, `a null test of a ${raw.cs} (the TS type says it cannot be null)`);
+      return { code: `(${raw.code} ${op} null)`, cs: "bool" };
+    }
+    const l = this.expr(e.left), r = this.expr(e.right);
+    const prim = (c: string) => ["double", "bool", "string", "double?", "bool?"].includes(c);
+    if (prim(l.cs) && prim(r.cs) && l.cs.replace("?", "") === r.cs.replace("?", "")) return { code: `(${l.code} ${op} ${r.code})`, cs: "bool" };
+    return { code: `${neg ? "!" : ""}JsRt.Eq(${l.code}, ${r.code})`, cs: "bool" };
+  }
+
+  private assignment(e: ts.BinaryExpression): Out {
+    const S = ts.SyntaxKind;
+    const k = e.operatorToken.kind;
+    if (k === S.EqualsToken && (ts.isArrayLiteralExpression(e.left) || ts.isObjectLiteralExpression(e.left))) {
+      return { code: this.destructuringAssign(e.left, e.right), cs: "void" };
+    }
+    const target = this.expr(e.left, true);
+    const tc = target.cs;
+    if (k === S.EqualsToken) return { code: `(${target.code} = ${this.exprTo(e.right, tc)})`, cs: tc };
+    if (k === S.QuestionQuestionEqualsToken) return { code: `(${target.code} ??= ${this.exprTo(e.right, tc.replace(/\?$/, ""))})`, cs: tc };
+    if (k === S.PlusEqualsToken && (tc === "string")) return { code: `(${target.code} += ${this.strOf(e.right)})`, cs: tc };
+    const op = e.operatorToken.getText();
+    if ([S.PlusEqualsToken, S.MinusEqualsToken, S.AsteriskEqualsToken, S.SlashEqualsToken, S.PercentEqualsToken].includes(k)) {
+      return { code: `(${target.code} ${op} ${this.exprTo(e.right, "double")})`, cs: tc };
+    }
+    return this.fail(e, `assignment ${op}`);
+  }
+
+  private prefix(e: ts.PrefixUnaryExpression): Out {
+    const S = ts.SyntaxKind;
+    switch (e.operator) {
+      case S.ExclamationToken: return { code: `!(${this.cond(e.operand)})`, cs: "bool" };
+      case S.MinusToken: return { code: `(-${this.exprTo(e.operand, "double")})`, cs: "double" };
+      case S.PlusToken: return { code: this.tsCs(e.operand) === "string" ? `JsRt.Num(${this.exprTo(e.operand, "string")})` : this.exprTo(e.operand, "double"), cs: "double" };
+      case S.PlusPlusToken: return { code: `++${this.expr(e.operand, true).code}`, cs: "double" };
+      case S.MinusMinusToken: return { code: `--${this.expr(e.operand, true).code}`, cs: "double" };
+      default: return this.fail(e, "unary operator");
+    }
+  }
+
+  // --- literals ------------------------------------------------------------------------
+
+  /** The C# class an object literal builds: its contextual type's, else its own. */
+  private literalClass(e: ts.ObjectLiteralExpression, want: string | null): string {
+    if (want && want !== "object" && (this.isDataClassName(want) || want.startsWith("JsRecord<"))) return want;
+    const ctxType = this.checker.getContextualType(e);
+    if (ctxType) {
+      try {
+        const c = this.cs(ctxType, e);
+        if (this.isDataClassName(c) || c.startsWith("JsRecord<")) {
+          if (c.startsWith("JsRecord<")) return c;
+          const fields = new Set(this.dataClasses.get(c)!.fields.map((f) => f.js));
+          const keys = e.properties.filter((p) => !ts.isSpreadAssignment(p)).map((p) => p.name?.getText() ?? "");
+          if (keys.every((k) => fields.has(k))) return c;
+        }
+      } catch {
+        // an unsupported contextual type: fall back to the literal's own
+      }
+    }
+    return this.tsCs(e);
+  }
+
+  private objectLiteral(e: ts.ObjectLiteralExpression, want: string | null): Out {
+    const c = this.literalClass(e, want);
+    const record = c.match(/^JsRecord<(.*)>$/);
+    const o = `__o${++this.ctx.temps}`;
+    const assigns: string[] = [];
+    const simple: string[] = [];
+    let needsInit = false;
+    const fieldOf = (key: string) => (record ? record[1]! : this.fieldCs(c, key));
+    const set = (key: string, value: string) => (record ? `${o}[${this.str(key)}] = ${value};` : `${o}.${Transpiler.escape(key)} = ${value};`);
+    const inline = (lit: ts.ObjectLiteralExpression, guard: string | null) => {
+      const inner: string[] = [];
+      for (const p of lit.properties) {
+        if (ts.isPropertyAssignment(p) && !ts.isComputedPropertyName(p.name)) inner.push(set(p.name.getText().replace(/^["']|["']$/g, ""), this.exprTo(p.initializer, fieldOf(p.name.getText().replace(/^["']|["']$/g, "")))));
+        else if (ts.isShorthandPropertyAssignment(p)) inner.push(set(p.name.text, this.exprTo(p.name, fieldOf(p.name.text))));
+        else this.fail(p, "property in a spread literal");
+      }
+      assigns.push(guard ? `if (${guard}) { ${inner.join(" ")} }` : inner.join(" "));
+    };
+    for (const p of e.properties) {
+      if (ts.isSpreadAssignment(p)) {
+        needsInit = true;
+        const x = this.skipParensKeepAs(p.expression);
+        // ...(cond ? { a } : {}) and ...{ a }: the fields themselves, so absent stays absent
+        if (ts.isObjectLiteralExpression(x)) {
+          inline(x, null);
+          continue;
+        }
+        if (ts.isConditionalExpression(x)) {
+          const wt = this.skipParensKeepAs(x.whenTrue), wf = this.skipParensKeepAs(x.whenFalse);
+          if (ts.isObjectLiteralExpression(wt) && ts.isObjectLiteralExpression(wf)) {
+            const cnd = this.cond(x.condition);
+            if (wf.properties.length) {
+              const t = `__c${++this.ctx.temps}`;
+              assigns.push(`var ${t} = ${cnd};`);
+              inline(wt, t);
+              inline(wf, `!${t}`);
+            } else {
+              inline(wt, cnd);
+            }
+            continue;
+          }
+        }
+        const src = this.expr(p.expression);
+        if (record) assigns.push(`${o}.assign(${this.coerce(src.code, src.cs, c)});`);
+        else assigns.push(`JsRt.Assign(${o}, ${src.code});`);
+        continue;
+      }
+      let key: string;
+      let value: ts.Expression;
+      if (ts.isPropertyAssignment(p)) {
+        if (ts.isComputedPropertyName(p.name)) {
+          if (!record) {
+            this.fail(p, "computed key in a shape literal");
+            continue;
+          }
+          needsInit = true;
+          assigns.push(`${o}[${this.exprTo(p.name.expression, "string")}] = ${this.exprTo(p.initializer, record[1]!)};`);
+          continue;
+        }
+        key = ts.isStringLiteral(p.name) || ts.isNumericLiteral(p.name) ? p.name.text : p.name.getText();
+        value = p.initializer;
+      } else if (ts.isShorthandPropertyAssignment(p)) {
+        key = p.name.text;
+        value = p.name;
+      } else {
+        this.fail(p, "object literal member");
+        continue;
+      }
+      const v = this.exprTo(value, fieldOf(key));
+      if (needsInit) assigns.push(set(key, v));
+      else simple.push(record ? `[${this.str(key)}] = ${v}` : `${Transpiler.escape(key)} = ${v}`);
+    }
+    const created = `new ${c}${simple.length ? ` { ${simple.join(", ")} }` : "()"}`;
+    if (!assigns.length) return { code: created, cs: c };
+    return { code: `JsRt.Obj(${created}, (${c} ${o}) => { ${assigns.join(" ")} })`, cs: c };
+  }
+
+  private arrayLiteral(e: ts.ArrayLiteralExpression, want: string | null): Out {
+    let c = want && want.startsWith("JsArray<") ? want : null;
+    if (!c) {
+      const ctxType = this.checker.getContextualType(e);
+      try {
+        const cc = ctxType ? this.cs(ctxType, e) : null;
+        if (cc && cc.startsWith("JsArray<")) c = cc;
+      } catch {
+        c = null;
+      }
+    }
+    c ??= this.tsCs(e);
+    if (!c.startsWith("JsArray<")) c = "JsArray<object>";
+    const elem = c.slice(8, -1);
+    const parts = e.elements.map((el) => {
+      if (ts.isSpreadElement(el)) {
+        const src = this.expr(el.expression);
+        if (src.cs.startsWith("JsMap<")) return `.addAll(${this.coerce(`${src.code}.entries()`, "JsArray<JsArray<object>>", `JsArray<${elem}>`)})`;
+        return `.addAll(${this.coerce(src.code, src.cs, c!)})`;
+      }
+      return `.add(${this.exprTo(el, elem)})`;
+    });
+    return { code: `new ${c}()${parts.join("")}`, cs: c };
+  }
+
+  /** Errors collected while emitting (for the report). */
+  get problems(): readonly string[] {
+    return this.errors;
+  }
+}
