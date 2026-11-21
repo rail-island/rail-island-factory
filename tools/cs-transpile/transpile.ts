@@ -363,6 +363,11 @@ export class Transpiler {
     if (f & (ts.TypeFlags.Boolean | ts.TypeFlags.BooleanLiteral)) return "bool";
     if (f & (ts.TypeFlags.Number | ts.TypeFlags.NumberLiteral)) return "double";
     if (f & (ts.TypeFlags.String | ts.TypeFlags.StringLiteral | ts.TypeFlags.TemplateLiteral)) return "string";
+    // `T & {}` (NonNullable<T>, the type of `l[k]!` for a generic T): T itself
+    if (t.isIntersection()) {
+      const rest = t.types.filter((x) => !(x.flags & ts.TypeFlags.Object && !x.getProperties().length && !x.getCallSignatures().length && !this.checker.getIndexInfosOfType(x).length));
+      if (rest.length === 1 && rest[0]!.flags & ts.TypeFlags.TypeParameter) return this.cs(rest[0]!, node);
+    }
     if (t.isUnion()) {
       const parts = t.types.filter((x) => !this.isVoidLike(x));
       const optional = parts.length !== t.types.length;

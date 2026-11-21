@@ -339,6 +339,13 @@ export function unionDefault(): unknown {
   return [leaf(), leaf("green"), leaf([[0, 1, "red"], [1, 2, "blue"]])];
 }
 
+const pick = <T>(l: Record<string, T>, k: string): T => l[k]!;
+
+/** A generic record read with `!` (its type is T & {}). */
+export function genericNonNull(): unknown {
+  return [pick({ a: { title: "A" }, b: { title: "B" } }, "b").title];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
