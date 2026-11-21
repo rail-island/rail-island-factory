@@ -482,6 +482,46 @@ public static class JsRt
         return i < 0 ? s : s[..i] + b + s[(i + a.Length)..];
     }
 
+    /**
+     * localeCompare as JS's default (ICU root) collation orders the ids and names the factory
+     * sorts: letters by their base letter first (case and accents aside), lower case before
+     * upper on a tie, punctuation and digits before letters. An approximation of full ICU.
+     */
+    public static double localeCompare(this string a, string b)
+    {
+        static int Rank(char c) => char.IsLetter(c) ? 2 : char.IsDigit(c) ? 1 : 0;
+        static string Fold(string s) => s.ToLowerInvariant();
+        string fa = Fold(a), fb = Fold(b);
+        for (int i = 0; i < Math.Min(fa.Length, fb.Length); i++)
+        {
+            int ra = Rank(fa[i]), rb = Rank(fb[i]);
+            if (ra != rb) return ra < rb ? -1 : 1;
+            if (fa[i] != fb[i]) return fa[i] < fb[i] ? -1 : 1;
+        }
+        if (fa.Length != fb.Length) return fa.Length < fb.Length ? -1 : 1;
+        for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return char.IsLower(a[i]) ? -1 : 1;
+        return 0;
+    }
+
+    /** "k" in o where o's C# type is object: a shape's present key, a record's key. */
+    public static bool Has(object? o, string key) => o switch
+    {
+        IJsObject x => x.__has(key),
+        null => throw new JsError($"cannot use 'in' on undefined"),
+        _ => o.GetType().GetMethod("has") is { } m && (bool)m.Invoke(o, new object[] { key })!,
+    };
+
+    /** f.name: the name of the function a delegate holds (a module function's own name). */
+    public static string FnName(Delegate f) => f.Method.Name.StartsWith('<') ? "" : f.Method.Name.TrimStart('@');
+
+    /** a.b where a's C# type is object (a union of named types): the field read at run time. */
+    public static object? Get(object? o, string key) => o switch
+    {
+        IJsObject x => x.__get(key),
+        null => throw new JsError($"cannot read {key} of undefined"),
+        _ => o.GetType().GetField(key)?.GetValue(o) ?? o.GetType().GetProperty(key)?.GetValue(o),
+    };
+
     public static string replaceAll(this string s, string a, string b) => s.Replace(a, b, StringComparison.Ordinal);
     public static string trim(this string s) => s.Trim();
     public static double indexOf(this string s, string a) => s.IndexOf(a, StringComparison.Ordinal);
@@ -512,6 +552,38 @@ public static class JsRt
             return (T)o;
         }
         if (target == typeof(double) || target == typeof(double?)) return (T)(object)Convert.ToDouble(v, CultureInfo.InvariantCulture);
+        if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof(JsRecord<>))
+        {
+            // a shape object or another record read as a record
+            var rec = Activator.CreateInstance(target)!;
+            var elem = target.GetGenericArguments()[0];
+            var asElem = typeof(JsRt).GetMethod(nameof(As))!.MakeGenericMethod(elem);
+            var setter = target.GetProperty("Item")!;
+            foreach (var (k, x) in KeyValues(v)) setter.SetValue(rec, asElem.Invoke(null, new[] { x }), new object[] { k });
+            return (T)rec;
+        }
+        if (typeof(IJsObject).IsAssignableFrom(target) && target.GetConstructor(Type.EmptyTypes) != null)
+        {
+            // a record, or a class instance whose fields the shape names, read as a shape
+            var o = (IJsObject)Activator.CreateInstance(target)!;
+            foreach (var (k, x) in KeyValues(v)) o.__set(k, x);
+            return (T)o;
+        }
+        if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof(JsMap<,>) && v is System.Collections.IEnumerable pairs)
+        {
+            var map = Activator.CreateInstance(target)!;
+            var ga = target.GetGenericArguments();
+            var asK = typeof(JsRt).GetMethod(nameof(As))!.MakeGenericMethod(ga[0]);
+            var asV = typeof(JsRt).GetMethod(nameof(As))!.MakeGenericMethod(ga[1]);
+            var set = target.GetMethod("set")!;
+            foreach (var e in pairs)
+            {
+                var pair = (IJsIndexable)e!;
+                set.Invoke(map, new[] { asK.Invoke(null, new[] { pair.__at(0) }), asV.Invoke(null, new[] { pair.__at(1) }) });
+            }
+            return (T)map;
+        }
+        if (typeof(Delegate).IsAssignableFrom(target) && v is Delegate f) return (T)(object)AdaptDelegate(f, target);
         if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof(JsArray<>) && v is System.Collections.IEnumerable items)
         {
             var arr = Activator.CreateInstance(target)!;
@@ -522,6 +594,70 @@ public static class JsRt
             return (T)arr;
         }
         throw new InvalidCastException($"cannot convert {v.GetType().Name} to {target.Name}");
+    }
+
+    /** The keys and values of a shape object, a record or a class instance (its public fields). */
+    private static IEnumerable<(string, object?)> KeyValues(object v)
+    {
+        if (v is IJsObject o)
+        {
+            foreach (var k in o.__keys().ToList()) yield return (k, o.__get(k));
+            yield break;
+        }
+        var t = v.GetType();
+        if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(JsRecord<>))
+        {
+            foreach (var e in (System.Collections.IEnumerable)v)
+            {
+                var et = e!.GetType();
+                yield return ((string)et.GetProperty("Key")!.GetValue(e)!, et.GetProperty("Value")!.GetValue(e));
+            }
+            yield break;
+        }
+        foreach (var fi in t.GetFields()) if (!fi.IsStatic) yield return (fi.Name.TrimStart('@'), fi.GetValue(v));
+    }
+
+    /**
+     * A function value as another delegate type: its parameters converted from the target's and the
+     * extra ones dropped (TS lets a function with fewer parameters stand for a wider type), its result
+     * converted to the target's. Built with expression trees.
+     */
+    private static Delegate AdaptDelegate(Delegate f, Type target)
+    {
+        var invoke = target.GetMethod("Invoke")!;
+        var tps = invoke.GetParameters().Select(p => System.Linq.Expressions.Expression.Parameter(p.ParameterType)).ToArray();
+        var fps = f.Method.GetParameters();
+        var fInvoke = f.GetType().GetMethod("Invoke")!;
+        var fParams = fInvoke.GetParameters();
+        var asM = typeof(JsRt).GetMethod(nameof(As))!;
+        var args = fParams.Select((p, i) => i < tps.Length
+            ? (System.Linq.Expressions.Expression)System.Linq.Expressions.Expression.Call(asM.MakeGenericMethod(p.ParameterType), System.Linq.Expressions.Expression.Convert(tps[i], typeof(object)))
+            : System.Linq.Expressions.Expression.Default(p.ParameterType)).ToArray();
+        System.Linq.Expressions.Expression body = System.Linq.Expressions.Expression.Invoke(System.Linq.Expressions.Expression.Constant(f), args);
+        if (invoke.ReturnType == typeof(void)) { }
+        else if (fInvoke.ReturnType == typeof(void)) body = System.Linq.Expressions.Expression.Block(body, System.Linq.Expressions.Expression.Default(invoke.ReturnType));
+        else body = System.Linq.Expressions.Expression.Call(asM.MakeGenericMethod(invoke.ReturnType), System.Linq.Expressions.Expression.Convert(body, typeof(object)));
+        void _(object? __) { }
+        _(fps);
+        return System.Linq.Expressions.Expression.Lambda(target, body, tps).Compile();
+    }
+
+    /** A shape object (a palette written with named keys) as a record. */
+    public static JsRecord<V> ShapeToRecord<V>(IJsObject? o)
+    {
+        if (o == null) return null!;
+        var r = new JsRecord<V>();
+        foreach (var k in o.__keys().ToList()) r[k] = As<V>(o.__get(k));
+        return r;
+    }
+
+    /** A record as a shape object: each key the shape has, set through it. */
+    public static T RecordToShape<T>(object? rec) where T : IJsObject, new()
+    {
+        if (rec == null) return default!;
+        var o = new T();
+        foreach (var (k, x) in KeyValues(rec)) o.__set(k, x);
+        return o;
     }
 
     /** `new (this.constructor)(args)`: another instance of the object's own class. */

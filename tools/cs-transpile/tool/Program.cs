@@ -70,10 +70,13 @@ public static class Program
             {
                 sb.Clear();
                 sb.Append("{\"error\":");
-                JsJson.WriteString(sb, e.ToString());
+                // the innermost exception (a type initializer's cause) and the generated frame it came from
+                var b = e.GetBaseException();
+                var frame = (b.StackTrace ?? "").Split('\n').FirstOrDefault(l => l.Contains("Generated.")) ?? "";
+                JsJson.WriteString(sb, $"{b.GetType().Name}: {b.Message} {frame.Trim()}");
                 sb.Append('}');
             }
-            File.WriteAllText(Path.Combine(outDir, j.file), sb.ToString());
+            File.WriteAllText(System.IO.Path.Combine(outDir, j.file), sb.ToString());
         }
     }
 
@@ -83,7 +86,9 @@ public static class Program
         for (int i = 0; i < xs.Length; i++)
         {
             if (i > 0) sb.Append(',');
-            sb.Append(JsRt.NumStr(xs[i]));
+            // JSON has no NaN or Infinity: written as strings, as compare.ts writes the JS side's
+            if (float.IsFinite(xs[i])) sb.Append(JsRt.NumStr(xs[i]));
+            else sb.Append('"').Append(JsRt.NumStr(xs[i])).Append('"');
         }
         sb.Append(']');
     }
@@ -92,7 +97,7 @@ public static class Program
     {
         sb.Append("{\"name\":");
         JsJson.WriteString(sb, n.name);
-        sb.Append(",\"position\":[").Append(string.Join(",", n.position.Select(JsRt.NumStr))).Append("],\"meshes\":[");
+        sb.Append(",\"position\":[").Append(string.Join(",", n.position.Select(JsRt.NumStr))).Append("],\"visible\":").Append(n.visible ? "true" : "false").Append(",\"meshes\":[");
         for (int i = 0; i < n.meshes.Count; i++)
         {
             var m = n.meshes[i];
@@ -114,6 +119,7 @@ public static class Program
             sb.Append(",\"normal\":");
             Floats(sb, m.normals);
             if (m.colors != null) { sb.Append(",\"color\":"); Floats(sb, m.colors); }
+            if (m.uvs != null) { sb.Append(",\"uv\":"); Floats(sb, m.uvs); }
             sb.Append('}');
         }
         sb.Append("],\"children\":[");
@@ -213,7 +219,7 @@ globalThis.__triangles = (g) => {
             {
                 var engine = new Jint.Engine();
                 engine.Execute(ThreeStub);
-                engine.Modules.Add("model", File.ReadAllText(Path.Combine(bundleDir, j.id + ".js")));
+                engine.Modules.Add("model", File.ReadAllText(System.IO.Path.Combine(bundleDir, j.id + ".js")));
                 var ns = engine.Modules.Import("model");
                 e = (engine, ns.Get("default"));
                 engines[j.id] = e;

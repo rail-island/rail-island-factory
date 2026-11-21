@@ -40,16 +40,21 @@ function dumpMaterial(m: THREE.MeshStandardMaterial): Json {
 }
 
 /** A built JS group as the C# console dumps a ModelNode (Program.cs WriteNode). */
+/** Float32 values as the C# dump writes them: NaN and the infinities as strings (JSON has none). */
+const floats = (a: ArrayLike<number>): Json[] => Array.from(a, (v) => (Number.isFinite(v) ? v : String(v)));
+
 export function dumpGroup(o: THREE.Object3D, root = true): Json {
   const meshes = o.children.filter((c): c is THREE.Mesh => (c as THREE.Mesh).isMesh).map((m) => {
     const g = m.geometry;
     const color = g.getAttribute("color");
+    const uv = g.getAttribute("uv");
     return {
       name: m.name,
       material: dumpMaterial(m.material as THREE.MeshStandardMaterial),
-      position: Array.from(g.getAttribute("position").array as Float32Array),
-      normal: Array.from(g.getAttribute("normal").array as Float32Array),
-      ...(color ? { color: Array.from(color.array as Float32Array) } : {}),
+      position: floats(g.getAttribute("position").array as Float32Array),
+      normal: floats(g.getAttribute("normal").array as Float32Array),
+      ...(color ? { color: floats(color.array as Float32Array) } : {}),
+      ...(uv ? { uv: floats(uv.array as Float32Array) } : {}),
     };
   });
   const userData: Record<string, Json> = JSON.parse(JSON.stringify(o.userData));
@@ -57,6 +62,7 @@ export function dumpGroup(o: THREE.Object3D, root = true): Json {
   return {
     name: o.name,
     position: [o.position.x, o.position.y, o.position.z],
+    visible: o.visible,
     meshes,
     children: o.children.filter((c) => !(c as THREE.Mesh).isMesh).map((c) => dumpGroup(c, false)),
     animations: (root ? o.animations : []).map((a) => ({
@@ -88,15 +94,16 @@ export function diff(a: Json, b: Json, at = "$", tolerant = false): string | nul
   if (typeof a === "number" && typeof b === "number") return same(a, b) ? null : `${at}: ${a} (js) vs ${b} (cs)`;
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return `${at}: length ${a.length} (js) vs ${b.length} (cs)`;
-    if (a.every((x) => typeof x === "number")) {
+    if (a.every((x) => typeof x === "number" || x === "NaN" || x === "Infinity" || x === "-Infinity")) {
       let n = 0;
       let first = -1;
       let worst = 0;
       for (let i = 0; i < a.length; i++) {
-        if (!same(a[i] as number, b[i] as number)) {
+        if (typeof a[i] === "string" || typeof b[i] === "string" ? a[i] !== b[i] : !same(a[i] as number, b[i] as number)) {
           n++;
           if (first < 0) first = i;
-          worst = Math.max(worst, Math.abs((a[i] as number) - (b[i] as number)));
+          const ai = a[i], bi = b[i];
+          if (typeof ai === "number" && typeof bi === "number") worst = Math.max(worst, Math.abs(ai - bi));
         }
       }
       return n ? `${at}: ${n} of ${a.length} numbers differ, first [${first}] ${a[first]} (js) vs ${b[first]} (cs), largest difference ${worst}` : null;

@@ -3,7 +3,8 @@
 // ToModelNode, which builds the engine-neutral node tree from the triangle soups
 // exactly as toGroup builds the THREE.Group: a mesh per material in name order, a
 // node per part at its pivot (offset from its parent's), the clips and the userData.
-// Named surfaces (UVs) and interiors are out of the pilot's scope and throw.
+// Named surfaces give a mesh box-projected UVs (surfaceUvs.ts) and a userData table;
+// interior parts are built hidden, with the door clips that reveal them (interiorTable.ts).
 
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,6 @@ public class MeshBuilder : MeshCore
         var standard = materials.map(mat =>
         {
             var spec = palette[mat];
-            if (spec.surface != null) throw new NotSupportedException($"{mat}: named surfaces are outside the pilot");
             return new MaterialData
             {
                 name = mat,
@@ -86,6 +86,7 @@ public class MeshBuilder : MeshCore
                     }
                     o += 9;
                 }
+                var spec = palette[mat];
                 holder.meshes.Add(new MeshData
                 {
                     name = mat,
@@ -93,6 +94,7 @@ public class MeshBuilder : MeshCore
                     positions = pos,
                     normals = nrm,
                     colors = col,
+                    uvs = spec.surfaceTile is double tile && tile != 0 ? BoxUvs(g.pos, g.part, unit.index, all, new[] { px, py, pz }, tile, mine) : null,
                 });
             }
         }
@@ -119,7 +121,71 @@ public class MeshBuilder : MeshCore
         if (drives != null) data["clipDrives"] = drives;
         var lampTable = lamps();
         if (lampTable != null) data["lamps"] = lampTable;
-        if (parts.some(p => p.name.StartsWith("interior", StringComparison.Ordinal))) throw new NotSupportedException("interiors are outside the pilot");
+        // the materials that draw with a named surface, which the game binds a photo to
+        var named = materials.filter(mat => palette[mat].surface != null);
+        if (named.length > 0)
+        {
+            var surfaces = new JsRecord<string>();
+            foreach (var mat in named) surfaces[mat] = palette[mat].surface;
+            data["surfaces"] = surfaces;
+        }
+        Interiors(root);
         return root;
+    }
+
+    /**
+     * surfaceUvs.ts boxUvs: per triangle, u,v from the two model axes its normal points least
+     * along, in model coordinates (the position relative to the pivot, the pivot added back,
+     * as the JS computes it), divided by the tile, then Float32.
+     */
+    private static float[] BoxUvs(JsArray<double> gpos, JsArray<double> gpart, double unit, bool all, double[] pivot, double tile, int tris)
+    {
+        var uv = new float[tris * 3 * 2];
+        int o = 0;
+        var p = new double[9];
+        for (int t = 0; t < (int)gpart.length; t++)
+        {
+            if (!all && gpart[t] != unit) continue;
+            for (int k = 0; k < 9; k++) p[k] = gpos[t * 9 + k] - pivot[k % 3];
+            double ux = p[3] - p[0], uy = p[4] - p[1], uz = p[5] - p[2];
+            double vx = p[6] - p[0], vy = p[7] - p[1], vz = p[8] - p[2];
+            double nx = Math.Abs(uy * vz - uz * vy), ny = Math.Abs(uz * vx - ux * vz), nz = Math.Abs(ux * vy - uy * vx);
+            for (int k = 0; k < 3; k++)
+            {
+                // the JS reads its Float32Array-bound numbers before the conversion: doubles
+                double x = p[k * 3] + pivot[0], y = p[k * 3 + 1] + pivot[1], z = p[k * 3 + 2] + pivot[2];
+                (double u, double v) = ny >= nx && ny >= nz ? (x, z) : nx >= nz ? (z, y) : (x, y);
+                uv[o++] = (float)(u / tile);
+                uv[o++] = (float)(v / tile);
+            }
+        }
+        return uv;
+    }
+
+    /**
+     * interiorTable.ts: each interior part (named `interior` or `interior-...`) hidden, and the
+     * door clips of its car that reveal it, sorted, on userData.interiors.
+     */
+    private void Interiors(ModelNode root)
+    {
+        var table = new JsRecord<JsArray<string>>();
+        foreach (var p in parts)
+        {
+            if (!JsRt.Test("^interior(-|$)", "", p.name)) continue;
+            string car = p.parent >= 0 ? "-" + parts[p.parent].name : "";
+            var names = clips.filter(c => c.drive.drive == "door" && c.name == $"doors-{c.drive.side}{car}").map(c => c.name).sort();
+            if (names.length == 0) throw new JsError($"{p.name}: no door clip of its car reveals it");
+            table[p.name] = names;
+        }
+        if (table.count == 0) return;
+        foreach (var name in table.keys()) Find(root, name)!.visible = false;
+        root.userData["interiors"] = table;
+    }
+
+    private static ModelNode? Find(ModelNode n, string name)
+    {
+        if (n.name == name) return n;
+        foreach (var c in n.children) if (Find(c, name) is { } f) return f;
+        return null;
     }
 }

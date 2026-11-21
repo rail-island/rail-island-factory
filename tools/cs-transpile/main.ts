@@ -75,20 +75,48 @@ ${sets.join("\n")}
 
 export interface TranspileReport {
   designs: Array<{ id: string; source: string; bundleModules: string[] }>;
+  /** Designs a batch left out because they reach unsupported code. */
+  dropped: Array<{ id: string; reason: string }>;
   modules: string[];
   inventory: Record<string, number>;
   stats: Record<string, number>;
 }
 
 /** Transpiles the designs and writes the C# project. Throws TranspileError listing every unsupported construct. */
-export async function writeProject(ids: string[]): Promise<TranspileReport> {
-  const designs = ids.map(pilotDesign);
-  const bundles = await Promise.all(designs.map(bundleInputs));
+/**
+ * The designs of `designs` that reach none of the declarations an error names (file:line): a
+ * batch drops the others rather than fail as a whole.
+ */
+function withoutErrors(designs: PilotDesign[], errors: string[]): PilotDesign[] {
+  const where = errors.map((line) => line.match(/^([^:]+):(\d+):\d+:/) ?? line.match(/ at ([^:]+):(\d+):\d+$/)).filter((m): m is RegExpMatchArray => !!m).map((m) => ({ file: m[1]!, line: Number(m[2]) }));
   const t = new Transpiler(GENERATOR_DIR, path.join(ROOT, "tsconfig.json"));
-  const result = t.transpile(
-    designs.map((d) => ({ source: d.source, names: [d.build, d.buildLod] })),
-    [{ source: "meshCore.ts", name: "MeshCore" }],
-  );
+  return designs.filter((d) => {
+    const spans = t.reachFrom([{ source: d.source, names: [d.build, d.buildLod] }], [{ source: "meshCore.ts", name: "MeshCore" }]).map((x) => t.span(x));
+    return !where.some((w) => spans.some((sp) => sp.file === w.file && w.line >= sp.from && w.line <= sp.to));
+  });
+}
+
+export async function writeProject(ids: string[], dropUnsupported = false): Promise<TranspileReport> {
+  let designs = ids.map(pilotDesign);
+  const run = (list: PilotDesign[]) => {
+    const tr = new Transpiler(GENERATOR_DIR, path.join(ROOT, "tsconfig.json"));
+    return { t: tr, result: tr.transpile(list.map((d) => ({ source: d.source, names: [d.build, d.buildLod] })), [{ source: "meshCore.ts", name: "MeshCore" }]) };
+  };
+  let dropped: Array<{ id: string; reason: string }> = [];
+  let done: ReturnType<typeof run>;
+  try {
+    done = run(designs);
+  } catch (e) {
+    if (!(e instanceof TranspileError) || !dropUnsupported) throw e;
+    const errors = e.message.split("\n").slice(1);
+    const kept = withoutErrors(designs, errors);
+    dropped = designs.filter((d) => !kept.includes(d)).map((d) => ({ id: d.id, reason: errors[0]! }));
+    designs = kept;
+    console.log(`dropped ${dropped.length} design(s) that reach unsupported code: ${dropped.map((d) => d.id).join(", ")}`);
+    done = run(designs);
+  }
+  const { t, result } = done;
+  const bundles = await Promise.all(designs.map(bundleInputs));
   fs.rmSync(path.join(OUT_DIR, "Generated"), { recursive: true, force: true });
   fs.mkdirSync(path.join(OUT_DIR, "Generated"), { recursive: true });
   fs.mkdirSync(path.join(OUT_DIR, "Runtime"), { recursive: true });
@@ -100,6 +128,7 @@ export async function writeProject(ids: string[]): Promise<TranspileReport> {
   fs.copyFileSync(path.join(HERE, "tool", "RailIsland.Models.csproj"), path.join(OUT_DIR, "RailIsland.Models.csproj"));
   const report: TranspileReport = {
     designs: designs.map((d, i) => ({ id: d.id, source: d.source, bundleModules: bundles[i]! })),
+    dropped,
     modules: result.modules,
     inventory: Object.fromEntries(result.inventory),
     stats: { ...result.stats },
@@ -181,7 +210,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const listed = process.argv.find((a) => a.startsWith("--ids="))?.slice(6).split(",").filter(Boolean);
   const ids = listed?.length ? listed : [...PILOT_IDS, ...(process.argv.includes("--truck") ? STRETCH_IDS : [])];
   try {
-    const report = await writeProject(ids);
+    const report = await writeProject(ids, !!listed?.length);
+    ids.splice(0, ids.length, ...report.designs.map((d) => d.id));
     console.log(`transpiled ${report.stats.declarations} declarations from ${report.modules.length} modules into ${report.stats.lines} lines of C# (${OUT_DIR})`);
     console.log(`classes: ${report.stats.dataClasses} shape classes (${report.stats.anonymousShapes} anonymous, ${report.stats.mergedUnions} merged unions), ${report.stats.conversions} conversions between shapes`);
   } catch (e) {

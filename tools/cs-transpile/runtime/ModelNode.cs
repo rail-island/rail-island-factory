@@ -34,6 +34,8 @@ public sealed class MeshData
     public float[] positions = System.Array.Empty<float>();
     public float[] normals = System.Array.Empty<float>();
     public float[]? colors;
+    /** Box-projected UVs of a material that names a surface (docs/models/surfaces.md). */
+    public float[]? uvs;
 }
 
 public sealed class ClipTrackData
@@ -55,6 +57,8 @@ public sealed class ModelNode
 {
     public string name = "";
     public double[] position = { 0, 0, 0 };
+    /** False for a vehicle's interior part until a door opens (docs/models/interiors.md). */
+    public bool visible = true;
     public List<MeshData> meshes = new();
     public List<ModelNode> children = new();
     public List<ClipData> animations = new();
