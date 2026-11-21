@@ -31,6 +31,13 @@ public readonly struct JsVoid
  * anonymous shape): its fields by their JS names, so a spread or a structural
  * conversion can copy them without reflection. A null field is an absent key.
  */
+/** The marker a transpiled constructor passes its base so the base does nothing; __ctor_X does the work. */
+public sealed class JsCtor
+{
+    public static readonly JsCtor Skip = new();
+    private JsCtor() { }
+}
+
 public interface IJsObject
 {
     /** The key is present: set, and for a field that cannot hold null, not null. */
@@ -266,10 +273,27 @@ public static class JsRt
     public static string toFixed(this double v, double digits = 0)
     {
         if (!double.IsFinite(v) || Math.Abs(v) >= 1e21) return NumStr(v);
-        string s = v.ToString("F" + (int)digits, CultureInfo.InvariantCulture);
-        // JS writes -0.00 as "0.00"... but "-0.001".toFixed(2) is "-0.00": keep .NET's sign only for v < 0
-        if (v == 0) s = s.TrimStart('-');
-        return s;
+        // the exact value of |v| times 10^f, rounded half up (JS picks the larger n of a tie; .NET's
+        // "F" format rounds an exact tie such as 3.44140625 to even)
+        int f = (int)digits;
+        long bits = BitConverter.DoubleToInt64Bits(Math.Abs(v));
+        int exp = (int)((bits >> 52) & 0x7FF);
+        long frac = bits & 0xFFFFFFFFFFFFFL;
+        System.Numerics.BigInteger mant = exp == 0 ? frac : frac | (1L << 52);
+        int e2 = (exp == 0 ? 1 : exp) - 1075;
+        var num = mant * System.Numerics.BigInteger.Pow(10, f);
+        System.Numerics.BigInteger n;
+        if (e2 >= 0) n = num << e2;
+        else
+        {
+            var den = System.Numerics.BigInteger.One << -e2;
+            n = System.Numerics.BigInteger.DivRem(num, den, out var rem);
+            if (rem * 2 >= den) n += 1;
+        }
+        string digitsStr = n.ToString(CultureInfo.InvariantCulture).PadLeft(f + 1, '0');
+        string s = f == 0 ? digitsStr : digitsStr[..^f] + "." + digitsStr[^f..];
+        // -0.001.toFixed(2) is "-0.00"; 0 and -0 have no sign
+        return v < 0 ? "-" + s : s;
     }
 
     // --- strings ---------------------------------------------------------------------

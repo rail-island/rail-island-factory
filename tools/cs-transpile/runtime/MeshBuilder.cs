@@ -13,13 +13,6 @@ using RailIsland.Factory.Generated;
 
 namespace RailIsland.Factory.Runtime;
 
-/** The marker a transpiled constructor passes its base so the base does nothing; __ctor_X does the work. */
-public sealed class JsCtor
-{
-    public static readonly JsCtor Skip = new();
-    private JsCtor() { }
-}
-
 public class MeshBuilder : MeshCore
 {
     public MeshBuilder(JsRecord<MaterialSpec> palette) : base(JsCtor.Skip) { __ctor_MeshBuilder(palette); }

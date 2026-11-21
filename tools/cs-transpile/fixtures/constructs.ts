@@ -346,6 +346,33 @@ export function genericNonNull(): unknown {
   return [pick({ a: { title: "A" }, b: { title: "B" } }, "b").title];
 }
 
+/** toFixed rounds an exact binary tie half away from zero (a memo key of a cab's scan). */
+export function toFixedTies(): unknown {
+  return [(-3.44140625).toFixed(7), (3.44140625).toFixed(7), (0.125).toFixed(2), (2.5).toFixed(0), (-0.001).toFixed(2), (0).toFixed(3), (1e-7).toFixed(7), (123.456).toFixed(1), (1.005).toFixed(2), (-2.0039062500).toFixed(7)];
+}
+
+interface Scan {
+  memo: Map<string, [number, number] | null>;
+}
+
+class Scanner {
+  private readonly memo: Map<string, [number, number] | null>;
+  constructor(shared?: Scan) {
+    this.memo = shared?.memo ?? new Map();
+  }
+  mark(k: string): void {
+    this.memo.set(k, [1, 2]);
+  }
+}
+
+/** A shared map handed on with `?? new Map()` stays the same map. */
+export function sharedMap(): unknown {
+  const shared: Scan = { memo: new Map() };
+  new Scanner(shared).mark("a");
+  new Scanner().mark("b");
+  return [...shared.memo.keys()];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

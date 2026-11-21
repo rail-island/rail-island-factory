@@ -1972,6 +1972,8 @@ export class Transpiler {
     if (ts.isAsExpression(e) && this.classView(e)) return raw;
     // literals, functions and `new` already have the type they are built with (new Map() its declared one)
     if (ts.isObjectLiteralExpression(e) || ts.isArrayLiteralExpression(e) || ts.isArrowFunction(e) || ts.isFunctionExpression(e) || ts.isNewExpression(e)) return raw;
+    // `a ?? b` of one reference type is that type (a conversion to the union's would copy a)
+    if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken && !VALUE_TYPES.has(raw.cs.replace(/\?$/, "")) && raw.cs !== "object") return raw;
     // an assignment's value is the target's: converting it would store one object and hand on a copy
     if (ts.isBinaryExpression(e) && e.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && e.operatorToken.kind <= ts.SyntaxKind.LastAssignment) return raw;
     const t = this.checker.getTypeAtLocation(e);
@@ -3004,6 +3006,12 @@ export class Transpiler {
       const left = this.exprRaw(e.left, false);
       // a number TypeScript calls never nullish: the left side as it is
       if (VALUE_TYPES.has(left.cs)) return { code: this.coerce(left.code, left.cs, c), cs: c };
+      // both sides of one reference type (`s.shared?.memo ?? new Map()`, typed Map<any, any> | ...):
+      // that type, not the union's - converting would copy the left side's map
+      if (!VALUE_TYPES.has(left.cs.replace(/\?$/, "")) && left.cs !== "object" && left.cs !== "null") {
+        const right = this.exprRaw(e.right, false);
+        if (right.cs === left.cs) return { code: `(${left.code} ?? ${right.code})`, cs: left.cs };
+      }
       const nullable = VALUE_TYPES.has(c) ? `${c}?` : c;
       const l = left.cs === nullable || left.cs === "null" ? left.code : this.coerce(left.code, left.cs, nullable);
       // two different C# types meeting as object (a Map ?? []): both sides as object
