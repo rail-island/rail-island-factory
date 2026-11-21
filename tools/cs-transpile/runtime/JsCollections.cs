@@ -73,6 +73,8 @@ public sealed class JsRecord<T> : IEnumerable<KeyValuePair<string, T>>
 
     public JsRecord<T> assign(JsRecord<T> src)
     {
+        // { ...undefined } spreads nothing
+        if (src == null) return this;
         foreach (var k in src.keys()) this[k] = src[k];
         return this;
     }

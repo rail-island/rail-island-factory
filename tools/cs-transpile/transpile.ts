@@ -30,8 +30,11 @@ interface DataField {
 
 interface DataClass {
   name: string;
+  /** Every field, the base class's included. */
   fields: DataField[];
   origin: string;
+  /** The class an interface extends (`interface Variant extends FillCandidate`): the C# base class. */
+  base?: string;
 }
 
 /** Per C# member: the local names in use (C# forbids a local hiding another in the same member). */
@@ -541,7 +544,8 @@ export class Transpiler {
       const name = this.uniqueTypeName(named.name);
       this.typeNameOf.set(named, name);
       const fields = this.fieldsOf(t, node);
-      this.dataClasses.set(name, { name, fields, origin: this.originOf(named) });
+      const base = this.interfaceBase(named, fields, node);
+      this.dataClasses.set(name, { name, fields, origin: this.originOf(named), ...(base ? { base } : {}) });
       // an anonymous shape with exactly these fields is this class ({ ...spec } of a MaterialSpec)
       const key = this.shapeKey(fields);
       if (!this.shapeNames.has(key)) this.shapeNames.set(key, name);
@@ -610,6 +614,49 @@ export class Transpiler {
       this.meshCoreNames = new Set((cls?.members ?? []).map((m) => m.name?.getText() ?? "").filter(Boolean));
     }
     return this.meshCoreNames;
+  }
+
+  /**
+   * The C# base class of an interface extending exactly one other (`Variant extends FillCandidate`),
+   * when every field of the base keeps its C# type: a Variant passed as a FillCandidate is then the
+   * same object, and reads back as a Variant. Null for anything else.
+   */
+  private interfaceBase(sym: ts.Symbol, fields: DataField[], node?: ts.Node): string | undefined {
+    const decl = sym.declarations?.find(ts.isInterfaceDeclaration);
+    const ext = decl?.heritageClauses?.filter((h) => h.token === ts.SyntaxKind.ExtendsKeyword).flatMap((h) => [...h.types]) ?? [];
+    if (ext.length !== 1) return undefined;
+    let base: string;
+    try {
+      base = this.cs(this.checker.getTypeAtLocation(ext[0]!), node);
+    } catch {
+      return undefined;
+    }
+    const b = this.dataClasses.get(base);
+    if (!b) return undefined;
+    const mine = new Map(fields.map((f) => [f.js, f]));
+    return b.fields.every((f) => mine.get(f.js)?.cs === f.cs && !!mine.get(f.js)?.nullable === !!f.nullable) ? base : undefined;
+  }
+
+  /** Whether `sub` is `sup` or derives from it. */
+  private derives(sub: string, sup: string): boolean {
+    for (let c: string | undefined = sub; c; c = this.dataClasses.get(c)?.base) if (c === sup) return true;
+    return false;
+  }
+
+  /** The class whose own fields hold `js` (up the base chain from `cls`), and its index there. */
+  private ownerOf(cls: string, js: string): { cls: string; index: number } {
+    const d = this.dataClasses.get(cls)!;
+    const own = this.ownFields(d);
+    const i = own.findIndex((f) => f.js === js);
+    if (i >= 0 || !d.base) return { cls, index: i };
+    return this.ownerOf(d.base, js);
+  }
+
+  /** A class's own fields: those its base does not have. */
+  private ownFields(d: DataClass): DataField[] {
+    if (!d.base) return d.fields;
+    const inherited = new Set(this.dataClasses.get(d.base)!.fields.map((f) => f.js));
+    return d.fields.filter((f) => !inherited.has(f.js));
   }
 
   /** What makes two shapes one class: their field names, C# types and null-ness. */
@@ -720,6 +767,8 @@ export class Transpiler {
       this.conversions++;
       return `JsRt.RecordToShape<${to}>(${code})`;
     }
+    if (this.isDataClassName(from) && this.isDataClassName(to) && this.derives(from, to)) return code;
+    if (this.isDataClassName(from) && this.isDataClassName(to) && this.derives(to, from)) return `JsRt.As<${to}>(${code})`;
     if (this.isDataClassName(from) && this.isDataClassName(to)) {
       this.conversions++;
       // a generated converter: the present fields copied as they are typed, no reflection
@@ -822,37 +871,44 @@ export class Transpiler {
    * spreads and JSON.stringify tell them apart; for the others null is absence.
    */
   private emitDataClass(d: DataClass): string {
-    const f = d.fields;
-    // presence bits: 64 to a word, __p0, __p1, ...
+    // a derived class declares its own fields; the IJsObject members chain to the base's
+    const f = this.ownFields(d);
+    const derived = !!d.base;
+    const mod = derived ? "override" : "virtual";
     const words = Math.max(1, Math.ceil(f.length / 64));
     const esc = (js: string) => Transpiler.escape(js);
     const bit = (i: number) => `${(1n << BigInt(i % 64)).toString()}UL`;
-    const word = (i: number) => `__p${Math.floor(i / 64)}`;
+    const word = (i: number) => `__p_${d.name}_${Math.floor(i / 64)}`;
     const has = (x: DataField, i: number) => (x.nullable ? `(${word(i)} & ${bit(i)}) != 0` : VALUE_TYPES.has(x.cs) ? "true" : `this.${Transpiler.backing(x.js)} != null`);
+    const fallback = (call: string, none: string) => (derived ? `base.${call}` : none);
     const lines = [
       `/** From ${d.origin}. */`,
-      `public partial class ${d.name} : IJsObject`,
+      `public partial class ${d.name} : ${derived ? d.base : "IJsObject"}`,
       "{",
-      `    internal ulong ${Array.from({ length: words }, (_, k) => `__p${k}`).join(", ")};`,
+      `    internal ulong ${Array.from({ length: words }, (_, k) => `__p_${d.name}_${k}`).join(", ")};`,
       ...f.map((x, i) => {
         const b = Transpiler.backing(x.js);
         return `    internal ${x.cs} ${b};\n    public ${x.cs} ${esc(x.js)} { get => ${b}; set { ${b} = value; ${word(i)} |= ${bit(i)}; } }`;
       }),
-      `    public bool __has(string __k) => __k switch { ${f.map((x, i) => `${this.str(x.js)} => ${has(x, i)}, `).join("")}_ => false };`,
-      `    public object __get(string __k) => __k switch { ${f.map((x) => `${this.str(x.js)} => this.${Transpiler.backing(x.js)}, `).join("")}_ => null };`,
-      `    public void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}} }`,
-      `    public IEnumerable<string> __keys() { ${f.map((x, i) => (has(x, i) === "true" ? `yield return ${this.str(x.js)}; ` : `if (${has(x, i)}) yield return ${this.str(x.js)}; `)).join("")}yield break; }`,
-      `    public bool __delete(string __k) { switch (__k) { ${f.map((x, i) => `case ${this.str(x.js)}: this.${Transpiler.backing(x.js)} = default; ${word(i)} &= ~${bit(i)}; return true; `).join("")}} return true; }`,
-      `    public IJsObject __copy() => (IJsObject)MemberwiseClone();`,
-      `    public ${d.name} copy() => (${d.name})MemberwiseClone();`,
+      `    public ${mod} bool __has(string __k) => __k switch { ${f.map((x, i) => `${this.str(x.js)} => ${has(x, i)}, `).join("")}_ => ${fallback("__has(__k)", "false")} };`,
+      `    public ${mod} object __get(string __k) => __k switch { ${f.map((x) => `${this.str(x.js)} => this.${Transpiler.backing(x.js)}, `).join("")}_ => ${fallback("__get(__k)", "null")} };`,
+      `    public ${mod} void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}default: ${derived ? "base.__set(__k, __v); " : ""}break; } }`,
+      `    public ${mod} IEnumerable<string> __keys() { ${derived ? "foreach (var __b in base.__keys()) yield return __b; " : ""}${f.map((x, i) => (has(x, i) === "true" ? `yield return ${this.str(x.js)}; ` : `if (${has(x, i)}) yield return ${this.str(x.js)}; `)).join("")}yield break; }`,
+      `    public ${mod} bool __delete(string __k) { switch (__k) { ${f.map((x, i) => `case ${this.str(x.js)}: this.${Transpiler.backing(x.js)} = default; ${word(i)} &= ~${bit(i)}; return true; `).join("")}} return ${fallback("__delete(__k)", "true")}; }`,
+      ...(derived ? [] : [`    public IJsObject __copy() => (IJsObject)MemberwiseClone();`]),
+      `    public ${derived ? "new " : ""}${d.name} copy() => (${d.name})MemberwiseClone();`,
       "}",
     ];
     return lines.join("\n") + "\n";
   }
 
   /** Whether field `x` (index `i`) of a shape object `o` is present, read off its backing field. */
-  private presentOn(o: string, x: DataField, i: number): string {
-    if (x.nullable) return `(${o}.__p${Math.floor(i / 64)} & ${(1n << BigInt(i % 64)).toString()}UL) != 0`;
+  private presentOn(o: string, x: DataField, i: number, cls?: string): string {
+    if (x.nullable) {
+      // the presence bit lives in the class that declares the field
+      const at = cls ? this.ownerOf(cls, x.js) : { cls: "", index: i };
+      return `(${o}.__p_${at.cls}_${Math.floor(at.index / 64)} & ${(1n << BigInt(at.index % 64)).toString()}UL) != 0`;
+    }
     return VALUE_TYPES.has(x.cs) ? "true" : `${o}.${Transpiler.backing(x.js)} != null`;
   }
 
@@ -873,7 +929,7 @@ export class Transpiler {
         const lines = src.flatMap((x, i) => {
           const y = dst.get(x.js);
           if (!y) return [];
-          return [`        if (${this.presentOn("a", x, i)}) b.${Transpiler.escape(x.js)} = ${this.coerce(`a.${Transpiler.backing(x.js)}`, x.cs, y.cs)};`];
+          return [`        if (${this.presentOn("a", x, i, from)}) b.${Transpiler.escape(x.js)} = ${this.coerce(`a.${Transpiler.backing(x.js)}`, x.cs, y.cs)};`];
         });
         methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        var b = new ${to}();\n${lines.join("\n")}\n        return b;\n    }`);
       }
