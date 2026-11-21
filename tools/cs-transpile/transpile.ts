@@ -786,7 +786,9 @@ export class Transpiler {
       if (fargs.length <= targs.length) {
         this.conversions++;
         const names = targs.map((_, i) => `__a${i}`);
-        const argList = fargs.map((t, i) => this.coerce(names[i]!, targs[i]!, t)).join(", ");
+        // undefined handed to a parameter with a default takes the default, not NaN
+        const defaults = this.methodDefaults.get(code);
+        const argList = fargs.map((t, i) => (targs[i] === `${t}?` && defaults?.has(i) ? `(${names[i]} ?? ${defaults.get(i)})` : this.coerce(names[i]!, targs[i]!, t))).join(", ");
         // `(f)(x)` would read as a cast: a plain name is called as it is, anything else through Invoke
         const call = /^[\w.@]+$/.test(code) ? `${code}(${argList})` : `(${code}).Invoke(${argList})`;
         const body = tret === "void" ? call : this.coerce(call, fret, tret);
@@ -968,6 +970,9 @@ export class Transpiler {
     }
     return out.join("\n");
   }
+
+  /** The constant defaults of a method's number and boolean parameters, by its C# name and index. */
+  private readonly methodDefaults = new Map<string, Map<number, string>>();
 
   /** Every identifier in the generator's sources, by the declaration it refers to. */
   private referenceIndex: Map<ts.Node, ts.Identifier[]> | null = null;
@@ -1220,6 +1225,16 @@ export class Transpiler {
     this.ctx.voidAsUnit = false;
     try {
       const { list, prologue } = this.params(fn);
+      // a number or boolean parameter's constant default, for a delegate adapter handed undefined
+      const defaults = new Map<number, string>();
+      list.split(/,\s*(?![^<(]*[>)])/).forEach((p, i) => {
+        const m = p.match(/^(double|bool) \S+ = (.+)$/);
+        if (m) defaults.set(i, m[2]!);
+      });
+      if (defaults.size) {
+        this.methodDefaults.set(name, defaults);
+        this.methodDefaults.set(`${this.moduleClass(fn.getSourceFile().fileName)}.${name}`, defaults);
+      }
       const head = `${prefix}${ret} ${name}${this.typeParams(fn)}(${list})${this.constraints(fn)}`;
       if (!fn.body) return `${head};`;
       const body = this.functionBody(fn.body, ret, prologue, "    ".repeat(prefix ? 2 : 1));

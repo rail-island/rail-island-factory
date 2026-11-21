@@ -306,6 +306,14 @@ export function sharedConstant(): unknown {
   return [noseCount(spec.front, spec.rear), noseCount(SHARED_NOSE, { len: 1 }), SHARED_NOSE.len];
 }
 
+/** A function with a defaulted parameter used as a value: a left-out argument takes the default. */
+export function defaultThroughAlias(): unknown {
+  const place = (u: number, w: number, base = 0.5): number => u + w + base;
+  const alias = place;
+  const lifted = (u: number, w: number) => alias(u, w);
+  return [alias(1, 2), alias(1, 2, 3), lifted(1, 1)];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
