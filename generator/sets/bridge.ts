@@ -62,9 +62,7 @@ export const TYPE_META: Record<string, BridgeTypeData> = {
   tied_arch: { maxSpan: 100 },
   suspension: { maxSpan: 140 },
   cable_stayed: { maxSpan: 120 },
-  plate_girder: { maxSpan: 60 },
   timber_trestle: { maxSpan: null },
-  box_girder: { maxSpan: 65 },
   deck_truss: { maxSpan: 65 },
 };
 
@@ -76,8 +74,12 @@ export const TYPE_META: Record<string, BridgeTypeData> = {
  */
 export const COLORS: Record<BridgeMaterial, Rgb> = {
   timber: [145, 108, 70], deck: [120, 110, 100], parapet: [150, 140, 125], pier: [95, 90, 85],
-  steel: [80, 90, 110], stone: [170, 160, 145], brick: [235, 205, 195], cable: [40, 40, 50], tower: [95, 90, 85],
+  steel: [80, 90, 110], stone: [170, 160, 145], brick: [150, 80, 64], cable: [40, 40, 50], tower: [95, 90, 85],
 };
+// The structures a type builds as, each with its own span policy: a type's own, and the
+// beam bridge's box-girder and steel-plate-girder sections (its `girders` parameter),
+// which were types of their own and keep their builders, piers and spans.
+const STRUCTURE_META: Record<string, BridgeTypeData> = { ...TYPE_META, box_girder: { maxSpan: 65 }, plate_girder: { maxSpan: 60 } };
 // A material's colour in the bridge being built (its parameters' palette), lifted
 // toward white (k > 1, by k - 1 of the way) or darkened (k < 1).
 function tone(material: BridgeMaterial, k: number): Rgb {
@@ -110,7 +112,8 @@ export type PierChoice = "concrete" | "stone" | "brick" | "steel";
 
 type Scheme = Partial<Record<BridgeMaterial, Rgb>>;
 // a colour choice: its title and the materials it recolours
-interface Swatch { title: string; colors: Scheme; masonry?: "stone" | "brick" }
+// (a masonry swatch also picks the material and the surface - the photo - it draws with)
+interface Swatch { title: string; colors: Scheme; masonry?: "stone" | "brick"; surface?: string }
 const PAINTS: Record<string, Swatch> = {
   oxideRed: { title: "Oxide red", colors: { steel: [150, 62, 45] } },
   green: { title: "Bridge green", colors: { steel: [60, 92, 68] } },
@@ -127,12 +130,12 @@ const CONCRETES: Record<string, Swatch> = {
 };
 // a masonry arch is built of stone or brick: the swatch picks the material too
 const MASONRY: Record<string, Swatch> = {
-  sandstone: { title: "Sandstone", colors: { stone: [170, 160, 145] }, masonry: "stone" },
-  granite: { title: "Granite", colors: { stone: [138, 138, 136] }, masonry: "stone" },
-  limestone: { title: "Limestone", colors: { stone: [208, 202, 188] }, masonry: "stone" },
-  redBrick: { title: "Red brick", colors: { brick: [235, 205, 195] }, masonry: "brick" },
-  yellowBrick: { title: "Yellow brick", colors: { brick: [240, 222, 170] }, masonry: "brick" },
-  blueBrick: { title: "Blue brick", colors: { brick: [150, 145, 160] }, masonry: "brick" },
+  sandstone: { title: "Sandstone", colors: { stone: [196, 170, 128] }, masonry: "stone", surface: "bridge-sandstone" },
+  granite: { title: "Granite", colors: { stone: [150, 150, 148] }, masonry: "stone", surface: "bridge-granite" },
+  limestone: { title: "Limestone", colors: { stone: [212, 204, 184] }, masonry: "stone", surface: "bridge-limestone" },
+  redBrick: { title: "Red brick", colors: { brick: [150, 80, 64] }, masonry: "brick", surface: "bridge-brick" },
+  yellowBrick: { title: "Yellow brick", colors: { brick: [196, 166, 112] }, masonry: "brick", surface: "bridge-brick-yellow" },
+  blueBrick: { title: "Blue brick", colors: { brick: [82, 84, 104] }, masonry: "brick", surface: "bridge-brick-blue" },
 };
 const TIMBERS: Record<string, Swatch> = {
   natural: { title: "Natural", colors: { timber: [145, 108, 70] } },
@@ -149,6 +152,9 @@ const PIER_TITLES: Record<PierChoice, string> = { concrete: "Concrete", stone: "
 const SHAPE_PARAMS: Record<string, { title: string; values: Record<string, string> }> = {
   hangers: { title: "Hangers", values: { vertical: "Vertical", network: "Network" } },
   towers: { title: "Towers", values: { h: "H-frame", y: "Inverted Y" } },
+  girders: { title: "Girders", values: { concrete: "Concrete beams", box: "Concrete box", plate: "Steel plate girders" } },
+  statues: { title: "Statues", values: { none: "None", piers: "On the piers" } },
+  gates: { title: "Gate towers", values: { none: "None", one: "One end", both: "Both ends" } },
 };
 
 // The colour parameters by name: their title and their swatches.
@@ -160,15 +166,14 @@ const COLOUR_PARAMS: Record<string, { title: string; swatches: Record<string, Sw
   cables: { title: "Cables", swatches: CABLE_COLOURS },
 };
 // Each type's choices, the first of each its default.
-const TYPE_CHOICES: Record<string, { colours: Array<[string, string[]]>; shapes?: Array<[string, string[]]>; piers?: PierChoice[] }> = {
-  beam: { colours: [["concrete", ["warm", "light", "weathered"]]], piers: ["concrete", "brick"] },
-  box_girder: { colours: [["concrete", ["warm", "light", "weathered"]]], piers: ["concrete", "stone"] },
-  plate_girder: { colours: [["paint", ["green", "oxideRed", "black", "blue"]]], piers: ["concrete", "stone", "brick", "steel"] },
+// `shapesAfter`: the shape parameters follow the colours (a masonry arch's material first).
+const TYPE_CHOICES: Record<string, { colours: Array<[string, string[]]>; shapes?: Array<[string, string[]]>; piers?: PierChoice[]; shapesAfter?: true }> = {
+  beam: { shapes: [["girders", ["concrete", "box", "plate"]]], colours: [["concrete", ["warm", "light", "weathered"]], ["paint", ["grey", "green", "oxideRed", "black", "blue"]]], piers: ["concrete", "stone", "brick", "steel"] },
   truss: { colours: [["paint", ["oxideRed", "green", "black", "silver"]]], piers: ["stone", "brick", "concrete"] },
   deck_truss: { colours: [["paint", ["grey", "oxideRed", "green"]]], piers: ["concrete", "stone", "brick"] },
   cantilever: { colours: [["paint", ["oxideRed", "grey", "black"]]], piers: ["concrete", "stone"] },
   arch: { colours: [["concrete", ["warm", "light", "weathered"]]], piers: ["concrete", "stone", "brick"] },
-  stone_arch: { colours: [["masonry", ["sandstone", "granite", "limestone", "redBrick", "yellowBrick", "blueBrick"]]] },
+  stone_arch: { colours: [["masonry", ["sandstone", "granite", "limestone", "redBrick", "yellowBrick", "blueBrick"]]], shapes: [["statues", ["none", "piers"]], ["gates", ["none", "one", "both"]]], shapesAfter: true },
   tied_arch: { shapes: [["hangers", ["vertical", "network"]]], colours: [["paint", ["blue", "silver", "oxideRed", "green"]]], piers: ["concrete", "stone", "brick"] },
   suspension: { colours: [["paint", ["orange", "green", "grey"]], ["cables", ["black", "white"]]], piers: ["concrete", "stone"] },
   cable_stayed: { shapes: [["towers", ["h", "y"]]], colours: [["concrete", ["warm", "light", "weathered"]], ["cables", ["black", "white", "orange"]]] },
@@ -179,14 +184,15 @@ const TYPE_CHOICES: Record<string, { colours: Array<[string, string[]]>; shapes?
 export const TYPE_PARAMS: Readonly<Record<string, readonly BridgeParam[]>> = Object.fromEntries(
   Object.keys(TYPE_META).map((type) => {
     const c = TYPE_CHOICES[type]!;
-    const params: BridgeParam[] = (c.shapes ?? []).map(([name, keys]) => ({
+    const shapes: BridgeParam[] = (c.shapes ?? []).map(([name, keys]) => ({
       name, title: SHAPE_PARAMS[name]!.title, default: keys[0]!,
       values: keys.map((value) => ({ value, title: SHAPE_PARAMS[name]!.values[value]! })),
     }));
-    for (const [name, keys] of c.colours) params.push({
+    const colours: BridgeParam[] = c.colours.map(([name, keys]) => ({
       name, title: COLOUR_PARAMS[name]!.title, default: keys[0]!,
       values: keys.map((value) => ({ value, title: COLOUR_PARAMS[name]!.swatches[value]!.title })),
-    });
+    }));
+    const params = c.shapesAfter ? [...colours, ...shapes] : [...shapes, ...colours];
     if (c.piers) params.push({ name: "piers", title: "Piers", default: c.piers[0]!, values: c.piers.map((value) => ({ value, title: PIER_TITLES[value] })) });
     return [type, params];
   }),
@@ -196,20 +202,28 @@ export const TYPE_PARAMS: Readonly<Record<string, readonly BridgeParam[]>> = Obj
 // the type's parameters. Set for the length of one public call (`withStyle`), so the
 // kit's helpers read it without every builder passing it on; the module is
 // single-threaded and every call restores the previous style.
-interface BuildStyle { palette: Record<BridgeMaterial, Rgb>; piers: PierChoice; masonry: "stone" | "brick"; network: boolean; yTowers: boolean }
-let style: BuildStyle = { palette: COLORS, piers: "concrete", masonry: "stone", network: false, yTowers: false };
+interface BuildStyle {
+  palette: Record<BridgeMaterial, Rgb>; piers: PierChoice; masonry: "stone" | "brick"; masonrySurface?: string;
+  network: boolean; yTowers: boolean; statues: boolean; gates: 0 | 1 | 2;
+}
+const plainStyle = (): BuildStyle => ({ palette: { ...COLORS }, piers: "concrete", masonry: "stone", network: false, yTowers: false, statues: false, gates: 0 });
+let style: BuildStyle = plainStyle();
 /** The style a `type` bridge with these parameters draws with. */
 function resolveStyle(type: string, params: BridgeParams = {}): BuildStyle {
-  const out: BuildStyle = { palette: { ...COLORS }, piers: "concrete", masonry: "stone", network: false, yTowers: false };
+  const out = plainStyle();
   for (const p of TYPE_PARAMS[type] ?? []) {
     const chosen = p.values.some((v) => v.value === params[p.name]) ? params[p.name]! : p.default;
     if (p.name === "piers") out.piers = chosen as PierChoice;
     else if (p.name === "hangers") out.network = chosen === "network";
     else if (p.name === "towers") out.yTowers = chosen === "y";
+    else if (p.name === "statues") out.statues = chosen === "piers";
+    else if (p.name === "gates") out.gates = chosen === "both" ? 2 : chosen === "one" ? 1 : 0;
+    else if (p.name === "girders") continue; // picks the structure (structureOf)
     else {
       const swatch = COLOUR_PARAMS[p.name]!.swatches[chosen]!;
       Object.assign(out.palette, swatch.colors);
       if (swatch.masonry) out.masonry = swatch.masonry;
+      if (swatch.surface) out.masonrySurface = swatch.surface;
     }
   }
   return out;
@@ -228,14 +242,23 @@ export const RETIRED_TYPES: Readonly<Record<string, RetiredBridge>> = {
   brick_arch: { type: "stone_arch", params: { masonry: "redBrick" } },
   network_arch: { type: "tied_arch", params: { hangers: "network", paint: "silver" } },
   cable_stayed_y: { type: "cable_stayed", params: { towers: "y" } },
+  box_girder: { type: "beam", params: { girders: "box" } },
+  plate_girder: { type: "beam", params: { girders: "plate", paint: "green" } },
 };
 /** A stored type and its own parameters, read as today's type and the values it builds with. */
 export function storedBridge(storedType: string, own?: BridgeParams): { type: string; params: BridgeParams } {
   const retired = RETIRED_TYPES[storedType];
   return retired ? { type: retired.type, params: { ...retired.params, ...(own ?? {}) } } : { type: storedType, params: own ?? {} };
 }
-// the type a stored id builds as (its retired type's, if any)
-const current = (type: string): string => RETIRED_TYPES[type]?.type ?? type;
+// The structure a stored type with these parameters builds as: its own, or for the beam
+// bridge the one its `girders` chose (box_girder, plate_girder: the builders and span
+// policies those types had). Internal; the public functions take a type.
+function structureOf(type: string, params?: BridgeParams): string {
+  const s = storedBridge(type, params);
+  if (s.type !== "beam") return s.type;
+  const girders = s.params.girders;
+  return girders === "box" ? "box_girder" : girders === "plate" ? "plate_girder" : "beam";
+}
 
 function withStyle<T>(type: string, params: BridgeParams | undefined, run: () => T): T {
   const previous = style;
@@ -257,8 +280,10 @@ const MASONRY_BAND = 1.25; // a stone or brick band (arch ring, impost, coping)
 const CABLE_TYPES = new Set(["suspension", "cable_stayed"]);
 /** Where a cable bridge's towers stand along a bridge of `length` (distances). */
 export function cableTowerDistances(type: string, length: number): number[] {
-  type = current(type);
-  const maxMain = TYPE_META[type]?.maxSpan ?? length;
+  return towerDistances(structureOf(type), length);
+}
+function towerDistances(type: string, length: number): number[] {
+  const maxMain = STRUCTURE_META[type]?.maxSpan ?? length;
   const mains = Math.max(1, Math.ceil(length / maxMain - 1));
   const main = length / (mains + 1);
   return Array.from({ length: mains + 1 }, (_, i) => main / 2 + i * main);
@@ -269,14 +294,16 @@ export function cableTowerDistances(type: string, length: number): number[] {
  * type's maxSpan, or -- for a cable type -- its back spans and main spans between
  * the towers.
  */
-export function getStructuralSpanRanges(type: string, length: number): SpanRange[] {
-  type = current(type);
+export function getStructuralSpanRanges(type: string, length: number, params?: BridgeParams): SpanRange[] {
+  return spanRanges(structureOf(type, params), length);
+}
+function spanRanges(type: string, length: number): SpanRange[] {
   if (typeof length !== "number" || length <= 0) return [];
   if (CABLE_TYPES.has(type)) {
-    const stops = [0, ...cableTowerDistances(type, length), length];
+    const stops = [0, ...towerDistances(type, length), length];
     return stops.slice(1).map((to, i) => ({ fromDistance: stops[i]!, toDistance: to }));
   }
-  const maxSpan = TYPE_META[type]?.maxSpan;
+  const maxSpan = STRUCTURE_META[type]?.maxSpan;
   if (!maxSpan) return [{ fromDistance: 0, toDistance: length }];
   const spanCount = Math.max(1, Math.ceil(length / maxSpan));
   const spanLength = length / spanCount;
@@ -451,8 +478,8 @@ function spanOverheadMembers(bridgeType: string, spanLength: number, clearanceY:
 // Empty for the types with nothing over the deck (the flat ones, and the arches
 // whose arch passes BELOW it), which is what tells the planner to use
 // deck-mounted masts instead.
-export function overheadMembers(type: string, length: number, deckWidth: number, clearanceY: number, plan?: SupportPlan): BridgeOverheadMember[] {
-  type = current(type);
+export function overheadMembers(type: string, length: number, deckWidth: number, clearanceY: number, plan?: SupportPlan, params?: BridgeParams): BridgeOverheadMember[] {
+  type = structureOf(type, params);
   if (length <= 0) return [];
   // a plan (planSupports) moves the spans and towers; the members follow them
   if (CABLE_TYPES.has(type)) {
@@ -461,11 +488,11 @@ export function overheadMembers(type: string, length: number, deckWidth: number,
     // a wire reaching that far reads as a mast, not a fixing. The tower legs run
     // from below the deck up past it, so a perpendicular wire meets them.
     const halfWidth = type === "suspension" ? suspensionCableHalfWidth(deckWidth) : cableStayedTowerHalfWidth(deckWidth);
-    const towers = plan?.towers.length ? plan.towers : cableTowerDistances(type, length);
+    const towers = plan?.towers.length ? plan.towers : towerDistances(type, length);
     return towers.map((d) => ({ t: d / length, kind: "span", halfWidth }));
   }
   const out: BridgeOverheadMember[] = [];
-  for (const range of plan?.spans ?? getStructuralSpanRanges(type, length)) {
+  for (const range of plan?.spans ?? spanRanges(type, length)) {
     const spanLength = range.toDistance - range.fromDistance;
     if (spanLength <= 0) continue;
     const whole = (t: number) => (range.fromDistance + t * spanLength) / length;
@@ -577,7 +604,9 @@ export type BridgeMaterial = "timber" | "deck" | "parapet" | "pier" | "steel" | 
 // square cross-section, length on local Y from a->b. "box": yaw-aligned size box.
 // "ribbon": a cross-section swept along a centerline -- see below.
 export type BridgePart = "deck" | "support" | "frame" | "detail";
-export type BridgeBox = { part?: BridgePart; ground?: true; color?: Rgb } & (
+// `surface`: the named surface (photo) a box draws with instead of its material's
+// own - a masonry arch's sandstone, limestone, granite or brick (its `masonry`).
+export type BridgeBox = { part?: BridgePart; ground?: true; color?: Rgb; surface?: string } & (
   | { shape: "span"; a: Vec3; b: Vec3; w: number; h: number; material: BridgeMaterial }
   | { shape: "strut"; a: Vec3; b: Vec3; thick: number; material: BridgeMaterial }
   | { shape: "box"; center: Vec3; size: Vec3; yaw: number; material: BridgeMaterial; topScale?: number }
@@ -605,9 +634,9 @@ export type RibbonProfilePoint = { u: number; v: number };
 function dist3(a: Vec3, b: Vec3): number {
   return Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
 }
-function pushStrut(out: BridgeBox[], a: Vec3, b: Vec3, thick: number, material: BridgeMaterial, part: BridgePart = "detail"): void {
+function pushStrut(out: BridgeBox[], a: Vec3, b: Vec3, thick: number, material: BridgeMaterial, part: BridgePart = "detail", color?: Rgb): void {
   if (dist3(a, b) < 0.05) return;
-  out.push({ shape: "strut", a, b, thick, material, part });
+  out.push({ shape: "strut", a, b, thick, material, part, ...(color ? { color } : {}) });
 }
 function pushBox(out: BridgeBox[], g: BridgePathGeom, distance: number, lx: number, ly: number, size: Vec3, material: BridgeMaterial, part: BridgePart = "detail", color?: Rgb): void {
   out.push({ shape: "box", center: pathWorldPoint(g, distance, lx, ly), size, yaw: pathYaw(g, distance), material, part, ...(color ? { color } : {}) });
@@ -1037,8 +1066,61 @@ function pushCutwaters(out: BridgeBox[], g: BridgePathGeom, distance: number, sp
     }
     const top = PARAPET_TOP + 0.12;
     pushBox(out, g, distance, s * (spec.w / 2 + 0.3), (spec.cutwaterTop! + top) / 2, { x: 0.6, y: top - spec.cutwaterTop!, z: Math.min(2.4, spec.d * 0.55) }, spec.material, "frame");
+    if (style.statues) pushStatue(out, g, distance, s * (spec.w / 2 + 0.3), top, s);
   }
 }
+// A statue over a masonry pier (the `statues` parameter: Charles Bridge in Prague):
+// a pedestal on the pilaster's top, a robed figure of blackened sandstone with its
+// head, holding a cross on the deck's side. `side` is the pier face (+1 / -1).
+function pushStatue(out: BridgeBox[], g: BridgePathGeom, distance: number, lx: number, baseY: number, side: number): void {
+  const dark = tone("stone", 0.5), yaw = pathYaw(g, distance);
+  pushBox(out, g, distance, lx, baseY + 0.5, { x: 0.95, y: 1.0, z: 1.5 }, "stone", "detail", tone("stone", 0.8));
+  const b = baseY + 1.0;
+  out.push({ shape: "box", center: pathWorldPoint(g, distance, lx, b + 1.05), size: { x: 0.8, y: 2.1, z: 0.8 }, yaw, material: "stone", part: "detail", topScale: 0.62, color: dark });
+  pushBox(out, g, distance, lx, b + 2.33, { x: 0.44, y: 0.46, z: 0.44 }, "stone", "detail", dark);
+  const inner = lx - side * 0.52;
+  pushStrut(out, pathWorldPoint(g, distance, inner, b + 0.9), pathWorldPoint(g, distance, inner, b + 3.1), 0.13, "stone", "detail", dark);
+  pushStrut(out, pathWorldPoint(g, distance - 0.38, inner, b + 2.6), pathWorldPoint(g, distance + 0.38, inner, b + 2.6), 0.13, "stone", "detail", dark);
+}
+
+// A gate tower over one end of a masonry arch (the `gates` parameter; the Old Town
+// Bridge Tower in Prague): two side walls standing on the ground beside the deck, the
+// passage between them up to the overhead clearance and a pointed arch over it (a
+// wall across the deck whose underside traces the arch), a cornice band, a steep
+// pyramid roof, four corner turrets with spires and a row of dark windows on both
+// faces. It stands just inside the bridge's end, over its abutment.
+const GATE_DEPTH = 7, GATE_OUT = 1.2, GATE_BODY = 5.5, GATE_ROOF = 9, ROOF_COLOR: Rgb = [62, 66, 74];
+function pushGateTower(out: BridgeBox[], g: BridgePathGeom, end: 0 | 1, heightAt: TerrainHeightFn): void {
+  const m = style.masonry, wall = tone(m, 0.78), band = tone(m, MASONRY_BAND), dark: Rgb = [40, 38, 36];
+  const half = g.deckWidth / 2, pass = half - PARAPET_THICKNESS - 0.1, outer = half + GATE_OUT;
+  const dc = end ? g.length - (GATE_DEPTH / 2 - 0.3) : GATE_DEPTH / 2 - 0.3, yaw = pathYaw(g, dc);
+  const spring = g.clearanceY + 0.3, r = pass * 1.3, xc = pass - r;
+  const archAt = (x: number): number => (Math.abs(x) >= pass ? spring : spring + Math.sqrt(Math.max(0, r * r - (Math.abs(x) - xc) ** 2)));
+  const crown = archAt(0), top = crown + GATE_BODY;
+  // the side walls, on the ground
+  for (const sd of [-1, 1]) {
+    const w = outer - pass, lx = sd * (pass + outer) / 2;
+    const foot = footprintTerrain(g, dc, lx, w, GATE_DEPTH, heightAt).low;
+    const p = pathWorldPoint(g, dc, lx, top);
+    out.push({ shape: "box", center: { x: p.x, y: (foot + p.y) / 2, z: p.z }, size: { x: w, y: p.y - foot, z: GATE_DEPTH }, yaw, material: m, part: "frame", ground: true, color: wall });
+  }
+  // the arch over the passage
+  const xs = [-(pass + 0.25), ...Array.from({ length: 13 }, (_, i) => -pass + (2 * pass * i) / 12), pass + 0.25];
+  pushWallAt(out, xs.map((x) => pathWorldPoint(g, dc, x, 0)), GATE_DEPTH, xs.map((x) => pathWorldPoint(g, dc, x, archAt(x)).y), xs.map((x) => pathWorldPoint(g, dc, x, top).y), m, "frame", wall);
+  // cornice band, roof, turrets and spires
+  pushBox(out, g, dc, 0, top - 0.2, { x: 2 * outer + 0.5, y: 0.6, z: GATE_DEPTH + 0.5 }, m, "detail", band);
+  out.push({ shape: "box", center: pathWorldPoint(g, dc, 0, top + 0.1 + GATE_ROOF / 2), size: { x: 2 * outer - 0.6, y: GATE_ROOF, z: GATE_DEPTH - 0.6 }, yaw, material: "steel", part: "frame", topScale: 0.12, color: ROOF_COLOR });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const lx = sx * (outer - 0.25), along = sz * (GATE_DEPTH / 2 - 0.25);
+    pushBox(out, g, dc + along, lx, top + 0.5, { x: 1.1, y: 3.0, z: 1.1 }, m, "detail", wall);
+    out.push({ shape: "box", center: pathWorldPoint(g, dc + along, lx, top + 2.0 + 2.25), size: { x: 1.3, y: 4.5, z: 1.3 }, yaw, material: "steel", part: "detail", topScale: 0.03, color: ROOF_COLOR });
+  }
+  // a row of windows on both faces
+  for (const sz of [-1, 1]) for (const lx of [-outer * 0.55, 0, outer * 0.55]) {
+    pushBox(out, g, dc + sz * (GATE_DEPTH / 2 + 0.04), lx, crown + 2.8, { x: 0.9, y: 2.2, z: 0.16 }, m, "detail", dark);
+  }
+}
+
 // A masonry pier standing in water sits on a starling: the pier and its cutwaters
 // again, STARLING_OUT wider all round, from the bed up to STARLING_RISE above the
 // waterline -- the ledge the current breaks on. Like a footing it is not charted.
@@ -1175,7 +1257,7 @@ function supportKind(type: string): SupportKind {
   if (CABLE_TYPES.has(type)) return "towers";
   if (type === "cantilever") return "cantilever";
   if (type === "timber_trestle") return "bents";
-  if (TYPE_META[type]?.maxSpan) return "spans";
+  if (STRUCTURE_META[type]?.maxSpan) return "spans";
   return "piers";
 }
 
@@ -1227,11 +1309,11 @@ function supportFootprintSize(type: string, kind: SupportKind, deckWidth: number
 /** The ground footprint a support of `type` at `distance` along `g` would stand on. */
 export function supportFootprint(type: string, g: BridgePathGeom, distance: number, params?: BridgeParams): SupportFootprint {
   const stored = storedBridge(type, params);
-  return withStyle(stored.type, stored.params, () => footprintStyled(stored.type, g, distance));
+  return withStyle(stored.type, stored.params, () => footprintStyled(structureOf(stored.type, stored.params), g, distance));
 }
 function footprintStyled(type: string, g: BridgePathGeom, distance: number): SupportFootprint {
   const kind = supportKind(type);
-  const spans = getStructuralSpanRanges(type, g.length);
+  const spans = spanRanges(type, g.length);
   const span = spans.length ? spans[0]!.toDistance - spans[0]!.fromDistance : g.length;
   const size = supportFootprintSize(type, kind, g.deckWidth, span);
   const c = pathWorldPoint(g, distance, 0, 0);
@@ -1244,18 +1326,18 @@ function defaultPlan(type: string, g: BridgePathGeom): SupportPlan {
   const L = g.length;
   switch (kind) {
     case "towers": {
-      const towers = cableTowerDistances(type, L);
+      const towers = towerDistances(type, L);
       return { spans: spansFromStops([0, ...towers, L]), supports: towers, towers, blocked: [] };
     }
     case "piers": return { spans: [{ fromDistance: 0, toDistance: L }], supports: defaultPierDistances(g), towers: [], blocked: [] };
     case "bents": return { spans: [{ fromDistance: 0, toDistance: L }], supports: defaultBentDistances(L), towers: [], blocked: [] };
     case "cantilever": {
-      const spans = getStructuralSpanRanges(type, L);
+      const spans = spanRanges(type, L);
       const supports = spans.flatMap((r) => CANTILEVER_TOWER_T.map((t) => r.fromDistance + t * (r.toDistance - r.fromDistance)));
       return { spans, supports, towers: [], blocked: [] };
     }
     default: {
-      const spans = getStructuralSpanRanges(type, L);
+      const spans = spanRanges(type, L);
       const supports = [0, ...spans.map((r) => r.toDistance)];
       return { spans, supports, towers: [], blocked: [] };
     }
@@ -1279,7 +1361,7 @@ function cleanPylons(pylons: number[] | undefined, length: number): number[] {
  */
 export function planSupports(type: string, g: BridgePathGeom, options: SupportOptions = {}, params?: BridgeParams): SupportPlan {
   const stored = storedBridge(type, params);
-  return withStyle(stored.type, stored.params, () => planStyled(stored.type, g, options));
+  return withStyle(stored.type, stored.params, () => planStyled(structureOf(stored.type, stored.params), g, options));
 }
 function planStyled(type: string, g: BridgePathGeom, options: SupportOptions): SupportPlan {
   const kind = supportKind(type);
@@ -1345,7 +1427,7 @@ function planStyled(type: string, g: BridgePathGeom, options: SupportOptions): S
     // a trestle opens up to three bents' spacing: enough to clear a track or a road
     // (their footprint is some 16 studs of ground) with one longer opening
     case "bents": target = L / trestleBentCount(L); soft = TRESTLE_BENT * 1.25; hard = TRESTLE_BENT * 3; break;
-    default: { const max = TYPE_META[type]?.maxSpan ?? L; target = baseSpan; soft = max; hard = max * 1.5; }
+    default: { const max = STRUCTURE_META[type]?.maxSpan ?? L; target = baseSpan; soft = max; hard = max * 1.5; }
   }
   const spanCost = (s: number): number => {
     const dev = (s - target) / target;
@@ -2017,14 +2099,14 @@ export function lowDetailBoxes(boxes: BridgeBox[]): BridgeBox[] {
 export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn, options: SupportOptions | SupportPlan = {}, params?: BridgeParams): BridgeBox[] {
   const stored = storedBridge(type, params);
   const known = BUILDERS[stored.type] ? stored.type : "beam";
-  return withStyle(known, stored.params, () => buildStyled(known, g, heightAt, waterAt, options));
+  return withStyle(known, stored.params, () => buildStyled(structureOf(known, stored.params), g, heightAt, waterAt, options));
 }
 function buildStyled(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn, waterAt: WaterLevelFn | undefined, options: SupportOptions | SupportPlan): BridgeBox[] {
   const out: BridgeBox[] = [];
   const builder = BUILDERS[type] ?? BUILDERS.beam!;
   const known = BUILDERS[type] ? type : "beam";
   const plan = "supports" in options && Array.isArray(options.supports) && "spans" in options ? options as SupportPlan : planStyled(known, g, options as SupportOptions);
-  const maxSpan = TYPE_META[known]?.maxSpan;
+  const maxSpan = STRUCTURE_META[known]?.maxSpan;
   // the ends: an abutment's breast wall under the types that bear on a seat there
   const under = abutmentUnder(known, g, plan.spans);
   const breast = SEATED_TYPES.has(known) || CABLE_TYPES.has(known);
@@ -2044,12 +2126,18 @@ function buildStyled(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn,
     if (known !== "cantilever") buildSpanBoundaryPiers(out, g, ranges, known, heightAt, waterAt, onAbutment);
     else {
       const inner = new Set(ranges.flatMap((r) => CANTILEVER_TOWER_T.map((t) => Math.round((r.fromDistance + t * (r.toDistance - r.fromDistance)) * 1000))));
-      for (const d of plan.supports) if (!inner.has(Math.round(d * 1000)) && !onAbutment?.(d)) pushPier(out, g, d, boundaryPierStyle("truss", g.deckWidth, TYPE_META.cantilever!.maxSpan!), heightAt, waterAt);
+      for (const d of plan.supports) if (!inner.has(Math.round(d * 1000)) && !onAbutment?.(d)) pushPier(out, g, d, boundaryPierStyle("truss", g.deckWidth, STRUCTURE_META.cantilever!.maxSpan!), heightAt, waterAt);
     }
   }
+  if (known === "stone_arch" && style.gates) for (const end of style.gates === 2 ? [0, 1] as const : [0] as const) pushGateTower(out, g, end, heightAt);
   buildAbutments(out, g, heightAt, material, under, breast);
-  // every box carries its colour: its own tone, else its material's in the chosen palette
-  return out.map((b) => (b.color ? b : { ...b, color: style.palette[b.material] }));
+  // every box carries its colour: its own tone, else its material's in the chosen palette;
+  // the masonry draws with the photo its swatch chose
+  const surface = style.masonrySurface;
+  return out.map((b) => {
+    const coloured = b.color ? b : { ...b, color: style.palette[b.material] };
+    return surface && b.material === style.masonry && !b.surface ? { ...coloured, surface } : coloured;
+  });
 }
 // The types whose ends bear on an abutment's seat (their end piers give way to it);
 // the cable types close on a breast wall too, under their anchorages. The arches

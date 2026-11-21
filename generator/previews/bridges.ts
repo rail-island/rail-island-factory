@@ -203,7 +203,7 @@ const v3 = (p: bridge.Vec3): V => [p.x, p.y, p.z];
 
 function draw(s: Sketch, list: readonly bridge.BridgeBox[]): void {
   for (const b of list) {
-    const mat = s.mat(KIND[b.material] ?? b.material, b.color ?? bridge.COLORS[b.material], SURFACE[b.material]);
+    const mat = s.mat(KIND[b.material] ?? b.material, b.color ?? bridge.COLORS[b.material], (b.surface as SurfaceId | undefined) ?? SURFACE[b.material]);
     if (b.shape === "box") s.box(mat, { cx: b.center.x, cy: b.center.y, cz: b.center.z, sx: b.size.x, sy: b.size.y, sz: b.size.z, yaw: b.yaw, topScale: b.topScale });
     else if (b.shape === "span") s.span(mat, v3(b.a), v3(b.b), b.w, b.h);
     else if (b.shape === "strut") s.bar(mat, v3(b.a), v3(b.b), b.thick);

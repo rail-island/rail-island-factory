@@ -54,14 +54,12 @@ meets its neighbours exactly - where the renderer's mitred sweep puts the deck. 
 
 | Type | Tier | Span limit | Superstructure | Piers |
 |---|---|---|---|---|
-| `beam` | plain | - | slab with two concrete girders underneath | concrete every ~25 studs |
-| `box_girder` | plain | 65 | trapezoidal concrete box under the slab, haunched: a parabolic soffit from 3.4 studs deep over the piers to 1.8 at mid-span | concrete at span boundaries, under the haunch |
-| `plate_girder` | framed | 60 | steel through-girders span / 11 deep (2.6 to 5 studs) along the deck edges - the railing too, no parapet or cornice - a quarter of their depth below the slab, top flanges rounding down at the ends, stiffeners on both faces of the web, cross girders under the slab | concrete, cap under the girders |
+| `beam` | plain (framed on steel plate girders or steel piers) | - / 65 / 60 | the `girders` parameter: `concrete`, a slab with two concrete girders underneath (piers every ~25 studs, no span limit); `box`, trapezoidal concrete box under the slab, haunched: a parabolic soffit from 3.4 studs deep over the piers to 1.8 at mid-span (structural spans of 65); `plate`, steel through-girders span / 11 deep (2.6 to 5 studs) along the deck edges - the railing too, no parapet or cornice - a quarter of their depth below the slab, top flanges rounding down at the ends, stiffeners on both faces of the web, cross girders under the slab (spans of 60) | concrete every ~25 studs; at span boundaries for the box and the plate girders |
 | `truss` | framed | 64 | Pratt through truss: inclined end posts with portal frames, verticals, diagonals sloping down toward mid-span, a polygonal (Parker) top chord rising up to 4 studs on spans over 40, a crossbeam at every top node with X bracing between | at span boundaries only; dressed stone by default (`piers`) |
 | `deck_truss` | framed | 65 | Warren truss with verticals under the deck, a cross frame between the trusses at every other panel point and X bracing in the bottom plane | concrete under the truss |
 | `timber_trestle` | framed | - | plank deck on two stringers and a post-and-rail guard; a bent every ~8 studs of two plumb and two battered posts on footings under a cap, X braced in stories of 10 studs with girts at the story lines and along the bridge at the first one | the bents |
 | `arch` | framed | 80 | concrete deck arch: two ribs thickening toward the springings, pairs of spandrel columns every ~5 studs with a cap beam under the slab, struts between the ribs | a concrete block under each rib, the two tied by a cap beam (`PierSpec.columns`) |
-| `stone_arch` | framed | 28 | masonry arches of stone or brick (`masonry`): spandrel walls, arch bands with a keystone, barrel vault | masonry, with cutwaters and pilasters between arches |
+| `stone_arch` | framed (signature with statues or gate towers) | 28 | masonry arches of stone or brick (`masonry`, each with its own photo), statues on the piers (`statues`), gate towers at one or both ends (`gates`): spandrel walls, arch bands with a keystone, barrel vault | masonry, with cutwaters and pilasters between arches |
 | `cantilever` | signature | 90 | Forth-fashion: towers at the quarters (two splayed legs a side, X braced, a crossbeam with knee braces on top), anchor arms back to the span's ends and cantilever arms out to 0.4 of the span, deepest at the towers (a straight top chord, a bottom chord curving up from the tower foot), N webs, a Warren suspended span under the slab between the arm tips | under the towers only: the anchor arms rest on the abutments or meet the next span's arms, with no pier at a span boundary |
 | `tied_arch` | signature | 100 | box-section steel arches springing from knuckles on tie girders along the deck edges, vertical or crossing (network) hangers (`hangers`), a hanger about every 4 studs, transverse struts above the wires with X bracing between them | concrete at span boundaries |
 | `suspension` | signature | 140 (main span) | towers, main cables, hangers, stiffening girders, anchor blocks | under the towers |
@@ -81,18 +79,42 @@ before it had parameters. Their titles are exported text, `set.bridge.<type>.par
 
 | Type | Parameters (first value the default) |
 |---|---|
-| `beam` | `concrete`: warm, light, weathered; `piers`: concrete, brick |
-| `box_girder` | `concrete`: warm, light, weathered; `piers`: concrete, stone |
-| `plate_girder` | `paint`: green, oxideRed, black, blue; `piers`: concrete, stone, brick, steel |
+| `beam` | `girders`: concrete, box, plate; `concrete`: warm, light, weathered; `paint`: grey, green, oxideRed, black, blue (the plate girders, the bearings, steel piers); `piers`: concrete, stone, brick, steel |
 | `truss` | `paint`: oxideRed, green, black, silver; `piers`: stone, brick, concrete |
 | `deck_truss` | `paint`: grey, oxideRed, green; `piers`: concrete, stone, brick |
 | `cantilever` | `paint`: oxideRed, grey, black; `piers`: concrete, stone |
 | `arch` | `concrete`: warm, light, weathered; `piers`: concrete, stone, brick |
-| `stone_arch` | `masonry`: sandstone, granite, limestone, redBrick, yellowBrick, blueBrick (the material too) |
+| `stone_arch` | `masonry`: sandstone, granite, limestone, redBrick, yellowBrick, blueBrick (the material and the photo too); `statues`: none, piers; `gates`: none, one, both |
 | `tied_arch` | `hangers`: vertical, network; `paint`: blue, silver, oxideRed, green; `piers`: concrete, stone, brick |
 | `suspension` | `paint`: orange, green, grey (the girders); `cables`: black, white; `piers`: concrete, stone |
 | `cable_stayed` | `towers`: h, y; `concrete`: warm, light, weathered; `cables`: black, white, orange |
 | `timber_trestle` | `timber`: natural, weathered, creosote |
+
+**Structures.** A type builds as one structure, with its builder, piers and span policy; the
+beam bridge's `girders` picks one of three (`structureOf`: `beam`, `box_girder`, `plate_girder`,
+which were types of their own; `STRUCTURE_META` holds their spans). Every public function maps
+a type and its parameters to the structure (`getStructuralSpanRanges` and `overheadMembers` take
+the parameters too).
+
+**Masonry photos.** A `masonry` swatch picks the material (stone or brick), its honest colour
+and the surface its boxes draw with (`BridgeBox.surface`): `bridge-sandstone`,
+`bridge-limestone`, `bridge-granite` (the cobblestone photo, grey), `bridge-brick`,
+`bridge-brick-yellow`, `bridge-brick-blue` - each a photo with a `balance` that corrects it
+toward that colour ([surfaces.md](surfaces.md)), so a tone of the colour (a keystone, the vault,
+a gate tower's darker walls) still scales the photo, and a yellow or blue brick is not the red
+photo under a tint.
+
+**Statues** (`statues: piers`, `pushStatue`): on every intermediate pier of a masonry arch, on
+each side, a pedestal on the pilaster's top and a robed figure of blackened sandstone (a
+tapering robe, the head, a cross held on the deck's side) - the Charles Bridge in Prague.
+
+**Gate towers** (`gates: one` / `both`, `pushGateTower`): a tower just inside the bridge's
+end, over its abutment (the Old Town Bridge Tower): two side walls 1.2 studs beyond the deck's
+edges standing on the ground (tagged `ground`), the passage between the parapets clear up to
+the overhead clearance with a pointed arch over it (a wall across the deck whose underside
+traces the arch), 5.5 studs of wall over the crown, a cornice band, a steep pyramid roof 9
+studs tall, four corner turrets with spires and three dark windows on each face. The
+passage clears the wires, so the catenary runs through on its deck masts.
 
 A colour parameter recolours materials (`paint` the steel, `concrete` the deck, parapet, pier and
 tower, `masonry` the stone or brick and picks which, `timber`, `cables`). `piers` changes what a
@@ -113,6 +135,8 @@ into it; their ids are stored in saved maps, so the registry keeps a retired ali
 | `brick_arch` | `stone_arch` with `masonry: redBrick` |
 | `network_arch` | `tied_arch` with `hangers: network`, `paint: silver` |
 | `cable_stayed_y` | `cable_stayed` with `towers: y` |
+| `box_girder` | `beam` with `girders: box` |
+| `plate_girder` | `beam` with `girders: plate`, `paint: green` |
 
 `storedBridge(storedType, own)` reads a stored bridge: its type, and the retired values under its
 own. Every public function accepts a retired id and draws it exactly as its type with those values
@@ -278,6 +302,10 @@ plus an allowance for its two ends. Triangles are counted as the site draws them
 | signature | 6,000 | 1,500 | 5,100 | 11,100 | 25,500 |
 | distant level (every tier) | 1,500 | 500 | 1,400 | 2,900 | 6,500 |
 
+A type's parameters can move it up a tier: a beam bridge on steel plate girders or steel
+trestle piers is framed, a masonry arch with statues or gate towers (a landmark) signature
+(`test/bridgeBudget.test.ts`, `tierOf`).
+
 For scale: a 160-stud (107 m) bridge stays within one row house (10,000) for the plain and
 framed tiers and about one rail vehicle (15,000) for a signature bridge. The distant level is
 also held to 65% of the full level; it keeps far more than a vehicle's 100 triangles a car
@@ -293,9 +321,9 @@ Counts at the parameters' defaults, measured before the abutments and the parame
 
 | Type | 60 | 160 | 400 | 160 curved |
 |---|---:|---:|---:|---:|
-| beam | 330 | 562 | 1,142 | 3,370 |
-| box_girder | 456 | 1,108 | 2,500 | 3,908 |
-| plate_girder | 1,472 | 3,844 | 9,248 | 6,028 |
+| beam, concrete beams | 330 | 562 | 1,142 | 3,370 |
+| beam, box girder | 456 | 1,108 | 2,500 | 3,908 |
+| beam, steel plate girders | 1,472 | 3,844 | 9,248 | 6,028 |
 | truss | 1,364 | 3,484 | 7,988 | 5,044 |
 | deck_truss | 1,400 | 3,592 | 9,164 | 7,024 |
 | timber_trestle | 2,400 | 5,592 | 13,464 | 7,152 |

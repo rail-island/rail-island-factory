@@ -33,10 +33,12 @@ function photo(base: string, name: string): { map: Texture; normalMap: Texture; 
   return set;
 }
 
-/** The tint a surface multiplies its photo by: the colour lifted toward white times the gain, or the fixed tint. */
+/** The tint a surface multiplies its photo by: the colour lifted toward white times the gain and balance, or the fixed tint. */
 export function surfaceTint(preset: SurfacePreset, color: Color): Color {
   if (preset.tint) return new Color(...preset.tint);
-  return color.clone().lerp(new Color(1, 1, 1), preset.tintLift).multiplyScalar(preset.gain ?? 1);
+  const tint = color.clone().lerp(new Color(1, 1, 1), preset.tintLift).multiplyScalar(preset.gain ?? 1);
+  const b = preset.balance;
+  return b ? new Color(tint.r * b[0], tint.g * b[1], tint.b * b[2]) : tint;
 }
 
 /** Bind the photos of every surface `root` names. Resolves when the materials are set (the images stream in after). */

@@ -94,6 +94,13 @@ export interface SurfacePreset {
   tintLift: number;
   /** Linear multiplier on the lifted tint (default 1). */
   gain?: number;
+  /**
+   * A per-channel linear multiplier on the tint, after `gain`: it corrects a photo
+   * toward the colour its material carries, so that colour can stay the honest one the
+   * surface reads as (a thumbnail, the far level) while lighter and darker tones of it
+   * still scale the photo (a masonry arch's sandstone, limestone and coloured bricks).
+   */
+  balance?: readonly [number, number, number];
   /** A fixed linear tint multiplier instead of the lifted colour (an airport's pavement). */
   tint?: readonly [number, number, number];
   /** Emissive self-fill of the albedo, keeping detail in shadow (default none). */
@@ -113,7 +120,14 @@ export const SURFACES = {
   "bridge-pier": { texture: "concrete", tile: 5, tintLift: 0.92, gain: 1.65, fill: 0.12 },
   "bridge-tower": { texture: "concrete", tile: 5, tintLift: 0.92, gain: 1.65, fill: 0.16 },
   "bridge-stone": { texture: "cobblestone", tile: 6, tintLift: 0.92, fill: 0.45, flat: "#9b8c70" },
-  "bridge-brick": { texture: "wall", tile: 6, tintLift: 0, fill: 0.55, flat: "#995848" },
+  // a masonry arch's own masonry (its `masonry` parameter): the photo of the stone or
+  // brick, balanced toward the honest colour the swatch carries
+  "bridge-sandstone": { texture: "sandstone", tile: 7, tintLift: 0, balance: [2.37, 3.2, 4.02], fill: 0.35, flat: "#c4aa80" },
+  "bridge-limestone": { texture: "limestone", tile: 7, tintLift: 0, balance: [1.44, 2.06, 2.8], fill: 0.35, flat: "#d4ccb8" },
+  "bridge-granite": { texture: "cobblestone", tile: 6, tintLift: 0, balance: [1.53, 1.9, 3.14], fill: 0.35, flat: "#969694" },
+  "bridge-brick": { texture: "wall", tile: 6, tintLift: 0, balance: [1.57, 2.56, 3.05], fill: 0.55, flat: "#995848" },
+  "bridge-brick-yellow": { texture: "wall", tile: 6, tintLift: 0, balance: [3.66, 5.08, 3.83], fill: 0.4, flat: "#c4a670" },
+  "bridge-brick-blue": { texture: "wall", tile: 6, tintLift: 0, balance: [1.34, 2.33, 3.53], fill: 0.4, flat: "#525468" },
   // roads, and the road surfaces of stops and road stations (RoadMesh, BusStopMesh)
   "road-asphalt": { texture: "asphalt", tile: 10, tintLift: 0.6 },
   "road-cobblestone": { texture: "cobblestone", tile: 4, tintLift: 0.6 },

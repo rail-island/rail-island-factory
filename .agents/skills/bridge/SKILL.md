@@ -49,6 +49,9 @@ studs, a road deck at 400 and a 160-stud arc with a vertex every 4 studs:
 | framed (girders, trusses, trestle, arches) | 4,000 | 1,000 |
 | signature (cantilever, tied/network arch, suspension, cable-stayed) | 6,000 | 1,500 |
 
+A type's parameters can move it up a tier: a beam bridge on steel plate girders or steel
+trestle piers is framed, a masonry arch with statues or gate towers (a landmark) signature.
+
 Spend triangles on what reads from the game's camera: silhouette, depth, shadow
 lines (cornices, copings, caps), real member rhythm. Every path vertex costs each
 ribbon a joint, so keep the ribbon count modest and leave a margin for bends.

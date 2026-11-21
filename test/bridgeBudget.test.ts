@@ -15,13 +15,20 @@ const TIERS: Record<Tier, { per100: number; ends: number }> = {
   signature: { per100: 6000, ends: 1500 },
 };
 const TIER_OF: Record<string, Tier> = {
-  beam: "plain", box_girder: "plain",
-  plate_girder: "framed", truss: "framed", deck_truss: "framed", timber_trestle: "framed",
+  beam: "plain",
+  truss: "framed", deck_truss: "framed", timber_trestle: "framed",
   arch: "framed", stone_arch: "framed",
   cantilever: "signature", tied_arch: "signature", suspension: "signature", cable_stayed: "signature",
 };
-const budgetOf = (type: string, length: number): number => {
-  const tier = TIERS[TIER_OF[type]!];
+// a beam bridge on steel plate girders, or on steel trestle piers, is a framed structure;
+// a masonry arch with statues or gate towers a landmark (Charles Bridge), a signature one
+const tierOf = (type: string, params: bridge.BridgeParams): Tier => {
+  if (type === "beam" && (params.girders === "plate" || params.piers === "steel")) return "framed";
+  if (type === "stone_arch" && ((params.statues ?? "none") !== "none" || (params.gates ?? "none") !== "none")) return "signature";
+  return TIER_OF[type]!;
+};
+const budgetOf = (type: string, length: number, params: bridge.BridgeParams = {}): number => {
+  const tier = TIERS[tierOf(type, params)];
   return tier.ends + (tier.per100 * length) / 100;
 };
 // the distant level (bridge.lowDetailBoxes, what the game draws far away), every tier
@@ -50,19 +57,19 @@ describe("the bridge budgets", () => {
 
   // every value of the parameters that change the shape (the piers, the hangers, the
   // towers); a colour changes no triangle
-  const SHAPES = new Set(["piers", "hangers", "towers"]);
+  const SHAPES = new Set(["piers", "hangers", "towers", "girders", "statues", "gates"]);
   const variants = (type: string): bridge.BridgeParams[] => {
     let out: Array<Record<string, string>> = [{}];
     for (const p of bridge.TYPE_PARAMS[type] ?? []) if (SHAPES.has(p.name)) out = out.flatMap((v) => p.values.map((x) => ({ ...v, [p.name]: x.value })));
     return out;
   };
   for (const type of Object.keys(bridge.TYPE_META)) for (const params of variants(type)) {
-    it(`hold ${type} ${JSON.stringify(params)} to its ${TIER_OF[type]} tier`, () => {
+    it(`hold ${type} ${JSON.stringify(params)} to its ${tierOf(type, params)} tier`, () => {
       for (const f of FIXTURES) {
         const path = bridge.pathFromPoints(f.points, f.width, 0, 0.67, 13.16)!; // the game's clearance
         const boxes = bridge.buildBridge(type, path, () => 0, undefined, {}, params);
         const triangles = bridgeMesh(boxes).triangleCount();
-        expect(triangles, `${type} ${f.name}`).toBeLessThanOrEqual(budgetOf(type, path.length));
+        expect(triangles, `${type} ${f.name}`).toBeLessThanOrEqual(budgetOf(type, path.length, params));
         const far = bridgeMesh(bridge.lowDetailBoxes(boxes)).triangleCount();
         expect(far, `${type} ${f.name} distant`).toBeLessThanOrEqual(Math.min(FAR.ends + (FAR.per100 * path.length) / 100, triangles * FAR.share));
         // the distant level keeps something standing on the ground

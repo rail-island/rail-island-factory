@@ -61,10 +61,11 @@ describe("the preview designs", () => {
 
   it("draw a recentred bridge deck over its own piers and girders", () => {
     // two tracks: a 17-stud deck recentred 4 studs to +z over a path along x
-    const girder = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-plate-girder")!;
+    // the beam bridge on its steel plate girders
+    const girder = PREVIEW_DESIGNS.find((d) => d.id === "proc-preview-bridge-beam")!;
     // the valley's ground block, 4 studs wider than the deck each side, aside
     const ground = 17 / 2 + 4;
-    const z = girder.build({ deck: "double" }).positions().filter((v, i) => i % 3 === 2 && Math.abs(Math.abs(v - 4) - ground) > 1e-6);
+    const z = girder.build({ deck: "double", girders: "plate" }).positions().filter((v, i) => i % 3 === 2 && Math.abs(Math.abs(v - 4) - ground) > 1e-6);
     // within a stud of the deck's edges (the girders' flanges overhang them); the
     // mirrored deck lay 8 studs off
     expect(Math.min(...z)).toBeGreaterThan(4 - 17 / 2 - 1);

@@ -218,7 +218,9 @@ describe("the bridge kit", () => {
       expect(bridge.buildBridge(type, path, () => 0).every((b) => b.color !== undefined), type).toBe(true);
       // each paint draws its own steel
       const paint = bridge.TYPE_PARAMS[type]!.find((p) => p.name === "paint");
-      if (paint) expect(new Set(paint.values.map((v) => steel(type, { paint: v.value }).join("|"))).size, type).toBe(paint.values.length);
+      // (a beam bridge's paint shows on its steel plate girders)
+      const shape = type === "beam" ? { girders: "plate" } : {};
+      if (paint) expect(new Set(paint.values.map((v) => steel(type, { ...shape, paint: v.value }).join("|"))).size, type).toBe(paint.values.length);
     }
     // a concrete pier's cap is lighter than its shaft
     const beam = bridge.buildBridge("beam", path, () => 0);
@@ -315,5 +317,51 @@ describe("the bridge kit", () => {
     // over a deep crossing the end stands on its pier, as before
     const deep = bridge.buildBridge("beam", path, () => 0);
     expect(deep.some((b) => b.shape === "box" && b.topScale !== undefined && Math.abs(b.center.x) < 0.01)).toBe(true);
+  });
+
+  it("draws a masonry arch with the photo of the stone or brick chosen", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 60, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const surfaces = (masonry: string) => new Set(bridge.buildBridge("stone_arch", path, () => 0, undefined, {}, { masonry }).filter((b) => b.material === "stone" || b.material === "brick").map((b) => `${b.material}@${b.surface}`));
+    expect(surfaces("sandstone")).toEqual(new Set(["stone@bridge-sandstone"]));
+    expect(surfaces("limestone")).toEqual(new Set(["stone@bridge-limestone"]));
+    expect(surfaces("granite")).toEqual(new Set(["stone@bridge-granite"]));
+    expect(surfaces("blueBrick")).toEqual(new Set(["brick@bridge-brick-blue"]));
+    expect(surfaces("yellowBrick")).toEqual(new Set(["brick@bridge-brick-yellow"]));
+    // a tone of the masonry (the vault) keeps the photo
+    const vault = bridge.buildBridge("stone_arch", path, () => 0, undefined, {}, { masonry: "blueBrick" }).find((b) => b.shape === "wall" && b.part === "detail" && b.material === "brick");
+    expect(vault?.surface).toBe("bridge-brick-blue");
+  });
+
+  it("stands statues on a masonry arch's piers and gate towers over its ends, when chosen", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 100, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const build = (params: bridge.BridgeParams) => bridge.buildBridge("stone_arch", path, () => 0, undefined, {}, params);
+    const heads = (boxes: bridge.BridgeBox[]) => boxes.filter((b) => b.shape === "box" && b.material === "stone" && b.part === "detail" && Math.abs(b.size.x - 0.44) < 1e-9);
+    const piers = bridge.getStructuralSpanRanges("stone_arch", 100).length - 1;
+    expect(heads(build({}))).toHaveLength(0);
+    expect(heads(build({ statues: "piers" }))).toHaveLength(2 * piers);
+    // a gate tower: two walls on the ground beside the deck, the passage clear to the wires
+    const walls = (boxes: bridge.BridgeBox[]) => boxes.filter((b) => b.shape === "box" && b.ground && b.part === "frame" && b.size.z === 7);
+    expect(walls(build({}))).toHaveLength(0);
+    expect(walls(build({ gates: "one" }))).toHaveLength(2);
+    const both = build({ gates: "both" });
+    expect(walls(both)).toHaveLength(4);
+    const arch = both.find((b) => b.shape === "wall" && b.part === "frame" && b.u1 - b.u0 === 7);
+    if (arch?.shape !== "wall") throw new Error("the arch over the passage is a wall");
+    const deckCentre = 24 + 0.67 - bridge.DECK_THICKNESS / 2;
+    expect(Math.min(...arch.bottoms) - deckCentre).toBeGreaterThanOrEqual(9.9);
+  });
+
+  it("builds a beam bridge as the structure its girders choose, the retired types as before", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 150, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    expect(bridge.getStructuralSpanRanges("beam", 150)).toHaveLength(1);
+    expect(bridge.getStructuralSpanRanges("beam", 150, { girders: "box" })).toHaveLength(3);
+    expect(bridge.getStructuralSpanRanges("beam", 150, { girders: "plate" })).toHaveLength(3);
+    expect(bridge.getStructuralSpanRanges("box_girder", 150)).toHaveLength(3);
+    for (const [old, now] of [["box_girder", { girders: "box" }], ["plate_girder", { girders: "plate", paint: "green" }]] as const) {
+      expect(bridge.buildBridge(old, path, () => 0)).toEqual(bridge.buildBridge("beam", path, () => 0, undefined, {}, now));
+    }
+    // the steel plate girders are steel, the concrete beams are not
+    expect(bridge.buildBridge("beam", path, () => 0, undefined, {}, { girders: "plate" }).some((b) => b.material === "steel" && b.part === "frame")).toBe(true);
+    expect(bridge.buildBridge("beam", path, () => 0).some((b) => b.material === "steel" && b.part === "frame")).toBe(false);
   });
 });

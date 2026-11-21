@@ -37,6 +37,7 @@ its average.
 | `texture` | the photo set |
 | `tile` | world units one repeat spans (studs for the game's structures, metres for a design) |
 | `tintLift`, `gain` | the tint is the material's colour lifted toward white by `tintLift`, times `gain` - a tint can only darken a photo |
+| `balance` | a per-channel multiplier on that tint: it corrects the photo toward the material's colour, so the colour stays the honest one the surface reads as (thumbnails, the far level) while its tones still scale the photo (the `bridge-sandstone`, `-limestone`, `-granite` and `bridge-brick*` presets a masonry arch's swatch picks) |
 | `tint` | a fixed linear multiplier instead (an airport's pavement) |
 | `fill` | albedo-coloured self-light that keeps detail in shadow |
 | `normalScale` | strength of the normal map |
