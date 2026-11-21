@@ -70,6 +70,18 @@ A set's module holds what its types ARE, and the game keeps what fits them to a 
 | `bridge` | `TYPE_META`: the span policy (`maxSpan`, or none); `TYPE_PARAMS` (what a player picks per type) and `RETIRED_TYPES` / `storedBridge` (a merged type's old id and its parameters); `COLORS` (every box carries its `color`); the kit (path sampling and its deck frame, box, span, strut, wall and ribbon shapes, the deck section, piers, abutments) and one function per type, run per structural span over the path the game hands in (`pathFromPoints`, carrying the game's deck support height and overhead clearance), the cable types once over the whole path with shared towers (`cableTowerDistances`); `buildBridge(type, path, heightAt)`, the boundary pier style, `overheadMembers` and `overheadMemberEndpoints`, and the distant level `lowDetailBoxes`. Every box built from the terrain up is tagged `ground`. The types, kit and budgets: [bridges.md](bridges.md) | path planning, grade profiles, lanes, the deck geometry, the ground pier footprints, catenary fixings, merging the far level into chunks |
 | `catenaryStyle` | `TYPE_META`: the support a style draws (mast or pole); `mast(style, input)`: the railway ladder mast with its footing or deck pedestal and its trackside arms or portal beam; `pole(style, input)`: the tram pole with its bracket arm and drops. Both take the heights the game plans with and return parts in one cross-section (box, bar, pole) | the planners (spacing, sides, wire runs, bridge and station fixings), the wires, the hangers |
 
+**Decoration drawings.** In the near tile (`detail: "high"`) the noise wall (`wall`) is a
+highway barrier: a concrete plinth 1 stud high, four absorber cassettes (`wall`) with a steel
+seam between each, a steel coping and a steel H-post at the start of every module, 5 studs to
+its top; the far tile keeps the plinth and one panel. The alpine gallery's walled (uphill) side
+has a battered base course, a cornice under the roof and a counterfort stepping in three courses
+on the outside, with a haunch under the roof and a cable trough along its inside foot; its open
+(valley) side stands a pillar on a kerb every module, its head stepping out in three haunches
+so each bay reads as an arched opening, and the far tile keeps a plain pillar, so the roof never
+floats. The roof slab rises toward the walled side and oversails the open edge with a fascia
+under it and a lip on top. Nothing but the open side's head beam and the walled side's haunch
+reaches below the roof's clearance (`test/decoration.test.ts`).
+
 Fixed props (a shed, a crane, a tower) are ordinary models, not module code ([props.md](props.md));
 a set names them by id.
 

@@ -45,8 +45,14 @@ export const TEXTURE_SLUGS = {
 
 export type TextureName = keyof typeof TEXTURE_SLUGS;
 export const TEXTURE_NAMES = Object.keys(TEXTURE_SLUGS).sort() as TextureName[];
-/** The three maps of every set, `<name>_<channel>.jpg`. */
-export const TEXTURE_CHANNELS = ["albedo", "normal", "rough"] as const;
+/**
+ * The four maps of every set, `<name>_<channel>.jpg`. `height` is the photo's
+ * displacement map, grey, high-passed to its local relief and histogram-equalized
+ * (fetchTextures.ts highPassHeight, equalizeHeight): the
+ * game's terrain height-blends its layers by it (the game packs it into the albedo
+ * array's alpha, so it costs no GPU memory of its own).
+ */
+export const TEXTURE_CHANNELS = ["albedo", "normal", "rough", "height"] as const;
 /** Every map is this many pixels square: the game has no texture quality tier. */
 export const TEXTURE_SIZE = 512;
 /**

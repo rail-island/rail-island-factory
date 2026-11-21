@@ -74,7 +74,8 @@ function roadSketch(values: ParamValues | undefined, type: string, lod: boolean)
 export function roadTypePreview(values: ParamValues | undefined, type: string): MeshBuilder { return roadSketch(values, type, false).build("road"); }
 export function roadTypePreviewLod(values: ParamValues | undefined, type: string): MeshBuilder { return roadSketch(values, type, true).build("road"); }
 
-// --- line decorations: the kind along both sides of a wide road ---
+// --- line decorations: the kind along both sides of a wide road (a gallery walled on
+// the left, so its open colonnade shows on the right) ---
 
 const DECORATION_COLORS: Record<decoration.DecorationMaterial, { color: Rgb; surface?: SurfaceId }> = {
   concrete: { color: [190, 188, 180], surface: "gallery-concrete" },
@@ -109,7 +110,7 @@ function decorationSketch(values: ParamValues | undefined, kind: string, lod: bo
   };
   for (let x = -length / 2; x + spacing <= length / 2 + 1e-6; x += spacing) {
     decoration.buildPiece(kind,
-      { a: { x, y: 0, z: 0, tx: 1, tz: 0 }, b: { x: x + spacing, y: 0, z: 0, tx: 1, tz: 0 }, left: reach, right: -reach, leftVisible: true, rightVisible: true, side: env?.sides.includes("both") ? "both" : "left" },
+      { a: { x, y: 0, z: 0, tx: 1, tz: 0 }, b: { x: x + spacing, y: 0, z: 0, tx: 1, tz: 0 }, left: reach, right: -reach, leftVisible: true, rightVisible: true, side: kind === "gallery" || !env?.sides.includes("both") ? "left" : "both" },
       { heightAt: () => 0, detail: lod ? "low" : "high", shoulderY }, out);
   }
   return s;

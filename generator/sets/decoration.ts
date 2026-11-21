@@ -62,6 +62,18 @@ const GALLERY_BEAM = 1.3;     // depth of the head beam / the cornice facing it
 const GALLERY_EAVE = 1.1;     // how far the slab oversails the open side
 const GALLERY_EAVE_SOLID = 0.9; // ...and the solid one, clear of its cornice
 const GALLERY_LIP = 0.45;     // upstand along the open eave
+const GALLERY_FASCIA = 0.5;   // how far the open eave's fascia hangs below the slab
+const GALLERY_HAUNCH = 1.1;   // how far the inside haunch reaches from the wall under the roof
+const GALLERY_TROUGH = 0.9;   // width of the cable trough along the wall's inside foot
+
+// the noise wall's cross-section, in studs above the ground it stands on (its top is TYPE_META.wall.top)
+const WALL_PLINTH = 1.0;      // top of the concrete plinth
+const WALL_PLINTH_HALF = 0.32;
+const WALL_PANEL_HALF = 0.22; // the absorber cassettes' half thickness
+const WALL_PANEL_TOP = 4.8;   // top of the highest cassette, under the coping
+const WALL_CASSETTES = 4;     // cassettes stacked between plinth and coping
+const WALL_SEAM = 0.1;        // the gap between two cassettes, showing the steel behind
+const WALL_POST_TOP = 5;      // the H-posts' tops
 
 // the guardrail's cross-section, in studs above the shoulder it is bolted to
 const GUARDRAIL_HEIGHT: number = TYPE_META.guardrail!.section!.height!;
@@ -128,9 +140,28 @@ export function buildPiece(kind: string, p: DecorationPiece, ctx: DecorationCont
     if (kind === "trees") {
       out.tree(side, sx, sz, ground);
     } else if (kind === "wall") {
+      // a highway noise barrier: a concrete plinth, absorber cassettes stacked on it
+      // with a seam between each, a steel coping and an H-post at every joint
       const ga = ctx.heightAt(p.a.x - p.a.tz * distance, p.a.z + p.a.tx * distance);
       const gb = ctx.heightAt(p.b.x - p.b.tz * distance, p.b.z + p.b.tx * distance);
-      out.sweep("wall", p.a, p.b, distance + 0.25, distance - 0.25, ga - 0.2, ga + 5, gb - 0.2, gb + 5);
+      const layer = (material: DecorationMaterial, half: number, bottom: number, top: number): void =>
+        out.sweep(material, p.a, p.b, distance + half, distance - half, ga + bottom, ga + top, gb + bottom, gb + top);
+      layer("concrete", WALL_PLINTH_HALF, -0.2, WALL_PLINTH);
+      if (high) {
+        // each seam is a thinner steel strip abutting the cassettes above and below,
+        // so no two faces of different materials share a plane
+        const step = (WALL_PANEL_TOP - WALL_PLINTH) / WALL_CASSETTES;
+        for (let i = 0; i < WALL_CASSETTES; i++) {
+          const bottom = WALL_PLINTH + i * step + (i ? WALL_SEAM / 2 : 0);
+          const top = WALL_PLINTH + (i + 1) * step - (i < WALL_CASSETTES - 1 ? WALL_SEAM / 2 : 0);
+          layer("wall", WALL_PANEL_HALF, bottom, top);
+          if (i < WALL_CASSETTES - 1) layer("metal", WALL_PANEL_HALF - 0.08, top, top + WALL_SEAM);
+        }
+        layer("metal", WALL_PANEL_HALF + 0.06, WALL_PANEL_TOP, WALL_PANEL_TOP + 0.18);
+        // the post at the module's start, stood on the ground there, its flanges proud of both faces
+        const px = p.a.x - p.a.tz * distance, pz = p.a.z + p.a.tx * distance;
+        out.box("metal", px, (ga - 0.2 + ga + WALL_POST_TOP) / 2, pz, WALL_PANEL_HALF * 2 + 0.24, WALL_POST_TOP + 0.2, 0.32, Math.atan2(p.a.tx, p.a.tz));
+      } else layer("wall", WALL_PANEL_HALF, WALL_PLINTH, WALL_PANEL_TOP + 0.18);
     } else if (kind === "gallery") {
       // The uphill side is a wall; the valley side is a colonnade on a low kerb.
       const solid = p.side === side || p.side === "both";
@@ -138,10 +169,10 @@ export function buildPiece(kind: string, p: DecorationPiece, ctx: DecorationCont
       const gb = ctx.heightAt(p.b.x - p.b.tz * distance, p.b.z + p.b.tx * distance);
       const rise = solid ? GALLERY_RISE : 0;
       const soffitA = p.a.y + GALLERY_CLEARANCE + rise, soffitB = p.b.y + GALLERY_CLEARANCE + rise;
+      const sign = side === "left" ? 1 : -1;
       if (solid) {
         // flush on the inside, articulated outside: a battered base course, a
-        // cornice under the slab and a stepped buttress every module
-        const sign = side === "left" ? 1 : -1;
+        // cornice under the slab and a stepped counterfort every module
         const inner = distance - sign * 0.35;
         const course = (outward: number, bottomA: number, topA: number, bottomB: number, topB: number): void => {
           const outer = distance + sign * outward;
@@ -151,19 +182,36 @@ export function buildPiece(kind: string, p: DecorationPiece, ctx: DecorationCont
         course(0.35, p.a.y + GALLERY_PLINTH, soffitA, p.b.y + GALLERY_PLINTH, soffitB);
         course(0.7, soffitA - GALLERY_BEAM, soffitA, soffitB - GALLERY_BEAM, soffitB);
         if (high) {
-          const top = wayY + GALLERY_CLEARANCE + rise, waist = (wayY + GALLERY_PLINTH + top) / 2;
-          member({ x, y: wayY, z, tx, tz }, 1.5, distance + sign * 0.7, 0.4, ground - 0.2, waist);
-          member({ x, y: wayY, z, tx, tz }, 1.1, distance + sign * 0.5, 0.25, waist, top - GALLERY_BEAM);
+          const top = wayY + GALLERY_CLEARANCE + rise, here = { x, y: wayY, z, tx, tz };
+          const third = (top - GALLERY_BEAM - wayY - GALLERY_PLINTH) / 3;
+          const foot = wayY + GALLERY_PLINTH;
+          // the counterfort steps in as it climbs: wide at the foot, slender under the cornice
+          member(here, 1.4, distance + sign * 1.0, 0.65, ground - 0.2, foot + third);
+          member(here, 1.2, distance + sign * 0.8, 0.45, foot + third, foot + 2 * third);
+          member(here, 1.0, distance + sign * 0.6, 0.25, foot + 2 * third, top - GALLERY_BEAM);
+          // inside: a haunch where the wall meets the roof, and a cable trough at its foot
+          const face = distance - sign * 0.35, haunchIn = face - sign * GALLERY_HAUNCH;
+          // a sheared course, low at the wall and lifted to the roof's underside toward the way
+          const roadRise = GALLERY_HAUNCH * 0.9;
+          out.sweep("concrete", p.a, p.b, Math.max(face, haunchIn), Math.min(face, haunchIn),
+            soffitA - roadRise - 0.1, soffitA - roadRise + 0.45, soffitB - roadRise - 0.1, soffitB - roadRise + 0.45,
+            sign > 0 ? 0 : roadRise, sign > 0 ? roadRise : 0);
+          const trough = face - sign * GALLERY_TROUGH;
+          out.sweep("concrete", p.a, p.b, Math.max(face, trough), Math.min(face, trough),
+            Math.min(ga, p.a.y) - 0.2, p.a.y + 0.7, Math.min(gb, p.b.y) - 0.2, p.b.y + 0.7);
         }
       } else {
-        out.sweep("concrete", p.a, p.b, distance + 0.3, distance - 0.3, ga - 0.2, p.a.y + GALLERY_KERB, gb - 0.2, p.b.y + GALLERY_KERB);
-        out.sweep("concrete", p.a, p.b, distance + 0.45, distance - 0.45, soffitA - GALLERY_BEAM, soffitA, soffitB - GALLERY_BEAM, soffitB);
+        out.sweep("concrete", p.a, p.b, distance + 0.35, distance - 0.35, ga - 0.2, p.a.y + GALLERY_KERB, gb - 0.2, p.b.y + GALLERY_KERB);
+        out.sweep("concrete", p.a, p.b, distance + 0.5, distance - 0.5, soffitA - GALLERY_BEAM, soffitA, soffitB - GALLERY_BEAM, soffitB);
+        const foot = wayY + GALLERY_KERB, head = wayY + GALLERY_CLEARANCE - GALLERY_BEAM, here = { x, y: wayY, z, tx, tz };
         if (high) {
-          const foot = wayY + GALLERY_KERB, head = wayY + GALLERY_CLEARANCE - GALLERY_BEAM;
-          member({ x, y: wayY, z, tx, tz }, 1.3, distance, 0.55, foot, foot + 0.4);  // splayed base
-          member({ x, y: wayY, z, tx, tz }, 0.9, distance, 0.38, foot, head);        // shaft
-          member({ x, y: wayY, z, tx, tz }, 1.3, distance, 0.55, head - 0.45, head); // capital
-        }
+          member(here, 1.7, distance, 0.6, foot, foot + 0.5);  // splayed base
+          member(here, 1.2, distance, 0.45, foot, head);       // shaft
+          // the haunches step out under the head beam, so every bay reads as an arched opening
+          member(here, 1.9, distance, 0.42, head - 1.6, head - 0.9);
+          member(here, 2.6, distance, 0.42, head - 0.9, head - 0.4);
+          member(here, 3.2, distance, 0.42, head - 0.4, head);
+        } else member(here, 1.2, distance, 0.45, foot, head); // the far level keeps its pillars: no floating roof
       }
     } else if (kind === "guardrail") {
       // a steel W-beam on posts, bolted to the road's shoulder, never the ground
@@ -202,6 +250,11 @@ export function buildPiece(kind: string, p: DecorationPiece, ctx: DecorationCont
     const outerRight = p.right - (rightRise ? GALLERY_EAVE_SOLID : GALLERY_EAVE);
     const soffitA = p.a.y + GALLERY_CLEARANCE, soffitB = p.b.y + GALLERY_CLEARANCE;
     out.sweep("concrete", p.a, p.b, outerLeft, outerRight, soffitA, soffitA + GALLERY_SLAB, soffitB, soffitB + GALLERY_SLAB, leftRise, rightRise);
+    // the open eave's fascia hangs below the slab, giving the roof its thick edge
+    if (!leftRise) out.sweep("concrete", p.a, p.b, outerLeft, outerLeft - 0.35,
+      soffitA - GALLERY_FASCIA, soffitA + 0.01, soffitB - GALLERY_FASCIA, soffitB + 0.01);
+    if (!rightRise) out.sweep("concrete", p.a, p.b, outerRight + 0.35, outerRight,
+      soffitA - GALLERY_FASCIA, soffitA + 0.01, soffitB - GALLERY_FASCIA, soffitB + 0.01);
     if (!leftRise) out.sweep("concrete", p.a, p.b, outerLeft, outerLeft - 0.5,
       soffitA + GALLERY_SLAB, soffitA + GALLERY_SLAB + GALLERY_LIP, soffitB + GALLERY_SLAB, soffitB + GALLERY_SLAB + GALLERY_LIP);
     if (!rightRise) out.sweep("concrete", p.a, p.b, outerRight + 0.5, outerRight,
