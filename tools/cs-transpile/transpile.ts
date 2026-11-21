@@ -2261,6 +2261,11 @@ export class Transpiler {
   /** A value as a string, as a template literal or `+` with a string converts it. */
   private strOf(e: ts.Expression): string {
     const out = this.expr(e);
+    // a string that may be null or undefined: JS writes "null" or "undefined" (by its TS type)
+    const t = this.checker.getTypeAtLocation(e);
+    const parts = t.isUnion() ? t.types : [t];
+    const hasNull = parts.some((x) => x.flags & ts.TypeFlags.Null), hasUndef = parts.some((x) => x.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Void));
+    if (out.cs === "string" && (hasNull || hasUndef)) return `(${out.code} ?? ${hasNull ? '"null"' : '"undefined"'})`;
     if (out.cs === "string") return out.code;
     return `JsRt.Str(${out.code})`;
   }
@@ -3634,6 +3639,19 @@ export class Transpiler {
         }
         this.fail(p, "object literal member");
         continue;
+      }
+      // `end: it.end` copying an optional field of a shape whose TS type admits null: JS copies an
+      // absent value as undefined, which a later default replaces - set only when the source has it
+      const vx = this.skipParens(value);
+      if (!record && ts.isPropertyAccessExpression(vx) && !vx.questionDotToken && this.dataClasses.get(c)?.fields.find((f) => f.js === key)?.nullable) {
+        const src = this.expr(vx.expression);
+        const sf = this.dataClasses.get(src.cs)?.fields.find((f) => f.js === vx.name.text);
+        if (sf && (sf.nullable || !VALUE_TYPES.has(sf.cs))) {
+          needsInit = true;
+          const t = `__src${++this.ctx.temps}`;
+          assigns.push(`{ var ${t} = ${src.code}; if (${t}.__has(${this.str(vx.name.text)})) { ${set(key, this.coerce(`${t}.${Transpiler.escape(vx.name.text)}`, sf.cs, fieldOf(key)))} } }`);
+          continue;
+        }
       }
       const v = this.exprTo(value, fieldOf(key));
       if (needsInit) assigns.push(set(key, v));

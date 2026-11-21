@@ -463,6 +463,23 @@ export function methodDefaults(): unknown {
   return [out.sweep(1, 2), out.sweep(1, 2, 3), out.sweep(1, 2, 3, "y"), loose(1), loose(1, 5, "c")];
 }
 
+interface BlockItem {
+  side?: string | null;
+  end?: string | null;
+  top?: string | null;
+}
+
+function blockFaces(mats: { side?: string | null; end?: string | null; top?: string | null }): string {
+  const { side = null, end = side, top = side } = mats;
+  return `${side}|${end}|${top}`;
+}
+
+/** An absent optional field copied into a literal stays undefined: the callee's default applies. */
+export function copiedAbsent(): unknown {
+  const it: BlockItem = { side: "under", top: null };
+  return [blockFaces({ side: it.side, end: it.end, top: it.top }), blockFaces({ side: "a", end: null })];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
