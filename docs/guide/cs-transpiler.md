@@ -51,7 +51,9 @@ pnpm cs:pilot --fixtures     # each supported construct (fixtures/constructs.ts)
 - **The seam.** Symbols of `meshBuilder.ts` and `threeBuilder.ts` are not transpiled. The designs'
   `MeshBuilder` is `runtime/MeshBuilder.cs`: the transpiled `MeshCore` plus `ToModelNode`, which does what
   `toGroup` does with three.js - a mesh per material in name order, a node per part at its pivot, the
-  clips and the userData - into the engine-neutral `ModelNode`. Named surfaces and interiors throw.
+  clips and the userData - into the engine-neutral `ModelNode`. It also ports what `surfaceUvs.ts` and
+  `interiorTable.ts` add: a named surface's box-projected UVs and `userData.surfaces`, and interior parts
+  built hidden with the door clips that reveal them on `userData.interiors`.
 - **Types** come from the TypeScript checker. `number` is `double`; string literal unions are `string`;
   `T | undefined` of a number is `double?`; arrays and tuples are `JsArray<T>` (a heterogeneous tuple
   `JsArray<object>`); `Map`/`Set` are `JsMap`/`JsSet`; `Record<string, T>` (and a `Record` over a finite
@@ -62,21 +64,31 @@ pnpm cs:pilot --fixtures     # each supported construct (fixtures/constructs.ts)
   (`LodMass`, `ClipDrive`) is merged into one class with every field; a union of separately named types
   (`LodPart | LodRect`) stays `object`, because its values are existing objects whose identity matters.
   An anonymous shape with exactly a named class's fields is that class (`{ ...spec }` of a `MaterialSpec`).
+  An interface extending exactly one other whose fields it keeps (`Variant extends FillCandidate`) is a C#
+  subclass: passed as the base it stays the same object and reads back as itself.
 - **Every expression** is emitted with its C# type and then converted to the C# mapping of its narrowed
   TS type (`coerce`): `double?` to `double` after a narrowing, a tuple element out of `JsArray<object>`, a
   delegate through an adapter lambda, one shape class into another (a generated `ShapeConvert` method, a
   copy of the present fields). An object literal takes its contextual type's class, so most copies never
   happen; an assignment's value and a literal's own fresh type are never converted (that would store one
-  object and hand on a copy), and a merged union narrowed to one of its members is read in place.
-- **Presence.** A shape class's fields are properties whose setters mark them present. A field whose TS
-  type admits `null` keeps "set to null" apart from "left out" (`{ end: null }` against `{}`), so a
-  destructuring default, `in`, `=== undefined`, a spread and JSON follow JS; for other fields null is absence.
+  object and hand on a copy), and a merged union narrowed to one of its members is read in place; where it
+  must become the member's class, the copy is made once per object and `===` sees it as its source.
+- **An untyped object constant** every use of which wants one class (`front: rdcEnd, rear: rdcEnd` as
+  `NoseShape`) is built as that class, so the uses share one object (`front === rear` holds); a constant
+  that is spread anywhere keeps its own shape.
+- **Presence.** A shape class's fields are properties whose setters mark them present; a field that is
+  always set (a required number) is always present. A key written with `undefined` is present, as in JS:
+  `{ ...series, ...{ lowWell: undefined } }` clears `lowWell`. A field whose TS type admits `null` keeps
+  null as a value of its own (`=== null`, JSON writes it); in any other field null is undefined - JSON leaves
+  it out and a destructuring default applies.
 - **Classes**: a TS constructor may run code before `super()`, which a C# constructor cannot, so each class
   gets `__ctor_<Name>` (the TS body, with `super(...)` calling the base's `__ctor`) and `__fields_<Name>` (the
   field initializers); the C# constructor only forwards to it, passing `JsCtor.Skip` to its base.
 - **Locals** are renamed to be unique within their C# member (C# forbids a local hiding another); a `const`
   arrow function becomes a local function (default parameters, recursion). A default parameter that is no
-  compile-time constant becomes a `null` default worked out in the body. `const a = x!` over a nullable
+  compile-time constant becomes a `null` default worked out in the body (a `string | null` parameter uses a
+  sentinel instead, so an explicit `null` stays null). A function passed as a value keeps its constant
+  defaults: the adapter lambda hands a left-out number argument the default. `const a = x!` over a nullable
   number keeps the local nullable: TypeScript's `!` drops `null` too, and `lodKit.ts`'s `cells` tests
   such a value for null.
 - **A tuple spread into arguments** (`m.box(mat, ...side(s, a, b), y0, y1)`) keeps the tuple in an
@@ -92,11 +104,17 @@ pnpm cs:pilot --fixtures     # each supported construct (fixtures/constructs.ts)
 - **`Math.hypot`/`min`/`max` and `push` with spreads** gather every argument in order into one array
   first - JS evaluates them all before pushing, so `b.push(...b, ...b)` reads `b` twice before it grows.
 - **A literal that spreads a record** (`{ ...KIT_PALETTE, dfBlue: ... }`) is a record, though TypeScript
-  types it by its named keys; the variable holding it is typed so too.
+  types it by its named keys; so is one spreading such a constant (`{ ...PALETTE, claret }`), every read of
+  the constant is the record, and a record wanted by the context (`Record<string, MaterialSpec>`) sets the
+  value type, not the first spread's narrower one.
+- **A spread of `a ?? b` or `c ? a : b`** assigns the chosen object as it is (the type of the whole would
+  convert `a` to the shape both share and drop its other keys); a literal branch is inlined.
 - **A type made of one class's members** (`Pen = Pick<MeshBuilder, "quad" | "tri">`) is that class.
 - **A key that is no identifier** (`"bridge-timber"`) is a field with a sanitized name and a hash of the key.
 - **A read past an array's end** gives null for an array of objects, as JS gives undefined; for an array
-  of numbers, which cannot hold it, it throws - except `a[i] ?? b`, which reads it as JS does.
+  of numbers, which cannot hold it, it throws - except where JS code can see undefined: `a[i] ?? b`, a
+  comparison with a literal (`trucks[i] !== false`), a tuple element destructured as optional (the shorter
+  member of `[n, n] | [n, n, n]`). `find` over numbers returns undefined when nothing matches.
 - **Unsupported constructs** are errors naming file, line and kind; all are reported before it fails.
 
 ## Speed
@@ -144,7 +162,11 @@ whenever the transpiler learns a construct; it checks the construct without a de
 
 `compare.ts` builds every combination `coverageCombinations` gives (the factory tests' sample), at full
 and low detail, twice: through the design's JS bundle (`bundleDesign`) with the real three.js, and through
-the transpiled C#. The dumps are compared exactly: the node tree, each material, every position, normal and
-colour as Float32 (both write Float32), the clips and the userData (key order aside). `report.json` lists
-each comparison and the first difference of any that differ. Then the default combination of each design
+the transpiled C#. The dumps are compared with a tolerance: the node tree, each material, the clips and
+the userData (key order aside) exactly; every position, normal, colour and UV (Float32 on both sides) to
+within 2^-22 relative plus 1e-9 absolute. The runtime keeps .NET's native `Math.Sin`/`Cos`, whose last bit
+differs from V8's now and then; a build is "identical" when every number matches bit for bit, "within
+tolerance" when only such last bits differ. `report.json` lists each comparison and the first difference
+of any that differ. `--ids=a,b` runs the comparison for any designs, `--max-combos=N` limits each to its
+first N combinations. Then the default combination of each design
 is timed in Node, in C# and as the JS bundle inside Jint 4.1 (with a three.js stub), as "Speed" describes.
