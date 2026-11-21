@@ -41,11 +41,8 @@ export type TerrainHeightFn = (x: number, z: number) => number;
 export type WaterLevelFn = (x: number, z: number) => number | undefined;
 export interface SpanRange { fromDistance: number; toDistance: number }
 
-/**
- * One type's span policy (the longest structural span before its superstructure
- * repeats, or none) and the colour its steelwork is painted (`COLORS.steel` without).
- */
-export interface BridgeTypeData { maxSpan: number | null; paint?: Rgb }
+/** One type's span policy: the longest structural span before its superstructure repeats, or none. */
+export interface BridgeTypeData { maxSpan: number | null }
 
 // --- dimensions (studs) ---
 export const DECK_THICKNESS = 0.8;
@@ -56,26 +53,19 @@ const PIER_WIDTH = 1.6;
 const MIN_PIER_DROP = 1; // min drop from deck bottom to terrain before a pier renders
 const MIN_WATER_DEPTH = 0.2; // shallower than this a pier stands on the bed, not in water
 
-// Each steel type wears its own paint, so the types tell apart at any zoom: the
-// historic trusses oxide red, the plate girder bridge green, the deck truss dark
-// grey, the tied arch blue, the network arch light grey, the suspension bridge's
-// girders orange (the cable-stayed decks are concrete).
 export const TYPE_META: Record<string, BridgeTypeData> = {
   beam: { maxSpan: null },
-  truss: { maxSpan: 64, paint: [150, 62, 45] },
-  cantilever: { maxSpan: 90, paint: [132, 56, 42] },
+  truss: { maxSpan: 64 },
+  cantilever: { maxSpan: 90 },
   arch: { maxSpan: 80 },
   stone_arch: { maxSpan: 28 },
-  brick_arch: { maxSpan: 28 },
-  tied_arch: { maxSpan: 100, paint: [56, 98, 150] },
-  suspension: { maxSpan: 140, paint: [170, 78, 46] },
+  tied_arch: { maxSpan: 100 },
+  suspension: { maxSpan: 140 },
   cable_stayed: { maxSpan: 120 },
-  cable_stayed_y: { maxSpan: 120 },
-  plate_girder: { maxSpan: 60, paint: [60, 92, 68] },
+  plate_girder: { maxSpan: 60 },
   timber_trestle: { maxSpan: null },
   box_girder: { maxSpan: 65 },
-  deck_truss: { maxSpan: 65, paint: [72, 78, 84] },
-  network_arch: { maxSpan: 100, paint: [210, 212, 206] },
+  deck_truss: { maxSpan: 65 },
 };
 
 /**
@@ -88,9 +78,173 @@ export const COLORS: Record<BridgeMaterial, Rgb> = {
   timber: [145, 108, 70], deck: [120, 110, 100], parapet: [150, 140, 125], pier: [95, 90, 85],
   steel: [80, 90, 110], stone: [170, 160, 145], brick: [235, 205, 195], cable: [40, 40, 50], tower: [95, 90, 85],
 };
-// A material's colour lifted toward white (k > 1, by k - 1 of the way) or darkened (k < 1).
+// A material's colour in the bridge being built (its parameters' palette), lifted
+// toward white (k > 1, by k - 1 of the way) or darkened (k < 1).
 function tone(material: BridgeMaterial, k: number): Rgb {
-  return COLORS[material].map((c) => Math.round(k >= 1 ? c + (255 - c) * (k - 1) : c * k)) as Rgb;
+  return style.palette[material].map((c) => Math.round(k >= 1 ? c + (255 - c) * (k - 1) : c * k)) as Rgb;
+}
+
+// --- parameters -----------------------------------------------------------------
+//
+// A player picks a bridge's look as they pick a building's: each type lists its own
+// parameters (`TYPE_PARAMS`), the game shows them with their titles (exported text,
+// `set.bridge.<type>.param.<name>[.<value>]`) and passes the chosen values to
+// `buildBridge` (and `planSupports` / `supportFootprint`, as the piers' footprint
+// follows their material). A value missing or unknown builds as the parameter's
+// default, and every default draws the type as it was drawn before it had any.
+//
+// Two kinds of parameter: a colour scheme (the steel's paint, the concrete's shade,
+// the stone, brick, timber, the cables) and the material of the piers. Each type
+// offers its own: a steel truss its paints and its piers of stone, brick or
+// concrete; a masonry arch its stone or brick, its piers being the arch itself.
+
+/** One value of a bridge parameter: its stable key and its English title. */
+export interface BridgeParamValue { value: string; title: string }
+/** A parameter a player sets on a bridge of one type: its stable name, English title, values and default. */
+export interface BridgeParam { name: string; title: string; values: BridgeParamValue[]; default: string }
+/** The values a player chose, by parameter name. */
+export type BridgeParams = Readonly<Record<string, string>>;
+
+/** What the piers are built of: concrete (the type's own shape), a masonry block, or a steel trestle tower. */
+export type PierChoice = "concrete" | "stone" | "brick" | "steel";
+
+type Scheme = Partial<Record<BridgeMaterial, Rgb>>;
+// a colour choice: its title and the materials it recolours
+interface Swatch { title: string; colors: Scheme; masonry?: "stone" | "brick" }
+const PAINTS: Record<string, Swatch> = {
+  oxideRed: { title: "Oxide red", colors: { steel: [150, 62, 45] } },
+  green: { title: "Bridge green", colors: { steel: [60, 92, 68] } },
+  grey: { title: "Grey", colors: { steel: [72, 78, 84] } },
+  blue: { title: "Blue", colors: { steel: [56, 98, 150] } },
+  silver: { title: "Silver", colors: { steel: [210, 212, 206] } },
+  orange: { title: "Orange", colors: { steel: [170, 78, 46] } },
+  black: { title: "Black", colors: { steel: [48, 48, 52] } },
+};
+const CONCRETES: Record<string, Swatch> = {
+  warm: { title: "Warm grey", colors: { deck: [120, 110, 100], parapet: [150, 140, 125], pier: [95, 90, 85], tower: [95, 90, 85] } },
+  light: { title: "Light grey", colors: { deck: [150, 147, 140], parapet: [182, 179, 172], pier: [132, 129, 123], tower: [132, 129, 123] } },
+  weathered: { title: "Weathered", colors: { deck: [98, 96, 94], parapet: [124, 122, 118], pier: [76, 75, 74], tower: [76, 75, 74] } },
+};
+// a masonry arch is built of stone or brick: the swatch picks the material too
+const MASONRY: Record<string, Swatch> = {
+  sandstone: { title: "Sandstone", colors: { stone: [170, 160, 145] }, masonry: "stone" },
+  granite: { title: "Granite", colors: { stone: [138, 138, 136] }, masonry: "stone" },
+  limestone: { title: "Limestone", colors: { stone: [208, 202, 188] }, masonry: "stone" },
+  redBrick: { title: "Red brick", colors: { brick: [235, 205, 195] }, masonry: "brick" },
+  yellowBrick: { title: "Yellow brick", colors: { brick: [240, 222, 170] }, masonry: "brick" },
+  blueBrick: { title: "Blue brick", colors: { brick: [150, 145, 160] }, masonry: "brick" },
+};
+const TIMBERS: Record<string, Swatch> = {
+  natural: { title: "Natural", colors: { timber: [145, 108, 70] } },
+  weathered: { title: "Weathered", colors: { timber: [150, 145, 135] } },
+  creosote: { title: "Creosoted", colors: { timber: [92, 72, 56] } },
+};
+const CABLE_COLOURS: Record<string, Swatch> = {
+  black: { title: "Black", colors: { cable: [40, 40, 50] } },
+  white: { title: "White", colors: { cable: [228, 228, 222] } },
+  orange: { title: "Orange", colors: { cable: [205, 98, 42] } },
+};
+const PIER_TITLES: Record<PierChoice, string> = { concrete: "Concrete", stone: "Stone", brick: "Brick", steel: "Steel trestle" };
+// The structural parameters: a tied arch's hangers, a cable-stayed bridge's towers.
+const SHAPE_PARAMS: Record<string, { title: string; values: Record<string, string> }> = {
+  hangers: { title: "Hangers", values: { vertical: "Vertical", network: "Network" } },
+  towers: { title: "Towers", values: { h: "H-frame", y: "Inverted Y" } },
+};
+
+// The colour parameters by name: their title and their swatches.
+const COLOUR_PARAMS: Record<string, { title: string; swatches: Record<string, Swatch> }> = {
+  paint: { title: "Paint", swatches: PAINTS },
+  concrete: { title: "Concrete", swatches: CONCRETES },
+  masonry: { title: "Masonry", swatches: MASONRY },
+  timber: { title: "Timber", swatches: TIMBERS },
+  cables: { title: "Cables", swatches: CABLE_COLOURS },
+};
+// Each type's choices, the first of each its default.
+const TYPE_CHOICES: Record<string, { colours: Array<[string, string[]]>; shapes?: Array<[string, string[]]>; piers?: PierChoice[] }> = {
+  beam: { colours: [["concrete", ["warm", "light", "weathered"]]], piers: ["concrete", "brick"] },
+  box_girder: { colours: [["concrete", ["warm", "light", "weathered"]]], piers: ["concrete", "stone"] },
+  plate_girder: { colours: [["paint", ["green", "oxideRed", "black", "blue"]]], piers: ["concrete", "stone", "brick", "steel"] },
+  truss: { colours: [["paint", ["oxideRed", "green", "black", "silver"]]], piers: ["stone", "brick", "concrete"] },
+  deck_truss: { colours: [["paint", ["grey", "oxideRed", "green"]]], piers: ["concrete", "stone", "brick"] },
+  cantilever: { colours: [["paint", ["oxideRed", "grey", "black"]]], piers: ["concrete", "stone"] },
+  arch: { colours: [["concrete", ["warm", "light", "weathered"]]], piers: ["concrete", "stone", "brick"] },
+  stone_arch: { colours: [["masonry", ["sandstone", "granite", "limestone", "redBrick", "yellowBrick", "blueBrick"]]] },
+  tied_arch: { shapes: [["hangers", ["vertical", "network"]]], colours: [["paint", ["blue", "silver", "oxideRed", "green"]]], piers: ["concrete", "stone", "brick"] },
+  suspension: { colours: [["paint", ["orange", "green", "grey"]], ["cables", ["black", "white"]]], piers: ["concrete", "stone"] },
+  cable_stayed: { shapes: [["towers", ["h", "y"]]], colours: [["concrete", ["warm", "light", "weathered"]], ["cables", ["black", "white", "orange"]]] },
+  timber_trestle: { colours: [["timber", ["natural", "weathered", "creosote"]]] },
+};
+
+/** Each type's parameters, as the game lists them for a player to pick (and the site's preview page). */
+export const TYPE_PARAMS: Readonly<Record<string, readonly BridgeParam[]>> = Object.fromEntries(
+  Object.keys(TYPE_META).map((type) => {
+    const c = TYPE_CHOICES[type]!;
+    const params: BridgeParam[] = (c.shapes ?? []).map(([name, keys]) => ({
+      name, title: SHAPE_PARAMS[name]!.title, default: keys[0]!,
+      values: keys.map((value) => ({ value, title: SHAPE_PARAMS[name]!.values[value]! })),
+    }));
+    for (const [name, keys] of c.colours) params.push({
+      name, title: COLOUR_PARAMS[name]!.title, default: keys[0]!,
+      values: keys.map((value) => ({ value, title: COLOUR_PARAMS[name]!.swatches[value]!.title })),
+    });
+    if (c.piers) params.push({ name: "piers", title: "Piers", default: c.piers[0]!, values: c.piers.map((value) => ({ value, title: PIER_TITLES[value] })) });
+    return [type, params];
+  }),
+);
+
+// The style a build draws with: its palette and its piers' material, resolved from
+// the type's parameters. Set for the length of one public call (`withStyle`), so the
+// kit's helpers read it without every builder passing it on; the module is
+// single-threaded and every call restores the previous style.
+interface BuildStyle { palette: Record<BridgeMaterial, Rgb>; piers: PierChoice; masonry: "stone" | "brick"; network: boolean; yTowers: boolean }
+let style: BuildStyle = { palette: COLORS, piers: "concrete", masonry: "stone", network: false, yTowers: false };
+/** The style a `type` bridge with these parameters draws with. */
+function resolveStyle(type: string, params: BridgeParams = {}): BuildStyle {
+  const out: BuildStyle = { palette: { ...COLORS }, piers: "concrete", masonry: "stone", network: false, yTowers: false };
+  for (const p of TYPE_PARAMS[type] ?? []) {
+    const chosen = p.values.some((v) => v.value === params[p.name]) ? params[p.name]! : p.default;
+    if (p.name === "piers") out.piers = chosen as PierChoice;
+    else if (p.name === "hangers") out.network = chosen === "network";
+    else if (p.name === "towers") out.yTowers = chosen === "y";
+    else {
+      const swatch = COLOUR_PARAMS[p.name]!.swatches[chosen]!;
+      Object.assign(out.palette, swatch.colors);
+      if (swatch.masonry) out.masonry = swatch.masonry;
+    }
+  }
+  return out;
+}
+// --- retired types ----------------------------------------------------------------
+//
+// Types that differed from another only in what is now a parameter were merged into
+// it. Their ids are stored in saved maps, so each stays readable: the registry's
+// retired alias draws it as the surviving type, and this map gives the parameter
+// values it stands for. A stored bridge is read with its own parameters first, then
+// these (`storedBridge`); every public function here accepts a retired id.
+
+/** A retired type: the type it is now, and the parameters it stands for. */
+export interface RetiredBridge { type: string; params: BridgeParams }
+export const RETIRED_TYPES: Readonly<Record<string, RetiredBridge>> = {
+  brick_arch: { type: "stone_arch", params: { masonry: "redBrick" } },
+  network_arch: { type: "tied_arch", params: { hangers: "network", paint: "silver" } },
+  cable_stayed_y: { type: "cable_stayed", params: { towers: "y" } },
+};
+/** A stored type and its own parameters, read as today's type and the values it builds with. */
+export function storedBridge(storedType: string, own?: BridgeParams): { type: string; params: BridgeParams } {
+  const retired = RETIRED_TYPES[storedType];
+  return retired ? { type: retired.type, params: { ...retired.params, ...(own ?? {}) } } : { type: storedType, params: own ?? {} };
+}
+// the type a stored id builds as (its retired type's, if any)
+const current = (type: string): string => RETIRED_TYPES[type]?.type ?? type;
+
+function withStyle<T>(type: string, params: BridgeParams | undefined, run: () => T): T {
+  const previous = style;
+  style = resolveStyle(type, params);
+  try {
+    return run();
+  } finally {
+    style = previous;
+  }
 }
 const LIGHT_BAND = 1.45; // a concrete cap, a coping: the band that catches the light
 const MASONRY_BAND = 1.25; // a stone or brick band (arch ring, impost, coping)
@@ -100,9 +254,10 @@ const MASONRY_BAND = 1.25; // a stone or brick band (arch ring, impost, coping)
 // between neighbours, with a back span half a main span long at each end down to
 // the abutments. Repeating a whole cable bridge per structural span put a pair of
 // towers in every span, each with its own cables down to the deck in between.
-const CABLE_TYPES = new Set(["suspension", "cable_stayed", "cable_stayed_y"]);
+const CABLE_TYPES = new Set(["suspension", "cable_stayed"]);
 /** Where a cable bridge's towers stand along a bridge of `length` (distances). */
 export function cableTowerDistances(type: string, length: number): number[] {
+  type = current(type);
   const maxMain = TYPE_META[type]?.maxSpan ?? length;
   const mains = Math.max(1, Math.ceil(length / maxMain - 1));
   const main = length / (mains + 1);
@@ -115,6 +270,7 @@ export function cableTowerDistances(type: string, length: number): number[] {
  * the towers.
  */
 export function getStructuralSpanRanges(type: string, length: number): SpanRange[] {
+  type = current(type);
   if (typeof length !== "number" || length <= 0) return [];
   if (CABLE_TYPES.has(type)) {
     const stops = [0, ...cableTowerDistances(type, length), length];
@@ -276,7 +432,6 @@ function spanOverheadMembers(bridgeType: string, spanLength: number, clearanceY:
     case "cantilever":
       return CANTILEVER_TOWER_T.map((t) => ({ t, kind: "point", localY: cantileverTowerTopY() }));
     case "tied_arch":
-    case "network_arch":
       return tiedArchStruts(spanLength, clearanceY).map((t) => ({ t, kind: "point", localY: tiedArchTopY(spanLength, t, clearanceY) }));
     default:
       return [];
@@ -297,6 +452,7 @@ function spanOverheadMembers(bridgeType: string, spanLength: number, clearanceY:
 // whose arch passes BELOW it), which is what tells the planner to use
 // deck-mounted masts instead.
 export function overheadMembers(type: string, length: number, deckWidth: number, clearanceY: number, plan?: SupportPlan): BridgeOverheadMember[] {
+  type = current(type);
   if (length <= 0) return [];
   // a plan (planSupports) moves the spans and towers; the members follow them
   if (CABLE_TYPES.has(type)) {
@@ -718,7 +874,71 @@ function footprintTerrain(g: BridgePathGeom, distance: number, lx: number, w: nu
   }
   return { low, high };
 }
+// The cantilever's tower pier: under both splayed tower legs.
+function CANTILEVER_PIER(deckWidth: number): PierSpec {
+  return { w: 3.0, d: 5.4, material: "tower", capWidth: 2 * (deckWidth / 2 + 0.3) + 1.4, bearings: [], under: CANTILEVER_UNDER + 0.5 };
+}
+// The piers' material, as the `piers` parameter chose: a concrete pier (the type's
+// own spec) becomes a masonry block as wide as what it carries under a capstone band,
+// or a steel trestle tower. Masonry arches and timber are not concrete and keep theirs.
+function choosePier(spec: PierSpec, deckWidth: number): PierSpec {
+  if ((spec.material !== "pier" && spec.material !== "tower") || style.piers === "concrete") return spec;
+  if (style.piers === "steel") return { ...spec, material: "steel" };
+  const under = (spec.under ?? 0) + 0.06;
+  return {
+    w: Math.max(deckWidth, spec.capWidth ?? 0) + 0.6, d: Math.max(spec.d, 2.6) + 0.4, material: style.piers, under,
+    impost: -DECK_THICKNESS / 2 - under - IMPOST_HEIGHT / 2 - 0.1,
+  };
+}
+// A steel trestle tower: four battered legs from concrete pedestals up to a cap girder
+// under the bearings, braced across and along the bridge in stories, X braced across.
+const STEEL_TOP_D = 1.6, STEEL_BATTER = 0.08, STEEL_BATTER_ALONG = 0.05, STEEL_SPREAD_MAX = 2.6, STEEL_SPREAD_ALONG_MAX = 1.6;
+const STEEL_FOOT = 1.2, STEEL_LEG = 0.45, STEEL_STORY = 8;
+function pushSteelTower(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: PierSpec, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn): void {
+  const under = spec.under ?? 0;
+  const capTop = -DECK_THICKNESS / 2 - under - 0.3, capH = 0.6;
+  const top = pathWorldPoint(g, distance, 0, capTop - capH).y;
+  const ground = heightAt(pathWorldPoint(g, distance, 0, 0).x, pathWorldPoint(g, distance, 0, 0).z);
+  const drop = top - ground;
+  if (drop <= MIN_PIER_DROP) return;
+  const capW = spec.capWidth ?? g.deckWidth * 0.78;
+  const halfTop = capW / 2 - 0.3, spread = Math.min(STEEL_SPREAD_MAX, drop * STEEL_BATTER), along = Math.min(STEEL_SPREAD_ALONG_MAX, drop * STEEL_BATTER_ALONG);
+  // the cap girder the bearings sit on
+  pushBox(out, g, distance, 0, capTop - capH / 2, { x: capW, y: capH, z: STEEL_TOP_D + 0.4 }, "steel", "support");
+  for (const lx of spec.bearings ?? [-g.deckWidth * BEAM_GIRDER_X, g.deckWidth * BEAM_GIRDER_X]) pushBox(out, g, distance, lx, capTop + 0.15, { x: 0.9, y: 0.3, z: STEEL_TOP_D * 0.7 }, "steel");
+  // each leg: its foot on a pedestal standing on the ground (or above the water)
+  const legs: Array<{ sx: number; sz: number; top: Vec3; foot: Vec3 }> = [];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const t = pathWorldPoint(g, distance + sz * STEEL_TOP_D / 2, sx * halfTop, capTop - capH);
+    const f = pathWorldPoint(g, distance + sz * (STEEL_TOP_D / 2 + along), sx * (halfTop + spread), 0);
+    const bed = heightAt(f.x, f.z), water = waterAt?.(f.x, f.z);
+    const base = water !== undefined && water > bed + MIN_WATER_DEPTH ? water : bed;
+    const pedestalTop = base + 0.4;
+    out.push({ shape: "box", center: { x: f.x, y: (bed + pedestalTop) / 2, z: f.z }, size: { x: STEEL_FOOT, y: pedestalTop - bed, z: STEEL_FOOT }, yaw: pathYaw(g, distance), material: "pier", part: "support", ground: true });
+    legs.push({ sx, sz, top: t, foot: { x: f.x, y: pedestalTop, z: f.z } });
+  }
+  const lerp = (a: Vec3, b: Vec3, k: number): Vec3 => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, z: a.z + (b.z - a.z) * k });
+  for (const l of legs) pushStrut(out, l.foot, l.top, STEEL_LEG, "steel", "support");
+  // stories from the top down: X braces across the bridge between the lines, a strut
+  // across at the top and the foot
+  const lowest = Math.max(...legs.map((l) => l.foot.y));
+  const stories = Math.max(1, Math.round((top - lowest) / STEEL_STORY));
+  const at = (l: (typeof legs)[number], y: number): Vec3 => lerp(l.top, l.foot, Math.min(1, Math.max(0, (l.top.y - y) / Math.max(l.top.y - l.foot.y, 1e-6))));
+  const leg = (sx: number, sz: number) => legs.find((l) => l.sx === sx && l.sz === sz)!;
+  for (let i = 0; i <= stories; i++) {
+    const y = top - ((top - lowest) * i) / stories;
+    if (i === 0 || i === stories) for (const sz of [-1, 1]) pushStrut(out, at(leg(-1, sz), y), at(leg(1, sz), y), 0.25, "steel", "support");
+    if (i === 0) continue;
+    const yAbove = top - ((top - lowest) * (i - 1)) / stories;
+    for (const sz of [-1, 1]) {
+      pushStrut(out, at(leg(-1, sz), yAbove), at(leg(1, sz), y), 0.18, "steel", "detail");
+      pushStrut(out, at(leg(1, sz), yAbove), at(leg(-1, sz), y), 0.18, "steel", "detail");
+    }
+  }
+}
 function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: PierSpec, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn): void {
+  spec = choosePier(spec, g.deckWidth);
+  if (spec.material === "steel") { pushSteelTower(out, g, distance, spec, heightAt, waterAt); return; }
   const under = spec.under ?? 0;
   const railPoint = pathWorldPoint(g, distance, 0, -DECK_THICKNESS / 2 - under);
   const terrainY = heightAt(railPoint.x, railPoint.z);
@@ -739,7 +959,7 @@ function pushPier(out: BridgeBox[], g: BridgePathGeom, distance: number, spec: P
     // the impost: a band of lighter stone standing proud all round, where an arch
     // springs or a girder bears -- the line that makes a block read as a pier
     if (spec.impost !== undefined && pathWorldPoint(g, distance, 0, spec.impost).y - IMPOST_HEIGHT / 2 > foot + 0.5) {
-      pushBox(out, g, distance, 0, spec.impost, { x: spec.w + 2 * IMPOST_OUT, y: IMPOST_HEIGHT, z: spec.d + 2 * IMPOST_OUT }, material, "support", tone(material, MASONRY_BAND));
+      pushBox(out, g, distance, 0, spec.impost, { x: spec.w + 2 * IMPOST_OUT, y: IMPOST_HEIGHT, z: spec.d + 2 * IMPOST_OUT }, material, "detail", tone(material, MASONRY_BAND));
     }
     return;
   }
@@ -848,15 +1068,12 @@ function boundaryPierStyle(bridgeType: string, deckWidth: number, spanLength: nu
     case "box_girder": return { w: Math.max(2.8, deckWidth * 0.28), d: 3, material: "pier", under: BOX_GIRDER_END_DEPTH + BOX_GIRDER_LIP };
     case "plate_girder": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: plateGirderUnder(spanLength), capWidth: deckWidth + 0.4, bearings: [-(deckWidth / 2 - PLATE_GIRDER_X), deckWidth / 2 - PLATE_GIRDER_X] };
     case "deck_truss": return { w: Math.max(2.2, deckWidth * 0.24), d: 2.6, material: "pier", under: deckTrussDepth(spanLength) - DECK_THICKNESS / 2, capWidth: deckWidth, bearings: [-(deckWidth / 2 - 0.55), deckWidth / 2 - 0.55] };
-    // the historic through truss stands on dressed stone, as the 19th-century ones
-    // did: a block as wide as the deck under a capstone band
-    case "truss": return { w: deckWidth + 0.6, d: 3.2, material: "stone", under: 0.06, impost: -DECK_THICKNESS / 2 - 0.06 - IMPOST_HEIGHT / 2 - 0.1 };
+    // (its `piers` parameter stands it on dressed stone by default: choosePier)
+    case "truss": return { w: Math.max(2.4, deckWidth * 0.26), d: 2.8, material: "pier", capWidth: deckWidth + 0.2, bearings: [-(deckWidth / 2 - 0.3), deckWidth / 2 - 0.3] };
     // the concrete arch springs from a block under each rib, the two tied by a cap
     // beam under the deck (a deck-wide wall read as the arch balancing on a dam)
     case "arch": return { w: ARCH_RIB_W + 1.0, d: 3.4, material: "pier", columns: [-(deckWidth / 2 - ARCH_RIB_INSET), deckWidth / 2 - ARCH_RIB_INSET], capWidth: deckWidth - 0.2, bearings: [] };
-    case "stone_arch": return { w: deckWidth + 0.4, d: 4.5, material: "stone", cutwaterTop: masonryArchSpringY(spanLength), impost: masonryArchSpringY(spanLength) };
-    case "brick_arch": return { w: deckWidth + 0.4, d: 4.5, material: "brick", cutwaterTop: masonryArchSpringY(spanLength), impost: masonryArchSpringY(spanLength) };
-    case "network_arch":
+    case "stone_arch": return { w: deckWidth + 0.4, d: 4.5, material: style.masonry, cutwaterTop: masonryArchSpringY(spanLength), impost: masonryArchSpringY(spanLength) };
     case "tied_arch": return { w: 2.6, d: 2.6, material: "tower", capWidth: deckWidth + 0.2, bearings: [-(deckWidth / 2 - TIED_ARCH_THICKNESS / 2), deckWidth / 2 - TIED_ARCH_THICKNESS / 2] };
     case "suspension": return { ...legs(suspensionCableHalfWidth(deckWidth), SUSPENSION_TOWER_WIDTH), w: 4.0, d: 4.0 };
     case "cable_stayed": return { ...legs(cableStayedTowerHalfWidth(deckWidth), CABLE_STAYED_TOWER_WIDTH), w: 3.6, d: 3.6 };
@@ -980,11 +1197,20 @@ function spansFromStops(stops: number[]): SpanRange[] {
 const PIER_MAX_FLARE = 1.6;
 function supportFootprintSize(type: string, kind: SupportKind, deckWidth: number, spanLength: number): { w: number; d: number } {
   const foot = (d: number): number => d * PIER_MAX_FLARE + 2 * FOOTING_MARGIN;
+  // a pier of another material than concrete stands on its own footprint
+  const chosen = (spec: PierSpec): { w: number; d: number } | null => {
+    const c = choosePier(spec, deckWidth);
+    if (c.material === "steel") return { w: (c.capWidth ?? deckWidth) + 2 * STEEL_SPREAD_MAX + STEEL_FOOT, d: STEEL_TOP_D + 2 * STEEL_SPREAD_ALONG_MAX + STEEL_FOOT };
+    if (c.material === "stone" || c.material === "brick") return { w: c.w, d: c.d + 2 * FOOTING_MARGIN };
+    return null;
+  };
   switch (kind) {
     case "bents": return { w: 0.84 * deckWidth + 0.9, d: 0.9 };
-    case "piers": return { w: Math.max(PIER_WIDTH, deckWidth * 0.6), d: foot(PIER_WIDTH) };
-    case "cantilever": return { w: 2 * (deckWidth / 2 + 0.3) + 1.4, d: foot(5.4) };
+    case "piers": return chosen({ w: PIER_WIDTH, d: PIER_WIDTH, material: "pier" }) ?? { w: Math.max(PIER_WIDTH, deckWidth * 0.6), d: foot(PIER_WIDTH) };
+    case "cantilever": return chosen(CANTILEVER_PIER(deckWidth)) ?? { w: 2 * (deckWidth / 2 + 0.3) + 1.4, d: foot(5.4) };
     default: {
+      const own = chosen(boundaryPierStyle(type, deckWidth, spanLength));
+      if (own) return own;
       const spec = boundaryPierStyle(type, deckWidth, spanLength);
       const w = spec.columns ? deckWidth : Math.max(spec.w, spec.capWidth ?? 0, deckWidth * 0.5);
       const concrete = spec.material === "pier" || spec.material === "tower";
@@ -994,7 +1220,11 @@ function supportFootprintSize(type: string, kind: SupportKind, deckWidth: number
 }
 
 /** The ground footprint a support of `type` at `distance` along `g` would stand on. */
-export function supportFootprint(type: string, g: BridgePathGeom, distance: number): SupportFootprint {
+export function supportFootprint(type: string, g: BridgePathGeom, distance: number, params?: BridgeParams): SupportFootprint {
+  const stored = storedBridge(type, params);
+  return withStyle(stored.type, stored.params, () => footprintStyled(stored.type, g, distance));
+}
+function footprintStyled(type: string, g: BridgePathGeom, distance: number): SupportFootprint {
   const kind = supportKind(type);
   const spans = getStructuralSpanRanges(type, g.length);
   const span = spans.length ? spans[0]!.toDistance - spans[0]!.fromDistance : g.length;
@@ -1042,7 +1272,11 @@ function cleanPylons(pylons: number[] | undefined, length: number): number[] {
  * player's pylons and blocked spans (see the section comment). With no options, or
  * nothing in the way, it is the type's even default layout.
  */
-export function planSupports(type: string, g: BridgePathGeom, options: SupportOptions = {}): SupportPlan {
+export function planSupports(type: string, g: BridgePathGeom, options: SupportOptions = {}, params?: BridgeParams): SupportPlan {
+  const stored = storedBridge(type, params);
+  return withStyle(stored.type, stored.params, () => planStyled(stored.type, g, options));
+}
+function planStyled(type: string, g: BridgePathGeom, options: SupportOptions): SupportPlan {
   const kind = supportKind(type);
   const L = g.length;
   const base = defaultPlan(type, g);
@@ -1249,7 +1483,7 @@ const buildCantilever: Builder = (out, g, opts, heightAt) => {
   const susDepth = Math.max(2.2, Math.min(4, 0.12 * (tips[1]! - tips[0]!)));
   const tipBottomY = deckBottomY - susDepth;
   if (!opts.suppressGroundPiers) {
-    buildPathPiers(out, g, heightAt, CANTILEVER_TOWER_T, { w: 3.0, d: 5.4, material: "tower", capWidth: 2 * sideX + 1.4, bearings: [], under: CANTILEVER_UNDER + 0.5 }, opts.waterAt);
+    buildPathPiers(out, g, heightAt, CANTILEVER_TOWER_T, CANTILEVER_PIER(g.deckWidth), opts.waterAt);
   }
   // the four arms: [from (a tower), to (an arm end), the end's bottom height]
   const arms: Array<[number, number, number]> = [[towers[0]!, 0, endBottomY], [towers[0]!, tips[0]!, tipBottomY], [towers[1]!, tips[1]!, tipBottomY], [towers[1]!, L, endBottomY]];
@@ -1386,8 +1620,8 @@ const makeArchMasonry = (masonry: BridgeMaterial): Builder => (out, g) => {
   const crown = openingTopY(0.5);
   for (const sx of [sideX, -sideX]) pushBox(out, g, g.length / 2, sx, crown - ARCH_BAND / 2 + 0.25, { x: FACE + 0.4, y: ARCH_BAND + 0.5, z: 1.1 }, masonry, "detail", tone(masonry, MASONRY_BAND));
 };
-const buildStoneArch = makeArchMasonry("stone");
-const buildBrickArch = makeArchMasonry("brick");
+// stone or brick, as the masonry parameter chose
+const buildMasonryArch: Builder = (out, g, opts, heightAt) => makeArchMasonry(style.masonry)(out, g, opts, heightAt);
 
 // A tied arch: two box-section steel arches springing from knuckles on the tie
 // girders along both deck edges (the deck is the tie), hangers about every 4 studs
@@ -1429,8 +1663,8 @@ const makeTiedArch = (network: boolean): Builder => (out, g, opts, heightAt) => 
     pushStrut(out, pathWorldPoint(g, distance, sideX, archTopY(t)), pathWorldPoint(g, g.length * next, -sideX, archTopY(next)), 0.25, "steel");
   });
 };
-const buildTiedArch = makeTiedArch(false);
-const buildNetworkArch = makeTiedArch(true);
+// vertical or crossing (network) hangers, as the hangers parameter chose
+const buildTiedArch: Builder = (out, g, opts, heightAt) => makeTiedArch(style.network)(out, g, opts, heightAt);
 
 // A tower of a cable type: two tapering legs from the pier cap below the deck up
 // past it, beside the deck edges, and a crossbeam on top.
@@ -1512,22 +1746,21 @@ const buildSuspension: Builder = (out, g, opts, heightAt) => {
 // the next tower's) and over its back span to the abutment; the outermost stay
 // leaves the top, the inner ones a little lower down each time.
 //
-// The pylon is an H (`cable_stayed`: two legs beside the deck, a crossbeam on top,
-// the stays in two vertical planes from the legs) or an inverted Y
-// (`cable_stayed_y`): the legs stand upright beside the deck to a knee above the
+// The pylon is an H (the `towers` parameter `h`: two legs beside the deck, a crossbeam
+// on top, the stays in two vertical planes from the legs) or an inverted Y (`y`): the legs stand upright beside the deck to a knee above the
 // wire envelope -- so a cross-span wire between them still finds two verticals --
 // then lean in to one mast over the deck's centre, whose stays fan down to both
 // deck edges in two inclined planes.
 const STAY_SPACING = 4;
-const makeCableStayed = (type: "cable_stayed" | "cable_stayed_y"): Builder => (out, g, opts, heightAt) => {
+const makeCableStayed = (pylon: "h" | "y"): Builder => (out, g, opts, heightAt) => {
   buildPathDeck(out, g);
-  const towers = opts.towers ?? cableTowerDistances(type, g.length);
+  const towers = opts.towers ?? cableTowerDistances("cable_stayed", g.length);
   const main = g.length / towers.length;
   const sideX = cableStayedTowerHalfWidth(g.deckWidth);
   buildPathPiers(out, g, heightAt, towers.map((d) => d / g.length), { ...boundaryPierStyle("cable_stayed", g.deckWidth, main), w: 3, d: 3 }, opts.waterAt, opts.towers);
   pushCableGirders(out, g, sideX, "deck");
   const TOWER_WIDTH = CABLE_STAYED_TOWER_WIDTH;
-  const y = type === "cable_stayed_y";
+  const y = pylon === "y";
   const kneeY = g.clearanceY + 2, mergeY = kneeY + sideX * 1.2;
   const TOWER_HEIGHT = y ? Math.max(cableStayedTowerHeight(main, g.clearanceY), mergeY + 7 - DECK_THICKNESS / 2) : cableStayedTowerHeight(main, g.clearanceY);
   const towerTopY = DECK_THICKNESS / 2 + TOWER_HEIGHT;
@@ -1563,8 +1796,8 @@ const makeCableStayed = (type: "cable_stayed" | "cable_stayed_y"): Builder => (o
     }
   });
 };
-const buildCableStayed = makeCableStayed("cable_stayed");
-const buildCableStayedY = makeCableStayed("cable_stayed_y");
+// H-frame or inverted-Y towers, as the towers parameter chose
+const buildCableStayed: Builder = (out, g, opts, heightAt) => makeCableStayed(style.yTowers ? "y" : "h")(out, g, opts, heightAt);
 
 // A through plate girder: a deep steel girder along each deck edge -- it is the
 // railing too, so there is no concrete parapet -- a quarter of its depth below the
@@ -1723,9 +1956,9 @@ const buildTimberTrestle: Builder = (out, g, opts, heightAt) => {
 };
 
 const BUILDERS: Record<string, Builder> = {
-  plate_girder: buildPlateGirder, timber_trestle: buildTimberTrestle, box_girder: buildBoxGirder, deck_truss: buildDeckTruss, network_arch: buildNetworkArch,
+  plate_girder: buildPlateGirder, timber_trestle: buildTimberTrestle, box_girder: buildBoxGirder, deck_truss: buildDeckTruss,
   beam: buildBeam, truss: buildTruss, cantilever: buildCantilever, arch: buildArch,
-  stone_arch: buildStoneArch, brick_arch: buildBrickArch, tied_arch: buildTiedArch, suspension: buildSuspension, cable_stayed: buildCableStayed, cable_stayed_y: buildCableStayedY,
+  stone_arch: buildMasonryArch, tied_arch: buildTiedArch, suspension: buildSuspension, cable_stayed: buildCableStayed,
 };
 
 // --- the distant level -------------------------------------------------------
@@ -1776,17 +2009,22 @@ export function lowDetailBoxes(boxes: BridgeBox[]): BridgeBox[] {
  * does not know builds as a beam bridge. `options` (or a plan from planSupports)
  * moves the supports off taken ground and keeps the player's pylons.
  */
-export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn, options: SupportOptions | SupportPlan = {}): BridgeBox[] {
+export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn, waterAt?: WaterLevelFn, options: SupportOptions | SupportPlan = {}, params?: BridgeParams): BridgeBox[] {
+  const stored = storedBridge(type, params);
+  const known = BUILDERS[stored.type] ? stored.type : "beam";
+  return withStyle(known, stored.params, () => buildStyled(known, g, heightAt, waterAt, options));
+}
+function buildStyled(type: string, g: BridgePathGeom, heightAt: TerrainHeightFn, waterAt: WaterLevelFn | undefined, options: SupportOptions | SupportPlan): BridgeBox[] {
   const out: BridgeBox[] = [];
   const builder = BUILDERS[type] ?? BUILDERS.beam!;
   const known = BUILDERS[type] ? type : "beam";
-  const plan = "supports" in options && Array.isArray(options.supports) && "spans" in options ? options as SupportPlan : planSupports(known, g, options as SupportOptions);
+  const plan = "supports" in options && Array.isArray(options.supports) && "spans" in options ? options as SupportPlan : planStyled(known, g, options as SupportOptions);
   const maxSpan = TYPE_META[known]?.maxSpan;
   // the ends: an abutment's breast wall under the types that bear on a seat there
   const under = abutmentUnder(known, g, plan.spans);
   const breast = SEATED_TYPES.has(known) || CABLE_TYPES.has(known);
   const onAbutment = SEATED_TYPES.has(known) ? (d: number): boolean => endOnAbutment(g, d, under, heightAt) : undefined;
-  const material: BridgeMaterial = known === "timber_trestle" ? "timber" : known === "stone_arch" ? "stone" : known === "brick_arch" ? "brick" : "pier";
+  const material: BridgeMaterial = known === "timber_trestle" ? "timber" : known === "stone_arch" ? style.masonry : "pier";
   if (!maxSpan || CABLE_TYPES.has(known)) {
     builder(out, g, { waterAt, supports: plan.supports, towers: plan.towers.length ? plan.towers : undefined, openings: plan.openings, onAbutment }, heightAt);
   } else {
@@ -1805,14 +2043,13 @@ export function buildBridge(type: string, g: BridgePathGeom, heightAt: TerrainHe
     }
   }
   buildAbutments(out, g, heightAt, material, under, breast);
-  // every box carries its colour: its own tone, else the type's paint on steel, else its material's
-  const paint = TYPE_META[known]?.paint;
-  return out.map((b) => (b.color ? b : { ...b, color: b.material === "steel" && paint ? paint : COLORS[b.material] }));
+  // every box carries its colour: its own tone, else its material's in the chosen palette
+  return out.map((b) => (b.color ? b : { ...b, color: style.palette[b.material] }));
 }
 // The types whose ends bear on an abutment's seat (their end piers give way to it);
 // the cable types close on a breast wall too, under their anchorages. The arches
 // spring from their own end blocks and keep them.
-const SEATED_TYPES = new Set(["beam", "box_girder", "plate_girder", "deck_truss", "truss", "tied_arch", "network_arch", "cantilever"]);
+const SEATED_TYPES = new Set(["beam", "box_girder", "plate_girder", "deck_truss", "truss", "tied_arch", "cantilever"]);
 // How far below the slab the seat lies: under the girders, box or truss at the ends.
 function abutmentUnder(type: string, g: BridgePathGeom, spans: SpanRange[]): number {
   if (type === "beam") return BEAM_GIRDER_DEPTH;

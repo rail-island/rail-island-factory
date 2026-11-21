@@ -18,6 +18,7 @@ Every string the game shows from the factory, with its English where it is autho
 | `model.<id>.param.<name>`, `model.<id>.param.<name>.<value>` | its parameter and value titles |
 | `set.<set>.<id>`, `set.<set>.<id>.desc` | the set registry's type name and description |
 | `set.<set>.group.<id>`, `.desc` | a set group (a road family) |
+| `set.bridge.<type>.param.<name>`, `.<value>` | a bridge type's parameters (`TYPE_PARAMS` in `generator/sets/bridge.ts`) |
 | `woods.<name>`, `woods.<name>.param...` | a woods type's label and parameters |
 | `woods.variant.<key>` | a woods variant that keeps its old type name (`NAMED_WOODS_VARIANTS`) |
 | `species.<key>` | `SPECIES_LABELS` |

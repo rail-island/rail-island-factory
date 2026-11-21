@@ -50,7 +50,9 @@ lists every type as a model of its own. The titles are the registry's English na
 
 A preview's parameters split in two, shown in two blocks on the model page:
 
-- **Parameters** - what the game passes as a player set it: a station's track count and
+- **Parameters** - what the game passes as a player set it: a bridge type's own look (its
+  `TYPE_PARAMS`: paint, concrete, masonry, piers, hangers, towers; `bridgeParams(type)` gives
+  each page its own list), a station's track count and
   length, a road station's stand count, what a tunnel carries (one track, two, a wide road), a
   rail mast over one track or a portal over two.
 - **Preview parameters** (`ParamSpec.preview`) - the fixture only, which the game takes from

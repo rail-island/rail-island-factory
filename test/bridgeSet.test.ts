@@ -210,22 +210,63 @@ describe("the bridge kit", () => {
     expect(plinths(flat).length).toBeGreaterThan(0);
   });
 
-  it("colours every box: a type's steel in its paint, caps and copings in a lighter band", () => {
+  it("colours every box from the type's parameters: steel in its paint, caps and copings in a lighter band", () => {
     const path = bridge.pathFromPoints([{ x: 0, y: 20, z: 0 }, { x: 60, y: 20, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const steel = (type: string, params?: bridge.BridgeParams): string[] =>
+      [...new Set(bridge.buildBridge(type, path, () => 0, undefined, {}, params).filter((b) => b.material === "steel" && b.part === "frame").map((b) => b.color!.join(",")))];
     for (const type of Object.keys(bridge.TYPE_META)) {
-      const boxes = bridge.buildBridge(type, path, () => 0);
-      expect(boxes.every((b) => b.color !== undefined), type).toBe(true);
-      const paint = bridge.TYPE_META[type]!.paint;
-      if (paint) expect(boxes.some((b) => b.material === "steel" && b.color === paint), type).toBe(true);
+      expect(bridge.buildBridge(type, path, () => 0).every((b) => b.color !== undefined), type).toBe(true);
+      // each paint draws its own steel
+      const paint = bridge.TYPE_PARAMS[type]!.find((p) => p.name === "paint");
+      if (paint) expect(new Set(paint.values.map((v) => steel(type, { paint: v.value }).join("|"))).size, type).toBe(paint.values.length);
     }
-    // the steel types tell apart by their paint
-    const paints = Object.values(bridge.TYPE_META).map((t) => t.paint?.join(",")).filter(Boolean);
-    expect(new Set(paints).size).toBe(paints.length);
     // a concrete pier's cap is lighter than its shaft
     const beam = bridge.buildBridge("beam", path, () => 0);
     const light = (c: bridge.Rgb): number => c[0] + c[1] + c[2];
     const caps = beam.filter((b) => b.part === "support" && b.material === "pier" && b.color && light(b.color) > light(bridge.COLORS.pier) + 100);
     expect(caps.length).toBeGreaterThan(0);
+  });
+
+  it("lists each type's own parameters, a default among the values of each", () => {
+    const lists = new Set<string>();
+    for (const type of Object.keys(bridge.TYPE_META)) {
+      const params = bridge.TYPE_PARAMS[type]!;
+      expect(params.length, type).toBeGreaterThan(0);
+      for (const p of params) expect(p.values.map((v) => v.value), `${type} ${p.name}`).toContain(p.default);
+      lists.add(JSON.stringify(params));
+    }
+    // no two types offer the same choices
+    expect(lists.size).toBe(Object.keys(bridge.TYPE_META).length);
+  });
+
+  it("builds the piers of the material chosen", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 120, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    const mid = (type: string, piers: string) => bridge.buildBridge(type, path, () => 0, undefined, {}, { piers }).filter((b) => b.part === "support" && b.shape !== "ribbon" && "center" in b ? Math.abs(b.center.x - 60) < 4 : b.shape === "strut" && Math.abs((b.a.x + b.b.x) / 2 - 60) < 4);
+    expect(mid("plate_girder", "concrete").some((b) => b.material === "pier" && b.shape === "box" && b.topScale !== undefined)).toBe(true);
+    expect(mid("plate_girder", "brick").some((b) => b.material === "brick" && b.ground)).toBe(true);
+    // a steel trestle: four legs on pedestals charted for ships
+    const steel = mid("plate_girder", "steel");
+    expect(steel.filter((b) => b.shape === "strut" && b.material === "steel").length).toBeGreaterThanOrEqual(4);
+    expect(steel.filter((b) => b.shape === "box" && b.ground).length).toBe(4);
+    // the truss stands on stone by default, concrete when chosen
+    expect(mid("truss", "stone").some((b) => b.material === "stone" && b.ground)).toBe(true);
+    expect(bridge.buildBridge("truss", path, () => 0).filter((b) => b.material === "stone" && b.ground).length).toBeGreaterThan(0);
+    expect(mid("truss", "concrete").some((b) => b.material === "pier" && b.ground)).toBe(true);
+  });
+
+  it("reads a retired type as its type with the parameters it stands for", () => {
+    const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 100, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
+    for (const [old, now] of Object.entries(bridge.RETIRED_TYPES)) {
+      expect(bridge.TYPE_META[old], old).toBeUndefined();
+      expect(bridge.storedBridge(old)).toEqual({ type: now.type, params: now.params });
+      // the old id draws exactly as its type with those parameters
+      expect(bridge.buildBridge(old, path, () => 0)).toEqual(bridge.buildBridge(now.type, path, () => 0, undefined, {}, now.params));
+      expect(bridge.overheadMembers(old, 100, 9, 9.9)).toEqual(bridge.overheadMembers(now.type, 100, 9, 9.9));
+    }
+    // a stored bridge's own parameters win over the retired ones
+    expect(bridge.storedBridge("brick_arch", { masonry: "yellowBrick" }).params).toEqual({ masonry: "yellowBrick" });
+    expect(bridge.buildBridge("brick_arch", path, () => 0).some((b) => b.material === "brick")).toBe(true);
+    expect(bridge.buildBridge("stone_arch", path, () => 0).some((b) => b.material === "brick")).toBe(false);
   });
 
   it("carries a single shaft under a wider cap as a hammerhead", () => {
@@ -242,7 +283,7 @@ describe("the bridge kit", () => {
 
   it("stands a through truss on stone piers with a capstone band", () => {
     const path = bridge.pathFromPoints([{ x: 0, y: 24, z: 0 }, { x: 128, y: 24, z: 0 }], 9, 0, 0.67, 9.9)!;
-    const mid = bridge.buildBridge("truss", path, () => 0).filter((b) => b.shape === "box" && b.part === "support" && Math.abs(b.center.x - 64) < 0.01);
+    const mid = bridge.buildBridge("truss", path, () => 0).filter((b) => b.shape === "box" && (b.part === "support" || b.part === "detail") && Math.abs(b.center.x - 64) < 0.01);
     expect(mid.some((b) => b.material === "stone" && b.ground)).toBe(true);
     const block = mid.find((b) => b.ground)!, band = mid.find((b) => !b.ground && b.material === "stone");
     if (block?.shape !== "box" || band?.shape !== "box") throw new Error("a truss pier is a block and a band");

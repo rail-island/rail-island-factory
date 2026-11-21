@@ -129,6 +129,9 @@ export function setPinCases(): Record<string, PinCase[]> {
     ],
     bridge: [
       { name: "types", build: () => bridge.TYPE_META },
+      // what a player picks per type, and what each retired id reads as: both stored in saved maps
+      { name: "params", build: () => bridge.TYPE_PARAMS },
+      { name: "retired", build: () => bridge.RETIRED_TYPES },
       ...Object.keys(bridge.TYPE_META).flatMap((type) => [
         { name: `${type}.overhead`, build: () => [40, 150, 300].map((l) => bridge.overheadMembers(type, l, 9, 9.9)) },
         { name: `${type}.valley`, build: () => bridge.buildBridge(type, BRIDGE_PATH, BRIDGE_VALLEY) },

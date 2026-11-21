@@ -30,6 +30,7 @@ import { fileURLToPath } from "node:url";
 import { BUILDINGS, VILLAGE_DESIGNS, ALL_VEHICLES, CHARACTER_DESIGNS } from "./generate.ts";
 import { BLOCK_PARAM_TEXT, SETS } from "./sets/registry.ts";
 import { WOODS } from "./woods.ts";
+import * as bridgeSet from "./sets/bridge.ts";
 import { SPECIES } from "./trees.ts";
 import { writeIfChanged } from "./jsModel.ts";
 import type { ProceduralDesign } from "./design.ts";
@@ -123,6 +124,8 @@ export function exportedText(): Map<string, string> {
       out.set(`set.${s.set}.${t.id}`, t.label);
       if (t.description) out.set(`set.${s.set}.${t.id}.desc`, t.description);
     }
+    // a bridge type's parameters, as the player picks them (sets/bridge.ts TYPE_PARAMS)
+    if (s.set === "bridge") for (const t of s.types) paramText(out, `set.bridge.${t.id}`, bridgeSet.TYPE_PARAMS[t.id]);
     for (const g of s.groups ?? []) {
       out.set(`set.${s.set}.group.${g.id}`, g.label);
       if (g.description) out.set(`set.${s.set}.group.${g.id}.desc`, g.description);

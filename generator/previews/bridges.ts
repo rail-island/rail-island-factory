@@ -33,6 +33,19 @@ export const BRIDGE_PARAMS: ParamSpec[] = [
   { name: "length", title: "Span", default: "short", preview: true, values: [{ value: "short", title: "60 studs" }, { value: "long", title: "160 studs" }] },
 ];
 const LENGTHS: Record<string, number> = { short: 60, long: 160 };
+
+/**
+ * A type's page parameters: what a player picks for a bridge of that type (the set
+ * module's TYPE_PARAMS - paint, concrete, masonry, piers, hangers, towers - ordinary
+ * parameters, as the game passes them), then the preview's fixture.
+ */
+export function bridgeParams(type: string): ParamSpec[] {
+  return [...(bridge.TYPE_PARAMS[type] ?? []).map((p): ParamSpec => ({ name: p.name, title: p.title, default: p.default, values: p.values.map((v) => ({ ...v })) })), ...BRIDGE_PARAMS];
+}
+// the values the set module builds with: the type's own parameters, not the fixture's
+function typeValues(type: string, p: Record<string, string>): bridge.BridgeParams {
+  return Object.fromEntries((bridge.TYPE_PARAMS[type] ?? []).map((q) => [q.name, p[q.name]!]));
+}
 // The game's decks: n tracks 8 apart on a deck 8n + 1 wide, the path along the
 // first track and the deck recentred over them; a road (8 or 16 wide) plus 2,
 // centred on its path. `road` names the road type laid on it.
@@ -86,12 +99,12 @@ const GROUND_COLOR: Rgb = [126, 146, 92];
 interface Fixture { list: bridge.BridgeBox[]; path: bridge.BridgePathGeom; y: number; length: number; deck: DeckSpec; wires: string; ground: Ground }
 /** The bridge the set module builds over its valley, the path raised until nothing dips below the valley floor. */
 function fixture(values: ParamValues | undefined, type: string): Fixture {
-  const p = resolveParams(BRIDGE_PARAMS, values);
+  const p = resolveParams(bridgeParams(type), values) as Record<string, string>;
   const length = LENGTHS[p.length!]!, deck = DECKS[p.deck!]!;
   const pathAt = (y: number) => bridge.pathFromPoints([{ x: -length / 2, y, z: 0 }, { x: length / 2, y, z: 0 }], deck.width, deck.shift, SUPPORT_Y, CLEARANCE_Y)!;
   const at = (y: number): Fixture => {
     const ground = valley(length, y);
-    return { list: bridge.buildBridge(type, pathAt(y), (x) => groundAt(ground, x) - SINK), path: pathAt(y), y, length, deck, wires: p.wires!, ground };
+    return { list: bridge.buildBridge(type, pathAt(y), (x) => groundAt(ground, x) - SINK, undefined, {}, typeValues(type, p)), path: pathAt(y), y, length, deck, wires: p.wires!, ground };
   };
   const first = at(14);
   const s = new Sketch();

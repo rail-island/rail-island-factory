@@ -25,9 +25,14 @@ Paths below are relative to the repository root. Read `docs/models/bridges.md`
 - Every box whose foot is on the terrain is tagged `ground`, and only those.
 - Tag parts: `deck`, `support`, `frame` (the silhouette), `detail` (what a middle
   level may drop).
-- Colour on purpose: every box carries a `color` - `COLORS`, the type's steel `paint`, or a
+- Colour on purpose: every box carries a `color` - the palette its parameters chose, or a
   `tone` of its material (light caps, copings and fascia bands; a dark vault). Keep deck,
-  structure and supports apart in value, and give a new steel type its own paint.
+  structure and supports apart in value.
+- Parameters: a type lists its own in `TYPE_PARAMS` (colour schemes, `piers`, shape choices);
+  the defaults keep its look, no two types offer the same list, the titles are translated
+  (`translate-text`), and the budget test builds every shape-changing value. A variant that
+  differs only in a parameter is not a new type; merging one retires its id with an alias and
+  a `RETIRED_TYPES` entry giving its parameters.
 - Close both ends: over a bank a seated type stands on its abutment (breast wall, backwall,
   wing walls), not an end pier; check the preview's valley shows it.
 - A member crossing over the track must clear `clearanceY`; if the catenary may

@@ -11,7 +11,7 @@ import { SETS, type SetName } from "../sets/registry.ts";
 import { TEXTURE_NAMES } from "../surfaces.ts";
 import * as blockType from "../sets/blockType.ts";
 import { idPart, previewCatalog, type PreviewCategory } from "./sketch.ts";
-import { BRIDGE_PARAMS, bridgePreview, bridgePreviewLod } from "./bridges.ts";
+import { bridgeParams, bridgePreview, bridgePreviewLod } from "./bridges.ts";
 import { ROAD_STATION_PARAMS, STATION_PARAMS, roadStationPreview, roadStationPreviewLod, stationPreview, stationPreviewLod } from "./stations.ts";
 import {
   AIRPORT_PARAMS, DAM_PARAMS, PORTAL_PARAMS, PORT_PARAMS, airportPreview, airportPreviewLod, busStopPreview, busStopPreviewLod,
@@ -44,7 +44,8 @@ interface Spec {
   prefix: string;
   build: Builder;
   buildLod: Builder;
-  params?: ParamSpec[];
+  /** The pages' parameters: one list, or each type's own. */
+  params?: ParamSpec[] | ((type: string) => ParamSpec[]);
   lodTriangles?: ProceduralDesign["lodTriangles"];
   /** False when the types are not set types (the texture library's photo sets): no game id. */
   setTypes?: boolean;
@@ -57,7 +58,7 @@ function designs(spec: Spec, types: ReadonlyArray<{ id: string; label: string }>
     id: `proc-preview-${spec.prefix}-${idPart(t.id)}`,
     title: t.label,
     ...boundDesign(spec.build, spec.buildLod, t.id),
-    ...(spec.params ? { params: spec.params } : {}),
+    ...(spec.params ? { params: typeof spec.params === "function" ? spec.params(t.id) : spec.params } : {}),
     lodTriangles: spec.lodTriangles ?? 500,
     catalog: previewCatalog(spec.category, spec.group, spec.setTypes === false ? undefined : t.id),
     ...(spec.sourceTree === false ? { sourceTree: false as const } : {}),
@@ -74,7 +75,7 @@ function structures(set: SetName, prefix: string, build: Builder, buildLod: Buil
 export const PREVIEW_FAMILIES: readonly PreviewFamily[] = [
   // a bridge's distant level is the set module's (bridge.lowDetailBoxes, what the game
   // draws far away): 500 + 1,500 per 100 studs, 3,000 on the 160-stud fixture
-  { source: "previews/bridges.ts", designs: designs({ category: "Structures", group: "bridge", prefix: "bridge", build: bridgePreview, buildLod: bridgePreviewLod, params: BRIDGE_PARAMS, lodTriangles: 3000 }, typesOf("bridge")) },
+  { source: "previews/bridges.ts", designs: designs({ category: "Structures", group: "bridge", prefix: "bridge", build: bridgePreview, buildLod: bridgePreviewLod, params: bridgeParams, lodTriangles: 3000 }, typesOf("bridge")) },
   {
     source: "previews/stations.ts",
     designs: [
