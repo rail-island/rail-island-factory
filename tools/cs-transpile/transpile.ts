@@ -1466,8 +1466,9 @@ export class Transpiler {
     this.ctx.voidAsUnit = (unit || shape?.ret === "JsVoid") && ret === "void";
     try {
       const { list, prologue, names } = this.params(fn);
-      let typed = list.replace(/ = [^,]+/g, "");
-      if (shape && !fn.parameters.some((p) => p.dotDotDotToken) && shape.params.length >= fn.parameters.length) {
+      const byShape = !!shape && !fn.parameters.some((p) => p.dotDotDotToken) && shape.params.length >= fn.parameters.length;
+      let typed = byShape ? "" : this.lambdaParams(list, prologue);
+      if (shape && byShape) {
         const own = fn.parameters.map((p) => {
           const c = this.withoutOwnTypeParams(fn, this.cs(this.checker.getTypeAtLocation(p), p));
           return c === "void" ? "object" : c;
@@ -1477,6 +1478,13 @@ export class Transpiler {
         shape.params.forEach((tt, i) => {
           if (i >= own.length) {
             entries.push(`${tt} __d${i}`);
+            return;
+          }
+          const init0 = fn.parameters[i]!.initializer;
+          if (tt === own[i] && init0 && (tt.endsWith("?") || !VALUE_TYPES.has(tt))) {
+            // a default the delegate's caller may leave out (null): applied here
+            entries.push(`${tt} ${names[i]}__in`);
+            conv.push(`${own[i]} ${names[i]} = ${names[i]}__in ?? ${this.exprTo(init0, own[i]!.replace(/\?$/, ""))};`);
             return;
           }
           if (tt === own[i]) {
@@ -3028,7 +3036,7 @@ export class Transpiler {
     this.ctx.voidAsUnit = false;
     try {
       const { list, prologue } = this.params(f);
-      const typed = list.replace(/ = [^,]+/g, "");
+      const typed = this.lambdaParams(list, prologue);
       if (!ts.isBlock(f.body) && !prologue.length) {
         if (ret === "void") return `(${typed}) => { ${this.exprStatement(f.body)}; }`;
         const body = ret === "bool" ? this.cond(f.body) : this.exprTo(f.body, ret);
@@ -3038,6 +3046,37 @@ export class Transpiler {
     } finally {
       this.ctx.voidAsUnit = saved;
     }
+  }
+
+  /**
+   * A lambda's parameter list without C#'s defaults (a delegate passes every argument): a nullable
+   * or reference parameter with a constant default takes it in the body when handed null, as a
+   * left-out JS argument (undefined) takes it.
+   */
+  private lambdaParams(list: string, prologue: string[]): string {
+    const lifted: string[] = [];
+    const out = this.splitParams(list).map((p) => {
+      const m = p.match(/^(.*\S) (\S+) = (.+)$/);
+      if (!m) return p;
+      const [, t, n, c] = m as unknown as [string, string, string, string];
+      if (VALUE_TYPES.has(t) || c === "null" || c === "default") return `${t} ${n}`;
+      lifted.push(`${t} ${n} = ${n}__d ?? ${c};`);
+      return `${t} ${n}__d`;
+    });
+    prologue.unshift(...lifted);
+    return out.join(", ");
+  }
+
+  private splitParams(list: string): string[] {
+    const parts: string[] = [];
+    let depth = 0, cur = "";
+    for (const ch of list) {
+      if (ch === "<" || ch === "(" || ch === "[") depth++;
+      if (ch === ">" || ch === ")" || ch === "]") depth--;
+      if (ch === "," && depth === 0) { parts.push(cur.trim()); cur = ""; } else cur += ch;
+    }
+    if (cur.trim()) parts.push(cur.trim());
+    return parts;
   }
 
   private functionBodyTo(body: ts.ConciseBody, ret: string, prologue: string[]): string {

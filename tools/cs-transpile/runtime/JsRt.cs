@@ -210,7 +210,14 @@ public static class JsRt
     public static object? Void(object? _) => null;
 
     /** Number(x) / parseFloat of a numeric string. */
-    public static double Num(string s) => double.TryParse(s.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : double.NaN;
+    /** Number(undefined) is NaN, Number("") and Number("  ") are 0. */
+    public static double Num(string s)
+    {
+        if (s == null) return double.NaN;
+        var t = s.Trim();
+        if (t.Length == 0) return 0;
+        return double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : double.NaN;
+    }
 
     /** Number.prototype.toString(): the shortest round-trip digits, laid out by JS's rules. */
     public static string NumStr(double v)

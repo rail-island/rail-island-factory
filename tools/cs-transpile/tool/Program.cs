@@ -72,7 +72,9 @@ public static class Program
                 sb.Append("{\"error\":");
                 // the innermost exception (a type initializer's cause) and the generated frame it came from
                 var b = e.GetBaseException();
-                var frames = (b.StackTrace ?? "").Split('\n').Where(l => l.Contains("Generated.")).Take(6).Select(l => l.Trim().Replace("at RailIsland.Factory.Generated.", "").Split(" in ")[0]);
+                // the frame that threw (the runtime's own, when it was one) and the generated ones above it
+                var lines = (b.StackTrace ?? "").Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToList();
+                var frames = lines.Take(1).Concat(lines.Skip(1).Where(l => l.Contains("Generated."))).Take(6).Select(l => l.Replace("at RailIsland.Factory.Generated.", "").Replace("at RailIsland.Factory.Runtime.", "").Split(" in ")[0]);
                 JsJson.WriteString(sb, $"{b.GetType().Name}: {b.Message} at {string.Join(" < ", frames)}");
                 sb.Append('}');
             }

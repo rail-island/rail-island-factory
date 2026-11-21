@@ -442,6 +442,27 @@ export function topLevelStatement(): unknown {
   return [TABLE["b"], AFTER];
 }
 
+/** Number of a missing parameter value or an empty string. */
+export function numberOfNothing(): unknown {
+  const p: Record<string, string> = { unit: "train" };
+  return [Number(p["cars"]), Number(""), Number(" 3 "), Number("x")];
+}
+
+interface Out {
+  sweep(left: number, right: number, leftRise?: number, label?: string): string;
+}
+
+/** An object literal's method with defaults, called through its interface without them. */
+export function methodDefaults(): unknown {
+  const out: Out = {
+    sweep(left, right, leftRise = 0, label = "x") {
+      return `${label}${left + right + leftRise}`;
+    },
+  };
+  const loose = (a: number, b = 2, c?: string, d = "q") => `${a}${b}${c ?? "-"}${d}`;
+  return [out.sweep(1, 2), out.sweep(1, 2, 3), out.sweep(1, 2, 3, "y"), loose(1), loose(1, 5, "c")];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
