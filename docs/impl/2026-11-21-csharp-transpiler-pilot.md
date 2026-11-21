@@ -120,8 +120,8 @@ Checks: `pnpm typecheck` and `pnpm build`'s `tsc` do not see `tools/` (the root 
    build as identical, within tolerance or different. The survey now finds no unsupported construct: all
    1,074 designs transpile. The last construct, `recordCoach`'s run-time patching of `Coach.prototype`, is
    emulated with static hooks. Every design then ran, its families kept together, in 15 batches of up to
-   100 designs with three parameter combinations each at both levels: 4,466 builds, 4,455 matching (3,787
-   bit-identical, 668 within tolerance). The 11 that differ are four ships' railings (below). The batches
+   100 designs with three parameter combinations each at both levels: 4,466 builds, 4,455 matching (3,801
+   bit-identical, 654 within tolerance). The 11 that differ are four ships' railings (below). The batches
    found, and the transpiler or runtime now handles:
    - interfaces extending one interface as C# subclasses; keys set to `undefined` staying present; an
      absent optional field copied into a literal staying absent;
@@ -187,7 +187,7 @@ as the spec said.
 - A closure that outlives its `for` loop iteration would see the shared C# loop variable, not JS's per-iteration binding; none in the pilot designs.
 - userData's JSON key order is the class's field order, not the literal's (the comparison ignores order).
 - `JsRt.As` (its generic-array path, `Activator`) and `JsJson` still use reflection: not trimming- or NativeAOT-safe as written (Godot's iOS export); shape conversions no longer do.
-- `Math.sin`/`cos` are .NET's (the user's choice): their last bit differs from V8's now and then, so 668 of 4,466 builds match only within the tolerance.
+- `Math.sin`/`cos` are .NET's (the user's choice): their last bit differs from V8's now and then, so 654 of 4,466 builds match only within the tolerance.
 - Four ships (the Aframax, the VLCC, the MSC Gulsun, the sailing yacht: 11 builds) differ in their railings' normals, which flip. `hullKit.ts`'s `TriBatch.draw` faces a batch by the sum of its normals, which for a railing's two opposite faces is about 1e-16: rounding noise, so any last-bit difference picks the other side. A factory fix (no hint below a threshold) would settle it; the pilot does not change the generator.
 - A read past the end of an array of numbers throws (JS gives undefined), except under `??`, a comparison with a literal, an optional tuple element and `find`.
 - A conversion's cached copy is shared while its source is unchanged; a write to the copy is not seen by the source (or the reverse), as before.
