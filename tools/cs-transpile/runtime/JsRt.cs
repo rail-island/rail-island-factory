@@ -443,8 +443,10 @@ public static class JsRt
     /** Array.from({ length: n }, (_, i) => f(i)). */
     public static JsArray<T> ArrayFrom<T>(double n, Func<double, T> f)
     {
+        // ToLength, as Array.from reads `length`: NaN and negatives are 0, a fraction is floored
+        int len = double.IsNaN(n) || n <= 0 ? 0 : Index(Math.Floor(n));
         var o = new JsArray<T>();
-        for (int i = 0; i < Index(n); i++) o.add(f(i));
+        for (int i = 0; i < len; i++) o.add(f(i));
         return o;
     }
 

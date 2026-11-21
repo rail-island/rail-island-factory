@@ -426,6 +426,13 @@ export function prototypePatch(): unknown {
   return [rec, k.drawn, after.drawn];
 }
 
+/** Array.from's length is ToLength: NaN and negatives give no elements, a fraction is floored. */
+export function arrayFromLength(): unknown {
+  const pitch = undefined as unknown as number;
+  const n = Math.max(1, Math.round(10 / pitch));
+  return [Array.from({ length: n }, (_, i) => i), Array.from({ length: -2 }, (_, i) => i), Array.from({ length: 2.7 }, (_, i) => i * 2)];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
