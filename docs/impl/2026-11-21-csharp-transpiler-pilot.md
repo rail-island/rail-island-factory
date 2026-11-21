@@ -71,7 +71,8 @@ Semantic differences the comparison caught, each now handled in the transpiler:
 kinds in 179 files. The six largest kinds - `entries()` on arrays (103), `switch` fall-through (87),
 rest parameters (39), `Math.hypot(...spread)` (36), array spreads of non-arrays (31), `push(...spread)`
 (16) - are 60 %. Most are mechanical; a few need decisions (`WeakMap`, methods in object literals,
-`for...of` over a string, `JSON.stringify`).
+`for...of` over a string, `JSON.stringify`). After follow-up 2 the six are supported: 187 sites of 42 kinds
+are left, and 134 of the 1,074 designs reach nothing unsupported (`clean` in `survey.json`).
 
 **Estimate for the whole catalog.** The pilot designs needed about 5 transpiler or runtime fixes after
 they first transpiled; the truck, which reaches the LOD kit, needed 10 - and three of those were semantic
@@ -97,6 +98,22 @@ Checks: `pnpm typecheck` and `pnpm build`'s `tsc` do not see `tools/` (the root 
    in place and emits typed `ShapeConvert` methods instead of reflection. Both benchmarks now warm up for
    300 ms and report the median of five rounds. Still 22 of 22 identical; C# is 1.3-1.7x faster than Node.
 
+2. **"Support the six largest survey kinds."** `for (const [i, x] of a.entries())` is a live index loop
+   (other `entries()`/`keys()` give pairs and indexes); `switch` is labels and `goto`, so fall-through, a
+   default between cases and `continue` behave as in JS; rest parameters are `params E[]`; `Math.hypot`/
+   `min`/`max` and `push` with spreads gather their arguments in order first. The survey fell from 518
+   unsupported sites to 187 and now counts the designs nothing unsupported is reached from (134), and
+   `--ids=` runs the full comparison for any designs. `fixtures/constructs.ts` checks each construct and its
+   edge cases in Node against C# (`pnpm cs:pilot --fixtures`): 9 of 9 identical. Running seven clean designs
+   that use the six kinds through the comparison found further, unrelated traps, fixed in the transpiler:
+   keys that are no identifiers, bound designs and re-exported entries in the API, namespace imports,
+   generic constraints, delegates called without their optional arguments or with fewer parameters,
+   `JsVoid` returns leaking into local functions, a switch C# could not prove returns, callbacks taking
+   the array, `a[i] ?? b` past the end, `?.` on numbers, `[...new Set(x)]`, `Pick<MeshBuilder, ...>`, a
+   literal spreading a record, and shorthand properties that the scalar replacement and reachability
+   missed. Of those designs' 16 builds two compare identical so far (the White House's and the cruise
+   ferry's distant models); the rest are listed under "Known problems". The pilot stays 22 of 22.
+
 ## How to test
 
 **Automated coverage.** None in `pnpm test`, by the spec (the pilot adds no factory test). The pilot is
@@ -113,12 +130,15 @@ is no user surface.
    C# column below the Node column (single runs are noisy; rerun if one row is close).
 3. Open `export/cs/Generated/Designs.g.cs`: a class per design, an enum per parameter, `Build(...)`.
 4. Open `export/cs/report.json`: `identical` equals `compared`; each result has `match: true`.
-5. Run `pnpm cs:pilot --survey`. Expect 1,074 designs and about 518 unsupported sites by kind;
-   `export/cs/survey.json` lists each with file and line.
+5. Run `pnpm cs:pilot --survey`. Expect 1,074 designs, about 187 unsupported sites by kind and
+   `cleanDesigns` 134; `export/cs/survey.json` lists each site with file and line, and the clean designs.
+6. Run `pnpm cs:pilot --fixtures`. Expect nine cases, each "same", and "fixtures: 9 of 9 identical".
 
 **Also worth trying.**
 - Break the runtime on purpose - make `JsRt.Round` round half to even - and rerun: the pyramid's
   comparison reports the first differing number and its path; restore it.
+- `pnpm cs:pilot --ids=proc-building-white-house,proc-vehicle-cruise-ferry`: two of four builds identical;
+  the others show the problems below.
 - `pnpm cs:pilot --no-run`, then `cd export/cs && dotnet run -c Release -- bench run/bench-jobs.json`
   after one full run, to time C# alone.
 
@@ -139,12 +159,15 @@ as the spec said.
 - A closure that outlives its `for` loop iteration would see the shared C# loop variable, not JS's per-iteration binding; none in the pilot designs.
 - userData's JSON key order is the class's field order, not the literal's (the comparison ignores order).
 - `JsRt.As` (its generic-array path, `Activator`) and `JsJson` still use reflection: not trimming- or NativeAOT-safe as written (Godot's iOS export); shape conversions no longer do.
+- The White House and Prague main station differ from JS in a few normals by about 1e-14 (18 of 159,255 numbers; 24 of 20,718), where JS gets exactly 0: almost certainly `Math.sin`/`cos`, whose last bit .NET (glibc) and V8 (fdlibm) do not always agree on. Positions still match as Float32.
+- Of the seven designs tried after follow-up 2: Prague main station's distant model draws 24 fewer triangles; the DF11 and HXD1 pass their palette record where a shape class is expected; the P42DC meets a `string | string[]` value and a nullable read; the cruise ferry converts a two-parameter delegate to a three-parameter one; the road-station preview uses named surfaces, which the seam leaves out.
+- A read past the end of an array of numbers throws (JS gives undefined), except under `??`.
 - Timings on this shared container move 10-20 % between runs; the margins hold over three runs per side, but a single run can show less.
 
 ## Recommended follow-ups
 
 1. Decide C# transpilation against the embedded Jint on these numbers: exact output either way; C# ~100x faster than Jint and faster than Node; transpilation costs weeks plus upkeep.
-2. If C#: support the survey's six largest kinds, then add a factory test that runs the transpiler over every design so new code stays inside the subset.
+2. If C#: port fdlibm's `sin`, `cos` (and `atan2`, `pow`) into the runtime, so every number matches V8 rather than glibc; then work through the seven designs' remaining traps and the survey's next kinds, and add a factory test that runs the transpiler over every design so new code stays inside the subset.
 3. If C# needs more speed: scalar-replace points passed between functions too (a struct for fixed-length numeric tuples, a signature change the transpiler would derive), and pre-size each material's buffers from the previous build.
 4. Make the runtime reflection-free (generated converters instead of `JsRt.As`'s array path, generated JSON writers) before targeting NativeAOT.
 5. Write the Godot adapter: `ModelNode` to `Node3D`/`ArrayMesh`, swapping each triangle's winding, `AnimationPlayer` for the clips.
