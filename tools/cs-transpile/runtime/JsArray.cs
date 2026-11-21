@@ -24,7 +24,13 @@ internal struct Small4<T>
     private T e0;
 }
 
-public sealed class JsArray<T> : IEnumerable<T>
+/** An array read without knowing its element type (a value TypeScript typed as a union or a type parameter). */
+public interface IJsIndexable
+{
+    object __at(double i);
+}
+
+public sealed class JsArray<T> : IEnumerable<T>, IJsIndexable
 {
     private const int SmallCapacity = 4;
 
@@ -436,6 +442,31 @@ public sealed class JsArray<T> : IEnumerable<T>
     }
 
     public JsArray<T> copy() => slice();
+
+    object IJsIndexable.__at(double i) => at(i)!;
+
+    /** splice(start, deleteCount, ...items): the removed elements; the array changed in place. */
+    public JsArray<T> splice(double start, double? deleteCount = null, params T[] items)
+    {
+        int s = Clamp(start, count);
+        int d = deleteCount is null ? count - s : Math.Max(0, Math.Min((int)Math.Truncate(deleteCount.Value), count - s));
+        var removed = slice(s, s + d);
+        var tail = Items[(s + d)..].ToArray();
+        count = s;
+        foreach (var x in items) add(x);
+        foreach (var x in tail) add(x);
+        return removed;
+    }
+
+    /** unshift(...items): inserted at the front, in order; the new length. */
+    public double unshift(params T[] items)
+    {
+        var all = ToArray();
+        count = 0;
+        foreach (var x in items) add(x);
+        foreach (var x in all) add(x);
+        return count;
+    }
 
     /** entries() of a number array: [index, value] pairs. */
     public JsArray<JsArray<double>> numberEntries()

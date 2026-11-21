@@ -5,6 +5,7 @@
 // (not part of the pilot) turns it into Node3D / ArrayMesh, swapping each
 // triangle's winding: Godot's front faces are clockwise, three.js's counter-clockwise.
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -64,6 +65,40 @@ public sealed class ModelNode
 /** JSON.stringify of the transpiled values: shape objects, arrays, records, numbers as JS prints them. */
 public static class JsJson
 {
+    /** JSON.stringify(v, replacer): every value passed through replacer(key, value) first, the root with key "". */
+    public static string Stringify(object? v, Func<string, object, object> replacer)
+    {
+        var sb = new StringBuilder();
+        Write(sb, Replace("", v, replacer));
+        return sb.ToString();
+    }
+
+    /** An object as the replacer left it: its keys in order. */
+    private sealed class Ordered : List<KeyValuePair<string, object?>> { }
+
+    private static object? Replace(string key, object? v, Func<string, object, object> r)
+    {
+        v = r(key, v!);
+        switch (v)
+        {
+            case string or double or bool or null: return v;
+            case IJsObject o:
+                var obj = new Ordered();
+                foreach (var k in o.__keys()) obj.Add(new(k, Replace(k, o.__get(k), r)));
+                return obj;
+            case System.Collections.IEnumerable e when IsRecord(e):
+                var rec = new Ordered();
+                foreach (var (k, x) in RecordEntries(e)) rec.Add(new(k, Replace(k, x, r)));
+                return rec;
+            case System.Collections.IEnumerable e:
+                var list = new List<object?>();
+                int i = 0;
+                foreach (var x in e) list.Add(Replace((i++).ToString(CultureInfo.InvariantCulture), x, r));
+                return list;
+            default: return v;
+        }
+    }
+
     public static string Stringify(object? v)
     {
         var sb = new StringBuilder();
@@ -83,6 +118,9 @@ public static class JsJson
             case int i: sb.Append(i.ToString(CultureInfo.InvariantCulture)); break;
             case IJsObject o:
                 WriteObject(sb, o.__keys().Select(k => new KeyValuePair<string, object?>(k, o.__get(k))), keepNulls: true);
+                break;
+            case Ordered ordered:
+                WriteObject(sb, ordered, keepNulls: true);
                 break;
             case IDictionary<string, object> dict:
                 WriteObject(sb, dict.Select(kv => new KeyValuePair<string, object?>(kv.Key, kv.Value)));

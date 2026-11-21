@@ -133,6 +133,70 @@ public static class JsRt
     public static bool IsFinite(double x) => double.IsFinite(x);
     public static bool IsInteger(double x) => double.IsFinite(x) && Math.Floor(x) == x;
 
+    /** Number.isFinite of any value: false for anything but a finite number. */
+    public static bool IsFiniteNumber(object? x) => x is double d && double.IsFinite(d);
+    /** Number.isNaN of any value: true only for the number NaN. */
+    public static bool IsNaNNumber(object? x) => x is double d && double.IsNaN(d);
+
+    /** Number(x) of any value, for the cases the factory passes: numbers, strings, booleans. */
+    public static double ToNumber(object? x) => x switch
+    {
+        null => double.NaN,
+        double d => d,
+        string s => s.Trim().Length == 0 ? 0 : Num(s),
+        bool b => b ? 1 : 0,
+        _ => double.NaN,
+    };
+
+    /** ToInt32: the double modulo 2^32, as a signed 32-bit integer (what JS's bitwise operators read). */
+    public static int ToInt32(double x)
+    {
+        if (!double.IsFinite(x)) return 0;
+        double t = Math.Truncate(x) % 4294967296.0;
+        if (t < 0) t += 4294967296.0;
+        return unchecked((int)(uint)t);
+    }
+
+    /** ToUint32: the double modulo 2^32, unsigned (what >>> reads). */
+    public static uint ToUint32(double x) => unchecked((uint)ToInt32(x));
+
+    /** Math.imul: the low 32 bits of the product, signed. */
+    public static double Imul(double a, double b) => unchecked(ToInt32(a) * ToInt32(b));
+
+    /** parseInt(s, radix): leading whitespace and sign, then as many digits of the radix as there are; NaN for none. */
+    public static double ParseInt(string s, double radix = 10)
+    {
+        s = s.TrimStart();
+        int sign = 1, i = 0;
+        if (i < s.Length && (s[i] == '+' || s[i] == '-')) { if (s[i] == '-') sign = -1; i++; }
+        int r = (int)radix;
+        if (r == 0) r = 10;
+        if ((r == 16 || radix == 0) && i + 1 < s.Length && s[i] == '0' && (s[i + 1] == 'x' || s[i + 1] == 'X')) { r = 16; i += 2; }
+        double v = 0;
+        int start = i;
+        for (; i < s.Length; i++)
+        {
+            char c = char.ToLowerInvariant(s[i]);
+            int d = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'z' ? c - 'a' + 10 : 99;
+            if (d >= r) break;
+            v = v * r + d;
+        }
+        return i == start ? double.NaN : sign * v;
+    }
+
+    /** Object.is: like ===, but NaN is itself and -0 is not 0. */
+    public static bool SameValue(object? a, object? b)
+    {
+        if (a is double x && b is double y) return double.IsNaN(x) ? double.IsNaN(y) : x == y && double.IsNegative(x) == double.IsNegative(y);
+        return Eq(a, b);
+    }
+
+    /** for...of over a value whose C# type is not known: an array's elements, a Map's [key, value] pairs. */
+    public static System.Collections.IEnumerable Iterate(object? v) => v as System.Collections.IEnumerable ?? throw new JsError($"cannot iterate a {v?.GetType().Name ?? "null"}");
+
+    /** void x: x was evaluated; the value is undefined. */
+    public static object? Void(object? _) => null;
+
     /** Number(x) / parseFloat of a numeric string. */
     public static double Num(string s) => double.TryParse(s.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : double.NaN;
 
@@ -359,6 +423,74 @@ public static class JsRt
 
     /** The keys of a shape object (Object.keys), declaration order. */
     public static JsArray<string> Keys(IJsObject o) => new(o.__keys());
+
+    /** Object.values of a shape object, declaration order. */
+    public static JsArray<object> Values(IJsObject o) => new(o.__keys().Select(k => o.__get(k)!));
+
+    /** Object.assign(target, ...sources) for a shape object: every present key copied in, in order. */
+    public static T AssignInto<T>(T target, params object?[] sources) where T : IJsObject
+    {
+        foreach (var s in sources) Assign(target, s);
+        return target;
+    }
+
+    /** arr.flat(): one level. */
+    public static JsArray<T> Flat<T>(JsArray<JsArray<T>> a)
+    {
+        var o = new JsArray<T>();
+        foreach (var x in a) if (x != null) o.addAll(x);
+        return o;
+    }
+
+    /** a[i] of an array whose C# type is not known here (a union, a type parameter): undefined outside it. */
+    public static object? At(object? a, double i) => a is IJsIndexable x ? x.__at(i) : throw new JsError($"cannot index a {a?.GetType().Name ?? "null"}");
+
+    /** const v = xs[i] that the code tests against undefined: null past the end. */
+    public static T? ReadOrNull<T>(JsArray<T> a, double i) where T : struct => a.holds(i) ? a[i] : null;
+
+    /** The characters of a string as JS iterates them: by code point. */
+    public static JsArray<string> Chars(string s)
+    {
+        var o = new JsArray<string>();
+        for (int i = 0; i < s.Length; i += char.IsSurrogatePair(s, i) ? 2 : 1) o.add(char.ConvertFromUtf32(char.ConvertToUtf32(s, i)));
+        return o;
+    }
+
+    /** s.replace(/re/flags, replacement): the first match, or all with g; $1 and $& as JS reads them. */
+    public static string Replace(string s, string pattern, string flags, string replacement)
+    {
+        var re = Regexes.GetOrAdd(flags + "/" + pattern, _ => new Regex(pattern, RegexOptions.ECMAScript | (flags.Contains('i') ? RegexOptions.IgnoreCase : 0)));
+        string repl = replacement.Replace("$&", "$0");
+        return flags.Contains('g') ? re.Replace(s, repl) : re.Replace(s, repl, 1);
+    }
+
+    /** s.replace(/re/flags, (match, g1, ...) => ...). */
+    public static string Replace(string s, string pattern, string flags, Func<string, string> f) => ReplaceWith(s, pattern, flags, m => f(m.Value));
+    public static string Replace(string s, string pattern, string flags, Func<string, string, string> f) => ReplaceWith(s, pattern, flags, m => f(m.Value, m.Groups.Count > 1 ? m.Groups[1].Value : null!));
+    public static string Replace(string s, string pattern, string flags, Func<string, string, string, string> f) => ReplaceWith(s, pattern, flags, m => f(m.Value, m.Groups.Count > 1 ? m.Groups[1].Value : null!, m.Groups.Count > 2 ? m.Groups[2].Value : null!));
+
+    private static string ReplaceWith(string s, string pattern, string flags, MatchEvaluator f)
+    {
+        var re = Regexes.GetOrAdd(flags + "/" + pattern, _ => new Regex(pattern, RegexOptions.ECMAScript | (flags.Contains('i') ? RegexOptions.IgnoreCase : 0)));
+        return flags.Contains('g') ? re.Replace(s, f) : re.Replace(s, f, 1);
+    }
+
+    /** s.replace("a", "b"): the first occurrence only, as JS does with a string pattern. */
+    public static string replace(this string s, string a, string b)
+    {
+        int i = s.IndexOf(a, StringComparison.Ordinal);
+        return i < 0 ? s : s[..i] + b + s[(i + a.Length)..];
+    }
+
+    public static string replaceAll(this string s, string a, string b) => s.Replace(a, b, StringComparison.Ordinal);
+    public static string trim(this string s) => s.Trim();
+    public static double indexOf(this string s, string a) => s.IndexOf(a, StringComparison.Ordinal);
+    public static string charAt(this string s, double i) => i >= 0 && i < s.Length ? s[(int)i].ToString() : "";
+    public static string substring(this string s, double a, double? b = null)
+    {
+        int n = s.Length, x = Math.Clamp((int)a, 0, n), y = b is null ? n : Math.Clamp((int)b.Value, 0, n);
+        return x <= y ? s[x..y] : s[y..x];
+    }
 
     /** Object.entries of a shape object. */
     public static JsArray<JsArray<object>> Entries(IJsObject o) => new(o.__keys().Select(k => new JsArray<object>().add(k).add(o.__get(k)!)));

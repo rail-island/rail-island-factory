@@ -64,6 +64,13 @@ public sealed class JsRecord<T> : IEnumerable<KeyValuePair<string, T>>
     public JsRecord<T> set(string key, T value) { this[key] = value; return this; }
 
     /** `{ ...a, ...b }`: copies every entry of `src` in (later keys win). */
+    /** Object.assign(record, ...records). */
+    public JsRecord<T> assignAll(JsArray<JsRecord<T>> sources)
+    {
+        foreach (var r in sources) if (r != null) assign(r);
+        return this;
+    }
+
     public JsRecord<T> assign(JsRecord<T> src)
     {
         foreach (var k in src.keys()) this[k] = src[k];
@@ -128,6 +135,7 @@ public sealed class JsMap<K, V> : IEnumerable<JsArray<object>> where K : notnull
     }
 
     public double size => map.Count;
+    public void clear() { map.Clear(); order.Clear(); }
     public JsArray<K> keys() => new(order);
     public JsArray<V> values() => new(order.Select(k => map[k]));
     public JsArray<JsArray<object>> entries() => new(order.Select(k => new JsArray<object>().add(k).add(map[k]!)));
@@ -162,7 +170,28 @@ public sealed class JsSet<T> : IEnumerable<T> where T : notnull
     }
 
     public double size => set.Count;
+    public void clear() { set.Clear(); order.Clear(); }
     public JsArray<T> values() => new(order);
     public IEnumerator<T> GetEnumerator() => order.ToList().GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+/**
+ * A JS WeakMap (a per-builder cache keyed by the MeshCore object): the entries go with
+ * their key, so caches kept in module statics do not hold every builder ever made.
+ */
+public sealed class JsWeakMap<K, V> where K : class
+{
+    private sealed class Box { public V value = default!; }
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<K, Box> table = new();
+
+    public V get(K key) => table.TryGetValue(key, out var b) ? b.value : default!;
+    public bool has(K key) => table.TryGetValue(key, out _);
+    public bool delete(K key) => table.Remove(key);
+
+    public JsWeakMap<K, V> set(K key, V value)
+    {
+        table.AddOrUpdate(key, new Box { value = value });
+        return this;
+    }
 }

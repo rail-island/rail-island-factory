@@ -130,3 +130,89 @@ export function pushSpreads(): unknown {
   c.push("x", ...["y", "z"]);
   return [a, b, c];
 }
+
+// --- bitwise operators, Math.imul (hashing and seeded noise) -------------------------------------
+
+export function int32Operators(): unknown {
+  let h = 2166136261;
+  for (const c of [104, 105, 33]) {
+    h ^= c;
+    h = Math.imul(h, 16777619);
+  }
+  let n = 0x7fffffff;
+  n ^= n >>> 13;
+  n |= 3;
+  return [h >>> 0, h | 0, n, -5 >>> 0, 1 << 31, (1 << 31) >> 4, 5000000000 | 0, ~7, Math.imul(0xffffffff, 5), 7 & 3, 6 ^ 3];
+}
+
+// --- built-ins ----------------------------------------------------------------------------------
+
+export function builtins(): unknown {
+  const a = [1, 2, 3, 4, 5];
+  const removed = a.splice(1, 2, 9, 8, 7);
+  const b = [3];
+  const len = b.unshift(1, 2);
+  const nested = [[1, 2], [3], []].flat();
+  const s = "proc-vehicle-cd-150_x";
+  const camel = s.replace(/^(proc-vehicle-|veh-)/, "").replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+  const first = "a-b-c".replace("-", "+");
+  const chars: string[] = [];
+  for (const ch of "hé!") chars.push(ch);
+  const digits = [..."1503"].map(Number);
+  const holes = Array<number>(3).fill(2);
+  return [removed, a, len, b, nested, camel, first, chars, digits, holes, parseInt("ff", 16), parseInt("  -42px"), parseInt("x"), Number.isNaN(Number("q")), [-2, 3].map(Math.abs), [1, 2].every(Number.isFinite)];
+}
+
+const [ALPHA, BETA, GAMMA] = [0.5, 0.85, 1.45];
+
+export function moduleDestructuring(): unknown {
+  return ALPHA + BETA * GAMMA;
+}
+
+export function statements(): unknown {
+  const a: number[] = [];
+  const b: number[] = [];
+  for (let i = 0; i < 2; i++) a.push(i), b.push(i * 10);
+  const unused = 3;
+  void unused;
+  return [a, b];
+}
+
+export function objects(): unknown {
+  const base: Record<string, number> = { x: 1 };
+  const more: Record<string, number> = { y: 2 };
+  const all = Object.assign({}, base, more, { x: 5 }) as Record<string, number>;
+  const lit = { p: 1, q: "s" };
+  const keyName = "p";
+  const m = new Map<string, number>([["k1", 1], ["k2", 2]]);
+  const firstKey = m.keys().next().value!;
+  const victim: { a: number; b?: number } = { a: 1, b: 2 };
+  delete victim.b;
+  const extra = true;
+  const spread = { a: 1, ...(extra ? { b: 2, ...(extra ? { c: 3 } : {}) } : {}) };
+  const pen = { draw(x: number, scale = 2): number { return x * scale; } };
+  return [all, Object.values(lit), keyName in lit, "z" in lit, firstKey, victim, spread, pen.draw(3), pen.draw(3, 5)];
+}
+
+/** const next = xs[i + 1] tested against undefined: a read past the end. */
+export function readPastTheEnd(): unknown {
+  const xs = [0.1, 0.5, 0.9];
+  const out: number[] = [];
+  xs.forEach((x, i) => {
+    const next = xs[i + 1];
+    if (next === undefined) return;
+    out.push(next - x);
+  });
+  return out;
+}
+
+export function late(): unknown {
+  const buf = new Float64Array(3);
+  buf[1] = 2.5;
+  const maps = new Map<string, Map<string, number>>([["a", new Map([["x", 1], ["y", 2]])]]);
+  const seen: string[] = [];
+  for (const [k, v] of maps.get("a") ?? []) seen.push(`${k}${v}`);
+  for (const [k] of maps.get("zz") ?? []) seen.push(k);
+  const key = JSON.stringify({ a: -0, b: [0, -0], c: "s" }, (_k, x: unknown) => (Object.is(x, -0) ? "-0" : x));
+  return [Array.from(buf), seen, key, Object.is(NaN, NaN), Object.is(0, -0), JSON.stringify(["q", 1.5, true])];
+}

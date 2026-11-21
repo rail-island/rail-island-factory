@@ -2,7 +2,8 @@
 //
 //   pnpm cs:pilot [--truck] [--no-run]
 //   pnpm cs:pilot --survey     every design, transpiled only: what is not covered yet
-//   pnpm cs:pilot --ids=a,b    the same run for any designs
+//   pnpm cs:pilot --ids=a,b    the same run for any designs (--max-combos=N: the first N
+//                              combinations of each; --no-bench: no timing)
 //   pnpm cs:pilot --fixtures   each supported construct (fixtures/constructs.ts) in Node and C#, compared
 //
 // 1. lists each pilot design's tree-shaken modules (esbuild metafile),
@@ -192,6 +193,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   }
   if (!process.argv.includes("--no-run")) {
     const { runPilot } = await import("./compare.ts");
-    await runPilot(ids);
+    const cap = Number(process.argv.find((a) => a.startsWith("--max-combos="))?.slice(13) ?? Infinity);
+    await runPilot(ids, cap, !process.argv.includes("--no-bench"));
   }
 }
