@@ -177,7 +177,9 @@ export async function runPilot(ids: string[]): Promise<void> {
   for (const r of results.filter((x) => !x.match).slice(0, 12)) console.log(`  ${r.file}: ${r.difference}`);
 
   // timing: the default combination of each design, both levels (every job would take minutes in Jint)
-  const timed = jobs.filter((j) => j.file.includes("__0"));
+  // only builds that matched are timed: a failing one would stop the bench
+  const ok = new Set(results.filter((r) => r.match).map((r) => r.file));
+  const timed = jobs.filter((j) => j.file.includes("__0") && ok.has(j.file));
   fs.writeFileSync(path.join(runDir, "bench-jobs.json"), JSON.stringify(timed));
   const node = timed.map((j) => ({ file: j.file, ...bench(() => builds.get(j.id)!(THREE, j.values, j.lod)) }));
   const csBench = JSON.parse(dotnet([dll, "bench", path.join(runDir, "bench-jobs.json")], { quiet: true })) as Array<{ file: string; ms: number; runs: number; triangles: number }>;

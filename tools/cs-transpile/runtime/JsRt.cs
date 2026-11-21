@@ -104,6 +104,11 @@ public static class JsRt
         return Math.Sqrt(sum) * max;
     }
 
+    // Math.hypot/min/max(...xs): the arguments gathered into one array
+    public static double Hypot(JsArray<double> xs) => Hypot(xs.ToArray());
+    public static double Min(JsArray<double> xs) => Min(xs.ToArray());
+    public static double Max(JsArray<double> xs) => Max(xs.ToArray());
+
     public static double Min(double a, double b) => Math.Min(a, b);
     public static double Max(double a, double b) => Math.Max(a, b);
     public static double Min(double a, double b, double c) => Math.Min(Math.Min(a, b), c);
@@ -313,6 +318,9 @@ public static class JsRt
         }
         if (inTmp) Array.Copy(tmp, items, n);
     }
+
+    /** `a[i] ?? f()`: past the end, a hole or null reads as undefined, as in JS. */
+    public static T ElemOr<T>(JsArray<T> a, double i, Func<T> f) => a != null && a.holds(i) ? a[i] : f();
 
     /** `f(...tuple)`: the tuple's first element, and the tuple kept for the following arguments. */
     public static T First<T>(JsArray<T> tuple, out JsArray<T> keep)

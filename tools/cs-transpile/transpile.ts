@@ -40,6 +40,8 @@ interface MemberContext {
   temps: number;
   /** Inside a lambda whose delegate returns JsVoid (a generic T TypeScript made void). */
   voidAsUnit: boolean;
+  /** Inside a switch case (not in a loop within it): the label its `break` jumps to. */
+  breakLabel: string | null;
   /** The enclosing class's C# name, for `this` types. */
   className: string | null;
 }
@@ -117,7 +119,7 @@ export class Transpiler {
   private readonly localCs = new Map<ts.Symbol, string>();
   /** Locals replaced by scalars: `const u = [a, b, c]` read only as u[0], u[1], u[2] -> u__0, u__1, u__2. */
   private readonly scalarized = new Map<ts.Symbol, string[]>();
-  private ctx: MemberContext = { used: new Set(), temps: 0, voidAsUnit: false, className: null };
+  private ctx: MemberContext = { used: new Set(), temps: 0, voidAsUnit: false, breakLabel: null, className: null };
 
   constructor(generatorDir: string, tsconfig: string) {
     this.generatorDir = generatorDir;
@@ -161,9 +163,15 @@ export class Transpiler {
     return sym;
   }
 
+  /** The symbol an identifier refers to; for `{ x }` shorthand, the variable x, not the property. */
+  private symbolOf(id: ts.Identifier): ts.Symbol | undefined {
+    if (ts.isShorthandPropertyAssignment(id.parent) && id.parent.name === id) return this.checker.getShorthandAssignmentValueSymbol(id.parent);
+    return this.checker.getSymbolAtLocation(id);
+  }
+
   private walkReach(node: ts.Node): void {
     if (ts.isIdentifier(node)) {
-      const sym = this.resolve(this.checker.getSymbolAtLocation(node));
+      const sym = this.resolve(this.symbolOf(node));
       for (const d of sym?.declarations ?? []) {
         if (!this.inGenerator(d)) continue;
         const top = this.topLevel(d);
@@ -171,6 +179,34 @@ export class Transpiler {
       }
     }
     ts.forEachChild(node, (c) => this.walkReach(c));
+  }
+
+  /** The C# method an exported entry function is: its declaring module's class and its own name. */
+  entryTarget(source: string, name: string): { moduleClass: string; name: string } {
+    const sf = this.sourceFile(source);
+    const sym = this.checker.getSymbolAtLocation(sf);
+    const exp = sym && this.checker.getExportsOfModule(sym).find((s) => s.name === name);
+    const decl = this.resolve(exp)?.declarations?.[0];
+    if (!decl) throw new TranspileError(`${source}: no export ${name}`);
+    const own = (decl as ts.NamedDeclaration).name;
+    return { moduleClass: this.moduleClass(decl.getSourceFile().fileName), name: Transpiler.escape(own && ts.isIdentifier(own) ? own.text : name) };
+  }
+
+  /** The top-level statements one design reaches, fresh (for the survey's per-design count). */
+  reachFrom(entries: Entry[], extraClasses: Array<{ source: string; name: string }>): ts.Statement[] {
+    this.reached.clear();
+    this.queue.length = 0;
+    return this.reach(entries, extraClasses);
+  }
+
+  /** A statement's file (relative to generator/) and its first and last line, 1-based. */
+  span(s: ts.Statement): { file: string; from: number; to: number } {
+    const sf = s.getSourceFile();
+    return {
+      file: path.relative(this.generatorDir, sf.fileName),
+      from: sf.getLineAndCharacterOfPosition(s.getStart()).line + 1,
+      to: sf.getLineAndCharacterOfPosition(s.getEnd()).line + 1,
+    };
   }
 
   /** Every top-level statement the entries reach, in file and position order. */
@@ -216,8 +252,21 @@ export class Transpiler {
 
   // --- names ---------------------------------------------------------------------------
 
+  /**
+   * A JS name as a C# identifier: a keyword gets `@`; a key that is no identifier at all
+   * (`"bridge-timber"`, a quoted key of a table) becomes one, with a hash of the key so two
+   * keys never meet on one name.
+   */
   static escape(name: string): string {
-    return CS_KEYWORDS.has(name) ? `@${name}` : name;
+    if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) return CS_KEYWORDS.has(name) ? `@${name}` : name;
+    let h = 0x811c9dc5;
+    for (let i = 0; i < name.length; i++) h = Math.imul(h ^ name.charCodeAt(i), 0x01000193) >>> 0;
+    return `${/^[0-9]/.test(name) ? "_" : ""}${name.replace(/[^A-Za-z0-9_]/g, "_")}__${h.toString(16).slice(0, 6)}`;
+  }
+
+  /** A shape field's backing field. */
+  static backing(js: string): string {
+    return `_${Transpiler.escape(js).replace(/^@/, "")}`;
   }
 
   private moduleClass(file: string): string {
@@ -268,7 +317,7 @@ export class Transpiler {
 
   private member(className: string | null, fn: () => string): string {
     const saved = this.ctx;
-    this.ctx = { used: new Set(), temps: 0, voidAsUnit: false, className };
+    this.ctx = { used: new Set(), temps: 0, voidAsUnit: false, breakLabel: null, className };
     try {
       return fn();
     } finally {
@@ -408,13 +457,21 @@ export class Transpiler {
     }
     const index = this.checker.getIndexInfosOfType(t);
     const props = t.getProperties();
+    // a type made of one class's members (Pick<MeshBuilder, "quad" | "tri">) is that class: its values are its instances
+    if (props.length && !index.length) {
+      const owners = props.map((p) => p.declarations?.[0]?.parent).filter((o): o is ts.ClassDeclaration => !!o && ts.isClassDeclaration(o));
+      if (owners.length === props.length) {
+        const seam = owners.find((o) => this.seamFiles.has(o.getSourceFile().fileName));
+        return seam ? "MeshBuilder" : this.className(owners[0]!);
+      }
+    }
     if (index.length && !props.length) return `JsRecord<${this.elementCs(index[0]!.type, node)}>`;
     // a Record over a finite key union (Record<LampRole, ...>): a record, not a shape
     if (props.length && ((t as ts.ObjectType).objectFlags & ts.ObjectFlags.Mapped)) {
       const each = new Set(props.map((p) => this.cs(this.checker.getTypeOfSymbol(p), node)));
       if (each.size === 1) return `JsRecord<${this.elementCs(this.checker.getTypeOfSymbol(props[0]!), node)}>`;
     }
-    if (index.length) throw new TranspileError(`a type with both an index signature and fields: ${this.checker.typeToString(t)}`);
+    if (index.length) throw new TranspileError(`unsupported type with both an index signature and fields: ${this.checker.typeToString(t)}${node ? ` at ${this.where(node)}` : ""}`);
     return this.dataClass(t, node);
   }
 
@@ -542,6 +599,9 @@ export class Transpiler {
     if (`${to}?` === from) return `((${to})(${code}))`; // a narrowed double?
     if (to === "JsVoid" || from === "JsVoid") return code;
     const arr = /^JsArray<(.*)>$/;
+    // a Set where an array is wanted ([...new Set(xs)]): its values in insertion order
+    const fs = from.match(/^JsSet<(.*)>$/);
+    if (fs && arr.test(to)) return this.coerce(`new JsArray<${fs[1]}>(${code})`, `JsArray<${fs[1]}>`, to);
     const fa = from.match(arr), ta = to.match(arr);
     if (fa && ta) {
       this.conversions++;
@@ -639,17 +699,20 @@ export class Transpiler {
     if (f.length > 64) throw new TranspileError(`${d.name}: more than 64 fields`);
     const esc = (js: string) => Transpiler.escape(js);
     const bit = (i: number) => `${(1n << BigInt(i)).toString()}UL`;
-    const has = (x: DataField, i: number) => (x.nullable ? `(__p & ${bit(i)}) != 0` : VALUE_TYPES.has(x.cs) ? "true" : `this._${x.js} != null`);
+    const has = (x: DataField, i: number) => (x.nullable ? `(__p & ${bit(i)}) != 0` : VALUE_TYPES.has(x.cs) ? "true" : `this.${Transpiler.backing(x.js)} != null`);
     const lines = [
       `/** From ${d.origin}. */`,
       `public partial class ${d.name} : IJsObject`,
       "{",
       "    internal ulong __p;",
-      ...f.map((x, i) => `    internal ${x.cs} _${x.js};\n    public ${x.cs} ${esc(x.js)} { get => _${x.js}; set { _${x.js} = value; __p |= ${bit(i)}; } }`),
-      `    public bool __has(string __k) => __k switch { ${f.map((x, i) => `"${x.js}" => ${has(x, i)}, `).join("")}_ => false };`,
-      `    public object __get(string __k) => __k switch { ${f.map((x) => `"${x.js}" => this._${x.js}, `).join("")}_ => null };`,
-      `    public void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case "${x.js}": this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}} }`,
-      `    public IEnumerable<string> __keys() { ${f.map((x, i) => (has(x, i) === "true" ? `yield return "${x.js}"; ` : `if (${has(x, i)}) yield return "${x.js}"; `)).join("")}yield break; }`,
+      ...f.map((x, i) => {
+        const b = Transpiler.backing(x.js);
+        return `    internal ${x.cs} ${b};\n    public ${x.cs} ${esc(x.js)} { get => ${b}; set { ${b} = value; __p |= ${bit(i)}; } }`;
+      }),
+      `    public bool __has(string __k) => __k switch { ${f.map((x, i) => `${this.str(x.js)} => ${has(x, i)}, `).join("")}_ => false };`,
+      `    public object __get(string __k) => __k switch { ${f.map((x) => `${this.str(x.js)} => this.${Transpiler.backing(x.js)}, `).join("")}_ => null };`,
+      `    public void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}} }`,
+      `    public IEnumerable<string> __keys() { ${f.map((x, i) => (has(x, i) === "true" ? `yield return ${this.str(x.js)}; ` : `if (${has(x, i)}) yield return ${this.str(x.js)}; `)).join("")}yield break; }`,
       `    public IJsObject __copy() => (IJsObject)MemberwiseClone();`,
       `    public ${d.name} copy() => (${d.name})MemberwiseClone();`,
       "}",
@@ -660,7 +723,7 @@ export class Transpiler {
   /** Whether field `x` (index `i`) of a shape object `o` is present, read off its backing field. */
   private presentOn(o: string, x: DataField, i: number): string {
     if (x.nullable) return `(${o}.__p & ${(1n << BigInt(i)).toString()}UL) != 0`;
-    return VALUE_TYPES.has(x.cs) ? "true" : `${o}._${x.js} != null`;
+    return VALUE_TYPES.has(x.cs) ? "true" : `${o}.${Transpiler.backing(x.js)} != null`;
   }
 
   /**
@@ -680,7 +743,7 @@ export class Transpiler {
         const lines = src.flatMap((x, i) => {
           const y = dst.get(x.js);
           if (!y) return [];
-          return [`        if (${this.presentOn("a", x, i)}) b.${Transpiler.escape(x.js)} = ${this.coerce(`a._${x.js}`, x.cs, y.cs)};`];
+          return [`        if (${this.presentOn("a", x, i)}) b.${Transpiler.escape(x.js)} = ${this.coerce(`a.${Transpiler.backing(x.js)}`, x.cs, y.cs)};`];
         });
         methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        var b = new ${to}();\n${lines.join("\n")}\n        return b;\n    }`);
       }
@@ -703,7 +766,9 @@ export class Transpiler {
       }
       out.push(this.member(null, () => {
         const sym = this.checker.getSymbolAtLocation(d.name)!;
-        const c = this.cs(this.checker.getTypeOfSymbol(sym), d);
+        const rec = this.recordLiteral(d.initializer);
+        if (rec) this.localCs.set(sym, rec);
+        const c = rec ?? this.cs(this.checker.getTypeOfSymbol(sym), d);
         const value = init ? this.exprTo(init, c) : VALUE_TYPES.has(c) ? `default(${c})` : "null";
         return `    public static ${c} ${Transpiler.escape(d.name.getText())} = ${value};`;
       }));
@@ -745,6 +810,23 @@ export class Transpiler {
     return fn.typeParameters?.length ? `<${fn.typeParameters.map((p) => p.name.text).join(", ")}>` : "";
   }
 
+  /** `where T : MeshBuilder` for a type parameter constrained to a class (`<M extends MeshCore>`). */
+  private constraints(fn: ts.SignatureDeclaration): string {
+    const out: string[] = [];
+    for (const p of fn.typeParameters ?? []) {
+      if (!p.constraint) continue;
+      let c: string;
+      try {
+        c = this.cs(this.checker.getTypeFromTypeNode(p.constraint), p);
+      } catch {
+        continue;
+      }
+      const isClass = [...this.classNames.values()].includes(c) || c === "MeshBuilder" || this.isDataClassName(c);
+      if (isClass) out.push(` where ${p.name.text} : ${c}`);
+    }
+    return out.join("");
+  }
+
   /**
    * The parameter list, and the statements the body starts with: a destructured
    * parameter's bindings, a default that is no compile-time constant.
@@ -756,7 +838,21 @@ export class Transpiler {
     let optionalSeen = false;
     for (const p of fn.parameters) {
       if (p.dotDotDotToken) {
-        this.fail(p, "rest parameter");
+        // ...rest: C# params, wrapped as the JsArray the body expects
+        if (!ts.isIdentifier(p.name)) {
+          this.fail(p, "destructured rest parameter");
+          continue;
+        }
+        const rc = this.cs(this.checker.getTypeAtLocation(p), p);
+        const re = rc.match(/^JsArray<(.*)>$/)?.[1];
+        if (!re) {
+          this.fail(p, `rest parameter of ${rc}`);
+          continue;
+        }
+        const name = this.declName(p.name);
+        names.push(`${name}__rest`);
+        list.push(`params ${re}[] ${name}__rest`);
+        prologue.push(`${rc} ${name} = JsArray<${re}>.Of(${name}__rest);`);
         continue;
       }
       const t = this.checker.getTypeAtLocation(p);
@@ -804,14 +900,31 @@ export class Transpiler {
   /** A function declaration, method or const arrow function as a C# method or local function. */
   private emitFunctionLike(fn: ts.SignatureDeclaration & { body?: ts.ConciseBody }, name: string, prefix: string): string {
     const ret = this.returnCs(fn);
-    const { list, prologue } = this.params(fn);
-    const head = `${prefix}${ret} ${name}${this.typeParams(fn)}(${list})`;
-    if (!fn.body) return `${head};`;
-    const body = this.functionBody(fn.body, ret, prologue, "    ".repeat(prefix ? 2 : 1));
-    return `${head}\n${body}`;
+    // a local function inside a unit lambda returns what it declares, not JsVoid
+    const savedUnit = this.ctx.voidAsUnit;
+    this.ctx.voidAsUnit = false;
+    try {
+      const { list, prologue } = this.params(fn);
+      const head = `${prefix}${ret} ${name}${this.typeParams(fn)}(${list})${this.constraints(fn)}`;
+      if (!fn.body) return `${head};`;
+      const body = this.functionBody(fn.body, ret, prologue, "    ".repeat(prefix ? 2 : 1));
+      return `${head}\n${body}`;
+    } finally {
+      this.ctx.voidAsUnit = savedUnit;
+    }
   }
 
   private functionBody(body: ts.ConciseBody, ret: string, prologue: string[], indent: string): string {
+    const savedBreak = this.ctx.breakLabel;
+    this.ctx.breakLabel = null;
+    try {
+      return this.functionBodyInner(body, ret, prologue, indent);
+    } finally {
+      this.ctx.breakLabel = savedBreak;
+    }
+  }
+
+  private functionBodyInner(body: ts.ConciseBody, ret: string, prologue: string[], indent: string): string {
     const inner = indent + "    ";
     const lines = prologue.map((p) => inner + p);
     if (ts.isBlock(body)) {
@@ -822,18 +935,62 @@ export class Transpiler {
       lines.push(`${inner}return ${this.exprTo(body, ret)};`);
     }
     if (this.ctx.voidAsUnit && ts.isBlock(body)) lines.push(`${inner}return JsVoid.I;`);
+    else if (ret !== "void" && ts.isBlock(body)) {
+      // TypeScript proved every path returns (an exhaustive switch); C# cannot see that
+      const last = body.statements[body.statements.length - 1];
+      if (!last || !(ts.isReturnStatement(last) || ts.isThrowStatement(last))) lines.push(`${inner}throw new JsError("no value returned");`);
+    }
     return `${indent}{\n${lines.join("\n")}\n${indent}}`;
   }
 
   /** A lambda (an arrow function or function expression used as a value). */
-  private lambda(fn: ts.ArrowFunction | ts.FunctionExpression, unit = false): Out {
+  /** A delegate type's parameter types and return type (void for an Action), or null. */
+  private delegateShape(cs: string): { params: string[]; ret: string } | null {
+    const m = cs.match(/^global::System\.(Func|Action)(?:<(.*)>)?$/);
+    if (!m) return null;
+    const args = m[2] ? this.splitAll(m[2]) : [];
+    const ret = m[1] === "Func" ? args.pop()! : "void";
+    return { params: args, ret };
+  }
+
+  /**
+   * A lambda. With `target` (the delegate it becomes), its parameters take the target's
+   * types - converted to the TS types inside, as `(m: this) => ...` called with a generic
+   * T needs - and parameters the target has beyond the lambda's are discarded: TypeScript
+   * lets `() => y` stand for `(x, z) => number`.
+   */
+  private lambda(fn: ts.ArrowFunction | ts.FunctionExpression, unit = false, target?: string): Out {
     const sig = this.signatureOf(fn);
     let ret = this.cs(sig.getReturnType(), fn);
+    const shape = target ? this.delegateShape(target) : null;
+    if (shape && shape.ret !== "void" && shape.ret !== "JsVoid" && ret !== "void") ret = shape.ret;
     const saved = this.ctx.voidAsUnit;
-    this.ctx.voidAsUnit = unit && ret === "void";
+    this.ctx.voidAsUnit = (unit || shape?.ret === "JsVoid") && ret === "void";
     try {
-      const { list, prologue } = this.params(fn);
-      const typed = list.replace(/ = [^,]+/g, "");
+      const { list, prologue, names } = this.params(fn);
+      let typed = list.replace(/ = [^,]+/g, "");
+      if (shape && !fn.parameters.some((p) => p.dotDotDotToken) && shape.params.length >= fn.parameters.length) {
+        const own = fn.parameters.map((p) => {
+          const c = this.cs(this.checker.getTypeAtLocation(p), p);
+          return c === "void" ? "object" : c;
+        });
+        const entries: string[] = [];
+        const conv: string[] = [];
+        shape.params.forEach((tt, i) => {
+          if (i >= own.length) {
+            entries.push(`${tt} __d${i}`);
+            return;
+          }
+          if (tt === own[i]) {
+            entries.push(`${own[i]} ${names[i]}`);
+            return;
+          }
+          entries.push(`${tt} ${names[i]}__in`);
+          conv.push(`${own[i]} ${names[i]} = ${this.coerce(`${names[i]}__in`, tt, own[i]!)};`);
+        });
+        typed = entries.join(", ");
+        prologue.unshift(...conv);
+      }
       if (!ts.isBlock(fn.body) && !prologue.length) {
         if (this.ctx.voidAsUnit) return { code: `(${typed}) => { ${this.exprStatement(fn.body)}; return JsVoid.I; }`, cs: this.lambdaCs(fn, "JsVoid") };
         const body = ret === "void" ? this.exprStatement(fn.body) : this.exprTo(fn.body, ret);
@@ -1001,11 +1158,17 @@ export class Transpiler {
   // --- emission: statements ------------------------------------------------------------
 
   private stmt(s: ts.Statement, ind: string): string {
+    // a `break` inside a loop is the loop's, even within a switch case
+    const loop = ts.isIterationStatement(s, false);
+    const saved = this.ctx.breakLabel;
+    if (loop) this.ctx.breakLabel = null;
     try {
       return this.stmtInner(s, ind);
     } catch (e) {
       this.errors.push(e instanceof TranspileError ? e.message : `${this.where(s)}: transpiler failure: ${(e as Error).message}`);
       return `${ind}/* error */`;
+    } finally {
+      if (loop) this.ctx.breakLabel = saved;
     }
   }
 
@@ -1047,7 +1210,7 @@ export class Transpiler {
       if (s.finallyBlock) out += `\n${ind}finally\n${this.block(s.finallyBlock, ind)}`;
       return out;
     }
-    if (ts.isBreakStatement(s) && !s.label) return `${ind}break;`;
+    if (ts.isBreakStatement(s) && !s.label) return this.ctx.breakLabel ? `${ind}goto ${this.ctx.breakLabel};` : `${ind}break;`;
     if (ts.isContinueStatement(s) && !s.label) return `${ind}continue;`;
     if (ts.isEmptyStatement(s)) return `${ind};`;
     if (ts.isFunctionDeclaration(s)) return this.indentBlock(this.emitFunctionDecl(s, false), ind);
@@ -1060,25 +1223,40 @@ export class Transpiler {
     return code.split("\n").map((l) => ind + l).join("\n");
   }
 
+  /**
+   * A switch as labels and gotos, which is what a JS switch is: the subject is compared
+   * with each case in order (=== , a default last), control jumps to the first match's
+   * label and runs on through the following cases until a `break` (`goto` the end) - so
+   * fall-through, a default in the middle and `continue` of an enclosing loop all behave
+   * as in JS. A C# switch would forbid the fall-through.
+   */
   private switchStmt(s: ts.SwitchStatement, ind: string): string {
-    // as an if-chain: C# has no fall-through into a non-empty case
-    const subject = this.temp();
+    const n = ++this.ctx.temps;
+    const subject = `__sw${n}`;
+    const end = `__sw${n}_end`;
     const st = this.expr(s.expression);
+    const clauses = s.caseBlock.clauses;
+    const label = (i: number) => `__sw${n}_c${i}`;
     const lines = [`${ind}{`, `${ind}    var ${subject} = ${st.code};`];
-    let pending: string[] = [];
-    let first = true;
-    for (const clause of s.caseBlock.clauses) {
-      if (ts.isCaseClause(clause)) pending.push(`JsRt.Eq(${subject}, ${this.expr(clause.expression).code})`);
-      else pending.push("true");
-      if (!clause.statements.length) continue;
-      const stmts = clause.statements.filter((x, i) => !(ts.isBreakStatement(x) && i === clause.statements.length - 1));
-      const last = clause.statements[clause.statements.length - 1]!;
-      if (!ts.isBreakStatement(last) && !ts.isReturnStatement(last) && !ts.isThrowStatement(last) && !ts.isContinueStatement(last)) this.fail(clause, "switch fall-through");
-      lines.push(`${ind}    ${first ? "" : "else "}if (${pending.join(" || ")})`, `${ind}    {`, ...stmts.map((x) => this.stmt(x, ind + "        ")), `${ind}    }`);
-      pending = [];
-      first = false;
+    clauses.forEach((c, i) => {
+      if (!ts.isCaseClause(c)) return;
+      const v = this.expr(c.expression);
+      const prim = (x: string) => ["double", "bool", "string"].includes(x);
+      const test = prim(st.cs) && st.cs === v.cs ? `${subject} == ${v.code}` : `JsRt.Eq(${subject}, ${v.code})`;
+      lines.push(`${ind}    if (${test}) goto ${label(i)};`);
+    });
+    const def = clauses.findIndex((c) => ts.isDefaultClause(c));
+    lines.push(`${ind}    goto ${def >= 0 ? label(def) : end};`);
+    const saved = this.ctx.breakLabel;
+    this.ctx.breakLabel = end;
+    try {
+      clauses.forEach((c, i) => {
+        lines.push(`${ind}    ${label(i)}:`, `${ind}    {`, ...c.statements.map((x) => this.stmt(x, ind + "        ")), `${ind}    }`);
+      });
+    } finally {
+      this.ctx.breakLabel = saved;
     }
-    lines.push(`${ind}}`);
+    lines.push(`${ind}    ${end}: ;`, `${ind}}`);
     return lines.join("\n");
   }
 
@@ -1125,7 +1303,9 @@ export class Transpiler {
         this.localCs.set(sym, asserted.cs);
         return `${ind}${asserted.cs} ${this.declName(d.name)} = ${asserted.code};`;
       }
-      const c = this.cs(this.checker.getTypeOfSymbol(sym), d);
+      const rec = this.recordLiteral(d.initializer);
+      if (rec) this.localCs.set(sym, rec);
+      const c = rec ?? this.cs(this.checker.getTypeOfSymbol(sym), d);
       const name = this.declName(d.name);
       if (!d.initializer) return `${ind}${c} ${name} = ${VALUE_TYPES.has(c) ? `default(${c})` : "default"};`;
       return `${ind}${c} ${name} = ${this.exprTo(d.initializer, c)};`;
@@ -1225,6 +1405,8 @@ export class Transpiler {
   }
 
   private forOf(s: ts.ForOfStatement, ind: string): string {
+    const entries = this.entriesLoop(s, ind);
+    if (entries !== null) return entries;
     const lit = this.skipParensKeepAs(s.expression);
     let src = this.expr(s.expression);
     if (ts.isArrayLiteralExpression(lit) && !lit.elements.some(ts.isSpreadElement) && src.cs.startsWith("JsArray<")) {
@@ -1247,6 +1429,44 @@ export class Transpiler {
     const t = this.temp();
     const body = ts.isBlock(s.statement) ? s.statement.statements : [s.statement];
     return `${ind}foreach (${elem} ${t} in ${src.code})\n${ind}{\n${this.destructure(binding, t, elem).map((x) => `${ind}    ${x}`).join("\n")}\n${body.map((x) => this.stmt(x, ind + "    ")).join("\n")}\n${ind}}`;
+  }
+
+  /**
+   * `for (const [i, x] of a.entries())`: an index loop over `a`, the length read each step
+   * (an array iterator is live), `i` the index and `x` the element - no pair per step.
+   */
+  private entriesLoop(s: ts.ForOfStatement, ind: string): string | null {
+    const call = this.skipParensKeepAs(s.expression);
+    if (!ts.isCallExpression(call) || call.arguments.length || !ts.isPropertyAccessExpression(call.expression) || call.expression.name.text !== "entries") return null;
+    const decl = s.initializer;
+    if (!ts.isVariableDeclarationList(decl)) return null;
+    const pattern = decl.declarations[0]!.name;
+    if (!ts.isArrayBindingPattern(pattern) || pattern.elements.length > 2 || pattern.elements.some((e) => ts.isBindingElement(e) && (e.dotDotDotToken || e.initializer))) return null;
+    const arr = this.expr(call.expression.expression);
+    if (!arr.cs.startsWith("JsArray<")) return null;
+    const elem = arr.cs.slice(8, -1);
+    const a = this.temp();
+    const k = this.temp();
+    const head: string[] = [];
+    const [iEl, xEl] = pattern.elements;
+    if (iEl && ts.isBindingElement(iEl) && ts.isIdentifier(iEl.name)) head.push(`double ${this.declName(iEl.name)} = ${k};`);
+    if (xEl && ts.isBindingElement(xEl)) {
+      if (ts.isIdentifier(xEl.name)) {
+        const c = this.cs(this.checker.getTypeAtLocation(xEl), xEl);
+        head.push(`${c} ${this.declName(xEl.name)} = ${this.coerce(`${a}[${k}]`, elem, c)};`);
+      } else {
+        const t = this.temp();
+        head.push(`var ${t} = ${a}[${k}];`, ...this.destructure(xEl.name, t, elem));
+      }
+    }
+    const body = ts.isBlock(s.statement) ? s.statement.statements : [s.statement];
+    const saved = this.ctx.breakLabel;
+    this.ctx.breakLabel = null;
+    try {
+      return [`${ind}{`, `${ind}    var ${a} = ${arr.code};`, `${ind}    for (int ${k} = 0; ${k} < ${a}.Count; ${k}++)`, `${ind}    {`, ...head.map((h) => `${ind}        ${h}`), ...body.map((x) => this.stmt(x, ind + "        ")), `${ind}    }`, `${ind}}`].join("\n");
+    } finally {
+      this.ctx.breakLabel = saved;
+    }
   }
 
   /** What iterating a C# value yields. */
@@ -1322,7 +1542,7 @@ export class Transpiler {
       return this.coerce(out.code, out.cs, to);
     }
     if (ts.isArrowFunction(x) || ts.isFunctionExpression(x)) {
-      const out = this.lambda(x, /Func<.*JsVoid>$/.test(to) || to === "global::System.Func<JsVoid>");
+      const out = this.lambda(x, /Func<.*JsVoid>$/.test(to) || to === "global::System.Func<JsVoid>", this.delegateShape(to) ? to : undefined);
       return out.code;
     }
     if (to === "bool" || to === "bool?") {
@@ -1355,7 +1575,7 @@ export class Transpiler {
   /** An expression with its C# type converted to the C# mapping of its TS type. */
   expr(e: ts.Expression, lvalue = false): Out {
     const raw = this.exprRaw(e, lvalue);
-    if (lvalue || raw.cs === "null") return raw;
+    if (lvalue || raw.cs === "null" || raw.cs === "module") return raw;
     if (ts.isObjectLiteralExpression(e) || ts.isArrayLiteralExpression(e) || ts.isArrowFunction(e) || ts.isFunctionExpression(e)) return raw;
     // an assignment's value is the target's: converting it would store one object and hand on a copy
     if (ts.isBinaryExpression(e) && e.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && e.operatorToken.kind <= ts.SyntaxKind.LastAssignment) return raw;
@@ -1474,6 +1694,8 @@ export class Transpiler {
     if (!decl) return this.fail(e, "identifier without a declaration");
     // a class used as a value: its name
     if (ts.isClassDeclaration(decl)) return { code: this.className(decl), cs: "object" };
+    // import * as kit from "./kit.ts": the module's static class
+    if (ts.isSourceFile(decl)) return { code: this.moduleClass(decl.fileName), cs: "module" };
     const top = this.topLevel(decl);
     const declaredCs = () => this.cs(this.checker.getTypeOfSymbol(sym), e);
     if ((top as ts.Node | null) === decl || (top && ts.isVariableStatement(top) && decl.parent?.parent === top)) {
@@ -1481,7 +1703,7 @@ export class Transpiler {
       const mod = this.moduleClass(decl.getSourceFile().fileName);
       const init = ts.isVariableDeclaration(decl) && decl.initializer ? this.skipParens(decl.initializer) : null;
       const isMethod = ts.isFunctionDeclaration(decl) || (init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init)));
-      return { code: `${mod}.${Transpiler.escape(sym.name)}`, cs: isMethod ? this.methodGroupCs(decl, init) : declaredCs() };
+      return { code: `${mod}.${Transpiler.escape(sym.name)}`, cs: isMethod ? this.methodGroupCs(decl, init) : this.localCs.get(sym) ?? declaredCs() };
     }
     const local = this.localNames.get(sym) ?? this.localName(sym, sym.name);
     const init = ts.isVariableDeclaration(decl) && decl.initializer ? this.skipParens(decl.initializer) : null;
@@ -1508,7 +1730,7 @@ export class Transpiler {
     let ok = true;
     const visit = (node: ts.Node): void => {
       if (!ok) return;
-      if (ts.isIdentifier(node) && node !== d.name && this.checker.getSymbolAtLocation(node) === sym) {
+      if (ts.isIdentifier(node) && node !== d.name && this.symbolOf(node) === sym) {
         const p = node.parent;
         const read = ts.isElementAccessExpression(p) && p.expression === node && ts.isNumericLiteral(p.argumentExpression) && Number(p.argumentExpression.text) < n && Number.isInteger(Number(p.argumentExpression.text));
         const written = read && ((ts.isBinaryExpression(p.parent) && p.parent.left === p && p.parent.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && p.parent.operatorToken.kind <= ts.SyntaxKind.LastAssignment) || ts.isPrefixUnaryExpression(p.parent) || ts.isPostfixUnaryExpression(p.parent));
@@ -1563,11 +1785,13 @@ export class Transpiler {
     if (name === "length" && obj.cs === "string") return { code: `((double)${obj.code}${q}Length)`, cs: "double" };
     if (name === "size" && (obj.cs.startsWith("JsMap<") || obj.cs.startsWith("JsSet<"))) return { code: `${obj.code}${q}size`, cs: "double" };
     if (obj.cs.startsWith("JsRecord<")) return { code: `${obj.code}${q.replace(".", "")}["${name}"]`.replace("?[", "?["), cs: obj.cs.slice(9, -1) };
+    // C#'s ?. lifts a number to double?
+    const lift = (c: string) => (e.questionDotToken && VALUE_TYPES.has(c) ? `${c}?` : c);
     // a shape class's field: its C# type as declared there (a merged union's is nullable)
-    if (this.isDataClassName(obj.cs)) return { code: `${obj.code}${q}${Transpiler.escape(name)}`, cs: this.fieldCs(obj.cs, name) };
+    if (this.isDataClassName(obj.cs)) return { code: `${obj.code}${q}${Transpiler.escape(name)}`, cs: lift(this.fieldCs(obj.cs, name)) };
     const sym = this.checker.getSymbolAtLocation(e.name);
     const memberCs = sym ? this.declaredMemberCs(sym, e) : "object";
-    return { code: `${obj.code}${q}${Transpiler.escape(name)}`, cs: memberCs };
+    return { code: `${obj.code}${q}${Transpiler.escape(name)}`, cs: lift(memberCs) };
   }
 
   private elementAccess(e: ts.ElementAccessExpression): Out {
@@ -1583,7 +1807,7 @@ export class Transpiler {
     const q = e.questionDotToken ? "?" : "";
     const arg = this.skipParensKeepAs(e.argumentExpression);
     const m = obj.cs.match(/^JsArray<(.*)>$/);
-    if (m) return { code: `${obj.code}${q}[${this.exprTo(arg, "double")}]`, cs: m[1]! };
+    if (m) return { code: `${obj.code}${q}[${this.exprTo(arg, "double")}]`, cs: q && VALUE_TYPES.has(m[1]!) ? `${m[1]}?` : m[1]! };
     const r = obj.cs.match(/^JsRecord<(.*)>$/);
     if (r) return { code: `${obj.code}${q}[${this.exprTo(arg, "string")}]`, cs: r[1]! };
     if (obj.cs === "string") return { code: `JsRt.Str(${obj.code}[(int)(${this.exprTo(arg, "double")})])`, cs: "string" };
@@ -1596,13 +1820,57 @@ export class Transpiler {
 
   // --- calls ---------------------------------------------------------------------------
 
+  /** Whether a callee is a function value (a delegate in C#), not a declared function or method. */
+  private isDelegateCallee(callee: ts.Expression): boolean {
+    const id = ts.isPropertyAccessExpression(callee) ? callee.name : ts.isIdentifier(callee) ? callee : null;
+    if (!id) return true;
+    const sym = this.resolve(this.checker.getSymbolAtLocation(id));
+    const d = sym?.valueDeclaration;
+    if (!d) return false;
+    if (ts.isFunctionDeclaration(d) || ts.isMethodDeclaration(d) || ts.isMethodSignature(d) || ts.isClassDeclaration(d)) return false;
+    if (ts.isVariableDeclaration(d) && d.initializer && d.parent.flags & ts.NodeFlags.Const) {
+      const init = this.skipParens(d.initializer);
+      if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) return false; // a local function / static method
+    }
+    return true;
+  }
+
   private args(call: ts.CallExpression | ts.NewExpression): string[] {
+    const out = this.argsGiven(call);
+    // a delegate has no optional parameters: the ones TypeScript let the call leave out are passed as default
+    if (ts.isCallExpression(call) && this.isDelegateCallee(call.expression)) {
+      const params = this.checker.getResolvedSignature(call)?.getParameters() ?? [];
+      for (let i = out.length; i < params.length; i++) {
+        const d = params[i]!.valueDeclaration;
+        if (d && ts.isParameter(d) && d.dotDotDotToken) break;
+        out.push("default");
+      }
+    }
+    return out;
+  }
+
+  private argsGiven(call: ts.CallExpression | ts.NewExpression): string[] {
     const sig = this.checker.getResolvedSignature(call);
     const decl = sig?.getDeclaration();
     const params = sig?.getParameters() ?? [];
     const out: string[] = [];
     let slot = 0;
-    for (const a of call.arguments ?? []) {
+    const args = call.arguments ?? [];
+    const restAt = params.findIndex((p) => {
+      const d = p.valueDeclaration;
+      return !!d && ts.isParameter(d) && !!d.dotDotDotToken;
+    });
+    for (let ai = 0; ai < args.length; ai++) {
+      const a = args[ai]!;
+      if (restAt >= 0 && slot >= restAt) {
+        // the arguments the rest parameter takes: one by one, or as one array when any is spread
+        const rc = this.cs(this.checker.getTypeOfSymbol(params[restAt]!), a);
+        const re = rc.match(/^JsArray<(.*)>$/)?.[1] ?? "object";
+        const rest = args.slice(ai);
+        if (rest.some(ts.isSpreadElement)) out.push(`${this.collect(rest, re)}.ToArray()`);
+        else out.push(...rest.map((x) => this.exprTo(x, re)));
+        break;
+      }
       if (ts.isSpreadElement(a)) {
         const t = this.checker.getTypeAtLocation(a.expression);
         if (!this.checker.isTupleType(t)) {
@@ -1632,14 +1900,37 @@ export class Transpiler {
     {
       const p = params[i];
       if (!p) return this.expr(a).code;
-      let pc = this.cs(this.checker.getTypeOfSymbol(p), a);
-      if (pc === "void") pc = "object";
       const pdecl = p.valueDeclaration;
+      // a transpiled, non-generic callee: its C# parameter type as declared (a `this` type is its class), not as instantiated here
+      const declared = pdecl && ts.isParameter(pdecl) && this.inGenerator(pdecl) && decl && !(decl as ts.SignatureDeclaration).typeParameters?.length;
+      let pc = this.cs(declared ? this.checker.getTypeAtLocation(pdecl) : this.checker.getTypeOfSymbol(p), a);
+      if (pc === "void") pc = "object";
       if (pdecl && ts.isParameter(pdecl) && (pdecl.questionToken || pdecl.initializer) && VALUE_TYPES.has(pc)) pc = `${pc}?`;
       const x = this.skipParensKeepAs(a);
       if ((ts.isArrowFunction(x) || ts.isFunctionExpression(x)) && decl && this.returnsTypeParam(decl, i)) return this.lambda(x, true).code;
+      if (decl && this.returnsTypeParam(decl, i)) {
+        const f = this.expr(a);
+        const act = f.cs.match(/^global::System\.Action(?:<(.*)>)?$/);
+        if (act) {
+          const ps = act[1] ? this.splitAll(act[1]) : [];
+          const names = ps.map((_, k) => `__u${k}`);
+          const call = /^[\w.@]+$/.test(f.code) ? `${f.code}(${names.join(", ")})` : `(${f.code}).Invoke(${names.join(", ")})`;
+          return `((${ps.map((t, k) => `${t} ${names[k]}`).join(", ")}) => { ${call}; return JsVoid.I; })`;
+        }
+        return f.code;
+      }
       return this.exprTo(a, pc);
     }
+  }
+
+  /** Arguments with spreads among them, gathered in order into one JsArray<elem>. */
+  private collect(args: readonly ts.Expression[], elem: string): string {
+    const parts = args.map((x) => {
+      if (!ts.isSpreadElement(x)) return `.add(${this.exprTo(x, elem)})`;
+      const src = this.expr(x.expression);
+      return `.addAll(${this.coerce(src.code, src.cs, `JsArray<${elem}>`)})`;
+    });
+    return `new JsArray<${elem}>()${parts.join("")}`;
   }
 
   /** Whether the declared parameter `i` is a function returning a type parameter of `decl` (a generic T a void lambda fills). */
@@ -1737,9 +2028,12 @@ export class Transpiler {
     if (ns === "Math") {
       const f = MATH[name];
       if (!f) return this.fail(e, `Math.${name}`);
-      if (a.length === 1 && ts.isSpreadElement(a[0]!)) {
-        if (name !== "min" && name !== "max") return this.fail(e, `Math.${name}(...spread)`);
-        return { code: `${f}(${this.exprTo(a[0].expression, "JsArray<double>")}.ToArray())`, cs: "double" };
+      if (a.some(ts.isSpreadElement)) {
+        // Math.max(x, ...ys): every argument in order, as one array
+        if (name !== "min" && name !== "max" && name !== "hypot") return this.fail(e, `Math.${name}(...spread)`);
+        const only = a.length === 1 ? (a[0] as ts.SpreadElement).expression : null;
+        const arr = only ? this.exprTo(only, "JsArray<double>") : this.collect(a, "double");
+        return { code: `${f}(${arr})`, cs: "double" };
       }
       return { code: `${f}(${a.map((x) => this.exprTo(x, "double")).join(", ")})`, cs: "double" };
     }
@@ -1803,7 +2097,8 @@ export class Transpiler {
     switch (name) {
       case "push": {
         if (a.length === 1 && ts.isSpreadElement(a[0]!)) return { code: `${self}pushAll(${this.exprTo(a[0].expression, obj.cs)})`, cs: "double" };
-        if (a.some(ts.isSpreadElement)) return this.fail(e, "push with spreads");
+        // every argument is evaluated before anything is pushed: gather them, then append
+        if (a.some(ts.isSpreadElement)) return { code: `${self}pushAll(${this.collect(a, elem)})`, cs: "double" };
         if (a.length <= 3) return { code: `${self}push(${a.map((x) => this.exprTo(x, elem)).join(", ")})`, cs: "double" };
         return { code: `${self}pushAll(new ${obj.cs}()${a.map((x) => `.add(${this.exprTo(x, elem)})`).join("")})`, cs: "double" };
       }
@@ -1851,6 +2146,9 @@ export class Transpiler {
       case "reverse": case "pop": case "shift": return { code: `${self}${name}()`, cs: name === "reverse" ? obj.cs : elem };
       case "fill": return { code: `${self}fill(${this.exprTo(a[0]!, elem)})`, cs: obj.cs };
       case "at": return { code: `${self}at(${this.exprTo(a[0]!, "double")})`, cs: elem };
+      // [index, element] pairs: numbers when the elements are, else boxed pairs
+      case "entries": return elem === "double" ? { code: `${self}numberEntries()`, cs: "JsArray<JsArray<double>>" } : { code: `${self}entries()`, cs: "JsArray<JsArray<object>>" };
+      case "keys": return { code: `${self}indexes()`, cs: "JsArray<double>" };
       default: return this.fail(e, `array method ${name}`);
     }
   }
@@ -1976,7 +2274,19 @@ export class Transpiler {
     }
     if (k === S.QuestionQuestionToken) {
       const c = this.tsCs(e);
+      const le = this.skipParensKeepAs(e.left);
+      const target = ts.isNonNullExpression(le) ? le.expression : le;
+      if (ts.isElementAccessExpression(target) && !target.questionDotToken) {
+        const arr = this.expr(target.expression);
+        if (arr.cs.startsWith("JsArray<")) {
+          // past the end (or a hole) reads as undefined, as in JS: then the right side
+          const elem = arr.cs.slice(8, -1);
+          return { code: this.coerce(`JsRt.ElemOr(${arr.code}, ${this.exprTo(target.argumentExpression, "double")}, () => ${this.exprTo(e.right, elem)})`, elem, c), cs: c };
+        }
+      }
       const left = this.exprRaw(e.left, false);
+      // a number TypeScript calls never nullish: the left side as it is
+      if (VALUE_TYPES.has(left.cs)) return { code: this.coerce(left.code, left.cs, c), cs: c };
       const nullable = VALUE_TYPES.has(c) ? `${c}?` : c;
       const l = left.cs === nullable || left.cs === "null" ? left.code : this.coerce(left.code, left.cs, nullable);
       return { code: `(${l} ?? ${this.exprTo(e.right, c)})`, cs: c };
@@ -2074,6 +2384,27 @@ export class Transpiler {
 
   // --- literals ------------------------------------------------------------------------
 
+  /**
+   * The record type an object literal is when it spreads a record (`{ ...KIT_PALETTE, dfBlue: ... }`
+   * with KIT_PALETTE a Record<string, MaterialSpec>): TypeScript types it by its named keys
+   * only, but it holds every key of the record too, so it is a record. Null otherwise.
+   */
+  private recordLiteral(e: ts.Expression | undefined): string | null {
+    const x = e && this.skipParensKeepAs(e);
+    if (!x || !ts.isObjectLiteralExpression(x)) return null;
+    for (const p of x.properties) {
+      if (!ts.isSpreadAssignment(p)) continue;
+      let c: string;
+      try {
+        c = this.tsCs(p.expression);
+      } catch {
+        continue;
+      }
+      if (c.startsWith("JsRecord<")) return c;
+    }
+    return null;
+  }
+
   /** The C# class an object literal builds: its contextual type's, else its own. */
   private literalClass(e: ts.ObjectLiteralExpression, want: string | null): string {
     if (want && want !== "object" && (this.isDataClassName(want) || want.startsWith("JsRecord<"))) return want;
@@ -2095,7 +2426,7 @@ export class Transpiler {
   }
 
   private objectLiteral(e: ts.ObjectLiteralExpression, want: string | null): Out {
-    const c = this.literalClass(e, want);
+    const c = this.recordLiteral(e) ?? this.literalClass(e, want);
     const record = c.match(/^JsRecord<(.*)>$/);
     const o = `__o${++this.ctx.temps}`;
     const assigns: string[] = [];

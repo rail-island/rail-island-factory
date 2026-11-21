@@ -21,6 +21,8 @@ pnpm cs:pilot                # the windsock and the pyramid tower: transpile, bu
 pnpm cs:pilot --truck        # the same with the American truck (parts, steered wheels, a rig, the LOD kit)
 pnpm cs:pilot --no-run       # transpile and write the C# project only
 pnpm cs:pilot --survey       # every design, transpiled only: what the supported subset does not cover yet
+pnpm cs:pilot --ids=a,b      # the full run (transpile, build, compare, time) for any designs
+pnpm cs:pilot --fixtures     # each supported construct (fixtures/constructs.ts) in Node and in C#, compared
 ```
 
 ## What it writes
@@ -36,7 +38,8 @@ pnpm cs:pilot --survey       # every design, transpiled only: what the supported
 | `export/cs/Program.cs`, `RailIsland.Models.csproj` | the dump and bench console |
 | `export/cs/transpile.json` | the designs, their esbuild bundle modules, the modules the transpiler reached, the syntax-kind inventory and the counts |
 | `export/cs/report.json` | every comparison and the timing |
-| `export/cs/survey.json` | the survey: unsupported constructs by kind and file, each with its location |
+| `export/cs/survey.json` | the survey: unsupported constructs by kind and file, each with its location, and `clean`: the designs nothing unsupported is reached from |
+| `export/cs-fixtures/` | the fixtures' C# project: the transpiled `fixtures/constructs.ts`, the runtime and a console printing each case's JSON |
 | `export/cs/bundles/<id>.js`, `export/cs/run/` | the JS bundles compared against, the jobs and the C# dumps |
 
 ## How it transpiles
@@ -78,6 +81,22 @@ pnpm cs:pilot --survey       # every design, transpiled only: what the supported
   such a value for null.
 - **A tuple spread into arguments** (`m.box(mat, ...side(s, a, b), y0, y1)`) keeps the tuple in an
   `out var` for the following positions (`JsRt.First`).
+- **`switch`** is labels and `goto`, as a JS switch is: the cases are compared in order (`===`, a
+  default last), control jumps to the first match and runs on until a `break`, which is `goto` the end - so
+  fall-through, a default between cases and a `continue` of an enclosing loop behave as in JS (a C# switch
+  forbids fall-through). A `break` inside a loop within a case stays the loop's.
+- **`for (const [i, x] of a.entries())`** is an index loop over `a` that reads its length each step (an
+  array iterator is live); elsewhere `entries()` gives pairs, numbers for a number array, else boxed.
+- **Rest parameters** are C# `params E[]`, wrapped as the `JsArray` the body uses; a call with spreads
+  among the rest arguments passes them gathered into one array.
+- **`Math.hypot`/`min`/`max` and `push` with spreads** gather every argument in order into one array
+  first - JS evaluates them all before pushing, so `b.push(...b, ...b)` reads `b` twice before it grows.
+- **A literal that spreads a record** (`{ ...KIT_PALETTE, dfBlue: ... }`) is a record, though TypeScript
+  types it by its named keys; the variable holding it is typed so too.
+- **A type made of one class's members** (`Pen = Pick<MeshBuilder, "quad" | "tri">`) is that class.
+- **A key that is no identifier** (`"bridge-timber"`) is a field with a sanitized name and a hash of the key.
+- **A read past an array's end** gives null for an array of objects, as JS gives undefined; for an array
+  of numbers, which cannot hold it, it throws - except `a[i] ?? b`, which reads it as JS does.
 - **Unsupported constructs** are errors naming file, line and kind; all are reported before it fails.
 
 ## Speed
@@ -112,6 +131,14 @@ generation or non-concurrent collection changed nothing beyond the noise.
 strict equality, a stable merge sort (`List.Sort` is not stable), regular expressions in ECMAScript mode
 and the structural conversion. `JsArray<T>` iterates live by index, as a JS `for...of` does;
 `JsRecord<T>` returns integer-like keys first, as JS objects do.
+
+## Fixtures
+
+`fixtures/constructs.ts` holds one function per supported construct and its edge cases (live iteration,
+fall-through, a default between cases, `continue` from a switch, a spread of an array into itself, rest
+arguments with spreads). `pnpm cs:pilot --fixtures` transpiles it into its own small project
+(`export/cs-fixtures/`), runs every function in Node and in C# and compares the JSON each returns. Add a case
+whenever the transpiler learns a construct; it checks the construct without a design that needs it.
 
 ## How it is proved
 

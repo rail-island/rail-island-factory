@@ -161,10 +161,14 @@ public sealed class JsArray<T> : IEnumerable<T>
         }
     }
 
+    /**
+     * A read outside the array: JS gives undefined. An array of objects returns null, which
+     * is what undefined is here; an array of numbers cannot hold it, so that read throws.
+     */
     private T Miss(double i)
     {
-        int k = JsRt.Index(i);
-        throw new JsError($"array index {k} out of range ({count})");
+        if (!typeof(T).IsValueType) return default!;
+        throw new JsError($"array index {JsRt.NumStr(i)} out of range ({count}) of a number array");
     }
 
     private void Reserve(int n)
@@ -298,6 +302,27 @@ public sealed class JsArray<T> : IEnumerable<T>
         return o;
     }
 
+    // callbacks that take no argument, or the array as a third: as JS passes (element, index, array)
+    public JsArray<U> map<U>(Func<U> f) => map<U>((T _) => f());
+    public JsArray<U> map<U>(Func<T, double, JsArray<T>, U> f) => map<U>((T x, double i) => f(x, i, this));
+    public JsArray<U> flatMap<U>(Func<T, double, JsArray<T>, JsArray<U>> f) => flatMap<U>((T x, double i) => f(x, i, this));
+    public JsArray<T> filter(Func<bool> f) => filter((T _) => f());
+    public JsArray<T> filter(Func<T, double, JsArray<T>, bool> f) => filter((T x, double i) => f(x, i, this));
+    public void forEach(Action f) => forEach((T _) => f());
+    public void forEach(Action<T, double, JsArray<T>> f) => forEach((T x, double i) => f(x, i, this));
+    public bool some(Func<T, double, JsArray<T>, bool> f) => some((T x, double i) => f(x, i, this));
+    public bool every(Func<T, double, JsArray<T>, bool> f) => every((T x, double i) => f(x, i, this));
+    public T find(Func<T, double, bool> f) { for (int i = 0; i < count; i++) if (f(this[i], i)) return this[i]; return default!; }
+    public double findIndex(Func<T, double, bool> f) { for (int i = 0; i < count; i++) if (f(this[i], i)) return i; return -1; }
+    public U reduce<U>(Func<U, T, double, JsArray<T>, U> f, U init) => reduce<U>((U acc, T x, double i) => f(acc, x, i, this), init);
+
+    /** Whether `i` is an index this array holds a value at (a JS read there is not undefined). */
+    public bool holds(double i)
+    {
+        int k = (int)i;
+        return k == i && (uint)k < (uint)count && this[k] is not null;
+    }
+
     public JsArray<U> flatMap<U>(Func<T, JsArray<U>> f)
     {
         var o = new JsArray<U>();
@@ -411,6 +436,30 @@ public sealed class JsArray<T> : IEnumerable<T>
     }
 
     public JsArray<T> copy() => slice();
+
+    /** entries() of a number array: [index, value] pairs. */
+    public JsArray<JsArray<double>> numberEntries()
+    {
+        var o = new JsArray<JsArray<double>>(count);
+        for (int i = 0; i < count; i++) o.add(JsArray<double>.Of(i, (double)(object)this[i]!));
+        return o;
+    }
+
+    /** entries(): [index, element] pairs, boxed. */
+    public JsArray<JsArray<object>> entries()
+    {
+        var o = new JsArray<JsArray<object>>(count);
+        for (int i = 0; i < count; i++) o.add(JsArray<object>.Of((double)i, this[i]!));
+        return o;
+    }
+
+    /** keys(): the indexes. */
+    public JsArray<double> indexes()
+    {
+        var o = new JsArray<double>(count);
+        for (int i = 0; i < count; i++) o.add(i);
+        return o;
+    }
 
     private static int Clamp(double v, int n)
     {
