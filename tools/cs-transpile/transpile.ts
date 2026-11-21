@@ -932,18 +932,21 @@ export class Transpiler {
       `public partial class ${d.name} : ${derived ? d.base : "IJsObject"}`,
       "{",
       `    internal ulong ${Array.from({ length: words }, (_, k) => `__p_${d.name}_${k}`).join(", ")};`,
+      // the keys a JS object of this type carries beyond its declared fields (an untyped literal's)
+      ...(derived ? [] : [`    public JsRecord<object> __extra;`]),
       ...f.map((x, i) => {
         const b = Transpiler.backing(x.js);
         return `    internal ${x.cs} ${b};\n    public ${x.cs} ${esc(x.js)} { get => ${b}; set { ${b} = value; ${word(i)} |= ${bit(i)}; } }`;
       }),
-      `    public ${mod} bool __has(string __k) => __k switch { ${f.map((x, i) => `${this.str(x.js)} => ${has(x, i)}, `).join("")}_ => ${fallback("__has(__k)", "false")} };`,
-      `    public ${mod} object __get(string __k) => __k switch { ${f.map((x) => `${this.str(x.js)} => this.${Transpiler.backing(x.js)}, `).join("")}_ => ${fallback("__get(__k)", "null")} };`,
-      `    public ${mod} void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}default: ${derived ? "base.__set(__k, __v); " : ""}break; } }`,
+      `    public ${mod} bool __has(string __k) => __k switch { ${f.map((x, i) => `${this.str(x.js)} => ${has(x, i)}, `).join("")}_ => ${fallback("__has(__k)", "__extra != null && __extra.has(__k)")} };`,
+      `    public ${mod} object __get(string __k) => __k switch { ${f.map((x) => `${this.str(x.js)} => this.${Transpiler.backing(x.js)}, `).join("")}_ => ${fallback("__get(__k)", "__extra?[__k]")} };`,
+      `    public ${mod} void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}default: ${derived ? "base.__set(__k, __v); " : "(__extra ??= new JsRecord<object>())[__k] = __v; "}break; } }`,
       `    public ${mod} bool __null(string __k) => __k switch { ${f.filter((x) => x.nullable).map((x) => `${this.str(x.js)} => true, `).join("")}_ => ${fallback("__null(__k)", "false")} };`,
-      `    public ${mod} IEnumerable<string> __keys() { ${derived ? "foreach (var __b in base.__keys()) yield return __b; " : ""}${f.map((x, i) => (has(x, i) === "true" ? `yield return ${this.str(x.js)}; ` : `if (${has(x, i)}) yield return ${this.str(x.js)}; `)).join("")}yield break; }`,
-      `    public ${mod} bool __delete(string __k) { switch (__k) { ${f.map((x, i) => `case ${this.str(x.js)}: this.${Transpiler.backing(x.js)} = default; ${word(i)} &= ~${bit(i)}; return true; `).join("")}} return ${fallback("__delete(__k)", "true")}; }`,
-      ...(derived ? [] : [`    public IJsObject __copy() => (IJsObject)MemberwiseClone();`]),
-      `    public ${derived ? "new " : ""}${d.name} copy() => (${d.name})MemberwiseClone();`,
+      `    public ${mod} IEnumerable<string> __keys() { ${derived ? "foreach (var __b in base.__keys()) yield return __b; " : ""}${f.map((x, i) => (has(x, i) === "true" ? `yield return ${this.str(x.js)}; ` : `if (${has(x, i)}) yield return ${this.str(x.js)}; `)).join("")}${derived ? "" : "if (__extra != null) foreach (var __x in __extra.keys()) yield return __x; "}yield break; }`,
+      `    public ${mod} bool __delete(string __k) { switch (__k) { ${f.map((x, i) => `case ${this.str(x.js)}: this.${Transpiler.backing(x.js)} = default; ${word(i)} &= ~${bit(i)}; return true; `).join("")}} return ${fallback("__delete(__k)", "__extra?.delete(__k) ?? true")}; }`,
+      ...(derived ? [] : [`    public IJsObject __copy() => copy();`]),
+      // a copy has its own extra keys, as a JS spread copies them
+      `    public ${derived ? "new " : ""}${d.name} copy() { var __c = (${d.name})MemberwiseClone(); if (__extra != null) __c.__extra = __extra.copy(); return __c; }`,
       "}",
     ];
     return lines.join("\n") + "\n";
@@ -975,9 +978,14 @@ export class Transpiler {
         const dst = new Map(this.dataClasses.get(to)!.fields.map((f) => [f.js, f]));
         const lines = src.flatMap((x, i) => {
           const y = dst.get(x.js);
-          if (!y) return [];
+          // a field the target does not declare: kept among its extra keys, as JS keeps it
+          if (!y) return [`        if (${this.presentOn("a", x, i, from)}) (b.__extra ??= new JsRecord<object>())[${this.str(x.js)}] = a.${Transpiler.backing(x.js)};`];
           return [`        if (${this.presentOn("a", x, i, from)}) b.${Transpiler.escape(x.js)} = ${this.coerce(`a.${Transpiler.backing(x.js)}`, x.cs, y.cs)};`];
         });
+        // the source's own extra keys: a target field among them is set, the rest stay extra
+        const srcNames = new Set(src.map((x) => x.js));
+        const fromExtra = [...dst.values()].filter((y) => !srcNames.has(y.js));
+        lines.push(`        if (a.__extra != null) foreach (var __k in a.__extra.keys()) ${fromExtra.length ? `switch (__k) { ${fromExtra.map((y) => `case ${this.str(y.js)}: b.${Transpiler.escape(y.js)} = JsRt.As<${y.cs}>(a.__extra[__k]); break; `).join("")}default: (b.__extra ??= new JsRecord<object>())[__k] = a.__extra[__k]; break; }` : `(b.__extra ??= new JsRecord<object>())[__k] = a.__extra[__k];`}`);
         // a merged union narrowed to a member (`it.k === "tier"`): one copy per object, and `===`
         // sees the copy as its source (a stack found by `q[0] === it`)
         if (this.mergedNames.has(from)) methods.push(`    public static ${to} ${from}__${to}(${from} a)\n    {\n        if (a == null) return null;\n        return JsRt.Narrowed(a, () =>\n        {\n            var b = new ${to}();\n${lines.map((l) => `    ${l}`).join("\n")}\n            return b;\n        });\n    }`);

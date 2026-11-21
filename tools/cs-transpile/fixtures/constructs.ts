@@ -480,6 +480,23 @@ export function copiedAbsent(): unknown {
   return [blockFaces({ side: it.side, end: it.end, top: it.top }), blockFaces({ side: "a", end: null })];
 }
 
+interface Boiler {
+  x0: number;
+  r: number;
+}
+
+function barrelPaint(spec: { boiler: Boiler }): string {
+  return (spec.boiler as { paint?: string }).paint ?? "paint";
+}
+
+/** A key an untyped literal carries beyond the declared type, read back through a cast. */
+export function extraKeys(): unknown {
+  const boiler = { x0: 1, r: 0.8, paint: "jacket" };
+  const spec = { boiler };
+  const copy = { ...spec.boiler, r: 1 };
+  return [barrelPaint(spec), barrelPaint({ boiler: { x0: 0, r: 1 } }), JSON.stringify(copy)];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
