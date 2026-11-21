@@ -88,7 +88,7 @@ public static class JsJson
             case string or double or bool or null: return v;
             case IJsObject o:
                 var obj = new Ordered();
-                foreach (var k in o.__keys()) obj.Add(new(k, Replace(k, o.__get(k), r)));
+                foreach (var k in o.__keys()) if (o.__get(k) != null || o.__null(k)) obj.Add(new(k, Replace(k, o.__get(k), r)));
                 return obj;
             case System.Collections.IEnumerable e when IsRecord(e):
                 var rec = new Ordered();
@@ -121,7 +121,8 @@ public static class JsJson
             case float f: sb.Append(double.IsFinite(f) ? JsRt.NumStr(f) : "null"); break;
             case int i: sb.Append(i.ToString(CultureInfo.InvariantCulture)); break;
             case IJsObject o:
-                WriteObject(sb, o.__keys().Select(k => new KeyValuePair<string, object?>(k, o.__get(k))), keepNulls: true);
+                // a present key holding undefined is left out, as JSON.stringify leaves it out
+                WriteObject(sb, o.__keys().Select(k => new KeyValuePair<string, object?>(k, o.__get(k))).Where(kv => kv.Value != null || o.__null(kv.Key)), keepNulls: true);
                 break;
             case Ordered ordered:
                 WriteObject(sb, ordered, keepNulls: true);

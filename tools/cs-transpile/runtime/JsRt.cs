@@ -38,6 +38,8 @@ public interface IJsObject
     object? __get(string key);
     void __set(string key, object? value);
     IEnumerable<string> __keys();
+    /** The field's TS type admits null: a null in it is a value (JSON writes it), not undefined. */
+    bool __null(string key);
     IJsObject __copy();
 }
 

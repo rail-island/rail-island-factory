@@ -879,7 +879,9 @@ export class Transpiler {
     const esc = (js: string) => Transpiler.escape(js);
     const bit = (i: number) => `${(1n << BigInt(i % 64)).toString()}UL`;
     const word = (i: number) => `__p_${d.name}_${Math.floor(i / 64)}`;
-    const has = (x: DataField, i: number) => (x.nullable ? `(${word(i)} & ${bit(i)}) != 0` : VALUE_TYPES.has(x.cs) ? "true" : `this.${Transpiler.backing(x.js)} != null`);
+    // a field that is always set reads as present; any other is present once written, even with
+    // undefined (`{ ...s, lowWell: undefined }` overrides s.lowWell): the presence bit
+    const has = (x: DataField, i: number) => (VALUE_TYPES.has(x.cs) && !x.nullable ? "true" : `(${word(i)} & ${bit(i)}) != 0`);
     const fallback = (call: string, none: string) => (derived ? `base.${call}` : none);
     const lines = [
       `/** From ${d.origin}. */`,
@@ -893,6 +895,7 @@ export class Transpiler {
       `    public ${mod} bool __has(string __k) => __k switch { ${f.map((x, i) => `${this.str(x.js)} => ${has(x, i)}, `).join("")}_ => ${fallback("__has(__k)", "false")} };`,
       `    public ${mod} object __get(string __k) => __k switch { ${f.map((x) => `${this.str(x.js)} => this.${Transpiler.backing(x.js)}, `).join("")}_ => ${fallback("__get(__k)", "null")} };`,
       `    public ${mod} void __set(string __k, object __v) { switch (__k) { ${f.map((x) => `case ${this.str(x.js)}: this.${esc(x.js)} = JsRt.As<${x.cs}>(__v); break; `).join("")}default: ${derived ? "base.__set(__k, __v); " : ""}break; } }`,
+      `    public ${mod} bool __null(string __k) => __k switch { ${f.filter((x) => x.nullable).map((x) => `${this.str(x.js)} => true, `).join("")}_ => ${fallback("__null(__k)", "false")} };`,
       `    public ${mod} IEnumerable<string> __keys() { ${derived ? "foreach (var __b in base.__keys()) yield return __b; " : ""}${f.map((x, i) => (has(x, i) === "true" ? `yield return ${this.str(x.js)}; ` : `if (${has(x, i)}) yield return ${this.str(x.js)}; `)).join("")}yield break; }`,
       `    public ${mod} bool __delete(string __k) { switch (__k) { ${f.map((x, i) => `case ${this.str(x.js)}: this.${Transpiler.backing(x.js)} = default; ${word(i)} &= ~${bit(i)}; return true; `).join("")}} return ${fallback("__delete(__k)", "true")}; }`,
       ...(derived ? [] : [`    public IJsObject __copy() => (IJsObject)MemberwiseClone();`]),
@@ -904,7 +907,7 @@ export class Transpiler {
 
   /** Whether field `x` (index `i`) of a shape object `o` is present, read off its backing field. */
   private presentOn(o: string, x: DataField, i: number, cls?: string): string {
-    if (x.nullable) {
+    if (x.nullable || !VALUE_TYPES.has(x.cs)) {
       // the presence bit lives in the class that declares the field
       const at = cls ? this.ownerOf(cls, x.js) : { cls: "", index: i };
       return `(${o}.__p_${at.cls}_${Math.floor(at.index / 64)} & ${(1n << BigInt(at.index % 64)).toString()}UL) != 0`;
@@ -1592,7 +1595,8 @@ export class Transpiler {
         const access = srcCs === "object" ? `JsRt.At(${src}, ${i}.0)` : `${src}[${i}]`;
         if (ts.isIdentifier(e.name)) {
           const c = this.cs(this.checker.getTypeAtLocation(e), e);
-          let value = this.coerce(access, elem, c);
+          // an element that may be missing (a shorter tuple of a union): read as undefined
+          let value = c === `${elem}?` && VALUE_TYPES.has(elem) && srcCs !== "object" ? `JsRt.ReadOrNull(${src}, ${i}.0)` : this.coerce(access, elem, c);
           if (e.initializer) value = `(${src}.length > ${i} ? ${value} : ${this.exprTo(e.initializer, c)})`;
           out.push(`${c} ${this.declName(e.name)} = ${value};`);
         } else {
@@ -1620,7 +1624,11 @@ export class Transpiler {
         const c = this.cs(this.checker.getTypeAtLocation(e), e);
         let value = this.coerce(field, fieldCs, c);
         // the default applies when the key is absent (undefined), not when it holds null
-        if (e.initializer) value = this.isDataClassName(srcCs) ? `(${src}.__has(${this.str(key)}) ? ${value} : ${this.exprTo(e.initializer, c)})` : `(${field} ?? ${this.exprTo(e.initializer, c)})`;
+        // (a field that cannot hold null: its null is undefined, whether present or not)
+        const nullField = this.dataClasses.get(srcCs)?.fields.find((x) => x.js === key)?.nullable;
+        if (e.initializer && VALUE_TYPES.has(fieldCs)) {
+          // a field that is always set: its default never applies
+        } else if (e.initializer) value = this.isDataClassName(srcCs) && nullField ? `(${src}.__has(${this.str(key)}) ? ${value} : ${this.exprTo(e.initializer, c)})` : `(${field} ?? ${this.exprTo(e.initializer, c)})`;
         out.push(`${c} ${this.declName(e.name)} = ${value};`);
       } else {
         const t = this.temp();
@@ -2977,7 +2985,18 @@ export class Transpiler {
       if (VALUE_TYPES.has(raw.cs)) return this.fail(e, `a null test of a ${raw.cs} (the TS type says it cannot be null)`);
       return { code: `(${raw.code} ${op} null)`, cs: "bool" };
     }
-    const l = this.expr(e.left), r = this.expr(e.right);
+    // `trucks[i] !== false` past the end: the read is undefined, unequal to the literal
+    const literal = (x: ts.Expression) => [ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NumericLiteral].includes(this.skipParens(x).kind);
+    const read = (x: ts.Expression, other: ts.Expression): Out => {
+      const ix = this.skipParens(x);
+      if (literal(other) && ts.isElementAccessExpression(ix) && !ix.questionDotToken) {
+        const arr = this.expr(ix.expression);
+        const elem = arr.cs.match(/^JsArray<(.*)>$/)?.[1];
+        if (elem && VALUE_TYPES.has(elem)) return { code: `JsRt.ReadOrNull(${arr.code}, ${this.exprTo(ix.argumentExpression, "double")})`, cs: `${elem}?` };
+      }
+      return this.expr(x);
+    };
+    const l = read(e.left, e.right), r = read(e.right, e.left);
     const prim = (c: string) => ["double", "bool", "string", "double?", "bool?"].includes(c);
     if (prim(l.cs) && prim(r.cs) && l.cs.replace("?", "") === r.cs.replace("?", "")) return { code: `(${l.code} ${op} ${r.code})`, cs: "bool" };
     return { code: `${neg ? "!" : ""}JsRt.Eq(${l.code}, ${r.code})`, cs: "bool" };

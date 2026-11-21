@@ -206,6 +206,34 @@ export function readPastTheEnd(): unknown {
   return out;
 }
 
+/** A union of tuples of different lengths destructured: the shorter one's missing element is undefined. */
+export function shortTuples(): unknown {
+  const rows: ReadonlyArray<readonly [number, number] | readonly [number, number, number]> = [[1, 2], [3, 4, 5]];
+  return rows.map(([a, b, c]) => (c === undefined ? a + b : a * b * c));
+}
+
+/** A comparison with a literal reads past the end as undefined. */
+export function comparePastTheEnd(): unknown {
+  const flags: readonly boolean[] = [true, false];
+  const xs = [1, 2];
+  return [0, 1, 2, 3].map((i) => [flags[i] !== false, xs[i] === 2]);
+}
+
+interface Series {
+  len: number;
+  well?: { d: number };
+  tag?: string;
+}
+
+/** A key set to undefined is present: a spread copies it over, JSON leaves it out, a default applies. */
+export function presentUndefined(): unknown {
+  const base: Series = { len: 1, well: { d: 2 }, tag: "a" };
+  const lead: Partial<Series> = { len: 3, well: undefined };
+  const merged = { ...base, ...lead } as Series;
+  const { well = { d: 9 }, tag = "z" } = merged;
+  return [merged.well === undefined, Object.keys(merged), JSON.stringify(merged), well.d, tag];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
