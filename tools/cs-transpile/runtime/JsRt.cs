@@ -417,8 +417,8 @@ public static class JsRt
     public static void Assign(IJsObject target, object? src)
     {
         if (src is null) return;
-        if (src is not IJsObject s) throw new JsError($"cannot spread a {src.GetType().Name} into {target.GetType().Name}");
-        foreach (var k in s.__keys().ToList()) target.__set(k, s.__get(k));
+        // a shape object, a record or a class instance: each key it has
+        foreach (var (k, v) in KeyValues(src).ToList()) target.__set(k, v);
     }
 
     /** The keys of a shape object (Object.keys), declaration order. */
@@ -545,6 +545,8 @@ public static class JsRt
         if (v is T t) return t;
         if (v is null) return default!;
         var target = typeof(T);
+        // a falsy value that is no T (false from `a && b`) read as a reference: undefined, falsy either way
+        if (!target.IsValueType && (v is false || (v is double d0 && (d0 == 0 || double.IsNaN(d0))) || (v is string s0 && s0.Length == 0))) return default!;
         if (v is IJsObject src && typeof(IJsObject).IsAssignableFrom(target))
         {
             var o = (IJsObject)Activator.CreateInstance(target)!;
@@ -568,6 +570,14 @@ public static class JsRt
             var o = (IJsObject)Activator.CreateInstance(target)!;
             foreach (var (k, x) in KeyValues(v)) o.__set(k, x);
             return (T)o;
+        }
+        if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof(JsSet<>) && v is System.Collections.IEnumerable members)
+        {
+            var set = Activator.CreateInstance(target)!;
+            var asT = typeof(JsRt).GetMethod(nameof(As))!.MakeGenericMethod(target.GetGenericArguments()[0]);
+            var addM = target.GetMethod("add")!;
+            foreach (var x in members) addM.Invoke(set, new[] { asT.Invoke(null, new[] { x }) });
+            return (T)set;
         }
         if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof(JsMap<,>) && v is System.Collections.IEnumerable pairs)
         {

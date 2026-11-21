@@ -700,6 +700,16 @@ export class Transpiler {
       this.conversions++;
       return `(${code}).mapValues<${tr[1]}>((${fr[1]} __v) => ${this.coerce("__v", fr[1]!, tr[1]!)})`;
     }
+    // a class instance where a shape of its fields is expected ({ m } of a Tram): its fields read out
+    if (this.isClassName(from) && this.isDataClassName(to)) {
+      this.conversions++;
+      return `JsRt.As<${to}>(${code})`;
+    }
+    // a Map or Set of one element type read as one of a related type: converted at run time (a copy)
+    if (/^Js(Map|Set)</.test(from) && /^Js(Map|Set)</.test(to)) {
+      this.conversions++;
+      return `JsRt.As<${to}>(${code})`;
+    }
     // a literal with named keys used as a record (a palette), and back
     const toRec = to.match(/^JsRecord<(.*)>$/);
     if (toRec && this.isDataClassName(from)) {
@@ -1497,7 +1507,7 @@ export class Transpiler {
         this.localCs.set(this.keyOf(sym), asserted.cs);
         return `${ind}${asserted.cs} ${this.declName(d.name)} = ${asserted.code};`;
       }
-      const rec = this.recordLiteral(d.initializer);
+      const rec = this.recordLiteral(d.initializer) ?? this.classView(d.initializer);
       if (rec) this.localCs.set(this.keyOf(sym), rec);
       const c = rec ?? this.cs(this.checker.getTypeOfSymbol(sym), d);
       const name = this.declName(d.name);
@@ -1785,7 +1795,16 @@ export class Transpiler {
   expr(e: ts.Expression, lvalue = false): Out {
     const raw = this.exprRaw(e, lvalue);
     if (lvalue || raw.cs === "null" || raw.cs === "module") return raw;
-    if (ts.isObjectLiteralExpression(e) || ts.isArrayLiteralExpression(e) || ts.isArrowFunction(e) || ts.isFunctionExpression(e)) return raw;
+    // a local kept wider than its TS type (`const a = x!` over a value that is really null): not narrowed
+    // back here - each use converts it to what it needs, and an untyped slot keeps the null
+    if (ts.isIdentifier(e)) {
+      const sym = this.resolve(this.symbolOf(e));
+      if (sym && this.localCs.has(this.keyOf(sym))) return raw;
+    }
+    // a class instance viewed by its fields (`this as { m }`) stays the class instance
+    if (ts.isAsExpression(e) && this.classView(e)) return raw;
+    // literals, functions and `new` already have the type they are built with (new Map() its declared one)
+    if (ts.isObjectLiteralExpression(e) || ts.isArrayLiteralExpression(e) || ts.isArrowFunction(e) || ts.isFunctionExpression(e) || ts.isNewExpression(e)) return raw;
     // an assignment's value is the target's: converting it would store one object and hand on a copy
     if (ts.isBinaryExpression(e) && e.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && e.operatorToken.kind <= ts.SyntaxKind.LastAssignment) return raw;
     const t = this.checker.getTypeAtLocation(e);
@@ -1831,6 +1850,13 @@ export class Transpiler {
       while (ts.isParenthesizedExpression(lit) || ts.isAsExpression(lit)) lit = lit.expression;
       if (ts.isObjectLiteralExpression(lit) && this.isClassName(to)) return this.duckLiteral(lit, to);
       const inner = this.expr(e.expression);
+      // `this as { m: MeshBuilder }`: a view of a class instance by fields it has, which the code may
+      // write through (a builder swapped for a scratch one) - the same object, not a copy
+      if (this.isClassName(inner.cs) && this.isDataClassName(to)) {
+        const fields = this.dataClasses.get(to)!.fields;
+        const own = this.checker.getApparentType(this.checker.getTypeAtLocation(e.expression));
+        if (fields.every((f) => own.getProperty(f.js))) return inner;
+      }
       return { code: this.coerce(inner.code, inner.cs, to), cs: to };
     }
     if (ts.isSatisfiesExpression(e)) return this.exprRaw(e.expression, lvalue);
@@ -2176,9 +2202,11 @@ export class Transpiler {
       // an argument that may be undefined, to a parameter with a constant default: JS then takes the default
       if (pdecl && ts.isParameter(pdecl) && pdecl.initializer && this.inGenerator(pdecl) && !this.isDelegateCallee((a.parent as ts.CallExpression).expression ?? a)) {
         const own = this.cs(this.checker.getTypeAtLocation(pdecl), a);
-        const constant = VALUE_TYPES.has(own) ? this.constantDefault(pdecl.initializer, own) : null;
+        const constant = this.constantDefault(pdecl.initializer, own);
         const at = this.tsCs(a);
-        if (constant !== null && at === `${own}?`) return `(${this.exprTo(a, at)} ?? ${constant})`;
+        const argType = this.checker.getTypeAtLocation(a);
+        const mayBeUndefined = argType.isUnion() && argType.types.some((x) => x.flags & ts.TypeFlags.Undefined);
+        if (constant !== null && constant !== "null" && (at === `${own}?` || (!VALUE_TYPES.has(own) && mayBeUndefined))) return `(${this.exprTo(a, at)} ?? ${constant})`;
       }
       const declared = pdecl && ts.isParameter(pdecl) && this.inGenerator(pdecl) && decl && !(decl as ts.SignatureDeclaration).typeParameters?.length;
       let pc = this.cs(declared ? this.checker.getTypeAtLocation(pdecl) : this.checker.getTypeOfSymbol(p), a);
@@ -2786,6 +2814,10 @@ export class Transpiler {
       const c = this.tsCs(e);
       if (c === "bool") return { code: `(${this.cond(e.left)} ${k === S.AmpersandAmpersandToken ? "&&" : "||"} ${this.cond(e.right)})`, cs: "bool" };
       const f = k === S.AmpersandAmpersandToken ? "And" : "Or";
+      // a && b with `a` an object or undefined (never 0 or ""): b when a is there, else undefined
+      const lt = this.checker.getTypeAtLocation(e.left);
+      const objectLeft = (lt.isUnion() ? lt.types : [lt]).every((x) => this.isVoidLike(x) || this.kindOf(x) === "object");
+      if (f === "And" && objectLeft && this.tsCs(e.left) !== c) return { code: `(${this.cond(e.left)} ? ${this.exprTo(e.right, c)} : default(${c}))`, cs: c };
       return { code: `JsRt.${f}<${c}>(${this.exprTo(e.left, c)}, () => ${this.exprTo(e.right, c)})`, cs: c };
     }
     if (k === S.QuestionQuestionToken) {
@@ -2934,6 +2966,23 @@ export class Transpiler {
   }
 
   // --- literals ------------------------------------------------------------------------
+
+  /** The class of `x as { m: MeshBuilder }` when x is a class instance having those fields (a view to write through), else null. */
+  private classView(e: ts.Expression | undefined): string | null {
+    const x = e && this.skipParens(e);
+    if (!x || !ts.isAsExpression(x) || this.isConstAssertion(x)) return null;
+    let to: string;
+    let from: string;
+    try {
+      to = this.cs(this.checker.getTypeFromTypeNode(x.type), x);
+      from = this.tsCs(x.expression);
+    } catch {
+      return null;
+    }
+    if (!this.isClassName(from) || !this.isDataClassName(to)) return null;
+    const own = this.checker.getApparentType(this.checker.getTypeAtLocation(x.expression));
+    return this.dataClasses.get(to)!.fields.every((f) => own.getProperty(f.js)) ? from : null;
+  }
 
   /** Whether a C# type name is a transpiled class or the seam's MeshBuilder (not a shape class). */
   private isClassName(cs: string): boolean {
