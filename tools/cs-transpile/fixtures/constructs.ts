@@ -257,6 +257,13 @@ export function recordValueTypes(): unknown {
   return withSpecs({ glass: { color: "g", glass: true } });
 }
 
+/** find over numbers: no match is undefined. */
+export function findNumbers(): unknown {
+  const kinks = [0.27, 1, 2.92];
+  const snap = (y: number) => kinks.find((k) => Math.abs(k - y) < 0.04) ?? y;
+  return [snap(0.62), snap(0.99), kinks.find((k, i) => i > 5) === undefined, [0, 3].find((x) => x === 0)];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;

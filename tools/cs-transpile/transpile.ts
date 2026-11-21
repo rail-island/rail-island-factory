@@ -2647,6 +2647,8 @@ export class Transpiler {
         const f = this.skipParensKeepAs(a[0]!);
         const fn = this.callback(a[0]!, [elem], "bool");
         void f;
+        // find on numbers or booleans: no match is undefined, not 0 or false
+        if (name === "find" && VALUE_TYPES.has(elem) && !self.endsWith("?.")) return { code: `JsRt.FindOrNull(${obj.code}, ${fn})`, cs: `${elem}?` };
         const cs = name === "filter" ? obj.cs : name === "find" ? elem : name === "findIndex" ? "double" : "bool";
         return { code: `${self}${name}(${fn})`, cs };
       }

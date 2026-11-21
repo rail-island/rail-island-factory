@@ -450,6 +450,19 @@ public static class JsRt
     /** const v = xs[i] that the code tests against undefined: null past the end. */
     public static T? ReadOrNull<T>(JsArray<T> a, double i) where T : struct => a.holds(i) ? a[i] : null;
 
+    /** arr.find over numbers or booleans: the first match, or undefined (null) when none matches. */
+    public static T? FindOrNull<T>(JsArray<T> a, Func<T, bool> f) where T : struct
+    {
+        for (int i = 0; i < (int)a.length; i++) if (f(a[i])) return a[i];
+        return null;
+    }
+
+    public static T? FindOrNull<T>(JsArray<T> a, Func<T, double, bool> f) where T : struct
+    {
+        for (int i = 0; i < (int)a.length; i++) if (f(a[i], i)) return a[i];
+        return null;
+    }
+
     /** The characters of a string as JS iterates them: by code point. */
     public static JsArray<string> Chars(string s)
     {
