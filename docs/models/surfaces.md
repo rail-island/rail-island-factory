@@ -11,7 +11,7 @@ rule), how a design opts a material into one, the UVs the JS model then carries,
 
 ## The library
 
-`assets/textures/<name>_{albedo,normal,rough}.jpg`: 20 photo sets from Poly Haven (CC0), every
+`assets/textures/<name>_{albedo,normal,rough,height}.jpg`: 20 photo sets from Poly Haven (CC0), every
 map 512 x 512, listed with slug, licence and use in `assets/textures/SOURCES.md`. They are the
 only photos the game draws with - terrain, track, roads, structures and any factory design that
 names a surface. `MAX_TEXTURES` caps the library at 20 sets: there is no texture compression and
@@ -24,9 +24,28 @@ which re-tinted the soil photo before. The game's terrain binds these four by te
 (`proc-preview-texture-*`) show them.
 `TEXTURE_AVERAGE` pins each albedo's mean colour; the test measures the files against it.
 
-`pnpm exec tsx generator/fetchTextures.ts [name...]` refetches sets at 1k and resizes them with
-sharp. The committed files are the library; refresh one only on purpose, review it, and update
-its average.
+`pnpm exec tsx generator/fetchTextures.ts [--maps=albedo,normal,rough,height] [name...]` refetches
+sets at 1k and resizes them with sharp; `--maps` limits it to those channels. The committed files
+are the library; refresh one only on purpose, review it, and update its average.
+
+### Height maps
+
+`<name>_height.jpg` is Poly Haven's displacement map (`disp`, on some sets `height`), for the
+game's terrain: it height-blends its layers by it, as Terrain3D does, so where grass meets rock
+the stones and tufts of each photo poke through the other instead of the two fading into each
+other (the game's `docs/rendering/renderer.md`). The game packs it into the alpha of its albedo
+array, so a height map costs no GPU memory of its own and does not count against `MAX_TEXTURES`.
+
+Two steps turn the scan into a blend height, both in `fetchTextures.ts`:
+
+- **High-pass** (`highPassHeight`): the map minus a wrap-around blur of itself (three box passes of
+  radius `HEIGHT_HIGH_PASS_RADIUS`, 12 px). The scans are dominated by broad swells of the ground;
+  a blend driven by them pushes a border out in blobs a third of the photo wide, where it should
+  follow stones. The blur wraps, so the map stays tileable.
+- **Equalize** (`equalizeHeight`): every pixel becomes its rank. Poly Haven scans at very
+  different ranges - clay averaged 41, wood 163 - and a set whose heights sat lower would lose every
+  border to its neighbour; equalized, every set has the same distribution (mean mid-grey), so a
+  border favours no set. `test/surfaces.test.ts` checks every file.
 
 ## Named surfaces
 

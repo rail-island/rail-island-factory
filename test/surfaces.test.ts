@@ -6,9 +6,38 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { MAX_TEXTURES, SURFACES, SURFACE_IDS, TEXTURE_AVERAGE, TEXTURE_CHANNELS, TEXTURE_NAMES, TEXTURE_SIZE, surfaceMaterial } from "../generator/surfaces.ts";
 import { TEXTURES_DIR, surfacesMeta } from "../generator/surfacesExport.ts";
+import { equalizeHeight, highPassHeight } from "../generator/fetchTextures.ts";
 import { MeshBuilder } from "../generator/threeBuilder.ts";
 
 const hexRgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+
+describe("height map processing", () => {
+  it("equalizes any distribution to an even spread over 0..255", () => {
+    const skewed = Float32Array.from({ length: 1000 }, (_, i) => (i % 100) ** 3);
+    const out = equalizeHeight(skewed);
+    const mean = out.reduce((a, b) => a + b, 0) / out.length;
+    expect(Math.abs(mean - 127.5)).toBeLessThan(2);
+    // order is kept
+    for (let i = 1; i < 100; i++) expect(out[i]!).toBeGreaterThanOrEqual(out[i - 1]!);
+  });
+
+  it("high-passes to local relief and stays tileable", () => {
+    const size = 64;
+    // a broad swell across the whole map plus one bump
+    const grey = Uint8Array.from({ length: size * size }, (_, i) => {
+      const x = i % size;
+      const y = Math.floor(i / size);
+      return Math.round(100 + 60 * Math.sin((2 * Math.PI * x) / size)) + (x === 20 && y === 20 ? 50 : 0);
+    });
+    const hp = highPassHeight(grey, size, 4);
+    // the swell is mostly gone, the bump stands out
+    const at = (x: number, y: number) => hp[y * size + x]!;
+    expect(Math.abs(at(16, 40))).toBeLessThan(10); // of the swell's 60
+    expect(at(20, 20)).toBeGreaterThan(40);
+    // the blur wraps: the left edge reads the right one, so no seam appears
+    expect(Math.abs(at(0, 40) - at(size - 1, 40))).toBeLessThan(3);
+  });
+});
 
 describe("texture library", () => {
   it("holds at most MAX_TEXTURES sets and nothing but them and SOURCES.md", () => {
@@ -23,7 +52,7 @@ describe("texture library", () => {
   });
 
   for (const name of TEXTURE_NAMES) {
-    it(`${name}: three ${TEXTURE_SIZE} px maps, its average albedo pinned`, async () => {
+    it(`${name}: four ${TEXTURE_SIZE} px maps, its average albedo pinned`, async () => {
       for (const c of TEXTURE_CHANNELS) {
         const meta = await sharp(path.join(TEXTURES_DIR, `${name}_${c}.jpg`)).metadata();
         expect([meta.width, meta.height]).toEqual([TEXTURE_SIZE, TEXTURE_SIZE]);
@@ -34,6 +63,23 @@ describe("texture library", () => {
       const n = info.width * info.height;
       const want = hexRgb(TEXTURE_AVERAGE[name]);
       for (let k = 0; k < 3; k++) expect(Math.abs(sum[k]! / n - want[k]!)).toBeLessThan(3);
+    });
+
+    // The game height-blends its terrain layers by these maps, so a set whose
+    // heights sat lower than its neighbour's would lose every border to it.
+    it(`${name}: its height map is equalized (mean mid-grey, the full range used)`, async () => {
+      const { data, info } = await sharp(path.join(TEXTURES_DIR, `${name}_height.jpg`)).greyscale().raw().toBuffer({ resolveWithObject: true });
+      let sum = 0;
+      let lo = 255;
+      let hi = 0;
+      for (let i = 0; i < data.length; i += info.channels) {
+        sum += data[i]!;
+        lo = Math.min(lo, data[i]!);
+        hi = Math.max(hi, data[i]!);
+      }
+      expect(Math.abs(sum / (info.width * info.height) - 127.5)).toBeLessThan(4);
+      expect(lo).toBeLessThan(16);
+      expect(hi).toBeGreaterThan(239);
     });
   }
 });
