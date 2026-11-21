@@ -219,7 +219,7 @@ describe("the bridge kit", () => {
       // each paint draws its own steel
       const paint = bridge.TYPE_PARAMS[type]!.find((p) => p.name === "paint");
       // (a beam bridge's paint shows on its steel plate girders)
-      const shape = type === "beam" ? { girders: "plate" } : {};
+      const shape: Record<string, string> = type === "beam" ? { girders: "plate" } : {};
       if (paint) expect(new Set(paint.values.map((v) => steel(type, { ...shape, paint: v.value }).join("|"))).size, type).toBe(paint.values.length);
     }
     // a concrete pier's cap is lighter than its shaft
