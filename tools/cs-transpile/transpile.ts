@@ -1864,6 +1864,9 @@ export class Transpiler {
     if (ts.isIdentifier(e)) {
       const sym = this.resolve(this.symbolOf(e));
       if (sym && this.localCs.has(this.keyOf(sym))) return raw;
+      // a constant built from a record spread is the record, not the shape of its named keys
+      const decl = sym?.valueDeclaration;
+      if (raw.cs.startsWith("JsRecord<") && decl && ts.isVariableDeclaration(decl) && this.recordLiteral(decl.initializer)) return raw;
     }
     // a class instance viewed by its fields (`this as { m }`) stays the class instance
     if (ts.isAsExpression(e) && this.classView(e)) return raw;
@@ -3138,6 +3141,12 @@ export class Transpiler {
         continue;
       }
       if (c.startsWith("JsRecord<")) return c;
+      // a constant itself spread from a record (`{ ...PALETTE, claret }`, PALETTE = { ...TRAM_PALETTE })
+      const inner = ts.isIdentifier(p.expression) ? this.resolve(this.symbolOf(p.expression))?.valueDeclaration : undefined;
+      if (inner && ts.isVariableDeclaration(inner) && inner.initializer !== x) {
+        const r = this.recordLiteral(inner.initializer);
+        if (r) return r;
+      }
     }
     return null;
   }
@@ -3163,7 +3172,9 @@ export class Transpiler {
   }
 
   private objectLiteral(e: ts.ObjectLiteralExpression, want: string | null): Out {
-    const c = this.recordLiteral(e) ?? this.literalClass(e, want);
+    // a record wanted (a Record<string, MaterialSpec> return) is built as that: the first spread's
+    // narrower value type would drop the other values' fields
+    const c = (want?.startsWith("JsRecord<") && this.recordLiteral(e) ? want : null) ?? this.recordLiteral(e) ?? this.literalClass(e, want);
     if (this.isClassName(c)) return this.duckLiteral(e, c);
     const record = c.match(/^JsRecord<(.*)>$/);
     const o = `__o${++this.ctx.temps}`;

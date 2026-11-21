@@ -234,6 +234,29 @@ export function presentUndefined(): unknown {
   return [merged.well === undefined, Object.keys(merged), JSON.stringify(merged), well.d, tag];
 }
 
+const KIT: Record<string, { color: string }> = { roof: { color: "r" }, rim: { color: "m" } };
+const KIT_MORE = { ...KIT, hazard: { color: "h" } };
+const KIT_ALL: Record<string, { color: string }> = { ...KIT_MORE, blue: { color: "b" } };
+
+/** A constant spread from a record holds the record's keys, and so does one spread from it. */
+export function recordSpreads(): unknown {
+  const deeper = { ...KIT_MORE, claret: { color: "c" } };
+  return [Object.keys(KIT_ALL), KIT_ALL["rim"]?.color, Object.keys(KIT_MORE).length, Object.keys(deeper)];
+}
+
+interface Spec {
+  color: string;
+  glass?: boolean;
+}
+
+const plain = (): Record<string, { color: string }> => ({ harness: { color: "h" } });
+const withSpecs = (more: Record<string, Spec>): Record<string, Spec> => ({ ...plain(), ...more });
+
+/** A record built from records of narrower values keeps every value whole. */
+export function recordValueTypes(): unknown {
+  return withSpecs({ glass: { color: "g", glass: true } });
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
