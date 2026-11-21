@@ -734,6 +734,8 @@ export class Transpiler {
       if (VALUE_TYPES.has(to) || to.endsWith("?")) return `((${to})(${code}))`;
       return `JsRt.As<${to}>(${code})`;
     }
+    // a number used as a key (`BY_SIDE[1]`): its JS string
+    if ((from === "double" || from === "double?") && to === "string") return `JsRt.Str(${code})`;
     if (`${from}?` === to) return code; // double -> double?: implicit
     if (`${to}?` === from) return to === "double" ? `(${code} ?? double.NaN)` : to === "bool" ? `(${code} ?? false)` : `((${to})(${code}))`; // a narrowed double?
     if (to === "JsVoid" || from === "JsVoid") return code;
@@ -3402,7 +3404,10 @@ export class Transpiler {
             continue;
           }
           needsInit = true;
-          assigns.push(`${o}[${this.exprTo(p.name.expression, "string")}] = ${this.exprTo(p.initializer, record[1]!)};`);
+          // a number key is its string (`[-1]: ...` is the key "-1")
+          const k = this.expr(p.name.expression);
+          const keyCode = VALUE_TYPES.has(k.cs.replace(/\?$/, "")) ? `JsRt.Str(${k.code})` : this.coerce(k.code, k.cs, "string");
+          assigns.push(`${o}[${keyCode}] = ${this.exprTo(p.initializer, record[1]!)};`);
           continue;
         }
         key = ts.isStringLiteral(p.name) || ts.isNumericLiteral(p.name) ? p.name.text : p.name.getText();

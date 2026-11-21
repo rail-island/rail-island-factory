@@ -373,6 +373,13 @@ export function sharedMap(): unknown {
   return [...shared.memo.keys()];
 }
 
+const BY_SIDE: Record<number, string> = { [1]: "right", [-1]: "left" };
+
+/** Number keys computed in a record literal. */
+export function numberKeys(): unknown {
+  return [BY_SIDE[1], BY_SIDE[-1], Object.keys(BY_SIDE)];
+}
+
 export function late(): unknown {
   const buf = new Float64Array(3);
   buf[1] = 2.5;
