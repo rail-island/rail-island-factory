@@ -66,6 +66,7 @@ import { CATHEDRALS } from "./cathedrals.ts";
 import { GOTHIC_CATHEDRALS } from "./gothicCathedrals.ts";
 import { TOWERS } from "./towers.ts";
 import { LANDMARKS } from "./landmarks.ts";
+import { PLAZA_FAMILIES } from "./plazaLandmarks.ts";
 import { INDUSTRY_MIGRATION } from "./industryMigration.ts";
 import { INDUSTRY } from "./industry.ts";
 import { HOSPITALS } from "./hospital.ts";
@@ -235,6 +236,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: GOTHIC_CATHEDRALS, source: "gothicCathedrals.ts", meta: "buildings" },
   { designs: TOWERS, source: "towers.ts", meta: "buildings" },
   { designs: LANDMARKS, source: "landmarks.ts", meta: "buildings" },
+  ...PLAZA_FAMILIES.map((f) => ({ ...f, meta: "buildings" as const })),
   { designs: INDUSTRY, source: "industry.ts", meta: "buildings" },
   { designs: HOSPITALS, source: "hospital.ts", meta: "buildings" },
   { designs: STATIONS, source: "stations.ts", meta: "buildings" },

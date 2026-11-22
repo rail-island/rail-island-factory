@@ -15,7 +15,12 @@ const baseline = JSON.parse(fs.readFileSync(new URL("./fixtures/city-presets-bas
 const all = [...BUILDINGS, ...VILLAGE_DESIGNS];
 const cityDesigns = all.filter((d) => inCities(d.id, catalogFields(d).group));
 /** City designs added after the old presets' last table: nothing of theirs to keep reachable. */
-const ADDED_SINCE_BASELINE = ["proc-building-panel-slab", "proc-building-panel-tower"];
+const ADDED_SINCE_BASELINE = [
+  "proc-building-panel-slab", "proc-building-panel-tower",
+  // the plaza landmarks (docs/models/plaza-landmarks.md)
+  "proc-building-plague-column", "proc-building-bandstand", "proc-building-arc-de-triomphe",
+  "proc-building-prague-old-town-hall", "proc-building-parthenon", "proc-building-temple-of-heaven",
+];
 
 describe("city variants", () => {
   it("are offered by exactly the designs the old presets built", () => {
