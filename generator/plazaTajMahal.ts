@@ -15,10 +15,12 @@
 //   arched niches 1.6 m deep in raised inlay frames; the cornice, the parapet
 //   with its small finials, the crest of the pishtaqs; the sixteen pinnacles
 //   (guldastas) at the pishtaqs' edges and the chamfers' corners;
-// - the double dome: the drum with its blind arcade and mouldings, the onion
-//   bulb (26 m across) with the lotus petals round its top, the gilt finial;
-//   the four chattris round it, open kiosks of eight columns under a chhajja
-//   and a small onion dome;
+// - the double dome: the drum (23.6 m across, 11.4 m above the roof) with its
+//   blind arcade and mouldings; the onion bulb, which swells out over the drum
+//   into an overhanging shoulder (27.9 m across 5.3 m up), closes over a full
+//   body and runs up a recurved neck, with sixteen lotus petals in relief round
+//   its top; the gilt finial; the four chattris round it, open kiosks of eight
+//   columns under a chhajja and a small onion dome of the same character;
 // - the four minarets, 40 m tall: tapering shafts in three stages with dark
 //   inlay rings, three balconies on corbels with their railings, each topped by
 //   an open chattri.
@@ -321,28 +323,29 @@ function chattri(m: MeshBuilder, cx: number, cz: number, y: number, r: number, c
   });
   const yt = top - 2.2 * s;
   m.scope("dome", () => {
-    const R = r * 1.08;
+    // an onion like the great dome's: it swells out over the drum, is widest low down,
+    // closes over a full body and runs up a recurved neck to the finial
     const h = yt - yd;
     const prof: Array<[number, number]> = [
-      [r - 0.15 * s, yd], [R * 0.98, yd + h * 0.18], [R, yd + h * 0.35], [R * 0.9, yd + h * 0.55],
-      [R * 0.62, yd + h * 0.76], [R * 0.3, yd + h * 0.92], [0.2 * s, yd + h],
+      [r - 0.15 * s, yd], [r * 1.1, yd + h * 0.06], [r * 1.17, yd + h * 0.15], [r * 1.19, yd + h * 0.27],
+      [r * 1.15, yd + h * 0.4], [r * 1.03, yd + h * 0.53], [r * 0.83, yd + h * 0.66], [r * 0.57, yd + h * 0.78],
+      [r * 0.33, yd + h * 0.87], [r * 0.18, yd + h * 0.94], [0.2 * s, yd + h],
     ];
     bulb(m, "marble", n, prof, cx, cz, yt + 0.15 * s);
   });
   m.scope("finial", () => finial(m, cx, cz, yt, top, s));
 }
 
-/** A pinnacle (guldasta) at (cx, cz): a slim octagonal shaft from y0, a ring, a little bulb, a gilt point at top. */
+/** A pinnacle (guldasta) at (cx, cz): a slim hexagonal shaft from y0, a ring, a little bulb, a gilt point at top. */
 function guldasta(m: MeshBuilder, cx: number, cz: number, y0: number, top: number): void {
   const r = 0.55;
   const ys = top - 2.6;
-  m.prism("marble", ngon(8, r, Math.PI / 8, cx, cz), y0, ys, false);
-  ringBand(m, "inlay", 8, r + 0.2, ys - 0.9, ys - 0.7, r, r, cx, cz);
-  ringBand(m, "marble", 8, r + 0.25, ys, ys + 0.25, r, 0, cx, cz);
-  const prof: Array<[number, number]> = [[r + 0.25, ys + 0.25], [0.75, ys + 0.6], [0.6, ys + 1.0], [0.2, ys + 1.35]];
-  bulb(m, "marble", 8, prof, cx, cz, ys + 1.45);
-  m.prism("gilt", ngon(6, 0.07, 0, cx, cz), ys + 1.4, ys + 1.8, false);
-  m.spire("gilt", ngon(6, 0.12, 0, cx, cz), ys + 1.8, top);
+  m.prism("marble", ngon(6, r, 0, cx, cz), y0, ys, false);
+  ringBand(m, "inlay", 6, r + 0.2, ys - 0.9, ys - 0.7, r, r, cx, cz);
+  ringBand(m, "marble", 6, r + 0.25, ys, ys + 0.25, r, 0, cx, cz);
+  const prof: Array<[number, number]> = [[r + 0.25, ys + 0.25], [0.78, ys + 0.55], [0.6, ys + 0.95], [0.2, ys + 1.3]];
+  bulb(m, "marble", 6, prof, cx, cz, ys + 1.45);
+  m.spire("gilt", ngon(6, 0.1, 0, cx, cz), ys + 1.33, top);
 }
 
 /** A small parapet finial (merlon) standing on y. */
@@ -364,10 +367,10 @@ function plinthArches(x0: number, x1: number): Arch[] {
 function plinth(m: MeshBuilder): void {
   m.scope("faces", () => {
     for (const phi of [Math.PI / 2, Math.PI, -Math.PI / 2]) {
-      m.moved(turn(phi), () => archWall(m, "plinth", "marbleShade", -PL, PL, 0, Y_PL, PL, plinthArches(-PL, PL), 3));
+      m.moved(turn(phi), () => archWall(m, "plinth", "marbleShade", -PL, PL, 0, Y_PL, PL, plinthArches(-PL, PL), 2));
     }
-    archWall(m, "plinth", "marbleShade", -PL, -ST_HW, 0, Y_PL, PL, plinthArches(-PL, -ST_HW - 1.2), 3);
-    archWall(m, "plinth", "marbleShade", ST_HW, PL, 0, Y_PL, PL, plinthArches(ST_HW + 1.2, PL), 3);
+    archWall(m, "plinth", "marbleShade", -PL, -ST_HW, 0, Y_PL, PL, plinthArches(-PL, -ST_HW - 1.2), 2);
+    archWall(m, "plinth", "marbleShade", ST_HW, PL, 0, Y_PL, PL, plinthArches(ST_HW + 1.2, PL), 2);
   });
   m.scope("top", () => {
     m.cap("plinth", rect(2 * PL, PL + ST_IN, 0, (ST_IN - PL) / 2), Y_PL);
@@ -517,76 +520,99 @@ function mausoleum(m: MeshBuilder): void {
 // --- the dome -----------------------------------------------------------------------------
 
 const DRUM_R = 11.8;
-const Y_DRUM = 43.4;
-const Y_BULB = 62.6;
+const Y_DRUM = 41.4;
+/** The neck's tip under the finial. */
+const Y_NECK = 64.4;
 const Y_TOP = 73;
+
+/**
+ * The onion's profile (radius, height), measured on the front photographs against
+ * the drum: from the drum's top it swells out at once into an overhanging shoulder,
+ * widest (27.9 m, 1.18 times the drum) 5.3 m up, closes over a full rounded body to
+ * a broad top under the lotus and runs up a recurved (concave) neck to a slender
+ * point under the finial.
+ */
+const BULB: Array<[number, number]> = [
+  [11.95, Y_DRUM], [12.8, 41.64], [13.3, 42.04], [13.62, 42.63], [13.82, 43.38], [13.88, 44.3], [13.94, 45.37],
+  [13.95, 46.65], [13.8, 48.05], [13.53, 49.5], [13.12, 51.0], [12.55, 52.5], [11.82, 53.95], [10.92, 55.34],
+  [9.88, 56.63], [8.8, 57.81], [7.85, 58.77], [6.85, 59.68], [5.82, 60.54], [4.85, 61.24], [3.85, 61.83],
+  [2.92, 62.33], [2.1, 62.79], [1.48, 63.22], [1.07, 63.65], [0.83, 64.08], [0.72, Y_NECK],
+];
+
+/** The onion's radius at height y (linear between the profile's rings). */
+function bulbR(y: number): number {
+  for (let i = 0; i + 1 < BULB.length; i++) {
+    const [r0, y0] = BULB[i]!;
+    const [r1, y1] = BULB[i + 1]!;
+    if (y <= y1) return r0 + ((r1 - r0) * (y - y0)) / (y1 - y0);
+  }
+  return BULB[BULB.length - 1]![0];
+}
 
 function dome(m: MeshBuilder): void {
   const N = 48;
   m.scope("drum", () => {
     m.prism("marble", ngon(N, DRUM_R), Y_ROOF, Y_DRUM, false);
     ringBand(m, "marble", N, DRUM_R + 0.35, Y_ROOF, 31.6, -1, DRUM_R);
-    ringBand(m, "inlay", N, DRUM_R + 0.12, 35.6, 36.2, DRUM_R, DRUM_R);
-    ringBand(m, "marble", N, DRUM_R + 0.4, 42.6, Y_DRUM, DRUM_R, DRUM_R);
+    ringBand(m, "inlay", N, DRUM_R + 0.12, 33.9, 34.5, DRUM_R, DRUM_R);
+    ringBand(m, "marble", N, DRUM_R + 0.4, Y_DRUM - 0.8, Y_DRUM, DRUM_R, DRUM_R);
     // the blind arcade round the drum's upper band, its arches on the flat facets
     const D = DRUM_R * Math.cos(Math.PI / N);
     for (let i = 0; i < 24; i++) {
       const phi = ((4 * i + 1) * Math.PI) / N + Math.PI / 2;
       const fw = 2 * DRUM_R * Math.sin(Math.PI / N) * 0.86;
-      m.moved(turn(phi), () => archPanel(m, "inlay", { cx: 0, w: fw, yb: 37.2, ys: 40.2, ya: 41.6, dep: 0 }, D, 0.05, 0.05, 3));
+      m.moved(turn(phi), () => archPanel(m, "inlay", { cx: 0, w: fw, yb: 35.3, ys: 38.3, ya: 39.7, dep: 0 }, D, 0.05, 0.05, 3));
     }
   });
   m.scope("bulb", () => {
-    const prof: Array<[number, number]> = [
-      [DRUM_R + 0.15, Y_DRUM], [12.7, 44.7], [13.15, 46.5], [13.25, 48.4], [13.0, 50.5], [12.35, 52.7], [11.2, 55.0],
-      [9.6, 57.1], [7.6, 58.9], [5.4, 60.4], [3.6, 61.5], [2.4, 62.2], [1.7, Y_BULB],
-    ];
-    for (let i = 0; i + 1 < prof.length; i++) {
-      const [r0, y0] = prof[i]!;
-      const [r1, y1] = prof[i + 1]!;
-      m.loft("marble", ngon(N, r0), y0, ngon(N, r1), y1, false);
+    const NB = 40;
+    for (let i = 0; i + 1 < BULB.length; i++) {
+      const [r0, y0] = BULB[i]!;
+      const [r1, y1] = BULB[i + 1]!;
+      m.loft("marble", ngon(NB, r0), y0, ngon(NB, r1), y1, false);
     }
-    m.cap("marble", ngon(N, 1.7), Y_BULB);
+    m.cap("marble", ngon(NB, BULB[BULB.length - 1]![0]), Y_NECK);
   });
   m.scope("lotus crown", () => {
-    // sixteen petals lying on the bulb's shoulder, their tips pointing down
+    // sixteen petals in relief on the onion's top, their tips hanging down, standing
+    // about 0.25 m off the surface (0.4 m out from the axis) and sunk into it behind
     const n = 16;
+    const off = 0.4;
+    // (height, half width) round the petal from its tip: wide low down, pointed at the neck
+    const outline: Array<[number, number]> = [[59.8, 0], [60.43, 0.72], [61.18, 0.9], [62.0, 0.5], [62.52, 0], [62.0, -0.5], [61.18, -0.9], [60.43, -0.72]];
     for (let i = 0; i < n; i++) {
       const phi = ((i + 0.5) / n) * Math.PI * 2;
-      const at = (r: number, y: number, t: number, o: number): Vec3 => {
-        const cs = Math.cos(phi);
-        const sn = Math.sin(phi);
-        return [(r + o) * sn + t * cs, y + o * 0.6, (r + o) * cs - t * sn];
+      const cs = Math.cos(phi);
+      const sn = Math.sin(phi);
+      const at = ([y, t]: [number, number]): Vec3 => {
+        const r = bulbR(y) + off;
+        return [r * sn + t * cs, y, r * cs - t * sn];
       };
-      // the petal's outline follows the bulb's surface between 3.9 m (61.3) and 7.9 m (58.5)
-      const pts: Vec3[] = [at(2.4, 62.2, -0.55, 0.22), at(2.4, 62.2, 0.55, 0.22), at(4.6, 60.81, 1.05, 0.22), at(7.0, 59.3, 0, 0.22), at(4.6, 60.81, -1.05, 0.22)];
-      m.slab("marbleShade", pts, [-Math.sin(phi) * 0.35, -0.35, -Math.cos(phi) * 0.35]);
+      m.slab("marbleShade", outline.map(at), [-sn * 0.3, -0.45, -cs * 0.3]);
     }
-    m.prism("marble", ngon(16, 2.3), Y_BULB - 0.4, Y_BULB + 0.5, false);
-    m.loft("marble", ngon(16, 2.3), Y_BULB + 0.5, ngon(16, 1.4), Y_BULB + 1.4, false);
-    m.cap("marble", ngon(16, 1.4), Y_BULB + 1.4);
   });
   m.scope("finial", () => {
-    const y0 = Y_BULB + 1.4;
+    const y0 = Y_NECK;
     const at = (r: number): Ring => ngon(12, r);
-    m.loft("gilt", at(1.0), y0, at(0.75), y0 + 0.8, false);
-    m.loft("gilt", at(0.75), y0 + 0.8, at(0.3), y0 + 1.3, false);
-    let y = y0 + 1.3;
-    for (const r of [0.85, 0.75, 0.6]) {
+    m.loft("gilt", at(0.62), y0, at(0.95), y0 + 0.3, false);
+    m.loft("gilt", at(0.95), y0 + 0.3, at(0.7), y0 + 0.6, false);
+    m.loft("gilt", at(0.7), y0 + 0.6, at(0.28), y0 + 0.9, false);
+    let y = y0 + 0.9;
+    for (const r of [0.75, 0.65, 0.52]) {
       const lats = [-60, -25, 15, 55].map((d) => (d * Math.PI) / 180);
       const c = y + r * 0.85;
-      m.loft("gilt", at(0.3), y, at(r * Math.cos(lats[0]!)), c + r * Math.sin(lats[0]!), false);
+      m.loft("gilt", at(0.28), y, at(r * Math.cos(lats[0]!)), c + r * Math.sin(lats[0]!), false);
       for (let i = 0; i + 1 < lats.length; i++) m.loft("gilt", at(r * Math.cos(lats[i]!)), c + r * Math.sin(lats[i]!), at(r * Math.cos(lats[i + 1]!)), c + r * Math.sin(lats[i + 1]!), false);
       y = c + r * Math.sin(lats[3]!) + 0.3;
-      m.loft("gilt", at(r * Math.cos(lats[3]!)), c + r * Math.sin(lats[3]!), at(0.3), y, false);
+      m.loft("gilt", at(r * Math.cos(lats[3]!)), c + r * Math.sin(lats[3]!), at(0.28), y, false);
     }
-    m.prism("gilt", at(0.18), y, Y_TOP - 2.4, false);
+    m.prism("gilt", at(0.16), y, Y_TOP - 2.4, false);
     // the crescent: a flat sickle of two slabs on the spike
     for (const s of [-1, 1]) {
       const yc = Y_TOP - 2.5;
       m.slab("gilt", [[s * 0.9, yc + 0.5, 0.06], [s * 0.35, yc, 0.06], [s * 0.12, yc, 0.06], [s * 0.12, yc + 0.25, 0.06]], [0, 0, -0.12]);
     }
-    m.spire("gilt", at(0.18), Y_TOP - 2.4, Y_TOP);
+    m.spire("gilt", at(0.16), Y_TOP - 2.4, Y_TOP);
   });
 }
 
@@ -673,11 +699,12 @@ export function tajMahalLod(): MeshBuilder {
       m.slab("marbleShade", [[-7, Y_PL + 0.05, H + 0.72], [7, Y_PL + 0.05, H + 0.72], [7, 18.2, H + 0.72], [0, 27.2, H + 0.72], [-7, 18.2, H + 0.72]], [0, 0, -0.05]);
     });
   }
-  m.prism("marble", ngon(12, DRUM_R), Y_PAR, Y_DRUM, false);
-  const prof: Array<[number, number]> = [[DRUM_R + 0.15, Y_DRUM], [13.2, 48.0], [11.3, 54.5], [6.8, 59.3], [1.7, Y_BULB]];
-  for (let i = 0; i + 1 < prof.length; i++) m.loft("marble", ngon(12, prof[i]![0]), prof[i]![1], ngon(12, prof[i + 1]![0]), prof[i + 1]![1], false);
-  m.spire("marble", ngon(12, 1.7), Y_BULB, 66.0);
-  m.spire("gilt", ngon(4, 0.25), 65.5, Y_TOP);
+  m.prism("marble", ngon(10, DRUM_R), Y_PAR, Y_DRUM, false);
+  // the onion: the overhanging shoulder, the full body, the recurved neck
+  const prof: Array<[number, number]> = [[DRUM_R, Y_DRUM], [13.55, 42.5], [13.95, 46.3], [12.0, 53.4], [7.9, 58.7], [3.9, 61.8], [1.5, 63.2]];
+  for (let i = 0; i + 1 < prof.length; i++) m.loft("marble", ngon(10, prof[i]![0]), prof[i]![1], ngon(10, prof[i + 1]![0]), prof[i + 1]![1], false);
+  m.spire("marble", ngon(10, 1.5), 63.2, Y_NECK + 0.6);
+  m.spire("gilt", ngon(4, 0.25), Y_NECK, Y_TOP);
   for (const [sx, sz] of [[1, 1], [-1, 1], [-1, -1], [1, -1]] as Array<[number, number]>) {
     m.prism("marble", ngon(6, 3.4, 0, sx * 15.6, sz * 15.6), Y_PAR, 39.0, false);
     m.spire("marble", ngon(6, 3.4, 0, sx * 15.6, sz * 15.6), 39.0, 45.2);

@@ -19,7 +19,7 @@ All are modelled in metres, +Y up, base at y = 0, centred on the origin. They ar
 |---|---|---|---|---|---|---|
 | `bld-plague-column` | Plague Column | village, town | 10.6 / 17.2 / 10.6 | 8,410 | 376 | `assets/plague-column/` |
 | `bld-bandstand` | Bandstand | village, town | 9.6 / 8.7 / 10.9 | 9,804 | 308 | `assets/bandstand/` |
-| `bld-arc-de-triomphe` | Arc de Triomphe | city; radial, round | 48.0 / 50.0 / 30.4 | 26,418 | 348 | `assets/arc-de-triomphe/` |
+| `bld-arc-de-triomphe` | Arc de Triomphe | city; radial, round | 48.0 / 50.0 / 30.4 | 29,580 | 348 | `assets/arc-de-triomphe/` |
 | `bld-prague-old-town-hall` | Prague Old Town Hall | town, city; rect, footprint | 56.7 / 69.5 / 22.6 | 23,336 | 240 | `assets/prague-old-town-hall/` |
 | `bld-parthenon` | Parthenon | city; rect, footprint | 72.3 / 20.8 / 33.7 | 26,270 | 444 | `assets/parthenon/` |
 | `bld-temple-of-heaven` | Temple of Heaven | town, city; radial, round | 69.8 / 44.0 / 69.8 | 29,288 | 418 | `assets/temple-of-heaven/` |
@@ -33,7 +33,7 @@ All are modelled in metres, +Y up, base at y = 0, centred on the origin. They ar
 | `bld-half-timbered-town-hall` | Half-Timbered Town Hall | village, town; rect, footprint | 22.3 / 30.2 / 16.5 | 23,312 | 408 | `assets/half-timbered-town-hall/` |
 | `bld-statue-of-liberty` | Statue of Liberty | city; radial, round | 76.7 / 93.0 / 76.4 | 24,169 | 268 | `assets/statue-of-liberty/` |
 | `bld-pantheon` | Pantheon | city; rect, footprint | 57.2 / 43.6 / 79.0 | 25,226 | 410 | `assets/pantheon/` |
-| `bld-taj-mahal` | Taj Mahal | city; rect, footprint | 95.7 / 73.0 / 95.7 | 29,294 | 480 | `assets/taj-mahal/` |
+| `bld-taj-mahal` | Taj Mahal | city; rect, footprint | 95.7 / 73.0 / 95.7 | 29,588 | 498 | `assets/taj-mahal/` |
 | `bld-gateway-of-india` | Gateway of India | city; rect, footprint | 43.4 / 26.0 / 27.4 | 28,936 | 448 | `assets/gateway-of-india/` |
 | `bld-village-chapel` | Village Chapel | village; rect | 7.2 / 14.2 / 10.9 | 4,180 | 260 | `assets/village-chapel/` |
 | `bld-belfry-of-bruges` | Belfry of Bruges | town, city; rect, footprint | 45.4 / 83.0 / 53.1 | 27,876 | 238 | `assets/belfry-of-bruges/` |
@@ -96,12 +96,22 @@ sculpture groups stand out about 4 m from the main faces.
   transverse one) with real depth and rosettes; socle, impost bands, archivolts, keystones
   and the generals' name tablets.
 - The four sculpture groups on stepped pedestals (Depart de 1792 and Triomphe de 1810 on
-  +Z, Resistance and Paix on -Z), six framed high-relief panels and the spandrel Victories.
+  +Z, Resistance and Paix on -Z). Each is a pyramid of figures about 2.5 times life size
+  carved from a shallow block set into the pier (in the darker stone, so it reads as the
+  shadow between the figures): a heap of drapery and bodies along the plinth, overlapping
+  figures with torsos lofted from 8-sided rings, heads, limbs 0.4-0.7 m thick and robes,
+  tunics and cloaks as solid volumes, busts in the middle rank, and the winged genius, Fame
+  or Minerva at the top with wings as thick layered feather slabs.
+- Six framed high-relief panels: figures in two overlapping ranks carved as rounded half
+  volumes 0.4-0.6 m proud of the sunk ground, a horseman and a fallen soldier in each. The
+  spandrel Victories recline along the arch's back with solid bodies, a wreath held out to
+  the keystone, a palm and a layered wing.
 - The entablature with the grand frieze, modillions and a 0.9 m corona; the attic with 30
   round shields, its cornice, the roof terrace, parapet and stair house; the Tomb of the
   Unknown Soldier under the arch.
-- Deviations: figures are stylised low-poly masses, frieze scenes generic, coffers as
-  pyramids, panel and attic heights estimated (about +-1 m).
+- Deviations: figures are stylised rounded masses (no faces or hands; few attributes),
+  scenes generic, a sparse frieze procession (2.5 m pitch), coffers as pyramids, panel and
+  attic heights estimated (about +-1 m).
 
 ## Prague Old Town Hall
 
@@ -324,11 +334,16 @@ left out. The main stair is on +Z.
 - The 57 m mausoleum with chamfered corners: on each face the pishtaq and the 14 m iwan
   recessed 6.2 m with its calligraphy frame, jali window and doorway; two storeys of niches
   on the side bays and chamfers; the parapet, finials and 16 guldastas.
-- The drum with a blind arcade, the onion dome (about 26.5 m across), the lotus crown and
-  the gilt finial at 73 m; four open chattris on the roof.
+- The drum (23.6 m across, top at 41.4 m) with its blind arcade, carrying an onion bulb
+  measured on the front photos: it swells out at once into a shoulder overhanging the drum,
+  widest (27.9 m, 1.18 times the drum) 5.3 m up, closes over a full body and runs up a
+  concave neck to a point at 64.4 m; sixteen lotus petals in relief hang over its top and
+  the gilt finial (collar, three balls, crescent) reaches 73 m. Four open chattris on the
+  roof; their domes, and the minarets' chattri domes, are small onions of the same kind.
 - Four minarets 40.5 m above the plinth with three corbelled balconies and a chattri each.
 - White marble with raised (never coplanar) inlay and dark calligraphy.
-- Deviations: a flat iwan back without the half-dome; single niches; plumb minarets; a flat
+- Deviations: the bulb slightly more elongated than the photos (0.66 against about 0.6 of
+  its width); a flat iwan back without the half-dome; single niches; plumb minarets; a flat
   roof deck; no arches between the chattri columns.
 
 ## Gateway of India
