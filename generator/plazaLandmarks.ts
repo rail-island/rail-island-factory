@@ -14,6 +14,12 @@ import { LEANING_TOWER_OF_PISA } from "./plazaLeaningTowerOfPisa.ts";
 import { CLOTH_HALL } from "./plazaClothHall.ts";
 import { NELSONS_COLUMN } from "./plazaNelsonsColumn.ts";
 import { ATOMIUM } from "./plazaAtomium.ts";
+import { MARKET_CROSS } from "./plazaMarketCross.ts";
+import { HALF_TIMBERED_TOWN_HALL } from "./plazaHalfTimberedTownHall.ts";
+import { STATUE_OF_LIBERTY } from "./plazaStatueOfLiberty.ts";
+import { PANTHEON } from "./plazaPantheon.ts";
+import { TAJ_MAHAL } from "./plazaTajMahal.ts";
+import { GATEWAY_OF_INDIA } from "./plazaGatewayOfIndia.ts";
 
 /** Each landmark's module, as the build registers it (generate.ts RAW_FAMILIES). */
 export const PLAZA_FAMILIES: ReadonlyArray<{ designs: ProceduralDesign[]; source: string }> = [
@@ -29,6 +35,12 @@ export const PLAZA_FAMILIES: ReadonlyArray<{ designs: ProceduralDesign[]; source
   { designs: CLOTH_HALL, source: "plazaClothHall.ts" },
   { designs: NELSONS_COLUMN, source: "plazaNelsonsColumn.ts" },
   { designs: ATOMIUM, source: "plazaAtomium.ts" },
+  { designs: MARKET_CROSS, source: "plazaMarketCross.ts" },
+  { designs: HALF_TIMBERED_TOWN_HALL, source: "plazaHalfTimberedTownHall.ts" },
+  { designs: STATUE_OF_LIBERTY, source: "plazaStatueOfLiberty.ts" },
+  { designs: PANTHEON, source: "plazaPantheon.ts" },
+  { designs: TAJ_MAHAL, source: "plazaTajMahal.ts" },
+  { designs: GATEWAY_OF_INDIA, source: "plazaGatewayOfIndia.ts" },
 ];
 
 export const PLAZA_LANDMARKS: ProceduralDesign[] = PLAZA_FAMILIES.flatMap((f) => f.designs);
@@ -47,6 +59,12 @@ export const PLAZA_TIERS: Record<string, [number, number]> = {
   "cloth-hall": [20000, 30000],
   "nelsons-column": [4000, 10000],
   "atomium": [20000, 30000],
+  "market-cross": [4000, 10000],
+  "half-timbered-town-hall": [20000, 30000],
+  "statue-of-liberty": [20000, 30000],
+  "pantheon": [20000, 30000],
+  "taj-mahal": [20000, 30000],
+  "gateway-of-india": [20000, 30000],
 };
 
 /** A plaza landmark's id without its prefix (the build exports `bld-x` as `proc-building-x`). */

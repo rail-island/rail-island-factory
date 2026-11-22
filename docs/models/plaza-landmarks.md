@@ -1,7 +1,7 @@
 # Plaza landmarks
 
-**Covers** - the monuments and civic buildings made for a settlement's main square (first batch: Plague Column, Bandstand, Arc de Triomphe, Prague Old Town Hall, Parthenon, Temple of Heaven; second batch: War Memorial, Equestrian Statue, Leaning Tower of Pisa, Krakow Cloth Hall, Nelson's Column, Atomium): their plaza rules, triangle tiers, what each reproduces and where it departs from the real one.
-**Code** - `generator/plazaLandmarks.ts` (index, tiers), `generator/plazaCatalog.ts`, `generator/plazaPlagueColumn.ts`, `generator/plazaBandstand.ts`, `generator/plazaArcDeTriomphe.ts`, `generator/plazaPragueOldTownHall.ts`, `generator/plazaParthenon.ts`, `generator/plazaTempleOfHeaven.ts`, `generator/plazaWarMemorial.ts`, `generator/plazaEquestrianStatue.ts`, `generator/plazaLeaningTowerOfPisa.ts`, `generator/plazaClothHall.ts`, `generator/plazaNelsonsColumn.ts`, `generator/plazaAtomium.ts`, `test/plazaLandmarks.test.ts`, `assets/<name>/`
+**Covers** - the monuments and civic buildings made for a settlement's main square (first batch: Plague Column, Bandstand, Arc de Triomphe, Prague Old Town Hall, Parthenon, Temple of Heaven; second batch: War Memorial, Equestrian Statue, Leaning Tower of Pisa, Krakow Cloth Hall, Nelson's Column, Atomium; third batch: Market Cross, Half-Timbered Town Hall, Statue of Liberty, Pantheon, Taj Mahal, Gateway of India): their plaza rules, triangle tiers, what each reproduces and where it departs from the real one.
+**Code** - `generator/plazaLandmarks.ts` (index, tiers), `generator/plazaCatalog.ts`, `generator/plazaPlagueColumn.ts`, `generator/plazaBandstand.ts`, `generator/plazaArcDeTriomphe.ts`, `generator/plazaPragueOldTownHall.ts`, `generator/plazaParthenon.ts`, `generator/plazaTempleOfHeaven.ts`, `generator/plazaWarMemorial.ts`, `generator/plazaEquestrianStatue.ts`, `generator/plazaLeaningTowerOfPisa.ts`, `generator/plazaClothHall.ts`, `generator/plazaNelsonsColumn.ts`, `generator/plazaAtomium.ts`, `generator/plazaMarketCross.ts`, `generator/plazaHalfTimberedTownHall.ts`, `generator/plazaStatueOfLiberty.ts`, `generator/plazaPantheon.ts`, `generator/plazaTajMahal.ts`, `generator/plazaGatewayOfIndia.ts`, `test/plazaLandmarks.test.ts`, `assets/<name>/`
 **See also** - [landmarks.md](landmarks.md) (the older secular landmarks), [game-properties.md](game-properties.md) (`plaza`), [historical.md](historical.md), [lod.md](lod.md), [../site/workshop.md](../site/workshop.md)
 
 ## The family
@@ -29,8 +29,14 @@ All are modelled in metres, +Y up, base at y = 0, centred on the origin. They ar
 | `bld-cloth-hall` | Krakow Cloth Hall | town, city; rect, footprint | 118.4 / 30.1 / 32.4 | 29,054 | 264 | `assets/cloth-hall/` |
 | `bld-nelsons-column` | Nelson's Column | city | 25.0 / 51.6 / 25.0 | 9,558 | 376 | `assets/nelsons-column/` |
 | `bld-atomium` | Atomium | city; radial, round | 104.0 / 102.0 / 104.0 | 26,160 | 500 | `assets/atomium/` |
+| `bld-market-cross` | Market Cross | village, town; radial, round | 9.8 / 14.6 / 9.8 | 7,896 | 416 | `assets/market-cross/` |
+| `bld-half-timbered-town-hall` | Half-Timbered Town Hall | village, town; rect, footprint | 22.3 / 30.2 / 16.5 | 23,312 | 408 | `assets/half-timbered-town-hall/` |
+| `bld-statue-of-liberty` | Statue of Liberty | city; radial, round | 76.7 / 93.0 / 76.4 | 24,169 | 268 | `assets/statue-of-liberty/` |
+| `bld-pantheon` | Pantheon | city; rect, footprint | 57.2 / 43.6 / 79.0 | 25,226 | 410 | `assets/pantheon/` |
+| `bld-taj-mahal` | Taj Mahal | city; rect, footprint | 95.7 / 73.0 / 95.7 | 29,294 | 480 | `assets/taj-mahal/` |
+| `bld-gateway-of-india` | Gateway of India | city; rect, footprint | 43.4 / 26.0 / 27.4 | 28,936 | 448 | `assets/gateway-of-india/` |
 
-Tiers (the building skill): the small monuments (Plague Column, Bandstand, War Memorial, Equestrian Statue, Nelson's Column) 4,000-10,000 triangles, the
+Tiers (the building skill): the small monuments (Plague Column, Bandstand, War Memorial, Equestrian Statue, Nelson's Column, Market Cross) 4,000-10,000 triangles, the
 large landmarks 20,000-30,000; every LOD 101-500 triangles, no windows, the full model's
 height and plan. `test/plazaLandmarks.test.ts` checks the tiers, the ground, at most 12
 materials, determinism, coplanar overlaps, degenerate triangles, the LODs, the plaza rule,
@@ -234,3 +240,100 @@ is z = 0, facing +Z.
   52 m in radius with lawns, which sets the plan extent.
 - Deviations: the plate net is offset latitude rings, not the real geodesic net; a generic
   pavilion; simplified pylons; a stylised round plaza.
+
+## Market Cross
+
+An English late-Gothic covered market cross, a composite of Chichester, Malmesbury and the
+Salisbury Poultry Cross; the octagon's flat sides face the axes.
+
+- A three-step octagonal base 9.8 m across; eight walls with real open pointed arches (2 m
+  wide, about 3.5 m high) under hood moulds and crocketed finials.
+- Stepped three-stage buttresses at the corners rising into crocketed pinnacles.
+- Inside: a central pillar with a stone bench round its foot and a ribbed fan spreading
+  from its capital to the walls.
+- A cornice and pierced parapet with leaf cresting, a low lead roof, a stone attic with four
+  clock faces, eight crocketed flying ribs curving to the central turret, an open lantern of
+  eight colonnettes, a lead cupola and spire, a gilt ball and cross at 14.6 m.
+- Deviations: a composite; the clocks sit on an attic below the ribs; plain arches without
+  ogee gablets; no niches or statues; four-sided ribs; no weathervane.
+
+## Half-Timbered Town Hall
+
+A German half-timbered town hall, a composite of Wernigerode (twin oriel spires, clock
+gable), Alsfeld (stone arcade) and Michelstadt (tiled helmets); the broad front faces +Z.
+
+- An open stone market hall about 5 m high with see-through pointed arches (four in front,
+  three on each end), a paved floor, a joisted ceiling and a beam on two braced oak posts;
+  a closed back wall with a door and barred windows.
+- Two jettied timber-framed storeys: raised framing 8 cm proud of cream plaster (sill,
+  plates, posts, rails, "Mann" figures, St Andrew's crosses), rows of small leaded windows,
+  carved corner posts.
+- Two octagonal corner oriels corbelled out from the front corners, rising to tall pointed
+  tiled helmets with gilt finials.
+- A steep 55-degree tiled roof with framed gables and three rows of dormers; the central
+  clock gable with a blue and gilt dial; a roof turret with an open bell lantern and a copper
+  onion (top 30.2 m); an outside stone stair at the back to the first floor.
+- Deviations: a composite; the stair at the back; gables not jettied; no carved ornament,
+  arms or flower boxes; tiles as course bands.
+
+## Statue of Liberty
+
+She faces +Z; 93.0 m from the ground to the torch tip.
+
+- Fort Wood: an 11-pointed star of granite walls 6.6 m high (points on a 76 m circle, shrunk
+  from over 100 m to fit a square), a paved terreplein and the sally port on +Z.
+- The foundation's terraces and stepped pyramid to 19.8 m, and Hunt's 27 m pedestal: the
+  course of discs, a rusticated die, a loggia of four Doric columns on every face, the
+  entablature, the balcony gallery with real openings and the observation parapet.
+- The 46.1 m copper statue in verdigris: a stola lofted in rings with deep folds and the
+  overfold, the mantle, the striding knee and raised right heel, the raised arm with the
+  torch's balcony and gilt flame, the tablet inscribed JULY / IV / MDCCLXXVI in raised blocks,
+  a face, hair, the crown with its window band and seven rays, and the broken chain.
+- Deviations: a smaller, evenly pointed fort; a simplified foundation; a pedestal at 0.9 of
+  its plan; 9 crown windows instead of 25; block lettering.
+
+## Pantheon
+
+The portico faces +Z.
+
+- The brick rotunda (55.2 m across) in three cornice-banded storeys with relieving arches,
+  six stepped rings and the shallow lead dome to 43.3 m, with the real 8.2 m oculus and its
+  bronze rim; through it the coffered inner dome (five rings of 28), the wall and the floor.
+- The intermediate block with its second pediment.
+- The portico on a 1.3 m podium: 16 Corinthian columns 11.8 m tall (eight grey granite
+  across the front, two rows of four pink granite behind), antae, the bronze doors and the
+  aisle niches; the entablature with M.AGRIPPA.L.F.COS.TERTIVM.FECIT in raised bronze
+  letters; the pediment with fixing holes in its tympanum and a tiled lead roof.
+- Deviations: the inner dome springs at 20.2 m to stay under the outer dome; flat niches;
+  simplified capitals and no modillions; smooth 20-sided shafts.
+
+## Taj Mahal
+
+The mausoleum on its plinth with the four minarets; the mosque, guest house and gardens are
+left out. The main stair is on +Z.
+
+- The 95 m square, 7 m plinth with a band of pointed-arch niches and a 20-step stair.
+- The 57 m mausoleum with chamfered corners: on each face the pishtaq and the 14 m iwan
+  recessed 6.2 m with its calligraphy frame, jali window and doorway; two storeys of niches
+  on the side bays and chamfers; the parapet, finials and 16 guldastas.
+- The drum with a blind arcade, the onion dome (about 26.5 m across), the lotus crown and
+  the gilt finial at 73 m; four open chattris on the roof.
+- Four minarets 40.5 m above the plinth with three corbelled balconies and a chattri each.
+- White marble with raised (never coplanar) inlay and dark calligraphy.
+- Deviations: a flat iwan back without the half-dome; single niches; plumb minarets; a flat
+  roof deck; no arches between the chattri columns.
+
+## Gateway of India
+
+The city side faces +Z; the sea side mirrors it (the steps to the water are left out).
+
+- A two-step plinth, the open pointed central arch along Z (8.4 m wide, 12 m to the crown)
+  with its barrel vault and archivolt, and the 13 m domed hall behind it with side arches
+  into the wings.
+- The upper central block: corbels under the chhajja, the attic with its inscription
+  panel, the crenellated parapet; four corner turrets with jali niches, an octagonal drum
+  of jali windows, stepped ribbed domes and finials at 26 m.
+- Two 16 m wings with recessed bays, lattice jali lunettes, doors into the wing halls, a
+  wrapping chhajja and a jali frieze.
+- Deviations: the arch measured from the photos (the brief's 15 m is the dome's span); 38 m
+  wide; no flagpole; jali with a dark back, not see-through.

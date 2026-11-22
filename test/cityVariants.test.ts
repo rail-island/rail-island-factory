@@ -22,6 +22,8 @@ const ADDED_SINCE_BASELINE = [
   "proc-building-prague-old-town-hall", "proc-building-parthenon", "proc-building-temple-of-heaven",
   "proc-building-war-memorial", "proc-building-equestrian-statue", "proc-building-leaning-tower-of-pisa",
   "proc-building-cloth-hall", "proc-building-nelsons-column", "proc-building-atomium",
+  "proc-building-market-cross", "proc-building-half-timbered-town-hall", "proc-building-statue-of-liberty",
+  "proc-building-pantheon", "proc-building-taj-mahal", "proc-building-gateway-of-india",
 ];
 
 describe("city variants", () => {
