@@ -11,6 +11,7 @@ import ts from "typescript";
 import { SETS, type SetDef } from "./registry.ts";
 import { writeIfChanged } from "../jsModel.ts";
 import { setPins } from "./pinCases.ts";
+import { STRUCTURE_TOKEN_PRICES, structureTokenPrice } from "../tokenPrices.ts";
 
 const SETS_DIR_NAME = "sets";
 /** export/sets/pins.json: every landed set's case hashes (pinCases.ts). */
@@ -40,7 +41,7 @@ export function setMeta(def: SetDef, extra: Record<string, Record<string, unknow
     landed: def.landed,
     defaultId: def.defaultId,
     retired: { ...def.retired },
-    types: def.types.map((t) => ({ id: t.id, ...(extra[t.id] ?? {}) })),
+    types: def.types.map((t) => ({ id: t.id, ...(extra[t.id] ?? {}), ...(def.collectible ? { tokenPrice: structureTokenPrice(def.set, t.id) } : {}) })),
     ...(def.groups ? { groups: def.groups.map((g) => ({ id: g.id, types: [...g.types] })) } : {}),
     ...(def.landed ? { module: `${def.set}.js` } : {}),
   };
@@ -108,6 +109,12 @@ export async function generateSets(dir: string): Promise<SetMeta[]> {
   fs.mkdirSync(outDir, { recursive: true });
   const keep = new Set<string>();
   const metas: SetMeta[] = [];
+  // the price table names only collectible sets' types (docs/models/token-prices.md)
+  for (const [set, types] of Object.entries(STRUCTURE_TOKEN_PRICES)) {
+    const def = SETS.find((d) => d.set === set && d.collectible);
+    if (!def) throw new Error(`generator/tokenPrices.ts: STRUCTURE_TOKEN_PRICES names no collectible set ${set}`);
+    for (const t of Object.keys(types)) if (!def.types.some((d) => d.id === t)) throw new Error(`generator/tokenPrices.ts: ${set} has no type ${t}`);
+  }
   for (const def of SETS) {
     const meta = setMeta(def, await typeMeta(def));
     metas.push(meta);

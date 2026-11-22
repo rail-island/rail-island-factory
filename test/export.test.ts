@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { parseGlb } from "../generator/glbTriangles";
+import { glbStats } from "../generator/glbStats";
 import { PNG } from "pngjs";
 import { SIDE_MAX_PX, SIDE_PX_PER_M, glbSideFrame } from "../generator/renderGlbThumb";
 import { built, glbOf, lodGlbOf } from "./catalogCache";
@@ -279,7 +280,13 @@ describe("buildExport", () => {
         isSideViewCategory(d.catalog?.category ?? "Road vehicles") ? [[d.id, glbSideFrame(glbOf(d.id))] as const] : []));
       // every vehicle's entry carries its rider seat, measured on its built model (docs/models/rider-seat.md)
       const seats = new Map(inSample(ALL_VEHICLES).map((d) => [d.id, vehicleSeat(d, glbOf(d.id))] as const));
-      expect(vehicles).toEqual(exportVehicleMeta(inSample(ALL_VEHICLES), rigs, sides, seats));
+      // its rail-token price is worked out from its default build's extent (docs/models/token-prices.md)
+      const sizes = new Map(inSample(ALL_VEHICLES).map((d) => {
+        const st = glbStats(glbOf(d.id));
+        return [d.id, st.max.map((v, i) => v - st.min[i]!)] as const;
+      }));
+      expect(vehicles).toEqual(exportVehicleMeta(inSample(ALL_VEHICLES), rigs, sides, seats, new Map(), sizes));
+      for (const v of vehicles.vehicles) expect(v.tokenPrice).toBeGreaterThan(0);
       for (const v of vehicles.vehicles) expect(v.rider).toHaveLength(3);
       expect(vehicles.vehicles.map((v) => v.id).sort()).toEqual(["proc-vehicle-american-truck", "proc-vehicle-cd-150"]);
       for (const v of vehicles.vehicles) {
