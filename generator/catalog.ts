@@ -42,6 +42,7 @@ import { checkDesignSounds, declaredSounds, defaultValues, shipHullStuds, withSo
 import type { SoundMapping, SoundOverride } from "./soundTable.ts";
 import { blurbOf, countryName, countryOf, makerOf, yearOf } from "./factTable.ts";
 import { isDraft } from "./workshop.ts";
+import { PRICED_VEHICLE_CATEGORIES, STRUCTURE_TOKEN_PRICES, statedTokenPrice, vehicleTokenPrice } from "./tokenPrices.ts";
 import { linksOf, type ModelLink } from "./linkTable.ts";
 import { LINE_COUNTS, LINE_PREVIEW_ID, LINE_STATIONS, lineCabinValue, lineStationValue } from "./cableCarLineIds.ts";
 
@@ -122,6 +123,12 @@ export interface MetaEntry {
    * plaza rules. Always present for a vehicle.
    */
   game?: ExportedGame;
+  /**
+   * What the game charges, in rail tokens, to unlock the whole design -- every
+   * variant at once (tokenPrices.ts, docs/models/token-prices.md): every vehicle,
+   * every landmark and every draught animal. Absent on what is never sold.
+   */
+  tokenPrice?: number;
 }
 
 export interface ExportMeta {
@@ -425,7 +432,7 @@ export function exportMeta(designs: readonly ProceduralDesign[]): ExportMeta {
     checkGameProperties(withoutSounds(d), false);
     checkDesignSounds(d, false);
   }
-  return { note: NOTE, count: designs.length, buildings: designs.map((d) => withCityUse(metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG), d)) };
+  return { note: NOTE, count: designs.length, buildings: designs.map((d) => withTokenPrice(withCityUse(metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG), d), null)) };
 }
 
 /** A design's measured extents by its values, so an export measures each variant once. */
@@ -529,6 +536,7 @@ export function exportVehicleMeta(
   sides: ReadonlyMap<string, ThumbSide> = new Map(),
   seats: ReadonlyMap<string, readonly [number, number, number]> = new Map(),
   doors: ReadonlyMap<string, readonly [number, number, number]> = new Map(),
+  sizes: ReadonlyMap<string, readonly number[]> = new Map(),
 ): VehicleExportMeta {
   for (const d of designs) {
     checkGameProperties(withoutSounds(d), true);
@@ -537,8 +545,30 @@ export function exportVehicleMeta(
   return {
     note: NOTE,
     count: designs.length,
-    vehicles: designs.map((d) => metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null, seats.get(d.id) ?? null, doors.get(d.id) ?? null)),
+    vehicles: designs.map((d) =>
+      withTokenPrice(metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null, seats.get(d.id) ?? null, doors.get(d.id) ?? null), sizes.get(d.id) ?? null),
+    ),
   };
+}
+
+/**
+ * An entry with its rail-token price (tokenPrices.ts): a vehicle's worked out from
+ * its game figures, its looks and `size` -- its default build's extent (x, y, z),
+ * without which a vehicle gets none -- a landmark's or a draught animal's stated,
+ * and a structure preview's its type's. Anything else is returned as it is.
+ */
+export function withTokenPrice(entry: MetaEntry, size: readonly number[] | null): MetaEntry {
+  let price: number | null | undefined = statedTokenPrice(entry.id);
+  // a structure type's site preview shows its type's price
+  if (price === undefined && entry.gameId) price = STRUCTURE_TOKEN_PRICES[entry.group]?.[entry.gameId];
+  if (price === undefined && PRICED_VEHICLE_CATEGORIES.includes(entry.category) && size) {
+    price = vehicleTokenPrice({
+      id: entry.id, category: entry.category, group: entry.group, traction: entry.traction, year: yearOf(entry.id)?.year,
+      game: entry.game as Parameters<typeof vehicleTokenPrice>[0]["game"], params: entry.params,
+      length: Math.max(size[0] ?? 0, size[2] ?? 0), height: size[1] ?? 0,
+    });
+  }
+  return price === undefined || price === null ? entry : { ...entry, tokenPrice: price };
 }
 
 /** Rounded to a tenth of a millimetre, so float noise does not reach the meta. */

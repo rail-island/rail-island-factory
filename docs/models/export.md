@@ -152,7 +152,9 @@ building import reading `skyscrapers.meta.json` therefore never sees a truck.
 Every vehicle entry carries `game`: its weight, power, top speed and
 acceleration, and where they apply its size factor, draft, rope and sill heights,
 airport class and per-variant figures ([game-properties.md](game-properties.md)).
-A vehicle design without them fails the build.
+A vehicle design without them fails the build. Every vehicle entry also carries `tokenPrice`, its
+rail-token price, and so do the landmarks' entries in `skyscrapers.meta.json`
+([token-prices.md](token-prices.md)).
 
 A **locomotive** (group `loco`) or a **unit** (group `unit`: powered and carrying
 passengers - the electric and diesel multiple units, the railcars, the ICE 1 and

@@ -187,10 +187,11 @@ import { JS_DIR, bundleDesign, bundleFlags, gzipSize, writeIfChanged, type Bundl
 import { BOARDING_DOOR_SOURCE, BUILD_CACHE_DIR, BuildCache, SourceGraph, designKey, readExportKeys, writeExportKeys } from "./buildCache.ts";
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
-  CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta,
+  CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, withTokenPrice,
   exportPropMeta, exportCharacterMeta, CHARACTERS_META_FILE, exportVehicleMeta, isSideViewCategory, listedEntry, metaEntry, PROPS_META_FILE, type ModelCatalog, type ReferenceImage,
 } from "./catalog.ts";
 import { TREE_DIR, TREE_MAX_BYTES, type SourceTree } from "./sourceTree.ts";
+import { tokenPriceProblems } from "./tokenPrices.ts";
 import type { MeshBuilder } from "./meshBuilder.ts";
 import { posable, type VehicleRig } from "./rig.ts";
 
@@ -855,7 +856,8 @@ export async function buildExport(
   const sides = new Map(models.flatMap((m) => (m.side ? [[m.id, m.side] as const] : [])));
   const seats = new Map(models.flatMap((m) => (m.seat ? [[m.id, m.seat] as const] : [])));
   const doors = new Map(models.flatMap((m) => (m.door ? [[m.id, m.door] as const] : [])));
-  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides, seats, doors), null, 2)}\n`);
+  const sizes = new Map(models.map((m) => [m.id, m.stats.max.map((v, i) => v - m.stats.min[i]!)] as const));
+  fs.writeFileSync(path.join(dir, VEHICLE_META_FILE), `${JSON.stringify(exportVehicleMeta(chosen(ALL_VEHICLES), rigs, sides, seats, doors, sizes), null, 2)}\n`);
   const bounds = new Map(models.map((m) => [m.id, { min: m.stats.min, max: m.stats.max }] as const));
   fs.writeFileSync(path.join(dir, PROPS_META_FILE), `${JSON.stringify(exportPropMeta(chosen(PROP_DESIGNS), bounds, FAR_PROPS), null, 2)}\n`);
   fs.writeFileSync(path.join(dir, CHARACTERS_META_FILE), `${JSON.stringify(exportCharacterMeta(chosen(CHARACTER_DESIGNS), bounds), null, 2)}\n`);
@@ -896,7 +898,8 @@ export async function buildExport(
     records: designs.map((design) => {
       const built = models.find((m) => m.id === design.id)!;
       const jsText = js.get(design.id)!;
-      const record = catalogRecord(listedEntry(metaEntry(design, catalogFields(design), built.rig, built.side, built.seat, built.door), design, BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design)), {
+      const entry = listedEntry(metaEntry(design, catalogFields(design), built.rig, built.side, built.seat, built.door), design, BUILDINGS.includes(design) || VILLAGE_DESIGNS.includes(design));
+      const record = catalogRecord(withTokenPrice(entry, built.stats.max.map((v, i) => v - built.stats.min[i]!)), {
         ...built.stats,
         jsBytes: Buffer.byteLength(jsText),
         jsGzipBytes: gzipSize(jsText),
@@ -906,6 +909,11 @@ export async function buildExport(
       return { ...record, ...airframeField(design.id), ...(design.buildCoarse ? { coarse: true } : {}), ...(design.buildMax ? { maxDetail: true } : {}), ...(design.sourceTree === false ? { noSourceTree: true } : {}) };
     }),
   };
+  // every vehicle, landmark and draught animal carries a rail-token price (docs/models/token-prices.md)
+  if (designs.length === DESIGNS.size) {
+    const problems = tokenPriceProblems(catalog.records, DESIGNS.keys());
+    if (problems.length) throw new Error(`generator/tokenPrices.ts: ${problems.join("; ")}`);
+  }
   // the legacy table maps old ids onto the whole catalog, so a narrowed export has none
   if (designs.length === DESIGNS.size) {
     const table = buildLegacyMapping(DESIGNS, (design, params, modelId) => extents(design, params, () => measureModel(design, params, modelId)));

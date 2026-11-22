@@ -155,7 +155,8 @@ data, the parameter rolls, a frontage per spacing and a party-wall case.
 `generateSets` (a whole export only) writes `export/sets/`:
 
 - `<set>.meta.json` for every set: `set`, `collectible`, `landed`, `defaultId`, `retired`,
-  `types` (`{ id, ...TYPE_META[id] }`, no English), `groups` (`{ id, types }`) and, once
+  `types` (`{ id, ...TYPE_META[id] }`, no English; a collectible set's types add `tokenPrice`,
+  [token-prices.md](token-prices.md)), `groups` (`{ id, types }`) and, once
   landed, `module`. A landed module may export `TYPE_META`, per-type data the game reads
   without running it (a shed's size).
 - `<set>.js` for a landed set: one minified ESM file with no imports, platform neutral, so the
