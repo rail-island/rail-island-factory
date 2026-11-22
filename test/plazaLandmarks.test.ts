@@ -10,9 +10,10 @@ import { findCoplanarOverlaps } from '../generator/coplanar';
 import catalogModels from '../generator/catalogModels.json';
 
 describe('plaza landmarks', () => {
-  it('are the six designs of the first batch, each with its own LOD builder and tier', () => {
+  it('are the designs of the first two batches, each with its own LOD builder and tier', () => {
     expect(PLAZA_LANDMARKS.map(d => plazaName(d.id)).sort()).toEqual([
-      'arc-de-triomphe', 'bandstand', 'parthenon', 'plague-column', 'prague-old-town-hall', 'temple-of-heaven',
+      'arc-de-triomphe', 'atomium', 'bandstand', 'cloth-hall', 'equestrian-statue', 'leaning-tower-of-pisa',
+      'nelsons-column', 'parthenon', 'plague-column', 'prague-old-town-hall', 'temple-of-heaven', 'war-memorial',
     ]);
     for (const d of PLAZA_LANDMARKS) {
       expect(d.buildLod.name).toBe(`${d.build.name}Lod`);

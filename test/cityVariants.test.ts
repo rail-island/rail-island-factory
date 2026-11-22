@@ -20,6 +20,8 @@ const ADDED_SINCE_BASELINE = [
   // the plaza landmarks (docs/models/plaza-landmarks.md)
   "proc-building-plague-column", "proc-building-bandstand", "proc-building-arc-de-triomphe",
   "proc-building-prague-old-town-hall", "proc-building-parthenon", "proc-building-temple-of-heaven",
+  "proc-building-war-memorial", "proc-building-equestrian-statue", "proc-building-leaning-tower-of-pisa",
+  "proc-building-cloth-hall", "proc-building-nelsons-column", "proc-building-atomium",
 ];
 
 describe("city variants", () => {
