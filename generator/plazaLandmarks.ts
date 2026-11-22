@@ -20,6 +20,14 @@ import { STATUE_OF_LIBERTY } from "./plazaStatueOfLiberty.ts";
 import { PANTHEON } from "./plazaPantheon.ts";
 import { TAJ_MAHAL } from "./plazaTajMahal.ts";
 import { GATEWAY_OF_INDIA } from "./plazaGatewayOfIndia.ts";
+import { VILLAGE_CHAPEL } from "./plazaVillageChapel.ts";
+import { BELFRY_OF_BRUGES } from "./plazaBelfryOfBruges.ts";
+import { BRUSSELS_TOWN_HALL } from "./plazaBrusselsTownHall.ts";
+import { MARKET_HALL } from "./plazaMarketHall.ts";
+import { US_CAPITOL } from "./plazaUsCapitol.ts";
+import { REICHSTAG } from "./plazaReichstag.ts";
+import { HAGIA_SOPHIA } from "./plazaHagiaSophia.ts";
+import { GATE_OF_HEAVENLY_PEACE } from "./plazaGateOfHeavenlyPeace.ts";
 
 /** Each landmark's module, as the build registers it (generate.ts RAW_FAMILIES). */
 export const PLAZA_FAMILIES: ReadonlyArray<{ designs: ProceduralDesign[]; source: string }> = [
@@ -41,6 +49,14 @@ export const PLAZA_FAMILIES: ReadonlyArray<{ designs: ProceduralDesign[]; source
   { designs: PANTHEON, source: "plazaPantheon.ts" },
   { designs: TAJ_MAHAL, source: "plazaTajMahal.ts" },
   { designs: GATEWAY_OF_INDIA, source: "plazaGatewayOfIndia.ts" },
+  { designs: VILLAGE_CHAPEL, source: "plazaVillageChapel.ts" },
+  { designs: BELFRY_OF_BRUGES, source: "plazaBelfryOfBruges.ts" },
+  { designs: BRUSSELS_TOWN_HALL, source: "plazaBrusselsTownHall.ts" },
+  { designs: MARKET_HALL, source: "plazaMarketHall.ts" },
+  { designs: US_CAPITOL, source: "plazaUsCapitol.ts" },
+  { designs: REICHSTAG, source: "plazaReichstag.ts" },
+  { designs: HAGIA_SOPHIA, source: "plazaHagiaSophia.ts" },
+  { designs: GATE_OF_HEAVENLY_PEACE, source: "plazaGateOfHeavenlyPeace.ts" },
 ];
 
 export const PLAZA_LANDMARKS: ProceduralDesign[] = PLAZA_FAMILIES.flatMap((f) => f.designs);
@@ -65,6 +81,14 @@ export const PLAZA_TIERS: Record<string, [number, number]> = {
   "pantheon": [20000, 30000],
   "taj-mahal": [20000, 30000],
   "gateway-of-india": [20000, 30000],
+  "village-chapel": [4000, 10000],
+  "belfry-of-bruges": [20000, 30000],
+  "brussels-town-hall": [20000, 30000],
+  "market-hall": [20000, 30000],
+  "us-capitol": [20000, 30000],
+  "reichstag": [20000, 30000],
+  "hagia-sophia": [20000, 30000],
+  "gate-of-heavenly-peace": [20000, 30000],
 };
 
 /** A plaza landmark's id without its prefix (the build exports `bld-x` as `proc-building-x`). */

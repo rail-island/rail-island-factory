@@ -1,7 +1,7 @@
 # Plaza landmarks
 
-**Covers** - the monuments and civic buildings made for a settlement's main square (first batch: Plague Column, Bandstand, Arc de Triomphe, Prague Old Town Hall, Parthenon, Temple of Heaven; second batch: War Memorial, Equestrian Statue, Leaning Tower of Pisa, Krakow Cloth Hall, Nelson's Column, Atomium; third batch: Market Cross, Half-Timbered Town Hall, Statue of Liberty, Pantheon, Taj Mahal, Gateway of India): their plaza rules, triangle tiers, what each reproduces and where it departs from the real one.
-**Code** - `generator/plazaLandmarks.ts` (index, tiers), `generator/plazaCatalog.ts`, `generator/plazaPlagueColumn.ts`, `generator/plazaBandstand.ts`, `generator/plazaArcDeTriomphe.ts`, `generator/plazaPragueOldTownHall.ts`, `generator/plazaParthenon.ts`, `generator/plazaTempleOfHeaven.ts`, `generator/plazaWarMemorial.ts`, `generator/plazaEquestrianStatue.ts`, `generator/plazaLeaningTowerOfPisa.ts`, `generator/plazaClothHall.ts`, `generator/plazaNelsonsColumn.ts`, `generator/plazaAtomium.ts`, `generator/plazaMarketCross.ts`, `generator/plazaHalfTimberedTownHall.ts`, `generator/plazaStatueOfLiberty.ts`, `generator/plazaPantheon.ts`, `generator/plazaTajMahal.ts`, `generator/plazaGatewayOfIndia.ts`, `test/plazaLandmarks.test.ts`, `assets/<name>/`
+**Covers** - the monuments and civic buildings made for a settlement's main square (first batch: Plague Column, Bandstand, Arc de Triomphe, Prague Old Town Hall, Parthenon, Temple of Heaven; second batch: War Memorial, Equestrian Statue, Leaning Tower of Pisa, Krakow Cloth Hall, Nelson's Column, Atomium; third batch: Market Cross, Half-Timbered Town Hall, Statue of Liberty, Pantheon, Taj Mahal, Gateway of India; fourth batch: Village Chapel, Belfry of Bruges, Brussels Town Hall, Market Hall, United States Capitol, Reichstag, Hagia Sophia, Gate of Heavenly Peace): their plaza rules, triangle tiers, what each reproduces and where it departs from the real one.
+**Code** - `generator/plazaLandmarks.ts` (index, tiers), `generator/plazaCatalog.ts`, `generator/plazaPlagueColumn.ts`, `generator/plazaBandstand.ts`, `generator/plazaArcDeTriomphe.ts`, `generator/plazaPragueOldTownHall.ts`, `generator/plazaParthenon.ts`, `generator/plazaTempleOfHeaven.ts`, `generator/plazaWarMemorial.ts`, `generator/plazaEquestrianStatue.ts`, `generator/plazaLeaningTowerOfPisa.ts`, `generator/plazaClothHall.ts`, `generator/plazaNelsonsColumn.ts`, `generator/plazaAtomium.ts`, `generator/plazaMarketCross.ts`, `generator/plazaHalfTimberedTownHall.ts`, `generator/plazaStatueOfLiberty.ts`, `generator/plazaPantheon.ts`, `generator/plazaTajMahal.ts`, `generator/plazaGatewayOfIndia.ts`, `generator/plazaVillageChapel.ts`, `generator/plazaBelfryOfBruges.ts`, `generator/plazaBrusselsTownHall.ts`, `generator/plazaMarketHall.ts`, `generator/plazaUsCapitol.ts`, `generator/plazaReichstag.ts`, `generator/plazaHagiaSophia.ts`, `generator/plazaGateOfHeavenlyPeace.ts`, `test/plazaLandmarks.test.ts`, `assets/<name>/`
 **See also** - [landmarks.md](landmarks.md) (the older secular landmarks), [game-properties.md](game-properties.md) (`plaza`), [historical.md](historical.md), [lod.md](lod.md), [../site/workshop.md](../site/workshop.md)
 
 ## The family
@@ -35,8 +35,16 @@ All are modelled in metres, +Y up, base at y = 0, centred on the origin. They ar
 | `bld-pantheon` | Pantheon | city; rect, footprint | 57.2 / 43.6 / 79.0 | 25,226 | 410 | `assets/pantheon/` |
 | `bld-taj-mahal` | Taj Mahal | city; rect, footprint | 95.7 / 73.0 / 95.7 | 29,294 | 480 | `assets/taj-mahal/` |
 | `bld-gateway-of-india` | Gateway of India | city; rect, footprint | 43.4 / 26.0 / 27.4 | 28,936 | 448 | `assets/gateway-of-india/` |
+| `bld-village-chapel` | Village Chapel | village; rect | 7.2 / 14.2 / 10.9 | 4,180 | 260 | `assets/village-chapel/` |
+| `bld-belfry-of-bruges` | Belfry of Bruges | town, city; rect, footprint | 45.4 / 83.0 / 53.1 | 27,876 | 238 | `assets/belfry-of-bruges/` |
+| `bld-brussels-town-hall` | Brussels Town Hall | town, city; rect, footprint | 71.4 / 96.0 / 49.1 | 25,390 | 296 | `assets/brussels-town-hall/` |
+| `bld-market-hall` | Market Hall | town, city; rect, footprint | 49.2 / 25.0 / 34.4 | 26,030 | 194 | `assets/market-hall/` |
+| `bld-us-capitol` | United States Capitol | city; rect, footprint | 195.2 / 88.0 / 104.4 | 28,528 | 432 | `assets/us-capitol/` |
+| `bld-reichstag` | Reichstag | city; rect, footprint | 139.6 / 50.1 / 99.7 | 29,313 | 436 | `assets/reichstag/` |
+| `bld-hagia-sophia` | Hagia Sophia | city; rect, footprint | 87.9 / 60.0 / 87.3 | 20,939 | 478 | `assets/hagia-sophia/` |
+| `bld-gate-of-heavenly-peace` | Gate of Heavenly Peace | city; rect, footprint | 66.0 / 32.6 / 57.0 | 26,750 | 284 | `assets/gate-of-heavenly-peace/` |
 
-Tiers (the building skill): the small monuments (Plague Column, Bandstand, War Memorial, Equestrian Statue, Nelson's Column, Market Cross) 4,000-10,000 triangles, the
+Tiers (the building skill): the small monuments (Plague Column, Bandstand, War Memorial, Equestrian Statue, Nelson's Column, Market Cross, Village Chapel) 4,000-10,000 triangles, the
 large landmarks 20,000-30,000; every LOD 101-500 triangles, no windows, the full model's
 height and plan. `test/plazaLandmarks.test.ts` checks the tiers, the ground, at most 12
 materials, determinism, coplanar overlaps, degenerate triangles, the LODs, the plaza rule,
@@ -337,3 +345,124 @@ The city side faces +Z; the sea side mirrors it (the steps to the water are left
   wrapping chhajja and a jali frieze.
 - Deviations: the arch measured from the photos (the brief's 15 m is the dome's span); 38 m
   wide; no flagpole; jali with a dark back, not see-through.
+
+## Village Chapel
+
+A generic Central European village chapel (Czech "kaple na navsi", Bavarian Dorfkapelle);
+the entrance gable faces +Z.
+
+- An ochre-rendered nave 6.4 x 7 m on a stone plinth, a rounded apse at the back under a
+  conical tile roof, white lesenes and a moulded cornice, round-arched windows with stone
+  surrounds.
+- The +Z front: a round-arched door with a panelled double leaf, a two-step porch with two
+  benches, a niche with a saint, and a curved volute gable with scrolls, vases, an oculus,
+  a pediment and a ball finial.
+- A steep red tile roof and a square ridge turret with an open belfry, louvres, a small
+  bronze bell, a copper onion helmet and a gilt cross at 14.24 m.
+- Deviations: a composite, richer than most real village chapels; a tile apse roof.
+
+## Belfry of Bruges
+
+The tower front faces the Markt (+Z).
+
+- The halls: a brick ring 44 m along the Markt and 50 m deep (shortened from about 84 m)
+  round a 26 m courtyard, 14 m walls, a corbelled crenellated parapet, corner turrets,
+  pointed shop arches and two-light windows on the front, slate roofs with stepped back gables.
+- A real gate passage under the tower into the courtyard.
+- The tower to 83 m: the brick square shaft with octagonal corner turrets, the Virgin's
+  niche and blind arcades; the machicolated gallery; the upper square stage with the lower
+  clocks, great corner pinnacles and an openwork balustrade; the white stone octagon with
+  two-light belfry openings and the upper clocks; the crenellated crown, slate roof and finial.
+- Deviations: shorter halls; no lean; stage heights estimated from photos; dark (not
+  see-through) belfry openings.
+
+## Brussels Town Hall
+
+The Gothic front faces the Grand-Place (+Z).
+
+- A 66 m front between octagonal corner turrets, the tower right of centre; a real
+  ground-floor arcade 4 m deep; an openwork band; two storeys of pointed windows with
+  mullions, transoms and tracery heads; about 70 statues in canopied niches; a crenellated
+  parapet with pinnacles; steep slate roofs with rows of dormers.
+- The tower: a square base over the real entrance arch to the courtyard, a square shaft
+  above the roof with a pinnacled gallery, three tapering octagonal openwork stages, the
+  openwork spire and the gilded St Michael at 96 m.
+- Wings round a 38 x 18 m courtyard under hipped roofs.
+- Deviations: a regular plan; a simplified Baroque back wing; approximate bay counts; a
+  crenellated (not openwork) parapet; blocky statues.
+
+## Market Hall
+
+A 19th-century cast-iron and glass market hall, a composite of the Baltard pavilions, the
+Budapest Great Market Hall and Nogent; the main entrance faces +Z.
+
+- A basilica in iron: a raised nave along X over side aisles, crossed by a transept whose
+  gable fronts (+-Z) are the entrances; cast-iron columns on a 6 x 7 m grid.
+- Brick bases, tall glazed round-headed bays with real bars and recessed panes, louvres,
+  lean-to zinc aisle roofs, a glazed clerestory, pitched zinc roofs with skylights, louvred
+  ridge lanterns with cresting and a square crossing lantern with a gilt finial at 25 m.
+- The +Z front: brick piers, an open portal, a great arched window, an enamel clock, a stone
+  gable and an iron-and-glass canopy; inside, 16 market stalls with awnings, seen through
+  the open portals.
+- Deviations: a composite with an added transept; opaque glass; no inner trusses; a blank
+  sign board.
+
+## United States Capitol
+
+The east front faces +Z; compressed to about 195 m long (real 229 m), depth and heights real.
+
+- The central block: a rusticated ground storey, two storeys of pedimented windows, the
+  balustrade; the east portico of 8 Corinthian columns before a 14-column colonnade, the
+  tympanum sculpture and a 20-step grand stair.
+- The Senate (-X) and House (+X) wings with pedimented porticos and colonnades; the
+  connecting corridors with small cupolas; a simplified west front and terrace.
+- The dome: the peristyle of 36 columns round a windowed drum, the attic with 36 windows,
+  the ribbed shell with 36 ribs, the tholos and the bronze Statue of Freedom at 88 m.
+- Deviations: shortened; one west terrace; simplified capitals and balustrades; six-column
+  wing porticos; no flagpoles.
+
+## Reichstag
+
+The west front (Platz der Republik) faces +Z.
+
+- The 132 x 81 m body round two light courts: a rusticated base, giant pilasters, arched
+  and pedimented windows, the cornice, attic and balustrade with urns; the east and short
+  projections.
+- Four 20 m square corner towers to about 40 m with arched windows, sculpture groups, a
+  stepped crown and a German flag each.
+- The west portico: a 16-step grand stair, six Corinthian columns, the glazed entrance
+  wall, corner piers with pinnacles, DEM DEUTSCHEN VOLKE in raised bronze letters and the
+  pediment.
+- Foster's dome: a 40 m elliptical shell 23.5 m high of 24 ribs and 17 rings with
+  see-through glass, the two spiral ramps and the mirrored cone inside.
+- Deviations: about 99.7 m deep with the full stair; the dome top about 2.5 m high;
+  simplified sculpture, balusters and courts; generic pier pinnacles.
+
+## Hagia Sophia
+
+The long axis is X, the narthex and entrance at -X (west), the apse at +X.
+
+- The central dome 34 m across, crown at 55.6 m, with 40 ribs on a drum of 40 windows and
+  small buttresses; the square block with the north and south great arches over recessed
+  red-orange tympana with rows of windows.
+- The east and west semidomes with their four exedra semidomes, the east apse, the four
+  stepped buttress towers and Ottoman sloping buttresses; the aisle and gallery block, the
+  inner narthex and the exonarthex arcade.
+- Four Ottoman minarets of 58.5-60 m with pencil caps and one or two balconies, the
+  south-east one in red brick.
+- Deviations: a rectangular plan; no pendentives, tombs or fountain; recessed arches and
+  dark windows; simplified minaret positions.
+
+## Gate of Heavenly Peace
+
+The front faces +Z (south). The central panel above the main gateway is plain red: no
+portrait, banner or text.
+
+- The 66 x 37 m, 12 m battered red podium with a grey plinth, coping and a white marble
+  balustrade; five semicircular gateways through it along Z, the central one largest.
+- The gate tower: a nine-by-five-bay hall of 28 red columns with lattice doors, painted beams
+  and dougong bands under a double-eaved hip-and-gable roof of golden glazed tiles with
+  upturned corners, ridge beasts and chiwen (to 32.6 m).
+- The forecourt: the Jinshui river with five arched marble bridges and two huabiao.
+- Deviations: the podium capped at 66 m; a straight river and a 20 m forecourt; lattice as
+  panels; blocky carvings.

@@ -24,6 +24,14 @@ const ADDED_SINCE_BASELINE = [
   "proc-building-cloth-hall", "proc-building-nelsons-column", "proc-building-atomium",
   "proc-building-market-cross", "proc-building-half-timbered-town-hall", "proc-building-statue-of-liberty",
   "proc-building-pantheon", "proc-building-taj-mahal", "proc-building-gateway-of-india",
+  "proc-building-village-chapel",
+  "proc-building-belfry-of-bruges",
+  "proc-building-brussels-town-hall",
+  "proc-building-market-hall",
+  "proc-building-us-capitol",
+  "proc-building-reichstag",
+  "proc-building-hagia-sophia",
+  "proc-building-gate-of-heavenly-peace",
 ];
 
 describe("city variants", () => {
