@@ -14,8 +14,10 @@ Rail Island. They have no parameters. Each has a stated rail-token price in
 `LANDMARK_TOKEN_PRICES` ([token-prices.md](token-prices.md)): 300 RT for the bandstand and
 the war memorial up to 2,500 RT for the Taj Mahal and the Statue of Liberty.
 
-All are modelled in metres, +Y up, base at y = 0, centred on the origin. They are
-**drafts** (workshop) until the user confirms them into `generator/catalogModels.json`.
+All are modelled in metres, +Y up, base at y = 0, centred on the origin. All 26 are
+confirmed into the catalog (`generator/catalogModels.json`, 2026-11). The game supplies
+the square's ground: the Atomium, the Cloth Hall and the Gate of Heavenly Peace draw none
+of their own, and the others only the steps and platforms that belong to them.
 
 | id | title | plaza rule | size x / y / z (m) | triangles | LOD | photos |
 |---|---|---|---|---|---|---|
@@ -28,9 +30,9 @@ All are modelled in metres, +Y up, base at y = 0, centred on the origin. They ar
 | `bld-war-memorial` | War Memorial | village, town | 10.0 / 8.75 / 10.0 | 8,206 | 148 | `assets/war-memorial/` |
 | `bld-equestrian-statue` | Equestrian Statue | town, city; radial, round | 12.0 / 12.8 / 12.0 | 7,530 | 432 | `assets/equestrian-statue/` |
 | `bld-leaning-tower-of-pisa` | Leaning Tower of Pisa | town, city; radial, round | 27.0 / 56.6 / 27.0 | 29,902 | 482 | `assets/leaning-tower-of-pisa/` |
-| `bld-cloth-hall` | Krakow Cloth Hall | town, city; rect, footprint | 118.4 / 30.1 / 32.4 | 29,054 | 264 | `assets/cloth-hall/` |
+| `bld-cloth-hall` | Krakow Cloth Hall | town, city; rect, footprint | 117.0 / 30.1 / 31.2 | 29,044 | 252 | `assets/cloth-hall/` |
 | `bld-nelsons-column` | Nelson's Column | city | 25.0 / 51.6 / 25.0 | 9,558 | 376 | `assets/nelsons-column/` |
-| `bld-atomium` | Atomium | city; radial, round | 104.0 / 102.0 / 104.0 | 26,160 | 500 | `assets/atomium/` |
+| `bld-atomium` | Atomium | city; radial, round | 92.2 / 102.0 / 82.2 | 25,612 | 440 | `assets/atomium/` |
 | `bld-market-cross` | Market Cross | village, town; radial, round | 9.8 / 14.6 / 9.8 | 7,896 | 416 | `assets/market-cross/` |
 | `bld-half-timbered-town-hall` | Half-Timbered Town Hall | village, town; rect, footprint | 22.3 / 30.2 / 16.5 | 23,312 | 408 | `assets/half-timbered-town-hall/` |
 | `bld-statue-of-liberty` | Statue of Liberty | city; radial, round | 76.7 / 93.0 / 76.4 | 24,169 | 268 | `assets/statue-of-liberty/` |
@@ -44,13 +46,13 @@ All are modelled in metres, +Y up, base at y = 0, centred on the origin. They ar
 | `bld-us-capitol` | United States Capitol | city; rect, footprint | 195.2 / 88.0 / 104.4 | 28,528 | 432 | `assets/us-capitol/` |
 | `bld-reichstag` | Reichstag | city; rect, footprint | 139.6 / 50.1 / 99.7 | 29,313 | 436 | `assets/reichstag/` |
 | `bld-hagia-sophia` | Hagia Sophia | city; rect, footprint | 87.9 / 60.0 / 87.3 | 20,939 | 478 | `assets/hagia-sophia/` |
-| `bld-gate-of-heavenly-peace` | Gate of Heavenly Peace | city; rect, footprint | 66.0 / 32.6 / 57.0 | 26,750 | 284 | `assets/gate-of-heavenly-peace/` |
+| `bld-gate-of-heavenly-peace` | Gate of Heavenly Peace | city; rect, footprint | 66.0 / 32.6 / 37.0 | 22,998 | 170 | `assets/gate-of-heavenly-peace/` |
 
 Tiers (the building skill): the small monuments (Plague Column, Bandstand, War Memorial, Equestrian Statue, Nelson's Column, Market Cross, Village Chapel) 4,000-10,000 triangles, the
 large landmarks 20,000-30,000; every LOD 101-500 triangles, no windows, the full model's
 height and plan. `test/plazaLandmarks.test.ts` checks the tiers, the ground, at most 12
 materials, determinism, coplanar overlaps, degenerate triangles, the LODs, the plaza rule,
-the committed references and that the designs are still drafts.
+the committed references and that the designs are confirmed.
 
 ## Plague Column
 
@@ -216,6 +218,8 @@ top railing stands about 56.6 m high on the high side.
 
 The long axis is X; the long fronts face +Z and -Z.
 
+- No ground of its own: the hall stands on y = 0 and the game's paving shows under the
+  arcades and through the passage.
 - The 108 x 18 m hall: a shaded ground storey behind the arcades, the red brick storey with
   cream pilasters and round-headed windows, a white cornice at 15 m.
 - The neo-Gothic arcades along both long fronts: pointed arches pierced through the arcade
@@ -255,11 +259,12 @@ is z = 0, facing +Z.
   spheres bands of glazed triangles.
 - Twenty 3.3 m tubes (12 edges, 8 half-diagonals including the lift tube) with collars and
   rows of small windows.
-- Three tapering lattice pylons carrying the lower spheres; the lowest sphere on a short
-  column over a round glazed entrance pavilion with a canopy toward +Z; a round paved plaza
-  52 m in radius with lawns, which sets the plan extent.
+- Three tapering lattice pylons on concrete pads carrying the lower spheres; the lowest
+  sphere on a short column over a round glazed entrance pavilion with a canopy toward +Z.
+  No ground of its own: the pads, column and pavilion stand directly on y = 0, so the
+  game's ground shows round them (plan about +-46 x +-41 m).
 - Deviations: the plate net is offset latitude rings, not the real geodesic net; a generic
-  pavilion; simplified pylons; a stylised round plaza.
+  pavilion; simplified pylons.
 
 ## Market Cross
 
@@ -476,10 +481,12 @@ The front faces +Z (south). The central panel above the main gateway is plain re
 portrait, banner or text.
 
 - The 66 x 37 m, 12 m battered red podium with a grey plinth, coping and a white marble
-  balustrade; five semicircular gateways through it along Z, the central one largest.
+  balustrade; five semicircular gateways through it along Z (walls and vaults, no floor), the central
+  one largest.
 - The gate tower: a nine-by-five-bay hall of 28 red columns with lattice doors, painted beams
   and dougong bands under a double-eaved hip-and-gable roof of golden glazed tiles with
   upturned corners, ridge beasts and chiwen (to 32.6 m).
-- The forecourt: the Jinshui river with five arched marble bridges and two huabiao.
-- Deviations: the podium capped at 66 m; a straight river and a 20 m forecourt; lattice as
-  panels; blocky carvings.
+- The podium and gate tower alone, centred on the podium's footprint: the Outer Jinshui
+  river, its bridges and the two huabiao are left out and no paving is drawn - the game
+  supplies the ground, which shows through the five floorless gateways.
+- Deviations: the podium capped at 66 m; no forecourt; lattice as panels; blocky carvings.

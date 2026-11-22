@@ -1,6 +1,6 @@
 // The plaza landmarks (docs/models/plaza-landmarks.md): each meets its triangle tier,
 // stands on the ground, exports clean deterministic geometry, carries its plaza rule
-// and its references, and has a dedicated LOD that keeps its silhouette.
+// and its references, has a dedicated LOD that keeps its silhouette, and is confirmed.
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { PLAZA_LANDMARKS, PLAZA_TIERS, plazaName } from '../generator/plazaLandmarks';
@@ -62,7 +62,7 @@ describe('plaza landmarks', () => {
       expect(fs.existsSync(`assets/${d.references}/SOURCES.md`)).toBe(true);
     });
   }
-  it('stay drafts until the user confirms them', () => {
-    for (const d of PLAZA_LANDMARKS) expect(catalogModels.ids).not.toContain(`proc-building-${plazaName(d.id)}`);
+  it('are confirmed into the catalog', () => {
+    for (const d of PLAZA_LANDMARKS) expect(catalogModels.ids).toContain(`proc-building-${plazaName(d.id)}`);
   });
 });

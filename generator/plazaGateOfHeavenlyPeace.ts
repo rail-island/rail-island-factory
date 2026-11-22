@@ -1,15 +1,15 @@
 // The Gate of Heavenly Peace (Tiananmen) in Beijing, the southern gate of the Imperial
-// City (1420, rebuilt 1651), with the Outer Jinshui river, its five white marble
-// bridges and the two huabiao before it. A plaza landmark
+// City (1420, rebuilt 1651): the podium and the gate tower alone. A plaza landmark
 // (docs/models/plaza-landmarks.md): the game may stand it on the rectangular main
-// square of a city.
+// square of a city, and supplies the ground round it and under it.
 //
 // What it reproduces (photos in assets/gate-of-heavenly-peace/, measured in px against
 // the gate's 66 m width and 32.6 m height):
 // - the podium: 66 x 37 m at the foot, 12 m high, red plastered walls with a batter
 //   and a grey stone plinth, the grey coping and the white marble balustrade along
 //   its top; five arched gateways pass right through it along Z, the central one the
-//   largest; above the central gateway a plain red wall panel;
+//   largest, their walls and vaults drawn but no floor (the game's ground shows
+//   through); above the central gateway a plain red wall panel;
 // - the gate tower on its marble base: the nine-bay by five-bay hall, red columns
 //   round a veranda before red lattice doors and windows; the blue and green painted
 //   beams and the bracket sets (dougong) in two staggered courses under each eave;
@@ -17,23 +17,18 @@
 //   lower eave a skirt round the upper storey, the upper roof hipped below and gabled
 //   above, both with a concave profile, upturned corners and tile ribs in real relief;
 //   the red gables with their gilt ornament and bargeboards; the main ridge with the
-//   chiwen at its ends, the hip and gable ridges and the little ridge beasts;
-// - in front (+Z) the paved forecourt crossed by the Jinshui river with marble
-//   parapets, the five arched marble bridges with their balustrades (one before each
-//   gateway, the central one the widest), and the two huabiao: carved marble columns
-//   on fenced pedestals with the spiralling dragon, the cloud plate, the round disc
-//   and the crouching beast.
+//   chiwen at its ends, the hip and gable ridges and the little ridge beasts.
 //
-// Deviations: no portrait, banners or slogans (the wall above the central gateway is a
-// plain panel); the river runs straight instead of in its shallow bow, and the
-// forecourt is only 20 m deep; the lattice is panels and bars, not pierced; the
-// dragons, clouds and beasts are blocks.
+// Deviations: no forecourt (the Outer Jinshui river, its five bridges and the two
+// huabiao are left out, and there is no paving: the game draws the ground); no
+// portrait, banners or slogans (the wall above the central gateway is a plain panel);
+// the lattice is panels and bars, not pierced; the dragons and beasts are blocks.
 //
-// Metres, +Y up, base at y = 0, centred on the footprint (podium and forecourt); the
-// gate faces +Z (south). Sources: Wikipedia "Tiananmen" and the photographs in
-// assets/gate-of-heavenly-peace/ (SOURCES.md). Deterministic: the same code gives the
-// same bytes. The id is what the game's saved maps store, so it is never renamed once
-// shipped.
+// Metres, +Y up, base at y = 0 (the podium walls' foot), centred on the podium's
+// footprint; the gate faces +Z (south). Sources: Wikipedia "Tiananmen" and the
+// photographs in assets/gate-of-heavenly-peace/ (SOURCES.md). Deterministic: the same
+// code gives the same bytes. The id is what the game's saved maps store, so it is never
+// renamed once shipped.
 
 import { MeshBuilder, ngon, rect, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
@@ -51,8 +46,6 @@ const PALETTE: Record<string, MaterialSpec> = {
   paintBlue: { color: "#2a5596", roughness: 0.6 },
   paintGreen: { color: "#2f8068", roughness: 0.6 },
   tile: { color: "#e3a72a", metallic: 0.1, roughness: 0.4 },
-  water: { color: "#3e6a70", metallic: 0.2, roughness: 0.2 },
-  passage: { color: "#56514b", roughness: 0.95 },
 };
 
 // --- general helpers ------------------------------------------------------------------
@@ -260,10 +253,6 @@ const PH = 12;
 const BATTER = 0.075;
 const COPE = 1.0;
 const PLINTH = 1.4;
-/** The podium's centre on Z: the forecourt lies in front of it. */
-const PZ = -10;
-/** The paving's top: the forecourt, the gate passages' floor. */
-const PAVE = 0.6;
 
 const xF = (y: number): number => PX - BATTER * y;
 const zF = (y: number): number => PZ0 - BATTER * y;
@@ -333,10 +322,6 @@ function podium(m: MeshBuilder): void {
         const x = g.c + (s * g.w) / 2;
         quadN(m, "plasterShade", [x, 0, -zF(0)], [x, 0, zF(0)], [x, g.s, zF(g.s)], [x, g.s, -zF(g.s)], [-s, 0, 0]);
       }
-      // the shaded floor of the passage, just above the paving it crosses
-      const yF = PAVE + 0.02;
-      const zf = zF(yF);
-      quadN(m, "passage", [g.c - g.w / 2, yF, -zf], [g.c + g.w / 2, yF, -zf], [g.c + g.w / 2, yF, zf], [g.c - g.w / 2, yF, zf], [0, 1, 0]);
       const pts = archPts(g);
       for (let i = 0; i < ARCH_N; i++) {
         const [x0, y0] = pts[i]!;
@@ -584,189 +569,37 @@ function gateTower(m: MeshBuilder): void {
   });
 }
 
-// --- the forecourt: the Jinshui river, its bridges, the huabiao --------------------------
-
-const Z_FRONT = PZ + PZ0;
-const RIVER_N = Z_FRONT + 5;
-const RIVER_S = RIVER_N + 6;
-const Z_END = Z_FRONT + 20; // the forecourt's south edge, as far before the gate as its back lies behind the centre
-const Y_WATER = 0.1;
-/** The bridges before the gateways: centre x and width. */
-const BRIDGES: Array<{ c: number; w: number }> = [
-  { c: -23, w: 3.8 },
-  { c: -12.5, w: 4.6 },
-  { c: 0, w: 6.0 },
-  { c: 12.5, w: 4.6 },
-  { c: 23, w: 3.8 },
-];
-const B_RAMP = 2.5;
-const B_STEP = 0.5;
-
-function bridge(m: MeshBuilder, c: number, w: number): void {
-  const z0 = RIVER_N - B_RAMP;
-  const z1 = RIVER_S + B_RAMP;
-  const half = (z1 - z0) / 2;
-  const zc = (z0 + z1) / 2;
-  const rise = 0.7 + 0.06 * w;
-  const top = (z: number): number => PAVE + rise * (1 - Math.pow((z - zc) / half, 2));
-  const archH = rise - 0.15;
-  const bottom = (z: number): number => {
-    if (z <= RIVER_N + 1e-9 || z >= RIVER_S - 1e-9) return 0.3;
-    const t = (z - RIVER_N) / (RIVER_S - RIVER_N);
-    return 0.3 + archH * Math.sqrt(Math.max(0, 1 - Math.pow(2 * t - 1, 2)));
-  };
-  const n = Math.round((z1 - z0) / B_STEP);
-  const zs: number[] = [];
-  for (let i = 0; i <= n; i++) zs.push(z0 + i * B_STEP);
-  const xl = c - w / 2;
-  const xr = c + w / 2;
-  m.scope("body", () => {
-    for (let i = 0; i < n; i++) {
-      const za = zs[i]!;
-      const zb = zs[i + 1]!;
-      for (const [x, s] of [[xl, -1], [xr, 1]] as Array<[number, number]>) {
-        quadN(m, "marble", [x, bottom(za), za], [x, bottom(zb), zb], [x, top(zb), zb], [x, top(za), za], [s, 0, 0]);
-      }
-      quadN(m, "marble", [xl, top(za), za], [xr, top(za), za], [xr, top(zb), zb], [xl, top(zb), zb], [0, 1, 0]);
-      if (za >= RIVER_N - 1e-9 && zb <= RIVER_S + 1e-9) {
-        quadN(m, "stone", [xl, bottom(za), za], [xr, bottom(za), za], [xr, bottom(zb), zb], [xl, bottom(zb), zb], [0, -1, 0]);
-      }
-    }
-  });
-  m.scope("balustrades", () => {
-    for (const x of [xl + 0.17, xr - 0.17]) {
-      const posts: number[] = [];
-      for (let i = 0; i <= n; i += 4) posts.push(zs[i]!);
-      if (posts[posts.length - 1] !== zs[n]) posts.push(zs[n]!);
-      posts.forEach((z, k) => {
-        const zz = k === 0 ? z + 0.2 : k === posts.length - 1 ? z - 0.2 : z;
-        const y = top(zz);
-        m.box("marble", x, zz, 0.28, 0.28, y - 0.05, y + 1.0, 0, false);
-        m.spire("marble", rect(0.28, 0.28, x, zz), y + 1.0, y + 1.2);
-        if (k > 0) {
-          const zp = k === 1 ? posts[0]! + 0.2 : posts[k - 1]!;
-          const za = zp + 0.14;
-          const zb = zz - 0.14;
-          m.slab("marble", [[x - 0.07, top(za) - 0.02, za], [x - 0.07, top(zb) - 0.02, zb], [x - 0.07, top(zb) + 0.8, zb], [x - 0.07, top(za) + 0.8, za]], [0.14, 0, 0]);
-        }
-      });
-    }
-  });
-}
-
-function huabiao(m: MeshBuilder, x: number, z: number): void {
-  const y0 = PAVE;
-  m.scope("fence", () => {
-    const h = 1.8;
-    for (const [px, pz] of [[-h, -h], [h, -h], [h, h], [-h, h]] as Array<[number, number]>) {
-      m.box("marble", x + px, z + pz, 0.3, 0.3, y0, y0 + 1.0, 0, false);
-      m.spire("marble", rect(0.3, 0.3, x + px, z + pz), y0 + 1.0, y0 + 1.25);
-    }
-    for (const s of [-1, 1]) {
-      m.box("marble", x, z + s * h, 2 * h - 0.3, 0.14, y0 + 0.1, y0 + 0.8);
-      m.box("marble", x + s * h, z, 0.14, 2 * h - 0.3, y0 + 0.1, y0 + 0.8);
-    }
-  });
-  m.scope("column", () => {
-    const rot = Math.PI / 8;
-    m.prism("marble", ngon(8, 1.3, rot, x, z), y0, y0 + 0.5);
-    m.loft("marble", ngon(8, 1.05, rot, x, z), y0 + 0.5, ngon(8, 0.95, rot, x, z), y0 + 0.9, false);
-    m.prism("marble", ngon(8, 1.15, rot, x, z), y0 + 0.9, y0 + 1.3);
-    m.prism("marble", ngon(8, 0.48, rot, x, z), y0 + 1.3, y0 + 8.6, false);
-    // the dragon coiling up the shaft
-    for (let k = 0; k < 12; k++) {
-      const a = k * 0.9;
-      const y = y0 + 1.8 + k * 0.5;
-      m.box("stone", x + 0.5 * Math.sin(a), z + 0.5 * Math.cos(a), 0.5, 0.22, y, y + 0.42, a);
-    }
-    // the cloud plate through the shaft, then the disc and the crouching beast
-    const yc = y0 + 7.2;
-    m.slab("marble", [[x - 1.5, yc + 0.35, z + 0.09], [x - 1.1, yc - 0.05, z + 0.09], [x + 1.1, yc - 0.05, z + 0.09], [x + 1.5, yc + 0.35, z + 0.09], [x + 1.2, yc + 0.85, z + 0.09], [x - 1.2, yc + 0.85, z + 0.09]], [0, 0, -0.18]);
-    m.prism("marble", ngon(16, 0.85, 0, x, z), y0 + 8.6, y0 + 8.85);
-    m.box("marble", x, z, 0.7, 0.7, y0 + 8.85, y0 + 9.05);
-    m.box("marble", x, z - 0.1, 0.45, 0.85, y0 + 9.05, y0 + 9.5);
-    m.box("marble", x, z + 0.32, 0.4, 0.42, y0 + 9.5, y0 + 9.95);
-    m.box("marble", x, z - 0.42, 0.14, 0.14, y0 + 9.5, y0 + 9.85);
-  });
-}
-
-function forecourt(m: MeshBuilder): void {
-  m.scope("paving", () => {
-    m.box("stone", 0, (PZ - PZ0 + RIVER_N) / 2, 2 * PX, RIVER_N - (PZ - PZ0), 0, PAVE);
-    m.box("stone", 0, (RIVER_S + Z_END) / 2, 2 * PX, Z_END - RIVER_S, 0, PAVE);
-  });
-  m.scope("river", () => m.cap("water", rect(2 * PX, RIVER_S - RIVER_N, 0, (RIVER_N + RIVER_S) / 2), Y_WATER));
-  m.scope("river parapets", () => {
-    const gaps = BRIDGES.map((b) => [b.c - b.w / 2 - 0.15, b.c + b.w / 2 + 0.15] as [number, number]);
-    const runs: Array<[number, number]> = [];
-    let x = -PX + 0.2;
-    for (const [a, b] of gaps) {
-      runs.push([x, a]);
-      x = b;
-    }
-    runs.push([x, PX - 0.2]);
-    for (const zb of [RIVER_N - 0.3, RIVER_S + 0.3]) {
-      for (const [a, b] of runs) {
-        m.box("marble", (a + b) / 2, zb, b - a, 0.36, PAVE, PAVE + 0.65);
-        const n = Math.max(1, Math.round((b - a) / 3));
-        for (let i = 0; i <= n; i++) {
-          const px = a + 0.15 + ((b - a - 0.3) * i) / n;
-          m.box("marble", px, zb, 0.3, 0.3, PAVE + 0.65, PAVE + 0.95, 0, false);
-          m.spire("marble", rect(0.3, 0.3, px, zb), PAVE + 0.95, PAVE + 1.1);
-        }
-      }
-    }
-  });
-  for (const b of BRIDGES) m.scope("jinshui bridge", () => bridge(m, b.c, b.w));
-  for (const s of [-1, 1]) m.scope("huabiao", () => huabiao(m, s * 17.75, RIVER_S + 5));
-}
-
 // --- the whole ------------------------------------------------------------------------
-
-const toGate = ([x, y, z]: Vec3): Vec3 => [x, y, z + PZ];
 
 export function gateOfHeavenlyPeace(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
-  m.moved(toGate, () => {
-    m.scope("podium", () => podium(m));
-    m.scope("gate tower", () => gateTower(m));
-  });
-  m.scope("forecourt", () => forecourt(m));
+  m.scope("podium", () => podium(m));
+  m.scope("gate tower", () => gateTower(m));
   return m;
 }
 
-/** The distant model: the battered podium, the hall, the two roofs and the gables, the ridge and chiwen, the forecourt. */
+/** The distant model: the battered podium with its gateways, the hall, the two roofs and the gables, the ridge and chiwen. */
 export function gateOfHeavenlyPeaceLod(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
-  m.box("stone", 0, (PZ - PZ0 + RIVER_N) / 2, 2 * PX, RIVER_N - (PZ - PZ0), 0, PAVE);
-  m.box("stone", 0, (RIVER_S + Z_END) / 2, 2 * PX, Z_END - RIVER_S, 0, PAVE);
-  m.cap("water", rect(2 * PX, RIVER_S - RIVER_N, 0, (RIVER_N + RIVER_S) / 2), Y_WATER);
-  for (const b of BRIDGES) {
-    const z0 = RIVER_N - B_RAMP;
-    const z1 = RIVER_S + B_RAMP;
-    const r = 0.7 + 0.06 * b.w;
-    m.sweep("marble", "z", [[b.c - b.w / 2, 0.3], [b.c + b.w / 2, 0.3], [b.c + b.w / 2, PAVE + r * 0.75], [b.c - b.w / 2, PAVE + r * 0.75]], (z0 + z1) / 2 - 2.2, [[b.c - b.w / 2, 0.3], [b.c + b.w / 2, 0.3], [b.c + b.w / 2, PAVE + r * 0.75], [b.c - b.w / 2, PAVE + r * 0.75]], (z0 + z1) / 2 + 2.2);
-  }
-  for (const s of [-1, 1]) m.prism("marble", ngon(6, 0.6, 0, s * 17.75, RIVER_S + 5), PAVE, PAVE + 9.9);
-  m.moved(toGate, () => {
-    const yT = PH - COPE;
-    m.loft("plaster", rect(2 * PX, 2 * PZ0), PAVE, rect(2 * xF(yT), 2 * zF(yT)), yT, false);
-    m.box("stone", 0, 0, 2 * xF(yT) + 0.5, 2 * zF(yT) + 0.5, yT, PH);
-    for (const g of GATES.filter((g) => g.c >= 0)) {
-      for (const sx of g.c === 0 ? [1] : [1, -1]) {
-        m.slab("plasterShade", [[sx * g.c - g.w / 2, PAVE, zF(PAVE) + 0.05], [sx * g.c + g.w / 2, PAVE, zF(PAVE) + 0.05], [sx * g.c + g.w / 2, g.s, zF(g.s) + 0.05], [sx * g.c, g.s + g.w / 2, zF(g.s + g.w / 2) + 0.05], [sx * g.c - g.w / 2, g.s, zF(g.s) + 0.05]], [0, 0, -0.2]);
-      }
+  const yT = PH - COPE;
+  // the podium's long faces stand 0.06 m in, so the gateway slabs on them stay inside the full model
+  const zL = (y: number): number => zF(y) - 0.06;
+  m.loft("plaster", rect(2 * PX, 2 * zL(0)), 0, rect(2 * xF(yT), 2 * zL(yT)), yT, false);
+  m.box("stone", 0, 0, 2 * xF(yT) + 0.5, 2 * zF(yT) + 0.5, yT, PH);
+  for (const g of GATES.filter((g) => g.c >= 0)) {
+    for (const sx of g.c === 0 ? [1] : [1, -1]) {
+      m.slab("plasterShade", [[sx * g.c - g.w / 2, 0, zL(0) + 0.05], [sx * g.c + g.w / 2, 0, zL(0) + 0.05], [sx * g.c + g.w / 2, g.s, zL(g.s) + 0.05], [sx * g.c, g.s + g.w / 2, zL(g.s + g.w / 2) + 0.05], [sx * g.c - g.w / 2, g.s, zL(g.s) + 0.05]], [0, 0, -0.2]);
     }
-    m.box("lacquer", 0, 0, 54, 24, PH, LOWER.yLip);
-    m.loft("tile", rect(2 * LOWER.lx, 2 * LOWER.lz), LOWER.yLip, rect(2 * UPPER_WALL_X, 2 * UPPER_WALL_Z), SKIRT_TOP, false);
-    m.box("paintGreen", 0, 0, 2 * UPPER_WALL_X, 2 * UPPER_WALL_Z, SKIRT_TOP, UPPER.yLip, 0, false);
-    const yg = upperY(DG);
-    m.loft("tile", rect(2 * UPPER.lx, 2 * UPPER.lz), UPPER.yLip, rect(2 * XG, 2 * ZG), yg, false);
-    const yr = upperY(UPPER.lz);
-    m.sweep("tile", "x", [[ZG + 0.6, yg - 0.5], [0, yr], [-ZG - 0.6, yg - 0.5]], -XG - OVER, [[ZG + 0.6, yg - 0.5], [0, yr], [-ZG - 0.6, yg - 0.5]], XG + OVER);
-    m.box("tile", 0, 0, 2 * (XG + OVER), 0.7, yr - 0.3, yr + 0.55);
-    for (const sx of [1, -1]) m.box("tile", sx * (XG + OVER - 0.5), 0, 0.55, 1.4, yr + 0.5, yr + 0.55 + 2.05);
-  });
+  }
+  m.box("lacquer", 0, 0, 54, 24, PH, LOWER.yLip);
+  m.loft("tile", rect(2 * LOWER.lx, 2 * LOWER.lz), LOWER.yLip, rect(2 * UPPER_WALL_X, 2 * UPPER_WALL_Z), SKIRT_TOP, false);
+  m.box("paintGreen", 0, 0, 2 * UPPER_WALL_X, 2 * UPPER_WALL_Z, SKIRT_TOP, UPPER.yLip, 0, false);
+  const yg = upperY(DG);
+  m.loft("tile", rect(2 * UPPER.lx, 2 * UPPER.lz), UPPER.yLip, rect(2 * XG, 2 * ZG), yg, false);
+  const yr = upperY(UPPER.lz);
+  m.sweep("tile", "x", [[ZG + 0.6, yg - 0.5], [0, yr], [-ZG - 0.6, yg - 0.5]], -XG - OVER, [[ZG + 0.6, yg - 0.5], [0, yr], [-ZG - 0.6, yg - 0.5]], XG + OVER);
+  m.box("tile", 0, 0, 2 * (XG + OVER), 0.7, yr - 0.3, yr + 0.55);
+  for (const sx of [1, -1]) m.box("tile", sx * (XG + OVER - 0.5), 0, 0.55, 1.4, yr + 0.5, yr + 0.55 + 2.05);
   return m;
 }
 

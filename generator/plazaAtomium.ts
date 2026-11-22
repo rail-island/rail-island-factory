@@ -12,7 +12,8 @@
 // spheres glazed triangles in alternate sectors of two bands. Three tapering lattice
 // pylons (the "bipods", with the emergency stairs inside) carry the three lower
 // spheres; the lowest sphere stands on a short column over the round entrance
-// pavilion with its canopy to +Z, on a small round paved plaza.
+// pavilion with its canopy to +Z. There is no ground: the pylons' pads, the pavilion
+// and its canopy stand straight on y = 0, on the game's own ground.
 //
 // The lowest sphere's underside is 5 m above the ground and the top sphere's crown
 // 102 m, so the vertical diagonal between the lowest and top centres is 79 m and the
@@ -43,9 +44,6 @@ const PALETTE: Record<string, MaterialSpec> = {
   pylon: { color: "#a7adb3", metallic: 0.3, roughness: 0.55 },
   glass: { color: "#2b3a48", metallic: 0.5, roughness: 0.15 },
   concrete: { color: "#d8d6d0", roughness: 0.9 },
-  paving: { color: "#b7b1a6", roughness: 0.95 },
-  pavingDark: { color: "#8c867c", roughness: 0.95 },
-  lawn: { color: "#6f8f4e", roughness: 1 },
 };
 
 // --- vector helpers -----------------------------------------------------------------
@@ -98,16 +96,6 @@ function post(m: MeshBuilder, mat: string, foot: Vec3, head: Vec3, w: number): v
     const j = (i + 1) % 4;
     const n = sub(lerp3(lo[i]!, hi[j]!, 0.5), mid);
     quadFacing(m, mat, lo[i]!, lo[j]!, hi[j]!, hi[i]!, n);
-  }
-}
-
-/** A flat ring between radii r0 < r1 at height y, facing up, as n quads. */
-function annulus(m: MeshBuilder, mat: string, r0: number, r1: number, y: number, n: number): void {
-  for (let i = 0; i < n; i++) {
-    const a0 = (2 * Math.PI * i) / n;
-    const a1 = (2 * Math.PI * (i + 1)) / n;
-    const p = (r: number, a: number): Vec3 => [r * Math.cos(a), y, -r * Math.sin(a)];
-    quadFacing(m, mat, p(r0, a0), p(r1, a0), p(r1, a1), p(r0, a1), [0, 1, 0]);
   }
 }
 
@@ -280,10 +268,8 @@ function tube(m: MeshBuilder, ca: Vec3, cb: Vec3, windows: boolean): void {
   }
 }
 
-// --- the pylons, column, pavilion and plaza ----------------------------------------------
+// --- the pylons, column and pavilion -----------------------------------------------------
 
-const PLAZA_R = 52;
-const PLAZA_TOP = 0.12;
 const PAV_R = 12;
 const PAV_ROOF = 3.9;
 
@@ -329,19 +315,6 @@ function pylon(m: MeshBuilder, c: Vec3): void {
 }
 
 function base(m: MeshBuilder): void {
-  m.scope("plaza", () => {
-    const disc = ngon(64, PLAZA_R);
-    m.prism("pavingDark", disc, 0, PLAZA_TOP - 0.04, false);
-    annulus(m, "pavingDark", PLAZA_R - 2.2, PLAZA_R, PLAZA_TOP - 0.04, 64);
-    m.prism("paving", ngon(64, PLAZA_R - 2.2), PLAZA_TOP - 0.04, PLAZA_TOP);
-    // lawn beds between the pylons
-    for (let i = 0; i < 3; i++) {
-      const a = (2 * Math.PI * i) / 3;
-      const cx = 30 * Math.cos(a);
-      const cz = -30 * Math.sin(a);
-      m.prism("lawn", ngon(12, 8, 0, cx, cz), PLAZA_TOP, PLAZA_TOP + 0.08);
-    }
-  });
   m.scope("pylon pads", () => {
     for (const c of CORNERS) {
       if (layerOf(c) !== 1) continue;
@@ -349,11 +322,11 @@ function base(m: MeshBuilder): void {
       const r = unit([p[0], 0, p[2]]);
       const ctr = add([p[0], 0, p[2]], mul(r, 1.5));
       const ang = Math.atan2(-r[2], r[0]);
-      m.prism("concrete", ngon(4, 6.2, ang + Math.PI / 4, ctr[0], ctr[2]), PLAZA_TOP, PLAZA_TOP + 0.35);
+      m.prism("concrete", ngon(4, 6.2, ang + Math.PI / 4, ctr[0], ctr[2]), 0, 0.35);
     }
   });
   m.scope("entrance pavilion", () => {
-    m.prism("concrete", ngon(32, PAV_R - 0.3), PLAZA_TOP, 0.45, false);
+    m.prism("concrete", ngon(32, PAV_R - 0.3), 0, 0.45, false);
     m.prism("glass", ngon(32, PAV_R - 0.6), 0.45, PAV_ROOF - 0.05, false);
     // mullions
     for (let i = 0; i < 16; i++) {
@@ -370,7 +343,7 @@ function base(m: MeshBuilder): void {
     const z1 = PAV_R + 9;
     m.box("concrete", 0, (z0 + z1) / 2, 9, z1 - z0, 3.1, 3.45);
     m.cap("concrete", [[-4.5, z1], [4.5, z1], [4.5, z0], [-4.5, z0]] as Ring, 3.1, false);
-    for (const x of [-4, 4]) m.box("collar", x, z1 - 0.6, 0.3, 0.3, PLAZA_TOP, 3.1, 0, false);
+    for (const x of [-4, 4]) m.box("collar", x, z1 - 0.6, 0.3, 0.3, 0, 3.1, 0, false);
   });
   m.scope("column", () => {
     m.prism("collar", ngon(16, 2.6), PAV_ROOF + 0.85, Y_LOW - R_SPHERE + 1.5, false);
@@ -423,9 +396,7 @@ function lodSphere(m: MeshBuilder, c: Vec3, r: number): void {
 
 export function atomiumLod(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
-  const disc = ngon(16, PLAZA_R);
-  lodLoft(m, "paving", disc, 0, disc, PLAZA_TOP);
-  lodLoft(m, "concrete", ngon(8, PAV_R + 1.2, Math.PI / 8), PLAZA_TOP, ngon(8, PAV_R + 1.2, Math.PI / 8), PAV_ROOF + 0.55);
+  lodLoft(m, "concrete", ngon(8, PAV_R + 1.2, Math.PI / 8), 0, ngon(8, PAV_R + 1.2, Math.PI / 8), PAV_ROOF + 0.55);
   lodBox(m, "collar", 0, 0, 4.4, 4.4, PAV_ROOF + 0.55, Y_LOW - R_SPHERE + 1.5);
   for (const c of [...CORNERS, CENTRE]) lodSphere(m, cellPoint(c), R_SPHERE);
   for (const [a, b] of tubes()) {

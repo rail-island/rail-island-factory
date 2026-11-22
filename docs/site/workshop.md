@@ -20,6 +20,7 @@ lives in the workshop until somebody confirms it.
   The 20 German trains of the detail pass (2026-11): the ICE 3, 4, T and 2, the BR 423, 642
   and 650, the VT 98, the SVT 877, the BR 103, 101, 120 and 218, the E 18, E 94 and V 200,
   the 01, 52 and P 8, and the Intercity coach (docs/models/germany-trains.md).
+  The 26 plaza landmarks (2026-11, docs/models/plaza-landmarks.md).
   The 3 British trains of the detail pass (2026-11): the Class 390 Pendolino, the Class 800
   IET and the Eurostar e300 (docs/models/uk-trains.md).
   The 20 Indian trains of the detail pass (2026-11): the Vande Bharat, Namo Bharat, Mumbai

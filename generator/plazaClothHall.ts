@@ -16,7 +16,8 @@
 // pavilions with domed turrets stand at the four corners and a stair tower with a
 // gable at each short end. The dark red tile roof shows only above the parapet.
 //
-// Modelled in metres, +Y up, the base of the paved plinth at y = 0, centred on the
+// Modelled in metres, +Y up, the hall standing on the ground at y = 0 (the game
+// supplies the ground and the square's paving: no plinth is drawn), centred on the
 // hall. The long axis runs along X; the two long fronts face +Z and -Z.
 //
 // Sources: Wikipedia "Krakow Cloth Hall", Commons "Sukiennice w Krakowie", the
@@ -27,7 +28,6 @@ import { MeshBuilder, ngon, rect, type MaterialSpec, type Ring } from "./meshBui
 import type { Vec3 } from "./meshCore.ts";
 import type { ProceduralDesign } from "./design.ts";
 import { PLAZA_CATALOG } from "./plazaCatalog.ts";
-import { lodBox } from "./lodPrimitives.ts";
 
 const PALETTE: Record<string, MaterialSpec> = {
   render: { color: "#e3cfa2", roughness: 0.9 },
@@ -35,7 +35,6 @@ const PALETTE: Record<string, MaterialSpec> = {
   brick: { color: "#a4523a", roughness: 0.9 },
   stone: { color: "#ece6d6", roughness: 0.85 },
   column: { color: "#cfc7b4", roughness: 0.85 },
-  paving: { color: "#a9a196", roughness: 0.95 },
   roof: { color: "#7a3a2c", roughness: 0.85 },
   metal: { color: "#3f4a46", metallic: 0.4, roughness: 0.55 },
   door: { color: "#4a3324", roughness: 0.8 },
@@ -213,7 +212,7 @@ function dotN(a: Vec3, b: Vec3, c: Vec3, n: Vec3): boolean {
 
 const HX = 54; // the hall's half length (108 m)
 const HZ = 9; // and half width (18 m): its long walls
-const YB = 0.25; // top of the paved plinth, the arcade floor
+const YB = 0; // the ground the hall stands on: the arcade and passage floors are the game's
 const PAV = 8.5; // the central pavilion's half width
 const TOW = 47.5; // the inner face of the corner pavilions
 const TOW_X = HX + 0.4; // their outer face
@@ -236,12 +235,6 @@ const PASS = 2.6; // half width of the passage through the hall
 const arcadeAxes = (): number[] => Array.from({ length: BAYS + 1 }, (_, i) => PAV + i * BAY);
 
 // --- parts -------------------------------------------------------------------------
-
-function plinth(m: MeshBuilder): void {
-  m.scope("plinth", () => {
-    bx(m, "paving", -HX - 5.2, HX + 5.2, 0, YB, -FRONT - 0.9, FRONT + 0.9);
-  });
-}
 
 function hallBody(m: MeshBuilder): void {
   m.scope("hall body", () => {
@@ -620,7 +613,6 @@ function hallRoof(m: MeshBuilder): void {
 export function clothHall(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
   m.scope("cloth hall", () => {
-    plinth(m);
     hallBody(m);
     hallRoof(m);
     for (const s of [-1, 1]) {
@@ -640,7 +632,6 @@ export function clothHall(): MeshBuilder {
 
 export function clothHallLod(): MeshBuilder {
   const m = new MeshBuilder(PALETTE);
-  lodBox(m, "paving", 0, 0, 2 * (HX + 5.2), 2 * (FRONT + 0.9), 0, YB);
   // the arcades as a dark band under the stone frieze, the brick storey, the attic
   m.box("renderShade", 0, 0, 2 * TOW, 2 * A_OUT, YB, 8.4);
   m.box("stone", 0, 0, 2 * TOW, 2 * A_OUT + 0.3, 8.4, 9.7);
