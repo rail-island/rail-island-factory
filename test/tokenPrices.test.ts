@@ -111,6 +111,20 @@ describe("the catalog", () => {
     for (const id of plaza) expect(LANDMARK_TOKEN_PRICES[id], id).toBeDefined();
   });
 
+  it("carries each draught animal's price on an animal-drawn vehicle's animal values", () => {
+    // the game prices `animal:<species>` from these values (vehicles.meta.json), not from the animals' records
+    const drawn = ALL_VEHICLES.filter((d) => catalogFields(d).traction === "animal");
+    expect(drawn.length).toBeGreaterThan(0);
+    for (const d of drawn) {
+      const entry = withTokenPrice(metaEntry(d, catalogFields(d)), null);
+      const animal = entry.params?.find((p) => p.name === "animal");
+      expect(animal, d.id).toBeDefined();
+      for (const v of animal!.values) expect(v.tokenPrice, `${d.id} animal=${v.value}`).toBe(ANIMAL_TOKEN_PRICES[`proc-animal-${v.value}`]);
+    }
+    // the design's own parameters stay unpriced
+    expect(drawn[0]!.params!.find((p) => p.name === "animal")!.values.every((v) => !("tokenPrice" in v))).toBe(true);
+  });
+
   it("prices exactly the collectible sets' types", () => {
     const collectible = SETS.filter((s) => s.collectible);
     expect(Object.keys(STRUCTURE_TOKEN_PRICES).sort()).toEqual(collectible.map((s) => s.set).sort());

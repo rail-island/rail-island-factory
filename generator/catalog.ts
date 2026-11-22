@@ -42,7 +42,7 @@ import { checkDesignSounds, declaredSounds, defaultValues, shipHullStuds, withSo
 import type { SoundMapping, SoundOverride } from "./soundTable.ts";
 import { blurbOf, countryName, countryOf, makerOf, yearOf } from "./factTable.ts";
 import { isDraft } from "./workshop.ts";
-import { PRICED_VEHICLE_CATEGORIES, STRUCTURE_TOKEN_PRICES, statedTokenPrice, vehicleTokenPrice } from "./tokenPrices.ts";
+import { ANIMAL_TOKEN_PRICES, PRICED_VEHICLE_CATEGORIES, STRUCTURE_TOKEN_PRICES, statedTokenPrice, vehicleTokenPrice } from "./tokenPrices.ts";
 import { linksOf, type ModelLink } from "./linkTable.ts";
 import { LINE_COUNTS, LINE_PREVIEW_ID, LINE_STATIONS, lineCabinValue, lineStationValue } from "./cableCarLineIds.ts";
 
@@ -64,6 +64,13 @@ export function isSideViewCategory(category: string): boolean {
 }
 
 /** One model as the game's building catalog would hold it. */
+/**
+ * A parameter as the export writes it: an animal-drawn vehicle's `animal` value
+ * carries its species' rail-token price (tokenPrices.ts), where the game reads it.
+ * Export only -- a design never states it, so design.ts stays as it is.
+ */
+export type ExportParamSpec = Omit<ParamSpec, "values"> & { values: Array<ParamSpec["values"][number] & { tokenPrice?: number }> };
+
 export interface MetaEntry {
   yaw?: number;
   id: string;
@@ -94,9 +101,10 @@ export interface MetaEntry {
   /**
    * A parametric model's enum parameters (design.ts). The thumbnail is built
    * with each parameter's default; the JS model builds any combination.
-   * Absent for a fixed model.
+   * Absent for a fixed model. An animal-drawn vehicle's `animal` values carry
+   * their species' `tokenPrice` (`withAnimalPrices`).
    */
-  params?: ParamSpec[];
+  params?: ExportParamSpec[];
   /**
    * What of a vehicle the game may move (rig.ts): its steered wheels, an
    * articulated vehicle's sections and the joints between them, by node name
@@ -568,7 +576,29 @@ export function withTokenPrice(entry: MetaEntry, size: readonly number[] | null)
       length: Math.max(size[0] ?? 0, size[2] ?? 0), height: size[1] ?? 0,
     });
   }
-  return price === undefined || price === null ? entry : { ...entry, tokenPrice: price };
+  const priced = price === undefined || price === null ? entry : { ...entry, tokenPrice: price };
+  return withAnimalPrices(priced);
+}
+
+/**
+ * An animal-drawn vehicle's entry with each `animal` value's species price
+ * (`ANIMAL_TOKEN_PRICES` of `proc-animal-<value>`): the game prices `animal:<species>`
+ * from these values, not from the animals' own catalog records.
+ */
+function withAnimalPrices(entry: MetaEntry): MetaEntry {
+  // draftAnimals.ts's ANIMAL_PARAM, named here so the catalog does not import the animals' geometry
+  const ANIMAL_PARAM = "animal";
+  if (entry.traction !== "animal" || !entry.params?.some((p) => p.name === ANIMAL_PARAM)) return entry;
+  return {
+    ...entry,
+    params: entry.params.map((p) => p.name !== ANIMAL_PARAM ? p : {
+      ...p,
+      values: p.values.map((v) => {
+        const price = ANIMAL_TOKEN_PRICES[`proc-animal-${v.value}`];
+        return price === undefined ? v : { ...v, tokenPrice: price };
+      }),
+    }),
+  };
 }
 
 /** Rounded to a tenth of a millimetre, so float noise does not reach the meta. */

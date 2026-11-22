@@ -27,7 +27,7 @@ non-collectible set types carry no price.
 |---|---|---|
 | every vehicle | worked out (below) | `tokenPrice` on its `vehicles.meta.json` entry and its `catalog.json` record |
 | landmarks (the plaza landmarks, Big Ben, the Eiffel Tower, Prague Main Station) | `LANDMARK_TOKEN_PRICES` | `tokenPrice` on its `skyscrapers.meta.json` entry and record |
-| draught animals | `ANIMAL_TOKEN_PRICES` | `tokenPrice` on its `catalog.json` record |
+| draught animals | `ANIMAL_TOKEN_PRICES` | `tokenPrice` on its `catalog.json` record, and on every animal-drawn vehicle's `animal` parameter value (`vehicles.meta.json` and the records), which is where the game reads it |
 | every type of a collectible set | `STRUCTURE_TOKEN_PRICES` | `tokenPrice` on the type in `export/sets/<set>.meta.json`, and on its site preview's record |
 
 Every price is a step of `TOKEN_LADDER`: 50, 75, 100, 150, 200, 250, 300, 400, 500, 650, 800,
@@ -74,7 +74,8 @@ Each look beyond the first adds 15 % (`LOOK_STEP`), at most x2.5 (`LOOK_CAP`): 2
 - The sets' export fails when a collectible set's type has no price in
   `STRUCTURE_TOKEN_PRICES`, or the table names a set or type that is not collectible.
 - `test/tokenPrices.test.ts` checks the rules, the looks, the ladder and the tables against the
-  catalog and the set registry.
+  catalog and the set registry, and that every animal-drawn vehicle's `animal` values carry
+  their species' price.
 
 A new vehicle needs nothing: its figures price it. A new landmark, draught animal or set type
 adds its price to the table in the same change. Prices are first guesses, tuned with the game's
