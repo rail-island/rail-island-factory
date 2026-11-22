@@ -45,6 +45,8 @@ export const COLUMNS: readonly Column[] = [
   { key: "id", label: "Id", unit: null, type: "text", dir: "asc", table: false, value: (r) => shownId(r) },
   { key: "category", label: "Category", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.category },
   { key: "group", label: "City pool", unit: null, type: "text", dir: "asc", table: true, value: (r) => r.group },
+  // What the game charges to unlock the whole design, in rail tokens (docs/models/token-prices.md).
+  { key: "tokenPrice", label: "Price", unit: "RT", type: "num", dir: "desc", table: true, value: (r) => r.tokenPrice ?? null },
   { key: "triangles", label: "Triangles", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.triangles },
   { key: "vertices", label: "Vertices", unit: null, type: "num", dir: "desc", table: true, value: (r) => r.vertices },
   { key: "jsBytes", label: "JS", unit: null, type: "bytes", dir: "desc", table: true, value: (r) => r.jsBytes, file: (r) => r.jsUrl },

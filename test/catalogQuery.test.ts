@@ -450,6 +450,23 @@ describe("downloads", () => {
   });
 });
 
+describe("token price column", () => {
+  it("shows the rail-token price, sorts by it and leaves an unpriced model last", () => {
+    const rows = prepareRows([
+      rec("proc-vehicle-a", "A", 1, { tokenPrice: 150 }),
+      rec("proc-vehicle-b", "B", 1, { tokenPrice: 2500 }),
+      rec("proc-building-c", "C", 1),
+    ]);
+    const col = column("tokenPrice")!;
+    expect(col.table).toBe(true);
+    expect(col.unit).toBe("RT");
+    expect(cellText(rows[1]!, col)).toBe("2,500");
+    expect(cellText(rows[2]!, col)).toBe("-");
+    expect(queryRows(rows, "", "tokenPrice", "desc").map((r) => r.id)).toEqual(["proc-vehicle-b", "proc-vehicle-a", "proc-building-c"]);
+    expect(queryRows(rows, "", "tokenPrice", "asc").map((r) => r.id)).toEqual(["proc-vehicle-a", "proc-vehicle-b", "proc-building-c"]);
+  });
+});
+
 describe("previewKey", () => {
   it("tells full, low, coarse and Max detail apart", async () => {
     const { previewKey } = await import("../src/catalogQuery");

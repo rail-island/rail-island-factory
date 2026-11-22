@@ -1,6 +1,7 @@
 // The narrow layout: two lines per model -- what it is, then a wrapping row of
 // labelled facts -- so nothing needs a sideways scroll on a phone. The stat row
-// always shows triangles, vertices and JS size, plus the column being sorted by
+// always shows triangles, vertices, JS size and the rail-token price (when the
+// model has one), plus the column being sorted by
 // when that is something else, so a reorder never hides the number behind it.
 
 import { For, Show } from "solid-js";
@@ -8,7 +9,7 @@ import { cellText, column, formatBytes, formatNumber, type Row } from "./catalog
 import { Thumb } from "./Thumb";
 import { Link } from "./Link";
 
-const ALWAYS = ["triangles", "vertices", "jsBytes"];
+const ALWAYS = ["triangles", "vertices", "jsBytes", "tokenPrice"];
 
 export function ModelCards(props: { rows: readonly Row[]; sort: string; onOpen: (r: Row) => void; hrefOf: (r: Row) => string }) {
   const extra = () => (ALWAYS.includes(props.sort) || props.sort === "title" ? undefined : column(props.sort));
@@ -34,6 +35,11 @@ export function ModelCards(props: { rows: readonly Row[]; sort: string; onOpen: 
                   <span>
                     <b>{formatBytes(r.jsBytes)}</b>
                   </span>
+                  <Show when={r.tokenPrice != null}>
+                    <span>
+                      <b>{formatNumber(r.tokenPrice!)}</b> RT
+                    </span>
+                  </Show>
                   <Show when={extra()}>
                     {(c) => (
                       <span>

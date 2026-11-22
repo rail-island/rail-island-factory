@@ -154,7 +154,13 @@ To see what deploys - the build's thumbnails and figures - run `pnpm build` and
   **The JS size is a link**: a click downloads the model's file (`js/<id>.js`,
   [../models/js-format.md](../models/js-format.md)) without opening the model. The model page's
   spec list links it too and adds the gzip size. There is no GLB to download.
-- **Narrow: cards.** Title and pool chip, then triangles, vertices and JS size -
+- **Price.** The table, the cards, the sort control and the model page show
+  each model's rail-token price (`tokenPrice`, column "Price", unit RT): what the
+  game charges to unlock the whole design
+  ([../models/token-prices.md](../models/token-prices.md)). An unpriced model
+  shows a dash and sorts last.
+- **Narrow: cards.** Title and pool chip, then triangles, vertices, JS size and
+  the price (when the model has one) -
   plus the sorted-by column when it is something else, so a reorder never hides
   the number behind it.
 - **The toolbar** holds the search box, a sort `<select>` over every
