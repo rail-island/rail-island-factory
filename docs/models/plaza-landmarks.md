@@ -10,7 +10,9 @@ Each landmark has its own module, so its standalone JS bundles only its own geom
 `plazaLandmarks.ts` lists the modules (`PLAZA_FAMILIES`, registered in `generate.ts`), all
 the designs (`PLAZA_LANDMARKS`) and each one's triangle tier (`PLAZA_TIERS`). All share
 `PLAZA_CATALOG`: category `Historical`, city pool `hist_center`, `defaultScale` 1, CC0 by
-Rail Island. They have no parameters.
+Rail Island. They have no parameters. Each has a stated rail-token price in
+`LANDMARK_TOKEN_PRICES` ([token-prices.md](token-prices.md)): 300 RT for the bandstand and
+the war memorial up to 2,500 RT for the Taj Mahal and the Statue of Liberty.
 
 All are modelled in metres, +Y up, base at y = 0, centred on the origin. They are
 **drafts** (workshop) until the user confirms them into `generator/catalogModels.json`.
