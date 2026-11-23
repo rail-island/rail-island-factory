@@ -19,7 +19,8 @@
     "sets:pins": "tsx generator/sets/writePins.ts",
     "import:sounds": "tsx generator/importSounds.ts",
     "openttd:ids": "tsx generator/writeOpenttdIds.ts",
-    "refs:fetch": "tsx generator/fetchRefs.ts"
+    "refs:fetch": "tsx generator/fetchRefs.ts",
+    "cs:pilot": "tsx tools/cs-transpile/main.ts"
   },
   "dependencies": {
     "solid-js": "^1.9.3",

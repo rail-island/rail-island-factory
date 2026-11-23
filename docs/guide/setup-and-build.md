@@ -25,6 +25,7 @@ packages `pnpm.onlyBuiltDependencies` allows.
 | `pnpm typecheck` | `tsc --noEmit` over `src/`, `generator/`, `test/` |
 | `pnpm import:sounds` | mirrors the sibling rail-island-music export into the committed `sounds/` ([../models/sounds.md](../models/sounds.md)) |
 | `pnpm refs:fetch` | downloads Commons photographs into a model's `assets/<name>/` and lists them in its `SOURCES.md` ([../models/world-fleet.md](../models/world-fleet.md)) |
+| `pnpm cs:pilot` | the C# transpiler pilot: transpiles the windsock and the pyramid tower (`--truck` adds the American truck) into `export/cs/`, builds them with the .NET 8 SDK and compares them with the JS models; `--survey` transpiles every design and counts what is not covered yet ([cs-transpiler.md](cs-transpiler.md)) |
 | `pnpm deploy` | `pnpm build` and `wrangler deploy` from a workstation (CI normally does it) |
 
 `export/`, `dist/` and `.wrangler/` are gitignored: everything in them is

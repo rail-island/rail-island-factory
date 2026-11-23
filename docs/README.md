@@ -14,6 +14,7 @@
 | [guide/setup-and-build.md](guide/setup-and-build.md) | installing, the scripts, what `pnpm build` produces, tests |
 | [guide/deploy.md](guide/deploy.md) | the Cloudflare Worker, the GitHub Actions workflows, secrets |
 | [guide/build-cache.md](guide/build-cache.md) | the committed `build-cache/`: build facts and thumbnails per design, cache keys, the deploy's export cache |
+| [guide/cs-transpiler.md](guide/cs-transpiler.md) | the C# transpiler pilot (`pnpm cs:pilot`): the TypeScript a design reaches transpiled into C#, the runtime and the `MeshBuilder` seam, the exact comparison with the JS model, timing against Node and Jint, the whole-catalog survey |
 | [models/lod.md](models/lod.md) | Low-detail JS variants, triangle budgets, structural silhouettes, flicker checks and preview toggle |
 | [models/skyscrapers.md](models/skyscrapers.md) | the ten skyscraper designs, their four sizes, the mesh builder, adding a design |
 | [models/village.md](models/village.md) | the eight parametric village houses in the Kenney and Quaternius styles and the alpine hut: plan families, the house builder, finish parameters, scale and tests |
