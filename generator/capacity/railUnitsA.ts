@@ -70,11 +70,11 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
     ],
   },
   "proc-vehicle-br-hst": {
-    seats: 0, cargo: { mail: 1.5 },
+    seats: 0, tonnes: 1.5, commodities: ["mail"],
     source: "Wikipedia: Mk3 coaches ~70 seats (2+8 set ~550); the Class 43 power car carries only its small luggage van",
     variants: [
-      { params: { unit: "middleCar" }, seats: 70, cargo: {} },
-      { params: { unit: "train" }, seats: 140, cargo: { mail: 3 } },
+      { params: { unit: "middleCar" }, seats: 70, tonnes: 0, commodities: [] },
+      { params: { unit: "train" }, seats: 140, tonnes: 3, commodities: ["mail"] },
       { params: { unit: "train", cars: "3" }, seats: 70 },
       { params: { unit: "train", cars: "5" }, seats: 210 },
       { params: { unit: "train", cars: "6" }, seats: 280 },
@@ -99,7 +99,7 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
     seats: 90,
     source: "Wikipedia: RDC-1 90 seats; RDC-2 70 seats + baggage compartment",
     variants: [
-      { params: { variant: "rdc2" }, seats: 70, cargo: { mail: 5 } },
+      { params: { variant: "rdc2" }, seats: 70, tonnes: 5, commodities: ["mail"] },
     ],
   },
   "proc-vehicle-cd-451": {
@@ -301,15 +301,15 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
     ],
   },
   "proc-vehicle-csd-m240": {
-    seats: 96, cargo: { mail: 1.5 },
+    seats: 96, tonnes: 1.5, commodities: ["mail"],
     source: "Wikipedia: M 240.0 ~56 seats + ~40 standing, small luggage compartment",
   },
   "proc-vehicle-csd-m296": {
-    seats: 94, cargo: { mail: 3 },
+    seats: 94, tonnes: 3, commodities: ["mail"],
     source: "size + Czech sources: M 296.1 / 853 ~64 seats + ~30 standing and a luggage room; 854 ~48 seats + ~20 standing",
     variants: [
-      { params: { variant: "cd854" }, seats: 68, cargo: {} },
-      { params: { variant: "cd854Blue" }, seats: 68, cargo: {} },
+      { params: { variant: "cd854" }, seats: 68, tonnes: 0, commodities: [] },
+      { params: { variant: "cd854Blue" }, seats: 68, tonnes: 0, commodities: [] },
     ],
   },
   "proc-vehicle-db-423": {
@@ -328,7 +328,7 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
     variants: [
       { params: { unit: "bn" }, seats: 136 },
       { params: { unit: "abn" }, seats: 120 },
-      { params: { unit: "bdnrf" }, seats: 86, cargo: { mail: 4 } },
+      { params: { unit: "bdnrf" }, seats: 86, tonnes: 4, commodities: ["mail"] },
       { params: { unit: "train" }, seats: 188 },
     ],
   },
@@ -419,13 +419,13 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
     ],
   },
   "proc-vehicle-dr-vt1816": {
-    seats: 46, cargo: { mail: 2 },
+    seats: 46, tonnes: 2, commodities: ["mail"],
     source: "Wikipedia: 4-car VT 18.16 140 seats + 23 dining (power cars ~46 2nd class each and a baggage room, VMd ~48 1st); VMe judged ~66",
     variants: [
-      { params: { unit: "dining" }, seats: 23, cargo: {} },
-      { params: { unit: "firstClass" }, seats: 48, cargo: {} },
-      { params: { unit: "trailer" }, seats: 66, cargo: {} },
-      { params: { unit: "train" }, seats: 163, cargo: { mail: 4 } },
+      { params: { unit: "dining" }, seats: 23, tonnes: 0, commodities: [] },
+      { params: { unit: "firstClass" }, seats: 48, tonnes: 0, commodities: [] },
+      { params: { unit: "trailer" }, seats: 66, tonnes: 0, commodities: [] },
+      { params: { unit: "train" }, seats: 163, tonnes: 4, commodities: ["mail"] },
       { params: { unit: "train", cars: "2" }, seats: 92 },
       { params: { unit: "train", cars: "3" }, seats: 115 },
       { params: { unit: "train", cars: "5" }, seats: 229 },

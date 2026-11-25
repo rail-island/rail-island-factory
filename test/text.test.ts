@@ -14,7 +14,7 @@ describe("exported text", () => {
   it("gives every exported key a non-empty English text", () => {
     expect(text.size).toBeGreaterThan(1000);
     for (const [key, en] of text) {
-      expect(key).toMatch(/^(model|set|woods|species|category|traction)\./);
+      expect(key).toMatch(/^(model|set|woods|species|category|traction|commodity)\./);
       expect(en.trim(), key).not.toBe("");
     }
   });

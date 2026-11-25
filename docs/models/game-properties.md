@@ -23,7 +23,8 @@ lists (`SteamDesign`, `TramDesign`, `WagonDesign`, `FreightDesign`,
 `CoachDesign`) carry a required `game`, which their map hands on.
 
 Two fields of the exported block are not declared here: a building's `traffic` and a
-vehicle's `capacity`, the passengers and cargo, stated in tables beside the designs
+vehicle's `capacity`, the passengers and commodities (a building's supply-chain role,
+a vehicle's seats, tonnes and the commodities it may carry), stated in tables beside the designs
 and written by the export ([traffic.md](traffic.md)), like the `sounds`.
 
 The build writes the block, unchanged, into the design's meta entry as `game`

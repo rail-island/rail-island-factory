@@ -69,7 +69,7 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
   },
   "proc-vehicle-ns-de1": {
     seats: 95,
-    cargo: { mail: 2 },
+    tonnes: 2, commodities: ["mail"],
     source: "nl.wikipedia: 73 seats (8 + 65) and a baggage compartment; plus ~22 standing (regional railcar)",
   },
   "proc-vehicle-ns-flirt": {
@@ -203,12 +203,12 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
   },
   "proc-vehicle-pioneer-zephyr": {
     seats: 0,
-    cargo: { mail: 3 },
+    tonnes: 3, commodities: ["mail"],
     source: "Wikipedia: 72 seats (power car: engine, railway post office and baggage; coach 40, observation 32); mail approx.",
     variants: [
-      { params: { unit: "coach" }, seats: 40, cargo: { mail: 2 } },
-      { params: { unit: "observation" }, seats: 32, cargo: {} },
-      { params: { unit: "train" }, seats: 72, cargo: { mail: 5 } },
+      { params: { unit: "coach" }, seats: 40, tonnes: 2, commodities: ["mail"] },
+      { params: { unit: "observation" }, seats: 32, tonnes: 0, commodities: [] },
+      { params: { unit: "train" }, seats: 72, tonnes: 5, commodities: ["mail"] },
     ],
   },
   "proc-vehicle-ratp-mi09": {
@@ -413,8 +413,8 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
     source: "Wikipedia: RAe TEE II 6-car 168 first-class seats + restaurant; the power car carries kitchen, customs and baggage (mail approx.)",
     variants: [
       { params: { unit: "middleCar" }, seats: 42 },
-      { params: { unit: "powerCar" }, seats: 0, cargo: { mail: 2 } },
-      { params: { unit: "train" }, seats: 102, cargo: { mail: 2 } },
+      { params: { unit: "powerCar" }, seats: 0, tonnes: 2, commodities: ["mail"] },
+      { params: { unit: "train" }, seats: 102, tonnes: 2, commodities: ["mail"] },
       { params: { unit: "train", cars: "3" }, seats: 60 },
       { params: { unit: "train", cars: "5" }, seats: 144 },
       { params: { unit: "train", cars: "6" }, seats: 186 },

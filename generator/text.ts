@@ -2,10 +2,11 @@
 //
 // Every string the game shows from the factory -- model titles, parameter titles
 // and values, set type names and descriptions, woods and species names, building
-// categories, traction names -- is listed here by a stable key with its English,
-// which stays where it is authored (the design's `title`, a parameter's titles,
-// the set registry, the woods types). The other 13 languages live in
-// text/<code>.json as a PHRASEBOOK keyed by the English itself:
+// categories, traction names, commodity names -- is listed here by a stable key
+// with its English, which stays where it is authored (the design's `title`, a
+// parameter's titles, the set registry, the woods types, the label tables below).
+// The other 13 languages live in text/<code>.json as a PHRASEBOOK keyed by the
+// English itself:
 //
 //   { "phrases":   { "<English>": "<translation>" },
 //     "overrides": { "<key>": "<translation>" } }
@@ -32,6 +33,7 @@ import { BLOCK_PARAM_TEXT, SETS } from "./sets/registry.ts";
 import { WOODS } from "./woods.ts";
 import * as bridgeSet from "./sets/bridge.ts";
 import { SPECIES } from "./trees.ts";
+import { COMMODITIES, type Commodity } from "./traffic.ts";
 import { writeIfChanged } from "./jsModel.ts";
 import type { ProceduralDesign } from "./design.ts";
 
@@ -99,6 +101,20 @@ export const TRACTION_LABELS: Readonly<Record<string, string>> = {
   steam: "Steam",
 };
 
+/** The supply chain's commodities (traffic.ts COMMODITIES): the game's cargo names. */
+export const COMMODITY_LABELS: Readonly<Record<Commodity, string>> = {
+  grain: "Grain",
+  wood: "Wood",
+  coal: "Coal",
+  "iron-ore": "Iron ore",
+  oil: "Oil",
+  food: "Food",
+  steel: "Steel",
+  fuel: "Fuel",
+  goods: "Goods",
+  mail: "Mail",
+};
+
 /** The designs the game shows: every one a game meta lists (not the trees, woods groves or props). */
 export function exportedDesigns(): readonly ProceduralDesign[] {
   return [...BUILDINGS, ...VILLAGE_DESIGNS, ...ALL_VEHICLES, ...CHARACTER_DESIGNS];
@@ -143,6 +159,7 @@ export function exportedText(): Map<string, string> {
   for (const s of SPECIES) out.set(`species.${s}`, SPECIES_LABELS[s]);
   for (const [c, label] of Object.entries(CATEGORY_LABELS)) out.set(`category.${c}`, label);
   for (const [c, label] of Object.entries(TRACTION_LABELS)) out.set(`traction.${c}`, label);
+  for (const c of COMMODITIES) out.set(`commodity.${c}`, COMMODITY_LABELS[c]);
   return out;
 }
 

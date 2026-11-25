@@ -191,7 +191,7 @@ import { BOARDING_DOOR_SOURCE, BUILD_CACHE_DIR, BuildCache, SourceGraph, designK
 import { findCoplanarOverlaps, type CoplanarOverlap } from "./coplanar.ts";
 import {
   CATALOG_FILE, META_FILE, REFERENCE_EXTENSIONS, REFS_DIR, VEHICLE_META_FILE, VILLAGE_META_FILE, catalogRecord, exportMeta, withTokenPrice,
-  exportPropMeta, exportCharacterMeta, CHARACTERS_META_FILE, exportVehicleMeta, isSideViewCategory, listedEntry, metaEntry, PROPS_META_FILE, type ModelCatalog, type ReferenceImage,
+  exportPropMeta, exportCharacterMeta, CHARACTERS_META_FILE, exportVehicleMeta, isSideViewCategory, listedEntry, metaEntry, PROPS_META_FILE, supplyChainProblems, type ModelCatalog, type ReferenceImage,
 } from "./catalog.ts";
 import { TREE_DIR, TREE_MAX_BYTES, type SourceTree } from "./sourceTree.ts";
 import { tokenPriceProblems } from "./tokenPrices.ts";
@@ -899,6 +899,9 @@ export async function buildExport(
       const stray = unknownTrafficIds(table, ids);
       if (stray.length) throw new Error(`generator/${file} names no such model: ${stray.join(", ")}`);
     }
+    // every commodity is made, taken and carried somewhere (docs/models/traffic.md, "The chain")
+    const orphans = supplyChainProblems([...BUILDINGS, ...VILLAGE_DESIGNS], ALL_VEHICLES);
+    if (orphans.length) throw new Error(`the supply chain has orphans:\n  ${orphans.join("\n  ")}`);
     const badLinks = linkTableProblems(DESIGNS.keys());
     if (badLinks.length) throw new Error(`generator/linkTable.ts: ${badLinks.join("; ")}`);
   }

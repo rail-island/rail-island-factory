@@ -27,7 +27,7 @@ import { checkGameProperties, resolveParams, type CatalogFields, type GameProper
 import type { VehicleRig } from "./rig.ts";
 import { cityExport, extentOf, type CityExport } from "./cityVariants.ts";
 import { measureHelipad, type ExportedHelipad } from "./helipad.ts";
-import { exportedBlock, isVehicleCategory, trafficProblems, type ExportedCapacity, type ExportedTraffic } from "./traffic.ts";
+import { chainProblems, exportedBlock, isVehicleCategory, PENDING_PRODUCERS, trafficProblems, type ChainDesign, type ExportedCapacity, type ExportedTraffic } from "./traffic.ts";
 import { BUILDING_TRAFFIC } from "./trafficTable.ts";
 import { VEHICLE_CAPACITY } from "./capacityTable.ts";
 
@@ -464,6 +464,23 @@ function checkTraffic(designs: readonly ProceduralDesign[], family: CatalogField
     return trafficProblems(d, fields, trafficEntry(proceduralId(d.id), fields.category));
   });
   if (problems.length) throw new Error(`passengers and cargo:\n  ${problems.join("\n  ")}`);
+}
+
+/** The confirmed designs with their exported traffic or capacity blocks, for the chain check. */
+export function chainDesigns(designs: readonly ProceduralDesign[], family: CatalogFields): ChainDesign[] {
+  return designs.filter((d) => !isDraft(d.id)).map((d) => {
+    const id = proceduralId(d.id);
+    return { id, params: d.params, block: exportedBlock(trafficEntry(id, (d.catalog ?? family).category)) };
+  });
+}
+
+/**
+ * The supply chain's orphans over the confirmed buildings and vehicles (traffic.ts
+ * chainProblems, with its temporary PENDING_PRODUCERS allowance); a whole build
+ * fails on any (generate.ts).
+ */
+export function supplyChainProblems(buildings: readonly ProceduralDesign[], vehicles: readonly ProceduralDesign[]): string[] {
+  return chainProblems(chainDesigns(buildings, SKYSCRAPER_CATALOG), chainDesigns(vehicles, VEHICLE_CATALOG), PENDING_PRODUCERS);
 }
 
 /**

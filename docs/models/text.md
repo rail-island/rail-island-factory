@@ -5,7 +5,7 @@ exported and under which keys, the phrasebooks in `text/` keyed by the English, 
 proper-noun titles, overrides, the export files, the gap check and who fixes gaps.
 **Code** - `generator/text.ts`, `generator/textGaps.ts`, `text/<code>.json`, `text/verbatim.json`,
 `test/text.test.ts`, `.agents/skills/translate-text/`
-**See also** - [sets.md](sets.md), [parameters.md](parameters.md), [export.md](export.md), the
+**See also** - [sets.md](sets.md), [parameters.md](parameters.md), [export.md](export.md), [traffic.md](traffic.md), the
 game's `docs/architecture/i18n.md`
 
 ## What is exported
@@ -24,6 +24,7 @@ Every string the game shows from the factory, with its English where it is autho
 | `species.<key>` | `SPECIES_LABELS` |
 | `category.<name>` | `CATEGORY_LABELS`, the building picker's tabs |
 | `traction.<name>` | `TRACTION_LABELS` |
+| `commodity.<id>` | `COMMODITY_LABELS`, the supply chain's commodities ([traffic.md](traffic.md)) |
 
 The site UI itself stays English, as do OpenTTD names and the GLB ZIP.
 
