@@ -2,7 +2,7 @@
 
 **Covers** - the two lists of the site: the confirmed **catalog** and the **workshop** of drafts; what a draft is, what the export does with it, how a model is confirmed; a model's web links on its Sources tab.
 **Code** - `generator/workshop.ts`, `generator/catalogModels.json`, `generator/linkTable.ts`, `generator/catalog.ts` (`catalogRecord`: `draft`, `links`), `generator/generate.ts` (`buildExport`), `generator/sitePages.ts`, `src/catalogQuery.ts` (`Section`, `sectionRows`, `sectionHeading`), `src/App.tsx`, `src/ModelDetail.tsx`, `test/workshop.test.ts`
-**See also** - [catalog-site.md](catalog-site.md), [seo-pages.md](seo-pages.md), [../models/export.md](../models/export.md)
+**See also** - [catalog-site.md](catalog-site.md), [chains.md](chains.md) (the third tab of the switch), [seo-pages.md](seo-pages.md), [../models/export.md](../models/export.md)
 
 ## Drafts
 
@@ -73,7 +73,8 @@ The listing opens on the **catalog**: only confirmed models, with the app bar re
 its count) moves to the **workshop**, `?section=workshop` in the URL, which lists only
 the drafts and reads "Rail Island Workshop", with a note that drafts are not exported
 to the game. The chips, the country row, the search and the totals all work within the
-section.
+section. A third tab, **Chains** (`?section=chains`), draws the supply chain of both
+lists, its draft designs marked ([chains.md](chains.md)).
 
 A model page belongs to its model's section, whatever the URL says: a draft linked to
 directly steps (previous / next) through the workshop, and closing it returns to the

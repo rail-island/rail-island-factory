@@ -429,18 +429,25 @@ export interface ViewState extends ChipPath {
   maker: string | null;
   /** Whether the list holds only the vehicles OpenTTD can hold (`/openttd/`). */
   openttd: boolean;
-  /** Which models the list shows: the confirmed catalog, or the workshop's drafts (`?section=workshop`). */
+  /** Which models the list shows: the confirmed catalog, or the workshop's drafts (`?section=workshop`); or the supply chains (`?section=chains`). */
   section: Section;
+  /** The Chains tab's selected node (`?chain=<node id>`, src/chains.ts), or null. Kept only on that tab. */
+  chain: string | null;
 }
 
 /**
  * The site's two lists (docs/site/workshop.md): the catalog of confirmed models, the
- * default, and the workshop of drafts not yet confirmed (a record's `draft`).
+ * default, and the workshop of drafts not yet confirmed (a record's `draft`); and the
+ * Chains tab beside them, the supply chain of both (docs/site/chains.md), which lists
+ * no model of its own.
  */
-export type Section = "catalog" | "workshop";
+export type Section = "catalog" | "workshop" | "chains";
 
-/** The section a record is listed in. */
-export function sectionOf(r: Pick<CatalogRecord, "draft">): Section {
+/** The tabs above the list, in order. */
+export const SECTIONS: readonly Section[] = ["catalog", "workshop", "chains"];
+
+/** The section a record is listed in (never the Chains tab). */
+export function sectionOf(r: Pick<CatalogRecord, "draft">): "catalog" | "workshop" {
   return r.draft ? "workshop" : "catalog";
 }
 
@@ -451,7 +458,12 @@ export function sectionRows<T extends Pick<CatalogRecord, "draft">>(rows: readon
 
 /** The app bar's heading of a section's list. */
 export function sectionHeading(section: Section): string {
-  return section === "workshop" ? "Rail Island Workshop" : "Rail Island Catalog";
+  return section === "workshop" ? "Rail Island Workshop" : section === "chains" ? "Rail Island Supply Chains" : "Rail Island Catalog";
+}
+
+/** A section's tab label. */
+export function sectionLabel(section: Section): string {
+  return section === "workshop" ? "Workshop" : section === "chains" ? "Chains" : "Catalog";
 }
 
 export type DetailTab = "specs" | "source" | "references";
@@ -522,6 +534,8 @@ export function parseView(search: string, pathname = "/"): ViewState {
   const country = route.country ?? readChip(p.get("country"));
   const maker = route.maker ?? readChip(p.get("maker"));
   const openttd = route.openttd ?? p.get("openttd") === "1";
+  const rawSection = p.get("section");
+  const section: Section = rawSection === "workshop" || rawSection === "chains" ? rawSection : "catalog";
   return {
     q: p.get("q") ?? "",
     layout: p.get("view") === "thumbs" ? "thumbs" : "table",
@@ -538,7 +552,8 @@ export function parseView(search: string, pathname = "/"): ViewState {
     country,
     maker,
     openttd,
-    section: p.get("section") === "workshop" ? "workshop" : "catalog",
+    section,
+    chain: section === "chains" ? readChain(p.get("chain")) : null,
   };
 }
 
@@ -557,6 +572,11 @@ function parsePath(pathname: string): { model?: string; chips?: (string | null)[
   if (`/${decoded[0]}/` === MAKER_PATH && decoded.length === 2) return { maker: readChip(decoded[1]!) };
   if (`/${decoded[0]}/` === OPENTTD_PATH && decoded.length === 1) return { openttd: true };
   return {};
+}
+
+/** A chain node id from the address bar (chains.ts ids are lower-case words and hyphens), else null. */
+function readChain(raw: string | null): string | null {
+  return raw && raw.length <= 80 && /^[a-z0-9-]+$/.test(raw) ? raw : null;
 }
 
 /** A chip value from the address bar, sanitized by shape and slugged: one that matches nothing simply lists nothing. */
@@ -614,7 +634,8 @@ export function serializeView(v: ViewState): string {
   if (v.country && path !== countryPath(v.country)) p.set("country", chipSlug(v.country));
   if (v.maker && path !== makerPath(v.maker)) p.set("maker", chipSlug(v.maker));
   if (v.openttd && path !== OPENTTD_PATH) p.set("openttd", "1");
-  if (v.section === "workshop") p.set("section", "workshop");
+  if (v.section !== "catalog") p.set("section", v.section);
+  if (v.section === "chains" && v.chain) p.set("chain", v.chain);
   if (v.sort !== DEFAULT_SORT) p.set("sort", v.sort);
   if (v.dir !== (column(v.sort)?.dir ?? DEFAULT_DIR)) p.set("dir", v.dir);
   if (v.model) {
@@ -662,7 +683,7 @@ export function offeredValues(p: RecordParam, chosen: Record<string, string>): R
  * dropped, and so is a parameter whose condition (`when`) the values before it
  * do not meet. A fixed record has none.
  */
-export function effectiveParams(r: CatalogRecord, chosen: Record<string, string>): Record<string, string> {
+export function effectiveParams(r: Pick<CatalogRecord, "params">, chosen: Record<string, string>): Record<string, string> {
   for (const p of r.params ?? []) {
     const replacement = p.retired?.[chosen[p.name] ?? ""];
     if (replacement) chosen = { ...chosen, ...replacement };

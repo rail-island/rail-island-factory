@@ -10,7 +10,7 @@ preview (its passenger view on structure pages included), and the URL state.
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
 `test/catalogQuery.test.ts`, `test/factTable.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
-**See also** - [workshop.md](workshop.md) (the catalog and the workshop, web links), [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md), [seo-pages.md](seo-pages.md)
+**See also** - [workshop.md](workshop.md) (the catalog and the workshop, web links), [chains.md](chains.md) (the Chains tab), [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md), [seo-pages.md](seo-pages.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
 copied and trimmed: no sign-in, uploads, woods or packages, and English only.
@@ -139,6 +139,11 @@ To see what deploys - the build's thumbnails and figures - run `pnpm build` and
 `pnpm preview`.
 
 ## The listing
+
+Above the toolbar a **Catalog | Workshop | Chains** switch picks the list: the
+confirmed models, the drafts ([workshop.md](workshop.md)), or the **Chains** tab, the
+supply chain of both drawn as a graph (a list of chains on a phone) instead of a
+listing ([chains.md](chains.md)). On the Chains tab the toolbar holds the switch alone.
 
 - **Thumbnails** (`src/Thumb.tsx`) are the build's (under `pnpm dev`, the browser's - "Local dev" above): a road or rail vehicle's is a
   side view (the record's `thumbSide`, [../models/export.md](../models/export.md)), shown in a
@@ -526,7 +531,7 @@ All state is in the URL (`parseView`/`viewUrl` in `catalogQuery.ts`). The path i
 page ([seo-pages.md](seo-pages.md)): `/model/<id>/` the open model,
 `/category/<group>/[<l2>/[<l3>/]]` the three chip rows (a lower one only under the one
 above), `/` the plain list. The query string carries the rest: `?q=` search,
-`?section=workshop` the workshop's drafts ([workshop.md](workshop.md)), `?view=thumbs` the thumbnail layout, `?country=` the country chip (its name's slug, `united-kingdom`), `?sort=` and `?dir=` ordering, on a model page the
+`?section=workshop` the workshop's drafts ([workshop.md](workshop.md)), `?section=chains` the Chains tab and `&chain=<node id>` its picked node ([chains.md](chains.md); kept on a model page opened from it, so closing it returns to the tab), `?view=thumbs` the thumbnail layout, `?country=` the country chip (its name's slug, `united-kingdom`), `?sort=` and `?dir=` ordering, on a model page the
 list's chips as `?cat=`, `?sub=` and `?sub2=` (the Creator's names), `?tab=source` or `?tab=references` its Source or Sources tab and `?node=` the selected tree node (kept
 only with the Source tab; a node id no longer in the tree selects nothing), `?stage=openttd`
 the OpenTTD view of a vehicle OpenTTD can hold (a model without one drops it), and

@@ -47,8 +47,9 @@ maker page, and only a variant thumbnail adds its `p.<name>` parameters. Otherwi
 Googlebot, which runs the app, followed thousands of `/model/<id>/?cat=...&country=...`
 links and indexed them in place of the canonical pages. A plain click still opens the
 whole view (`viewUrl`); a middle click opens the page without the list's filters. The
-Catalog/Workshop switch is the one link that keeps its query (`?section=workshop`), since
-the workshop has no page of its own.
+Catalog/Workshop/Chains switch and the Chains tab's nodes are the links that keep their
+query (`?section=workshop`, `?section=chains&chain=<node>`), since neither tab has a page
+of its own ([chains.md](chains.md)).
 
 The old all-query form (`/?model=<id>`, `/?cat=...&sub=...`, the webapp Creator's form)
 is still read. On load the app rewrites it to the path form with `replaceState`.

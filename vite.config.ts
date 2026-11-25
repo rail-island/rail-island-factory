@@ -99,8 +99,10 @@ function assetHeaders(): Plugin {
 // it stands, so the deployed site serves the very files the game would import.
 // `pnpm dev` uses no export folder: generator/devServer.ts serves the data on
 // demand and the browser measures and renders the rest (docs/site/catalog-site.md).
-export default defineConfig(({ command }) => ({
-  plugins: [solid(), inlineBoot(), socialPreview(), assetHeaders(), sitePages(), devExport()],
+export default defineConfig(({ command, mode }) => ({
+  // Under Vitest the components compile for the server, so a test renders them to
+  // markup with solid-js/web renderToString (test/chainsView.test.ts); the site build is unchanged.
+  plugins: [solid(mode === "test" ? { ssr: true } : {}), inlineBoot(), socialPreview(), assetHeaders(), sitePages(), devExport()],
   publicDir: command === "serve" ? false : "export",
   build: {
     // three (~560 kB) is its own chunk, loaded only when a model page opens

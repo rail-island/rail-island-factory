@@ -16,7 +16,7 @@ checks, the export and where the numbers came from.
 **See also** - [game-properties.md](game-properties.md) (the rest of `game`),
 [sounds.md](sounds.md) (the other table kept apart from the designs), [export.md](export.md),
 [text.md](text.md) (the commodity names),
-[../site/workshop.md](../site/workshop.md) (drafts)
+[../site/workshop.md](../site/workshop.md) (drafts), [../site/chains.md](../site/chains.md) (the site's Chains tab, drawn from these blocks)
 
 ## What the game does with them
 

@@ -10,7 +10,7 @@
 // docs/site/seo-pages.md).
 
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
-import { COLUMNS, GROUPS, NO_CHIPS, OPENTTD_PATH, chipLabel, chipMatches, chipRows, chipSlug, countryChips, linkUrl, parseView, prepareRows, queryRows, sectionHeading, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
+import { COLUMNS, GROUPS, NO_CHIPS, OPENTTD_PATH, SECTIONS, chipLabel, chipMatches, chipRows, chipSlug, countryChips, linkUrl, parseView, prepareRows, queryRows, sectionHeading, sectionLabel, sectionOf, sectionRows, shownId, viewUrl, type Column, type Row, type Section, type ViewState } from "./catalogQuery";
 import { SITE_URL, categoryMeta, categoryTree, countryMeta, homeMeta, listIntro, makerMeta, modelMeta, openttdMeta, type PageMeta } from "./pageMeta";
 import { Link } from "./Link";
 import type { ModelCatalog } from "../generator/catalog.ts";
@@ -19,6 +19,8 @@ import { ModelCards } from "./ModelCards";
 import { ModelVariants } from "./ModelVariants";
 import { ModelDetail } from "./ModelDetail";
 import { ExportPanel } from "./ExportPanel";
+import { ChainsView } from "./ChainsView";
+import { chainGraph } from "./chains";
 import { EMPTY_EXPORT, addEntry, entryFor, hasEntry, loadExport, saveExport, type ExportState } from "./exportList";
 import logoUrl from "./rail-island-logo.webp";
 
@@ -110,7 +112,11 @@ export function App() {
     return record ? sectionOf(record) : view().section;
   });
   const inSection = createMemo(() => sectionRows(rows() ?? [], section()));
-  const counts = createMemo(() => ({ catalog: sectionRows(rows() ?? [], "catalog").length, workshop: sectionRows(rows() ?? [], "workshop").length }));
+  const counts = createMemo((): Partial<Record<Section, number>> => ({ catalog: sectionRows(rows() ?? [], "catalog").length, workshop: sectionRows(rows() ?? [], "workshop").length }));
+  // The Chains tab's graph (chains.ts, docs/site/chains.md): built from the records once the tab is first shown.
+  const onChains = createMemo(() => section() === "chains");
+  const graph = createMemo(() => (onChains() && rows() ? chainGraph(rows()!) : null));
+  const chainPatch = (chain: string | null): Partial<ViewState> => ({ section: "chains", chain });
   const listed = createMemo(() => queryRows(inSection(), view().q, view().sort, view().dir, view()));
   // What each chip row offers, from every model of the section rather than the
   // searched ones, so the chips hold still while somebody types.
@@ -137,7 +143,8 @@ export function App() {
   // A node belongs to one model's tree: opening, closing or stepping drops it.
   const openPatch = (r: Row, params: Record<string, string> = {}): Partial<ViewState> => ({ model: r.id, tab: "specs", node: null, stage: "3d", params: { ...params } });
   // closing returns to the list of the model's own section
-  const closePatch = (): Partial<ViewState> => ({ model: null, tab: "specs", node: null, stage: "3d", params: {}, section: section() });
+  // (a model opened from the Chains tab returns to it, its node still selected)
+  const closePatch = (): Partial<ViewState> => ({ model: null, tab: "specs", node: null, stage: "3d", params: {}, section: view().section === "chains" ? "chains" : section() });
   const onOpen = (r: Row, params: Record<string, string> = {}) => update(openPatch(r, params), true);
   const hrefOpen = (r: Row, params: Record<string, string> = {}) => hrefOf(openPatch(r, params));
   const onClose = () => update(closePatch(), true);
@@ -164,7 +171,7 @@ export function App() {
   const listPage = createMemo((): PageMeta | null => {
     const v = view();
     const all = sectionRows(rows() ?? [], "catalog");
-    if (v.model || v.group || v.section === "workshop" || !all.length) return null;
+    if (v.model || v.group || v.section !== "catalog" || !all.length) return null;
     const sorted = (f: { maker?: string | null; country?: string | null; openttd?: boolean }) => queryRows(all, "", "title", "asc", { ...NO_CHIPS, ...f });
     if (v.maker) {
       const rs = sorted({ maker: v.maker });
@@ -215,6 +222,29 @@ export function App() {
   }
 
   const totalTris = () => listed().reduce((s, r) => s + r.triangles, 0);
+
+  /** The Catalog | Workshop | Chains switch above the list; each keeps the rest of the view. */
+  const sectionTabs = () => (
+    <div class="factory-sections" role="group" aria-label="Section">
+      <For each={SECTIONS}>
+        {(s) => (
+          <Link
+            class="factory-filter factory-section"
+            classList={{ "factory-filter--on": section() === s }}
+            aria-current={section() === s ? "page" : undefined}
+            href={viewUrl({ ...view(), section: s, chain: null })}
+            onNavigate={() => pick({ section: s, chain: null })}
+          >
+            {sectionLabel(s)}
+            <Show when={counts()[s] !== undefined}>
+              {" "}
+              <span class="factory-section__count">{counts()[s]}</span>
+            </Show>
+          </Link>
+        )}
+      </For>
+    </div>
+  );
 
   return (
     <div class="factory" classList={{ "factory--detail": !!open() }}>
@@ -288,6 +318,23 @@ export function App() {
               />
             )}
           </Match>
+          <Match when={graph()}>
+            {(g) => (
+              <>
+                <div class="factory-toolbar">{sectionTabs()}</div>
+                <ChainsView
+                  graph={g()}
+                  rows={rows() ?? []}
+                  wide={wide()}
+                  selected={view().chain}
+                  onSelect={(chain) => pick({ chain })}
+                  hrefSelect={(chain) => viewUrl({ ...view(), ...chainPatch(chain) })}
+                  onOpen={(r) => onOpen(r)}
+                  hrefOpen={(r) => hrefOpen(r)}
+                />
+              </>
+            )}
+          </Match>
           <Match when={true}>
             <Show when={listPage()}>
               {(page) => (
@@ -301,21 +348,7 @@ export function App() {
               )}
             </Show>
             <div class="factory-toolbar">
-              <div class="factory-sections" role="group" aria-label="Section">
-                <For each={["catalog", "workshop"] as const}>
-                  {(s) => (
-                    <Link
-                      class="factory-filter factory-section"
-                      classList={{ "factory-filter--on": section() === s }}
-                      aria-current={section() === s ? "page" : undefined}
-                      href={viewUrl({ ...view(), section: s })}
-                      onNavigate={() => pick({ section: s })}
-                    >
-                      {s === "workshop" ? "Workshop" : "Catalog"} <span class="factory-section__count">{counts()[s]}</span>
-                    </Link>
-                  )}
-                </For>
-              </div>
+              {sectionTabs()}
               <Show when={section() === "workshop"}>
                 <p class="factory-muted factory-sections__note">Drafts not yet confirmed: they are not exported to the game.</p>
               </Show>
