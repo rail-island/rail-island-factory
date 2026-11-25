@@ -35,7 +35,10 @@ import { COACH_CATALOG } from "./csdCoaches.ts";
 import { block, side } from "./vehicleParts.ts";
 import { TAU } from "./characterKit.ts";
 import { lodBlock, lodSideBox, lodWheel } from "./lodKit.ts";
-import { LOAD_PALETTE, bulkLoads } from "./loadKit.ts";
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads } from "./loadKit.ts";
+
+/** A mine tub carries what a mine sends out: coal or iron ore, never grain. */
+const MINE_LOOKS = /* @__PURE__ */ BULK_LOOKS.filter((l) => !l.commodities.includes("grain"));
 import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import { animalVehicleDesign, buildAnimalVehicle, buildAnimalVehicleLod, type AnimalVehicleSpec } from "./animalVehicleKit.ts";
 
@@ -511,8 +514,8 @@ function mineTubBody(m: MeshBuilder): void {
     const band = grow(MT_UPPER, -0.025);
     rods(m, "iron", [...band, band[0]!].map(([x, z]) => [x * 0.97, 0.7, z * 0.965] as Vec3), 0.012, 4, false);
   });
-  // the loads on its floor (docs/models/loads.md): a mound of coal, iron ore or grain heaped over the rim
-  bulkLoads(m, [0, MT_BOTTOM + 0.04, 0], (mat) => m.scope("heap", () => m.loft(mat, MT_HEAP_FOOT, MT_TOP - 0.03, MT_HEAP_TOP, MT_TOP + 0.18)));
+  // the loads on its floor (docs/models/loads.md): a mound of coal or iron ore heaped over the rim
+  bulkLoads(m, [0, MT_BOTTOM + 0.04, 0], (mat) => m.scope("heap", () => m.loft(mat, MT_HEAP_FOOT, MT_TOP - 0.03, MT_HEAP_TOP, MT_TOP + 0.18)), MINE_LOOKS);
 }
 
 /** The mine tub's heap: its foot just inside the rim, its flat top. */
@@ -525,7 +528,7 @@ function mineTubLod(m: MeshBuilder): void {
   lodBlock(m, -MT_FRAME - 0.12, MT_FRAME + 0.12, 0.2, MT_BOTTOM, -0.22, 0.22, { side: "iron", end: "buffer" });
   for (const x of [-MT_AXLE_X, MT_AXLE_X]) for (const s of [-1, 1]) lodWheel(m, "wheel", x, MT_WHEEL.r, ...side(s, 0.27, 0.35), 6);
   // the heaps over the rim, hidden load parts (docs/models/loads.md)
-  bulkLoads(m, [0, MT_BOTTOM + 0.04, 0], (mat) => m.scope("heap", () => m.loft(mat, MT_HEAP_FOOT_LOD, MT_TOP, MT_HEAP_TOP_LOD, MT_TOP + 0.18)));
+  bulkLoads(m, [0, MT_BOTTOM + 0.04, 0], (mat) => m.scope("heap", () => m.loft(mat, MT_HEAP_FOOT_LOD, MT_TOP, MT_HEAP_TOP_LOD, MT_TOP + 0.18)), MINE_LOOKS);
 }
 
 /** The heap from afar: a four-sided mound. */

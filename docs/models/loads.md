@@ -95,7 +95,7 @@ food.
 | CR C70, IR BOXN (open unit) | coal, iron-ore, grain heaps | floor |
 | Vte (legacy open wagon) | coal, iron-ore, grain heaps | floor 1.2 m |
 | Uaaikk (legacy heavy wagon) | a power transformer on bearers (goods) | well deck 0.6 m |
-| animal-rail mine tub | coal, iron-ore, grain heaps | the tub's floor |
+| animal-rail mine tub | coal, iron-ore heaps (a mine sends no grain) | the tub's floor |
 | Tatra 815 tipper, world-truck tippers, the T909's trailers, the truck kit's dump bodies with `load: gravel` | coal, iron-ore, grain heaps | the bin's floor |
 | Kenworth C500 log truck (truck kit `logs`) | logs (wood) | the bunks |
 | Lohr car transporter (truck kit `carCarrier`) | the cars on both decks (goods) | lower deck |

@@ -5,6 +5,7 @@
 // the JS model; and no design keeps a loaded/empty cargo parameter.
 
 import { describe, expect, it } from "vitest";
+import { VEHICLE_CAPACITY } from "../generator/capacityTable.ts";
 import * as THREE from "three";
 import { MeshBuilder } from "../generator/meshBuilder.ts";
 import { MeshBuilder as ThreeMeshBuilder } from "../generator/threeBuilder.ts";
@@ -97,7 +98,7 @@ const FREIGHT: Record<string, string[]> = {
   "proc-vehicle-ir-boxn-wagon": BULK,
   "proc-vehicle-legacy-open-wagon": BULK,
   "proc-vehicle-legacy-heavy-wagon": ["goods"],
-  "proc-vehicle-animal-rail-mine-tub": BULK,
+  "proc-vehicle-animal-rail-mine-tub": ["coal", "iron-ore"],
   "proc-vehicle-tatra-815-tipper": BULK,
   "proc-vehicle-tatra-815": BULK,
   "proc-vehicle-kenworth-c500-log": ["wood"],
@@ -114,6 +115,19 @@ const FREIGHT: Record<string, string[]> = {
   "proc-vehicle-ship-push-barge": BULK,
   "proc-vehicle-ship-yangtze-cargo": CONTAINERS,
 };
+
+describe("loads against capacities", () => {
+  it("every commodity a design draws is one its capacity carries (a design without a table entry is a draft)", () => {
+    const problems: string[] = [];
+    for (const [id, drawn] of Object.entries(FREIGHT)) {
+      const entry = VEHICLE_CAPACITY[id];
+      if (!entry) continue;
+      const carried = new Set<string>([...(entry.commodities ?? []), ...(entry.variants ?? []).flatMap((v) => v.commodities ?? [])]);
+      for (const c of drawn) if (!carried.has(c)) problems.push(`${id} draws ${c} but its capacity does not carry it`);
+    }
+    expect(problems).toEqual([]);
+  });
+});
 
 /** Whether an exterior face facing up lies on the bed: within `below` under the pivot's height `y`, inside the load's plan (`pts`). */
 function onBed(rest: readonly Tri[], pts: readonly number[][], y: number, below = 0.3): boolean {

@@ -98,7 +98,7 @@ export const RAIL_CARS: Readonly<Record<string, VehicleCapacityEntry>> = {
     source: "DR double-deck coach: about 126 seats, driving trailer about 110 (approx.)",
     variants: [{ params: { variant: "drivingTrailer" }, seats: 110 }],
   },
-  "proc-vehicle-eas-open-wagon": { tonnes: 58, commodities: ["grain", "coal", "iron-ore"], source: "Eas: payload 58 t (Wikipedia)" },
+  "proc-vehicle-eas-open-wagon": { tonnes: 58, commodities: ["grain", "wood", "coal", "iron-ore"], source: "Eas: payload 58 t (Wikipedia); open high-sided wagon, so logs too" },
   "proc-vehicle-faccs-hopper-wagon": { tonnes: 57, commodities: ["grain", "coal", "iron-ore"], source: "Faccs: payload about 57 t (approx.)" },
   "proc-vehicle-falls-hopper-wagon": { tonnes: 64, commodities: ["grain", "coal", "iron-ore"], source: "Falls: payload about 64 t (approx.)" },
   "proc-vehicle-glacier-express": {
@@ -223,7 +223,7 @@ export const RAIL_CARS: Readonly<Record<string, VehicleCapacityEntry>> = {
   "proc-vehicle-tatra-kt8": { seats: 230, source: "Tatra KT8D5: about 230 seated and standing (Wikipedia)" },
   "proc-vehicle-tatra-t3": { seats: 110, source: "Tatra T3: 110 seated and standing (Wikipedia)" },
   "proc-vehicle-tatra-t6": { seats: 130, source: "Tatra T6A5: about 130 seated and standing (Wikipedia)" },
-  "proc-vehicle-ua-open-wagon": { tonnes: 50, commodities: ["grain", "coal", "iron-ore"], source: "size: Ua open wagon, about 50 t" },
+  "proc-vehicle-ua-open-wagon": { tonnes: 50, commodities: ["grain", "wood", "coal", "iron-ore"], source: "size: Ua open wagon, about 50 t; logs too" },
   "proc-vehicle-uic-z-coach": {
     seats: 66,
     source: "UIC-Z: 2nd class 66, 1st class 54, restaurant 36 seats (Wikipedia)",
