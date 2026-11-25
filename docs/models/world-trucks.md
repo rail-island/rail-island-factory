@@ -2,7 +2,7 @@
 
 **Covers** - the 100 trucks and lorries from around the world on the world truck kit: the kit's `TruckSpec` (cab library, chassis and axle layouts, bodies, trailers), the chain of trailers in the rig and its clearances, the steered axles, the low detail, the parameters, game properties, OpenTTD figures and sounds, references, deviations and tests.
 **Code** - `generator/truckKit.ts`, `generator/truckBodies.ts`, `generator/worldTruckPresets.ts`, `generator/worldTrucks.ts`, `generator/rig.ts`, `generator/vehicleParts.ts` (`steeredWheels`, `plate`, `arc`), `generator/lodKit.ts` (`fitLod`), `generator/openttdTable.ts`, `generator/soundTable.ts`, `generator/worldFleet.ts` (`truckFeatures`), `test/worldTrucks.test.ts`, `test/rig.test.ts`, `test/worldFleet.test.ts`
-**See also** - [trucks.md](trucks.md) (the reproduced trucks and their cab shell, which the kit's shell follows), [vehicles.md](vehicles.md) (the American truck), [vehicle-rig.md](vehicle-rig.md), [world-fleet.md](world-fleet.md) (references, data checks, the sweep sample), [lod.md](lod.md), [openttd-figures.md](openttd-figures.md), [sounds.md](sounds.md), [../specs/2026-11-05-world-vehicle-fleet-list.md](../specs/2026-11-05-world-vehicle-fleet-list.md)
+**See also** - [loads.md](loads.md), [trucks.md](trucks.md) (the reproduced trucks and their cab shell, which the kit's shell follows), [vehicles.md](vehicles.md) (the American truck), [vehicle-rig.md](vehicle-rig.md), [world-fleet.md](world-fleet.md) (references, data checks, the sweep sample), [lod.md](lod.md), [openttd-figures.md](openttd-figures.md), [sounds.md](sounds.md), [../specs/2026-11-05-world-vehicle-fleet-list.md](../specs/2026-11-05-world-vehicle-fleet-list.md)
 
 ## The designs
 
@@ -68,7 +68,7 @@ kilolitres) and the cargo at the defaults; triangles at the defaults.
 | `veh-magirus-ladder` | Magirus Turntable Ladder | cabover, 6x2 | - | 10.00 x 3.22 x 3.60 | 2010 / 0 GOOD | 2,200 |
 | `veh-rosenbauer-panther` | Rosenbauer Panther | cabover, 6x6 | - | 12.00 x 3.72 x 3.97 | 2005 / 0 GOOD | 2,386 |
 | `veh-liebherr-ltm` | Liebherr LTM 1100 Mobile Crane | cabover, 10x4 | - | 13.80 x 3.34 x 4.00 | 2010 / 0 GOOD | 2,788 |
-| `veh-lohr-car-transporter` | Car Transporter | cabover, 4x2, semi | load: cars, empty | 16.20 x 3.21 x 4.09 | 2010 / 12 GOOD | 3,382 |
+| `veh-lohr-car-transporter` | Car Transporter | cabover, 4x2, semi | - (the cars a hidden load part) | 16.20 x 3.21 x 4.09 | 2010 / 12 GOOD | 3,382 |
 | `veh-peterbilt-379` | Peterbilt 379 | hood/square, 6x4, semi | body: dryVan, flatbed | 22.58 x 3.16 x 4.10 | 1987 / 20 GOOD | 3,708 |
 | `veh-peterbilt-579` | Peterbilt 579 | hood/aero, 6x4, semi | body: dryVan, reefer | 22.48 x 3.16 x 4.10 | 2012 / 20 GOOD | 3,444 |
 | `veh-kenworth-w900` | Kenworth W900 | hood/square, 6x4, semi | body: dryVan, tank | 23.08 x 3.16 x 4.10 | 1961 / 20 GOOD | 3,708 |
@@ -171,14 +171,16 @@ axles, so the rig's Ackermann angles turn the second axle less.
 ### Bodies
 
 `box`, `curtain`, `reefer` (unit on the front wall), `container`, `tank` (round or
-elliptical, bands, walkway, manholes, saddles), `tipper` (bin, headboard, ribs, ram, a gravel
-load), `dump` (a mining body with its canopy), `flatbed`, `dropside`, `canvas` (dropside and
-tilt), `logs`, `mixer` (the tilted drum, its stripe, water tank, hopper and chute), `refuse`
+elliptical, bands, walkway, manholes, saddles), `tipper` (bin, headboard, ribs, ram; with
+`load: gravel` a coal, an iron ore and a grain heap, each a hidden load part on the bin's floor,
+[loads.md](loads.md)), `dump` (a mining body with its canopy), `flatbed`, `dropside`, `canvas` (dropside and
+tilt), `logs` (the logs a hidden `wood` load part on the bunks), `mixer` (the tilted drum, its stripe, water tank, hopper and chute), `refuse`
 (rounded body, rear loader), `crane` (loader crane behind the cab), `boom` (a mobile
-crane's superstructure; the boom is a part), `carCarrier` (two decks, cars as `load`),
+crane's superstructure; the boom is a part), `carCarrier` (two decks; with `load: cars` the
+cars a hidden `goods` load part on the lower deck),
 `fire` (roller-shutter lockers, roof ladder or monitor), `ladder` (turntable; the ladder set
 is a part), `sweeper`, `plough` (front blade), `lowLoader` (gooseneck, well deck, an
-excavator as `load`), `artBox` (painted panels and lamps), `van`/`none`.
+excavator as `load: machine`, part of the model: no commodity), `artBox` (painted panels and lamps), `van`/`none`.
 
 ### Trailers: a chain of sections
 
@@ -221,7 +223,8 @@ first). The sections are the full rig's.
 ## Parameters, game properties, OpenTTD and sounds
 
 - `body` picks the trailer's or the rigid's body (2 to 3 values); `colour` and `livery` only
-  recolour (`finishParams`); `load` is the road train's trailers or the car carrier's cars;
+  recolour (`finishParams`); `load` is the road train's trailers (no cargo: there is no
+  loaded/empty parameter);
   `variant` the Xcient's diesel tractor or fuel cell rigid.
 - `game`: weight in tonnes (gross, a combination's), power in kW, top speed in km/h, from
   the makers' figures; variants where a body changes the weight.

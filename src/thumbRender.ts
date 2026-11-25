@@ -14,6 +14,7 @@
 
 import { AmbientLight, Box3, DirectionalLight, OrthographicCamera, PerspectiveCamera, Scene, Vector3, WebGLRenderer, type Camera, type Object3D } from "three";
 import type { CatalogRecord } from "./catalogQuery";
+import { showFirstLoad } from "./viewerLoads";
 import { loadModel } from "./modelModule";
 
 /** Edge of the square three-quarter thumbnail, in pixels. */
@@ -65,6 +66,8 @@ function toBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 /** Build the variant and draw its thumbnail. */
 export async function renderVariantThumb(record: CatalogRecord, params: Record<string, string>): Promise<Blob> {
   const { object } = await loadModel(record, params);
+  // a freight vehicle drawn loaded, as the build's thumbnails (docs/models/loads.md)
+  showFirstLoad(object);
   const r = shared();
   const scene = new Scene();
   scene.add(object);

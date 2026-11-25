@@ -68,7 +68,7 @@
     6
    ],
    "nodes": [
-    "cargo/tubes"
+    "load-steel/steel-tubes/tubes"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "XML `load` 2.8..12.5 m, 1.4..1.7 m; 21 tubes 0.12 m across in three layers."
@@ -85,7 +85,7 @@
     8
    ],
    "nodes": [
-    "cargo/bolsters/bolster-1"
+    "load-steel/steel-tubes/bolsters/bolster-1"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Native pixel edge estimate; +/- one pixel."
@@ -102,7 +102,7 @@
     8
    ],
    "nodes": [
-    "cargo/bolsters/bolster-2"
+    "load-steel/steel-tubes/bolsters/bolster-2"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Native pixel edge estimate; +/- one pixel."
@@ -172,7 +172,7 @@
     6
    ],
    "nodes": [
-    "cargo/tubes"
+    "load-steel/steel-tubes/tubes"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "XML `load` 2.8..12.5 m, 1.4..1.7 m; 21 tubes 0.12 m across in three layers."
@@ -189,7 +189,7 @@
     8
    ],
    "nodes": [
-    "cargo/bolsters/bolster-1"
+    "load-steel/steel-tubes/bolsters/bolster-1"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Native pixel edge estimate; +/- one pixel."
@@ -206,7 +206,7 @@
     8
    ],
    "nodes": [
-    "cargo/bolsters/bolster-2"
+    "load-steel/steel-tubes/bolsters/bolster-2"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Native pixel edge estimate; +/- one pixel."

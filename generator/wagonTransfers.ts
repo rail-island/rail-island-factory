@@ -1,6 +1,7 @@
 // Every freight wagon transferred from vlakosimdb (wagons.ts), one row per
 // vlakosimdb vehicle, for the measured comparison (csdCoachComparison.ts,
-// csdCoachReport.ts): the design and cargo that build it, its native folder
+// csdCoachReport.ts): the design and the load it shows (docs/models/loads.md),
+// its comparison's name, its native folder
 // (assets/<folder>/native/<key>/) and the source x of its buffer midpoint.
 // See docs/models/wagons.md.
 
@@ -14,30 +15,30 @@ const WAGONS_DOC = {
     "the transfer onto the XML clip shapes (0.1 m posts the BMPs paint up to 0.2 m wide, polygonal hoppers and tank, loads bounded by their XML hulls) and the deliberate mechanical choices (1.75 m buffer spacing, 920 mm wheels)",
 };
 
-const wagon = (key: string, title: string, id: string, folder: string, centre: number, cargo?: string): CoachTransfer => ({
+const wagon = (key: string, title: string, id: string, folder: string, centre: number, look?: string, load?: string): CoachTransfer => ({
   key,
   title,
   id,
-  ...(cargo ? { params: { cargo } } : {}),
+  ...(load ? { load } : {}),
   folder,
   native: `native/${key}`,
   centre,
-  report: cargo ? `COMPARISON-${cargo}.md` : "COMPARISON.md",
+  report: look ? `COMPARISON-${look}.md` : "COMPARISON.md",
   doc: WAGONS_DOC,
 });
 
 export const WAGON_TRANSFERS: readonly CoachTransfer[] = [
   wagon("n_nas", "Nas", "proc-vehicle-nas-flat-wagon", "wagon-nas", 10.45, "empty"),
-  wagon("n_nas-full_1", "Nas + Wood", "proc-vehicle-nas-flat-wagon", "wagon-nas", 10.45, "wood"),
-  wagon("n_nas-full_2", "Nas + Tubes", "proc-vehicle-nas-flat-wagon", "wagon-nas", 10.45, "tubes"),
-  wagon("n_nas-full_3", "Nas + Reels", "proc-vehicle-nas-flat-wagon", "wagon-nas", 10.45, "reels"),
+  wagon("n_nas-full_1", "Nas + Wood", "proc-vehicle-nas-flat-wagon", "wagon-nas", 10.45, "wood", "wood"),
+  wagon("n_nas-full_2", "Nas + Tubes", "proc-vehicle-nas-flat-wagon", "wagon-nas", 10.45, "tubes", "steel"),
+  wagon("n_nas-full_3", "Nas + Reels", "proc-vehicle-nas-flat-wagon", "wagon-nas", 10.45, "reels", "goods"),
   wagon("n_ua-empty", "Ua Empty", "proc-vehicle-ua-open-wagon", "wagon-ua", 6.85, "empty"),
-  wagon("n_ua_1", "Ua Coal", "proc-vehicle-ua-open-wagon", "wagon-ua", 6.85, "coal"),
-  wagon("n_ua_2", "Ua Wood", "proc-vehicle-ua-open-wagon", "wagon-ua", 6.85, "wood"),
-  wagon("n_ua_3", "Ua + Sand", "proc-vehicle-ua-open-wagon", "wagon-ua", 6.85, "sand"),
+  wagon("n_ua_1", "Ua Coal", "proc-vehicle-ua-open-wagon", "wagon-ua", 6.85, "coal", "coal"),
+  wagon("n_ua_2", "Ua Wood", "proc-vehicle-ua-open-wagon", "wagon-ua", 6.85, "wood", "wood"),
+  wagon("n_ua_3", "Ua + Sand", "proc-vehicle-ua-open-wagon", "wagon-ua", 6.85, "sand", "iron-ore"),
   wagon("n_eas", "Eas", "proc-vehicle-eas-open-wagon", "wagon-eas", 6.95, "empty"),
-  wagon("n_eas-drevo", "Eas-drevo", "proc-vehicle-eas-open-wagon", "wagon-eas", 6.95, "wood"),
-  wagon("n_eas-uhlo", "Eas-uhli", "proc-vehicle-eas-open-wagon", "wagon-eas", 6.95, "coal"),
+  wagon("n_eas-drevo", "Eas-drevo", "proc-vehicle-eas-open-wagon", "wagon-eas", 6.95, "wood", "wood"),
+  wagon("n_eas-uhlo", "Eas-uhli", "proc-vehicle-eas-open-wagon", "wagon-eas", 6.95, "coal", "coal"),
   wagon("n_raj", "Raj", "proc-vehicle-raj-hopper-wagon", "wagon-raj", 7.2),
   wagon("n_rah_1", "Rah#1", "proc-vehicle-rah-tank-wagon", "wagon-rah", 6.35),
 ];

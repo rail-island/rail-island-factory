@@ -460,6 +460,9 @@ export interface LodPart {
   section?: number;
 }
 
+/** A LOD's triangles as its budget counts them: with loads, the exterior and its largest load (docs/models/loads.md). */
+const fitCount = (m: MeshBuilder): number => m.loadBudget?.() ?? m.triangleCount();
+
 /**
  * An articulated LOD's sections (docs/models/vehicle-rig.md): section i is the
  * node `section<i>` pivoted at its hinge with section i - 1, and a bellows joins
@@ -545,12 +548,12 @@ export function fitLod(spec: LodSpec, budget: number): MeshBuilder {
   };
   for (;;) {
     const m = build();
-    if (m.triangleCount() <= budget) {
+    if (fitCount(m) <= budget) {
       let best = m;
       for (let i = dropped - 1; i >= 0; i--) {
         back.add(optional[i]!);
         const more = build();
-        if (more.triangleCount() <= budget) best = more;
+        if (fitCount(more) <= budget) best = more;
         else back.delete(optional[i]!);
       }
       return best;
@@ -651,16 +654,16 @@ export function fitParts(palette: Record<string, MaterialSpec>, parts: readonly 
   };
   let m = build();
   for (const o of optional) {
-    if (m.triangleCount() <= budget) break;
+    if (fitCount(m) <= budget) break;
     gone.add(o);
     m = build();
   }
-  if (m.triangleCount() > budget) throw new Error(`the LOD does not fit ${budget} triangles`);
+  if (fitCount(m) > budget) throw new Error(`the LOD does not fit ${budget} triangles`);
   for (const o of [...optional].reverse()) {
     if (!gone.has(o)) continue;
     gone.delete(o);
     const more = build();
-    if (more.triangleCount() <= budget) m = more;
+    if (fitCount(more) <= budget) m = more;
     else gone.add(o);
   }
   return m;

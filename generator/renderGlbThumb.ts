@@ -22,7 +22,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
 import {
-  collectTriangles, cross, dot, norm, parseGlb, sub, triBounds, xformPoint,
+  collectTriangles, firstLoad, cross, dot, norm, parseGlb, sub, triBounds, xformPoint,
   type Mat4, type Tri, type Vec3,
 } from "./glbTriangles.ts";
 
@@ -223,6 +223,12 @@ export type GlbSource = Uint8Array | string;
  */
 export interface ThumbOptions {
   interiors?: boolean;
+  /**
+   * A freight vehicle's load (docs/models/loads.md): the load parts of one
+   * commodity, every one (true) or none (false). By default the first load part's
+   * first commodity: a thumbnail shows the vehicle loaded.
+   */
+  loads?: boolean | string;
   cull?: boolean;
   cutAbove?: number;
   xRange?: [number, number];
@@ -231,7 +237,8 @@ export interface ThumbOptions {
 
 export function readTriangles(glb: GlbSource, opts: ThumbOptions = {}): Tri[] {
   const { json, bin } = parseGlb(typeof glb === "string" ? fs.readFileSync(glb) : glb);
-  let tris = collectTriangles(json, bin, opts);
+  const loads = opts.loads ?? firstLoad(json) ?? false;
+  let tris = collectTriangles(json, bin, { ...opts, loads });
   const cut = opts.cutAbove;
   if (cut !== undefined) tris = tris.filter((t) => t.p.every((p) => p[1] <= cut));
   if (tris.length === 0) throw new Error(`${typeof glb === "string" ? path.basename(glb) : "the GLB"} has no triangles`);
@@ -337,8 +344,8 @@ export function glbSideFrame(glb: GlbSource): SideFrame {
  * Render the GLB -- a road or rail vehicle built nose-first along +X -- in the
  * side view: seen from its -Z flank, nose on the left, orthographic.
  */
-export function renderGlbSideThumb(glb: GlbSource): { png: PNG; frame: SideFrame } {
-  const tris = readTriangles(glb);
+export function renderGlbSideThumb(glb: GlbSource, opts: Pick<ThumbOptions, "loads"> = {}): { png: PNG; frame: SideFrame } {
+  const tris = readTriangles(glb, opts);
   const { min, max } = triBounds(tris);
   const f = sideFrame(min[0], max[0]);
   const right = max[0] + SIDE_MARGIN_M; // the nose's end of the frame, drawn at the left edge

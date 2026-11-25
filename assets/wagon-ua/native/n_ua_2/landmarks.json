@@ -714,7 +714,7 @@
     9
    ],
    "nodes": [
-    "cargo/logs"
+    "load-wood/logs"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "XML `load` (3.1..3.6 m, x 0.8..12.9); the BMP paints its top rows 4..6."
@@ -731,7 +731,7 @@
     31
    ],
    "nodes": [
-    "cargo/straps/strap-1"
+    "load-wood/straps/strap-1"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Light grey strap column painted on z_both from the load top down to the solebar."
@@ -748,7 +748,7 @@
     31
    ],
    "nodes": [
-    "cargo/straps/strap-2"
+    "load-wood/straps/strap-2"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Light grey strap column painted on z_both from the load top down to the solebar."
@@ -765,7 +765,7 @@
     31
    ],
    "nodes": [
-    "cargo/straps/strap-3"
+    "load-wood/straps/strap-3"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Light grey strap column painted on z_both from the load top down to the solebar."
@@ -782,7 +782,7 @@
     31
    ],
    "nodes": [
-    "cargo/straps/strap-4"
+    "load-wood/straps/strap-4"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "Light grey strap column painted on z_both from the load top down to the solebar."

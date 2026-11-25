@@ -22,6 +22,8 @@ import { US_PALETTE, knuckleCoupler, paintedSweep, sideText } from "./usHoodKit.
 import { enumParam } from "./emuParts.ts";
 import type { LodBand, LodPart } from "./lodKit.ts";
 import { bogieParts, fitUnit, type UnitBody } from "./lodUnits.ts";
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, loadLodPart } from "./loadKit.ts";
+import { lodRoofBox } from "./lodKit.ts";
 
 const COUPLER_Y = 0.88;
 /** The same parameter as worldWagons.ts' WAGON_PARAMS (kept here to avoid an import cycle). */
@@ -39,7 +41,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   wgInk: paint("#e8e6df"),
   wgPlate: paint("#e2b62a", 0.5),
   wgRed: paint("#b8281f", 0.5),
-  wgLoad: paint("#2b2a28", 0.95),
+  ...LOAD_PALETTE,
 };
 
 /** Shared heights: the side sheet's foot, the floor. */
@@ -202,6 +204,8 @@ function endWall(m: MeshBuilder, e: number, body: number, half: number, y1: numb
 export const BOXN = { length: 10.713, body: 4.92, half: 1.5, top: 3.233, centre: 3.262, number: "ER 82153" };
 /** The six panels' rib heights (pressed, between the stanchions). */
 const BOXN_RIBS = [2.42, 1.72, 1.18];
+/** The BOXN's floor, inside its sheets. */
+const BOXN_FLOOR = SIDE_Y0 + 0.12;
 /** Hinged ladder frames, panel indices from the left end as seen from each side. */
 const BOXN_LADDERS = [2, 4];
 
@@ -209,7 +213,12 @@ function boxn(m: MeshBuilder): void {
   const { body, half, top } = BOXN;
   const chord = top - 0.13;
   m.scope("body", () => {
-    block(m, "wgBody", -body, body, SIDE_Y0, chord + 0.01, -half, half);
+    // the open box: its floor, side and end sheets, seen into from above (the loads stand on the floor)
+    m.scope("floor", () => block(m, "wgFrame", -body + 0.04, body - 0.04, SIDE_Y0, BOXN_FLOOR, -half + 0.04, half - 0.04));
+    m.scope("sheets", () => {
+      for (const s of [-1, 1]) block(m, "wgBody", -body, body, SIDE_Y0, chord + 0.01, ...side(s, half - 0.04, half));
+      for (const e of [-1, 1]) block(m, "wgBody", ...(e > 0 ? [body - 0.04, body] as const : [-body, -body + 0.04] as const), SIDE_Y0, chord + 0.01, -half + 0.04, half - 0.04);
+    });
     m.scope("top chord", () => {
       for (const s of [-1, 1]) block(m, "wgBody", -body - 0.08, body + 0.08, chord, top, ...side(s, half - 0.06, half + 0.08));
       for (const e of [-1, 1]) block(m, "wgBody", ...(e > 0 ? [body - 0.06, body + 0.08] as const : [-body - 0.08, -body + 0.06] as const), chord, top, -half + 0.06, half - 0.06);
@@ -250,16 +259,17 @@ function boxn(m: MeshBuilder): void {
     }
     for (const e of [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => endWall(m, e, body, half, chord, BOXN_RIBS.slice(0, 2)));
   });
-  // the coal heaped over the top chord: a mound falling to the chord on every side
-  m.scope("load", () => {
+  // the loads heaped over the top chord: a mound of coal, iron ore or grain falling to the chord on
+  // every side, each a hidden load part on the floor (docs/models/loads.md)
+  bulkLoads(m, [0, BOXN_FLOOR, 0], (mat) => m.scope("heap", () => {
     const nx = 8, nz = 6, hx = body - 0.04, hz = half - 0.04, y0 = chord + 0.03, rise = 0.32;
     const H = (i: number, j: number): Vec3 => {
       const u = -1 + (2 * i) / nx, w = -1 + (2 * j) / nz;
       const f = Math.min(1, 1.25 * (1 - Math.abs(u) ** 4)) * (1 - w * w);
       return [u * hx, y0 + rise * Math.max(0, f), w * hz];
     };
-    for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) m.quad("wgLoad", H(i, j), H(i, j + 1), H(i + 1, j + 1), H(i + 1, j));
-  });
+    for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) m.quad(mat, H(i, j), H(i, j + 1), H(i + 1, j + 1), H(i + 1, j));
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -355,7 +365,9 @@ export function irBoxnWagonLod(v?: ParamValues): MeshBuilder {
   const hw: Array<[number, number]> = unit === "open"
     ? [[y0, s.half], [top - 0.1, s.half + 0.06], [top, s.half - 0.1]]
     : [[y0, s.half], [BCNA.eave, s.half + 0.05], [BCNA.eave + BCNA.rise * 0.6, s.half * 0.68], [top, 0.25]];
-  const body: UnitBody = { y0, hw, side, roof: unit === "open" ? "wgLoad" : "wgBody", front: { tip: [[y0, s.body + 0.08]] }, rear: { tip: [[y0, -s.body - 0.08]] } };
+  const body: UnitBody = { y0, hw, side, roof: unit === "open" ? "wgFrame" : "wgBody", front: { tip: [[y0, s.body + 0.08]] }, rear: { tip: [[y0, -s.body - 0.08]] } };
   const parts: LodPart[] = bogieParts([[s.centre, AXLE_HALF + WHEEL_R + 0.2], [-s.centre, AXLE_HALF + WHEEL_R + 0.2]], y0);
+  // the open wagon's loads, a mound over its top each (docs/models/loads.md)
+  if (unit === "open") for (const look of BULK_LOOKS) parts.push(loadLodPart(look.commodities, BOXN_FLOOR, { draw: (m) => m.scope("heap", () => lodRoofBox(m, look.mat, -s.body + 0.04, s.body - 0.04, s.half - 0.1, 0.6, top, top + 0.32)) }));
   return fitUnit({ palette: PALETTE, bodies: [body], parts }, 100);
 }

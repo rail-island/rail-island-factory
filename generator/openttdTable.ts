@@ -242,7 +242,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cta-5000": pax(110, ELRL, { presets: presets() }),
   "proc-vehicle-us-caboose": wagon(5, "MAIL", ["mail"], { presets: presets({ livery: "unionPacific" }) }), // approx.
   "proc-vehicle-us-boxcar": wagon(70, "GOOD", ["piece", "covered", "express"], { presets: presets({ livery: "railbox" }) }), // approx.
-  "proc-vehicle-us-well-car": wagon(40, "GOOD", ["piece", "express"], { variants: [at({ cargo: "double" }, { capacity: 80 })], presets: presets({ cargo: "empty" }, { cargo: "double" }) }),
+  "proc-vehicle-us-well-car": wagon(80, "GOOD", ["piece", "express"], { presets: presets() }),
   "proc-vehicle-sf-cable-car": pax(60, null, { presets: presets({ livery: "california" }) }), // approx.
   "proc-vehicle-amtrak-acela": loco(ELRL, {
     variants: [
@@ -749,7 +749,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-magirus-ladder": truck(0, "GOOD", [], { presets: presets() }),
   "proc-vehicle-rosenbauer-panther": truck(0, "GOOD", [], { presets: presets() }),
   "proc-vehicle-liebherr-ltm": truck(0, "GOOD", [], { presets: presets() }),
-  "proc-vehicle-lohr-car-transporter": truck(12, "GOOD", ["piece", "express"], { presets: presets(...each("load", "empty")) }),
+  "proc-vehicle-lohr-car-transporter": truck(12, "GOOD", ["piece", "express"], { presets: presets() }),
   "proc-vehicle-peterbilt-379": truck(20, "GOOD", ["piece", "covered", "express"], { variants: [at({ body: "flatbed" }, { cargo: "STEL", refitClasses: ["piece"] })], presets: presets(...each("body", "flatbed")) }),
   "proc-vehicle-peterbilt-579": truck(20, "GOOD", ["piece", "covered", "express"], { variants: [at({ body: "reefer" }, { refitClasses: ["piece", "refrigerated"] })], presets: presets(...each("body", "reefer")) }),
   "proc-vehicle-kenworth-w900": truck(20, "GOOD", ["piece", "covered", "express"], { variants: [at({ body: "tank" }, { cargo: "OIL_", refitClasses: ["liquid"], capacity: 24 })], presets: presets(...each("body", "tank")) }),
@@ -825,7 +825,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   // capped at the GRF's word (65,535): the largest ships carry more than it holds.
   // A car carrier carries GOOD: no default climate has VEHI (FIRS's refits take it as piece goods).
   // cargo ships
-  "proc-vehicle-ship-triple-e": truck(18_340, "GOOD", ["piece", "express"], { presets: presets(...each("load", "empty")) }),
+  "proc-vehicle-ship-triple-e": truck(18_340, "GOOD", ["piece", "express"], { presets: presets() }),
   "proc-vehicle-ship-emma-maersk": truck(15_500, "GOOD", ["piece", "express"], { presets: presets() }),
   "proc-vehicle-ship-msc-gulsun": truck(23_756, "GOOD", ["piece", "express"], { presets: presets() }),
   "proc-vehicle-ship-panamax-container": truck(4_500, "GOOD", ["piece", "express"], { presets: presets(...each("livery", "green", "blue")) }), // approx.
@@ -850,7 +850,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-ship-reefer": truck(9_000, "FOOD", ["refrigerated", "piece"], { presets: presets(...each("livery", "blue")) }), // approx.
   "proc-vehicle-ship-liberty": truck(10_850, "GOOD", ["piece", "bulk"], { presets: presets() }),
   "proc-vehicle-ship-victory": truck(10_600, "GOOD", ["piece", "bulk"], { presets: presets() }),
-  "proc-vehicle-ship-europaschiff": truck(1_350, "GOOD", ["piece", "bulk"], { presets: presets(...each("load", "empty")) }),
+  "proc-vehicle-ship-europaschiff": truck(1_350, "GOOD", ["piece", "bulk"], { presets: presets() }),
   "proc-vehicle-ship-rhine-tanker": truck(3_000, "OIL_", ["liquid"], { presets: presets() }), // approx.
   "proc-vehicle-ship-push-barge": truck(2_800, "COAL", ["bulk"], { presets: presets() }),
   "proc-vehicle-ship-yangtze-cargo": truck(3_000, "GOOD", ["piece", "bulk"], { presets: presets() }), // approx.

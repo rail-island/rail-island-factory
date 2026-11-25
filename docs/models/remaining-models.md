@@ -43,8 +43,8 @@ liner with metre geometry; the legacy mapping compensates only old placements.
 
 ## Freight additions
 
-Existing Pao and Wap families gain `cargo=empty`; their old default loaded geometry
-is unchanged. Nas with a tram and Pao with a bus are intentionally omitted; both legacy IDs map to their corresponding empty wagon. New covered wagons share `body=box|beer|sliding` (Z, Lp,
+The Pao and Wap draw their loads as hidden load parts ([loads.md](loads.md)); the
+`cargo` parameter they once gained is gone. Nas with a tram and Pao with a bus are intentionally omitted; both legacy IDs map to their corresponding empty wagon. New covered wagons share `body=box|beer|sliding` (Z, Lp,
 Zaz), with different length, roof profile, door span and axle arrangement. Vte is
 a short two-axle open wagon, Uaaikk a bogie low loader with a dropped deck, stakes
 and an end brake shelter. These bodies are based on the original XML profiles and

@@ -77,11 +77,11 @@ describe('legacy references and procedural IDs',()=>{
   for(const s of sources.filter(s=>s.kind==='vehicle'&&!['aircraft','ship'].includes(s.category))){expect(table.entries[s.id]!.scale).toBe(1);expect(table.entries[s.id]!.scaleAxis).toBe('game');expect(models.get(table.entries[s.id]!.modelId)).not.toHaveProperty('defaultScale');}
   expect(resolveModelReference(table,models,'train-loco-electric-cd-163',2)!.scale).toBe(2);
  });
- it('resolves paint, unit and cargo parameters instead of dropping to defaults',()=>{
+ it('resolves paint and unit parameters instead of dropping to defaults; no cargo parameter (docs/models/loads.md)',()=>{
   expect(table.entries['train-loco-electric-cd-151-cez']!.params).toMatchObject({livery:'cd151Cez'});
   expect(table.entries['train-emu-cd-675-cd-975']!.params).toMatchObject({variant:'cd675',unit:'drivingTrailer'});
   for (const id of ['train-truck-n-nas-full-4', 'train-truck-n-pao-full-2']) {
-    expect(table.entries[id]!.params).toMatchObject({cargo:'empty'});
+    expect(table.entries[id]!.params).toEqual({});
     expect(table.entries[id]!.scale).toBe(1);
   }
   expect(table.entries['moto-bus-kar-b961']!.params).toMatchObject({variant:'b961'});

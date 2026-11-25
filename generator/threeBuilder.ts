@@ -23,7 +23,9 @@ export class MeshBuilder extends MeshCore {
    * relative to that pivot. A rigged model's group carries `userData.rig`, a model
    * that smokes `userData.emitters`, a fountain `userData.fountain`, a vehicle with
    * lamps `userData.lamps`, a window glass material `userData.glass`, one with an
-   * interior `userData.interiors` (its interior Groups built hidden). Non-indexed
+   * interior `userData.interiors` (its interior Groups built hidden), a freight
+   * vehicle `userData.loads` once the bundle's build() calls its `hideLoads`
+   * (its load Groups hidden, docs/models/loads.md). Non-indexed
    * triangle soups with flat per-face normals, MeshStandardMaterial colours from
    * the palette's sRGB hex: the same data toGlb writes.
    */

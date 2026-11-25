@@ -2,7 +2,7 @@
 
 **Covers** - the 49 cargo and service ships of the world fleet: container ships, tankers, gas and bulk carriers, ro-ro, heavy-lift and general cargo ships, river cargo, tugs, fishing vessels, icebreakers and research ships, offshore, rescue and pilot craft; their sizes, datums, parameters and deviations.
 **Code** - `generator/worldShipsCargo.ts`, `generator/worldShipsService.ts` (on `generator/hullKit.ts`)
-**See also** - [world-ships.md](world-ships.md) (the kit, datums, budgets, OpenTTD and checks), [world-ships-passenger.md](world-ships-passenger.md), [world-fleet.md](world-fleet.md)
+**See also** - [loads.md](loads.md), [world-ships.md](world-ships.md) (the kit, datums, budgets, OpenTTD and checks), [world-ships-passenger.md](world-ships-passenger.md), [world-fleet.md](world-fleet.md)
 
 Sizes are the built model's: length over the hull (a bowsprit or a stern wheel aside), the
 moulded beam, the height from the keel to the highest point. The references and figures are
@@ -12,11 +12,11 @@ in `assets/ship-<name>/SOURCES.md`.
 
 | id | title | L x B x H (m) | draft (draftFrac) | bow / stern | triangles (LOD) | params |
 |---|---|---|---|---|---|---|
-| `veh-ship-triple-e` | Maersk Triple E Class | 399.0 x 59.0 x 75.4 | 14.5 (0.1923) | bulbous / transom | 18772 (99) | load: full, empty |
-| `veh-ship-emma-maersk` | Emma Maersk | 397.7 x 56.4 x 71.6 | 15.5 (0.2165) | bulbous / transom | 17827 (99) | load: full, empty |
-| `veh-ship-msc-gulsun` | MSC Gulsun Class | 399.9 x 61.5 x 78.6 | 16.0 (0.2036) | bulbous / transom | 19433 (99) | load: full, empty |
-| `veh-ship-panamax-container` | Panamax Container Ship | 294.0 x 32.2 x 51.5 | 12.0 (0.2331) | bulbous / transom | 11907 (99) | load: full, empty; livery: orange, green, blue |
-| `veh-ship-feeder-container` | Feeder Container Ship | 139.1 x 22.6 x 41.5 | 8.8 (0.2118) | bulbous / transom | 9821 (99) | load: full, empty |
+| `veh-ship-triple-e` | Maersk Triple E Class | 399.0 x 59.0 x 75.4 | 14.5 (0.1923) | bulbous / transom | 18772 (99) | - |
+| `veh-ship-emma-maersk` | Emma Maersk | 397.7 x 56.4 x 71.6 | 15.5 (0.2165) | bulbous / transom | 17827 (99) | - |
+| `veh-ship-msc-gulsun` | MSC Gulsun Class | 399.9 x 61.5 x 78.6 | 16.0 (0.2036) | bulbous / transom | 19433 (99) | - |
+| `veh-ship-panamax-container` | Panamax Container Ship | 294.0 x 32.2 x 51.5 | 12.0 (0.2331) | bulbous / transom | 11907 (99) | livery: orange, green, blue |
+| `veh-ship-feeder-container` | Feeder Container Ship | 139.1 x 22.6 x 41.5 | 8.8 (0.2118) | bulbous / transom | 9821 (99) | - |
 | `veh-ship-ideal-x` | Ideal X | 159.6 x 20.7 x 30.6 | 9.2 (0.3007) | raked / cruiser | 5840 (99) | - |
 | `veh-ship-vlcc` | Very Large Crude Carrier | 330.0 x 60.0 x 64.6 | 21.0 (0.3252) | bulbous / transom | 9930 (99) | livery: navy, green, black |
 | `veh-ship-seawise-giant` | Seawise Giant | 458.4 x 68.8 x 70.6 | 24.6 (0.3484) | raked / transom | 11115 (99) | - |
@@ -32,15 +32,15 @@ in `assets/ship-<name>/SOURCES.md`.
 | `veh-ship-laker` | Great Lakes Freighter | 222.5 x 22.9 x 25.7 | 7.9 (0.3074) | raked / transom | 5316 (99) | livery: red, black |
 | `veh-ship-self-unloader` | Self-Unloading Laker | 304.8 x 32.0 x 31.4 | 9.4 (0.2994) | raked / transom | 5742 (99) | - |
 | `veh-ship-pctc` | Pure Car and Truck Carrier | 199.9 x 32.3 x 46.4 | 9.5 (0.2047) | bulbous / transom | 3862 (89) | livery: blue, white, red |
-| `veh-ship-roro` | Ro-Ro Cargo Ship | 190.0 x 26.0 x 38.4 | 7.5 (0.1953) | bulbous / transom | 6695 (99) | load: full, empty; livery: white, blue, orange |
-| `veh-ship-heavy-lift` | Semi-Submersible Heavy-Lift Ship | 275.0 x 70.0 x 75.5 | 10.5 (0.1391) | raked / transom | 6684 (93) | load: full, empty |
+| `veh-ship-roro` | Ro-Ro Cargo Ship | 190.0 x 26.0 x 38.4 | 7.5 (0.1953) | bulbous / transom | 6695 (99) | livery: white, blue, orange |
+| `veh-ship-heavy-lift` | Semi-Submersible Heavy-Lift Ship | 275.0 x 70.0 x 75.5 | 10.5 (0.1391) | raked / transom | 6684 (93) | - |
 | `veh-ship-reefer` | Refrigerated Cargo Ship | 150.0 x 23.0 x 35.6 | 9.0 (0.2528) | bulbous / transom | 7378 (99) | livery: white, blue, red |
 | `veh-ship-liberty` | Liberty Ship | 134.6 x 17.3 x 31.4 | 8.5 (0.2707) | raked / cruiser | 5731 (99) | - |
 | `veh-ship-victory` | Victory Ship | 138.8 x 18.9 x 34.0 | 8.7 (0.2559) | raked / cruiser | 5839 (99) | - |
-| `veh-ship-europaschiff` | Rhine Motor Cargo Vessel | 80.0 x 9.5 x 10.7 | 2.5 (0.2336) | barge / transom | 4951 (98) | load: full, empty |
+| `veh-ship-europaschiff` | Rhine Motor Cargo Vessel | 80.0 x 9.5 x 10.7 | 2.5 (0.2336) | barge / transom | 4951 (98) | - |
 | `veh-ship-rhine-tanker` | Rhine Tanker Barge | 110.0 x 11.4 x 12.8 | 3.5 (0.2734) | barge / transom | 6042 (98) | - |
-| `veh-ship-push-barge` | Push Barge | 76.5 x 11.4 x 6.7 | 3.5 (0.5224) | barge / sternwheel | 3792 (98) | load: full, empty |
-| `veh-ship-yangtze-cargo` | Yangtze River Cargo Ship | 90.0 x 15.8 x 15.9 | 3.5 (0.2201) | raked / transom | 5716 (99) | load: full, empty |
+| `veh-ship-push-barge` | Push Barge | 76.5 x 11.4 x 6.7 | 3.5 (0.5224) | barge / sternwheel | 3792 (98) | - |
+| `veh-ship-yangtze-cargo` | Yangtze River Cargo Ship | 90.0 x 15.8 x 15.9 | 3.5 (0.2201) | raked / transom | 5716 (99) | - |
 | `veh-ship-volga-don` | Volga-Don River Ship | 138.3 x 16.5 x 17.9 | 3.5 (0.1955) | raked / transom | 4274 (85) | - |
 
 All 30 are **detailed ships** (see "Detail" in [world-ships.md](world-ships.md)): a fine
@@ -51,8 +51,13 @@ wheelhouse on its lift, the car on the roof, the radar mast).
 
 Notes:
 
-- **Container ships** carry a `load` parameter: full (stacks on the hatch covers) or empty
-  (the covers on their coamings alone). Each stack is one row of boxes (2.5 m) in two colours,
+- **Loads** ([loads.md](loads.md)): a cargo ship's deck cargo is a hidden load part (`cargo` in
+  `worldShipsCargo.ts`), shown by the game with what the ship carries, so the model at rest is the
+  empty ship. The container ships' stacks on the hatch covers, the Ro-Ro's trailers, the
+  Europaschiff's containers on its hatch covers and the Yangtze ship's in its hold stand for
+  `goods` and `food`; the heavy-lift ship's jack-up rig for `goods`; the push barge's heaps for
+  `coal`, `iron-ore` and `grain`, one part each, and it floats at its loaded 3.5 m draft. The bulk
+  carriers' and tankers' cargo is under their hatches and decks: no load part. Each stack is one row of boxes (2.5 m) in two colours,
   its height and colours from a fixed seed, with lashing bridges in the bay gaps. The Triple E has its island bridge forward of midships and twin uptakes aft,
   Emma Maersk the bridge two-thirds forward, MSC Gulsun the bridge well forward.
   The feeder is the Vega Scorpio (Zhejiang 950 type): seven 40 ft bays on green coamings, the

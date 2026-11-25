@@ -707,7 +707,7 @@
     7
    ],
    "nodes": [
-    "cargo"
+    "load-wood"
    ],
    "tolerancePixels": 1.5,
    "uncertainty": "The load painted above the 3.3 m rim; the model bounds also count the lower logs hidden below it."
@@ -724,7 +724,7 @@
     7
    ],
    "nodes": [
-    "cargo"
+    "load-wood"
    ],
    "tolerancePixels": 1.5,
    "uncertainty": "The load painted above the 3.3 m rim; the model bounds also count the lower logs hidden below it."

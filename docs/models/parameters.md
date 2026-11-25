@@ -15,6 +15,9 @@ the parameter values pick the variant.
 Many designs are parametric. The five village houses carry up to six parameters each
 ([village.md](village.md)); every parametric vehicle is listed below, its values in
 declaration order, the first the default unless noted.
+What a freight vehicle carries is no parameter: its loads are hidden load parts the
+game shows with its cargo ([loads.md](loads.md)); the former `cargo` and loaded/empty
+`load` parameters are gone, and a saved map's old value is ignored.
 
 | design | parameters | reference |
 |---|---|---|
@@ -25,9 +28,6 @@ declaration order, the first the default unless noted.
 | `veh-csd-classic-green-coach` | `variant`: classA, classB | [csd-coaches.md](csd-coaches.md) |
 | `veh-bmo-double-deck-coach` | `livery`: csd, cdBlue, cdBlueGrey, cdRedDoors, cdNajbrt | [bmo-double-deck.md](bmo-double-deck.md) |
 | `veh-cd-green-white-coach` | `variant`: a, ab, b, bee, beel, bds, ds, bdmeer, bdmtee, beeBlue (default b); `livery`: greenWhite (default), cdBlue (only on a, ab, b, bee, bds, bdmtee) | [cd-green-white.md](cd-green-white.md) |
-| `veh-nas-flat-wagon` | `cargo`: empty, wood, tubes, reels | [wagons.md](wagons.md) |
-| `veh-ua-open-wagon` | `cargo`: empty, coal, wood, sand | [wagons.md](wagons.md) |
-| `veh-eas-open-wagon` | `cargo`: empty, wood, coal | [wagons.md](wagons.md) |
 | `veh-csd-433-0` | `livery`: black, redLining | [steam-locomotives.md](steam-locomotives.md) |
 | `veh-csd-475-1` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
 | `veh-csd-498-1` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
@@ -36,8 +36,6 @@ declaration order, the first the default unless noted.
 | `veh-csd-386` | `unit`: locomotive, tender | [steam-locomotives.md](steam-locomotives.md) |
 | `veh-cd-110` | `livery`: cd110, cd111, cd210, cd111Blue | [cz-electrics.md](cz-electrics.md) |
 | `veh-cd-130` | `livery`: cd130, cd123, cd123No019 | [cz-electrics.md](cz-electrics.md) |
-| `veh-sqns-container-wagon` | `cargo`: empty, maersk | [freight-wagons.md](freight-wagons.md) |
-| `veh-pao-flat-wagon` | `cargo`: empty, tubes | [freight-wagons.md](freight-wagons.md) |
 | `veh-habis-sliding-wall-wagon` | `livery`: tw1, tw2 | [freight-wagons.md](freight-wagons.md) |
 | `veh-faccs-hopper-wagon` | `livery`: cd, viamont | [freight-wagons.md](freight-wagons.md) |
 | `veh-falls-hopper-wagon` | `livery`: cd, sd, viamont | [freight-wagons.md](freight-wagons.md) |

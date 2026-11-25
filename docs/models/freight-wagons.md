@@ -1,29 +1,32 @@
 # Freight wagons: container, flat, sliding-wall and hopper
 
-**Covers** - the seven freight wagons transferred from vlakosimdb after the first five (Sqns, Pao, Habis, Hadgs, Faccs, Falls, Wap), their `cargo` and `livery` parameters, the JT7 clip solid, the shared parts, the native-raster comparison and the tests.
+**Covers** - the seven freight wagons transferred from vlakosimdb after the first five (Sqns, Pao, Habis, Hadgs, Faccs, Falls, Wap), their loads as hidden load parts, their `livery` parameters, the JT7 clip solid, the shared parts, the native-raster comparison and the tests.
 **Code** - `generator/freightWagons.ts`, `generator/hopperWagons.ts`, `generator/freightWagonParts.ts`, `generator/freightTransfers.ts`, `generator/coachTransfers.ts` (`ALL_TRANSFERS`), `generator/strokeFont.ts`, `test/freightWagons.test.ts`
-**See also** - [wagons.md](wagons.md) (the first five wagons, the `Wagon` builder and the comparison method), [vehicles.md](vehicles.md), [parameters.md](parameters.md), the sources under `assets/wagon-<name>/` (`SOURCES.md`, `PHOTOS.md`, `COMPARISON*.md`)
+**See also** - [loads.md](loads.md), [wagons.md](wagons.md) (the first five wagons, the `Wagon` builder and the comparison method), [vehicles.md](vehicles.md), [parameters.md](parameters.md), the sources under `assets/wagon-<name>/` (`SOURCES.md`, `PHOTOS.md`, `COMPARISON*.md`)
 
 ## The designs
 
 Twelve vlakosimdb wagons (`db/train/truck/`) become seven designs. A wagon that
-differs from another only by its load is a value of `cargo`; one that differs
-only by its paint is a value of `livery` ([parameters.md](parameters.md)).
+differs from another only by its load is the same model, each load a hidden load
+part on its bed ([loads.md](loads.md)); one that differs only by its paint is a
+value of `livery` ([parameters.md](parameters.md)).
 The vlakosimdb wagons the game has archived are not transferred (below).
 
-| id | vlakosimdb | parameter | over buffers | triangles |
+| id | vlakosimdb | parameter, load parts | over buffers | triangles |
 |---|---|---|---|---|
-| `veh-sqns-container-wagon` | `n_sqns`, `n_sqns-full#1` | `cargo`: `empty` (default), `maersk` (a Maersk 40 ft box) | 19.8 m | 3,500 / 5,100 |
-| `veh-pao-flat-wagon` | `n_pao`, `n_pao-full#1` | `cargo`: `tubes` (default), `empty` | 15.3 m | 5,100 / 4,800 |
+| `veh-sqns-container-wagon` | `n_sqns`, `n_sqns-full#1` | load: a Maersk 40 ft box (`goods`, `food`) | 19.8 m | 3,500 / 5,100 loaded |
+| `veh-pao-flat-wagon` | `n_pao`, `n_pao-full#1` | load: steel tubes on bolsters (`steel`) | 15.3 m | 4,800 / 5,100 loaded |
 | `veh-habis-sliding-wall-wagon` | `n_habis_tw1`, `n_habis_tw2` | `livery`: `tw1` (default, grey), `tw2` (weathered brown) | 23.2 m | 4,100 |
 | `veh-hadgs-hopper-wagon` | `n_hadgs` | - | 16.8 m | 4,000 |
-| `veh-faccs-hopper-wagon` | `n_faccs`, `viamont_faccs` | `livery`: `cd` (default), `viamont` | 12.8 m | 3,900 / 4,000 |
-| `veh-falls-hopper-wagon` | `n_falls`, `sd_falls`, `viamont_falls` | `livery`: `cd` (default), `sd`, `viamont` | 13.5 m | 3,700 to 3,900 |
-| `veh-wap-hopper-wagon` | `n_wap-full#2` | - (loaded) | 13.5 m | 3,800 |
+| `veh-faccs-hopper-wagon` | `n_faccs`, `viamont_faccs` | `livery`: `cd` (default), `viamont`; loads: `coal`, `iron-ore`, `grain` heaps | 12.8 m | 3,900 / 4,000 |
+| `veh-falls-hopper-wagon` | `n_falls`, `sd_falls`, `viamont_falls` | `livery`: `cd` (default), `sd`, `viamont`; loads: `coal`, `iron-ore`, `grain` heaps | 13.5 m | 3,700 to 3,900 |
+| `veh-wap-hopper-wagon` | `n_wap-full#2` | loads: `coal`, `iron-ore`, `grain` heaps | 13.5 m | 3,800 |
 
-The Sqns and the Pao keep their load variants as `cargo` (the Sqns in its own
-two vlakosimdb folders; the Pao's empty folder is archived, so its default is the
-tube load). The Habis, Faccs and Falls variants repaint one geometry (the XML
+The Sqns's two vlakosimdb folders (empty, with the Maersk box) and the Pao's
+loaded one are one model each, the load a hidden part; the Wap's former `cargo`
+parameter (loaded or empty) is gone the same way, and its game weight is the
+empty wagon's 37 t, the load's tonnes adding in the game. The Hadgs is a covered
+hopper: its grain stays under its roof, so it has no load part. The Habis, Faccs and Falls variants repaint one geometry (the XML
 files of each family are identical but for their colorizes), hence `livery`.
 The Wap is the older CSD name of the Falls type, but vlakosimdb models it as a
 different body, so it stays its own design.
@@ -82,13 +85,15 @@ roof, the end frames, the TRANSWAGGON plate, label board and data panel) and the
 Hadgs (body and curved roof, the two sliding doors with stiffeners and inverted-V
 braces on their rails, posts, X-braced ends, roof hatches). `hopperWagons.ts`
 builds the Faccs (the hopper over the frame, discharge chutes, end frames,
-braces and steps, a ballast top), the Falls (two lower halves, the centre post,
-the overhanging upper bulge, the brake platform with ladder and railing, a coal
-top) and the Wap (lower body with side flaps, upper bulge, the platform at the
--x end, gravel heaped to the XML `load` hull).
+braces and steps), the Falls (two lower halves, the centre post, the
+overhanging upper bulge, the brake platform with ladder and railing) and the
+Wap (lower body with side flaps, upper bulge, the platform at the -x end).
 
-A bulk load fills an open top: the body is drawn without its top face and a
-height field spans the top opening, its edges on the rim.
+An open top shows an inner tub (`hopperTub`): the body is drawn without its top
+face, a rim runs from the opening in to the tub, whose walls face in down to its
+floor. The loads (`hopperLoads`) are a height field each of coal, iron ore and
+grain spanning the opening, its edges on the rim, pivoted on the tub's floor so a
+heap scaled down sinks into the tub (the Wap's heaped to the XML `load` hull).
 
 ## Deliberate deviations
 
@@ -136,8 +141,8 @@ JS source module, the reference folders, parameter values and defaults), every
 landmark within its pixel tolerance, every parameter combination inside the
 rail envelope, under 8,000 triangles and free of coplanar faces, length over
 buffers, axle positions and wheels on the rail for every combination, the loads
-(the empty Sqns carries nothing, the ISO box sits on the pins, the tubes stay
-under the XML hull, the bus stands on the deck where the inline puts it), that
+(nothing at rest, the ISO box sits on the pins, the tubes stay under the XML hull;
+each load free of coplanar faces and the largest within the budget), that
 a livery changes only paint, the running numbers' check digits on both sides,
 MAERSK and TRANSWAGGON reading from outside, and that the clip solid refuses a
 concave view. The catalog sweep (`test/catalogSweep.ts`) covers every

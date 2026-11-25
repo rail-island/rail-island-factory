@@ -7,7 +7,7 @@
 // Textures are ignored (a textured primitive shades with its factor alone) --
 // the mesh builder never writes one.
 
-import { type Gltf, type Vec3, type Mat4, readAccessor, ident, mul, trs, xformPoint, xformDir, norm, cross, sub } from "./glbParse.ts";
+import { type Gltf, type Vec3, type Mat4, parseGlb, readAccessor, ident, mul, trs, xformPoint, xformDir, norm, cross, sub } from "./glbParse.ts";
 
 export type { Mat4, Vec3, Gltf } from "./glbParse.ts";
 export { parseGlb, xformPoint, norm, sub, cross, dot } from "./glbParse.ts";
@@ -25,18 +25,47 @@ export interface Tri {
   material: string;
   /** True for a triangle of a vehicle's interior (collected only when asked for). */
   interior?: boolean;
+  /** True for a triangle of a freight vehicle's load (collected only when asked for, docs/models/loads.md). */
+  load?: boolean;
   /** True when its material is drawn from both sides (the game culls every other triangle's back). */
   doubleSided?: boolean;
 }
 
-export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?: boolean } = {}): Tri[] {
+/**
+ * What collectTriangles reads besides the model at rest: a vehicle's `interiors`,
+ * and its `loads` (docs/models/loads.md) -- every load part (true) or those
+ * standing for one commodity (its id).
+ */
+export interface CollectOptions {
+  interiors?: boolean;
+  loads?: boolean | string;
+}
+
+/** The first commodity of a GLB's first load part (the thumbnails' loaded look), or null for a model without loads. */
+export function firstLoad(json: Gltf): string | null {
+  const loads = (json.scenes?.[json.scene ?? 0] as { extras?: { loads?: Array<{ commodities: string[] }> } } | undefined)?.extras?.loads;
+  return loads?.[0]?.commodities[0] ?? null;
+}
+
+/** Every commodity a GLB's load parts stand for, in their order, each once (docs/models/loads.md). */
+export function loadCommodities(glb: Uint8Array): string[] {
+  const { json } = parseGlb(glb);
+  const loads = (json.scenes?.[json.scene ?? 0] as { extras?: { loads?: Array<{ commodities: string[] }> } } | undefined)?.extras?.loads ?? [];
+  return [...new Set(loads.flatMap((l) => l.commodities))];
+}
+
+export function collectTriangles(json: Gltf, bin: Uint8Array, opts: CollectOptions = {}): Tri[] {
   const tris: Tri[] = [];
-  const visit = (nodeIndex: number, parent: Mat4, inside = false): void => {
+  const visit = (nodeIndex: number, parent: Mat4, inside = false, inLoad = false): void => {
     const node = json.nodes?.[nodeIndex];
     if (!node) return;
     // a vehicle's interior is hidden while its doors are shut, so the model at
     // rest (thumbnails, stats, budgets) leaves it out (docs/models/interiors.md)
     if (node.extras?.interior && !opts.interiors) return;
+    // a freight vehicle's load is hidden while it carries nothing (docs/models/loads.md)
+    const load = (node.extras as { load?: string[] } | undefined)?.load;
+    if (load && !(opts.loads === true || (typeof opts.loads === "string" && load.includes(opts.loads)))) return;
+    const loadTri = inLoad || !!load;
     const interior = inside || !!node.extras?.interior;
     const world = mul(parent, node.matrix ? (node.matrix as Mat4) : trs(node.translation, node.rotation, node.scale));
     if (node.mesh != null) {
@@ -73,11 +102,11 @@ export function collectTriangles(json: Gltf, bin: Uint8Array, opts: { interiors?
           const corners = col
             ? (idx.slice(i, i + 3).map((v) => [col[v * 3], col[v * 3 + 1], col[v * 3 + 2]]) as [Vec3, Vec3, Vec3])
             : undefined;
-          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}), ...(interior ? { interior } : {}), ...(doubleSided ? { doubleSided } : {}), ...(alpha !== undefined ? { alpha } : {}) });
+          tris.push({ p: p as [Vec3, Vec3, Vec3], n: n as [Vec3, Vec3, Vec3], color, material, ...(corners ? { corners } : {}), ...(interior ? { interior } : {}), ...(loadTri ? { load: true } : {}), ...(doubleSided ? { doubleSided } : {}), ...(alpha !== undefined ? { alpha } : {}) });
         }
       }
     }
-    for (const c of node.children ?? []) visit(c, world, interior);
+    for (const c of node.children ?? []) visit(c, world, interior, loadTri);
   };
   const scene = json.scenes?.[json.scene ?? 0];
   for (const n of scene?.nodes ?? []) visit(n, ident());

@@ -34,7 +34,8 @@ metres **from the stern** (`u`; x = u - length / 2) and heights from the keel. T
 edge of the shell); `game.draftFrac` is the draft over the built model's highest point
 (mast, funnel or crane top), measured off the model the first time the export asks
 (`shipGame` in `worldShips.ts`), and again for each parameter value that changes the height
-or the draft (a push barge light or loaded states its variant's `draftFrac`).
+or the draft. A ship's load is a hidden load part ([loads.md](loads.md)), out of the model at
+rest the height is measured on, and the push barge floats at its loaded draft.
 `test/worldShips.test.ts` checks that `draftFrac` times the height lands on the paint edge.
 
 A hydrofoil's hull stands on its foils (`lift`: the keel at y = lift, the foils on y = 0,
@@ -111,8 +112,8 @@ lower and upper boxes in two colours).
 Shared shapes are in `worldShips.ts`: `oceanHull`, `deckhouse` (an accommodation stack
 with its wheelhouse and wings), `aftHouse` (that, its funnel, mast and lifeboats),
 `funnel`, `mast`, `lifeboats`, `exhausts`, `fittings`, `bayGaps`, `detailed`,
-`passengerFittings`, `liferafts`, and the `load`, `livery`
-and `colour` parameters.
+`passengerFittings`, `liferafts`, and the `livery` and `colour` parameters. A load is a
+hull-kit item, `{ k: "load", commodities, u, floor, items }`, drawn as a hidden load part.
 
 ### Detail
 
@@ -205,7 +206,7 @@ read off photographs are marked approx.
 ## Checking a change
 
 - `pnpm exec vitest run test/worldShips.test.ts` - size, keel, waterline on its paint edge,
-  budgets, LOD budget and flicker, cargo per type, load and livery parameters (about 10 s).
+  budgets, LOD budget and flicker, cargo per type, the container load part and livery parameters (about 10 s).
 - `pnpm exec vitest run test/worldFleet.test.ts` - registry, references, OpenTTD ids.
 - `pnpm exec vitest run catalog -t "proc-vehicle-ship-"` - the covering sample's full sweep.
 - A kit change moves every ship's bytes: render the contact sheets

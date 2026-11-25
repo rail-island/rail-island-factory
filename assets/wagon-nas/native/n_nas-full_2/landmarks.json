@@ -339,7 +339,7 @@
     18
    ],
    "nodes": [
-    "cargo"
+    "load-steel"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "From the XML inline placements (the cargo is painted by its own bitmaps, not the z_both canvas)."

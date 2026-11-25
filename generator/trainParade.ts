@@ -181,9 +181,9 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
     cars: [
       { model: "proc-vehicle-emd-sd40-2", params: { livery: "burlingtonNorthern" } },
       { model: "proc-vehicle-us-boxcar", params: { livery: "boxcarRed" } },
-      { model: "proc-vehicle-us-well-car", params: { cargo: "double" } },
+      { model: "proc-vehicle-us-well-car" },
       { model: "proc-vehicle-us-boxcar", params: { livery: "railbox" } },
-      { model: "proc-vehicle-us-well-car", params: { cargo: "single" } },
+      { model: "proc-vehicle-us-well-car" },
       { model: "proc-vehicle-us-caboose", params: { livery: "santaFe" } },
     ],
   },
@@ -365,7 +365,7 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
     cars: [
       { model: "proc-vehicle-sbb-ce68" },
       { model: "proc-vehicle-habis-sliding-wall-wagon" },
-      { model: "proc-vehicle-eas-open-wagon", params: { cargo: "wood" } },
+      { model: "proc-vehicle-eas-open-wagon" },
       { model: "proc-vehicle-rah-tank-wagon" },
       { model: "proc-vehicle-habis-sliding-wall-wagon", params: { livery: "tw2" } },
     ],
@@ -393,9 +393,9 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
     id: "jnr-ef66-containers",
     cars: [
       { model: "proc-vehicle-jnr-ef66", params: { livery: "jrFreight" } },
-      { model: "proc-vehicle-sqns-container-wagon", params: { cargo: "maersk" } },
-      { model: "proc-vehicle-sqns-container-wagon", params: { cargo: "maersk" } },
-      { model: "proc-vehicle-sqns-container-wagon", params: { cargo: "maersk" } },
+      { model: "proc-vehicle-sqns-container-wagon" },
+      { model: "proc-vehicle-sqns-container-wagon" },
+      { model: "proc-vehicle-sqns-container-wagon" },
     ],
   },
   {
@@ -477,8 +477,8 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
     id: "class-66-coal",
     cars: [
       { model: "proc-vehicle-br-class-66" },
-      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "coal" } },
-      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "coal" } },
+      { model: "proc-vehicle-ua-open-wagon" },
+      { model: "proc-vehicle-ua-open-wagon" },
       { model: "proc-vehicle-raj-hopper-wagon" },
       { model: "proc-vehicle-raj-hopper-wagon" },
     ],
@@ -496,9 +496,9 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
     id: "es44ac-double-stack",
     cars: [
       { model: "proc-vehicle-ge-es44ac" },
-      { model: "proc-vehicle-us-well-car", params: { cargo: "double" } },
-      { model: "proc-vehicle-us-well-car", params: { cargo: "double" } },
-      { model: "proc-vehicle-us-well-car", params: { cargo: "double" } },
+      { model: "proc-vehicle-us-well-car" },
+      { model: "proc-vehicle-us-well-car" },
+      { model: "proc-vehicle-us-well-car" },
     ],
   },
   {
@@ -578,9 +578,9 @@ export const TRAIN_PARADE: readonly TrainSpec[] = [
     id: "dr-52-freight",
     cars: [
       { formation: { model: "proc-vehicle-dr-52", name: "with tender" } },
-      { model: "proc-vehicle-eas-open-wagon", params: { cargo: "wood" } },
-      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "coal" } },
-      { model: "proc-vehicle-ua-open-wagon", params: { cargo: "sand" } },
+      { model: "proc-vehicle-eas-open-wagon" },
+      { model: "proc-vehicle-ua-open-wagon" },
+      { model: "proc-vehicle-ua-open-wagon" },
       { model: "proc-vehicle-legacy-covered-wagon" },
     ],
   },

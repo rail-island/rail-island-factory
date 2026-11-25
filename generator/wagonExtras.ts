@@ -2,11 +2,13 @@
 import { MeshBuilder, type Ring } from './meshBuilder.ts';
 import type { GameProperties } from './design.ts';
 import { WAGON_PALETTE, Wagon } from './wagonParts.ts';
-import { drawGearLod, freightWagonLod, openBoxPart, wagonAxles, wagonBogies, wagonBox, zSweep } from './lodSteam.ts';
+import { drawGearLod, freightWagonLod, openBoxPart, roofBoxPart, wagonAxles, wagonBogies, wagonBox, zSweep } from './lodSteam.ts';
 import type { LodPart } from './lodKit.ts';
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, loadLodPart } from './loadKit.ts';
 import { WAGON_CATALOG } from './wagons.ts';
 import { numberLines } from './freightWagonParts.ts';
 import { resolveParams, type ParamValues, type ParamSpec, type ProceduralDesign } from './design.ts';
+import { loadPart } from './loadPart.ts';
 const BODY:ParamSpec[]=[{name:'body',title:'Body',default:'box',values:[{value:'box',title:'Z'},{value:'beer',title:'Lp'},{value:'sliding',title:'Zaz'}]}];
 const palette={body:{color:'#934b34'},rib:{color:'#ad6044'},roof:{color:'#665b53'},cream:{color:'#dddcc7'},frame:{color:'#292a29'},ink:{color:'#e4dec8'},glass:{color:'#647a81',glass:true}};
 function chassis(c:Wagon,length:number,axles:number[],bogies=false):void {
@@ -38,7 +40,7 @@ export function coveredWagon(given?:ParamValues):MeshBuilder {
  });return m;
 }
 export function vteWagon():MeshBuilder {
- const c=new Wagon(palette,4.9),m=c.m;chassis(c,9.8,[1.95,7.85]);
+ const c=new Wagon({...palette,...LOAD_PALETTE},4.9),m=c.m;chassis(c,9.8,[1.95,7.85]);
  m.scope('open body',()=>{
   c.box('body',.6,9.2,1.1,1.2,-1.4,1.4);
   for(const s of [-1,1]){
@@ -48,10 +50,13 @@ export function vteWagon():MeshBuilder {
    c.letters(s,1.53,1.4,numberLines('21 54 1500 001-1','CD',1.5,.09),'ink');
   }
   for(const x of [.6,9.1])c.box('body',x,x+.1,1.2,2.79,-1.34,1.34);
- });return m;
+ });
+ // the loads on the floor at 1.2 m (docs/models/loads.md): coal, iron ore or grain heaped over the sides in two mounds
+ bulkLoads(m,[c.X(4.9),1.2,0],(mat)=>m.scope('heap',()=>c.heap(mat,.72,9.08,1.33,16,6,(x,z)=>2.66+.38*(.55+.45*Math.cos((x-.72)/8.36*4*Math.PI)**2)*(1-(z/1.33)**2)*Math.max(0,Math.min(1,(x-.72)/.25,(9.08-x)/.25,(1.33-Math.abs(z))/.15)))));
+ return m;
 }
 export function heavyWagon():MeshBuilder {
- const c=new Wagon(palette,12.05),m=c.m;
+ const c=new Wagon({...palette,...LOAD_PALETTE},12.05),m=c.m;
  m.scope('running gear',()=>{for(const x of [3.15,20.75])c.freightBogie(x,2.5);});
  m.scope('low deck',()=>{
   const section:Ring=[[2.9,.9],[5.5,.9],[6.8,.2],[17.4,.2],[18.7,.9],[21.5,.9],[21.5,1.3],[18.7,1.3],[17.4,.6],[6.8,.6],[5.5,1.3],[2.9,1.3]];
@@ -62,6 +67,15 @@ export function heavyWagon():MeshBuilder {
   c.box('frame',1.1,2,2.6,2.7,-1,1);
   for(const s of [-1,1])c.letters(s,1.51,7,numberLines('31 54 3999 001-3','CD',.65,.07),'ink');
  });
+ // the load in the well (docs/models/loads.md): a power transformer as goods, on its timber bearers
+ loadPart(m, ['goods'],[c.X(12.1),.6,0],()=>m.scope('transformer',()=>{
+  // each piece set into the one below it, so no face lies on another
+  for(const x of [8.2,15.9])c.box('loadBark',x,x+.3,.605,.8,-1.2,1.2);
+  c.box('loadBoxGrey',7.6,16.6,.78,3.3,-1.25,1.25);
+  c.box('loadSteelDark',8.2,16,3.28,3.5,-1.05,1.05);
+  for(const s of [-1,1])for(let x=8.4;x<16;x+=1.2)c.sideBox('loadSteel',s,x,x+.12,1.1,3.0,1.24,1.38);
+  for(const x of [10,12.1,14.2])m.box('loadSteel',c.X(x),0,.3,.3,3.45,4.1);
+ }));
  for(const s of [-1,1])m.scope('buffers',()=>c.drawGear(s,s>0?23.2:.9,s>0?22.75:1.35,s>0?22.7:1.4,.75,1.05,1.4,'frame'));
  return m;
 }
@@ -86,9 +100,11 @@ export function coveredWagonLod(given?:ParamValues):MeshBuilder {
 /** The Vte from afar: the floor on its frame and the open body, seen into from above. */
 export function vteWagonLod():MeshBuilder {
  return freightWagonLod({
-  palette:{...WAGON_PALETTE,...palette},
   shells:[wagonBox(4.9,.6,9.2,[[.78,1.45],[1.2,1.45]],[[.78,1.1,'frame'],[1.1,1.2,'body']],{roof:'body'})],
-  parts:[openBoxPart(4.9,'body',.6,9.2,1.45,1.2,2.8,.1),...chassisLod(9.8,[1.95,7.85])],
+  palette:{...WAGON_PALETTE,...palette,...LOAD_PALETTE},
+  parts:[openBoxPart(4.9,'body',.6,9.2,1.45,1.2,2.8,.1),...chassisLod(9.8,[1.95,7.85]),
+   // the heaps over the sides, hidden load parts (docs/models/loads.md)
+   ...BULK_LOOKS.map((look)=>loadLodPart(look.commodities,1.2,roofBoxPart(4.9,look.mat,.75,9.05,1.3,.6,2.7,3.0)))],
  });
 }
 /** The Uaaikk from afar: the well deck as five convex pieces, the brakeman's cabin with its glass band, bogies and beams. */
@@ -104,12 +120,14 @@ export function heavyWagonLod():MeshBuilder {
  ];
  const glass:Array<[number,number,string]>=[[.8,1.5,'frame'],[1.5,2.3,'lodGlass'],[2.3,2.7,'frame']];
  return freightWagonLod({
-  palette:{...WAGON_PALETTE,...palette},
+  palette:{...WAGON_PALETTE,...palette,...LOAD_PALETTE},
   shells:[wagonBox(C,1.2,1.9,[[.8,.9],[2.7,.9]],glass)],
   parts:[
    {draw:m=>m.scope('low deck',()=>{for(const [poly,walls] of pieces)zSweep(m,'body',X(poly),1.4,walls);})},
    wagonBogies(C,[[3.15,2.5],[20.75,2.5]],.9),
    drawGearLod(C,[[1.35,1.4],[22.7,22.75]],.75,1.05,1.4,'frame'),
+   // the transformer in the well, a hidden load part (docs/models/loads.md)
+   loadLodPart(['goods'],.6,roofBoxPart(C,'loadBoxGrey',7.6,16.6,1.25,1.05,.6,3.5)),
   ],
  });
 }

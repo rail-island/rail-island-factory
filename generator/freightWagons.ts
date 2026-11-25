@@ -1,13 +1,13 @@
 // The container, flat, sliding-wall and covered hopper wagons transferred from
 // vlakosimdb, and (from hopperWagons.ts) the open hoppers -- seven designs:
 //
-//   veh-sqns-container-wagon      n_sqns, n_sqns-full#1           `cargo`: empty, maersk
-//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      `cargo`: empty, tubes
+//   veh-sqns-container-wagon      n_sqns, n_sqns-full#1           load: a Maersk box (goods, food)
+//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      load: steel tubes
 //   veh-habis-sliding-wall-wagon  n_habis_tw1, n_habis_tw2        `livery`: tw1, tw2
 //   veh-hadgs-hopper-wagon        n_hadgs                         fixed
 //   veh-faccs-hopper-wagon        n_faccs, viamont_faccs          `livery`: cd, viamont
 //   veh-falls-hopper-wagon        n_falls, sd_falls, viamont_falls `livery`: cd, sd, viamont
-//   veh-wap-hopper-wagon          n_wap-full#2                    fixed (loaded)
+//   veh-wap-hopper-wagon          n_wap-full#2                    loads: coal, iron ore, grain
 //
 // Each follows its simplemodel's XML clip shapes and the native BMPs at 0.1 m a
 // pixel (assets/wagon-<name>/native/<key>/landmarks.json). Source coordinates
@@ -26,17 +26,12 @@ import { drawGearLod, freightWagonLod, openBoxPart, platesPart, roofBoxPart, wag
 import type { LodShell } from "./lodKit.ts";
 import { FREIGHT_NUMBERS, boldText, clipSolid, container40, maerskStar, numberLines, type Pt } from "./freightWagonParts.ts";
 import { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod, FACCS_PARAMS, FALLS_PARAMS } from "./hopperWagons.ts";
-import { WAP_PARAMS } from "./hopperWagons.ts";
+import { CONTAINER_COMMODITIES, LOAD_PALETTE, loadLodPart } from "./loadKit.ts";
+import { loadPart } from "./loadPart.ts";
 
 export { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod } from "./hopperWagons.ts";
 
 
-export const SQNS_PARAMS: readonly ParamSpec[] = [
-  { name: "cargo", title: "Cargo", default: "empty", values: [{ value: "empty", title: "Empty" }, { value: "maersk", title: "Maersk" }] },
-];
-export const PAO_PARAMS: readonly ParamSpec[] = [
-  { name: "cargo", title: "Cargo", default: "tubes", values: [{ value: "empty", title: "Empty" },{ value: "tubes", title: "Steel tubes" }] },
-];
 export const HABIS_PARAMS: readonly ParamSpec[] = [
   { name: "livery", title: "Livery", default: "tw1", values: [{ value: "tw1", title: "Grey" }, { value: "tw2", title: "Brown" }] },
 ];
@@ -70,8 +65,7 @@ export const SQNS_PINS = [0.5, 3.6, 6.7, 9.8, 12.9, 16.0, 19.1];
 const SQNS_CROSS: Pt[] = [[2.0, 2.2], [3.6, 3.8], [6.7, 6.9], [9.8, 10.0], [12.9, 13.1], [16.0, 16.2], [17.6, 17.8]];
 
 /** The Sqns 60 ft container wagon (vlakosimdb n_sqns, n_sqns-full#1). */
-export function sqnsContainerWagon(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(SQNS_PARAMS, params);
+export function sqnsContainerWagon(): MeshBuilder {
   const c = new Wagon(SQNS_PALETTE, 9.9);
   const m = c.m;
   m.scope("frame", () => {
@@ -100,8 +94,9 @@ export function sqnsContainerWagon(params?: ParamValues): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.75, 1.8));
     m.scope("bogie 2", () => c.freightBogie(17.05, 1.8));
   });
-  if (cargo === "maersk")
-    m.scope("cargo", () => {
+  // the load on the pins at 1.3 m (docs/models/loads.md): a Maersk box of goods or food
+  loadPart(m, CONTAINER_COMMODITIES, [c.X(9.9), 1.3, 0], () =>
+    m.scope("container", () => {
       // a 40 ft Maersk box on the pins: the star square at the low-x end of the +z side, MAERSK beside it (native z_dec/z_inc)
       const box = container40(c, 9.9, 1.3);
       for (const s of [1, -1])
@@ -110,24 +105,21 @@ export function sqnsContainerWagon(params?: ParamValues): MeshBuilder {
           maerskStar(c, s, face, s > 0 ? 5.45 : 14.25, 1.3 + 1.35, 1.45);
           m.scope("lettering", () => boldText(c, "ink", s, face + 0.004, s > 0 ? 10.65 : 9.05, 2.1, "MAERSK", 0.97, 0.98, 0.29, 0.18));
         });
-    });
+    }),
+  );
   return m;
 }
 
 /** The Sqns from afar (lodSteam.ts): the open frame and fishbelly, bogies, beams, and the Maersk box with its star squares. */
-export function sqnsContainerWagonLod(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(SQNS_PARAMS, params);
+export function sqnsContainerWagonLod(): MeshBuilder {
   const C = 9.9;
   const shells: LodShell[] = [];
-  if (cargo === "maersk") {
-    // the star square: the -x end of the +z side, the +x end of the -z side
-    const star = (s: number, x: number) => ({ u: [x - 0.725 - C, x + 0.725 - C] as const, y: [1.925, 3.375] as const, mat: "maerskBlue", sides: [s], optional: 40 });
-    shells.push(wagonBox(C, 9.9 - 6.096, 9.9 + 6.096, [[1.3, 1.219], [3.891, 1.219]], [[1.3, 3.891, "container"]], { sideWindows: [star(1, 5.45), star(-1, 14.25)] }));
-  }
   return freightWagonLod({
     palette: { ...WAGON_PALETTE, ...SQNS_PALETTE },
     shells,
     parts: [
+      // the Maersk box on the pins, a hidden load part (docs/models/loads.md)
+      loadLodPart(CONTAINER_COMMODITIES, 1.3, roofBoxPart(C, "container", 9.9 - 6.096, 9.9 + 6.096, 1.219, 1.219, 1.3, 3.891)),
       // the open frame: side and end beams round the centre sill, the track seen between them
       openBoxPart(C, "frame", 0.7, 19.1, 1.5, 0.9, 1.2, 0.2, "frameDark"),
       roofBoxPart(C, "frameDark", 0.9, 18.9, 0.12, 0.12, 0.8, 1.15),
@@ -147,14 +139,11 @@ const PAO_PALETTE: Record<string, MaterialSpec> = {
   deck: { color: "#505750", roughness: 0.9 },
   plankGap: { color: "#2f2f2f", roughness: 0.9 },
   bolster: { color: "#709880", roughness: 0.85 },
-  tube: { color: "#7f6a1c", metallic: 0.25, roughness: 0.5 },
-  tubeDark: { color: "#6d3d0c", metallic: 0.25, roughness: 0.5 },
-  bore: { color: "#2b2420", roughness: 0.7 },
+  ...LOAD_PALETTE,
 };
 
 /** The Pao flat wagon with a load (vlakosimdb n_pao-full#1, n_pao-full#2). */
-export function paoFlatWagon(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(PAO_PARAMS, params);
+export function paoFlatWagon(): MeshBuilder {
   const c = new Wagon(PAO_PALETTE, 7.65);
   const m = c.m;
   m.scope("frame", () => {
@@ -183,8 +172,9 @@ export function paoFlatWagon(params?: ParamValues): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.6, 1.9));
     m.scope("bogie 2", () => c.freightBogie(12.7, 1.9));
   });
-  if (cargo === "tubes")
-    m.scope("cargo", () => {
+  // the load on the deck at 1.2 m (docs/models/loads.md): steel tubes on their bolsters
+  loadPart(m, ["steel"], [c.X(7.65), 1.2, 0], () =>
+    m.scope("steel tubes", () => {
       // two timber bolsters (XML `load` 3.8..4.8 and 10.5..11.5, 1.2..1.4 m) under a bundle of 21 tubes, 2.8..12.5 m up to 1.7 m
       m.scope("bolsters", () => {
         ([[3.8, 4.8], [10.5, 11.5]] as Pt[]).forEach(([x0, x1], i) => m.scope(`bolster ${i + 1}`, () => c.sideSweep("bolster", [[x0, 1.205], [x1, 1.205], [x1, 1.4], [x0, 1.4]], -1.25, 1.25)));
@@ -195,17 +185,17 @@ export function paoFlatWagon(params?: ParamValues): MeshBuilder {
           for (let k = 0; k < count; k++) {
             const z = (k - (count - 1) / 2) * 2 * r;
             const y = 1.4 + r + layer * r * Math.sqrt(3);
-            c.tube((k + layer) % 3 ? "tube" : "tubeDark", "bore", 2.8 + (k % 2) * 0.02, 12.5 - ((k + 1) % 2) * 0.02, z, y, r, 0.012, 8);
+            c.tube((k + layer) % 3 ? "loadSteel" : "loadSteelDark", "loadDark", 2.8 + (k % 2) * 0.02, 12.5 - ((k + 1) % 2) * 0.02, z, y, r, 0.012, 8);
           }
         });
       });
-    });
+    }),
+  );
   return m;
 }
 
 /** The Pao from afar (lodSteam.ts): the deck over its solebars, fishbelly, bogies, beams and the tube bundle on its bolsters. */
-export function paoFlatWagonLod(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(PAO_PARAMS, params);
+export function paoFlatWagonLod(): MeshBuilder {
   const C = 7.65;
   const shells = [wagonBox(C, 0.5, 14.8, [[0.7, 1.5], [1.2, 1.5]], [[0.7, 1.1, "frame"], [1.1, 1.2, "frameLight"]], { roof: "deck" })];
   const parts = [
@@ -213,11 +203,10 @@ export function paoFlatWagonLod(params?: ParamValues): MeshBuilder {
     wagonBogies(C, [[2.6, 1.9], [12.7, 1.9]], 0.7),
     drawGearLod(C, [[0.45, 0.5], [14.8, 14.85]], 0.8, 1.19, 1.45, "frame"),
   ];
-  if (cargo === "tubes") {
-    // three layers of tubes, 8, 7 and 6 across, on two bolsters
-    shells.push(wagonBox(C, 2.8, 12.5, [[1.4, 0.48], [1.4 + 0.12 + 2 * 0.06 * Math.sqrt(3), 0.36]], [[1.4, 1.75, "tube"]], { end: [[1.4, 1.75, "tubeDark"]] }));
-    for (const [x0, x1] of [[3.8, 4.8], [10.5, 11.5]] as Pt[]) parts.push(roofBoxPart(C, "bolster", x0, x1, 1.25, 1.25, 1.205, 1.4, 30));
-  }
+  // three layers of tubes, 8, 7 and 6 across, on two bolsters: a hidden load part (docs/models/loads.md)
+  const tubes = roofBoxPart(C, "loadSteel", 2.8, 12.5, 0.48, 0.36, 1.4, 1.4 + 0.12 + 2 * 0.06 * Math.sqrt(3));
+  const bolsters = ([[3.8, 4.8], [10.5, 11.5]] as Pt[]).map(([x0, x1]) => roofBoxPart(C, "bolster", x0, x1, 1.25, 1.25, 1.205, 1.4));
+  parts.push(loadLodPart(["steel"], 1.2, { draw: (m) => { tubes.draw(m); for (const b of bolsters) b.draw(m); } }));
   return freightWagonLod({ palette: { ...WAGON_PALETTE, ...PAO_PALETTE }, shells, parts });
 }
 
@@ -470,13 +459,13 @@ interface FreightDesign {
 }
 
 const DESIGNS: readonly FreightDesign[] = [
-  { id: "proc-vehicle-sqns-container-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "maersk" }, weight: 50 }] }, title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, buildLod: sqnsContainerWagonLod, params: SQNS_PARAMS },
-  { id: "proc-vehicle-pao-flat-wagon", game: { weight: 22, power: 0, maxspeed: 120, accel: null, variants: [{ params: { cargo: "empty" }, weight: 20 }] }, title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, buildLod: paoFlatWagonLod, params: PAO_PARAMS },
+  { id: "proc-vehicle-sqns-container-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null }, title: "Sqns Container Wagon", folder: "wagon-sqns", build: sqnsContainerWagon, buildLod: sqnsContainerWagonLod },
+  { id: "proc-vehicle-pao-flat-wagon", game: { weight: 20, power: 0, maxspeed: 120, accel: null }, title: "Pao Flat Wagon", folder: "wagon-pao", build: paoFlatWagon, buildLod: paoFlatWagonLod },
   { id: "proc-vehicle-habis-sliding-wall-wagon", game: { weight: 50, power: 0, maxspeed: 160, accel: null }, title: "Habis Sliding-Wall Wagon", folder: "wagon-habis", build: habisSlidingWallWagon, buildLod: habisSlidingWallWagonLod, params: HABIS_PARAMS },
   { id: "proc-vehicle-hadgs-hopper-wagon", game: { weight: 25, power: 0, maxspeed: 120, accel: null }, title: "Hadgs Covered Hopper Wagon", folder: "wagon-hadgs", build: hadgsHopperWagon, buildLod: hadgsHopperWagonLod },
   { id: "proc-vehicle-faccs-hopper-wagon", game: { weight: 38, power: 0, maxspeed: 90, accel: null }, title: "Faccs Hopper Wagon", folder: "wagon-faccs", build: faccsHopperWagon, buildLod: faccsHopperWagonLod, params: FACCS_PARAMS },
   { id: "proc-vehicle-falls-hopper-wagon", game: { weight: 37, power: 0, maxspeed: 90, accel: null }, title: "Falls Hopper Wagon", folder: "wagon-falls", build: fallsHopperWagon, buildLod: fallsHopperWagonLod, params: FALLS_PARAMS },
-  { id: "proc-vehicle-wap-hopper-wagon", game: { weight: 60, power: 0, maxspeed: 90, accel: null, variants: [{ params: { cargo: "empty" }, weight: 37 }] }, title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon, buildLod: wapHopperWagonLod, params: WAP_PARAMS },
+  { id: "proc-vehicle-wap-hopper-wagon", game: { weight: 37, power: 0, maxspeed: 90, accel: null }, title: "Wap Hopper Wagon", folder: "wagon-wap", build: wapHopperWagon, buildLod: wapHopperWagonLod },
 ];
 
 /** Every freight wagon design of this family, in catalog order. The ids are stored in saved maps. */

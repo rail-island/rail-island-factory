@@ -25,8 +25,9 @@ describe('road vehicle LODs', () => {
       expect(d.buildLod).toBeDefined();
       for (const v of sample(coverageCombinations(d.params, d.finishParams))) {
         const { m, faces: f } = faces(id, v);
-        expect(m.triangleCount()).toBeLessThanOrEqual(lodBudget(d));
-        expect(m.triangleCount()).toBeGreaterThan(0.7 * lodBudget(d));
+        // the exterior and its largest load (docs/models/loads.md)
+        expect(m.budgetTriangleCount()).toBeLessThanOrEqual(lodBudget(d));
+        expect(m.budgetTriangleCount()).toBeGreaterThan(0.7 * lodBudget(d));
         // windscreens in the one LOD glass; the wheels stand on the road
         expect(f.some((t) => t.material === LOD_GLASS)).toBe(true);
         expect(Math.min(...f.flatMap((t) => t.p.map((p) => p[1]!)))).toBeCloseTo(0, 6);

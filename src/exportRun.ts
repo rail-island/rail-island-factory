@@ -9,6 +9,7 @@ import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import type { CatalogRecord } from "./catalogQuery";
 import { glbFileName, safeName, type ExportEntry } from "./exportList";
 import { loadModel } from "./modelModule";
+import { showFirstLoad } from "./viewerLoads";
 import { encodeGrf, GRF_ZOOM, type GrfImage, type GrfPart, type GrfVehicle } from "./openttd/grf";
 import { zoomImages } from "./openttd/pixels";
 import { spriteViews, type ModelBox } from "./openttd/projection";
@@ -102,6 +103,8 @@ interface Planned {
 /** A car's model, built at its values; a turned car is wrapped and turned about its vertical axis. */
 async function carModel(r: CatalogRecord, car: ExportCar): Promise<{ object: Object3D; dispose: () => void }> {
   const { object } = await loadModel(r, car.params);
+  // a freight vehicle's sprites show it loaded, as its thumbnail (docs/models/loads.md)
+  showFirstLoad(object);
   if (!car.turned) return { object, dispose: () => disposeModel(object) };
   const turned = new Group();
   turned.rotation.y = Math.PI;

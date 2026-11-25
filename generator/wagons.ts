@@ -1,11 +1,11 @@
 // The freight wagons transferred from vlakosimdb: five designs, three of them
-// parametric by their load. Each follows its simplemodel's XML clip shapes
+// with their loads as hidden load parts (loadKit.ts, docs/models/loads.md). Each follows its simplemodel's XML clip shapes
 // (alongx sections, alongy plans, alongz elevations) and the native BMPs at
 // 0.1 m a pixel (assets/wagon-<name>/native/<key>/landmarks.json):
 //
-//   veh-nas-flat-wagon     n_nas, n_nas-full#1..#3   `cargo`: empty, wood, tubes, reels
-//   veh-ua-open-wagon      n_ua-empty, n_ua#1..#3    `cargo`: empty, coal, wood, sand
-//   veh-eas-open-wagon     n_eas, n_eas-drevo, -uhlo `cargo`: empty, wood, coal
+//   veh-nas-flat-wagon     n_nas, n_nas-full#1..#3   loads: wood, steel (tubes), goods (reels)
+//   veh-ua-open-wagon      n_ua-empty, n_ua#1..#3    loads: coal, iron ore and grain (the sand heap), wood
+//   veh-eas-open-wagon     n_eas, n_eas-drevo, -uhlo loads: coal, iron ore, grain, wood
 //   veh-raj-hopper-wagon   n_raj                     fixed
 //   veh-rah-tank-wagon     n_rah#1                   fixed
 //
@@ -16,10 +16,11 @@
 import { ngon, rect, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields, GameProperties, ParamSpec, ParamValues } from "./design.ts";
-import { resolveParams } from "./design.ts";
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads } from "./loadKit.ts";
 import { WAGON_PALETTE, Wagon } from "./wagonParts.ts";
 import { wagonLod, type WagonLodItem } from "./lodClassic.ts";
 import { strokeText } from "./strokeFont.ts";
+import { loadPart } from "./loadPart.ts";
 
 /** The game-catalog fields of the wagons: rail vehicles in their own `wagon` group. */
 export const WAGON_CATALOG: CatalogFields = {
@@ -43,13 +44,6 @@ export const WAGON_NUMBERS = {
   rah: { number: "33 54 7921 779-6", source: "read from the native z_dec.bmp (33 RIV / 54 CPAV / 792 1 779-0); the printed check digit 0 does not verify, corrected to 6" },
 } as const;
 
-const cargoParam = (values: Array<[string, string]>): readonly ParamSpec[] => [
-  { name: "cargo", title: "Cargo", default: "empty", values: values.map(([value, title]) => ({ value, title })) },
-];
-
-export const NAS_PARAMS = cargoParam([["empty", "Empty"], ["wood", "Logs"], ["tubes", "Steel tubes"], ["reels", "Cable reels"]]);
-export const UA_PARAMS = cargoParam([["empty", "Empty"], ["coal", "Coal"], ["wood", "Logs"], ["sand", "Sand"]]);
-export const EAS_PARAMS = cargoParam([["empty", "Empty"], ["wood", "Logs"], ["coal", "Coal"]]);
 
 const lerp = (pts: Array<[number, number]>, x: number): number => {
   if (x <= pts[0]![0]) return pts[0]![1];
@@ -82,7 +76,6 @@ const EAS_PALETTE: Record<string, MaterialSpec> = {
   bodyLight: { color: "#822802", roughness: 0.7 },
   inside: { color: "#5a1d02", roughness: 0.85 },
   doorFrame: { color: "#3e2f24", roughness: 0.7 },
-  coal: { color: "#161616", roughness: 0.95 },
 };
 
 /** The Eas side stanchions (XML alongz `bok`): source x of each 0.1 m post, corner posts included. */
@@ -91,9 +84,8 @@ const EAS_POSTS = [0.3, 1.4, 2.5, 3.6, 4.7, 5.8, 6.9, 8.0, 9.1, 10.2, 11.3, 12.4
 const EAS_DOORS = [[2.5, 3.6, 4.7], [9.1, 10.2, 11.3]];
 
 /** The Eas high-sided open wagon (vlakosimdb n_eas, n_eas-drevo, n_eas-uhlo). */
-export function easOpenWagon(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(EAS_PARAMS, params);
-  const c = new Wagon(EAS_PALETTE, 6.95);
+export function easOpenWagon(): MeshBuilder {
+  const c = new Wagon({ ...EAS_PALETTE, ...LOAD_PALETTE }, 6.95);
   const m = c.m;
   m.scope("body", () => {
     m.scope("floor", () => c.box("inside", 0.4, 13.5, 0.9, 1.1, -1.3, 1.3));
@@ -151,15 +143,16 @@ export function easOpenWagon(params?: ParamValues): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.35, 2.0));
     m.scope("bogie 2", () => c.freightBogie(11.45, 2.0));
   });
-  if (cargo === "coal")
-    m.scope("cargo", () => {
-      // the native load's visual hull: an elevation of four mounds and a section peaked mid-width
-      const elev: Array<[number, number]> = [[0.4, 3.15], [0.9, 3.4], [1.7, 3.5], [3.6, 3.4], [5.9, 3.5], [8.3, 3.4], [9.0, 3.5], [9.6, 3.4], [11.7, 3.5], [12.3, 3.5], [13.5, 3.15]];
-      const sect: Array<[number, number]> = [[-1.3, 3.15], [-0.65, 3.4], [-0.4, 3.5], [0.4, 3.5], [0.7, 3.4], [1.3, 3.15]];
-      c.heap("coal", 0.4, 13.5, 1.3, 26, 8, (x, z) => Math.min(lerp(elev, x), lerp(sect, z)));
-    });
-  if (cargo === "wood")
-    m.scope("cargo", () => {
+  // the loads on the floor at 1.1 m (docs/models/loads.md): a bulk heap per bulk look, the logs
+  const floor: Vec3 = [c.X(6.95), 1.1, 0];
+  bulkLoads(m, floor, (mat) => {
+    // the native load's visual hull: an elevation of four mounds and a section peaked mid-width
+    const elev: Array<[number, number]> = [[0.4, 3.15], [0.9, 3.4], [1.7, 3.5], [3.6, 3.4], [5.9, 3.5], [8.3, 3.4], [9.0, 3.5], [9.6, 3.4], [11.7, 3.5], [12.3, 3.5], [13.5, 3.15]];
+    const sect: Array<[number, number]> = [[-1.3, 3.15], [-0.65, 3.4], [-0.4, 3.5], [0.4, 3.5], [0.7, 3.4], [1.3, 3.15]];
+    m.scope("heap", () => c.heap(mat, 0.4, 13.5, 1.3, 26, 8, (x, z) => Math.min(lerp(elev, x), lerp(sect, z))));
+  });
+  loadPart(m, ["wood"], floor, () =>
+    m.scope("logs", () => {
       // fifteen bundles of five logs laid across the wagon, their tops 3.7 to 3.9 m (the native n_eas-drevo)
       for (let i = 0; i < 15; i++)
         m.scope(`bundle ${i + 1}`, () => {
@@ -167,10 +160,11 @@ export function easOpenWagon(params?: ParamValues): MeshBuilder {
           const x = 0.735 + i * 0.888;
           const r = 0.145;
           const lift = [0, 0.04, 0, 0.06][i % 4]! + (i === 14 ? 0.08 : 0);
-          for (const d of [-0.29, 0, 0.29]) c.logZ(i % 2 ? "bark" : "barkDark", x + d, 3.3 + lift, -1.27 + (i % 3) * 0.01, 1.27 - (i % 2) * 0.015, r, 8, "logEnd");
-          for (const d of [-0.145, 0.145]) c.logZ(i % 2 ? "barkDark" : "bark", x + d, 3.3 + 0.25 + lift, -1.25 + (i % 2) * 0.02, 1.25 - (i % 3) * 0.02, r, 8, "logEnd");
+          for (const d of [-0.29, 0, 0.29]) c.logZ(i % 2 ? "loadBark" : "loadBarkDark", x + d, 3.3 + lift, -1.27 + (i % 3) * 0.01, 1.27 - (i % 2) * 0.015, r, 8, "loadLogEnd");
+          for (const d of [-0.145, 0.145]) c.logZ(i % 2 ? "loadBarkDark" : "loadBark", x + d, 3.3 + 0.25 + lift, -1.25 + (i % 2) * 0.02, 1.25 - (i % 3) * 0.02, r, 8, "loadLogEnd");
         });
-    });
+    }),
+  );
   return m;
 }
 
@@ -180,11 +174,6 @@ const UA_PALETTE: Record<string, MaterialSpec> = {
   bodyLight: { color: "#8f402f", roughness: 0.7 },
   inside: { color: "#60271f", roughness: 0.85 },
   handbrake: { color: "#b0242a", roughness: 0.5 },
-  coal: { color: "#1a1b1b", roughness: 0.95 },
-  sand: { color: "#9ea49a", roughness: 0.95 },
-  // the native n_ua#2 load: weathered, lighter logs
-  bark: { color: "#7a6034", roughness: 0.9 },
-  barkDark: { color: "#5f381f", roughness: 0.9 },
 };
 
 /** The Ua's lighter painted stanchions (native z_both columns 15..121): source x and width of each. */
@@ -193,9 +182,8 @@ const UA_POSTS: Array<[number, number]> = [[1.5, 0.1], [2.5, 0.1], [4.5, 0.2], [
 const UA_DOORS: Array<[number, number, number, number]> = [[2.6, 4.5, 3.3, 4.2], [9.0, 10.9, 9.7, 10.6]];
 
 /** The Ua open wagon with a load (vlakosimdb n_ua-empty, n_ua#1..#3). */
-export function uaOpenWagon(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(UA_PARAMS, params);
-  const c = new Wagon(UA_PALETTE, 6.85);
+export function uaOpenWagon(): MeshBuilder {
+  const c = new Wagon({ ...UA_PALETTE, ...LOAD_PALETTE }, 6.85);
   const m = c.m;
   m.scope("body", () => {
     m.scope("floor", () => c.box("inside", 0.8, 12.9, 0.9, 1.1, -1.3, 1.3));
@@ -254,27 +242,31 @@ export function uaOpenWagon(params?: ParamValues): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.35, 1.8));
     m.scope("bogie 2", () => c.freightBogie(11.35, 1.8));
   });
-  if (cargo === "coal" || cargo === "sand")
-    m.scope("cargo", () => {
+  // the loads on the floor at 1.1 m (docs/models/loads.md): the native coal heap for coal, its
+  // sand heap for iron ore and grain, and the logs
+  const floor: Vec3 = [c.X(6.85), 1.1, 0];
+  bulkLoads(m, floor, (mat) =>
+    m.scope("heap", () => {
       // the native `load` visual hull: a section peaked off-centre and two heaps along the wagon
-      const coal = cargo === "coal";
+      const coal = mat === "loadCoal";
       const sect: Array<[number, number]> = coal ? [[-1.3, 3.0], [-0.8, 3.3], [0.4, 3.6], [1.3, 3.1]] : [[-1.3, 3.1], [-0.8, 3.4], [0.4, 3.7], [1.3, 3.1]];
       const elev: Array<[number, number]> = coal
         ? [[0.8, 2.8], [1.3, 3.2], [2.7, 3.4], [5.3, 3.6], [7.4, 3.2], [7.9, 3.0], [8.5, 3.3], [9.8, 3.6], [11.2, 3.5], [12.9, 3.1]]
         : [[0.8, 2.9], [1.6, 3.2], [2.7, 3.5], [5.3, 3.6], [7.9, 3.1], [8.5, 3.5], [9.8, 3.7], [11.2, 3.5], [12.9, 3.1]];
-      c.heap(cargo, 0.8, 12.9, 1.3, 30, 8, (x, z) => Math.max(3.3, Math.min(lerp(elev, x), lerp(sect, z))));
-    });
-  if (cargo === "wood")
-    m.scope("cargo", () => {
+      c.heap(mat, 0.8, 12.9, 1.3, 30, 8, (x, z) => Math.max(3.3, Math.min(lerp(elev, x), lerp(sect, z))));
+    }),
+  );
+  // the logs and the straps down to the solebar: pivoted at the straps' foot, 0.95 m
+  loadPart(m, ["wood"], [floor[0], 0.95, 0], () => {
       // logs along the wagon, their top layer 3.4 to 3.6 m (the native n_ua#2 `load`)
       m.scope("logs", () => {
         for (let k = 0; k < 7; k++) {
           const z = -1.08 + k * 0.36;
-          c.logX(k % 2 ? "bark" : "barkDark", 0.85 + (k % 3) * 0.04, 12.85 - (k % 2) * 0.05, z, 3.21, 0.18, 8, "logEnd");
+          c.logX(k % 2 ? "loadBark" : "loadBarkDark", 0.85 + (k % 3) * 0.04, 12.85 - (k % 2) * 0.05, z, 3.21, 0.18, 8, "loadLogEnd");
         }
         for (let k = 0; k < 6; k++) {
           const z = -0.9 + k * 0.36;
-          c.logX(k % 2 ? "barkDark" : "bark", 1.4 - (k % 2) * 0.1, 12.3 + (k % 3) * 0.12, z, 3.43, 0.18, 8, "logEnd");
+          c.logX(k % 2 ? "loadBarkDark" : "loadBark", 1.4 - (k % 2) * 0.1, 12.3 + (k % 3) * 0.12, z, 3.43, 0.18, 8, "loadLogEnd");
         }
       });
       // four steel straps over the load and down both sides (native z_both columns 23, 55, 81, 112)
@@ -286,7 +278,7 @@ export function uaOpenWagon(params?: ParamValues): MeshBuilder {
           }),
         );
       });
-    });
+  });
   return m;
 }
 
@@ -298,8 +290,6 @@ const NAS_PALETTE: Record<string, MaterialSpec> = {
   sideLight: { color: "#a0482f", roughness: 0.7 },
   deck: { color: "#505750", roughness: 0.9 },
   plankGap: { color: "#2f2f2f", roughness: 0.9 },
-  tube: { color: "#8a8d90", metallic: 0.3, roughness: 0.45 },
-  bore: { color: "#2b2c2e", roughness: 0.7 },
   reel: { color: "#7f3f00", roughness: 0.8 },
   cable: { color: "#26292a", roughness: 0.8 },
 };
@@ -308,9 +298,8 @@ const NAS_PALETTE: Record<string, MaterialSpec> = {
 const NAS_STAKES = [2.7, 4.9, 7.1, 9.3, 11.5, 13.7, 15.9, 18.1];
 
 /** The Nas flat wagon with drop sides and stakes (vlakosimdb n_nas, n_nas-full#1..#3). */
-export function nasFlatWagon(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(NAS_PARAMS, params);
-  const c = new Wagon(NAS_PALETTE, 10.45);
+export function nasFlatWagon(): MeshBuilder {
+  const c = new Wagon({ ...NAS_PALETTE, ...LOAD_PALETTE }, 10.45);
   const m = c.m;
   m.scope("body", () => {
     m.scope("deck", () => {
@@ -353,8 +342,10 @@ export function nasFlatWagon(params?: ParamValues): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.65, 2.0));
     m.scope("bogie 2", () => c.freightBogie(18.35, 2.0));
   });
-  if (cargo === "wood")
-    m.scope("cargo", () => {
+  // the loads on the deck at 1.2 m (docs/models/loads.md): logs, steel tubes, cable reels as goods
+  const floor: Vec3 = [c.X(10.45), 1.2, 0];
+  loadPart(m, ["wood"], floor, () =>
+    m.scope("logs", () => {
       // a pile of 25 logs in five layers, 2.9 to 18.1 m (n_nas-full#1's wood inlines)
       const counts = [7, 6, 5, 4, 3];
       let n = 0;
@@ -364,19 +355,21 @@ export function nasFlatWagon(params?: ParamValues): MeshBuilder {
             const z = (k - (count - 1) / 2) * 0.4;
             const y = 1.2 + 0.2 + layer * 0.3464;
             const j = n++ % 5;
-            c.logX(j % 2 ? "bark" : "barkDark", 2.82 + j * 0.04, 18.18 - ((j * 3) % 5) * 0.04, z, y, 0.2, 8, "logEnd");
+            c.logX(j % 2 ? "loadBark" : "loadBarkDark", 2.82 + j * 0.04, 18.18 - ((j * 3) % 5) * 0.04, z, y, 0.2, 8, "loadLogEnd");
           }
         }),
       );
-    });
-  if (cargo === "tubes")
-    m.scope("cargo", () => {
+    }),
+  );
+  loadPart(m, ["steel"], floor, () =>
+    m.scope("tubes", () => {
       // five steel tubes 0.9 m across, three below and two above (n_nas-full#2's tube inlines)
       for (const [z, y] of [[-0.95, 1.65], [0.0, 1.65], [0.95, 1.65], [-0.475, 2.42], [0.475, 2.42]] as Array<[number, number]>)
-        m.scope("tube", () => c.tube("tube", "bore", 2.8, 18.3, z, y, 0.45, 0.04, 16));
-    });
-  if (cargo === "reels")
-    m.scope("cargo", () => {
+        m.scope("tube", () => c.tube("loadSteel", "loadDark", 2.8, 18.3, z, y, 0.45, 0.04, 16));
+    }),
+  );
+  loadPart(m, ["goods"], floor, () =>
+    m.scope("cable reels", () => {
       // six cable reels standing across the wagon, 2 m across (n_nas-full#3's reel inlines)
       for (const x of [2.9, 5.8, 9.0, 11.9, 15.1, 18.0])
         m.scope("reel", () => {
@@ -385,7 +378,8 @@ export function nasFlatWagon(params?: ParamValues): MeshBuilder {
           const core = ngon(8, 0.8 / Math.cos(Math.PI / 8), Math.PI / 8, c.X(x), 2.205);
           m.sweep("cable", "z", core, -0.9, core, 0.9, false);
         });
-    });
+    }),
+  );
   return m;
 }
 
@@ -654,37 +648,34 @@ export function rahTankWagon(): MeshBuilder {
 // from the same source dimensions as above, a dark block per bogie.
 
 /** The Eas from afar: the open body with its inside, its doors, the stanchions and underframe (optional) and the load. */
-export function easOpenWagonLod(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(EAS_PARAMS, params);
+export function easOpenWagonLod(): MeshBuilder {
   const items: WagonLodItem[] = [
     { name: "body", kind: "tub", x: [0.2, 13.7], y: [0.8, 3.3], hz: 1.45, t: 0.15, floor: 1.1, outer: "body", inner: "inside" },
     { name: "underframe", optional: 10, kind: "block", x: [3.8, 10.0], y: [0.5, 0.8], z: 0.6, side: "underframe", top: null },
     { name: "doors", kind: "panels", rects: EAS_DOORS.map(([a, , b]) => [a! + 0.1, b!, 1.2, 3.2] as const), z: 1.46, mat: "bodyLight" },
     { name: "stanchions", optional: 15, kind: "panels", rects: EAS_POSTS.filter((x) => !EAS_DOORS.some((d) => d.includes(x))).map((x) => [x, x + 0.1, 0.9, 3.2] as const), z: 1.5, mat: "bodyDark" },
   ];
-  if (cargo === "coal") items.push({ name: "cargo", kind: "heap", x: [0.4, 13.5], y: [3.15, 3.5], hz: 1.28, inset: 0.6, ridge: 0.4, mat: "coal" });
+  for (const look of BULK_LOOKS) items.push({ name: "heap", load: { commodities: look.commodities, floor: 1.1 }, kind: "heap", x: [0.4, 13.5], y: [3.15, 3.5], hz: 1.28, inset: 0.6, ridge: 0.4, mat: look.mat });
   // the bundles lie across: their log ends face the sides
-  if (cargo === "wood") items.push({ name: "cargo", kind: "block", x: [0.3, 13.6], y: [3.15, 3.9], z: 1.27, side: "logEnd", end: "bark", top: "barkDark" });
-  return wagonLod({ palette: { ...WAGON_PALETTE, ...EAS_PALETTE }, centre: 6.95, bogies: [[2.35, 2.0], [11.45, 2.0]], items });
+  items.push({ name: "logs", load: { commodities: ["wood"], floor: 1.1 }, kind: "block", x: [0.3, 13.6], y: [3.15, 3.9], z: 1.27, side: "loadLogEnd", end: "loadBark", top: "loadBarkDark" });
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...EAS_PALETTE, ...LOAD_PALETTE }, centre: 6.95, bogies: [[2.35, 2.0], [11.45, 2.0]], items });
 }
 
 /** The Ua from afar: the open body with its inside, the stanchions and underframe (optional) and the load. */
-export function uaOpenWagonLod(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(UA_PARAMS, params);
+export function uaOpenWagonLod(): MeshBuilder {
   const items: WagonLodItem[] = [
     { name: "body", kind: "tub", x: [0.5, 13.2], y: [0.8, 3.3], hz: 1.5, t: 0.2, floor: 1.1, outer: "body", inner: "inside" },
     { name: "underframe", optional: 10, kind: "block", x: [3.6, 10.1], y: [0.5, 0.8], z: 0.9, side: "underframe", top: null },
     { name: "stanchions", optional: 15, kind: "panels", rects: UA_POSTS.map(([x, w]) => [x, x + w, 0.9, 3.2] as const), z: 1.53, mat: "bodyLight" },
   ];
-  if (cargo === "coal" || cargo === "sand") items.push({ name: "cargo", kind: "heap", x: [0.8, 12.9], y: [3.0, 3.65], hz: 1.28, inset: 1.2, ridge: 0.4, mat: cargo });
+  for (const look of BULK_LOOKS) items.push({ name: "heap", load: { commodities: look.commodities, floor: 1.1 }, kind: "heap", x: [0.8, 12.9], y: [3.0, 3.65], hz: 1.28, inset: 1.2, ridge: 0.4, mat: look.mat });
   // the logs lie along the wagon: their ends face the ends
-  if (cargo === "wood") items.push({ name: "cargo", kind: "sweep", axis: "x", sec: [[-1.28, 3.03], [1.28, 3.03], [1.08, 3.61], [-1.08, 3.61]], a: [0.85, 12.85], wall: "bark", caps: "logEnd" });
-  return wagonLod({ palette: { ...WAGON_PALETTE, ...UA_PALETTE }, centre: 6.85, bogies: [[2.35, 1.8], [11.35, 1.8]], items });
+  items.push({ name: "logs", load: { commodities: ["wood"], floor: 1.1 }, kind: "sweep", axis: "x", sec: [[-1.28, 3.03], [1.28, 3.03], [1.08, 3.61], [-1.08, 3.61]], a: [0.85, 12.85], wall: "loadBark", caps: "loadLogEnd" });
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...UA_PALETTE, ...LOAD_PALETTE }, centre: 6.85, bogies: [[2.35, 1.8], [11.35, 1.8]], items });
 }
 
 /** The Nas from afar: the frame and deck, the fishbelly, the stakes, drop sides and end walls (optional) and the load. */
-export function nasFlatWagonLod(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(NAS_PARAMS, params);
+export function nasFlatWagonLod(): MeshBuilder {
   const items: WagonLodItem[] = [
     { name: "frame", kind: "block", x: [0.6, 20.3], y: [0.8, 1.2], z: 1.44, side: "frame", top: "deck" },
     { name: "fishbelly", kind: "profile", sec: [[6.1, 0.4], [15.0, 0.4], [16.4, 0.8], [4.8, 0.8]], hz: 1.42, mat: "frame" },
@@ -692,11 +683,11 @@ export function nasFlatWagonLod(params?: ParamValues): MeshBuilder {
     { name: "stakes", optional: 15, kind: "panels", rects: NAS_STAKES.map((x) => [x, x + 0.1, 0.7, 2.9] as const), z: 1.53, mat: "side" },
     ...[[0.5, 0.6], [20.3, 20.4]].map(([a, b], i): WagonLodItem => ({ name: i ? "front end wall" : "rear end wall", optional: 25, kind: "block", x: [a!, b!], y: [1.2, 2.0], z: 1.4, side: null, end: "side", top: null })),
   ];
-  if (cargo === "wood") items.push({ name: "cargo", kind: "sweep", axis: "x", sec: [[-1.4, 1.2], [1.4, 1.2], [0.6, 2.9], [-0.6, 2.9]], a: [2.82, 18.18], wall: "bark", caps: "logEnd" });
-  if (cargo === "tubes") items.push({ name: "cargo", kind: "sweep", axis: "x", sec: [[-1.4, 1.2], [1.4, 1.2], [1.4, 2.1], [0.95, 2.87], [-0.95, 2.87], [-1.4, 2.1]], a: [2.8, 18.3], wall: "tube", caps: "bore" });
-  if (cargo === "reels")
-    for (const x of [2.9, 5.8, 9.0, 11.9, 15.1, 18.0]) items.push({ name: "reel", kind: "block", x: [x - 0.9, x + 0.9], y: [1.2, 3.2], z: 1.0, side: "reel", end: "cable", top: "cable" });
-  return wagonLod({ palette: { ...WAGON_PALETTE, ...NAS_PALETTE }, centre: 10.45, bogies: [[2.65, 2.0], [18.35, 2.0]], items });
+  items.push({ name: "logs", load: { commodities: ["wood"], floor: 1.2 }, kind: "sweep", axis: "x", sec: [[-1.4, 1.2], [1.4, 1.2], [0.6, 2.9], [-0.6, 2.9]], a: [2.82, 18.18], wall: "loadBark", caps: "loadLogEnd" });
+  items.push({ name: "tubes", load: { commodities: ["steel"], floor: 1.2 }, kind: "sweep", axis: "x", sec: [[-1.4, 1.2], [1.4, 1.2], [1.4, 2.1], [0.95, 2.87], [-0.95, 2.87], [-1.4, 2.1]], a: [2.8, 18.3], wall: "loadSteel", caps: "loadDark" });
+  // the cable reels as one block from afar
+  items.push({ name: "cable reels", load: { commodities: ["goods"], floor: 1.2 }, kind: "block", x: [2.0, 18.9], y: [1.2, 3.2], z: 1.0, side: "reel", end: "cable", top: "cable" });
+  return wagonLod({ palette: { ...WAGON_PALETTE, ...NAS_PALETTE, ...LOAD_PALETTE }, centre: 10.45, bogies: [[2.65, 2.0], [18.35, 2.0]], items });
 }
 
 /** The Raj from afar: the frame, the red body, the centre sill (optional) and the four hoppers as pointed diamonds. */
@@ -738,48 +729,19 @@ export interface WagonDesign {
 }
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
-const NAS_FLAT_WAGON_GAME: GameProperties = {
-  weight: 25,
-  power: 0,
-  maxspeed: 120,
-  accel: null,
-  variants: [
-    { params: { cargo: "reels" }, weight: 33 },
-    { params: { cargo: "wood" }, weight: 50 },
-    { params: { cargo: "tubes" }, weight: 35 },
-  ],
-};
+const NAS_FLAT_WAGON_GAME: GameProperties = { weight: 25, power: 0, maxspeed: 120, accel: null };
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
-const UA_OPEN_WAGON_GAME: GameProperties = {
-  weight: 30,
-  power: 0,
-  maxspeed: 120,
-  accel: null,
-  variants: [
-    { params: { cargo: "coal" }, weight: 60 },
-    { params: { cargo: "wood" }, weight: 50 },
-    { params: { cargo: "sand" }, weight: 60 },
-  ],
-};
+const UA_OPEN_WAGON_GAME: GameProperties = { weight: 30, power: 0, maxspeed: 120, accel: null };
 
 /** What the game needs of it beyond its geometry (design.ts GameProperties). */
-const EAS_OPEN_WAGON_GAME: GameProperties = {
-  weight: 23.5,
-  power: 0,
-  maxspeed: 90,
-  accel: null,
-  variants: [
-    { params: { cargo: "coal" }, weight: 65.5 },
-    { params: { cargo: "wood" }, weight: 65.5 },
-  ],
-};
+const EAS_OPEN_WAGON_GAME: GameProperties = { weight: 23.5, power: 0, maxspeed: 90, accel: null };
 
 /** Every wagon design, in catalog order. The ids are stored in saved maps. */
 export const WAGON_DESIGNS: readonly WagonDesign[] = [
-  { id: "proc-vehicle-nas-flat-wagon", game: NAS_FLAT_WAGON_GAME, title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, buildLod: nasFlatWagonLod, params: NAS_PARAMS },
-  { id: "proc-vehicle-ua-open-wagon", game: UA_OPEN_WAGON_GAME, title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, buildLod: uaOpenWagonLod, params: UA_PARAMS },
-  { id: "proc-vehicle-eas-open-wagon", game: EAS_OPEN_WAGON_GAME, title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, buildLod: easOpenWagonLod, params: EAS_PARAMS },
+  { id: "proc-vehicle-nas-flat-wagon", game: NAS_FLAT_WAGON_GAME, title: "Nas Flat Wagon", folder: "wagon-nas", build: nasFlatWagon, buildLod: nasFlatWagonLod },
+  { id: "proc-vehicle-ua-open-wagon", game: UA_OPEN_WAGON_GAME, title: "Ua Open Wagon", folder: "wagon-ua", build: uaOpenWagon, buildLod: uaOpenWagonLod },
+  { id: "proc-vehicle-eas-open-wagon", game: EAS_OPEN_WAGON_GAME, title: "Eas Open Wagon", folder: "wagon-eas", build: easOpenWagon, buildLod: easOpenWagonLod },
   { id: "proc-vehicle-raj-hopper-wagon", game: { weight: 50, power: 0, maxspeed: 90, accel: null }, title: "Raj Hopper Wagon", folder: "wagon-raj", build: rajHopperWagon, buildLod: rajHopperWagonLod },
   { id: "proc-vehicle-rah-tank-wagon", game: { weight: 40, power: 0, maxspeed: 100, accel: null }, title: "Rah Tank Wagon", folder: "wagon-rah", build: rahTankWagon, buildLod: rahTankWagonLod },
 ];

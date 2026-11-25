@@ -558,18 +558,17 @@ export function liebherrLtmSpec(): TruckSpec {
 export function liebherrLtm(): MeshBuilder { return buildTruck(liebherrLtmSpec()); }
 export function liebherrLtmLod(): MeshBuilder { return lodOf(liebherrLtmSpec()); }
 
-export const LOHR_PARAMS = param("load", "Load", [["cars", "Cars"], ["empty", "Empty"]]);
-export function lohrCarTransporterSpec(p?: ParamValues): TruckSpec {
-  const cars = pick(LOHR_PARAMS, p) === "cars";
+export function lohrCarTransporterSpec(): TruckSpec {
   const t = euSemi("carCarrier", { length: 13.4, floor: 0.95, top: 3.95, wheel: 0.4, dual: false, rear: 1.4, pin: 1.2 });
   // the decks begin behind the gooseneck, clear of the tractor's rear wheels
   t.body.from = 3.5;
-  t.body.load = cars ? "cars" : "none";
+  // the cars on both decks: a hidden load part of goods (docs/models/loads.md)
+  t.body.load = "cars";
   return tractor(euCab("day", { top: 2.95, grille: "bars", visor: false }), t,
     { cab: "#e7e9eb", cab2: "#2b2d31", body: "#3b3e43", body2: "#c8cbd0", load: "#b22a2a", art: "#2a5aa8", art2: "#d9dcdf" }, { fifth: 4.0 });
 }
-export function lohrCarTransporter(p?: ParamValues): MeshBuilder { return buildTruck(lohrCarTransporterSpec(p)); }
-export function lohrCarTransporterLod(p?: ParamValues): MeshBuilder { return lodOf(lohrCarTransporterSpec(p)); }
+export function lohrCarTransporter(): MeshBuilder { return buildTruck(lohrCarTransporterSpec()); }
+export function lohrCarTransporterLod(): MeshBuilder { return lodOf(lohrCarTransporterSpec()); }
 
 // ===========================================================================
 // North America
@@ -1133,7 +1132,7 @@ export const WORLD_TRUCK_SPECS: readonly WorldTruck[] = [
   t("veh-magirus-ladder", "Magirus Turntable Ladder", magirusLadderSpec, magirusLadder, magirusLadderLod, g(16, 210, 100)),
   t("veh-rosenbauer-panther", "Rosenbauer Panther", rosenbauerPantherSpec, rosenbauerPanther, rosenbauerPantherLod, g(39, 515, 115)),
   t("veh-liebherr-ltm", "Liebherr LTM 1100 Mobile Crane", liebherrLtmSpec, liebherrLtm, liebherrLtmLod, g(60, 450, 80)),
-  t("veh-lohr-car-transporter", "Car Transporter", lohrCarTransporterSpec, lohrCarTransporter, lohrCarTransporterLod, g(40, 338, 90, [{ params: { load: "empty" }, weight: 26 }]), LOHR_PARAMS),
+  t("veh-lohr-car-transporter", "Car Transporter", lohrCarTransporterSpec, lohrCarTransporter, lohrCarTransporterLod, g(26, 338, 90)),
   t("veh-peterbilt-379", "Peterbilt 379", peterbilt379Spec, peterbilt379, peterbilt379Lod, g(36, 410, 110), PETERBILT_379_PARAMS),
   t("veh-peterbilt-579", "Peterbilt 579", peterbilt579Spec, peterbilt579, peterbilt579Lod, g(36, 380, 110), PETERBILT_579_PARAMS),
   t("veh-kenworth-w900", "Kenworth W900", kenworthW900Spec, kenworthW900, kenworthW900Lod, g(36, 410, 110), W900_PARAMS),

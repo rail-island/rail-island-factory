@@ -2,7 +2,7 @@
 
 **Covers** - the cupola caboose (`proc-vehicle-us-caboose`), the 50 ft boxcar (`proc-vehicle-us-boxcar`), the double-stack well car (`proc-vehicle-us-well-car`) and the San Francisco cable car (`proc-vehicle-sf-cable-car`): measures, parameters, the double-stack gauge, deviations and tests.
 **Code** - `generator/usFreight.ts` (`US_FREIGHT`), `generator/usHoodKit.ts` (`paintedSweep`, `knuckleCoupler`), `test/usTransit.test.ts`, `assets/us-caboose/`, `assets/us-boxcar/`, `assets/us-well-car/`, `assets/sf-cable-car/`
-**See also** - [us-transit.md](us-transit.md), [loading-gauge.md](loading-gauge.md), [wagons.md](wagons.md), [trams.md](trams.md)
+**See also** - [loads.md](loads.md), [us-transit.md](us-transit.md), [loading-gauge.md](loading-gauge.md), [wagons.md](wagons.md), [trams.md](trams.md)
 
 ## The designs
 
@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | `proc-vehicle-us-caboose` | Cupola caboose | `livery`: `santaFe` (red), `unionPacific` (yellow) | 11.10 m | 6,700 / 6,800 |
 | `proc-vehicle-us-boxcar` | 50 ft boxcar | `livery`: `boxcarRed`, `railbox` | 16.87 m | 9,300 / 8,200 |
-| `proc-vehicle-us-well-car` | Double-stack well car | `cargo`: `single` (default), `empty`, `double` | 19.35 m | 11,000 / 8,700 / 13,300 |
+| `proc-vehicle-us-well-car` | Double-stack well car | - (its two containers a hidden `goods`/`food` load part, [loads.md](loads.md)) | 19.35 m | 8,700 at rest / 13,300 loaded |
 | `proc-vehicle-sf-cable-car` | San Francisco cable car | `livery`: `powell` (Powell Street car), `california` (California Street car) | 8.38 m / 9.22 m | 5,500 / 6,600 |
 
 The freight cars are wagons (`WAGON_CATALOG`) on two freight trucks with knuckle couplers; the
@@ -70,7 +70,8 @@ body and length with it, so it is not a finish parameter.
   blind end, a ribbed roof, the door end at -x with two leaves, hinges and four locking bars with
   their keepers and handles, the eight corner castings with their apertures, the owner's code and
   number (RIXU, valid check digits) and the high-cube stripes. The distant model is the girders' box,
-  the container(s) over the well and the trucks. The double stack reaches 6.18 m: this design is held
+  the two containers over the well (a hidden load part) and the trucks. Its load is the
+  double stack, pivoted on the well's deck, so the game grows it from the deck with the fill. It reaches 6.18 m: this design is held
   to the `usDoubleStack` gauge (3.3 by 6.2 m; [loading-gauge.md](loading-gauge.md)).
 - **Cable car** - measured from photographs (assets/sf-cable-car/SOURCES.md; Powell car 5 side-on at
   50.6 px/m). `powell` is the single-ended Powell Street car (27 ft 6 in, car 24): the open grip section
@@ -105,5 +106,5 @@ body and length with it, so it is not a finish parameter.
 
 `test/usTransit.test.ts` (with the passenger cars): every combination inside its gauge, the
 budget, without coplanar faces, at its length on two supports (the cable car's per line); the well
-car's stacks against the US and double-stack gauges, single by default; the Powell car's single grip
+car's double stack, a hidden load part, against the US and double-stack gauges; the Powell car's single grip
 section, headlamp and rear tail lamp against the California car's two grip sections and headlamps.

@@ -53,7 +53,7 @@ import { PNG } from "pngjs";
 import { glbSideFrame, readTriangles, renderGlbSideThumb, renderGlbThumb, type SideFrame } from "./renderGlbThumb.ts";
 import { gameYaw, riderSeat } from "./riderSeat.ts";
 import { boardingDoor } from "./boardingDoor.ts";
-import type { Vec3 } from "./glbTriangles.ts";
+import { loadCommodities, type Vec3 } from "./glbTriangles.ts";
 import { SKYSCRAPERS, SKYSCRAPER_CATALOG } from "./skyscrapers.ts";
 import { VEHICLES, VEHICLE_CATALOG } from "./vehicles.ts";
 import { COMMERCIAL } from "./commercialStreets.ts";
@@ -555,13 +555,23 @@ function buildAll(designs: readonly ProceduralDesign[], check: (design: Procedur
   for (const b of checked) {
     const overlaps = findCoplanarOverlaps(b.bytes);
     if (overlaps.length) found.set(b.design.id, overlaps);
+    // each load shown on its bed (docs/models/loads.md)
+    for (const c of loadCommodities(b.bytes)) {
+      const loaded = findCoplanarOverlaps(b.bytes, undefined, { loads: c });
+      if (loaded.length) found.set(`${b.design.id} (loaded: ${c})`, loaded);
+    }
   }
   if (found.size) throw new ZFightingError(found);
   for (const {design} of checked) {
     const low = buildLodModel(design);
-    if (!low.triangleCount() || low.triangleCount() > lodBudget(design)) throw new Error(`${design.id}: invalid LOD triangle count ${low.triangleCount()}`);
-    const overlaps = findCoplanarOverlaps(low.toGlb(design.id));
+    if (!low.triangleCount() || low.budgetTriangleCount() > lodBudget(design)) throw new Error(`${design.id}: invalid LOD triangle count ${low.budgetTriangleCount()}`);
+    const lowGlb = low.toGlb(design.id);
+    const overlaps = findCoplanarOverlaps(lowGlb);
     if (overlaps.length) found.set(`${design.id} (LOD)`, overlaps);
+    for (const c of loadCommodities(lowGlb)) {
+      const loaded = findCoplanarOverlaps(lowGlb, undefined, { loads: c });
+      if (loaded.length) found.set(`${design.id} (LOD, loaded: ${c})`, loaded);
+    }
     if (design.buildCoarse) {
       const coarse = design.buildCoarse();
       if (!coarse.triangleCount() || coarse.triangleCount() > COARSE_TRIANGLES) throw new Error(`${design.id}: invalid coarse triangle count ${coarse.triangleCount()}`);

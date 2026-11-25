@@ -201,15 +201,19 @@ describe("the world ships", () => {
       expect(spec.items.some((it) => ["rail", "edgeRail", "bulwark", "strakes"].includes(it.k)), `${s.id} rails, bulwark or strakes`).toBe(true);
       expect(built(s, combos(s)[0]).triangleCount(), s.id).toBeGreaterThan(shipBudget(spec) * 0.25);
     }
-    // a loaded container ship draws a stack per row of boxes and its lashing bridges
-    const t = CARGO_SHIP_SPECS[0]!.spec();
-    expect(t.items.filter((it) => it.k === "containers").every((it) => it.k === "containers" && it.rows === 2.5)).toBe(true);
-    expect(t.items.some((it) => it.k === "lashing")).toBe(true);
+    // a container ship's load draws a stack per row of boxes and its lashing bridges
+    const load = CARGO_SHIP_SPECS[0]!.spec().items.flatMap((it) => (it.k === "load" ? it.items : []));
+    expect(load.filter((it) => it.k === "containers").length).toBeGreaterThan(0);
+    expect(load.filter((it) => it.k === "containers").every((it) => it.k === "containers" && it.rows === 2.5)).toBe(true);
+    expect(load.some((it) => it.k === "lashing")).toBe(true);
   });
 
-  it("drops the containers of an empty container ship, and changes only colours with a livery", () => {
+  it("draws a container ship's containers as a hidden load part, and changes only colours with a livery", () => {
     const t = CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-triple-e")!;
-    expect(t.build({ load: "empty" }).triangleCount()).toBeLessThan(t.build().triangleCount() * 0.7);
+    const m = t.build();
+    expect(m.loads()).toEqual([{ part: "load-goods", commodities: ["goods", "food"] }]);
+    // the model at rest is the empty ship: the stacks are most of the loaded one
+    expect(m.exteriorTriangleCount()).toBeLessThan(m.triangleCount() * 0.7);
     for (const s of ALL.filter((x) => x.finishParams?.includes("livery"))) {
       const p = s.params!.find((q) => q.name === "livery")!;
       expect(new Set(p.values.map((v) => s.build({ livery: v.value }).triangleCount())).size, s.id).toBe(1);

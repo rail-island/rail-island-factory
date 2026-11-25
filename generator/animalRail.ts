@@ -35,6 +35,7 @@ import { COACH_CATALOG } from "./csdCoaches.ts";
 import { block, side } from "./vehicleParts.ts";
 import { TAU } from "./characterKit.ts";
 import { lodBlock, lodSideBox, lodWheel } from "./lodKit.ts";
+import { LOAD_PALETTE, bulkLoads } from "./loadKit.ts";
 import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import { animalVehicleDesign, buildAnimalVehicle, buildAnimalVehicleLod, type AnimalVehicleSpec } from "./animalVehicleKit.ts";
 
@@ -510,21 +511,33 @@ function mineTubBody(m: MeshBuilder): void {
     const band = grow(MT_UPPER, -0.025);
     rods(m, "iron", [...band, band[0]!].map(([x, z]) => [x * 0.97, 0.7, z * 0.965] as Vec3), 0.012, 4, false);
   });
+  // the loads on its floor (docs/models/loads.md): a mound of coal, iron ore or grain heaped over the rim
+  bulkLoads(m, [0, MT_BOTTOM + 0.04, 0], (mat) => m.scope("heap", () => m.loft(mat, MT_HEAP_FOOT, MT_TOP - 0.03, MT_HEAP_TOP, MT_TOP + 0.18)));
 }
+
+/** The mine tub's heap: its foot just inside the rim, its flat top. */
+const MT_HEAP_FOOT: Ring = grow(MT_UPPER, -0.035);
+const MT_HEAP_TOP: Ring = MT_HEAP_FOOT.map(([x, z]) => [x * 0.45, z * 0.4]);
 
 function mineTubLod(m: MeshBuilder): void {
   lodSideBox(m, "tubSteel", [[-0.73, MT_BOTTOM], [0.73, MT_BOTTOM], [0.8, MT_TOP], [-0.8, MT_TOP]], -0.43, 0.43);
   lodBlock(m, -0.8, 0.8, MT_TOP - 0.001, MT_TOP, -0.43, 0.43, { side: null, top: "tubInside" });
   lodBlock(m, -MT_FRAME - 0.12, MT_FRAME + 0.12, 0.2, MT_BOTTOM, -0.22, 0.22, { side: "iron", end: "buffer" });
   for (const x of [-MT_AXLE_X, MT_AXLE_X]) for (const s of [-1, 1]) lodWheel(m, "wheel", x, MT_WHEEL.r, ...side(s, 0.27, 0.35), 6);
+  // the heaps over the rim, hidden load parts (docs/models/loads.md)
+  bulkLoads(m, [0, MT_BOTTOM + 0.04, 0], (mat) => m.scope("heap", () => m.loft(mat, MT_HEAP_FOOT_LOD, MT_TOP, MT_HEAP_TOP_LOD, MT_TOP + 0.18)));
 }
+
+/** The heap from afar: a four-sided mound. */
+const MT_HEAP_FOOT_LOD: Ring = ccw([[-0.76, -0.4], [0.76, -0.4], [0.76, 0.4], [-0.76, 0.4]]);
+const MT_HEAP_TOP_LOD: Ring = ccw([[-0.34, -0.16], [0.34, -0.16], [0.34, 0.16], [-0.34, 0.16]]);
 
 const MINE_TUB: AnimalVehicleSpec = {
   id: "veh-animal-rail-mine-tub",
   title: "Mine Tub",
   kind: "rail",
   catalog: WAGON_CATALOG,
-  palette: PALETTE,
+  palette: { ...PALETTE, ...LOAD_PALETTE },
   weight: 0.35,
   maxspeed: 10,
   hitch: [MT_FRAME + 0.2, 0.27, 0],

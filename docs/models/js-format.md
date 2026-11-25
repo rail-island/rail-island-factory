@@ -5,7 +5,7 @@
 in-memory GLB, and the measured sizes.
 **Code** - `generator/jsModel.ts`, `generator/threeBuilder.ts`, `generator/meshCore.ts`, `generator/passengerHints.ts`,
 `generator/generate.ts` (`generateJsModels`), `generator/buildCaches.ts`, `test/jsModel.test.ts`
-**See also** - [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
+**See also** - [loads.md](loads.md), [vehicle-rig.md](vehicle-rig.md), [parameters.md](parameters.md), [export.md](export.md), [skyscrapers.md](skyscrapers.md), [vehicles.md](vehicles.md),
 [../site/catalog-site.md](../site/catalog-site.md)
 
 ## What it is
@@ -71,6 +71,10 @@ scene.add(build(THREE)); // a THREE.Group named after the model id
 - **Interiors.** A passenger vehicle's group carries `userData.interiors`, each interior part's name
   and the `door` clips that reveal it; its interior Groups are built hidden (`visible = false`), for the
   consumer to show while one of those doors stands open ([interiors.md](interiors.md)).
+- **Loads.** A freight vehicle's group carries `userData.loads`, `[{ part, commodities }]`: each load
+  part (`load-<commodity>`, `load-<commodity>-<car>`) and the commodities it stands for. Its load Groups
+  are built hidden, each pivoted on the bed it rests on, for the consumer to show the one whose
+  commodities hold what the vehicle carries, `scale.y` its fill (0..1) ([loads.md](loads.md)).
 - **Parameters.** The module also exports `params`, the design's enum parameters (`[]` for a fixed design),
   and `build(THREE, params)` builds any combination of their values; `build(THREE)` builds the defaults, the
   GLB's model, and an unknown name or value throws ([parameters.md](parameters.md)).

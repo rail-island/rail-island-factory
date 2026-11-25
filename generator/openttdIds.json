@@ -4182,11 +4182,13 @@
       },
       "proc-vehicle-us-well-car?cargo=double": {
         "id": 5054,
-        "size": 6
+        "size": 6,
+        "retired": true
       },
       "proc-vehicle-us-well-car?cargo=empty": {
         "id": 5048,
-        "size": 6
+        "size": 6,
+        "retired": true
       },
       "proc-vehicle-vectron?": {
         "id": 1968,
@@ -5333,7 +5335,8 @@
       },
       "proc-vehicle-lohr-car-transporter?load=empty": {
         "id": 1356,
-        "size": 4
+        "size": 4,
+        "retired": true
       },
       "proc-vehicle-mack-anthem?": {
         "id": 1468,
@@ -6551,7 +6554,8 @@
       },
       "proc-vehicle-ship-europaschiff?load=empty": {
         "id": 480,
-        "size": 4
+        "size": 4,
+        "retired": true
       },
       "proc-vehicle-ship-expedition-cruise?": {
         "id": 760,
@@ -6947,7 +6951,8 @@
       },
       "proc-vehicle-ship-triple-e?load=empty": {
         "id": 324,
-        "size": 4
+        "size": 4,
+        "retired": true
       },
       "proc-vehicle-ship-valemax?": {
         "id": 416,

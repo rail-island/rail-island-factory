@@ -8,7 +8,7 @@
 // the build itself (generate.ts), which refuses to write an export with a
 // flickering model -- the deploy does not wait for the tests. Works on any GLB the
 // triangle reader understands.
-import { collectTriangles, parseGlb } from "./glbTriangles.ts";
+import { collectTriangles, parseGlb, type CollectOptions } from "./glbTriangles.ts";
 
 type V3 = [number, number, number];
 type V2 = [number, number];
@@ -71,9 +71,9 @@ function clipPolygon(subject: V2[], clip: V2[]): V2[] {
  * Every z-fighting pair of materials in `glb`, merged per (material pair, plane),
  * largest first. `minArea` drops slivers that only touch along an edge;
  * `interiors` checks a vehicle's interior too, which is hidden at rest (a pose
- * with its doors open).
+ * with its doors open), and `loads` a freight vehicle's load (docs/models/loads.md).
  */
-export function findCoplanarOverlaps(glb: Uint8Array, minArea = 1e-3, opts: { interiors?: boolean } = {}): CoplanarOverlap[] {
+export function findCoplanarOverlaps(glb: Uint8Array, minArea = 1e-3, opts: CollectOptions = {}): CoplanarOverlap[] {
   const { json, bin } = parseGlb(glb);
   // the primitive's base colour stands in for the material: two materials of the
   // same colour cannot flicker visibly either

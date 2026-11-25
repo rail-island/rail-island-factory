@@ -1,8 +1,8 @@
 // The ships from around the world (docs/models/world-ships.md): what the four
 // modules of the family share - the design record a ship is listed with, its game
-// properties (the waterline's draftFrac measured off the built model), the load
-// parameter, and the shapes many ships repeat (an ocean hull, an accommodation
-// block with its bridge, a funnel, a mast). Each ship is a ShipSpec on the hull
+// properties (the waterline's draftFrac measured off the built model) and the
+// shapes many ships repeat (an ocean hull, an accommodation block with its bridge,
+// a funnel, a mast). Each ship is a ShipSpec on the hull
 // kit (hullKit.ts) at its real size; the ids are stored in the game's saved maps:
 // never rename one.
 //
@@ -39,7 +39,7 @@ export const UNPOWERED_ACCEL = 0.3;
  * A ship's game properties: its running figures and the waterline's draftFrac,
  * measured off the built model the first time the export asks (the model's
  * height is its mast or funnel top), and again for each parameter value that
- * changes the height (a container ship without its load keeps its mast).
+ * changes the height.
  */
 function shipGame(w: WorldShip): GameProperties {
   let memo: { d: number; v: VehicleGameVariant[] } | null = null;
@@ -83,12 +83,6 @@ export function shipDesigns(list: readonly WorldShip[]): ProceduralDesign[] {
 }
 
 // --- shared parameters ---------------------------------------------------------------
-
-/** A cargo ship's load: the containers, trailers or cargo on deck, or none. */
-export const LOAD_PARAM: ParamSpec = {
-  name: "load", title: "Load", default: "full",
-  values: [{ value: "full", title: "Full" }, { value: "empty", title: "Empty" }],
-};
 
 /** A livery parameter from [value, title] pairs, the first the default. */
 export function liveryParam(...values: ReadonlyArray<readonly [string, string]>): ParamSpec {

@@ -46,8 +46,10 @@ clip reveals is refused.
   site's highlight leaves the interior meshes out of its parts the same way
   (`makeParts`, `src/viewerHighlight.ts`).
 - **Triangles.** `triangleCount()` counts everything. `exteriorTriangleCount()` is
-  what the design budgets and the catalog's `triangles` count.
-  `interiorTriangleCount()` is the rest.
+  the model at rest - no interiors, no freight loads - and the catalog's
+  `triangles` count; a design's budget counts it with its largest load
+  (`budgetTriangleCount()`, [loads.md](loads.md)). `interiorTriangleCount()` is
+  the interiors'.
 
 A consumer shows an interior while any of its clips stands above 0, and hides it
 once all are shut again. The site does this today. The game does not yet; see

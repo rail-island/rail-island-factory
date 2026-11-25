@@ -12,7 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { catalogFields, DESIGNS, toGlb } from "../generate.ts";
-import { collectTriangles, parseGlb, triBounds, type Tri } from "../glbTriangles.ts";
+import { collectTriangles, firstLoad, parseGlb, triBounds, type Tri } from "../glbTriangles.ts";
 import { catalogOpenttd, openttdFeatureOf } from "../openttd.ts";
 import { zoomImages } from "../../src/openttd/pixels.ts";
 import { applyMatrix, spriteViews, type ModelBox, type SpriteView } from "../../src/openttd/projection.ts";
@@ -125,7 +125,8 @@ async function drawItem(id: string, cars: Car[], feature: OpenttdFeature, direct
   const out: Array<{ length: number; image: GrfImage }> = [];
   for (const car of cars) {
     const { json, bin } = parseGlb(toGlb(id, design.build(car.params)));
-    const tris = collectTriangles(json, bin);
+    // loaded with its first load, as the GRF's sprites (docs/models/loads.md)
+    const tris = collectTriangles(json, bin, { loads: firstLoad(json) ?? false });
     const b = triBounds(tris);
     const box: ModelBox = car.turned
       ? { min: [-b.max[0], b.min[1], -b.max[2]], max: [-b.min[0], b.max[1], -b.min[2]] }

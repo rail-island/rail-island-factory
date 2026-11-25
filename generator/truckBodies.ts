@@ -15,10 +15,12 @@ import type { Vec3 } from "./meshCore.ts";
 import { steeredWheels } from "./vehicleParts.ts";
 import type { SteerAxle, VehicleRig } from "./rig.ts";
 import { fitLod, lodBlock, lodPolygon, lodWheel, LOD_GLASS, LOD_PALETTE, type LodPart } from "./lodKit.ts";
+import { BULK_LOOKS } from "./loadKit.ts";
 import {
   Kit, axleY, caboverCab, freeOf, fender, hoodCab, miningCab, ord, sweepR, tyre, tyreSpans, tyreWidth, truckPalette, vanCab,
   type AxleSpec, type BodySpec, type CabPlace, type CabResult, type ChassisSpec, type TrailerSpec, type TruckSpec,
 } from "./truckKit.ts";
+import { loadPart } from "./loadPart.ts";
 
 // ---------------------------------------------------------------------------
 // the layout: where every unit of the chain stands
@@ -298,12 +300,15 @@ function tipperBody(k: Kit, b: BodySpec, p: BodyPlace): void {
     k.sidePanel("body2", s, hw, x - 0.04, x + 0.04, b.floor, b.top - 0.02, 0.02, 0.03);
   }
   for (const s of [-1, 1]) k.sidePanel("body2", s, hw, x0, x1, b.top - 0.08, b.top, 0.03, 0.03);
-  if (b.load === "gravel") {
-    k.blk("load", x0 + 0.1, x1 - 0.1, b.floor + 0.05, b.top - 0.18, -hw + 0.08, hw - 0.08);
-    k.slab("load", [[x0 + 0.4, b.top - 0.18, -hw + 0.3], [x1 - 0.4, b.top - 0.18, -hw + 0.3], [x1 - 0.8, b.top - 0.05, -0.4], [x0 + 0.8, b.top - 0.05, -0.4]], [0, -0.05, 0]);
-    k.slab("load", [[x0 + 0.4, b.top - 0.18, hw - 0.3], [x1 - 0.4, b.top - 0.18, hw - 0.3], [x1 - 0.8, b.top - 0.05, 0.4], [x0 + 0.8, b.top - 0.05, 0.4]], [0, -0.05, 0]);
-    k.blk("load", x0 + 0.8, x1 - 0.8, b.top - 0.18, b.top - 0.05, -0.4, 0.4);
-  }
+  // a bulk body's loads: a heap each of coal, iron ore and grain on the floor (docs/models/loads.md)
+  if (b.load === "gravel")
+    for (const look of BULK_LOOKS)
+      k.load(look.commodities, (x0 + x1) / 2, b.floor + 0.08, () => k.m.scope("heap", () => {
+        k.blk(look.mat, x0 + 0.1, x1 - 0.1, b.floor + 0.085, b.top - 0.18, -hw + 0.08, hw - 0.08);
+        k.slab(look.mat, [[x0 + 0.4, b.top - 0.18, -hw + 0.3], [x1 - 0.4, b.top - 0.18, -hw + 0.3], [x1 - 0.8, b.top - 0.05, -0.4], [x0 + 0.8, b.top - 0.05, -0.4]], [0, -0.05, 0]);
+        k.slab(look.mat, [[x0 + 0.4, b.top - 0.18, hw - 0.3], [x1 - 0.4, b.top - 0.18, hw - 0.3], [x1 - 0.8, b.top - 0.05, 0.4], [x0 + 0.8, b.top - 0.05, 0.4]], [0, -0.05, 0]);
+        k.blk(look.mat, x0 + 0.8, x1 - 0.8, b.top - 0.18, b.top - 0.05, -0.4, 0.4);
+      }));
   // the hydraulic ram ahead of the bin
   k.cylY("steel", x1 + 0.12, 0, p.frame - 0.05, b.floor + 0.6, 0.09, 8);
 }
@@ -332,8 +337,9 @@ function dumpBody(k: Kit, b: BodySpec, p: BodyPlace): void {
     k.blk("body2", x - 0.15, x + 0.15, f + 0.4 + (rise * (x - x0)) / (x1 - x0), b.top - 0.05, ...ord(s * (hw - 0.02), s * (hw + 0.12)));
   }
   if (b.load === "gravel") {
+    // the loads on the sloped floor (docs/models/loads.md), pivoted at its low end
     const load: Ring = [[x0 + 0.5, f + 0.3], [x1 - 0.4, f + rise + 0.2], [x1 - 1.5, b.top - 0.1], [x0 + 2.5, b.top - 0.5]];
-    k.m.sweep("load", "z", load, -hw + 0.25, load, hw - 0.25);
+    for (const look of BULK_LOOKS) k.load(look.commodities, x0 + 0.5, f + 0.25, () => k.m.scope("heap", () => k.m.sweep(look.mat, "z", load, -hw + 0.25, load, hw - 0.25)));
   }
 }
 
@@ -396,6 +402,16 @@ function machine(k: Kit, x0: number, x1: number, y: number, hw: number): void {
 function logsBody(k: Kit, b: BodySpec, p: BodyPlace, bunks: readonly number[]): void {
   const [x0, x1] = bx(b, p);
   const hw = b.hw ?? 1.2;
+  // the logs are the load (docs/models/loads.md): a hidden load part on the bunks
+  k.load(["wood"], (x0 + x1) / 2, b.floor, () => k.m.scope("logs", () => logs(k, b, x0, x1, hw)));
+  for (const x of bunks) {
+    k.blk("chassis", x - 0.12, x + 0.12, b.floor - 0.2, b.floor - 0.004, -hw - 0.05, hw + 0.05);
+    k.pair("steel", x - 0.06, x + 0.06, b.floor - 0.2, b.top + 0.1, hw + 0.06, hw + 0.14);
+  }
+}
+
+/** The rows of logs, their pale cut ends. */
+function logs(k: Kit, b: BodySpec, x0: number, x1: number, hw: number): void {
   const r = 0.2;
   const rows = Math.max(1, Math.round((b.top - b.floor) / (2 * r * 0.9)));
   for (let row = 0; row < rows; row++) {
@@ -406,16 +422,12 @@ function logsBody(k: Kit, b: BodySpec, p: BodyPlace, bunks: readonly number[]): 
       const y = b.floor + r + row * 2 * r * 0.88;
       const xa = x0 + ((i + row) % 3) * 0.12;
       const xb = x1 - ((i * 2 + row) % 3) * 0.1;
-      k.cylX("load", xa, xb, y, z, r * 0.97, 8);
-      k.slab("logEnd", ngon(8, r * 0.8, Math.PI / 8, z, y).map(([zz, yy]): Vec3 => [xa - 0.005, yy, zz]), [0.02, 0, 0]);
-      k.slab("logEnd", ngon(8, r * 0.8, Math.PI / 8, z, y).map(([zz, yy]): Vec3 => [xb + 0.005, yy, zz]), [-0.02, 0, 0]);
+      k.cylX((i + row) % 2 ? "loadBark" : "loadBarkDark", xa, xb, y, z, r * 0.97, 8);
+      k.slab("loadLogEnd", ngon(8, r * 0.8, Math.PI / 8, z, y).map(([zz, yy]): Vec3 => [xa - 0.005, yy, zz]), [0.02, 0, 0]);
+      k.slab("loadLogEnd", ngon(8, r * 0.8, Math.PI / 8, z, y).map(([zz, yy]): Vec3 => [xb + 0.005, yy, zz]), [-0.02, 0, 0]);
     }
   }
-  k.keep("load", x0, x1, b.floor, b.top, -hw, hw);
-  for (const x of bunks) {
-    k.blk("chassis", x - 0.12, x + 0.12, b.floor - 0.2, b.floor - 0.004, -hw - 0.05, hw + 0.05);
-    k.pair("steel", x - 0.06, x + 0.06, b.floor - 0.2, b.top + 0.1, hw + 0.06, hw + 0.14);
-  }
+  k.keep("loadBark", x0, x1, b.floor, b.top, -hw, hw);
 }
 
 /** A double cone about the axis from a to b: rings of radii `prof` (t along the axis, r). */
@@ -615,13 +627,19 @@ function carCarrierBody(k: Kit, b: BodySpec, p: BodyPlace): void {
   k.keep("body2", x0, x1, b.floor - 0.1, b.top, -hw, hw);
   subframe(k, x0, x1, p.frame, b.floor - 0.1);
   if (b.load !== "cars") return;
+  // the cars on both decks are the load (docs/models/loads.md): goods, a hidden load part on the lower deck
+  k.load(["goods"], (x0 + x1) / 2, b.floor + 0.08, () => k.m.scope("cars", () => carCarrierCars(k, b, x0, x1, up)));
+}
+
+/** A car carrier's cars on its two decks, in turn red, blue and grey. */
+function carCarrierCars(k: Kit, b: BodySpec, x0: number, x1: number, up: number): void {
   const cars = Math.max(1, Math.floor((x1 - x0 - 0.3) / 4.4));
   const len = (x1 - x0 - 0.3) / cars;
   for (const [deck, y] of [[0, b.floor + 0.08], [1, up + 0.08]] as const) {
     for (let i = 0; i < cars; i++) {
       const a = x0 + 0.2 + i * len;
       const c = a + len - 0.35;
-      const colour = (i + deck) % 3 === 0 ? "load" : (i + deck) % 3 === 1 ? "art2" : "art";
+      const colour = (i + deck) % 3 === 0 ? "loadBoxRed" : (i + deck) % 3 === 1 ? "loadBoxBlue" : "loadBoxGrey";
       k.blk(colour, a, c, y + 0.15, y + 0.8, -0.85, 0.85);
       k.blk("glass", a + (c - a) * 0.3, c - (c - a) * 0.22, y + 0.8, y + 1.32, -0.75, 0.75);
       k.blk(colour, a + (c - a) * 0.32, c - (c - a) * 0.24, y + 1.32, y + 1.36, -0.72, 0.72);
@@ -938,9 +956,11 @@ export function buildTruckLod(s: TruckSpec, budget: number): MeshBuilder {
   kit.boxes.forEach((b, i) => {
     // each box a little inset by its index, so no two share a face plane
     const e = 0.004 * ((i % 7) + 1);
+    const draw = (mb: MeshBuilder): void => mb.scope(`mass ${i}`, () => lodBlock(mb, b.x0 + e * 0.5, b.x1 - e * 0.5, b.y0, b.y1 - e * 0.25, b.z0 + e, b.z1 - e, { side: b.mat }));
     parts.push({
       section: b.sec, ...(b.rank !== undefined ? { optional: b.rank } : {}),
-      draw: (mb) => mb.scope(`mass ${i}`, () => lodBlock(mb, b.x0 + e * 0.5, b.x1 - e * 0.5, b.y0, b.y1 - e * 0.25, b.z0 + e, b.z1 - e, { side: b.mat })),
+      // a load's mass, a hidden load part as the full model's (docs/models/loads.md)
+      draw: b.load ? (mb) => loadPart(mb, b.load!.commodities, [(b.x0 + b.x1) / 2, b.load!.floor, 0], () => draw(mb)) : draw,
     });
   });
   for (const p of kit.panes) {
