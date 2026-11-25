@@ -53,12 +53,12 @@ function groupVertices(group: THREE.Object3D): Map<string, number[]> {
   return out;
 }
 
-/** A GLB's vertices per material, in draw order, with each material's colour (a vehicle's hidden interior too). */
+/** A GLB's vertices per material, in draw order, with each material's colour (a vehicle's hidden interior and loads too). */
 function glbVertices(glb: Uint8Array): { positions: Map<string, number[]>; colors: Map<string, number[]> } {
   const { json, bin } = parseGlb(glb);
   const positions = new Map<string, number[]>();
   const colors = new Map<string, number[]>();
-  for (const t of collectTriangles(json, bin, { interiors: true })) {
+  for (const t of collectTriangles(json, bin, { interiors: true, loads: true })) {
     const list = positions.get(t.material) ?? [];
     for (const p of t.p) list.push(...p);
     positions.set(t.material, list);
@@ -140,7 +140,7 @@ export function sweep(ids: readonly string[]): void {
         const nodes = walk(tree.root);
         expect(new Set(nodes.map((n) => n.id)).size).toBe(nodes.length);
         const { json, bin } = parseGlb(glb);
-        // the model at rest: a vehicle's hidden interiors are out of both
+        // the model at rest: a vehicle's hidden interiors and loads are out of both
         const byMat = new Map<string, ReturnType<typeof collectTriangles>>();
         for (const t of collectTriangles(json, bin)) {
           if (!byMat.has(t.material)) byMat.set(t.material, []);
@@ -216,6 +216,10 @@ export function sweep(ids: readonly string[]): void {
         const interiors = (json.scenes![0] as { extras?: { interiors?: Record<string, string[]> } }).extras?.interiors;
         expect(group.userData.interiors).toEqual(interiors);
         for (const name of Object.keys(interiors ?? {})) expect(group.getObjectByName(name)!.visible).toBe(false);
+        // and its loads, each built hidden (docs/models/loads.md)
+        const loads = (json.scenes![0] as { extras?: { loads?: Array<{ part: string }> } }).extras?.loads;
+        expect(group.userData.loads).toEqual(loads);
+        for (const l of loads ?? []) expect(group.getObjectByName(l.part)!.visible).toBe(false);
         expect(group.name).toBe(id);
         const anims = ((json as unknown as { animations?: Array<{ name: string; channels: Array<{ sampler: number; target: { node: number; path: string } }>; samplers: Array<{ input: number; output: number }> }> }).animations) ?? [];
         expect(group.animations.map((c) => c.name)).toEqual(anims.map((a) => a.name));
@@ -265,7 +269,8 @@ export function sweep(ids: readonly string[]): void {
         const expected = buildLodModel(d);
         const lowTriangles = lodTriangles(low);
         expect(lowTriangles).toBeGreaterThan(0);
-        expect(lowTriangles).toBeLessThanOrEqual(lodBudget(d));
+        // the budget counts the exterior and its largest load (docs/models/loads.md)
+        expect(expected.budgetTriangleCount()).toBeLessThanOrEqual(lodBudget(d));
         expect(lowTriangles).toBe(expected.triangleCount());
         // deterministic: this build's bytes are those of the cached one, built apart from it
         expect(expected.toGlb(id)).toEqual(lodGlbOf(id));
@@ -276,12 +281,13 @@ export function sweep(ids: readonly string[]): void {
           expect(Object.keys(lowRig).sort()).toEqual(["joints", "maxBendDeg", "sections"]);
           expect(lowRig.sections!.length).toBeGreaterThan(1);
         }
-        low.traverse((o) => { if (o !== low && !(o instanceof THREE.Mesh)) expect(o.name).toMatch(/^(section|joint)[0-9]+$/); });
+        // (and its loads, hidden load parts: docs/models/loads.md)
+        low.traverse((o) => { if (o !== low && !(o instanceof THREE.Mesh)) expect(o.name).toMatch(/^(section|joint)[0-9]+$|^load-/); });
         // the same triangles, in model space, as the generator's GLB (compared as sets: node order may differ)
         const { json, bin } = parseGlb(lodGlbOf(id));
         const key = (p: number[]) => p.map((v) => v.toFixed(4)).join(",");
         const reference = new Map<string, string[]>();
-        for (const f of collectTriangles(json, bin)) {
+        for (const f of collectTriangles(json, bin, { loads: true })) {
           const list = reference.get(f.material) ?? [];
           list.push(f.p.map(key).join("|"));
           reference.set(f.material, list);
@@ -316,7 +322,8 @@ export function sweep(ids: readonly string[]): void {
         const model = buildLodModel(d, values);
         const glb = model.toGlb(id);
         expect(model.triangleCount()).toBeGreaterThan(0);
-        expect(model.triangleCount()).toBeLessThanOrEqual(lodBudget(d));
+        // the exterior and its largest load (docs/models/loads.md)
+        expect(model.budgetTriangleCount()).toBeLessThanOrEqual(lodBudget(d));
         expect(findCoplanarOverlaps(glb)).toEqual([]);
         const { json, bin } = parseGlb(glb);
         const faces = collectTriangles(json, bin);

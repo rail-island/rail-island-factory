@@ -286,6 +286,12 @@ export class MeshCore {
   protected readonly clips: AnimationClipSpec[] = [];
   /** Where the model smokes, steams or flares (see `emit`). */
   protected readonly emitterList: Emitter[] = [];
+  /** A freight vehicle's load parts (loadPart.ts), once it drew one: each part's name and the commodities it stands for. */
+  declare loadParts?: Array<{ part: string; commodities: string[] }>;
+  /** Once it drew a load: its triangles as its budget counts them (loadPart.ts `budgetTriangles`). */
+  declare loadBudget?: () => number;
+  /** Once it drew a load: hides the JS model's load Groups and lists them as `userData.loads` (loadPart.ts). */
+  declare hideLoads?: (root: { userData: Record<string, unknown>; getObjectByName: (name: string) => { visible: boolean } | undefined }) => void;
   /** A fountain's water (see `pool` and `jet`), or null for anything else. */
   protected water: FountainWater | null = null;
   /** The part being drawn, or -1. */

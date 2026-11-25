@@ -5,6 +5,7 @@ import { strokeText } from './strokeFont.ts';
 import { rollWheels } from './rolling.ts';
 import type { ProceduralDesign } from './design.ts';
 import { blockPart, profileBody, sectionBody, truckLod } from './lodRoad.ts';
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, loadLodPart } from './loadKit.ts';
 
 const palette: Record<string, MaterialSpec> = {
   paint: { color: '#a84548', roughness: .72 }, bed: { color: '#86423d', roughness: .9 },
@@ -140,7 +141,12 @@ function tatra(m: MeshBuilder, s: Spec) {
     disk(m,'trim','z',1,1.94,.39,-1.02,-.78);
     block(m,'trim',1.05,1.15,1.35,3.22,.77,.86);
   });
+  // the loads on the bed's floor (docs/models/loads.md): coal, iron ore or grain heaped to a ridge over the sides
+  bulkLoads(m,[(s.end+.83)/2,TATRA_FLOOR,0],(mat)=>m.scope('heap',()=>m.sweep(mat,'x',TATRA_HEAP,s.end+.09,TATRA_HEAP,.76)));
 }
+/** The Tatra's bed floor, and the section of its heaps (z, y): from just above the floor to a ridge over the sides. */
+const TATRA_FLOOR = 1.48;
+const TATRA_HEAP: Ring = [[-1.12,TATRA_FLOOR+.01],[1.12,TATRA_FLOOR+.01],[1.12,2.25],[.5,2.62],[-.5,2.62],[-1.12,2.25]];
 /** The Praga's cab side profile (x, y), bonnet and canopy cross-sections (z, y). */
 const PRAGA_CAB: Ring = [[.35,1.08],[1.62,1.08],[1.62,2.41],[1.51,2.57],[.48,2.57],[.35,2.44]];
 const PRAGA_BONNET: Ring = [[-.57,1.03],[.57,1.03],[.57,1.86],[.45,2.02],[-.45,2.02],[-.57,1.86]];
@@ -203,7 +209,7 @@ function colorsOf(kind: Kind): Record<string, MaterialSpec> {
   const colors={...palette};
   if(kind==='praga') { colors.paint={color:'#747762'}; colors.bed={color:'#737561'}; colors.rim={color:'#737561'}; }
   if(kind==='atego') { colors.paint={color:'#008fc5'}; colors.canvas={color:'#d5d7d5',roughness:.92}; colors.rim={color:'#b8bfc3',metallic:.3}; }
-  return colors;
+  return kind==='tatra' ? {...colors,...LOAD_PALETTE} : colors;
 }
 function build(kind: Kind, draw: (m: MeshBuilder, s: Spec) => void): MeshBuilder {
   const s=specs[kind]; const colors=colorsOf(kind);
@@ -250,6 +256,8 @@ export function tatra815TipperLod(): MeshBuilder {
       blockPart('chassis', 'trim', [s.end + .12, 1.18], [.62, 1.36], [-.9, .9], { top: false }),
       blockPart('tipper body', 'bed', [s.end, .83], [1.36, 2.41], [-s.hw, s.hw]),
       blockPart('headboard', 'bed', [.77, 1.14], [2.41, 2.98], [-s.hw, s.hw], { optional: 18 }),
+      // the heaps over the sides, hidden load parts (docs/models/loads.md)
+      ...BULK_LOOKS.map((look) => loadLodPart(look.commodities, TATRA_FLOOR, blockPart('heap', look.mat, [s.end + .09, .76], [2.41, 2.62], [-1.0, 1.0], { ends: true }))),
     ],
     wheels: lodWheels(s),
   }, 100);

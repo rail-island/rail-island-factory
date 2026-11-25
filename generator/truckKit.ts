@@ -15,6 +15,8 @@
 import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { arc, block, plate } from "./vehicleParts.ts";
+import { LOAD_PALETTE } from "./loadKit.ts";
+import { loadPart } from "./loadPart.ts";
 
 // ---------------------------------------------------------------------------
 // the spec
@@ -223,6 +225,8 @@ export function truckPalette(l: Livery): Record<string, MaterialSpec> {
     marker: { color: "#ffa01f", roughness: 0.3 },
     beaconBlue: { color: "#2f6bff", roughness: 0.3 },
     reflector: { color: "#d8341f", roughness: 0.4 },
+    // what a tipper, a log truck or a car carrier carries (loadKit.ts, docs/models/loads.md)
+    ...LOAD_PALETTE,
   };
 }
 
@@ -230,7 +234,9 @@ export function truckPalette(l: Livery): Record<string, MaterialSpec> {
 // the drawing context: the mesh, and what the low detail keeps of it
 
 /** A mass the distant model keeps: a box in one colour, in one section; `rank` gives way first (lowest first). */
-export interface LodBox { x0: number; x1: number; y0: number; y1: number; z0: number; z1: number; mat: string; sec: number; rank?: number }
+export interface LodBox { x0: number; x1: number; y0: number; y1: number; z0: number; z1: number; mat: string; sec: number; rank?: number; load?: TruckLoad }
+/** A load being drawn (Kit.load): what it stands for and the height of the bed it rests on. */
+export interface TruckLoad { commodities: readonly string[]; floor: number }
 /** A window on a box's front (+x) face, or on its sides, in the LOD glass. */
 export interface LodPane { x: [number, number]; y: [number, number]; z: [number, number]; face: "front" | "side"; sec: number; box: number; rank?: number }
 
@@ -243,6 +249,8 @@ export class Kit {
   sec = 0;
   /** The last shell's box (its windows' owner at low detail). */
   lastShell = -1;
+  /** The load being drawn (see `load`), or null. */
+  private loading: TruckLoad | null = null;
   constructor(readonly spec: TruckSpec) {
     this.m = new MeshBuilder(truckPalette(spec.livery));
   }
@@ -256,10 +264,23 @@ export class Kit {
     this.blk(mat, x0, x1, y0, y1, a, b);
     this.blk(mat, x0, x1, y0, y1, -b, -a);
   }
-  /** Records a mass for the low detail. */
+  /** Records a mass for the low detail (inside `load`, a mass of that load). */
   keep(mat: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, rank?: number): void {
     if (x1 - x0 < 0.02 || y1 - y0 < 0.02 || z1 - z0 < 0.02) return;
-    this.boxes.push({ x0, x1, y0, y1, z0, z1, mat, sec: this.sec, ...(rank !== undefined ? { rank } : {}) });
+    this.boxes.push({ x0, x1, y0, y1, z0, z1, mat, sec: this.sec, ...(rank !== undefined ? { rank } : {}), ...(this.loading ? { load: this.loading } : {}) });
+  }
+  /**
+   * Draws `fn` as a load (docs/models/loads.md): a hidden load part standing for
+   * `commodities`, pivoted on the bed at (x, floor) on the centre line; what it
+   * keeps for the low detail is that load's there too.
+   */
+  load(commodities: readonly string[], x: number, floor: number, fn: () => void): void {
+    this.loading = { commodities, floor };
+    try {
+      loadPart(this.m, commodities, [x, floor, 0], fn);
+    } finally {
+      this.loading = null;
+    }
   }
   /** A closed box the low detail keeps too. */
   mass(mat: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, rank?: number): void {

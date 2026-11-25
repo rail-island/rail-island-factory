@@ -382,7 +382,11 @@ Behind the doors each car's cabin
 shows only while one of its doors opens or stands open; **Interior on / Interior
 off** shows every cabin with the doors shut and cuts the model away just under the
 ceilings, so the seat layout shows from above, and the triangle count is the
-exterior's ([../models/interiors.md](../models/interiors.md)). A model with lamps gets a
+exterior's ([../models/interiors.md](../models/interiors.md)). A freight vehicle with
+loads gets a **Load** select (each commodity its load parts stand for, or Empty) and a
+**Fill** slider that scales the shown load from its bed; it opens with the first load
+full, as its thumbnail, and its triangle count is the model at rest
+([../models/loads.md](../models/loads.md)). A model with lamps gets a
 **Lights on / Lights off** button beside them that shows every tagged lamp lit,
 indicators blinking ([../models/lamps.md](../models/lamps.md)).
 

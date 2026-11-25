@@ -17,9 +17,9 @@ import { sample } from './catalogCache';
 const STEAM = ['csd-433-0', 'csd-456-0', 'csd-475-1', 'csd-477-0', 'csd-498-1', 'csd-556-0', 'csd-636', 'csd-386', 'csd-m112'].map((s) => `proc-vehicle-${s}`);
 const WAGONS = ['sqns-container-wagon', 'pao-flat-wagon', 'habis-sliding-wall-wagon', 'hadgs-hopper-wagon', 'faccs-hopper-wagon', 'falls-hopper-wagon', 'wap-hopper-wagon', 'legacy-covered-wagon', 'legacy-open-wagon', 'legacy-heavy-wagon'].map((s) => `proc-vehicle-${s}`);
 
-const faces = (id: string, values?: ParamValues) => {
+const faces = (id: string, values?: ParamValues, loads: boolean | string = false) => {
   const { json, bin } = parseGlb(buildLodModel(DESIGNS.get(id)!, values).toGlb(id));
-  return collectTriangles(json, bin);
+  return collectTriangles(json, bin, { loads });
 };
 const colours = (id: string, values?: ParamValues) => new Set(faces(id, values).map((f) => f.color.map((c) => c.toFixed(3)).join(',')));
 
@@ -33,10 +33,12 @@ describe('steam and freight wagon LODs', () => {
         const full = glbStats(d.build(values).toGlb('full'));
         const m = buildLodModel(d, values);
         // the budget used, not only kept
-        expect(m.triangleCount()).toBeLessThanOrEqual(100);
-        expect(m.triangleCount()).toBeGreaterThanOrEqual(50);
+        // the exterior and its largest load (docs/models/loads.md)
+        expect(m.budgetTriangleCount()).toBeLessThanOrEqual(100);
+        expect(m.budgetTriangleCount()).toBeGreaterThanOrEqual(50);
         const glb = m.toGlb(id);
         expect(findCoplanarOverlaps(glb)).toEqual([]);
+        for (const l of m.loads() ?? []) expect(findCoplanarOverlaps(glb, undefined, { loads: l.commodities[0]! }), l.part).toEqual([]);
         const st = glbStats(glb);
         // the wheels or bogies reach the rail; the body is as long as the full model's, less its buffers
         expect(st.min[1]).toBeLessThanOrEqual(0.1);
@@ -67,11 +69,13 @@ describe('steam and freight wagon LODs', () => {
   it('shows each livery and load', () => {
     expect(colours('proc-vehicle-falls-hopper-wagon', { livery: 'sd' })).not.toEqual(colours('proc-vehicle-falls-hopper-wagon', { livery: 'cd' }));
     expect(colours('proc-vehicle-habis-sliding-wall-wagon', { livery: 'tw2' })).not.toEqual(colours('proc-vehicle-habis-sliding-wall-wagon', { livery: 'tw1' }));
-    expect(faces('proc-vehicle-sqns-container-wagon', { cargo: 'maersk' }).some((f) => f.material === 'container')).toBe(true);
-    expect(faces('proc-vehicle-sqns-container-wagon', { cargo: 'empty' }).some((f) => f.material === 'container')).toBe(false);
-    expect(faces('proc-vehicle-pao-flat-wagon', { cargo: 'tubes' }).some((f) => f.material === 'tube')).toBe(true);
-    expect(faces('proc-vehicle-wap-hopper-wagon', { cargo: 'coal' }).some((f) => f.material === 'gravel')).toBe(true);
-    expect(faces('proc-vehicle-wap-hopper-wagon', { cargo: 'empty' }).some((f) => f.material === 'gravel')).toBe(false);
+    // the loads, hidden load parts shown by commodity (docs/models/loads.md)
+    expect(faces('proc-vehicle-sqns-container-wagon', undefined, 'goods').some((f) => f.material === 'container')).toBe(true);
+    expect(faces('proc-vehicle-sqns-container-wagon').some((f) => f.material === 'container')).toBe(false);
+    expect(faces('proc-vehicle-pao-flat-wagon', undefined, 'steel').some((f) => f.material === 'loadSteel')).toBe(true);
+    expect(faces('proc-vehicle-wap-hopper-wagon', undefined, 'coal').some((f) => f.material === 'loadCoal')).toBe(true);
+    expect(faces('proc-vehicle-wap-hopper-wagon', undefined, 'grain').some((f) => f.material === 'loadCoal')).toBe(false);
+    expect(faces('proc-vehicle-wap-hopper-wagon').some((f) => f.material === 'loadCoal')).toBe(false);
     // the low loader's cabin keeps its glass band
     expect(faces('proc-vehicle-legacy-heavy-wagon').some((f) => f.material === LOD_GLASS)).toBe(true);
   });

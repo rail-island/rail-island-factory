@@ -65,9 +65,10 @@ export function coachComparison(key: string): CoachComparisonRow[] {
     if (isLeaf(n)) leaves.push(n);
     else n.children.forEach(walk);
   };
-  walk(mesh.sourceTree(coach.id, coach.title).root);
+  walk(mesh.sourceTree(coach.id, coach.title, { loads: coach.load ?? false }).root);
   const { json, bin } = parseGlb(mesh.toGlb(`${coach.title} comparison`));
-  const tris = collectTriangles(json, bin);
+  // a freight wagon compared loaded shows that load (docs/models/loads.md)
+  const tris = collectTriangles(json, bin, { loads: coach.load ?? false });
   const byMaterial = new Map<string, typeof tris>();
   for (const t of tris) {
     let list = byMaterial.get(t.material);

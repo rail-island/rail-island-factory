@@ -44,6 +44,11 @@
 // the model away above the ceilings, so the seat layout shows from above
 // (viewerInteriors.ts).
 //
+// A freight vehicle with loads (userData.loads, docs/models/loads.md) gets a Load
+// select -- each commodity its parts stand for, or Empty -- and a Fill slider that
+// scales the shown load in y from its bed, as the game shows what a vehicle
+// carries (viewerLoads.ts). It opens loaded with the first, as the thumbnail.
+//
 // A vehicle with lamps (userData.lamps, docs/models/lamps.md) gets a Lights
 // button that shows every tagged lamp lit, indicators blinking, so a design's
 // tagging can be checked by eye (viewerLamps.ts).
@@ -80,6 +85,7 @@ import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
 import { applyInteriors, cutHeight, interiorsOf, type DoorSide, type Interior } from "./viewerInteriors";
+import { applyLoads, commodityTitle, loadChoices, loadsOf, type Load } from "./viewerLoads";
 import { buildScenery } from "./viewerScenery";
 import { lineParams, loadLine, type Line } from "./viewerLine";
 import { motionButtons, motionTitle, restingMotion, type MotionButton } from "./viewerMotions";
@@ -217,6 +223,15 @@ export function ModelViewer(props: {
   // Its interiors, hidden but while their doors open (or with the Interior toggle), and the toggle's cut.
   let interiors: Interior[] = [];
   const [interiorCount, setInteriorCount] = createSignal(0);
+  // Its loads (viewerLoads.ts): the commodities they show, the one shown (null: Empty) and the fill.
+  let loads: Load[] = [];
+  const [loadOptions, setLoadOptions] = createSignal<string[]>([]);
+  const [loadShown, setLoadShown] = createSignal<string | null>(null);
+  const [loadFill, setLoadFill] = createSignal(1);
+  const showLoads = () => {
+    applyLoads(loads, loadShown(), loadFill());
+    render();
+  };
   let cut = new Plane(new Vector3(0, -1, 0), Infinity);
   // A character's motions (viewerMotions.ts): its buttons, the one playing and its action.
   const [motions, setMotions] = createSignal<MotionButton[]>([]);
@@ -464,6 +479,8 @@ export function ModelViewer(props: {
     setDoorTarget({ left: 0, right: 0 });
     interiors = [];
     setInteriorCount(0);
+    loads = [];
+    setLoadOptions([]);
   };
   const dropScenery = () => {
     if (!scenery) return;
@@ -883,9 +900,9 @@ export function ModelViewer(props: {
           disposeParts();
           disposeModel(current);
         }
-        // the exterior's triangles, the catalog's count: an interior has a budget of its own
+        // the exterior's triangles, the catalog's count: an interior has a budget of its own, a load is hidden at rest
         let triangles = 0;
-        const inner = new Set(interiorsOf(group).map((it) => it.group));
+        const inner = new Set([...interiorsOf(group).map((it) => it.group), ...loadsOf(group).map((l) => l.group)]);
         group.traverse((o) => {
           let up: Object3D | null = o;
           while (up && !inner.has(up)) up = up.parent;
@@ -916,6 +933,11 @@ export function ModelViewer(props: {
         setInteriorCount(interiors.length);
         if (interiors.length) cut = new Plane(new Vector3(0, -1, 0), cutHeight(interiors));
         showInteriors();
+        loads = loadsOf(group);
+        setLoadOptions(loadChoices(loads));
+        setLoadShown(loadChoices(loads)[0] ?? null);
+        setLoadFill(1);
+        applyLoads(loads, loadShown(), loadFill());
         dropScenery();
         if (record.scenery && record.scenery.way !== "ropeway") {
           scenery = buildScenery(record.scenery, new Box3().setFromObject(group));
@@ -1073,7 +1095,7 @@ export function ModelViewer(props: {
         <p class="factory-viewer__hint">W A S D or arrows walk, Q E turn, Shift runs, drag looks, two fingers walk, Esc returns</p>
       </Show>
       <Show when={clips().length > 0 || motions().length > 0 || stateClips().length > 0 || doorClips().length > 0 || configClips().length > 0 || hasGear() || lampCount() > 0 || props.record.scenery || isStructure()}>
-        <div class="factory-viewer__controls" role="group" aria-label="Animation, motions, pantographs, doors, gear, flaps, nose, interior, lights, scenery and passenger view">
+        <div class="factory-viewer__controls" role="group" aria-label="Animation, motions, pantographs, doors, gear, flaps, nose, interior, load, lights, scenery and passenger view">
           <Show when={motions().length > 0}>
             <For each={motions()}>
               {(b) => (
@@ -1168,6 +1190,19 @@ export function ModelViewer(props: {
             >
               {showInterior() ? "Interior off" : "Interior on"}
             </button>
+          </Show>
+          <Show when={loadOptions().length > 0}>
+            <label class="factory-viewer__check" title="What the vehicle carries: the load parts of one commodity, or none">
+              Load
+              <select aria-label="Load" value={loadShown() ?? ""} onChange={(e) => { setLoadShown(e.currentTarget.value || null); showLoads(); }}>
+                <option value="">Empty</option>
+                <For each={loadOptions()}>{(c) => <option value={c}>{commodityTitle(c)}</option>}</For>
+              </select>
+            </label>
+            <label class="factory-viewer__check" title="How full: the load scaled from its bed">
+              Fill
+              <input type="range" aria-label="Fill" min="0" max="1" step="0.05" value={loadFill()} disabled={loadShown() === null} onInput={(e) => { setLoadFill(Number(e.currentTarget.value)); showLoads(); }} />
+            </label>
           </Show>
           <Show when={lampCount() > 0}>
             <button type="button" class="factory-btn" onClick={toggleLights} aria-pressed={lightsOn()}>

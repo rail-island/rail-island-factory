@@ -24,9 +24,11 @@
 import { MeshBuilder, chamferedRect, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { LOD_PALETTE, lodPolygon } from "./lodKit.ts";
+import { LOAD_PALETTE } from "./loadKit.ts";
 import { lodBar, lodStack } from "./lodAir.ts";
 import { rollWheels } from "./rolling.ts";
 import { measureWaterRig, type WaterChurn, type WaterRig } from "./waterRig.ts";
+import { loadPart } from "./loadPart.ts";
 
 // --- the spec ----------------------------------------------------------------------
 
@@ -118,6 +120,12 @@ export type Band = readonly [mat: string, frac: number];
 
 export type Item =
   | Tier
+  /**
+   * A ship's load (docs/models/loads.md): its items drawn as one hidden load part
+   * standing for `commodities`, pivoted on the deck or hatch covers it rests on --
+   * at u, height `floor`, on the centre line.
+   */
+  | { k: "load"; commodities: readonly string[]; u: number; floor: number; items: readonly Item[]; name?: string }
   | { k: "box"; u: readonly [number, number]; z: readonly [number, number]; y: readonly [number, number]; mat: string; name?: string; top?: boolean }
   | { k: "cyl"; u: number; z?: number; y: readonly [number, number]; r: number; mat: string; n?: number; name?: string }
   | { k: "rod"; a: Vec3; b: Vec3; r: number; mat: string; n?: number; name?: string }
@@ -239,6 +247,8 @@ export function shipPalette(livery: Record<string, string>): Record<string, Mate
   const out: Record<string, MaterialSpec> = {};
   const cols = { ...BASE_COLOURS, ...livery };
   for (const [k, c] of Object.entries(cols)) out[k] = { color: c, roughness: 0.6 };
+  // a bulk barge's heaps (docs/models/loads.md)
+  Object.assign(out, LOAD_PALETTE);
   out.glass = { color: livery.glass ?? "#1f2a33", metallic: 0.2, roughness: 0.15, glass: true };
   out.sail = { color: cols.sail!, roughness: 0.8, doubleSided: true };
   out.steel = { color: cols.steel!, metallic: 0.3, roughness: 0.5 };
@@ -981,6 +991,9 @@ function drawItem(c: ShipCtx, it: Item, i: number): void {
   const nm = (fallback: string): string => it.name ?? `${fallback} ${i + 1}`;
   switch (it.k) {
     case "tier": drawTier(c, it, i); return;
+    case "load":
+      loadPart(m, it.commodities, [x(it.u), it.floor, 0], () => m.scope(nm("load"), () => it.items.forEach((sub, j) => drawItem(c, sub, j))));
+      return;
     case "box":
       m.scope(nm("block"), () => m.box(it.mat, x((it.u[0] + it.u[1]) / 2), (it.z[0] + it.z[1]) / 2, it.u[1] - it.u[0], it.z[1] - it.z[0], it.y[0], it.y[1], 0, it.top ?? true));
       return;
@@ -1896,6 +1909,14 @@ function lodItem(c: ShipCtx, it: Item): LodPrim[] {
     draw: (m) => m.scope("bar", () => lodBar(m, mat, [x(a[0]), a[1], a[2]], [x(b[0]), b[1], b[2]], r, 3)),
   });
   switch (it.k) {
+    case "load": {
+      // the whole load one primitive, drawn as a hidden load part as the full model's
+      const prims = it.items.flatMap((sub) => lodItem(c, sub));
+      return [{
+        tris: prims.reduce((a, p) => a + p.tris, 0), weight: prims.reduce((a, p) => a + p.weight, 0),
+        draw: (m) => loadPart(m, it.commodities, [x(it.u), it.floor, 0], () => m.scope("load", () => prims.forEach((p) => p.draw(m)))),
+      }];
+    }
     case "tier": {
       const w = tierWidth(c, it);
       const hw = Math.max(0.2, w((it.u[0] + it.u[1]) / 2));

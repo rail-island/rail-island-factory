@@ -60,7 +60,7 @@ without an override fails the build.
 ### Looks
 
 A design's **looks** are the product of the value counts of its look parameters,
-`LOOK_PARAMS`: livery, body, colour, variant, version, operator, cover, cargo, length, seats.
+`LOOK_PARAMS`: livery, body, colour, variant, version, operator, cover, length, seats (a freight vehicle's load is no parameter, [loads.md](loads.md)).
 A train's length and car position (`unit`, `cars`, `trainCars`), loaded or empty (`load`), the
 harnessed animal (`animal`, `team`) and a pose (`gear`) are the same vehicle and do not count.
 Each look beyond the first adds 15 % (`LOOK_STEP`), at most x2.5 (`LOOK_CAP`): 2 looks x1.15,

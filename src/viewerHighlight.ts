@@ -26,8 +26,9 @@ export interface Part {
 export function makeParts(root: Object3D): Part[] {
   const parts: Part[] = [];
   const seen = new Map<string, number>();
-  // a vehicle's interiors are not in the source tree (docs/models/interiors.md)
-  const inner = new Set(Object.keys((root.userData.interiors ?? {}) as object).map((name) => root.getObjectByName(name)));
+  // a vehicle's interiors and loads are not in the source tree (docs/models/interiors.md, loads.md)
+  const loads = ((root.userData.loads ?? []) as Array<{ part: string }>).map((l) => l.part);
+  const inner = new Set([...Object.keys((root.userData.interiors ?? {}) as object), ...loads].map((name) => root.getObjectByName(name)));
   const inside = (o: Object3D | null): boolean => !!o && (inner.has(o) || inside(o.parent));
   root.traverse((o) => {
     if (!(o instanceof Mesh) || Array.isArray(o.material) || inside(o)) return;

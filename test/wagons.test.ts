@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EAS_PARAMS, NAS_PARAMS, UA_PARAMS, WAGON_CATALOG, WAGON_DESIGNS, WAGON_NUMBERS } from "../generator/wagons";
+import { WAGON_CATALOG, WAGON_DESIGNS, WAGON_NUMBERS } from "../generator/wagons";
 import { WAGON_TRANSFERS } from "../generator/wagonTransfers";
 import { transferBuild } from "../generator/coachTransfers";
 import { uicCheckDigit } from "../generator/csdCoaches";
@@ -17,7 +17,7 @@ function built(key: string) {
   const mesh = transferBuild(t);
   const glb = mesh.toGlb(t.title);
   const { json, bin } = parseGlb(glb);
-  return { glb, nodes: leaves(mesh.sourceTree(t.id, t.title).root), tris: collectTriangles(json, bin) };
+  return { glb, nodes: leaves(mesh.sourceTree(t.id, t.title).root), tris: collectTriangles(json, bin, { loads: t.load ?? false }) };
 }
 
 // Length over the buffer heads and the axle centres (Factory x) of each vlakosimdb
@@ -45,7 +45,7 @@ const LOAD_TOP: Record<string, [number, number]> = {
 };
 
 describe("freight wagons transferred from vlakosimdb", () => {
-  it("are registered as rail wagons with stable ids, their references and a cargo parameter", () => {
+  it("are registered as rail wagons with stable ids, their references and their loads as load parts", () => {
     expect(WAGON_DESIGNS.map((w) => w.id)).toEqual(["proc-vehicle-nas-flat-wagon", "proc-vehicle-ua-open-wagon", "proc-vehicle-eas-open-wagon", "proc-vehicle-raj-hopper-wagon", "proc-vehicle-rah-tank-wagon"]);
     for (const w of WAGON_DESIGNS) {
       const d = VEHICLES.find((v) => v.id === w.id)!;
@@ -53,14 +53,14 @@ describe("freight wagons transferred from vlakosimdb", () => {
       expect(d.catalog).toMatchObject({ category: "Rail vehicles", group: "wagon" });
       expect(d.references).toBe(w.folder);
     }
-    const values = (specs: typeof NAS_PARAMS) => specs[0]!.values.map((v) => v.value);
-    expect(values(NAS_PARAMS)).toEqual(["empty", "wood", "tubes", "reels"]);
-    expect(values(UA_PARAMS)).toEqual(["empty", "coal", "wood", "sand"]);
-    expect(values(EAS_PARAMS)).toEqual(["empty", "wood", "coal"]);
-    for (const specs of [NAS_PARAMS, UA_PARAMS, EAS_PARAMS]) expect(specs).toEqual([expect.objectContaining({ name: "cargo", default: "empty" })]);
-    // every cargo of every parametric wagon is one transferred vlakosimdb vehicle
-    for (const w of WAGON_DESIGNS.filter((d) => d.params))
-      expect(WAGON_TRANSFERS.filter((t) => t.id === w.id).map((t) => t.params!.cargo)).toEqual(w.params![0]!.values.map((v) => v.value));
+    // no cargo parameter: the loads are hidden load parts (docs/models/loads.md)
+    for (const w of WAGON_DESIGNS) expect(w.params).toBeUndefined();
+    const loads = (id: string) => WAGON_DESIGNS.find((w) => w.id === id)!.build().loads()!.map((l) => l.commodities.join("+"));
+    expect(loads("proc-vehicle-nas-flat-wagon")).toEqual(["wood", "steel", "goods"]);
+    expect(loads("proc-vehicle-ua-open-wagon")).toEqual(["coal", "iron-ore", "grain", "wood"]);
+    expect(loads("proc-vehicle-eas-open-wagon")).toEqual(["coal", "iron-ore", "grain", "wood"]);
+    // every load a transferred vlakosimdb vehicle shows is one of its design's
+    for (const t of WAGON_TRANSFERS.filter((x) => x.load)) expect(WAGON_DESIGNS.find((w) => w.id === t.id)!.build().loads()!.some((l) => l.commodities.includes(t.load!))).toBe(true);
   });
 
   it.each(WAGON_TRANSFERS.map((t) => [t.key] as const))("%s matches the native BMP landmarks within their pixel tolerances", (key) => {
@@ -94,24 +94,26 @@ describe("freight wagons transferred from vlakosimdb", () => {
   });
 
   it.each(WAGON_TRANSFERS.map((t) => [t.key] as const))("%s carries exactly its own load", (key) => {
-    const { nodes } = built(key);
-    const cargo = nodes.filter((n) => n.id.startsWith("cargo/"));
+    const { tris } = built(key);
+    const cargo = tris.filter((t) => t.load);
     const top = LOAD_TOP[key];
     if (!top) {
       expect(cargo).toEqual([]);
       return;
     }
     expect(cargo.length).toBeGreaterThan(0);
-    const high = Math.max(...cargo.map((n) => n.max![1]));
+    const high = Math.max(...cargo.flatMap((t) => t.p.map((p) => p[1])));
     expect(high).toBeGreaterThanOrEqual(top[0]);
     expect(high).toBeLessThanOrEqual(top[1] + 1e-6);
   });
 
-  it("builds the empty wagon by default and refuses a cargo it does not carry", () => {
-    for (const [id, missing] of [["proc-vehicle-nas-flat-wagon", "coal"], ["proc-vehicle-ua-open-wagon", "reels"], ["proc-vehicle-eas-open-wagon", "sand"]] as const) {
+  it("builds the empty wagon at rest, every load hidden, and ignores a stored cargo value", () => {
+    for (const id of ["proc-vehicle-nas-flat-wagon", "proc-vehicle-ua-open-wagon", "proc-vehicle-eas-open-wagon"]) {
       const d = WAGON_DESIGNS.find((w) => w.id === id)!;
-      expect(Buffer.from(d.build().toGlb(id)).equals(Buffer.from(d.build({ cargo: "empty" }).toGlb(id)))).toBe(true);
-      expect(() => d.build({ cargo: missing })).toThrow(/no value/);
+      const { json, bin } = parseGlb(d.build().toGlb(id));
+      expect(collectTriangles(json, bin).some((t) => t.load)).toBe(false);
+      // a saved map's old `cargo` value builds the same wagon
+      expect(Buffer.from(d.build().toGlb(id)).equals(Buffer.from(d.build({ cargo: "coal" } as never).toGlb(id)))).toBe(true);
     }
   });
 

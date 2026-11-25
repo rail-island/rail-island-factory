@@ -37,6 +37,8 @@ import { US_PALETTE, sideText } from "./usHoodKit.ts";
 import { WAGON_PARAMS, type WagonUnit } from "./worldWagons.ts";
 import type { LodBand, LodPart } from "./lodKit.ts";
 import { bogieParts, fitUnit, underPart, type UnitBody } from "./lodUnits.ts";
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, loadLodPart } from "./loadKit.ts";
+import { lodRoofBox } from "./lodKit.ts";
 
 /** The automatic couplers' centre height. */
 const COUPLER_Y = 0.88;
@@ -77,7 +79,7 @@ function palette(unit: WagonUnit): Record<string, MaterialSpec> {
     ...US_PALETTE,
     wgBody: paint(unit === "open" ? C70_PAINT : P70_PAINT, 0.8),
     wgInk: paint(INK, 0.6),
-    wgLoad: paint("#2b2a28", 0.95),
+    ...(unit === "open" ? LOAD_PALETTE : {}),
     wgDark: paint("#1e1d1c", 0.9),
     // the stakes, braces and chord: the same paint, worn lighter on the edges that catch the light
     wgEdge: paint(unit === "open" ? "#5a544e" : "#3a3836", 0.75),
@@ -283,11 +285,11 @@ function buildC70(m: MeshBuilder): void {
     brakeWheel(m, 1, L + 0.07, -0.85, 2.35);
     for (const s of [-1, 1]) m.scope(s > 0 ? "right side" : "left side", () => c70Side(m, s));
   });
-  m.scope("load", () => {
-    // the coal heaped to a ridge over the top chord
+  // the loads on the floor (docs/models/loads.md): coal, iron ore or grain heaped to a ridge over the top chord
+  bulkLoads(m, [0, c.floor, 0], (mat) => m.scope("heap", () => {
     const q: Ring = [[-c.hw + 0.04, c.floor], [c.hw - 0.04, c.floor], [c.hw - 0.04, c.top - 0.06], [0.5, c.top + 0.22], [-0.5, c.top + 0.22], [-c.hw + 0.04, c.top - 0.06]];
-    m.sweep("wgLoad", "x", q, -L + 0.05, q, L - 0.05);
-  });
+    m.sweep(mat, "x", q, -L + 0.05, q, L - 0.05);
+  }));
   m.scope("trucks", () => {
     m.scope("front truck", () => k6Bogie(m, c.centre));
     m.scope("rear truck", () => k6Bogie(m, -c.centre));
@@ -522,12 +524,14 @@ export function buildCnC70Lod(v?: ParamValues): MeshBuilder {
   const L = open ? C70.body : P70.body;
   const y0 = open ? C70.sill : P70.sill;
   const hw = open ? C70.hw + 0.06 : P70.hw + 0.06;
-  // the open wagon's coal heaped to its ridge over the top chord
-  const side: LodBand[] = open ? [[y0, C70.top, "wgBody"], [C70.top, C70.top + 0.22, "wgLoad"]] : [[y0, P70.eaves + P70.rise, "wgBody"]];
+  // the open wagon: its box closed at the top chord in the dark of its inside, the loads heaped
+  // to a ridge over it hidden load parts on its floor (docs/models/loads.md)
+  const side: LodBand[] = open ? [[y0, C70.top, "wgBody"]] : [[y0, P70.eaves + P70.rise, "wgBody"]];
   const body: UnitBody = open
-    ? { y0, hw: [[y0, hw], [C70.top, hw], [C70.top + 0.22, 0.5]], side, roof: "wgLoad", front: { tip: [[y0, L]] }, rear: { tip: [[y0, -L]] } }
+    ? { y0, hw: [[y0, hw], [C70.top, hw]], side, roof: "wgDark", front: { tip: [[y0, L]] }, rear: { tip: [[y0, -L]] } }
     : { y0, hw: [[y0, hw], [P70.eaves, hw], [P70.eaves + 0.3, 1.15], [P70.eaves + P70.rise, 0.35]], side, roof: "wgBody", front: { tip: [[y0, L]] }, rear: { tip: [[y0, -L]] } };
   const centre = open ? C70.centre : P70.centre;
   const parts: LodPart[] = [...bogieParts([[centre, 1.15], [-centre, 1.15]], y0), underPart(-centre + 1.2, centre - 1.2, 0.72, y0, 0.3)];
+  if (open) for (const look of BULK_LOOKS) parts.push(loadLodPart(look.commodities, C70.floor, { draw: (m) => m.scope("heap", () => lodRoofBox(m, look.mat, -L + 0.05, L - 0.05, C70.hw - 0.04, 0.5, C70.top, C70.top + 0.22)) }));
   return fitUnit({ palette: palette(unit), bodies: [body], parts }, 100);
 }

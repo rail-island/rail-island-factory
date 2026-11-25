@@ -8,13 +8,20 @@
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
 import { shipLod, worldShip, type Item, type ShipSpec } from "./hullKit.ts";
-import { aftHouse, bayGaps, deckhouse, exhausts, fittings, funnel, LOAD_PARAM, liveryParam, mast, oceanHull, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
+import { aftHouse, bayGaps, deckhouse, exhausts, fittings, funnel, liveryParam, mast, oceanHull, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
+import { BULK_LOOKS, CONTAINER_COMMODITIES } from "./loadKit.ts";
 
-const loaded = (p: ParamValues | undefined, params: readonly ParamSpec[] = [LOAD_PARAM]): boolean => pick(params, p, "load") === "full";
 /** A rod between two points (u, y, z). */
 const rod = (a: [number, number, number], b: [number, number, number], r: number, mat: string, name?: string): Item => ({ k: "rod", a, b, r, mat, ...(name ? { name } : {}) });
-/** The items only a loaded ship carries. */
-const cargo = (p: ParamValues | undefined, items: Item[], params: readonly ParamSpec[] = [LOAD_PARAM]): Item[] => (loaded(p, params) ? items : []);
+/**
+ * A ship's load (docs/models/loads.md): `items` as one hidden load part standing
+ * for `commodities` (containers: goods and food), pivoted midway along them on
+ * the hatch covers or the deck at height `floor`.
+ */
+function cargo(floor: number, items: Item[], commodities: readonly string[] = CONTAINER_COMMODITIES): Item {
+  const us = items.flatMap((it) => ("u" in it && Array.isArray(it.u) ? [it.u[0] as number, it.u[1] as number] : []));
+  return { k: "load", commodities, u: (Math.min(...us) + Math.max(...us)) / 2, floor, items };
+}
 
 // ---------------------------------------------------------------------------
 // container ships
@@ -34,7 +41,7 @@ function coveredHatches(u: readonly [number, number], n: number, hw: number, y: 
   return { k: "hatches", u, n, hw, y, h, gap, coaming: 1, coamingMat: "hull", ribs: 2 };
 }
 
-export function tripleESpec(p?: ParamValues): ShipSpec {
+export function tripleESpec(): ShipSpec {
   const L = 399;
   const D = 33;
   const T = D + 1 + 1.2;
@@ -44,7 +51,7 @@ export function tripleESpec(p?: ParamValues): ShipSpec {
     livery: MAERSK,
     items: [
       coveredHatches([14, 380], 26, 27, D, 1.2, 1.6),
-      ...cargo(p, stacks([{ u: [14, 80], bays: 5, tiers: 9, seed: 3 }, { u: [100, 228], bays: 10, tiers: 10, seed: 5 }, { u: [252, 372], bays: 9, tiers: 9, seed: 11 }], 28.4, T)),
+      cargo(T, stacks([{ u: [14, 80], bays: 5, tiers: 9, seed: 3 }, { u: [100, 228], bays: 10, tiers: 10, seed: 5 }, { u: [252, 372], bays: 9, tiers: 9, seed: 11 }], 28.4, T)),
       // the engine room's casing and the twin uptakes aft
       { k: "tier", u: [82, 98], y: [D - 0.2, D + 16], hw: 10, lip: 0.3, windows: [{ y: 6, h: 0.5, w: 2.4, pitch: 3.2, mat: "black" }], name: "engine casing" },
       ...[-4.6, 4.6].flatMap((z): Item[] => [funnel([84, 96], 4.2, [D + 16, D + 34], [["funnel", 0.85], ["black", 1]], 1.2, z), { k: "cyl", u: 92.6, z, y: [D + 33, D + 35.5], r: 1.1, mat: "black", name: "exhaust pipe" }]),
@@ -58,7 +65,7 @@ export function tripleESpec(p?: ParamValues): ShipSpec {
   };
 }
 
-export function emmaMaerskSpec(p?: ParamValues): ShipSpec {
+export function emmaMaerskSpec(): ShipSpec {
   const L = 397.7;
   const D = 30.2;
   const T = D + 1 + 1.2;
@@ -68,7 +75,7 @@ export function emmaMaerskSpec(p?: ParamValues): ShipSpec {
     livery: MAERSK,
     items: [
       coveredHatches([10, 382], 27, 25.8, D, 1.2, 1.5),
-      ...cargo(p, stacks([{ u: [10, 68], bays: 4, tiers: 8, seed: 2 }, { u: [86, 152], bays: 5, tiers: 9, seed: 4 }, { u: [170, 374], bays: 15, tiers: 8, seed: 6 }], 27, T)),
+      cargo(T, stacks([{ u: [10, 68], bays: 4, tiers: 8, seed: 2 }, { u: [86, 152], bays: 5, tiers: 9, seed: 4 }, { u: [170, 374], bays: 15, tiers: 8, seed: 6 }], 27, T)),
       { k: "tier", u: [70, 84], y: [D - 0.2, D + 15], hw: 9, lip: 0.3, windows: [{ y: 6, h: 0.5, w: 2.4, pitch: 3.2, mat: "black" }], name: "engine casing" },
       funnel([71, 83], 5.5, [D + 15, D + 31], [["funnel", 0.85], ["black", 1]], 1.2),
       ...exhausts([71, 83], 5.5, D + 31, 1.2),
@@ -81,7 +88,7 @@ export function emmaMaerskSpec(p?: ParamValues): ShipSpec {
   };
 }
 
-export function gulsunSpec(p?: ParamValues): ShipSpec {
+export function gulsunSpec(): ShipSpec {
   const L = 399.9;
   const D = 33.2;
   const T = D + 1 + 1.2;
@@ -91,7 +98,7 @@ export function gulsunSpec(p?: ParamValues): ShipSpec {
     livery: { hull: "#1e2226", bottom: "#8f2a22", boot: "#c9c6bd", deck: "#5d6466", house: "#f2f0ea", funnel: "#d9b23e" },
     items: [
       coveredHatches([12, 384], 26, 28.6, D, 1.2, 1.6),
-      ...cargo(p, stacks([{ u: [12, 52], bays: 3, tiers: 10, seed: 13 }, { u: [70, 318], bays: 19, tiers: 11, seed: 17 }, { u: [340, 380], bays: 3, tiers: 9, seed: 19 }], 29.6, T)),
+      cargo(T, stacks([{ u: [12, 52], bays: 3, tiers: 10, seed: 13 }, { u: [70, 318], bays: 19, tiers: 11, seed: 17 }, { u: [340, 380], bays: 3, tiers: 9, seed: 19 }], 29.6, T)),
       { k: "tier", u: [54, 68], y: [D - 0.2, D + 17], hw: 9, lip: 0.3, windows: [{ y: 7, h: 0.5, w: 2.4, pitch: 3.2, mat: "black" }], name: "engine casing" },
       funnel([56, 66], 5, [D + 17, D + 34], [["funnel", 0.85], ["black", 1]], 1.0),
       ...exhausts([56, 66], 5, D + 34, 1.0),
@@ -103,7 +110,7 @@ export function gulsunSpec(p?: ParamValues): ShipSpec {
   };
 }
 
-export const PANAMAX_PARAMS: readonly ParamSpec[] = [LOAD_PARAM, /* @__PURE__ */ liveryParam(["orange", "Orange"], ["green", "Green"], ["blue", "Blue"])];
+export const PANAMAX_PARAMS: readonly ParamSpec[] = [/* @__PURE__ */ liveryParam(["orange", "Orange"], ["green", "Green"], ["blue", "Blue"])];
 const PANAMAX_LIVERIES: Record<string, Record<string, string>> = {
   orange: { hull: "#d9681e", funnel: "#d9681e", deck: "#6b6f6c" },
   green: { hull: "#2f6a45", funnel: "#2f6a45", deck: "#6b6f6c", stripe: "#f2f0ea" },
@@ -121,7 +128,7 @@ export function panamaxSpec(p?: ParamValues): ShipSpec {
     items: [
       coveredHatches([64, 270], 14, 14.8, D, 1.1, 1.4),
       coveredHatches([8, 30], 2, 14.8, D, 1.1, 1.4),
-      ...cargo(p, stacks([{ u: [8, 30], bays: 2, tiers: 5, seed: 23 }, { u: [64, 268], bays: 16, tiers: 6, seed: 29 }], 15.6, T), PANAMAX_PARAMS),
+      cargo(T, stacks([{ u: [8, 30], bays: 2, tiers: 5, seed: 23 }, { u: [64, 268], bays: 16, tiers: 6, seed: 29 }], 15.6, T)),
       ...aftHouse({ u: [34, 60], D, decks: 7, hw: 12, wings: 16.1, funnel: { u: [36, 44], hw: 3.2, h: 9 }, detail: true, freefall: 8 }),
       ...fittings({ L, B: 32.2, D, fc: [16, 2.5], aft: [3], draft: 12 }),
       { k: "box", u: [262, 266], z: [-6, 6], y: [D + 2.5, D + 6], mat: "house", name: "breakwater" },
@@ -137,7 +144,7 @@ export function panamaxSpec(p?: ParamValues): ShipSpec {
  * forward; the cranes' jibs stowed forward on tall rests, green coamings and
  * lashing bridges standing on the deck, the house on a raised poop aft.
  */
-export function feederSpec(p?: ParamValues): ShipSpec {
+export function feederSpec(): ShipSpec {
   const L = 139.1;
   const B = 22.6;
   const D = 11.8;
@@ -209,7 +216,7 @@ export function feederSpec(p?: ParamValues): ShipSpec {
     },
     items: [
       ...groups.map((g): Item => ({ k: "hatches", u: g.u, n: g.bays, hw: hw - 0.4, y: D, h: 0.9, gap: 0.6, coaming: co, coamingMat: "lash", ribs: 2 })),
-      ...cargo(p, groups.map((g): Item => ({ k: "containers", u: g.u, bays: g.bays, hw, y: T, tiers: g.tiers, seed: g.seed, rows: 2.5 }))),
+      cargo(T, groups.map((g): Item => ({ k: "containers", u: g.u, bays: g.bays, hw, y: T, tiers: g.tiers, seed: g.seed, rows: 2.5 }))),
       ...[...bayGaps(gA.u, gA.bays), ...bayGaps(gB.u, gB.bays), ...bayGaps(gC.u, gC.bays)].flatMap(lashing),
       ...guides(gA.u),
       // the after crane's jib on its rest in the gap between the middle bays, the forward one's on the forecastle, inboard
@@ -836,7 +843,7 @@ export function pctcSpec(p?: ParamValues): ShipSpec {
   };
 }
 
-export const RORO_PARAMS: readonly ParamSpec[] = [LOAD_PARAM, /* @__PURE__ */ liveryParam(["white", "White"], ["blue", "Blue"], ["orange", "Orange"])];
+export const RORO_PARAMS: readonly ParamSpec[] = [/* @__PURE__ */ liveryParam(["white", "White"], ["blue", "Blue"], ["orange", "Orange"])];
 export function roroSpec(p?: ParamValues): ShipSpec {
   const L = 190;
   const D = 16;
@@ -850,7 +857,7 @@ export function roroSpec(p?: ParamValues): ShipSpec {
       ...deckhouse({ u: [L - 30, L - 14], y0: D + 2.8, decks: 4, hw: 12, wings: 13, step: 0.4, detail: true }),
       mast(L - 20, D + 2.8 + 4 * 2.8, D + 22),
       ...[9, -9].flatMap((z): Item[] => [funnel([14, 22], 2.4, [D, D + 9], [["funnel", 0.86], ["black", 1]], 0.4, z), { k: "cyl", u: 20.6, z, y: [D + 8.4, D + 10], r: 0.5, mat: "black", name: "exhaust pipe" }]),
-      ...cargo(p, [{ k: "containers", u: [26, L - 34], bays: 9, hw: 11.5, y: D, tiers: 1, seed: 41, rows: 2.6, name: "trailers" }], RORO_PARAMS),
+      cargo(D, [{ k: "containers", u: [26, L - 34], bays: 9, hw: 11.5, y: D, tiers: 1, seed: 41, rows: 2.6, name: "trailers" }]),
       { k: "plate", pts: [[0.3, D - 6], [0.3, D + 0.2], [1.2, D + 9], [1.2, D - 6]], z: 0, t: 18, mat: "steel", name: "stern ramp" },
       { k: "bulwark", u: [22, L - 30], h: 1.1, t: 0.25 },
       { k: "freefall", u: L - 34, y: D + 5.6, len: 7, tilt: 0.55 },
@@ -860,8 +867,7 @@ export function roroSpec(p?: ParamValues): ShipSpec {
   };
 }
 
-export const HEAVY_LIFT_PARAMS: readonly ParamSpec[] = [LOAD_PARAM];
-export function heavyLiftSpec(p?: ParamValues): ShipSpec {
+export function heavyLiftSpec(): ShipSpec {
   const L = 275;
   const D = 15.5;
   return {
@@ -881,7 +887,7 @@ export function heavyLiftSpec(p?: ParamValues): ShipSpec {
       { k: "boats", at: [L - 18], z: 34.8, y: D + 6, len: 8, r: 1.3, name: "lifeboats" },
       { k: "mooring", at: [3, 18], hw: 32, s: 1.2, winch: true },
       { k: "anchors", u: L - 6, y: D - 3, s: 3.4 },
-      ...cargo(p, [
+      cargo(D, [
         // a jack-up rig's hull on the deck, its accommodation, its four legs, its crane and drilling derrick
         { k: "box", u: [60, 170], z: [-30, 30], y: [D, D + 8], mat: "yellow", name: "cargo hull" },
         { k: "tier", u: [130, 166], y: [D + 8, D + 20], hw: 18, mat: "white", lip: 0.4, windows: [{ y: 2, h: 1, w: 1, pitch: 3 }, { y: 6, h: 1, w: 1, pitch: 3 }], front: { y: 2, h: 1, w: 1, n: 10 }, name: "cargo accommodation" },
@@ -890,7 +896,7 @@ export function heavyLiftSpec(p?: ParamValues): ShipSpec {
         { k: "crane", u: 96, z: 20, y: D + 8, h: 10, jib: 34, dir: Math.PI * 0.95, lift: 0.4, mat: "orange", name: "cargo crane" },
         { k: "tier", u: [84, 104], y: [D + 8, D + 12], hw: 9, mat: "grey", name: "drill floor" },
         { k: "tier", u: [90, 98], y: [D + 12, D + 40], hw: 4, mat: "white", taper: [0.08, 28], name: "derrick" },
-      ]),
+      ], ["goods"]),
     ],
   };
 }
@@ -984,7 +990,6 @@ export function victorySpec(): ShipSpec {
 // ---------------------------------------------------------------------------
 // river and coastal cargo
 
-export const EUROPA_PARAMS: readonly ParamSpec[] = [LOAD_PARAM];
 /** A river vessel's fittings: bollards along both sides, the anchors in the bow and the stern, the rubbing strake, the draft marks. */
 function riverFittings(L: number, B: number, D: number, T: number, every = 12): Item[] {
   const at = Array.from({ length: Math.max(2, Math.round((L - 4) / every) + 1) }, (_, i) => 2 + ((L - 4) * i) / Math.max(1, Math.round((L - 4) / every)));
@@ -1009,7 +1014,7 @@ function riverAft(u0: number, u1: number, D: number, hw: number, car = true): It
   ];
 }
 
-export function europaschiffSpec(p?: ParamValues): ShipSpec {
+export function europaschiffSpec(): ShipSpec {
   const L = 80;
   const D = 2.9;
   return {
@@ -1018,9 +1023,9 @@ export function europaschiffSpec(p?: ParamValues): ShipSpec {
     livery: { hull: "#1d2024", bottom: "#8f2a22", boot: "#1d2024", stripe: "#c23128", deck: "#6b6f6c", house: "#f2f0ea", hatch: "#5a6a72", funnel: "#1d2024" },
     items: [
       { k: "box", u: [12, 74], z: [-4.25, 4.25], y: [D - 0.1, D + 0.9], mat: "hull", name: "hold coaming" },
-      ...(loaded(p)
-        ? [{ k: "containers", u: [12.4, 73.6], bays: 5, hw: 3.9, y: D + 0.9, tiers: 2, seed: 43, rows: 2.5 } as Item]
-        : [{ k: "hatches", u: [12.4, 73.6], n: 12, hw: 4.1, y: D + 0.9, h: 0.5, gap: 0.15, ridge: 0.2 } as Item]),
+      { k: "hatches", u: [12.4, 73.6], n: 12, hw: 4.1, y: D + 0.9, h: 0.5, gap: 0.15, ridge: 0.2 },
+      // the containers on the hatch covers' crowns
+      cargo(D + 1.6, [{ k: "containers", u: [12.4, 73.6], bays: 5, hw: 3.9, y: D + 1.6, tiers: 2, seed: 43, rows: 2.5 }]),
       ...riverAft(1.5, 10, D, 4.4),
       // the fore deck: its cabin and the anchor winch
       { k: "tier", u: [L - 5.5, L - 2], y: [D - 0.1, D + 1.8], hw: 3.6, lip: 0.2, windows: [{ y: 0.7, h: 0.6, w: 0.6, pitch: 1.4 }], name: "fore cabin" },
@@ -1055,22 +1060,23 @@ export function rhineTankerSpec(): ShipSpec {
   };
 }
 
-export const PUSH_BARGE_PARAMS: readonly ParamSpec[] = [LOAD_PARAM];
-export function pushBargeSpec(p?: ParamValues): ShipSpec {
+export function pushBargeSpec(): ShipSpec {
   const L = 76.5;
   const D = 4;
-  const T = loaded(p) ? 3.5 : 0.7;
+  // the loaded draft: a barge's load is hidden while it carries nothing, its waterline the loaded one
+  const T = 3.5;
   return {
     kind: "cargo",
     hull: { length: L, beam: 11.4, depth: D, draft: T, bow: "barge", stern: "sternwheel", section: "flat", entry: 0.07, run: 0.04, transom: 0.96, rake: 0.06, boot: 0.15, rudder: false, fine: true },
     livery: { hull: "#2b2f33", bottom: "#8f2a22", boot: "#1d2024", deck: "#5f6466", hatch: "#3b3f43", black: "#1b1c1d" },
     items: [
       { k: "box", u: [4, 72], z: [-5.3, 5.3], y: [D - 0.1, D + 1], mat: "hull", top: false, name: "hold coaming" },
-      ...cargo(p, [
-        { k: "box", u: [6, 70], z: [-4.8, 4.8], y: [D + 0.4, D + 1.4], mat: "black", name: "coal" },
-        { k: "box", u: [12, 64], z: [-3.6, 3.6], y: [D + 1.4, D + 2.2], mat: "black", name: "coal heap" },
-        { k: "box", u: [20, 56], z: [-2.2, 2.2], y: [D + 2.2, D + 2.7], mat: "black", name: "coal crest" },
-      ]),
+      // the loads in the hold: a heap each of coal, iron ore and grain, stepped to a crest
+      ...BULK_LOOKS.map((look) => cargo(D + 0.4, [
+        { k: "box", u: [6, 70], z: [-4.8, 4.8], y: [D + 0.4, D + 1.4], mat: look.mat, name: "heap" },
+        { k: "box", u: [12, 64], z: [-3.6, 3.6], y: [D + 1.4, D + 2.2], mat: look.mat, name: "heap top" },
+        { k: "box", u: [20, 56], z: [-2.2, 2.2], y: [D + 2.2, D + 2.7], mat: look.mat, name: "heap crest" },
+      ], look.commodities)),
       // the coupling winches and the bollards along both sides, the stiffeners of the coaming
       { k: "box", u: [1, 3], z: [-5, 5], y: [D, D + 0.5], mat: "steel", name: "coupling" },
       ...[2, L - 2].flatMap((u): Item[] => [3.6, -3.6].map((z): Item => rod([u, D + 0.6, z - 0.6], [u, D + 0.6, z + 0.6], 0.3, "steel", "coupling winch"))),
@@ -1082,8 +1088,7 @@ export function pushBargeSpec(p?: ParamValues): ShipSpec {
   };
 }
 
-export const YANGTZE_PARAMS: readonly ParamSpec[] = [LOAD_PARAM];
-export function yangtzeSpec(p?: ParamValues): ShipSpec {
+export function yangtzeSpec(): ShipSpec {
   const L = 90;
   const D = 4.5;
   return {
@@ -1092,7 +1097,7 @@ export function yangtzeSpec(p?: ParamValues): ShipSpec {
     livery: { hull: "#2a3b5f", bottom: "#8f2a22", boot: "#1d2024", stripe: "#c23128", deck: "#6b6f6c", house: "#f2f0ea", funnel: "#2a3b5f" },
     items: [
       { k: "box", u: [14, 82], z: [-7.2, 7.2], y: [D - 0.1, D + 1.2], mat: "hull", top: false, name: "hold coaming" },
-      ...cargo(p, [{ k: "containers", u: [14.5, 81.5], bays: 5, hw: 6.6, y: D + 0.4, tiers: 3, seed: 47, rows: 2.5 }, { k: "lashing", at: bayGaps([14.5, 81.5], 5), hw: 6.4, y: D + 0.4, h: 2.6 }]),
+      cargo(D + 0.4, [{ k: "containers", u: [14.5, 81.5], bays: 5, hw: 6.6, y: D + 0.4, tiers: 3, seed: 47, rows: 2.5 }, { k: "lashing", at: bayGaps([14.5, 81.5], 5), hw: 6.4, y: D + 0.4, h: 2.6 }]),
       ...deckhouse({ u: [1, 12], y0: D - 0.1, decks: 3, hw: 7, h: 2.6, step: 0.3, wings: 7.6, detail: true }),
       { k: "cyl", u: 2.5, z: 4.5, y: [D + 5.2, D + 9], r: 0.4, mat: "funnel", name: "exhaust" },
       { k: "cyl", u: 2.5, z: -4.5, y: [D + 5.2, D + 9], r: 0.4, mat: "funnel", name: "exhaust port" },
@@ -1129,16 +1134,16 @@ export function volgaDonSpec(): ShipSpec {
 // ---------------------------------------------------------------------------
 // the build functions, exported under their own names (jsModel.ts imports a design's builders by name)
 
-export function shipTripleE(p?: ParamValues): MeshBuilder { return worldShip(tripleESpec(p)); }
-export function shipTripleELod(p?: ParamValues): MeshBuilder { return shipLod(tripleESpec(p)); }
-export function shipEmmaMaersk(p?: ParamValues): MeshBuilder { return worldShip(emmaMaerskSpec(p)); }
-export function shipEmmaMaerskLod(p?: ParamValues): MeshBuilder { return shipLod(emmaMaerskSpec(p)); }
-export function shipMscGulsun(p?: ParamValues): MeshBuilder { return worldShip(gulsunSpec(p)); }
-export function shipMscGulsunLod(p?: ParamValues): MeshBuilder { return shipLod(gulsunSpec(p)); }
+export function shipTripleE(): MeshBuilder { return worldShip(tripleESpec()); }
+export function shipTripleELod(): MeshBuilder { return shipLod(tripleESpec()); }
+export function shipEmmaMaersk(): MeshBuilder { return worldShip(emmaMaerskSpec()); }
+export function shipEmmaMaerskLod(): MeshBuilder { return shipLod(emmaMaerskSpec()); }
+export function shipMscGulsun(): MeshBuilder { return worldShip(gulsunSpec()); }
+export function shipMscGulsunLod(): MeshBuilder { return shipLod(gulsunSpec()); }
 export function shipPanamax(p?: ParamValues): MeshBuilder { return worldShip(panamaxSpec(p)); }
 export function shipPanamaxLod(p?: ParamValues): MeshBuilder { return shipLod(panamaxSpec(p)); }
-export function shipFeeder(p?: ParamValues): MeshBuilder { return worldShip(feederSpec(p)); }
-export function shipFeederLod(p?: ParamValues): MeshBuilder { return shipLod(feederSpec(p)); }
+export function shipFeeder(): MeshBuilder { return worldShip(feederSpec()); }
+export function shipFeederLod(): MeshBuilder { return shipLod(feederSpec()); }
 export function shipIdealX(): MeshBuilder { return worldShip(idealXSpec()); }
 export function shipIdealXLod(): MeshBuilder { return shipLod(idealXSpec()); }
 export function shipVlcc(p?: ParamValues): MeshBuilder { return worldShip(vlccSpec(p)); }
@@ -1171,22 +1176,22 @@ export function shipPctc(p?: ParamValues): MeshBuilder { return worldShip(pctcSp
 export function shipPctcLod(p?: ParamValues): MeshBuilder { return shipLod(pctcSpec(p)); }
 export function shipRoro(p?: ParamValues): MeshBuilder { return worldShip(roroSpec(p)); }
 export function shipRoroLod(p?: ParamValues): MeshBuilder { return shipLod(roroSpec(p)); }
-export function shipHeavyLift(p?: ParamValues): MeshBuilder { return worldShip(heavyLiftSpec(p)); }
-export function shipHeavyLiftLod(p?: ParamValues): MeshBuilder { return shipLod(heavyLiftSpec(p)); }
+export function shipHeavyLift(): MeshBuilder { return worldShip(heavyLiftSpec()); }
+export function shipHeavyLiftLod(): MeshBuilder { return shipLod(heavyLiftSpec()); }
 export function shipReefer(p?: ParamValues): MeshBuilder { return worldShip(reeferSpec(p)); }
 export function shipReeferLod(p?: ParamValues): MeshBuilder { return shipLod(reeferSpec(p)); }
 export function shipLiberty(): MeshBuilder { return worldShip(libertySpec()); }
 export function shipLibertyLod(): MeshBuilder { return shipLod(libertySpec()); }
 export function shipVictory(): MeshBuilder { return worldShip(victorySpec()); }
 export function shipVictoryLod(): MeshBuilder { return shipLod(victorySpec()); }
-export function shipEuropaschiff(p?: ParamValues): MeshBuilder { return worldShip(europaschiffSpec(p)); }
-export function shipEuropaschiffLod(p?: ParamValues): MeshBuilder { return shipLod(europaschiffSpec(p)); }
+export function shipEuropaschiff(): MeshBuilder { return worldShip(europaschiffSpec()); }
+export function shipEuropaschiffLod(): MeshBuilder { return shipLod(europaschiffSpec()); }
 export function shipRhineTanker(): MeshBuilder { return worldShip(rhineTankerSpec()); }
 export function shipRhineTankerLod(): MeshBuilder { return shipLod(rhineTankerSpec()); }
-export function shipPushBarge(p?: ParamValues): MeshBuilder { return worldShip(pushBargeSpec(p)); }
-export function shipPushBargeLod(p?: ParamValues): MeshBuilder { return shipLod(pushBargeSpec(p)); }
-export function shipYangtze(p?: ParamValues): MeshBuilder { return worldShip(yangtzeSpec(p)); }
-export function shipYangtzeLod(p?: ParamValues): MeshBuilder { return shipLod(yangtzeSpec(p)); }
+export function shipPushBarge(): MeshBuilder { return worldShip(pushBargeSpec()); }
+export function shipPushBargeLod(): MeshBuilder { return shipLod(pushBargeSpec()); }
+export function shipYangtze(): MeshBuilder { return worldShip(yangtzeSpec()); }
+export function shipYangtzeLod(): MeshBuilder { return shipLod(yangtzeSpec()); }
 export function shipVolgaDon(): MeshBuilder { return worldShip(volgaDonSpec()); }
 export function shipVolgaDonLod(): MeshBuilder { return shipLod(volgaDonSpec()); }
 
@@ -1194,11 +1199,11 @@ export function shipVolgaDonLod(): MeshBuilder { return shipLod(volgaDonSpec());
 // the designs, in the list's order (docs/specs/2026-11-05-world-vehicle-fleet-list.md)
 
 export const CARGO_SHIP_SPECS: readonly WorldShip[] = [
-  { id: "veh-ship-triple-e", title: "Maersk Triple E Class", spec: tripleESpec, build: shipTripleE, buildLod: shipTripleELod, params: [LOAD_PARAM], game: { weight: 250_000, power: 59_360, maxspeed: 43 }, references: "ship-triple-e" },
-  { id: "veh-ship-emma-maersk", title: "Emma Maersk", spec: emmaMaerskSpec, build: shipEmmaMaersk, buildLod: shipEmmaMaerskLod, params: [LOAD_PARAM], game: { weight: 220_000, power: 80_080, maxspeed: 46 }, references: "ship-emma-maersk" },
-  { id: "veh-ship-msc-gulsun", title: "MSC Gulsun Class", spec: gulsunSpec, build: shipMscGulsun, buildLod: shipMscGulsunLod, params: [LOAD_PARAM], game: { weight: 260_000, power: 62_500, maxspeed: 42 }, references: "ship-msc-gulsun" },
+  { id: "veh-ship-triple-e", title: "Maersk Triple E Class", spec: tripleESpec, build: shipTripleE, buildLod: shipTripleELod, game: { weight: 250_000, power: 59_360, maxspeed: 43 }, references: "ship-triple-e" },
+  { id: "veh-ship-emma-maersk", title: "Emma Maersk", spec: emmaMaerskSpec, build: shipEmmaMaersk, buildLod: shipEmmaMaerskLod, game: { weight: 220_000, power: 80_080, maxspeed: 46 }, references: "ship-emma-maersk" },
+  { id: "veh-ship-msc-gulsun", title: "MSC Gulsun Class", spec: gulsunSpec, build: shipMscGulsun, buildLod: shipMscGulsunLod, game: { weight: 260_000, power: 62_500, maxspeed: 42 }, references: "ship-msc-gulsun" },
   { id: "veh-ship-panamax-container", title: "Panamax Container Ship", spec: panamaxSpec, build: shipPanamax, buildLod: shipPanamaxLod, params: PANAMAX_PARAMS, finishParams: ["livery"], game: { weight: 80_000, power: 40_000, maxspeed: 44 }, references: "ship-panamax-container" },
-  { id: "veh-ship-feeder-container", title: "Feeder Container Ship", spec: feederSpec, build: shipFeeder, buildLod: shipFeederLod, params: [LOAD_PARAM], game: { weight: 17_000, power: 8_400, maxspeed: 33 }, references: "ship-feeder-container" },
+  { id: "veh-ship-feeder-container", title: "Feeder Container Ship", spec: feederSpec, build: shipFeeder, buildLod: shipFeederLod, game: { weight: 17_000, power: 8_400, maxspeed: 33 }, references: "ship-feeder-container" },
   { id: "veh-ship-ideal-x", title: "Ideal X", spec: idealXSpec, build: shipIdealX, buildLod: shipIdealXLod, game: { weight: 22_000, power: 4_500, maxspeed: 27 }, references: "ship-ideal-x" },
   { id: "veh-ship-vlcc", title: "Very Large Crude Carrier", spec: vlccSpec, build: shipVlcc, buildLod: shipVlccLod, params: VLCC_PARAMS, finishParams: ["livery"], game: { weight: 340_000, power: 27_000, maxspeed: 28 }, references: "ship-vlcc" },
   { id: "veh-ship-seawise-giant", title: "Seawise Giant", spec: seawiseGiantSpec, build: shipSeawiseGiant, buildLod: shipSeawiseGiantLod, game: { weight: 657_000, power: 37_300, maxspeed: 24 }, references: "ship-seawise-giant" },
@@ -1215,14 +1220,14 @@ export const CARGO_SHIP_SPECS: readonly WorldShip[] = [
   { id: "veh-ship-self-unloader", title: "Self-Unloading Laker", spec: selfUnloaderSpec, build: shipSelfUnloader, buildLod: shipSelfUnloaderLod, game: { weight: 90_000, power: 14_000, maxspeed: 26 }, references: "ship-self-unloader" },
   { id: "veh-ship-pctc", title: "Pure Car and Truck Carrier", spec: pctcSpec, build: shipPctc, buildLod: shipPctcLod, params: PCTC_PARAMS, finishParams: ["livery"], game: { weight: 42_000, power: 14_000, maxspeed: 37 }, references: "ship-pctc" },
   { id: "veh-ship-roro", title: "Ro-Ro Cargo Ship", spec: roroSpec, build: shipRoro, buildLod: shipRoroLod, params: RORO_PARAMS, finishParams: ["livery"], game: { weight: 25_000, power: 16_000, maxspeed: 37 }, references: "ship-roro" },
-  { id: "veh-ship-heavy-lift", title: "Semi-Submersible Heavy-Lift Ship", spec: heavyLiftSpec, build: shipHeavyLift, buildLod: shipHeavyLiftLod, params: HEAVY_LIFT_PARAMS, game: { weight: 160_000, power: 27_000, maxspeed: 26 }, references: "ship-heavy-lift" },
+  { id: "veh-ship-heavy-lift", title: "Semi-Submersible Heavy-Lift Ship", spec: heavyLiftSpec, build: shipHeavyLift, buildLod: shipHeavyLiftLod, game: { weight: 160_000, power: 27_000, maxspeed: 26 }, references: "ship-heavy-lift" },
   { id: "veh-ship-reefer", title: "Refrigerated Cargo Ship", spec: reeferSpec, build: shipReefer, buildLod: shipReeferLod, params: REEFER_PARAMS, finishParams: ["livery"], game: { weight: 20_000, power: 12_000, maxspeed: 39 }, references: "ship-reefer" },
   { id: "veh-ship-liberty", title: "Liberty Ship", spec: libertySpec, build: shipLiberty, buildLod: shipLibertyLod, game: { weight: 14_245, power: 1_900, maxspeed: 20 }, references: "ship-liberty" },
   { id: "veh-ship-victory", title: "Victory Ship", spec: victorySpec, build: shipVictory, buildLod: shipVictoryLod, game: { weight: 15_200, power: 6_300, maxspeed: 28 }, references: "ship-victory" },
-  { id: "veh-ship-europaschiff", title: "Rhine Motor Cargo Vessel", spec: europaschiffSpec, build: shipEuropaschiff, buildLod: shipEuropaschiffLod, params: EUROPA_PARAMS, game: { weight: 1_650, power: 600, maxspeed: 18 }, references: "ship-europaschiff" },
+  { id: "veh-ship-europaschiff", title: "Rhine Motor Cargo Vessel", spec: europaschiffSpec, build: shipEuropaschiff, buildLod: shipEuropaschiffLod, game: { weight: 1_650, power: 600, maxspeed: 18 }, references: "ship-europaschiff" },
   { id: "veh-ship-rhine-tanker", title: "Rhine Tanker Barge", spec: rhineTankerSpec, build: shipRhineTanker, buildLod: shipRhineTankerLod, game: { weight: 3_900, power: 1_500, maxspeed: 20 }, references: "ship-rhine-tanker" },
-  { id: "veh-ship-push-barge", title: "Push Barge", spec: pushBargeSpec, build: shipPushBarge, buildLod: shipPushBargeLod, params: PUSH_BARGE_PARAMS, game: { weight: 3_000, power: 0, maxspeed: 15 }, references: "ship-push-barge" },
-  { id: "veh-ship-yangtze-cargo", title: "Yangtze River Cargo Ship", spec: yangtzeSpec, build: shipYangtze, buildLod: shipYangtzeLod, params: YANGTZE_PARAMS, game: { weight: 4_200, power: 1_200, maxspeed: 18 }, references: "ship-yangtze-cargo" },
+  { id: "veh-ship-push-barge", title: "Push Barge", spec: pushBargeSpec, build: shipPushBarge, buildLod: shipPushBargeLod, game: { weight: 3_000, power: 0, maxspeed: 15 }, references: "ship-push-barge" },
+  { id: "veh-ship-yangtze-cargo", title: "Yangtze River Cargo Ship", spec: yangtzeSpec, build: shipYangtze, buildLod: shipYangtzeLod, game: { weight: 4_200, power: 1_200, maxspeed: 18 }, references: "ship-yangtze-cargo" },
   { id: "veh-ship-volga-don", title: "Volga-Don River Ship", spec: volgaDonSpec, build: shipVolgaDon, buildLod: shipVolgaDonLod, game: { weight: 6_500, power: 1_320, maxspeed: 19 }, references: "ship-volga-don" },
 ];
 

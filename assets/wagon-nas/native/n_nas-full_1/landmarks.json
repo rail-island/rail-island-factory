@@ -339,7 +339,7 @@
     18
    ],
    "nodes": [
-    "cargo"
+    "load-wood"
    ],
    "tolerancePixels": 1.5,
    "uncertainty": "From the XML inline placements (the cargo is painted by its own bitmaps, not the z_both canvas). Seven 0.4 m logs fit between the stakes, so the pile tops out 0.11 m under the XML 3.1 m."

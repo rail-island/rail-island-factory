@@ -36,6 +36,7 @@ import {
 import { csdBalm, csdBam, csdBdmtee, csdBe31, csdBi20, csdClassicGreenCoach, csdDsk } from "./csdCoaches.ts";
 import { bmoCoach } from "./bmoCoach.ts";
 import { cdGreenWhiteCoach } from "./cdGreenWhiteCoach.ts";
+import { loadPart } from "./loadPart.ts";
 
 // --- generic solids ------------------------------------------------------------------------
 
@@ -125,7 +126,11 @@ export function lodPanels(m: MeshBuilder, mat: string, rects: ReadonlyArray<read
 // --- the freight wagons (wagons.ts) ----------------------------------------------------------
 
 /** A solid of a wagon's LOD, in the wagon's source x (Factory x + centre); optional ones give way first, lowest first. */
-export type WagonLodItem = { optional?: number; name: string } & (
+export type WagonLodItem = {
+  optional?: number; name: string;
+  /** A load (docs/models/loads.md): drawn as a hidden load part standing for these commodities, pivoted on the bed at `floor` m. */
+  load?: { commodities: readonly string[]; floor: number };
+} & (
   /** A box without its bottom: z either a half width or a range; each face group in its own material (null: left out). */
   | { kind: "block"; x: readonly [number, number]; y: readonly [number, number]; z: number | readonly [number, number]; side?: string | null; end?: string | null; top?: string | null }
   /** An open-topped body: outer walls, inner walls and floor (lodTub). */
@@ -204,7 +209,7 @@ export function wagonLod(spec: WagonLodSpec, budget = 100): MeshBuilder {
     { draw: (m) => m.scope("running gear", () => {
       for (const [xc, wb] of spec.bogies) lodBogie(m, xc - spec.centre, wb / 2 + FREIGHT_BOGIE_REACH, FREIGHT_BOGIE_TOP, 1.1);
     }) },
-    ...spec.items.map((it): LodPart => ({ ...(it.optional !== undefined ? { optional: it.optional } : {}), draw: (m) => m.scope(it.name, () => wagonItem(m, it, spec.centre)) })),
+    ...spec.items.map((it): LodPart => ({ ...(it.optional !== undefined ? { optional: it.optional } : {}), draw: (m) => (it.load ? loadPart(m, it.load.commodities, [0, it.load.floor, 0], () => m.scope(it.name, () => wagonItem(m, it, spec.centre))) : m.scope(it.name, () => wagonItem(m, it, spec.centre))) })),
   ];
   return fitLod({ palette: spec.palette, shells: [], parts }, budget);
 }

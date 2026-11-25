@@ -15,11 +15,11 @@ export const TOKEN_LADDER: readonly number[] = [50, 75, 100, 150, 200, 250, 300,
 
 /**
  * The parameters that draw a different look of a vehicle. A train's length and
- * car position (`unit`, `cars`, `trainCars`), loaded or empty (`load`), the
+ * car position (`unit`, `cars`, `trainCars`), a road train's trailers (`load`), the
  * harnessed animal (`animal`, `team`: the animals are collected apart) and a pose
  * (`gear`) are the same vehicle and do not count.
  */
-export const LOOK_PARAMS: readonly string[] = ["livery", "body", "colour", "color", "variant", "version", "operator", "cover", "cargo", "length", "seats"];
+export const LOOK_PARAMS: readonly string[] = ["livery", "body", "colour", "color", "variant", "version", "operator", "cover", "length", "seats"];
 /** What each look beyond the first adds, as a fraction of the single-look price. */
 export const LOOK_STEP = 0.15;
 /** The most the looks multiply a price by. */

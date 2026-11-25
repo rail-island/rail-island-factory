@@ -21,10 +21,10 @@ const IDS = [
   'proc-vehicle-raj-hopper-wagon', 'proc-vehicle-rah-tank-wagon',
 ];
 const design = (id: string) => VEHICLES.find((d) => d.id === id)!;
-function materials(m: { toGlb(name: string): Uint8Array }): Map<string, number> {
+function materials(m: { toGlb(name: string): Uint8Array }, loads: boolean | string = false): Map<string, number> {
   const { json, bin } = parseGlb(m.toGlb('lod'));
   const out = new Map<string, number>();
-  for (const f of collectTriangles(json, bin)) out.set(f.material, (out.get(f.material) ?? 0) + 1);
+  for (const f of collectTriangles(json, bin, { loads })) out.set(f.material, (out.get(f.material) ?? 0) + 1);
   return out;
 }
 
@@ -36,12 +36,14 @@ describe('classic LODs', () => {
       const budget = lodBudget(d);
       for (const values of sample(coverageCombinations(d.params, d.finishParams))) {
         const m = d.buildLod(values);
-        const n = m.triangleCount();
+        // the exterior and its largest load (docs/models/loads.md)
+        const n = m.budgetTriangleCount();
         expect(n).toBeLessThanOrEqual(budget);
         // a dedicated LOD uses its budget: no variant falls far below it
         expect(n).toBeGreaterThan(budget * 0.4);
         const glb = m.toGlb(id);
         expect(findCoplanarOverlaps(glb)).toEqual([]);
+        for (const l of m.loads() ?? []) expect(findCoplanarOverlaps(glb, undefined, { loads: l.commodities[0]! }), l.part).toEqual([]);
         // running gear reaches the rail (bogie blocks at 8 cm) or the road
         expect(glbStats(glb).min[1]).toBeLessThan(0.1);
         expect(glbStats(glb).min[1]).toBeGreaterThanOrEqual(0);
@@ -80,12 +82,15 @@ describe('classic LODs', () => {
   });
 
   it('shows each wagon load in its own colours', () => {
-    const nas = design('proc-vehicle-nas-flat-wagon');
-    expect(materials(nas.buildLod({ cargo: 'tubes' })).get('tube')).toBeGreaterThan(0);
-    expect(materials(nas.buildLod({ cargo: 'reels' })).get('reel')).toBeGreaterThan(0);
-    expect(materials(nas.buildLod({ cargo: 'wood' })).get('logEnd')).toBeGreaterThan(0);
-    expect(materials(design('proc-vehicle-eas-open-wagon').buildLod({ cargo: 'coal' })).get('coal')).toBeGreaterThan(0);
-    expect(materials(design('proc-vehicle-ua-open-wagon').buildLod({ cargo: 'sand' })).get('sand')).toBeGreaterThan(0);
+    // each a hidden load part of its commodity (docs/models/loads.md), none at rest
+    const nas = design('proc-vehicle-nas-flat-wagon').buildLod();
+    expect(materials(nas, 'steel').get('loadSteel')).toBeGreaterThan(0);
+    expect(materials(nas, 'goods').get('reel')).toBeGreaterThan(0);
+    expect(materials(nas, 'wood').get('loadLogEnd')).toBeGreaterThan(0);
+    expect(materials(nas).get('loadSteel')).toBeUndefined();
+    expect(materials(design('proc-vehicle-eas-open-wagon').buildLod(), 'coal').get('loadCoal')).toBeGreaterThan(0);
+    expect(materials(design('proc-vehicle-ua-open-wagon').buildLod(), 'iron-ore').get('loadIronOre')).toBeGreaterThan(0);
+    expect(materials(design('proc-vehicle-ua-open-wagon').buildLod(), 'grain').get('loadIronOre')).toBeUndefined();
     expect(materials(design('proc-vehicle-rah-tank-wagon').buildLod()).get('band')).toBeGreaterThan(0);
   });
 

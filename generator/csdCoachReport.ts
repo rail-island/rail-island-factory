@@ -65,10 +65,10 @@ function report(key: string): string[] {
   const bytes = mesh.toGlb(`${coach.title} comparison`);
   const revision = createHash("sha256").update(bytes).digest("hex");
   const { json, bin } = parseGlb(bytes);
-  const tree = mesh.sourceTree(coach.id, coach.title);
-  const variant = coach.params ? ` Built with ${Object.entries(coach.params).map(([k, v]) => `\`${k}=${v}\``).join(", ")} of \`${coach.id}\`.` : "";
+  const tree = mesh.sourceTree(coach.id, coach.title, { loads: coach.load ?? false });
+  const variant = coach.params || coach.load ? ` Built with ${[...Object.entries(coach.params ?? {}).map(([k, v]) => `\`${k}=${v}\``), ...(coach.load ? [`the \`${coach.load}\` load`] : [])].join(", ")} of \`${coach.id}\`.` : "";
   const colors = new Map(tree.materials.map((m, i) => [m, tree.colors[i]!]));
-  const tris: Tri[] = collectTriangles(json, bin).map((t) => {
+  const tris: Tri[] = collectTriangles(json, bin, { loads: coach.load ?? false }).map((t) => {
     const hex = colors.get(t.material)!.slice(1);
     const u = [0, 1, 2].map((k) => t.p[1]![k]! - t.p[0]![k]!);
     const v = [0, 1, 2].map((k) => t.p[2]![k]! - t.p[0]![k]!);

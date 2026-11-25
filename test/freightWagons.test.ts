@@ -1,7 +1,7 @@
 import { proceduralId } from "../generator/modelId.ts";
 import fs from "node:fs";
 import { describe, it, expect } from "vitest";
-import { FREIGHT_WAGONS, HABIS_PARAMS, PAO_PARAMS, SQNS_PARAMS, SQNS_PINS } from "../generator/freightWagons";
+import { FREIGHT_WAGONS, HABIS_PARAMS, SQNS_PINS } from "../generator/freightWagons";
 import { FACCS_LIVERIES, FACCS_PARAMS, FALLS_LIVERIES, FALLS_PARAMS } from "../generator/hopperWagons";
 import { FREIGHT_NUMBERS, clipSolidFaces } from "../generator/freightWagonParts";
 import { FREIGHT_TRANSFERS } from "../generator/freightTransfers";
@@ -13,6 +13,7 @@ import { uicCheckDigit } from "../generator/csdCoaches";
 import { canStroke } from "../generator/strokeFont";
 import { coachComparison, readLandmarks } from "../generator/csdCoachComparison";
 import { glbStats } from "../generator/glbStats";
+import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { findCoplanarOverlaps } from "../generator/coplanar";
 import { isLeaf, type LeafNode, type TreeNode } from "../generator/sourceTree";
 import { sample } from "./catalogCache";
@@ -43,16 +44,18 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
       expect(d.catalog).toEqual(WAGON_CATALOG);
       for (const f of ["SOURCES.md", "PHOTOS.md"]) expect(fs.existsSync(new URL(`../assets/${d.references}/${f}`, import.meta.url)), `${d.id} ${f}`).toBe(true);
     }
-    expect(values(SQNS_PARAMS)).toEqual(["empty", "maersk"]);
-    expect(values(PAO_PARAMS)).toEqual(["empty", "tubes"]);
     expect(values(HABIS_PARAMS)).toEqual(["tw1", "tw2"]);
     expect(values(FACCS_PARAMS)).toEqual(["cd", "viamont"]);
     expect(values(FALLS_PARAMS)).toEqual(["cd", "sd", "viamont"]);
-    expect(SQNS_PARAMS[0]).toMatchObject({ name: "cargo", default: "empty" });
-    expect(PAO_PARAMS[0]).toMatchObject({ name: "cargo", default: "tubes" });
     for (const p of [HABIS_PARAMS, FACCS_PARAMS, FALLS_PARAMS]) expect(p[0]!.name).toBe("livery");
     expect(design("proc-vehicle-hadgs-hopper-wagon").params).toBeUndefined();
-    expect(design("proc-vehicle-wap-hopper-wagon").params?.[0]).toMatchObject({name:"cargo",default:"coal"});
+    // no cargo parameter: the loads are hidden load parts (docs/models/loads.md)
+    for (const id of ["proc-vehicle-sqns-container-wagon", "proc-vehicle-pao-flat-wagon", "proc-vehicle-wap-hopper-wagon"]) expect(design(id).params, id).toBeUndefined();
+    const loads = (id: string) => design(id).build().loads()!.map((l) => l.commodities.join("+"));
+    expect(loads("proc-vehicle-sqns-container-wagon")).toEqual(["goods+food"]);
+    expect(loads("proc-vehicle-pao-flat-wagon")).toEqual(["steel"]);
+    for (const id of ["proc-vehicle-faccs-hopper-wagon", "proc-vehicle-falls-hopper-wagon", "proc-vehicle-wap-hopper-wagon"]) expect(loads(id), id).toEqual(["coal", "iron-ore", "grain"]);
+    expect(design("proc-vehicle-hadgs-hopper-wagon").build().loads()).toBeNull();
     // the liveries name the vlakosimdb folder each one comes from
     expect(FACCS_LIVERIES.map((l) => l.source)).toEqual(["n_faccs", "viamont_faccs"]);
     expect(FALLS_LIVERIES.map((l) => l.source)).toEqual(["n_falls", "sd_falls", "viamont_falls"]);
@@ -64,9 +67,8 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
       const defaults = paramCombinations(d.params)[0]!;
       expect(FREIGHT_TRANSFERS.some((t) => t.id === d.id && JSON.stringify(t.params ?? {}) === JSON.stringify(defaults)), d.id).toBe(true);
     }
-    // every cargo of the two loaded designs is one compared vlakosimdb vehicle
-    for (const id of ["proc-vehicle-sqns-container-wagon"])
-      expect(FREIGHT_TRANSFERS.filter((t) => t.id === id).map((t) => t.params!.cargo)).toEqual(values(design(id).params!));
+    // the Sqns is compared empty and with its Maersk box
+    expect(FREIGHT_TRANSFERS.filter((t) => t.id === "proc-vehicle-sqns-container-wagon").map((t) => t.load ?? "empty")).toEqual(["empty", "goods"]);
   });
 
   it.each(FREIGHT_TRANSFERS.map((t) => [t.key] as const))("%s matches the native BMP landmarks within their pixel tolerances", (key) => {
@@ -81,14 +83,16 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
   it.each(FREIGHT_WAGONS.flatMap((d) => sample(coverageCombinations(d.params, d.finishParams)).map((p) => [d.id, JSON.stringify(p)] as const)))(
     "%s %s builds inside the rail envelope and budget, without flicker",
     (id, params) => {
-      const glb = design(id).build(JSON.parse(params)).toGlb(id, "vehicle");
-      const s = glbStats(glb);
+      const mesh = design(id).build(JSON.parse(params));
+      const glb = mesh.toGlb(id, "vehicle");
+      const s = glbStats(glb, { loads: true });
       expect(s.min[1]).toBeCloseTo(0, 5);
       expect(s.max[2] - s.min[2]).toBeLessThanOrEqual(3.1);
       expect(s.min[2]).toBeCloseTo(-s.max[2], 5);
       expect(s.max[1]).toBeLessThanOrEqual(4.7);
-      expect(s.triangles).toBeLessThanOrEqual(8000);
+      expect(mesh.budgetTriangleCount()).toBeLessThanOrEqual(8000);
       expect(findCoplanarOverlaps(glb)).toEqual([]);
+      for (const l of mesh.loads() ?? []) expect(findCoplanarOverlaps(glb, undefined, { loads: l.commodities[0]! }), l.part).toEqual([]);
     },
   );
 
@@ -111,20 +115,25 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
     }
   });
 
-  it("carries exactly its own load: nothing on the empty Sqns, a 40 ft Maersk box on the pins, tubes or an empty deck on the Pao", () => {
-    const top = (nodes: LeafNode[]) => Math.max(...nodes.map((n) => n.max![1]));
-    expect(tree("proc-vehicle-sqns-container-wagon").filter((n) => n.id.startsWith("cargo/"))).toEqual([]);
-    const box = tree("proc-vehicle-sqns-container-wagon", { cargo: "maersk" }).filter((n) => n.id.startsWith("cargo/box/"));
-    expect(Math.max(...box.map((n) => n.max![0])) - Math.min(...box.map((n) => n.min![0]))).toBeCloseTo(12.192, 3);
-    expect(Math.min(...box.map((n) => n.min![1]))).toBeCloseTo(1.303, 3);
-    expect(top(box)).toBeCloseTo(1.3 + 2.591 - 0.003, 3);
+  it("carries exactly its own load: nothing at rest, a 40 ft Maersk box on the Sqns's pins, tubes on the Pao", () => {
+    const load = (id: string, commodity: string) => {
+      const { json, bin } = parseGlb(design(id).build().toGlb(id));
+      expect(collectTriangles(json, bin).some((t) => t.load), id).toBe(false);
+      return collectTriangles(json, bin, { loads: commodity }).filter((t) => t.load && (commodity !== "goods" || t.material === "container")).flatMap((t) => t.p);
+    };
+    // the box's shell, without its frame and castings
+    const box = load("proc-vehicle-sqns-container-wagon", "goods");
+    const along = box.map((p) => p[0]);
+    const up = box.map((p) => p[1]);
+    expect(Math.max(...along) - Math.min(...along)).toBeCloseTo(12.192, 3);
+    expect(Math.min(...up)).toBeCloseTo(1.303, 3);
+    expect(Math.max(...up)).toBeCloseTo(1.3 + 2.591 - 0.003, 2);
     // the pins under the box's corner castings: the box ends over the 3.6 and 16.0 m pins
-    expect(Math.min(...box.map((n) => n.min![0])) + 9.9).toBeGreaterThan(SQNS_PINS[1]!);
-    expect(Math.max(...box.map((n) => n.max![0])) + 9.9).toBeLessThan(SQNS_PINS[5]! + 0.2);
-    const tubes = tree("proc-vehicle-pao-flat-wagon").filter((n) => n.id.startsWith("cargo/"));
-    expect(top(tubes)).toBeGreaterThan(1.68);
-    expect(top(tubes)).toBeLessThanOrEqual(1.75); // the XML `load` hull reaches 1.7 m
-    expect(tree("proc-vehicle-pao-flat-wagon", { cargo: "empty" }).filter((n) => n.id.startsWith("cargo/"))).toHaveLength(0);
+    expect(Math.min(...along) + 9.9).toBeGreaterThan(SQNS_PINS[1]!);
+    expect(Math.max(...along) + 9.9).toBeLessThan(SQNS_PINS[5]! + 0.2);
+    const tubes = load("proc-vehicle-pao-flat-wagon", "steel").map((p) => p[1]);
+    expect(Math.max(...tubes)).toBeGreaterThan(1.68);
+    expect(Math.max(...tubes)).toBeLessThanOrEqual(1.75); // the XML `load` hull reaches 1.7 m
   });
 
   it("varies a livery's paint only: each livery builds the same faces in other colours", () => {
@@ -156,7 +165,6 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
 
   it("reads MAERSK and TRANSWAGGON from outside on both sides", () => {
     for (const [id, params, prefix] of [
-      ["proc-vehicle-sqns-container-wagon", { cargo: "maersk" }, (s: string) => `cargo/${s}-side-livery/lettering/`],
       ["proc-vehicle-habis-sliding-wall-wagon", undefined, (s: string) => `body/${s}-side/name-plate/`],
     ] as const) {
       for (const side of ["right", "left"]) {
@@ -167,6 +175,16 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
         expect(Math.sign(z)).toBe(side === "right" ? 1 : -1);
         expect(ink[0]!.max![2]).toBeCloseTo(z, 6);
       }
+    }
+    // the Maersk box's lettering, in the Sqns's load part: one plane a side, facing out
+    const { json, bin } = parseGlb(design("proc-vehicle-sqns-container-wagon").build().toGlb("sqns"));
+    const ink = collectTriangles(json, bin, { loads: "goods" }).filter((t) => t.load && t.material === "ink");
+    for (const sd of [1, -1]) {
+      const side = ink.filter((t) => Math.sign(t.p[0][2]) === sd);
+      expect(side.length).toBeGreaterThan(0);
+      const zs = side.flatMap((t) => t.p.map((p) => p[2]));
+      expect(Math.max(...zs) - Math.min(...zs)).toBeLessThan(1e-6);
+      for (const t of side) expect(Math.sign(t.n[0][2])).toBe(sd);
     }
   });
 

@@ -3,7 +3,7 @@
 // twice -- and the box comes from the decoded triangles rather than the accessors'
 // min/max, so a node transform is honoured.
 
-import { collectTriangles, parseGlb, triBounds, type Vec3 } from "./glbTriangles.ts";
+import { collectTriangles, parseGlb, triBounds, type CollectOptions, type Vec3 } from "./glbTriangles.ts";
 
 export interface GlbStats {
   triangles: number;
@@ -15,7 +15,7 @@ export interface GlbStats {
   max: Vec3;
 }
 
-export function glbStats(glb: Uint8Array): GlbStats {
+export function glbStats(glb: Uint8Array, opts: CollectOptions = {}): GlbStats {
   const { json, bin } = parseGlb(glb);
   let vertices = 0;
   let primitives = 0;
@@ -32,7 +32,8 @@ export function glbStats(glb: Uint8Array): GlbStats {
     for (const c of node.children ?? []) visit(c);
   };
   for (const n of json.scenes?.[json.scene ?? 0]?.nodes ?? []) visit(n);
-  const tris = collectTriangles(json, bin);
+  // the model at rest, or as `opts` show it (a freight vehicle loaded, docs/models/loads.md)
+  const tris = collectTriangles(json, bin, opts);
   const { min, max } = tris.length ? triBounds(tris) : { min: [0, 0, 0] as Vec3, max: [0, 0, 0] as Vec3 };
   return { triangles: tris.length, vertices, primitives, materials: json.materials?.length ?? 0, min, max };
 }

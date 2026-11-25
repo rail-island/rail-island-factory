@@ -1,20 +1,22 @@
 # Freight wagons
 
-**Covers** - the five freight wagons transferred from vlakosimdb (Nas, Ua, Eas, Raj, Rah), the `cargo` parameter of the first three, the shared wagon parts, the native-raster comparison and the tests.
+**Covers** - the five freight wagons transferred from vlakosimdb (Nas, Ua, Eas, Raj, Rah), the loads of the first three as hidden load parts, the shared wagon parts, the native-raster comparison and the tests.
 **Code** - `generator/wagons.ts`, `generator/wagonParts.ts`, `generator/wagonTransfers.ts`, `generator/coachTransfers.ts` (`ALL_TRANSFERS`), `generator/csdCoachComparison.ts`, `generator/csdCoachReport.ts`, `generator/strokeFont.ts`, `test/wagons.test.ts`
-**See also** - [freight-wagons.md](freight-wagons.md) (the container, flat, sliding-wall and hopper wagons that build on these parts), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the comparison method), the sources under `assets/wagon-<name>/` (`SOURCES.md`, `COMPARISON*.md`)
+**See also** - [loads.md](loads.md), [freight-wagons.md](freight-wagons.md) (the container, flat, sliding-wall and hopper wagons that build on these parts), [vehicles.md](vehicles.md), [parameters.md](parameters.md), [csd-coaches.md](csd-coaches.md) (the comparison method), the sources under `assets/wagon-<name>/` (`SOURCES.md`, `COMPARISON*.md`)
 
 ## The designs
 
 Thirteen vlakosimdb wagons (`db/train/truck/`) become five designs. A vehicle
-that differs from another only by its load is a value of the `cargo` parameter
-(default `empty`), not a separate model ([parameters.md](parameters.md)).
+that differs from another only by its load is the same model: each load it can
+show is a hidden load part on its floor, which the game shows with what the
+wagon carries ([loads.md](loads.md)). There is no `cargo` parameter any more; a
+saved map's old value is ignored.
 
-| id | vlakosimdb | `cargo` | over buffers | triangles |
+| id | vlakosimdb | load parts | over buffers | triangles (at rest / with the largest load) |
 |---|---|---|---|---|
-| `veh-nas-flat-wagon` | `n_nas`, `n_nas-full#1..#3` | `empty`, `wood` (logs), `tubes`, `reels` (cable reels) | 20.9 m | 4,300 to 6,400 |
-| `veh-ua-open-wagon` | `n_ua-empty`, `n_ua#1` (coal), `n_ua#2` (wood), `n_ua#3` (sand) | `empty`, `coal`, `wood`, `sand` | 13.5 m | 4,000 to 5,300 |
-| `veh-eas-open-wagon` | `n_eas`, `n_eas-drevo` (wood), `n_eas-uhlo` (coal) | `empty`, `wood`, `coal` | 13.9 m | 4,000 to 10,300 |
+| `veh-nas-flat-wagon` | `n_nas`, `n_nas-full#1..#3` | `wood` (logs), `steel` (tubes), `goods` (cable reels) | 20.9 m | 4,300 / 6,400 |
+| `veh-ua-open-wagon` | `n_ua-empty`, `n_ua#1` (coal), `n_ua#2` (wood), `n_ua#3` (sand) | `coal`, `iron-ore`, `grain` (the coal heap for coal, the sand heap for ore and grain), `wood` | 13.5 m | 4,000 / 5,300 |
+| `veh-eas-open-wagon` | `n_eas`, `n_eas-drevo` (wood), `n_eas-uhlo` (coal) | `coal`, `iron-ore`, `grain` (one heap), `wood` | 13.9 m | 4,000 / 10,300 |
 | `veh-raj-hopper-wagon` | `n_raj` | - | 14.4 m | 4,200 |
 | `veh-rah-tank-wagon` | `n_rah#1` | - | 12.6 m | 4,400 |
 
@@ -53,16 +55,17 @@ coupling), `logX`/`logZ` (logs with light cut ends), `tube` (a hollow tube),
 
 - **Nas**: deck with plank gaps every 0.4 m (native `y_dec`), 0.5 m drop sides,
   solebar and fishbelly, eight stakes per side and end walls with corner posts.
-  `wood` is a five-layer pile of 25 logs, `tubes` five 0.9 m steel tubes, `reels`
-  six 2 m cable reels standing across the wagon.
+  Its loads on the deck at 1.2 m: a five-layer pile of 25 logs (wood), five
+  0.9 m steel tubes (steel), six 2 m cable reels standing across the wagon (goods).
 - **Ua**: 0.2 m walls, lighter rim and painted stanchions, two doors per side
   with seams and J-shaped locking bars, end posts, a red handbrake box and
-  underframe equipment. `coal` and `sand` are height fields of the XML `load`
-  hull above the rim; `wood` two layers of logs under four steel straps.
+  underframe equipment. Its loads on the floor at 1.1 m: the coal heap and the
+  sand heap are height fields of the XML `load` hull above the rim (coal; iron ore
+  and grain), the logs two layers under four steel straps (wood).
 - **Eas**: the 13 XML side stanchions, grey two-leaf door frames, end posts and
   rails, a black data panel, label and running number at diagonally opposite
-  ends. `wood` is fifteen bundles of five logs laid across, `coal` a height field
-  with four mounds.
+  ends. Its loads on the floor at 1.1 m: fifteen bundles of five logs laid across
+  (wood), a height field with four mounds (coal, iron ore, grain).
 - **Raj**: the red sloped frame (a frustum between the XML alongx and alongz
   trapezoids), four 10-sided hoppers on the XML rotation profile with grey lids,
   two platforms with gratings, ladders and handrails, and the brake platform.
@@ -100,7 +103,10 @@ under `export/review/<key>/`. Each `assets/wagon-<name>/native/<key>/` holds the
 unchanged `vehicle.xml`, model `index.xml`, BMPs (and inline sub-models), the
 `landmarks.json` native pixel boxes and `baseline.json`, the first authored
 geometry's measurement. Loads that the base canvas does not paint (Nas inlines,
-Ua `load` hulls) are annotated from their XML bounds and marked so.
+Ua `load` hulls) are annotated from their XML bounds and marked so. A loaded
+vehicle is compared with that load shown (`CoachTransfer.load`: the Nas's wood,
+steel and goods, the Ua's coal, wood and iron ore for its sand, the Eas's wood and
+coal, [loads.md](loads.md)).
 
 | vehicle | boxes | baseline MAE (pp) | final MAE (pp) |
 |---|---:|---:|---:|
@@ -112,10 +118,11 @@ Ua `load` hulls) are annotated from their XML bounds and marked so.
 
 ## Tests
 
-`test/wagons.test.ts` checks the registration, ids and cargo values, every
-landmark within its pixel tolerance, length over buffers, axle positions, gauge
-and wheels on the rail, that each variant carries exactly its own load up to its
-XML height, that the default build is the empty wagon, the running numbers'
+`test/wagons.test.ts` checks the registration, ids and each design's load parts,
+every landmark within its pixel tolerance, length over buffers, axle positions,
+gauge and wheels on the rail, that each compared vehicle shows exactly its own
+load up to its XML height, that the model at rest is the empty wagon (an old
+`cargo` value builds the same), the running numbers'
 check digits, the lettering on both sides (the Rah's caron reads correctly from
 outside and its letters lie on the shell), and the Raj hoppers' rotation
 profile. The catalog sweep (`test/catalogSweep.ts`) covers the

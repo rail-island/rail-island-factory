@@ -130,7 +130,7 @@ field but the vehicle's own, which the export reads ([../site/openttd-export.md]
 | `cta-5000` | Chicago 'L' 5000-series | train ELRL | 2009 | 110 PASS | 73 / 35 | 1 | - |
 | `us-caboose` | Cupola caboose | train RAIL | 1925* | 5 MAIL | 23 / 6 | 2 | - |
 | `us-boxcar` | 50 ft boxcar | train RAIL | 1970* | 70 GOOD | 45 / 14 | 2 | - |
-| `us-well-car` | Double-stack well car | train RAIL | 1984 | 40 GOOD | 35 / 10 | 3 | - |
+| `us-well-car` | Double-stack well car | train RAIL | 1984 | 80 GOOD | 48 / 15 | 1 | - |
 | `sf-cable-car` | San Francisco cable car | road | 1888* | 60 PASS | 48 / 24 | 2 | - |
 | `up-big-boy` | UP Big Boy | train RAIL | 1941 | 0 PASS | 163 / 104 | 2 | with tender |
 | `prr-k4s` | PRR K4s | train RAIL | 1914 | 0 PASS | 112 / 58 | 2 | with tender |

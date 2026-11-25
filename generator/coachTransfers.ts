@@ -66,6 +66,8 @@ export interface CoachTransfer {
   title: string;
   id: string;
   params?: ParamValues;
+  /** The load shown (a freight wagon's load parts of this commodity, docs/models/loads.md); none when absent. */
+  load?: string;
   folder: string;
   native: string;
   centre: number;

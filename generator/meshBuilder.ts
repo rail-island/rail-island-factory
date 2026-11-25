@@ -15,6 +15,7 @@
 import { slug, type ArgValue, type NodeExtent, type PrimitiveKind, type ScopeNode, type SourceTree, type TreeNode } from "./sourceTree.ts";
 import { MeshCore, type Ring, type SweepAxis, type Vec3 } from "./meshCore.ts";
 import { interiorsOf, isInteriorName } from "./interiorTable.ts";
+import { budgetTriangles, loadTriangleCounts } from "./loadPart.ts";
 
 export { chamferedRect, grow, ngon, rect, scaleRing } from "./meshCore.ts";
 export type { AnimationClipSpec, AnimationTrack, LampSpec, Lamps, MaterialSpec, Ring, SweepAxis } from "./meshCore.ts";
@@ -153,12 +154,18 @@ export class MeshBuilder extends MeshCore {
    * "-3"...); a leaf is "<kind>-<n>" within its scope. Empty scopes are dropped,
    * and so are a vehicle's interiors, hidden at rest.
    */
-  sourceTree(id: string, title: string): SourceTree {
+  sourceTree(id: string, title: string, opts: { loads?: boolean | string } = {}): SourceTree {
     // A vehicle's interiors are hidden at rest and left out, as collectTriangles
     // leaves them out of the GLB (docs/models/interiors.md): the tree is the model
     // at rest, its materials those drawn outside them.
     const units = this.outputUnits(title);
-    const hidden = new Set(units.filter((u) => u.index >= 0 && isInteriorName(u.name)).map((u) => u.index));
+    // a freight vehicle's loads are hidden at rest the same way (docs/models/loads.md), but
+    // those `opts.loads` shows, as collectTriangles shows them (a vlakosimdb comparison's load)
+    const shown = (index: number): boolean => {
+      const l = this.loadOf(index);
+      return !l || opts.loads === true || (typeof opts.loads === "string" && l.commodities.includes(opts.loads));
+    };
+    const hidden = new Set(units.filter((u) => u.index >= 0 && (isInteriorName(u.name) || !shown(u.index))).map((u) => u.index));
     const materials = [...this.groups.keys()].filter((mat) => this.groups.get(mat)!.part.some((p) => !hidden.has(p))).sort();
     // The GLB writes a material's triangles node by node (outputUnits); a leaf's
     // range is drawn inside one node, so it moves as a block to where its node's
@@ -231,7 +238,9 @@ export class MeshBuilder extends MeshCore {
     };
     const root = build(this.root, "", title)!;
     const colors = materials.map((name) => this.palette[name]!.color);
-    return { version: 1, id, triangles: this.exteriorTriangleCount(), materials, colors, root };
+    let triangles = 0;
+    for (const g of this.groups.values()) for (const p of g.part) if (!hidden.has(p)) triangles++;
+    return { version: 1, id, triangles, materials, colors, root };
   }
 
   /**
@@ -250,9 +259,46 @@ export class MeshBuilder extends MeshCore {
     return n;
   }
 
-  /** How many triangles the model holds outside its interiors: what a design's budget counts. */
+  /** How many triangles the model holds outside its interiors and loads: the model at rest. */
   exteriorTriangleCount(): number {
-    return this.triangleCount() - this.interiorTriangleCount();
+    return this.triangleCount() - this.interiorTriangleCount() - this.loadTriangleCount();
+  }
+
+  /**
+   * A freight vehicle's load parts (loadPart.ts, docs/models/loads.md): each
+   * part's name and the commodities it stands for, in drawing order; null for a
+   * model without one.
+   */
+  loads(): Array<{ part: string; commodities: string[] }> | null {
+    return this.loadParts?.length ? this.loadParts.map((l) => ({ part: l.part, commodities: [...l.commodities] })) : null;
+  }
+
+  /** The load part the part at `index` is (or is inside), or null. */
+  private loadOf(index: number): { part: string; commodities: string[] } | null {
+    for (let p = index; p >= 0; p = this.parts[p]!.parent) {
+      const l = this.loadParts?.find((x) => x.part === this.parts[p]!.name);
+      if (l) return l;
+    }
+    return null;
+  }
+
+  /** Per load part (as `loads()` lists them), how many triangles it holds. */
+  loadTriangleCounts(): number[] {
+    return loadTriangleCounts(this);
+  }
+
+  /** How many triangles every load part holds together. */
+  loadTriangleCount(): number {
+    return this.loadTriangleCounts().reduce((a, b) => a + b, 0);
+  }
+
+  /**
+   * What a design's triangle budget counts: the exterior and the largest load it
+   * shows at once -- for each commodity, the load parts standing for it (one per
+   * car) together (docs/models/loads.md).
+   */
+  budgetTriangleCount(): number {
+    return budgetTriangles(this) - this.interiorTriangleCount();
   }
 
   /**
@@ -266,7 +312,9 @@ export class MeshBuilder extends MeshCore {
    * a model that smokes its emitters as `extras.emitters`, a fountain its water as
    * `extras.fountain`, a vehicle's lamps as `extras.lamps`, and the interiors and
    * the door clips revealing each as `extras.interiors`, each interior node marked
-   * `extras.interior` (collectTriangles leaves them out unless asked).
+   * `extras.interior`, and a freight vehicle's load parts as `extras.loads`, each
+   * load node marked `extras.load` with its commodities (collectTriangles leaves
+   * interiors and loads out unless asked).
    * Animation clips (see `animate`) become glTF animations of the part nodes,
    * linearly interpolated, and what plays each is the scene's `extras.clipDrives`.
    */
@@ -274,8 +322,8 @@ export class MeshBuilder extends MeshCore {
     type Json = {
       asset: { version: string; generator: string };
       scene: number;
-      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown; clipDrives?: unknown; lamps?: unknown; interiors?: unknown } }>;
-      nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[]; extras?: { interior: true } }>;
+      scenes: Array<{ nodes: number[]; extras?: { rig?: unknown; emitters?: unknown; fountain?: unknown; clipDrives?: unknown; lamps?: unknown; interiors?: unknown; loads?: unknown } }>;
+      nodes: Array<{ mesh: number; name: string; translation?: Vec3; children?: number[]; extras?: { interior: true } | { load: string[] } }>;
       meshes: Array<{ name: string; primitives: unknown[] }>;
       materials: unknown[];
       accessors: unknown[];
@@ -290,17 +338,19 @@ export class MeshBuilder extends MeshCore {
     const drives = this.clipDrives();
     const lamps = this.lamps();
     const interiors = this.interiors();
+    const loads = this.loads();
+    const loadOf = (part: string): string[] | undefined => loads?.find((l) => l.part === part)?.commodities;
     const json: Json = {
       asset: { version: "2.0", generator },
       scene: 0,
       scenes: [{
         nodes: units.map((_, i) => i).filter((i) => units[i]!.index < 0 || this.parts[units[i]!.index]!.parent < 0),
-        ...(this.rig || this.emitterList.length || this.water || drives || lamps || interiors ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}), ...(lamps ? { lamps } : {}), ...(interiors ? { interiors } : {}) } } : {}),
+        ...(this.rig || this.emitterList.length || this.water || drives || lamps || interiors || loads ? { extras: { ...(this.rig ? { rig: this.rig } : {}), ...(this.emitterList.length ? { emitters: this.emitterList } : {}), ...(this.water ? { fountain: this.water } : {}), ...(drives ? { clipDrives: drives } : {}), ...(lamps ? { lamps } : {}), ...(interiors ? { interiors } : {}), ...(loads ? { loads } : {}) } } : {}),
       }],
       nodes: units.map((u, i) => {
         if (u.index < 0) return { mesh: i, name: u.name };
         const children = this.parts.map((p, k) => (p.parent === u.index ? nodeOf(k) : -1)).filter((k) => k >= 0);
-        return { mesh: i, name: u.name, translation: this.partOffset(u.index), ...(children.length ? { children } : {}), ...(isInteriorName(u.name) ? { extras: { interior: true as const } } : {}) };
+        return { mesh: i, name: u.name, translation: this.partOffset(u.index), ...(children.length ? { children } : {}), ...(isInteriorName(u.name) ? { extras: { interior: true as const } } : {}), ...(loadOf(u.name) ? { extras: { load: loadOf(u.name)! } } : {}) };
       }),
       meshes: units.map((u) => ({ name: u.name, primitives: [] })),
       materials: [],

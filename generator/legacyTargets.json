@@ -376,86 +376,62 @@
   },
   "train-truck-n-nas": {
     "designId": "veh-nas-flat-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-nas-2": {
     "designId": "veh-nas-flat-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-nas-full-1": {
     "designId": "veh-nas-flat-wagon",
-    "params": {
-      "cargo": "wood"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-nas-full-2": {
     "designId": "veh-nas-flat-wagon",
-    "params": {
-      "cargo": "tubes"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-nas-full-3": {
     "designId": "veh-nas-flat-wagon",
-    "params": {
-      "cargo": "reels"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-ua-empty": {
     "designId": "veh-ua-open-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-ua-1": {
     "designId": "veh-ua-open-wagon",
-    "params": {
-      "cargo": "coal"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-ua-2": {
     "designId": "veh-ua-open-wagon",
-    "params": {
-      "cargo": "wood"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-ua-3": {
     "designId": "veh-ua-open-wagon",
-    "params": {
-      "cargo": "sand"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-eas": {
     "designId": "veh-eas-open-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-eas-drevo": {
     "designId": "veh-eas-open-wagon",
-    "params": {
-      "cargo": "wood"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-eas-uhlo": {
     "designId": "veh-eas-open-wagon",
-    "params": {
-      "cargo": "coal"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-raj": {
@@ -480,30 +456,22 @@
   },
   "train-truck-n-sqns": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-sqns-full-1": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-pao-full-1": {
     "designId": "veh-pao-flat-wagon",
-    "params": {
-      "cargo": "tubes"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-pao-full-2": {
     "designId": "veh-pao-flat-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Transported tram/bus intentionally omitted; use the corresponding empty wagon."
   },
@@ -3255,23 +3223,17 @@
   },
   "train-truck-n-pao-2": {
     "designId": "veh-pao-flat-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-wap-2": {
     "designId": "veh-wap-hopper-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "reproduction"
   },
   "train-truck-n-nas-full-4": {
     "designId": "veh-nas-flat-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Transported tram/bus intentionally omitted; use the corresponding empty wagon."
   },
@@ -3620,9 +3582,7 @@
   },
   "train-truck-n-pao": {
     "designId": "veh-pao-flat-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
@@ -3646,65 +3606,49 @@
   },
   "train-truck-n-sqs": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-sqs-full-1": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-sqs-full-2": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-sqs-full-3": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-sqs-full-4": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-sqs-full-5": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-sqs-full-6": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-sqs-full-7": {
     "designId": "veh-sqns-container-wagon",
-    "params": {
-      "cargo": "maersk"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
@@ -3716,25 +3660,19 @@
   },
   "train-truck-n-wap": {
     "designId": "veh-wap-hopper-wagon",
-    "params": {
-      "cargo": "empty"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-wap-full-1": {
     "designId": "veh-wap-hopper-wagon",
-    "params": {
-      "cargo": "coal"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },
   "train-truck-n-wap-full-3": {
     "designId": "veh-wap-hopper-wagon",
-    "params": {
-      "cargo": "coal"
-    },
+    "params": {},
     "quality": "substitute",
     "reason": "Archived model; nearest available vehicle family, preserving role and approximate size."
   },

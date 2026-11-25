@@ -2,7 +2,7 @@
 
 **Covers** - the site's export list (the "Add to export" button, the app bar's Export panel, its browser storage), the two formats it writes in the browser (a NewGRF for OpenTTD and a ZIP of GLB files), the model page's one-click "Download for OpenTTD" and its OpenTTD view, how a vehicle becomes OpenTTD sprites, the GRF encoder, the `openttd` block every vehicle a GRF can hold states (facts, presets, formations) and the balance formula, the preview scenes prerendered in OpenTTD, and how the GRF was checked against nmlc and a real OpenTTD.
 **Code** - `src/exportList.ts`, `src/ExportPanel.tsx`, `src/exportRun.ts`, `src/download.ts`, `src/modelModule.ts`, `src/zip.ts`, `src/ModelDetail.tsx` (the stage bar), `src/OpenttdPreview.tsx`, `src/openttd/properties.ts`, `src/openttd/projection.ts`, `src/openttd/spriteRenderer.ts`, `src/openttd/pixels.ts`, `src/openttd/grf.ts`, `src/openttd/scene.ts`, `src/openttd/scenes/`, `generator/design.ts` (`OpenttdProperties`, `checkOpenttdProperties`), `generator/openttd.ts`, `generator/openttdTable.ts`, `generator/openttdIds.ts`, `generator/openttdIds.json`, `generator/writeOpenttdIds.ts`, `generator/generate.ts` (`checkOpenttdDesign`), `generator/catalog.ts` (`catalogRecord`), `generator/openttdScenes/` (the prerender, its marker GRF, scene AI and game script, the headless preview), `test/openttdGrf.test.ts`, `test/openttdExport.test.ts`, `test/openttdOneClick.test.ts`, `test/openttdIds.test.ts`, `test/exportList.test.ts`
-**See also** - [catalog-site.md](catalog-site.md), [../models/openttd-figures.md](../models/openttd-figures.md) (every vehicle's figures), [../models/game-properties.md](../models/game-properties.md), [../models/js-format.md](../models/js-format.md), [../specs/2026-10-17-openttd-grf-export.md](../specs/2026-10-17-openttd-grf-export.md), [../specs/2026-11-04-one-click-openttd-export.md](../specs/2026-11-04-one-click-openttd-export.md)
+**See also** - [../models/loads.md](../models/loads.md), [catalog-site.md](catalog-site.md), [../models/openttd-figures.md](../models/openttd-figures.md) (every vehicle's figures), [../models/game-properties.md](../models/game-properties.md), [../models/js-format.md](../models/js-format.md), [../specs/2026-10-17-openttd-grf-export.md](../specs/2026-10-17-openttd-grf-export.md), [../specs/2026-11-04-one-click-openttd-export.md](../specs/2026-11-04-one-click-openttd-export.md)
 
 ## The export list
 
@@ -226,6 +226,13 @@ squeezed about three times against width) looked stubby, true proportions at
 OpenTTD's lengths too thin.
 
 ### Sprites
+
+A freight vehicle is drawn loaded with its first load part's first commodity, full,
+as its thumbnail (`showFirstLoad`, `src/viewerLoads.ts`; the preview sheets the same):
+OpenTTD holds one sprite set per vehicle, and its hidden load parts would otherwise
+leave it empty ([../models/loads.md](../models/loads.md)). The presets that named a
+loaded/empty value (the well car's `cargo`, the Lohr's, Triple E's and Europaschiff's
+`load=empty`) went with those parameters: their ids are kept `retired` in the id table.
 
 `spriteViews` (`projection.ts`) gives, per part and direction, the model-to-tile
 matrix, the orthographic projection of the sprite's frame (the slice's box on

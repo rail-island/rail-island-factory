@@ -1,9 +1,10 @@
 // The open hopper wagons transferred from vlakosimdb (listed with the other
 // freight wagons in freightWagons.ts): the Faccs ballast hopper and the Falls
 // coal hopper in their liveries, and the older Wap (the CSD name of the same
-// self-discharging type) with its load. Each body is the JT7 clip solid of its
-// XML `box`/`base` shapes (freightWagonParts.ts clipSolid), open at the top over
-// its load. Source coordinates as in freightWagons.ts. See docs/models/freight-wagons.md.
+// self-discharging type). Each body is the JT7 clip solid of its XML
+// `box`/`base` shapes (freightWagonParts.ts clipSolid), open at the top over an
+// inner tub, and its loads -- a heap of coal, iron ore or grain -- are hidden
+// load parts on the tub's floor (loadKit.ts, docs/models/loads.md). Source coordinates as in freightWagons.ts. See docs/models/freight-wagons.md.
 
 import { type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
@@ -13,6 +14,7 @@ import { WAGON_PALETTE, Wagon } from "./wagonParts.ts";
 import { blockPart, clipShell, drawGearLod, freightWagonLod, joinSameColour, roofBoxPart, wagonBogies, wagonBox } from "./lodSteam.ts";
 import { FREIGHT_NUMBERS, boldText, clipSolid, numberLines, surfaceStrip, type Clip, type Pt } from "./freightWagonParts.ts";
 import { strokeText as strokeLetters } from "./strokeFont.ts";
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, loadLodPart } from "./loadKit.ts";
 
 const sideName = (s: number) => (s > 0 ? "right side" : "left side");
 const endName = (e: number) => (e > 0 ? "front end" : "rear end");
@@ -36,6 +38,8 @@ const HOPPER_PALETTE: Record<string, MaterialSpec> = {
   yellowInk: { color: "#e8e000", roughness: 0.5 },
   handrail: { color: "#d8c838", roughness: 0.5 },
   steelwork: { color: "#3a3a3c", roughness: 0.7 },
+  inside: { color: "#3b3631", roughness: 0.9 },
+  ...LOAD_PALETTE,
 };
 
 /** A livery of a hopper: its parameter value, title, vlakosimdb folder and paints. */
@@ -53,6 +57,51 @@ const liveryParam = (liveries: readonly HopperLivery[]): readonly ParamSpec[] =>
 /** An open-topped body: the faces of `clip` but its top, which the load fills. */
 function openTop(c: Wagon, mat: string, clip: Clip): void {
   clipSolid(c, mat, clip, (n) => n[1] < 0.999);
+}
+
+/** An open top's inner tub: where the top's opening and the tub run. */
+interface Tub {
+  /** The opening in the body's top: source x0..x1, half width, at height y. */
+  top: readonly [number, number, number, number];
+  /** The tub: source x0..x1, half width, its floor's height (below the top). */
+  tub: readonly [number, number, number, number];
+}
+
+/**
+ * What an empty hopper shows through its open top: the rim from the opening in
+ * to the tub (facing up), the tub's walls facing in and its floor facing up --
+ * so the hollow body is never seen into. The loads stand on that floor.
+ */
+function hopperTub(c: Wagon, mat: string, rimMat: string, t: Tub): void {
+  const m = c.m;
+  const [a0, a1, ah, y] = t.top;
+  const [b0, b1, bh, f] = t.tub;
+  const P = (x: number, yy: number, z: number): Vec3 => [c.X(x), yy, z];
+  // the rim 6 mm under the opening's edge, so a heap's flat edge facets never lie on it
+  const r = y - 0.006;
+  m.scope("rim", () => {
+    m.facets(rimMat, [P(a0, r, -ah), P(a1, r, -ah), P(b1, r, -bh), P(a0, r, -ah), P(b1, r, -bh), P(b0, r, -bh)], [0, 1, 0]);
+    m.facets(rimMat, [P(a0, r, ah), P(b0, r, bh), P(b1, r, bh), P(a0, r, ah), P(b1, r, bh), P(a1, r, ah)], [0, 1, 0]);
+    m.facets(rimMat, [P(a0, r, -ah), P(b0, r, -bh), P(b0, r, bh), P(a0, r, -ah), P(b0, r, bh), P(a0, r, ah)], [0, 1, 0]);
+    m.facets(rimMat, [P(a1, r, -ah), P(a1, r, ah), P(b1, r, bh), P(a1, r, -ah), P(b1, r, bh), P(b1, r, -bh)], [0, 1, 0]);
+  });
+  m.scope("tub", () => {
+    for (const s of [-1, 1]) m.facets(mat, [P(b0, f, s * bh), P(b1, f, s * bh), P(b1, r, s * bh), P(b0, f, s * bh), P(b1, r, s * bh), P(b0, r, s * bh)], [0, 0, -s]);
+    for (const [x, s] of [[b0, 1], [b1, -1]] as const) m.facets(mat, [P(x, f, -bh), P(x, f, bh), P(x, r, bh), P(x, f, -bh), P(x, r, bh), P(x, r, -bh)], [s, 0, 0]);
+    m.facets(mat, [P(b0, f, -bh), P(b1, f, -bh), P(b1, f, bh), P(b0, f, -bh), P(b1, f, bh), P(b0, f, bh)], [0, 1, 0]);
+  });
+}
+
+/** The loads of an open top (docs/models/loads.md): a heap per bulk look filling the opening, pivoted on the tub's floor. */
+function hopperLoads(c: Wagon, t: Tub, rise: number, mounds: number): void {
+  const [x0, x1, half, y] = t.top;
+  bulkLoads(c.m, [c.X((x0 + x1) / 2), t.tub[3], 0], (mat) => c.m.scope("heap", () => loadSurface(c, mat, x0, x1, half, y, rise, mounds)));
+}
+
+/** A hopper LOD's loads: a hipped roof box per bulk look over the opening, pivoted on the tub's floor. */
+function hopperLodLoads(C: number, t: Tub, rise: number, optional?: number) {
+  const [x0, x1, half, f] = t.tub;
+  return BULK_LOOKS.map((look) => loadLodPart(look.commodities, f, roofBoxPart(C, look.mat, x0, x1, half, half * 0.4, t.top[3], t.top[3] + rise, optional)));
 }
 
 /**
@@ -89,6 +138,9 @@ const FACCS_SECTION: Pt[] = [[-1.3, 3.8], [-0.8, 4.2], [0.8, 4.2], [1.3, 3.8], [
 const FACCS_LOWER: Clip = { section: FACCS_SECTION, elevation: [[3.6, 1.2], [3.3, 2.1], [9.5, 2.1], [9.2, 1.2]] };
 const FACCS_UPPER: Clip = { section: FACCS_SECTION, elevation: [[3.3, 2.1], [2.0, 3.9], [2.1, 4.2], [10.7, 4.2], [10.8, 3.9], [9.5, 2.1]] };
 
+/** The Faccs's open top over x 2.1..10.7, |z| 0.8 at 4.2 m, and its tub down to 3.6 m. */
+const FACCS_TUB: Tub = { top: [2.1, 10.7, 0.8, 4.2], tub: [2.25, 10.55, 0.75, 3.6] };
+
 /** The Faccs self-discharging ballast hopper (vlakosimdb n_faccs, viamont_faccs). */
 export function faccsHopperWagon(params?: ParamValues): MeshBuilder {
   const { livery } = resolveParams(FACCS_PARAMS, params);
@@ -100,8 +152,9 @@ export function faccsHopperWagon(params?: ParamValues): MeshBuilder {
       clipSolid(c, "upper", FACCS_LOWER, (n) => n[1] < 0.999);
       clipSolid(c, "upper", FACCS_UPPER, (n) => Math.abs(n[1]) < 0.999);
     });
-    // the ballast in the open top (native y_dec: grey stones over x 2.2..10.6, |z| < 0.7)
-    m.scope("load", () => loadSurface(c, "ballast", 2.1, 10.7, 0.8, 4.2, 0.08, 3));
+    // the tub in the open top and its loads (native y_dec: the load over x 2.2..10.6, |z| < 0.7)
+    hopperTub(c, "inside", "upper", FACCS_TUB);
+    hopperLoads(c, FACCS_TUB, 0.08, 3);
     // the darker lower slopes under the side's crease at 2.5 m (native rows 20..27)
     m.scope("lower slopes", () => {
       for (const s of [-1, 1]) {
@@ -193,7 +246,7 @@ export function faccsHopperWagonLod(params?: ParamValues): MeshBuilder {
   const C = 6.4;
   // the VIAMONT board on the upper side
   const board = (s: number) => ({ u: [(s > 0 ? 6.7 : 3.0) - C, (s > 0 ? 9.9 : 6.2) - C] as const, y: [3.1, 3.75] as const, mat: "ink", sides: [s], optional: 40 });
-  const hopper = clipShell(C, [FACCS_LOWER, FACCS_UPPER], [[1.2, 2.1, "lower"], [2.1, 4.2, "upper"]], { end: [[1.2, 4.2, "upper"]], roof: "ballast" });
+  const hopper = clipShell(C, [FACCS_LOWER, FACCS_UPPER], [[1.2, 2.1, "lower"], [2.1, 4.2, "upper"]], { end: [[1.2, 4.2, "upper"]], roof: "inside" });
   return freightWagonLod({
     palette: { ...WAGON_PALETTE, ...HOPPER_PALETTE, ...L.paint },
     shells: [
@@ -206,6 +259,7 @@ export function faccsHopperWagonLod(params?: ParamValues): MeshBuilder {
       roofBoxPart(C, "upper", 12.5, 12.6, 1.5, 1.5, 1.2, 2.3, 30),
       blockPart(C, "lower", 4.4, 8.4, 0.1, 0.9, 1.4, 20),
       wagonBogies(C, [[2.25, 2.0], [10.55, 2.0]], 0.9),
+      ...hopperLodLoads(C, FACCS_TUB, 0.1),
     ],
   });
 }
@@ -235,6 +289,9 @@ const FALLS_UPPER: Clip = {
   elevation: [[0.1, 4.0], [0.4, 3.0], [12.6, 3.0], [12.9, 4.0], [12.9, 4.3], [0.1, 4.3]],
 };
 
+/** The Falls's open top over x 0.1..12.9, |z| 1.2 at 4.3 m, and its tub down to 3.1 m. */
+const FALLS_TUB: Tub = { top: [0.1, 12.9, 1.2, 4.3], tub: [0.45, 12.55, 1.15, 3.1] };
+
 /** The Falls self-discharging coal hopper (vlakosimdb n_falls, sd_falls, viamont_falls). */
 export function fallsHopperWagon(params?: ParamValues): MeshBuilder {
   const { livery } = resolveParams(FALLS_PARAMS, params);
@@ -248,7 +305,8 @@ export function fallsHopperWagon(params?: ParamValues): MeshBuilder {
       m.scope("centre post", () => c.box("shade", 6.1, 6.9, 0.92, 3.0, -1.4, 1.4));
     });
     m.scope("upper", () => openTop(c, "upper", FALLS_UPPER));
-    m.scope("load", () => loadSurface(c, "coal", 0.1, 12.9, 1.2, 4.3, 0.12, 2));
+    hopperTub(c, "inside", "upper", FALLS_TUB);
+    hopperLoads(c, FALLS_TUB, 0.12, 2);
     if (livery !== "cd")
       m.scope("panels", () => {
         // the lower side panels inside their border (SD grey, Viamont black; native rows 31..48)
@@ -305,12 +363,13 @@ export function fallsHopperWagonLod(params?: ParamValues): MeshBuilder {
   return freightWagonLod({
     palette,
     // the centre post between the two halves of the lower box
-    shells: [{ ...clipShell(C, [lower, FALLS_UPPER], side, { end: [[0.9, 2.95, "lower"], [2.95, 4.3, "upper"]], roof: "coal" }), sideWindows: [{ u: [6.1 - C, 6.9 - C] as const, y: [0.9, 2.95] as const, mat: "shade", optional: 35 }] }],
+    shells: [{ ...clipShell(C, [lower, FALLS_UPPER], side, { end: [[0.9, 2.95, "lower"], [2.95, 4.3, "upper"]], roof: "inside" }), sideWindows: [{ u: [6.1 - C, 6.9 - C] as const, y: [0.9, 2.95] as const, mat: "shade", optional: 35 }] }],
     parts: [
       blockPart(C, "frame", 2.6, 10.9, 0.55, 0.9, 1.3, 20),
       roofBoxPart(C, "frame", 12.6, 13.2, 1.5, 1.5, 0.85, 0.95, 15),
       drawGearLod(C, [[0.3, 0.4]], 0.85, 1.2, 1.45, "frame"),
       wagonBogies(C, [[2.45, 2.0], [10.55, 2.0]], 0.9),
+      ...hopperLodLoads(C, FALLS_TUB, 0.15),
     ],
   });
 }
@@ -324,7 +383,6 @@ const WAP_PALETTE: Record<string, MaterialSpec> = {
   lower: { color: "#a3a68b", roughness: 0.65 },
   frame: { color: "#33363a", roughness: 0.8 },
   letter2: { color: "#ecece4", roughness: 0.6 },
-  gravel: { color: "#77746e", roughness: 0.95 },
 };
 
 /** The Wap body: the lower box and the upper bulge (XML `base`). */
@@ -337,10 +395,11 @@ const WAP_UPPER: Clip = {
   elevation: [[0.9, 3.5], [1.4, 3.0], [12.8, 3.0], [13.3, 3.5], [13.3, 4.1], [0.9, 4.1]],
 };
 
-/** The loaded Wap self-discharging hopper (vlakosimdb n_wap-full#2). */
-export const WAP_PARAMS: ParamSpec[] = [{name:"cargo",title:"Cargo",default:"coal",values:[{value:"coal",title:"Loaded"},{value:"empty",title:"Empty"}]}];
-export function wapHopperWagon(given?: ParamValues): MeshBuilder {
-  const {cargo} = resolveParams(WAP_PARAMS, given);
+/** The Wap's open top over x 0.9..13.3, |z| 1.1 at 4.1 m, and its tub down to 3.1 m. */
+const WAP_TUB: Tub = { top: [0.9, 13.3, 1.1, 4.1], tub: [1.4, 12.8, 1.05, 3.1] };
+
+/** The Wap self-discharging hopper (vlakosimdb n_wap-full#2), its loads hidden load parts. */
+export function wapHopperWagon(): MeshBuilder {
   const c = new Wagon(WAP_PALETTE, 6.75);
   const m = c.m;
   m.scope("body", () => {
@@ -353,12 +412,13 @@ export function wapHopperWagon(given?: ParamValues): MeshBuilder {
         m.scope("post", () => c.sideBox("shade", s, 6.8, 7.4, 0.9, 3.0, 1.4, 1.48));
         m.scope("rail", () => c.sideBox("shade", s, 1.4, 12.8, 2.95, 3.02, 1.4, 1.46));
       });
-    // the gravel heaped above the rim (XML `load`: up to 4.5 m)
-    if (cargo === "coal") m.scope("load", () => {
+    hopperTub(c, "inside", "upper", WAP_TUB);
+    // the loads heaped above the rim (XML `load`: up to 4.5 m), on the tub's floor
+    bulkLoads(m, [c.X(7.1), WAP_TUB.tub[3], 0], (mat) => m.scope("heap", () => {
       const elev: Pt[] = [[1.4, 4.1], [3.2, 4.5], [5.2, 4.1], [6.1, 4.4], [9.1, 4.5], [12.8, 4.1]];
       const sect: Pt[] = [[-1.1, 4.1], [-0.9, 4.1], [-0.1, 4.5], [0.5, 4.4], [0.9, 4.1], [1.1, 4.1]];
-      c.heap("gravel", 0.9, 13.3, 1.1, 24, 8, (x, z) => Math.max(4.1, Math.min(lerp(elev, x), lerp(sect, z))));
-    });
+      c.heap(mat, 0.9, 13.3, 1.1, 24, 8, (x, z) => Math.max(4.1, Math.min(lerp(elev, x), lerp(sect, z))));
+    }));
   });
   m.scope("underframe", () => {
     m.scope("frame", () => c.box("frame", 0.5, 13.0, 0.78, 1.2, -1.3, 1.3));
@@ -389,18 +449,17 @@ export function wapHopperWagon(given?: ParamValues): MeshBuilder {
 }
 
 
-/** The Wap from afar (lodSteam.ts): the lower box and upper bulge, the gravel heaped above the rim (loaded), the brake platform and bogies. */
-export function wapHopperWagonLod(given?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(WAP_PARAMS, given);
+/** The Wap from afar (lodSteam.ts): the lower box and upper bulge, the loads heaped above the rim, the brake platform and bogies. */
+export function wapHopperWagonLod(): MeshBuilder {
   const C = 6.75;
   // the post between the side flaps
-  const shells = [{ ...clipShell(C, [WAP_LOWER, WAP_UPPER], [[0.8, 3.0, "lower"], [3.0, 4.1, "upper"]], { roof: cargo === "coal" ? "gravel" : "shade" }), sideWindows: [{ u: [6.8 - C, 7.4 - C] as const, y: [0.9, 3.0] as const, mat: "shade", optional: 35 }] }];
+  const shells = [{ ...clipShell(C, [WAP_LOWER, WAP_UPPER], [[0.8, 3.0, "lower"], [3.0, 4.1, "upper"]], { roof: "inside" }), sideWindows: [{ u: [6.8 - C, 7.4 - C] as const, y: [0.9, 3.0] as const, mat: "shade", optional: 35 }] }];
   const parts = [
     blockPart(C, "shade", 0.5, 1.4, 1.2, 1.3, 1.4, 15),
     drawGearLod(C, [[0.5, 0.6], [12.8, 13.0]], 0.8, 1.2, 1.4, "frame"),
     wagonBogies(C, [[3.55, 2.0], [10.65, 2.0]], 0.8),
   ];
-  // the heap above the rim
-  if (cargo === "coal") parts.push(roofBoxPart(C, "gravel", 1.4, 12.8, 1.1, 0.45, 4.1, 4.5, 45));
+  // the heaps above the rim, hidden load parts
+  parts.push(...hopperLodLoads(C, WAP_TUB, 0.4));
   return freightWagonLod({ palette: { ...WAGON_PALETTE, ...WAP_PALETTE }, shells, parts });
 }

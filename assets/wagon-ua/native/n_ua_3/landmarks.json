@@ -714,7 +714,7 @@
     7
    ],
    "nodes": [
-    "cargo"
+    "load-iron-ore"
    ],
    "tolerancePixels": 1.01,
    "uncertainty": "The XML `load` visual hull above the 3.3 m rim (alongx section, alongz heaps); the BMP paints the load only from above."

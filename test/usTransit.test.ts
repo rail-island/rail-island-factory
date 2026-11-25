@@ -177,12 +177,13 @@ describe("the US passenger cars, urban rail and freight cars", () => {
     }
   });
 
-  it("stacks the well car's containers to the double-stack gauge, single by default", () => {
-    expect(US_FREIGHT.find((d) => d.id === "proc-vehicle-us-well-car")!.params![0]!.default).toBe("single");
-    const h = (cargo: string) => glbStats(wellCar({ cargo }).toGlb("w")).max[1];
-    expect(h("single")).toBeLessThanOrEqual(LOADING_GAUGES.us.height);
-    expect(h("double")).toBeGreaterThan(LOADING_GAUGES.us.height);
-    expect(h("double")).toBeLessThanOrEqual(LOADING_GAUGES.usDoubleStack.height);
+  it("stacks the well car's two containers, a hidden load part, to the double-stack gauge", () => {
+    expect(US_FREIGHT.find((d) => d.id === "proc-vehicle-us-well-car")!.params).toBeUndefined();
+    expect(wellCar().loads()).toEqual([{ part: "load-goods", commodities: ["goods", "food"] }]);
+    const h = (loads: boolean) => glbStats(wellCar().toGlb("w"), { loads }).max[1];
+    expect(h(false)).toBeLessThanOrEqual(LOADING_GAUGES.us.height);
+    expect(h(true)).toBeGreaterThan(LOADING_GAUGES.us.height);
+    expect(h(true)).toBeLessThanOrEqual(LOADING_GAUGES.usDoubleStack.height);
   });
 
   it("draws the single-ended Powell car and the longer, double-ended California car", () => {

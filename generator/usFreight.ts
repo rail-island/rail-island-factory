@@ -1,10 +1,11 @@
 // North American freight cars and the San Francisco cable car: a cupola
-// caboose, a 50 ft boxcar and a double-stack well car (its `cargo` single by
-// default, double reaching the US double-stack gauge), and the Powell Street
+// caboose, a 50 ft boxcar and a double-stack well car (its two containers a
+// hidden load part, reaching the US double-stack gauge), and the Powell Street
 // cable car. Boxes drawn with the hood kit's painted sweeps (usHoodKit.ts),
 // US trucks and knuckle couplers. See docs/models/us-freight.md.
 
 import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
+import { CONTAINER_COMMODITIES, loadLodPart } from "./loadKit.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { paint } from "./dieselParts.ts";
@@ -738,10 +739,6 @@ export function boxcarLod(params?: ParamValues): MeshBuilder {
 // (-x), the brake wheel on its stand. Along a side, u runs from the viewer's left
 // to right (x = s * u), so both sides read alike.
 
-export const WELL_PARAMS: readonly ParamSpec[] = [{
-  name: "cargo", title: "Cargo", default: "single",
-  values: [{ value: "empty", title: "Empty" }, { value: "single", title: "Single stack" }, { value: "double", title: "Double stack" }],
-}];
 export const WELL_LENGTH = ft(63, 6);
 /**
  * The car's measures (m): the end sills, the well's ends, the girders' deep bottom
@@ -1009,8 +1006,7 @@ function wcIbcs(m: MeshBuilder, y: number): void {
   for (const ex of [-1, 1]) for (const s of [-1, 1]) block(m, "black", ex * (CONTAINER.len / 2 - 0.089) - 0.07, ex * (CONTAINER.len / 2 - 0.089) + 0.07, y, y + 0.02, s * (CONTAINER.half - 0.081) - 0.06, s * (CONTAINER.half - 0.081) + 0.06);
 }
 
-export function wellCar(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(WELL_PARAMS, params);
+export function wellCar(): MeshBuilder {
   const m = new MeshBuilder(WC_PALETTE);
   m.scope("car", () => {
     for (const s of [-1, 1])
@@ -1026,15 +1022,16 @@ export function wellCar(params?: ParamValues): MeshBuilder {
     m.scope("floor", () => wcFloor(m));
     for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => wcEnd(m, e));
   });
-  if (cargo !== "empty")
+  // the load (docs/models/loads.md): two containers stacked in the well, a hidden load part on its deck
+  loadPart(m, CONTAINER_COMMODITIES, [0, WL.deck, 0], () =>
     m.scope("containers", () => {
       m.scope("lower", () => container(m, WL.deck, "cBlue", "RIXU 401235 0"));
-      if (cargo === "double")
-        m.scope("upper", () => {
-          wcIbcs(m, WL.deck + CONTAINER.h);
-          container(m, WL.deck + CONTAINER.h + 0.02, "cRed", "RIXU 512870 3");
-        });
-    });
+      m.scope("upper", () => {
+        wcIbcs(m, WL.deck + CONTAINER.h);
+        container(m, WL.deck + CONTAINER.h + 0.02, "cRed", "RIXU 512870 3");
+      });
+    }),
+  );
   m.scope("trucks", () => {
     m.scope("front truck", () => m.bogie(() => bxTruck(m, WL.centre)));
     m.scope("rear truck", () => m.bogie(() => bxTruck(m, -WL.centre)));
@@ -1043,15 +1040,15 @@ export function wellCar(params?: ParamValues): MeshBuilder {
   return m;
 }
 
-export function wellCarLod(params?: ParamValues): MeshBuilder {
-  const { cargo } = resolveParams(WELL_PARAMS, params);
+export function wellCarLod(): MeshBuilder {
   // the girders and end structures as one box, the containers standing out of the well on it, the trucks
   const body: UnitBody = { y0: WL.bottom, hw: [[WL.bottom, WL.outer], [WL.top, WL.outer]], side: [[WL.bottom, WL.top, "wcYellow"]], roof: "wcYellow", front: { tip: [[WL.bottom, WL.sill]] }, rear: { tip: [[WL.bottom, -WL.sill]] }, windows: [] };
   const [x0, x1] = [-CONTAINER.len / 2, CONTAINER.len / 2];
-  const boxes: Array<[number, string]> = cargo === "empty" ? [] : cargo === "single" ? [[WL.deck, "cBlue"]] : [[WL.deck, "cBlue"], [WL.deck + CONTAINER.h + 0.02, "cRed"]];
+  const boxes: Array<[number, string]> = [[WL.deck, "cBlue"], [WL.deck + CONTAINER.h + 0.02, "cRed"]];
   const parts: LodPart[] = [
     ...bogieParts([[WL.centre, 1.3], [-WL.centre, 1.3]], WL.endUnder),
-    ...boxes.map(([y0, mat]): LodPart => ({ draw: (m) => m.scope("containers", () => block(m, mat, x0, x1, Math.max(y0, WL.top - 0.1), y0 + CONTAINER.h, -CONTAINER.half, CONTAINER.half)) })),
+    // the two containers, one hidden load part (docs/models/loads.md)
+    loadLodPart(CONTAINER_COMMODITIES, WL.deck, { draw: (m) => m.scope("containers", () => { for (const [y0, mat] of boxes) block(m, mat, x0, x1, Math.max(y0, WL.top - 0.1), y0 + CONTAINER.h, -CONTAINER.half, CONTAINER.half); }) }),
   ];
   return fitUnit({ palette: WC_PALETTE, bodies: [body], parts }, 100);
 }
@@ -1064,6 +1061,7 @@ export function wellCarLod(params?: ParamValues): MeshBuilder {
 
 import { letters, wordWidth } from "./letters.ts";
 import type { Table } from "./lodKit.ts";
+import { loadPart } from "./loadPart.ts";
 
 export const CABLE_CAR_PARAMS: readonly ParamSpec[] = [{
   name: "livery", title: "Livery", default: "powell",
@@ -1501,6 +1499,6 @@ const wagonGame = (weight: number, variants: GameProperties["variants"] = []): G
 export const US_FREIGHT: ProceduralDesign[] = [
   { id: "proc-vehicle-us-caboose", title: "Cupola caboose", build: caboose, buildLod: cabooseLod, params: CABOOSE_PARAMS, finishParams: ["livery"], game: wagonGame(22), catalog: WAGON_CATALOG, loadingGauge: "us", references: "us-caboose" },
   { id: "proc-vehicle-us-boxcar", title: "50 ft boxcar", build: boxcar, buildLod: boxcarLod, params: BOXCAR_PARAMS, finishParams: ["livery"], game: wagonGame(30), catalog: WAGON_CATALOG, loadingGauge: "us", references: "us-boxcar" },
-  { id: "proc-vehicle-us-well-car", title: "Double-stack well car", build: wellCar, buildLod: wellCarLod, params: WELL_PARAMS, game: wagonGame(32, [{ params: { cargo: "empty" }, weight: 22 }, { params: { cargo: "double" }, weight: 42 }]), catalog: WAGON_CATALOG, loadingGauge: "usDoubleStack", references: "us-well-car" },
+  { id: "proc-vehicle-us-well-car", title: "Double-stack well car", build: wellCar, buildLod: wellCarLod, game: wagonGame(22), catalog: WAGON_CATALOG, loadingGauge: "usDoubleStack", references: "us-well-car" },
   { id: "proc-vehicle-sf-cable-car", title: "San Francisco cable car", build: cableCar, buildLod: cableCarLod, params: CABLE_CAR_PARAMS, game: { weight: 7, power: 40, maxspeed: 15, accel: null }, catalog: { ...TRAM_CATALOG, traction: "cable" }, loadingGauge: "us", references: "sf-cable-car" },
 ];
