@@ -153,6 +153,9 @@ import { SMALL_DIESELS } from "./smallDiesels.ts";
 import { CITY_BUS_DESIGNS, KAROSA_DESIGNS } from "./buses.ts";
 import { VILLAGE_HOUSES } from "./village.ts";
 import { unknownTableIds } from "./soundMapping.ts";
+import { unknownTrafficIds } from "./traffic.ts";
+import { BUILDING_TRAFFIC } from "./trafficTable.ts";
+import { VEHICLE_CAPACITY } from "./capacityTable.ts";
 import { COMMERCIAL_BUILDINGS } from "./commercial.ts";
 import { PANEL_HOUSES } from "./panelHouses.ts";
 import { TREES } from "./trees.ts";
@@ -890,6 +893,12 @@ export async function buildExport(
     if (unknown.length) throw new Error(`generator/soundTable.ts names no such model: ${unknown.join(", ")}`);
     const unconfirmed = unknownCatalogIds(DESIGNS.keys());
     if (unconfirmed.length) throw new Error(`generator/catalogModels.json names no such model: ${unconfirmed.join(", ")}`);
+    // every model the passengers-and-cargo tables name must exist (docs/models/traffic.md)
+    const ids = [...DESIGNS.keys()].map(proceduralId);
+    for (const [file, table] of [["trafficTable.ts", BUILDING_TRAFFIC], ["capacityTable.ts", VEHICLE_CAPACITY]] as const) {
+      const stray = unknownTrafficIds(table, ids);
+      if (stray.length) throw new Error(`generator/${file} names no such model: ${stray.join(", ")}`);
+    }
     const badLinks = linkTableProblems(DESIGNS.keys());
     if (badLinks.length) throw new Error(`generator/linkTable.ts: ${badLinks.join("; ")}`);
   }

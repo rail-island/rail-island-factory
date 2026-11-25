@@ -9,7 +9,7 @@ how they are checked and exported, and where today's values came from.
 `generator/catalog.ts` (`metaEntry`, `exportMeta`, `withCityUse`, `exportVehicleMeta`),
 `generator/cityVariants.ts`, `generator/partyWalls.ts`, `generator/helipad.ts` (`measureHelipad`), `test/cityVariants.test.ts`, `test/partyWalls.test.ts`, every
 design module's `game` field, `test/export.test.ts`
-**See also** - [sounds.md](sounds.md) (the `sounds` field), [token-prices.md](token-prices.md) (the `tokenPrice` beside `game`), [export.md](export.md), [../site/openttd-export.md](../site/openttd-export.md) (the optional `openttd` block for the GRF export), [parameters.md](parameters.md),
+**See also** - [sounds.md](sounds.md) (the `sounds` field), [traffic.md](traffic.md) (`traffic` and `capacity`, written by the export), [token-prices.md](token-prices.md) (the `tokenPrice` beside `game`), [export.md](export.md), [../site/openttd-export.md](../site/openttd-export.md) (the optional `openttd` block for the GRF export), [parameters.md](parameters.md),
 [legacy-mapping.md](legacy-mapping.md), [vehicles.md](vehicles.md),
 [reproductions.md](reproductions.md), [hospital.md](hospital.md), [industry.md](industry.md#offshore-platform)
 
@@ -21,6 +21,10 @@ the design's `id`; a long one (many variants) is a named constant just above the
 design list in the same module, e.g. `CD_163_GAME`. The item types of the mapped
 lists (`SteamDesign`, `TramDesign`, `WagonDesign`, `FreightDesign`,
 `CoachDesign`) carry a required `game`, which their map hands on.
+
+Two fields of the exported block are not declared here: a building's `traffic` and a
+vehicle's `capacity`, the passengers and cargo, stated in tables beside the designs
+and written by the export ([traffic.md](traffic.md)), like the `sounds`.
 
 The build writes the block, unchanged, into the design's meta entry as `game`
 (`skyscrapers.meta.json`, `village.meta.json`, `vehicles.meta.json`), and

@@ -50,6 +50,12 @@ document that owns it in the same change.** Conventions:
   is committed with it. **OpenTTD ids are stored in players' saved games**: never
   edit or reuse an id there; a renamed preset or formation keeps its ids through
   an alias.
+- **Every building and vehicle states its passengers and cargo** (docs/models/traffic.md):
+  a building's residents, jobs and cargo in `generator/trafficTable.ts`, a vehicle's seats
+  and cargo in `generator/capacityTable.ts` (`generator/capacity/`), never on the design;
+  the build fails without them (Station and Decor buildings, locomotives and cable car
+  machinery excepted). A new design adds its entry in the same change. Cargo class ids
+  are stored in players' saved games: never rename one.
 - **Every vehicle states its game properties** (`game` on the design: weight,
   power, maxspeed, accel); the build fails without them.
 - **`export/` and `dist/` are generated and gitignored.** Never commit them.

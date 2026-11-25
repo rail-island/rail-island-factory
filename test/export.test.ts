@@ -27,8 +27,11 @@ describe("exportMeta", () => {
     expect(meta.count).toBe(SKYSCRAPERS.length);
     expect(meta.buildings.map((b) => b.id)).toEqual(SKYSCRAPERS.map((d) => d.id));
     for (const { game, ...b } of meta.buildings) {
-      // the city variants (cityVariants.ts, test/cityVariants.test.ts) are the only game property a skyscraper has
-      if (game) expect(Object.keys(game), b.id).toEqual(b.id === "proc-building-sky-glass-office" ? ["city", "helipad"] : ["city"]);
+      // the city variants (cityVariants.ts, test/cityVariants.test.ts) and the passengers and cargo
+      // (traffic.ts, test/traffic.test.ts) are the only game properties a skyscraper has
+      const keys = Object.keys(game ?? {});
+      expect(keys.at(-1), b.id).toBe("traffic");
+      if (keys.length > 1) expect(keys.slice(0, -1), b.id).toEqual(b.id === "proc-building-sky-glass-office" ? ["city", "helipad"] : ["city"]);
       expect(b).toEqual({
         id: b.id,
         title: SKYSCRAPERS.find((d) => d.id === b.id)!.title,
@@ -55,10 +58,12 @@ describe("exportMeta for the village houses", () => {
     for (const { game, ...b } of meta.buildings) {
       const d = VILLAGE_HOUSES.find((x) => x.id === b.id)!;
       // every house a city builds carries its city variants; the alpine hut is placed by hand only
-      if (d.id === "proc-building-village-alpine-hut") expect(game).toBeUndefined();
+      // (and every house its passengers and cargo: traffic.ts)
+      const traffic = expect.objectContaining({ residents: expect.any(Number) });
+      if (d.id === "proc-building-village-alpine-hut") expect(game).toEqual({ traffic });
       // the row house also names the sides it can stand against its neighbours
-      else if (d.id === "proc-building-village-narrow-house") expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array), party: ["left", "right"] } });
-      else expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array) } });
+      else if (d.id === "proc-building-village-narrow-house") expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array), party: ["left", "right"] }, traffic });
+      else expect(game, d.id).toEqual({ city: { variants: expect.any(Array), colours: expect.any(Array) }, traffic });
       expect(b).toEqual({
         id: d.id,
         title: d.title,
@@ -101,10 +106,12 @@ describe("exportVehicleMeta", () => {
     expect(meta.count).toBe(VEHICLES.length);
     expect(meta).not.toHaveProperty("buildings");
     expect(meta.vehicles.map((v) => v.id)).toEqual(VEHICLES.map((d) => d.id));
-    // the sounds are soundMapping.ts's (test/soundMapping.test.ts): set apart here
+    // the sounds are soundMapping.ts's (test/soundMapping.test.ts), the capacity traffic.ts's
+    // (test/traffic.test.ts): set apart here
     const noSounds = (game: (typeof meta.vehicles)[number]["game"]) => {
-      const { sounds, variants, ...rest } = game!;
+      const { sounds, variants, capacity, ...rest } = game!;
       expect(sounds).toBeDefined();
+      expect(capacity).toBeDefined();
       return variants ? { ...rest, variants: variants.map(({ sounds: _s, ...x }) => x) } : rest;
     };
     for (const v of meta.vehicles) {
@@ -137,17 +144,18 @@ describe("exportVehicleMeta", () => {
 describe("game properties", () => {
   // What the game needs beyond geometry is the factory's: every vehicle states its
   // running figures, and the build refuses one that does not.
-  it("are in every vehicle's meta entry, and only plaza/block/city/sounds in a building's", () => {
+  it("are in every vehicle's meta entry, and only plaza/block/city/sounds/helipad/offshore/traffic in a building's", () => {
     for (const v of exportVehicleMeta(ALL_VEHICLES).vehicles) {
       expect(v.game, v.id).toBeDefined();
       for (const k of ["weight", "power", "maxspeed", "accel"] as const) expect(v.game, `${v.id} ${k}`).toHaveProperty(k);
     }
     for (const b of exportMeta(BUILDINGS).buildings) {
-      if (b.game) expect(Object.keys(b.game).every((k) => ["plaza", "block", "city", "sounds", "helipad", "offshore"].includes(k)), b.id).toBe(true);
+      if (b.game) expect(Object.keys(b.game).every((k) => ["plaza", "block", "city", "sounds", "helipad", "offshore", "traffic"].includes(k)), b.id).toBe(true);
     }
     expect(exportMeta(BUILDINGS).buildings.find((b) => b.id === "proc-building-brandenburg-gate")!.game).toEqual({
       plaza: { cities: ["city"], layouts: ["rect"], fit: "footprint" },
       city: { variants: [{ size: expect.any(Array) }] },
+      traffic: expect.objectContaining({ jobs: expect.any(Number) }),
     });
     // the per-variant figures: the CD 162 runs at 140 km/h, the 163 at 120
     const cd163 = exportVehicleMeta(ALL_VEHICLES).vehicles.find((v) => v.id === "proc-vehicle-cd-163")!.game!;

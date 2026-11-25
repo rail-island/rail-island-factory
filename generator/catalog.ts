@@ -27,6 +27,9 @@ import { checkGameProperties, resolveParams, type CatalogFields, type GameProper
 import type { VehicleRig } from "./rig.ts";
 import { cityExport, extentOf, type CityExport } from "./cityVariants.ts";
 import { measureHelipad, type ExportedHelipad } from "./helipad.ts";
+import { exportedBlock, isVehicleCategory, trafficProblems, type ExportedCapacity, type ExportedTraffic } from "./traffic.ts";
+import { BUILDING_TRAFFIC } from "./trafficTable.ts";
+import { VEHICLE_CAPACITY } from "./capacityTable.ts";
 
 /** A design's game properties as a meta entry carries them: a building's city use exported (cityVariants.ts). */
 export type ExportedGame = Omit<GameProperties, "city" | "variants" | "helipad"> & {
@@ -36,6 +39,10 @@ export type ExportedGame = Omit<GameProperties, "city" | "variants" | "helipad">
   /** Its sounds by slot, written by the export (soundMapping.ts, docs/models/sounds.md). */
   sounds?: SoundMapping;
   variants?: Array<NonNullable<GameProperties["variants"]>[number] & { sounds?: SoundOverride }>;
+  /** A building's passengers and cargo (traffic.ts, trafficTable.ts); `{}` for one that generates nothing. */
+  traffic?: ExportedTraffic;
+  /** A vehicle's seats and cargo space (traffic.ts, capacityTable.ts); `{}` for one that carries nothing. */
+  capacity?: ExportedCapacity;
 };
 import { RAIL_COLLECTOR_TOP, TRAM_COLLECTOR_TOP } from "./collector.ts";
 import { checkDesignSounds, declaredSounds, defaultValues, shipHullStuds, withSounds } from "./soundMapping.ts";
@@ -440,7 +447,34 @@ export function exportMeta(designs: readonly ProceduralDesign[]): ExportMeta {
     checkGameProperties(withoutSounds(d), false);
     checkDesignSounds(d, false);
   }
-  return { note: NOTE, count: designs.length, buildings: designs.map((d) => withTokenPrice(withCityUse(metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG), d), null)) };
+  checkTraffic(designs, SKYSCRAPER_CATALOG);
+  return { note: NOTE, count: designs.length, buildings: designs.map((d) => withTokenPrice(withTraffic(withCityUse(metaEntry(d, d.catalog ?? SKYSCRAPER_CATALOG), d)), null)) };
+}
+
+/** A design's passengers-and-cargo table entry (trafficTable.ts or capacityTable.ts), by its exported id. */
+function trafficEntry(id: string, category: string) {
+  return isVehicleCategory(category) ? VEHICLE_CAPACITY[id] : BUILDING_TRAFFIC[id];
+}
+
+/** Throws, naming every problem, when a confirmed design's traffic or capacity is missing or wrong (traffic.ts trafficProblems). */
+function checkTraffic(designs: readonly ProceduralDesign[], family: CatalogFields): void {
+  // a draft is in no game meta file (workshop.ts): it states its numbers once it is confirmed
+  const problems = designs.filter((d) => !isDraft(d.id)).flatMap((d) => {
+    const fields = d.catalog ?? family;
+    return trafficProblems(d, fields, trafficEntry(proceduralId(d.id), fields.category));
+  });
+  if (problems.length) throw new Error(`passengers and cargo:\n  ${problems.join("\n  ")}`);
+}
+
+/**
+ * An entry with its passengers and cargo (docs/models/traffic.md): a vehicle's
+ * `game.capacity`, a building's `game.traffic`, each `{}` when the design carries
+ * nothing. Written last, after the sounds and the city use.
+ */
+export function withTraffic(entry: MetaEntry): MetaEntry {
+  const vehicle = isVehicleCategory(entry.category);
+  const block = exportedBlock(trafficEntry(entry.id, entry.category));
+  return { ...entry, game: { ...(entry.game ?? {}), ...(vehicle ? { capacity: block } : { traffic: block }) } as ExportedGame };
 }
 
 /** A design's measured extents by its values, so an export measures each variant once. */
@@ -459,7 +493,8 @@ export function measuredExtent(design: ProceduralDesign, values: ParamValues): [
 
 /** A design's meta entry as its meta file lists it: a building's with its city variants. */
 export function listedEntry(entry: MetaEntry, design: ProceduralDesign, building: boolean): MetaEntry {
-  return building ? withCityUse(entry, design) : entry;
+  if (building) return withTraffic(withCityUse(entry, design));
+  return isVehicleCategory(entry.category) ? withTraffic(entry) : entry;
 }
 
 /**
@@ -550,11 +585,12 @@ export function exportVehicleMeta(
     checkGameProperties(withoutSounds(d), true);
     checkDesignSounds(d, true);
   }
+  checkTraffic(designs, VEHICLE_CATALOG);
   return {
     note: NOTE,
     count: designs.length,
     vehicles: designs.map((d) =>
-      withTokenPrice(metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null, seats.get(d.id) ?? null, doors.get(d.id) ?? null), sizes.get(d.id) ?? null),
+      withTokenPrice(withTraffic(metaEntry(d, d.catalog ?? VEHICLE_CATALOG, rigs.get(d.id) ?? null, sides.get(d.id) ?? null, seats.get(d.id) ?? null, doors.get(d.id) ?? null)), sizes.get(d.id) ?? null),
     ),
   };
 }
