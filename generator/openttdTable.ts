@@ -1028,6 +1028,13 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-sbb-ew4-coach": pax(54, RAIL, { variants: [at({ unit: "b" }, { capacity: 78 })], presets: presets({ unit: "b" }, ...each("livery", "sbb")) }),
   "proc-vehicle-sbb-ic2000": pax(100, RAIL, { variants: [at({ unit: "b" }, { capacity: 130 })], presets: presets({ unit: "b" }) }),
   "proc-vehicle-glacier-express": pax(36, RAIL, { variants: [at({ unit: "second" }, { capacity: 48 })], presets: presets({ unit: "second" }) }),
+  // Austria (docs/models/austria-trains.md)
+  // the 4010 power car carries the luggage and guard's compartments: no seats
+  "proc-vehicle-obb-4010": pax(0, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 60 }), at({ unit: "endCar" }, { capacity: 42 })],
+    presets: presets({ unit: "middleCar" }, { unit: "endCar" }, ...each("livery", "trafficRed")),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{ unit: "endCar" }, "turned"])],
+  }),
   // Spain (docs/models/spain-trains.md)
   "proc-vehicle-renfe-s100": series(0, 41, ELRL, { cars: 8, liveries: ["avlo"] }), // power cars without seats; 329 seats in 8 trailers
   "proc-vehicle-renfe-s103": series(40, 50, ELRL, { cars: 8 }),

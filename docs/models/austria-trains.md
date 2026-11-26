@@ -18,7 +18,48 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-4020 -->
 
-<!-- design:obb-4010 -->
+### OBB 4010 Transalpin (`proc-vehicle-obb-4010`)
+
+- **Built on**: the series kit (`generator/shinkansen.ts`) with its own cab face (`generator/seriesCab.ts`),
+  `generator/atObb4010.ts`: the 6010 driving trailer as the end car, the 7010 as the intermediate car and
+  the 4010 power car leading through `leadEnd` (its own length, layout, grilles, bogies, pantograph and
+  roof); the design maps its own `unit` values onto the kit's. No kit change.
+- **Parameters**: `unit` - `powerCar` (default, 4010), `middleCar` (7010 open second), `endCar` (6010
+  driving trailer), `train`; `cars` 3 - 6 (default 4) with `train`: the power car, 7010s, the driving
+  trailer turned at the rear. `livery` - `blueIvory` (default; ultramarine and ivory with the Pflatsch,
+  4010 027-3 / 6010 012-0) and `trafficRed` (the 1990s Valousek scheme, 4010 008-3 / 6010 008-8).
+- **Figures** (German Wikipedia "OBB 4010"): 149.12 m in six cars - power car 16.82 m, intermediate cars
+  26.4 m, driving trailer 26.7 m (buffers at the cab ends, centre couplers between the cars); `game` 64 t
+  power car, 44 t intermediate car, 43 t driving trailer (283 t in six), 2,500 kW, 150 km/h. Width
+  2.83 m and crown 3.85 m are estimates from the head-on photographs (not published).
+- **Face** (head-on 4010 021, about 200 px/m from the buffer spacing; 4010 027 three-quarter): upright to
+  the windscreens' foot (2.34 m), the two windscreens leaning back about 9 degrees to 3.2 m, the dome
+  rounding back 1.0 m to the crown; corners rounded 0.42 m in plan; the corner windows wrapping round onto
+  the cab sides to 0.98 m behind the tip; the round head lamps (1.9 m) over the tail lamps (1.6 m) on
+  their rings at lat 1.0; the top lamp's round housing standing forward off the dome with the red marker
+  under it; rectangular buffers.
+- **Sides** (projective fits on 4010 008 and 6010 008, the Leoben photograph): power car - cab door and
+  its high window, two louvred grilles, the luggage door and window, two grilles, two narrow windows by
+  the gangway; the brake resistor housing on the roof from 2.0 to 8.6 m behind the tip, the single-arm
+  pantograph at 11 m (knee to the inner end), Bo'Bo' 9.0 m apart. Driving trailer - cab door, luggage
+  window, door at 6.6 m, seven saloon windows at a 2.3 m pitch, rear door. 7010 - a door at each end,
+  eleven windows 1.22 m wide at 1.95 m. Bogies 19.0 m apart on the coaches.
+- **Paint**: blueIvory - ivory with the blue window band (2.08 - 3.23 m), an ivory and a blue line under
+  it and a blue line at 1.19 - 1.3 m; the face blue under the ivory dome with an ivory and a blue line
+  over the windscreens, the lamps on red fields framed in ivory, the white Pflatsch and number; the face's
+  blue sweeping back onto the cab side down to the low line. trafficRed - red, the grey-white band
+  1.33 - 1.77 m (across the face under the lamps), red, the umbra grey window band 2.0 - 3.11 m starting
+  behind the cab window, umbra grey round the windscreens and corner windows.
+- **References**: `assets/obb-4010/` - eleven Commons photographs (SOURCES.md), 1970 to 2008.
+- **Deviations**: the brief's `bloodOrange` is not modelled: the class never wore it (de.wikipedia lists
+  sapphire/ultramarine and ivory, then the Valousek traffic red, as do all photographs); `trafficRed` is
+  the later scheme. The 1965 sapphire scheme with the wing emblem is folded into `blueIvory`. The
+  compartment cars (7110, corridor and compartment sides differ) and the dining car (7310) are drawn as
+  7010s: no photograph of their sides was found. Both sides of each car are the same. The corner windows
+  stay glazed in both liveries (the rebuilt units had them closed). The distant model's 100-triangle
+  budget drops the pantograph and the resistor housing.
+- **Budget**: power car 15,498 (blueIvory) / 12,267 (trafficRed), driving trailer 15,662 / 12,179,
+  intermediate car 9,412 / 9,120; six cars 66,164; distant model 100 a car, 496 for six.
 
 <!-- design:obb-5047 -->
 

@@ -512,6 +512,7 @@
     "proc-vehicle-obb-1012": 48,
     "proc-vehicle-obb-1040": 49,
     "proc-vehicle-obb-1144": 835,
+    "proc-vehicle-obb-4010": 836,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
     "proc-vehicle-oslo-sl79": 778,
@@ -3228,6 +3229,26 @@
       "proc-vehicle-obb-1144?livery=bloodOrange": {
         "id": 10212,
         "size": 4
+      },
+      "proc-vehicle-obb-4010?": {
+        "id": 10216,
+        "size": 6
+      },
+      "proc-vehicle-obb-4010?formation=6 cars": {
+        "id": 10244,
+        "size": 32
+      },
+      "proc-vehicle-obb-4010?livery=trafficRed": {
+        "id": 10238,
+        "size": 6
+      },
+      "proc-vehicle-obb-4010?unit=endCar": {
+        "id": 10230,
+        "size": 8
+      },
+      "proc-vehicle-obb-4010?unit=middleCar": {
+        "id": 10222,
+        "size": 8
       },
       "proc-vehicle-odakyu-gse?": {
         "id": 5546,

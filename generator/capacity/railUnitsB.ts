@@ -633,4 +633,16 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 360 },
     ],
   },
+  "proc-vehicle-obb-4010": {
+    seats: 0,
+    source: "de.wikipedia: OBB 4010 six-car set 66 first + 174 second + 34 dining seats; the 4010 power car has no seats (luggage and guard's compartments), the 7010 open second ~60 (10 bays of 6), the 6010 driving trailer 42 first (7 bays of 6)",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 60 },
+      { params: { unit: "endCar" }, seats: 42 },
+      { params: { unit: "train" }, seats: 162 },
+      { params: { unit: "train", cars: "3" }, seats: 102 },
+      { params: { unit: "train", cars: "5" }, seats: 222 },
+      { params: { unit: "train", cars: "6" }, seats: 282 },
+    ],
+  },
 };
