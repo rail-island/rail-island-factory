@@ -12,6 +12,7 @@ import { nodeCards, touches, type ChainGraph, type ChainNode, type ChainDrawing,
 import type { Row } from "./catalogQuery";
 import { Link } from "./Link";
 import { Thumb } from "./Thumb";
+import { VariantThumb } from "./VariantThumb";
 
 /** How many vehicles a group shows before its "Show all" button. */
 const VEHICLES_SHOWN = 12;
@@ -26,9 +27,9 @@ export interface ChainsProps {
   onSelect: (id: string | null) => void;
   /** The URL that selects a node (null: none). */
   hrefSelect: (id: string | null) => string;
-  /** Opens a card's model; a commodity's vehicle with `load`, the commodity, shown loaded. */
-  onOpen: (r: Row, load?: string) => void;
-  hrefOpen: (r: Row, load?: string) => string;
+  /** Opens a card's model; a commodity's vehicle in the selection that carries it (`params`) with `load`, the commodity, shown loaded. */
+  onOpen: (r: Row, params: Record<string, string>, load?: string) => void;
+  hrefOpen: (r: Row, params: Record<string, string>, load?: string) => string;
 }
 
 export function ChainsView(props: ChainsProps) {
@@ -240,10 +241,10 @@ export function NodeCards(props: ChainsProps & { node: ChainNode }) {
   );
 }
 
-function CardGroupView(props: { group: CardGroup; byId: Map<string, Row>; onOpen: (r: Row, load?: string) => void; hrefOpen: (r: Row, load?: string) => string }) {
+function CardGroupView(props: { group: CardGroup; byId: Map<string, Row>; onOpen: (r: Row, params: Record<string, string>, load?: string) => void; hrefOpen: (r: Row, params: Record<string, string>, load?: string) => string }) {
   const [all, setAll] = createSignal(false);
   const cards = () => [
-    ...(props.group.buildings ?? []).map((c) => ({ ...c, tonnes: undefined as number | undefined })),
+    ...(props.group.buildings ?? []).map((c) => ({ ...c, tonnes: undefined as number | undefined, params: {} as Record<string, string> })),
     ...(props.group.vehicles ?? []),
   ];
   const shown = () => (props.group.vehicles && !all() ? cards().slice(0, VEHICLES_SHOWN) : cards());
@@ -262,8 +263,10 @@ function CardGroupView(props: { group: CardGroup; byId: Map<string, Row>; onOpen
                 <li>
                   <Show when={row()} fallback={<span class="factory-chaincard">{c.title}</span>}>
                     {(r) => (
-                      <Link class="factory-chaincard" href={props.hrefOpen(r(), props.group.commodity)} onNavigate={() => props.onOpen(r(), props.group.commodity)}>
-                        <Thumb record={r()} />
+                      <Link class="factory-chaincard" href={props.hrefOpen(r(), c.params, props.group.commodity)} onNavigate={() => props.onOpen(r(), c.params, props.group.commodity)}>
+                        <Show when={Object.keys(c.params).length} fallback={<Thumb record={r()} />}>
+                          <VariantThumb record={r()} params={c.params} size="small" />
+                        </Show>
                         <span class="factory-chaincard__body">
                           <span class="factory-chaincard__title">{c.title}</span>
                           <span class="factory-muted factory-chaincard__line">{c.line}</span>

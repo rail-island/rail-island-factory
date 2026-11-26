@@ -20,6 +20,7 @@ import { proceduralId } from "../generator/modelId.ts";
 import { COMMODITIES } from "../generator/traffic.ts";
 import { applyLoads, loadChoices, loadsOf, shownSteps } from "../src/viewerLoads.ts";
 import { design, jsModuleOf } from "./catalogCache";
+import { carriers, chainGraph, type ChainRecord } from "../src/chains.ts";
 
 const PALETTE = { body: { color: "#808080" }, ...LOAD_PALETTE };
 
@@ -226,6 +227,29 @@ describe("loads against capacities", () => {
       for (const c of drawn) if (!carried.has(c)) problems.push(`${id} draws ${c} but its capacity does not carry it`);
     }
     expect(problems).toEqual([]);
+  });
+
+  it("a Chains carrier card opens the selection that carries its commodity, and draws it there unless the body is closed", () => {
+    // regression: the IR BOXN's covered BCNA carries lumber; its lumber card opened the open BOXN, which drew coal instead
+    const vehicles = ALL_VEHICLES.filter((d) => VEHICLE_CAPACITY[proceduralId(d.id)]);
+    const records: ChainRecord[] = vehicles.map((d) => ({ id: proceduralId(d.id), title: d.title, params: d.params as ChainRecord["params"], game: { capacity: VEHICLE_CAPACITY[proceduralId(d.id)] } as NonNullable<ChainRecord["game"]> }));
+    const g = chainGraph(records);
+    const byId = new Map(vehicles.map((d) => [proceduralId(d.id), d]));
+    const loadsOfSelection = new Map<string, ReturnType<ReturnType<(typeof vehicles)[number]["build"]>["loads"]>>();
+    const problems: string[] = [];
+    let drawn = 0;
+    for (const c of COMMODITIES) for (const card of carriers(g, c)) {
+      const key = `${card.id} ${JSON.stringify(card.params)}`;
+      if (!loadsOfSelection.has(key)) loadsOfSelection.set(key, byId.get(card.id)!.build(card.params).loads());
+      const loads = loadsOfSelection.get(key);
+      if (!loads) continue;
+      drawn++;
+      if (!loads.some((l) => l.commodities.includes(c))) problems.push(`${key} opened for ${c} draws no ${c}`);
+    }
+    expect(drawn).toBeGreaterThan(10);
+    expect(problems).toEqual([]);
+    expect(carriers(g, "lumber").find((v) => v.id === "proc-vehicle-ir-boxn-wagon")!.params).toEqual({ unit: "covered" });
+    expect(carriers(g, "coal").find((v) => v.id === "proc-vehicle-ir-boxn-wagon")!.params).toEqual({});
   });
 
   it("every vehicle that draws a load can show every commodity its capacity carries, at its defaults and in each capacity variant", () => {

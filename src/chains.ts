@@ -105,6 +105,11 @@ export function selectionsOf<F extends object>(record: Pick<CatalogRecord, "para
   return [resolve({}), ...(variants ?? []).map((v) => resolve(v.params))];
 }
 
+/** The parameters each of `selectionsOf`'s selections is chosen with: `{}` for the defaults, then each variant's own. */
+function selectionParams<F extends object>(block: Block<F>): Array<Record<string, string>> {
+  return [{}, ...(block.variants ?? []).map((v) => ({ ...v.params }))];
+}
+
 /** One recipe table a building runs, by its signature (its input -> output pairs), with its rates and stocks over its selections. */
 interface RecipeUse {
   key: string;
@@ -134,6 +139,8 @@ interface VehicleFacts {
   title: string;
   draft: boolean;
   tonnes: Map<string, number[]>;
+  /** Per commodity, the parameters of the first selection that carries the most of it (`{}`: the defaults). */
+  opens: Map<string, { params: Record<string, string>; tonnes: number }>;
 }
 
 function recipeKey(pairs: ReadonlyArray<[string, string]>): string {
@@ -166,8 +173,17 @@ function buildingFacts(r: ChainRecord): BuildingFacts | null {
 function vehicleFacts(r: ChainRecord): VehicleFacts | null {
   const block = r.game?.capacity as Block<VehicleCapacityFields> | undefined;
   if (!block) return null;
-  const facts: VehicleFacts = { id: r.id, title: r.title, draft: !!r.draft, tonnes: new Map() };
-  for (const f of selectionsOf(r, block)) if ((f.tonnes ?? 0) > 0) for (const c of f.commodities ?? []) push(facts.tonnes, c, f.tonnes!);
+  const facts: VehicleFacts = { id: r.id, title: r.title, draft: !!r.draft, tonnes: new Map(), opens: new Map() };
+  const given = selectionParams(block);
+  selectionsOf(r, block).forEach((f, i) => {
+    if (!((f.tonnes ?? 0) > 0)) return;
+    for (const c of f.commodities ?? []) {
+      push(facts.tonnes, c, f.tonnes!);
+      // a card opens the selection that carries the commodity (a BOXN's lumber is its covered BCNA), never one that does not
+      const best = facts.opens.get(c);
+      if (!best || f.tonnes! > best.tonnes) facts.opens.set(c, { params: given[i]!, tonnes: f.tonnes! });
+    }
+  });
   return facts.tonnes.size ? facts : null;
 }
 
@@ -584,6 +600,11 @@ export interface VehicleCard {
   /** The most tonnes it carries of the commodity, over its variants. */
   tonnes: number;
   line: string;
+  /**
+   * The parameters the card opens and draws the model with: those of the selection that
+   * carries the commodity (the first with the most tonnes), `{}` when its defaults do.
+   */
+  params: Record<string, string>;
 }
 
 export interface CardGroup {
@@ -635,7 +656,7 @@ export function carriers(g: ChainGraph, c: string): VehicleCard[] {
     const tonnes = v.tonnes.get(c);
     if (!tonnes) continue;
     const all = [...v.tonnes.keys()].sort(byOrder);
-    out.push({ id: v.id, title: v.title, draft: v.draft, tonnes: Math.max(...tonnes), line: `${range(tonnes, " t")} - ${all.map(lower).join(", ")}` });
+    out.push({ id: v.id, title: v.title, draft: v.draft, tonnes: Math.max(...tonnes), line: `${range(tonnes, " t")} - ${all.map(lower).join(", ")}`, params: v.opens.get(c)!.params });
   }
   return out.sort((a, b) => b.tonnes - a.tonnes || collator.compare(a.title, b.title) || a.id.localeCompare(b.id));
 }

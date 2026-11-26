@@ -71,13 +71,20 @@ describe("the Chains tab", () => {
 
   it("opens a commodity's vehicle loaded with that commodity, through the link and the click", () => {
     const opened: Array<[string, string | undefined]> = [];
-    const hrefOpen = (r: { id: string }, load?: string) => linkUrl({ ...parseView(""), model: r.id, load: load ?? null });
-    const html = render({ selected: "fuel", hrefOpen, onOpen: (r, load) => opened.push([r.id, load]) });
+    const hrefOpen = (r: { id: string }, params: Record<string, string>, load?: string) => linkUrl({ ...parseView(""), model: r.id, params, load: load ?? null });
+    const html = render({ selected: "fuel", hrefOpen, onOpen: (r, _params, load) => opened.push([r.id, load]) });
     expect(html).toContain('href="/model/proc-vehicle-tank/?load=fuel"');
     // the same vehicle from the oil node opens loaded with oil; a building's card names no load
     expect(render({ selected: "oil", hrefOpen })).toContain('href="/model/proc-vehicle-tank/?load=oil"');
     expect(render({ selected: "process-fuel", hrefOpen })).toContain('href="/model/proc-building-refinery/"');
     expect(nodeCards(chainGraph(ROWS), "fuel")[0]!.commodity).toBe("fuel");
+    // a vehicle whose variant carries the commodity opens in that variant (an IR BOXN's lumber is its covered BCNA)
+    const UNIT = [{ name: "unit", title: "Wagon", default: "open", values: [{ value: "open", title: "Open" }, { value: "covered", title: "Covered" }] }];
+    const wagon = { ...record("proc-vehicle-boxn", "Open and covered wagon", { capacity: { tonnes: 58, commodities: ["coal"], variants: [{ params: { unit: "covered" }, tonnes: 58, commodities: ["lumber"] }] } } as ChainRecord["game"]), params: UNIT } as CatalogRecord;
+    const rows = prepareRows([wagon]);
+    const at = (selected: string) => renderToString(() => ChainsView({ graph: chainGraph(rows), rows, wide: true, selected, onSelect: () => {}, hrefSelect: () => "/", onOpen: () => {}, hrefOpen }));
+    expect(at("lumber")).toContain('href="/model/proc-vehicle-boxn/?p.unit=covered&amp;load=lumber"');
+    expect(at("coal")).toContain('href="/model/proc-vehicle-boxn/?load=coal"');
     // the model page keeps it in the address, and the viewer shows it when the model's loads stand for it
     const v = parseView("?load=fuel", "/model/proc-vehicle-tank/");
     expect(v.load).toBe("fuel");

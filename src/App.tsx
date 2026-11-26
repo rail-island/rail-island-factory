@@ -348,8 +348,8 @@ export function App() {
                   selected={view().chain}
                   onSelect={(chain) => pick({ chain })}
                   hrefSelect={(chain) => viewUrl({ ...view(), ...chainPatch(chain) })}
-                  onOpen={(r, load) => onOpen(r, {}, load ?? null)}
-                  hrefOpen={(r, load) => hrefOpen(r, {}, load ?? null)}
+                  onOpen={(r, params, load) => onOpen(r, params, load ?? null)}
+                  hrefOpen={(r, params, load) => hrefOpen(r, params, load ?? null)}
                 />
               </>
             )}

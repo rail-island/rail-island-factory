@@ -156,6 +156,25 @@ describe("the cards", () => {
     expect(towns[0]!.buildings!.find((c) => c.id === "proc-building-shop")!.draft).toBe(true);
   });
 
+  it("open each carrier in the selection that carries the commodity, the defaults when they do", () => {
+    // regression: an open wagon whose covered unit carries lumber opened open, drawing coal under lumber
+    const UNIT = [{ name: "unit", title: "Wagon", default: "open", values: [{ value: "open", title: "Open" }, { value: "covered", title: "Covered" }] }] as ChainRecord["params"];
+    const wagon = vehicle("proc-vehicle-boxn", "Open and covered wagon", {
+      tonnes: 58, commodities: ["coal", "grain"],
+      variants: [{ params: { unit: "covered" }, tonnes: 58, commodities: ["goods", "lumber", "grain"] }],
+    }, { params: UNIT });
+    const big = vehicle("proc-vehicle-sized", "Sized flat", { tonnes: 40, commodities: ["steel"], variants: [{ params: { size: "big" }, tonnes: 70, commodities: ["steel"] }] }, { params: SIZE });
+    const wg = chainGraph([wagon, big]);
+    const opens = (c: string, id: string) => carriers(wg, c).find((v) => v.id === id)!.params;
+    expect(opens("coal", "proc-vehicle-boxn")).toEqual({});
+    expect(opens("lumber", "proc-vehicle-boxn")).toEqual({ unit: "covered" });
+    expect(opens("goods", "proc-vehicle-boxn")).toEqual({ unit: "covered" });
+    // carried alike at the defaults and in a variant: the defaults
+    expect(opens("grain", "proc-vehicle-boxn")).toEqual({});
+    // the most tonnes win
+    expect(opens("steel", "proc-vehicle-sized")).toEqual({ size: "big" });
+  });
+
   it("sort carriers by tonnes, the biggest first, and skip vehicles that carry nothing", () => {
     const more = chainGraph([...CATALOG, vehicle("proc-vehicle-big", "Big hopper", { tonnes: 90, commodities: ["coal"] })]);
     expect(carriers(more, "coal").map((v) => v.id)).toEqual(["proc-vehicle-big", "proc-vehicle-hopper"]);

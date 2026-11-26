@@ -98,8 +98,15 @@ Opening a model from a card is a history entry; its page keeps `?section=chains&
 in the URL, so closing it (the app bar's back arrow) returns to the tab with the node
 still picked.
 
-A vehicle card under a commodity (the group's `commodity`) opens its model **loaded
-with that commodity**: the link carries `?load=<commodity>` (`linkUrl`, so the plain
+A vehicle card under a commodity (the group's `commodity`) opens its model **in the
+selection that carries it, loaded with that commodity**. The selection is the card's
+`params` (`carriers`): `{}` when the defaults carry the commodity, else the parameters
+of the first variant carrying the most of it - the IR BOXN's lumber card opens its
+covered BCNA (`?p.unit=covered`), a closed body, never the open wagon, which has no
+lumber to draw and would show its coal. The card's picture is that selection's too
+(`VariantThumb` when `params` is not empty). `test/loads.test.ts` checks every
+confirmed vehicle's every card this way: the selection it opens either draws the
+commodity or draws no load at all. The link carries `?load=<commodity>` (`linkUrl`, so the plain
 href has it too, `/model/<id>/?load=fuel`), `ViewState.load` keeps it on the model
 page, and the viewer's Load select opens on it at full fill (`initialLoad` in
 `src/viewerLoads.ts`; [../models/loads.md](../models/loads.md)). The value is read
