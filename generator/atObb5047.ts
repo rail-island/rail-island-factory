@@ -10,7 +10,7 @@
 // traffic red (red ends with the dark grey band round the windscreens and cab sides, light grey body,
 // the current paint) and the delivery paint by Wolfgang Valousek (ivory, an ultramarine window band, a
 // blood-orange stripe and door zone, the old OBB emblem). Matched to the photographs and figures in
-// assets/obb-5047/ (SOURCES.md). See docs/models/austria-trains.md.
+// assets/obb-5047/ (SOURCES.md). See docs/models/austria-units.md.
 //
 // Heights over the rail. On the face and in the sweeps d behind the face's tip ("tip d"); elsewhere d
 // behind the face's join (body d, JOIN behind the tip). 25.42 m over the buffers (de.wikipedia "OBB

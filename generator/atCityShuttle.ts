@@ -11,7 +11,7 @@
 // driving trailer leads (wieselTrain): 3 .. 5 cars, the locomotive (its own design) at the rear.
 // Matched to the photographs in assets/obb-cityshuttle-dd/ (SOURCES.md) and the published figures
 // (de.wikipedia "OBB Nahverkehrs-Doppelstockwagen"). Registered in atUnits.ts. See
-// docs/models/austria-trains.md.
+// docs/models/austria-units.md.
 //
 // Heights over the rail. On the face d behind its tip; elsewhere d behind the body's front end (the
 // face's join on the driving trailer, the coupling gap on a coach).

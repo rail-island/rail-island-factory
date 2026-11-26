@@ -11,7 +11,7 @@
 // red swoosh with its dark grey wedge along the cab's sides. The coaches are copies of the series with
 // their own layouts: the couchette car's two-storey mini cabins (upper and lower frames of two panes
 // each) and the sleeping car's cabin windows. `unit` `train` is the set the control car leads.
-// Registered in atUnits.ts. See docs/models/austria-trains.md.
+// Registered in atUnits.ts. See docs/models/austria-units.md.
 //
 // Heights over the rail. On the face, d behind its tip (the buffer beam's front); on the control car's
 // sides d behind the tip too, written as `t(d)` where the kit takes d behind the body's front end (the

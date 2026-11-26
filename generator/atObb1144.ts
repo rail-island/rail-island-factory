@@ -1,7 +1,7 @@
 // The OBB 1044/1144 (proc-vehicle-obb-1144), the SGP / ELIN / BBC / Siemens Bo'Bo'
 // 15 kV 16.7 Hz universal locomotive of 1974-1995, on the box locomotive kit
 // (boxLocoKit.ts) with its own profile, measured on the reference photographs
-// (assets/obb-1144/SOURCES.md; docs/models/austria-trains.md):
+// (assets/obb-1144/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the cab front: an arrow in elevation, its foremost line at the windscreens'
 //   sill, the windscreen band leaning back into the round roof edge and the lower

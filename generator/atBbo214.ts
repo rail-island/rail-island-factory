@@ -2,7 +2,7 @@
 // express steam locomotive, a 1'D2' h2 (2-8-4 Berkshire) with its four-axle
 // tender, drawn on the steam kit (steamLoco.ts) as the preserved 12.10 (built
 // 1936) appears today, measured on the reference photographs
-// (assets/bbo-214/SOURCES.md; docs/models/austria-trains.md):
+// (assets/bbo-214/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the running gear: the leading axle 1.41 m behind the buffers, four coupled
 //   drivers of 1,940 mm 2.15 m apart, the two-axle trailing truck under the wide

@@ -9,7 +9,7 @@
 // its high-voltage module, the "Steuerwagen" at the rear its air conditioning. Two liveries: the
 // delivery paint (white, red front and red joints, the black window band) and the Cityjet repaint
 // (white, a red band under the windows, the red-framed mask, black doors). Registered in atUnits.ts.
-// See docs/models/austria-trains.md and assets/obb-4024/SOURCES.md.
+// See docs/models/austria-units.md and assets/obb-4024/SOURCES.md.
 //
 // Heights over the rail; d behind the face's tip (the lower face's front, 0.8 - 1.45 m up) on the
 // face, else d behind the body's front end (the face's join on an end car, the joint's gap on an

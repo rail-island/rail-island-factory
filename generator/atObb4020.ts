@@ -12,7 +12,7 @@
 // blue window band, stripe, cab panels and front, the S-Bahn "S" on the front) and the red and grey
 // "Schraegdesign" of the units repainted from 2004 (red ends, light grey between the doors, grey
 // front). Matched to the photographs in assets/obb-4020/ (SOURCES.md) and the published figures
-// (de.wikipedia "OBB 4020"). See docs/models/austria-trains.md.
+// (de.wikipedia "OBB 4020"). See docs/models/austria-units.md.
 //
 // Heights over the rail. On the face, d behind its tip (the lamp band's front); the layout's d behind
 // the body's front end (the face's join, JOIN behind the tip).

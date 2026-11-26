@@ -7,7 +7,7 @@
 // flat front leaning back above the gold bumper, the grey shield round the tall windscreen and the
 // two round lamps, the crash boxes and the Scharfenberg coupler low under it. Matched to the
 // photographs in assets/noevog-himmelstreppe/ (SOURCES.md) and the published figures (de.wikipedia
-// "NOVOG ET1-ET9"). See docs/models/austria-trains.md.
+// "NOVOG ET1-ET9"). See docs/models/austria-units.md.
 //
 // Heights over the rail. On the face, d behind its tip (the gold bumper's front); the layout's d
 // behind the body's front end (the face's join, JOIN behind the tip; an intermediate car's from its

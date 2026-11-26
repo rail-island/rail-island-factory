@@ -1,7 +1,7 @@
 // The OBB 1042/1142 (proc-vehicle-obb-1142), the SGP Bo'Bo' 15 kV 16.7 Hz universal
 // locomotive of 1963-1977 (the 1142 the 1042.531 - 707 rebuilt for push-pull service),
 // on the box locomotive kit (boxLocoKit.ts) with its own profile, measured on the
-// reference photographs (assets/obb-1142/SOURCES.md; docs/models/austria-trains.md):
+// reference photographs (assets/obb-1142/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the cab front: nearly upright, leaning back 0.2 m from the light grey band to the
 //   roof, a slight bow in plan and well rounded corners; the two windscreens side by

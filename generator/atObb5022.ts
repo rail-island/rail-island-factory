@@ -7,7 +7,7 @@
 // the face's lamp panel and the red ones on the sides - and the Cityjet repaint every unit wears since
 // 2017 (white over a red band the low-floor windows reach into, a black cap, a red line round the mask,
 // a white lamp panel with the red OBB letters, dark grey doors). Matched to the photographs in
-// assets/obb-5022/ (SOURCES.md). See docs/models/austria-trains.md.
+// assets/obb-5022/ (SOURCES.md). See docs/models/austria-units.md.
 //
 // Heights over the rail; d behind the face's tip on the face and in the end car's sweeps, else d behind
 // the body's front end (the face's join, DJOIN behind the tip).

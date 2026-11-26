@@ -85,7 +85,7 @@ export function worldTrainsSuite(index: number, count: number): void {
 describe("the eight countries' trains", () => {
   if (index === 0) it("are all filed under their country", () => {
     // the plan's 160 designs, the Class 378 added after it and the Austrian designs (docs/models/austria-trains.md)
-    expect(FAMILIES.length).toBe(174);
+    expect(FAMILIES.length).toBe(181);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);

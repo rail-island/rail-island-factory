@@ -2,7 +2,7 @@
 // 16.7 Hz electric locomotive of 1955-1961 (the 1110 the 110 km/h mountain version,
 // ten rebuilt as 1110.500 with a rheostatic brake in 1974-75), on the box locomotive
 // kit (boxLocoKit.ts) with its own profile, measured on the reference photographs
-// (assets/obb-1110/SOURCES.md; docs/models/austria-trains.md):
+// (assets/obb-1110/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the cab front: upright below the windscreens' sill line, the windscreen band
 //   leaning back a little, the roof rounding down over the cab in a dome; in plan a

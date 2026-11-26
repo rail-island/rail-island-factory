@@ -2,7 +2,7 @@
 // BBO E, DR E 99, OBB 1099.001-016, NOVOG E (Krauss Linz and the Austrian Siemens-Schuckert
 // works), a C'C' rod-drive locomotive for the 760 mm gauge at 6.5 kV 25 Hz, in the body the
 // OBB gave it in 1959-62. Measured on the reference photographs (assets/obb-1099/SOURCES.md;
-// docs/models/austria-trains.md):
+// docs/models/austria-locos.md):
 //
 // - the body on the box locomotive kit (boxLocoKit.ts): 10.1 m long over the end walls, 2.4 m
 //   wide, the side from 1.15 m to the eave at 3.12 m, the roof rounding to 3.4 m (de.wikipedia's

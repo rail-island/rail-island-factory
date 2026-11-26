@@ -1,7 +1,7 @@
 // The BBO 1100.1 / OBB 1189 (proc-vehicle-obb-1189, BBC Vienna and Floridsdorf,
 // 1926/27), the "Austrian crocodile": a (1'C)(C1') rod-drive electric for the
 // Arlberg and Tauern ramps, measured on the reference photographs
-// (assets/obb-1189/SOURCES.md; docs/models/austria-trains.md):
+// (assets/obb-1189/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the centre body on the box locomotive kit (boxLocoKit.ts): 6.84 m long, 3.0 m
 //   wide, its cab ends chamfered at the corners (a narrow window on each chamfer),

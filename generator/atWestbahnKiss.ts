@@ -6,7 +6,7 @@
 // chUnits.ts) with the KISS 2's smaller rectangular windscreen in a dark dome, the white face and the
 // light blue apron; the sides in the WESTbahn's white, light blue and lime green with diagonal sweeps
 // and orange door frames. Matched to the photographs in assets/westbahn-kiss/ (SOURCES.md).
-// See docs/models/austria-trains.md.
+// See docs/models/austria-units.md.
 //
 // Heights over the rail; d behind the face's tip on the face and in the end car's sweeps, else d behind
 // the body's front end (the face's join on the end car, the body's end on the middle car).

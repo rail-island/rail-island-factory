@@ -1,7 +1,7 @@
 // The OBB 2043 (proc-vehicle-obb-2043), the Jenbacher B'B' diesel-hydraulic of 1964-1977
 // (Jenbach DH 1500; 77 built, the series 2043.05 - 77 one metre longer than the four of the
 // pre-series), on the box locomotive kit (boxLocoKit.ts) with its own profile, measured on
-// the reference photographs (assets/obb-2043/SOURCES.md; docs/models/austria-trains.md):
+// the reference photographs (assets/obb-2043/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the cab front: upright and flat below the line under the windscreens, the windscreen
 //   panel leaning back above it, the roof edge rounded down to it, the corners rounded in

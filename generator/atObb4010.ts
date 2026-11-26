@@ -1,7 +1,7 @@
 // The OBB 4010 "Transalpin" (proc-vehicle-obb-4010): the SGP six-car electric multiple unit of
 // 1965-1978 (designer Johann Benda), drawn on the series kit (shinkansen.ts) with its own cab face
 // (seriesCab.ts), measured on the reference photographs (assets/obb-4010/SOURCES.md;
-// docs/models/austria-trains.md):
+// docs/models/austria-units.md):
 //
 // - the 4010 power car (16.82 m, Bo'Bo', 2,500 kW) leads: the cab, the machine room behind its
 //   louvred grilles, the luggage and guard's compartment, no seats; the single-arm pantograph at its

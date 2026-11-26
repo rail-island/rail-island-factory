@@ -6,7 +6,7 @@
 // The strongly raked face with the big black windscreen surround framed in red, the white band with
 // the OBB logo, the two lamp pods in the red band and the black buffer blocks; the Cityjet paint:
 // white over three red bands, dark grey doors. One pantograph, on the 4744.0 end car over its rear
-// bogie. Matched to the photographs in assets/obb-4744/ (SOURCES.md). See docs/models/austria-trains.md.
+// bogie. Matched to the photographs in assets/obb-4744/ (SOURCES.md). See docs/models/austria-units.md.
 //
 // Heights over the rail; d behind the face's tip on the face and in the end car's sweeps, else d behind
 // the body's front end (the face's join on the end car, the body's end on the middle car).

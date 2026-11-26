@@ -1,7 +1,7 @@
 // The OBB 2016 "Hercules" (proc-vehicle-obb-2016), Siemens' ER20 Bo'Bo' diesel-electric
 // locomotive of 2002 - 2004 (100 built, 2016 001 - 100), on the box locomotive kit
 // (boxLocoKit.ts) with its own profile, measured on the reference photographs
-// (assets/obb-2016/SOURCES.md; docs/models/austria-trains.md):
+// (assets/obb-2016/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the published figures (de.wikipedia "OBB 2016"): 19.275 m over the buffers, 2.87 m wide,
 //   bogie centres 10.362 m, 2.7 m wheelbase, 1,100 mm wheels, 80 t, 2,000 kW, 140 km/h;

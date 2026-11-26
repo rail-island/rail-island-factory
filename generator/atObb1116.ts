@@ -1,7 +1,7 @@
 // The OBB 1116 "Taurus" (proc-vehicle-obb-1116), the Siemens ES64U2 Bo'Bo'
 // dual-system electric locomotive of 2000 - 2006 (1016 / 1116), on the box
 // locomotive kit (boxLocoKit.ts) with its own profile, measured on the reference
-// photographs (assets/obb-1116/SOURCES.md; docs/models/austria-trains.md):
+// photographs (assets/obb-1116/SOURCES.md; docs/models/austria-locos.md):
 //
 // - the cab end: the rounded, bulging nose, one superellipse in plan from the
 //   centre line to the side walls, no flat middle; the face leans back about 12 degrees below the
