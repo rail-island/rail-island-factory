@@ -52,9 +52,9 @@ export interface Recipe {
   output: Commodity;
   /** Tonnes of each input used per tonne of output. */
   inputs: Tonnes;
-  /** At most this many tonnes of output per hour of game time. */
+  /** At most this many tonnes of output per minute of game time. */
   rate: number;
-  /** The stockpile cap, tonnes, per input. */
+  /** The stockpile cap, tonnes, per input: about 10 minutes of input at the full rate. */
   stock: number;
 }
 
@@ -64,7 +64,7 @@ export interface BuildingTrafficFields {
   residents?: number;
   /** People working in it. */
   jobs?: number;
-  /** What it makes from nothing, tonnes per hour of game time: a primary industry's raw commodity, a town's mail. */
+  /** What it makes from nothing, tonnes per minute of game time: a primary industry's raw commodity, a town's mail. */
   produces?: Tonnes;
   /** What it consumes on delivery (a town, a sink). */
   accepts?: Commodity[];
@@ -105,8 +105,19 @@ export type TableEntry<F> = F & {
 export type BuildingTrafficEntry = TableEntry<BuildingTrafficFields>;
 export type VehicleCapacityEntry = TableEntry<VehicleCapacityFields>;
 
+/**
+ * The unit of every rate in a building's traffic block: tonnes per minute of game
+ * time. The export writes it on every non-empty block, so the game can tell this
+ * table from an older per-hour import (a block without it).
+ */
+export const TRAFFIC_UNIT = "min";
+
 /** The exported blocks: the table entry without its source. Empty `{}` means none. */
-export type ExportedTraffic = BuildingTrafficFields & { variants?: TrafficVariant<BuildingTrafficFields>[] };
+export type ExportedTraffic = BuildingTrafficFields & {
+  /** The rates' unit (TRAFFIC_UNIT), on every non-empty building block; a variant carries none, the block's applies. */
+  unit?: typeof TRAFFIC_UNIT;
+  variants?: TrafficVariant<BuildingTrafficFields>[];
+};
 export type ExportedCapacity = VehicleCapacityFields & { variants?: TrafficVariant<VehicleCapacityFields>[] };
 
 /** Building categories whose designs generate nothing; every other building must state its traffic. */
@@ -318,6 +329,12 @@ export function exportedBlock(entry: BuildingTrafficEntry | VehicleCapacityEntry
   if (!entry || entry.nothing) return {};
   const { source: _source, nothing: _nothing, ...rest } = entry;
   return JSON.parse(JSON.stringify(rest)) as ExportedTraffic | ExportedCapacity;
+}
+
+/** A building's exported `game.traffic`: the block marked with its unit (TRAFFIC_UNIT); `{}` stays `{}`. */
+export function exportedTraffic(entry: BuildingTrafficEntry | undefined): ExportedTraffic {
+  const block = exportedBlock(entry) as ExportedTraffic;
+  return Object.keys(block).length ? { unit: TRAFFIC_UNIT, ...block } : {};
 }
 
 /**

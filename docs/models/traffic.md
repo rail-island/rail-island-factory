@@ -4,10 +4,12 @@
 a building's residents, jobs and supply-chain role - what it makes from nothing,
 consumes, or processes by a recipe (`game.traffic`) - and a vehicle's seats, tonnes
 and the commodities it may carry (`game.capacity`); the commodities, the chain and
-its check, which designs must state their numbers, variants and how they match, the
-checks, the export and where the numbers came from.
+its check, the per-minute unit and its marker, the tuning, which designs must state
+their numbers, variants and how they match, the checks, the export and where the
+numbers came from.
 **Code** - `generator/traffic.ts` (`COMMODITIES`, types, `mustCarry`,
-`trafficProblems`, `exportedBlock`, `resolvedNumbers`, `chainOf`, `chainProblems`),
+`trafficProblems`, `TRAFFIC_UNIT`, `exportedBlock`, `exportedTraffic`, `resolvedNumbers`,
+`chainOf`, `chainProblems`),
 `generator/trafficTable.ts` (buildings),
 `generator/capacityTable.ts` and `generator/capacity/*.ts` (vehicles),
 `generator/catalog.ts` (`withTraffic`, `checkTraffic`, `supplyChainProblems`),
@@ -23,8 +25,9 @@ checks, the export and where the numbers came from.
 The game's traffic engine (its `docs/gameplay/traffic.md`) makes every placed building
 generate groups of passengers and cargo with a target building, and carries them on
 the player's vehicles up to their capacity. A building generates
-`0.5 x residents + 0.25 x jobs` passenger trips per hour of game time and its `produces`
-rates of raw commodities and mail; a processor turns delivered inputs into its
+`5/60 x residents + 2.5/60 x jobs` passenger trips per minute of game time (the
+game's constants: the factory states people, not trips) and its `produces` rates of
+raw commodities and mail; a processor turns delivered inputs into its
 output by its recipe and makes nothing without them; a building attracts passengers
 by its jobs and residents and takes in the commodities it `accepts` or its recipe
 uses. Until a design carried these numbers, the game guessed
@@ -52,7 +55,8 @@ list):
 The ids are stored in players' saved games (the game's `traffic.json`): never rename
 one. A **raw** commodity is made from nothing at a fixed rate (`produces`), a
 **processed** one only by a recipe (`processes`), and **mail** by and for towns.
-**A unit is one tonne.** Passengers are people: a vehicle's `seats` count every
+**A unit is one tonne, and every rate is per minute of game time** (see "The unit
+marker" below). Passengers are people: a vehicle's `seats` count every
 passenger it takes, seated and standing; they are not a commodity.
 
 The names are exported text (`commodity.<id>`, `COMMODITY_LABELS` in
@@ -66,13 +70,14 @@ A building's `game.traffic`:
 ```ts
 {
   residents?: number; jobs?: number;          // whole people
-  produces?: { [commodity]: tonnesPerHour };  // made from nothing: raw commodities, mail
+  unit?: "min";                               // the rates' unit; on every non-empty block (export only)
+  produces?: { [commodity]: tonnesPerMinute }; // made from nothing: raw commodities, mail
   accepts?: commodity[];                      // consumed on delivery: towns and sinks
   processes?: {                               // a processor's recipe
     output: commodity;                        // a processed commodity
     inputs: { [commodity]: tonnesPerTonneOfOutput };
-    rate: number;                             // at most this many t of output an hour
-    stock: number;                            // stockpile cap in t, per input
+    rate: number;                             // at most this many t of output a minute
+    stock: number;                            // stockpile cap in t, per input (about 10 minutes)
   };
   variants?: [{ params, ...fields }];
 }
@@ -110,15 +115,16 @@ take. A concrete mixer carries no commodity (`nothing`).
 | wood | logging camp (`industry-logging-camp`) | goods factories (`ind-building-h`, `ind-building-k`) |
 | coal | mine (`industry-mine`) | steel mill (`industry-factory-a`); power plant, coal type (a sink) |
 | iron-ore | mine, `type: iron` | steel mill |
-| oil | oil pump (3 t/h, large 6), offshore platform (150 t/h) | refineries (`chemical-factory`, both types) |
-| food | food plant: 1 t grain -> 1 t food, 15 t/h (extended 22) | homes, shops and landmarks, the warehouse (`ind-building-s`), the offshore platform |
-| steel | steel mill: 1 t iron ore + 0.5 t coal -> 1 t steel, 30 t/h (extended 45) | goods factories |
-| fuel | refinery: 1 t oil -> 1 t fuel, 40 t/h (refinery type 80) | shops (corner shop, market block, shop, annex), tank farm (`ind-detail-tank`), power plant (default oil and gas type) |
-| goods | goods factory: 0.5 t steel + 0.5 t wood -> 1 t goods, 12 t/h (`h`, extended 18) and 10 t/h (`k`, extended 15) | homes, shops, offices and landmarks, the warehouse, the offshore platform |
+| oil | oil pump (36 t/min, large 72), offshore platform (1,800 t/min) | refineries (`chemical-factory`, both types) |
+| food | food plant: 1 t grain -> 1 t food, 180 t/min (extended 264) | homes, shops and landmarks, the warehouse (`ind-building-s`), the offshore platform |
+| steel | steel mill: 1 t iron ore + 0.5 t coal -> 1 t steel, 360 t/min (extended 540) | goods factories |
+| fuel | refinery: 1 t oil -> 1 t fuel, 480 t/min (refinery type 960) | shops (corner shop, market block, shop, annex), tank farm (`ind-detail-tank`), power plant (default oil and gas type) |
+| goods | goods factory: 0.5 t steel + 0.5 t wood -> 1 t goods, 144 t/min (`h`, extended 216) and 120 t/min (`k`, extended 180) | homes, shops, offices and landmarks, the warehouse, the offshore platform |
 | mail | homes, shops, offices, landmarks | homes, shops, offices, landmarks |
 
-The model ids above drop their `proc-building-` prefix. A processor's stock cap is
-about ten hours of its rate. Offices (the glass, bullet, dark slab, art deco, pagoda,
+The model ids above drop their `proc-building-` prefix. The raw producers: farm
+180 t/min (large 300), logging camp 144, coal mine 300, iron mine 360. A processor's
+stock cap is ten minutes of its input ("The tuning"). Offices (the glass, bullet, dark slab, art deco, pagoda,
 pyramid and twin-tower skyscrapers) take goods and mail; homes and shops food, goods
 and mail; the nuclear power plant takes no commodity. The rates are first drafts;
 balancing is the game's.
@@ -129,6 +135,39 @@ commodity has no confirmed building that makes it (`produces` or a recipe's
 that carries it, over every confirmed design at its defaults and in each of its
 variants (`chainOf`, `chainProblems`); `test/traffic.test.ts` runs it too.
 
+## The unit marker
+
+Every rate - `produces`, a recipe's `rate` - is **tonnes per minute of game time**;
+a `stock` is tonnes. The export writes `unit: "min"` (`TRAFFIC_UNIT`,
+`exportedTraffic`) as the first key of every **non-empty** building `game.traffic`
+block; an empty `{}` stays `{}`, a variant carries no unit (the block's applies), and
+a vehicle's `game.capacity` has none (seats and tonnes are no rates). The table does
+not state it: `trafficTable.ts` is per minute throughout. A block without the marker
+is an older per-hour export, and the game divides its rates by 60, so an old import
+is never read 60 times too high.
+
+## The tuning
+
+The figures are game tuning, not real output. They were set per hour once and
+retuned when the game moved to minutes (the webapp's travel-time demand spec), by
+three rules applied to every design and variant:
+
+- **The chain: x12 of the old hourly figure, per minute.** A raw `produces` and every
+  recipe `rate` is the old t/h times 12, in t/min. The target is that a standard coal
+  mine fills a 5-wagon train (5 x 58 t) in about a minute: 25 t/h -> 300 t/min. One
+  factor for the whole chain keeps every ratio (farm : mine : oil, a recipe's rate
+  against its suppliers).
+- **Mail: x10/60.** Mail stays town-scale - a town of about 100 buildings makes about
+  1 t a minute - so a house's 0.01 t/h became 0.0017 t/min (rounded to 4 decimals,
+  never to 0). Any other commodity a town produces would follow mail.
+- **Stock: 10 minutes of input.** `stock = 10 x rate x the largest input ratio`,
+  rounded: a steel mill at 540 t/min with 1 t ore and 0.5 t coal per tonne keeps
+  5,400 t.
+
+Residents, jobs and `accepts` did not change; the game's per-minute passenger
+constants (`5/60` a resident, `2.5/60` a job) carry the passengers' retune. The
+sanity bounds below are per minute too.
+
 ## Where they live
 
 Not on the design. A design module, and `design.ts` with its types, is bundled into
@@ -137,7 +176,7 @@ module. The numbers live in two tables keyed by the exported model id, read only
 the export, the way the sounds do ([sounds.md](sounds.md)):
 
 - `generator/trafficTable.ts` (`BUILDING_TRAFFIC`): `residents`, `jobs` (whole
-  people), `produces` (tonnes per hour by commodity), `accepts` (commodities),
+  people), `produces` (tonnes per minute by commodity), `accepts` (commodities),
   `processes` (a recipe);
 - `generator/capacityTable.ts` (`VEHICLE_CAPACITY`), split by family under
   `generator/capacity/` (rail units, rail cars, road / water / air): `seats` (whole
@@ -192,7 +231,7 @@ by every livery and colour. The capacity's variants therefore travel inside the 
 and fail the build on any problem: a missing entry where one is needed, a block that
 carries nothing at its defaults, an unknown field or commodity, a commodity at 0
 (leave it out), a number below 0 or above the sanity bounds (people above 20,000 per
-building field or 3,000 seats, production or a recipe's rate above 2,000 t/h, a stock
+building field or 3,000 seats, production or a recipe's rate above 2,000 t/min, a stock
 above 100,000 t, an input above 10 t per tonne, tonnes above 250,000), a fraction of a
 person, a commodity listed twice, `tonnes` without `commodities` or the other way
 round, tonnes above 0 with no commodity or a commodity with 0 tonnes, a processed
@@ -211,10 +250,23 @@ checks over every confirmed design. The chain check is above ("The chain").
 sounds and the city use: `game.traffic` on buildings (`skyscrapers.meta.json`,
 `village.meta.json`), `game.capacity` on vehicles (`vehicles.meta.json`), and both in
 the site's `catalog.json` records, drafts included where a table names them. The
-`source` is dropped. A building without other game properties gets a `game` block
-holding only `traffic`.
+`source` is dropped, and a non-empty building block gains `unit: "min"` first ("The
+unit marker"). The coal mine lands as:
 
-The webapp's `master` accepts `traffic` among a building's `game` keys, and its
+```json
+"traffic": {
+  "unit": "min",
+  "jobs": 120,
+  "produces": { "coal": 300 },
+  "accepts": ["fuel"],
+  "variants": [{ "params": { "type": "iron" }, "produces": { "iron-ore": 360 } }]
+}
+```
+
+A building without other game properties gets a `game` block holding only `traffic`.
+
+The webapp reads `unit` and converts a block without it (an older per-hour export)
+to per minute; its `master` accepts `traffic` among a building's `game` keys, and its
 `vehicleGame` passes a vehicle's `capacity` through untouched, so this export imports
 into a webapp that has no traffic engine as well as into one that has.
 
@@ -227,9 +279,9 @@ into a webapp that has no traffic engine as well as into one that has.
   interior. A unit's single cars and whole sets per car count are stated separately.
 - **Buildings:** judged from the model's size, floors and use: about 2.5 people per
   flat, an office job per 15-20 m2, landmarks a staff and few or no residents,
-  industry producing a few to about 150 t/h by its kind and size. When the five cargo
-  classes became commodities, each industry kept its old rate as its new rate or its
-  recipe's rate.
+  industry first producing a few to about 150 t/h by its kind and size, now 36 to
+  1,800 t/min ("The tuning"). When the five cargo classes became commodities, each
+  industry kept its old rate as its new rate or its recipe's rate.
 
 Real figures sit beside the game's own tuning (queue caps, patience, token
 milestones), which was made against its old guesses; a liner's or a freighter's real

@@ -27,7 +27,7 @@ import { checkGameProperties, resolveParams, type CatalogFields, type GameProper
 import type { VehicleRig } from "./rig.ts";
 import { cityExport, extentOf, type CityExport } from "./cityVariants.ts";
 import { measureHelipad, type ExportedHelipad } from "./helipad.ts";
-import { chainProblems, exportedBlock, isVehicleCategory, trafficProblems, type ChainDesign, type ExportedCapacity, type ExportedTraffic } from "./traffic.ts";
+import { chainProblems, exportedBlock, exportedTraffic, isVehicleCategory, trafficProblems, type ChainDesign, type ExportedCapacity, type ExportedTraffic } from "./traffic.ts";
 import { BUILDING_TRAFFIC } from "./trafficTable.ts";
 import { VEHICLE_CAPACITY } from "./capacityTable.ts";
 
@@ -456,6 +456,11 @@ function trafficEntry(id: string, category: string) {
   return isVehicleCategory(category) ? VEHICLE_CAPACITY[id] : BUILDING_TRAFFIC[id];
 }
 
+/** The exported block: a vehicle's capacity, or a building's traffic marked with its unit (traffic.ts exportedTraffic). */
+function trafficBlock(id: string, category: string) {
+  return isVehicleCategory(category) ? exportedBlock(VEHICLE_CAPACITY[id]) : exportedTraffic(BUILDING_TRAFFIC[id]);
+}
+
 /** Throws, naming every problem, when a confirmed design's traffic or capacity is missing or wrong (traffic.ts trafficProblems). */
 function checkTraffic(designs: readonly ProceduralDesign[], family: CatalogFields): void {
   // a draft is in no game meta file (workshop.ts): it states its numbers once it is confirmed
@@ -470,7 +475,7 @@ function checkTraffic(designs: readonly ProceduralDesign[], family: CatalogField
 export function chainDesigns(designs: readonly ProceduralDesign[], family: CatalogFields): ChainDesign[] {
   return designs.filter((d) => !isDraft(d.id)).map((d) => {
     const id = proceduralId(d.id);
-    return { id, params: d.params, block: exportedBlock(trafficEntry(id, (d.catalog ?? family).category)) };
+    return { id, params: d.params, block: trafficBlock(id, (d.catalog ?? family).category) };
   });
 }
 
@@ -485,12 +490,12 @@ export function supplyChainProblems(buildings: readonly ProceduralDesign[], vehi
 
 /**
  * An entry with its passengers and cargo (docs/models/traffic.md): a vehicle's
- * `game.capacity`, a building's `game.traffic`, each `{}` when the design carries
- * nothing. Written last, after the sounds and the city use.
+ * `game.capacity`, a building's `game.traffic` (marked `unit: "min"`), each `{}`
+ * when the design carries nothing. Written last, after the sounds and the city use.
  */
 export function withTraffic(entry: MetaEntry): MetaEntry {
   const vehicle = isVehicleCategory(entry.category);
-  const block = exportedBlock(trafficEntry(entry.id, entry.category));
+  const block = trafficBlock(entry.id, entry.category);
   return { ...entry, game: { ...(entry.game ?? {}), ...(vehicle ? { capacity: block } : { traffic: block }) } as ExportedGame };
 }
 
