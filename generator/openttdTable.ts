@@ -1142,6 +1142,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-ss4": loco(ELRL, { presets: presets() }),
   "proc-vehicle-cr-df4": loco(RAIL, { presets: presets(...each("livery", "green")) }),
   "proc-vehicle-cr-df11": loco(RAIL, { presets: presets() }),
+  "proc-vehicle-cr-df8b": loco(RAIL, { presets: presets() }),
   "proc-vehicle-cr-qj": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-sy": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-js": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
