@@ -197,7 +197,7 @@ function window(m: MeshBuilder, at: Place, n: Vec3, u: Span, y: Span, r: number,
 }
 
 /** Thin bars along polylines in a unit cell (x right, y up), scaled to w x h at (u0, v0), as (u, v) triangles; `flip` reads toward -u. */
-function glyphTris(lines: ReadonlyArray<readonly Pt[]>, u0: number, v0: number, w: number, h: number, t: number, flip: boolean): Array<[number, number]> {
+export function glyphTris(lines: ReadonlyArray<readonly Pt[]>, u0: number, v0: number, w: number, h: number, t: number, flip: boolean): Array<[number, number]> {
   const out: Array<[number, number]> = [];
   for (const line of lines)
     for (let j = 1; j < line.length; j++) {
@@ -220,7 +220,7 @@ function glyphTris(lines: ReadonlyArray<readonly Pt[]>, u0: number, v0: number, 
  * unit cell: he (the grain radical and the mouth) and xie (the speech radical and
  * the "all" over the "sun"); the same strokes as the CRH3C's face (cnCrh3c.ts).
  */
-const HEXIE: ReadonlyArray<ReadonlyArray<readonly Pt[]>> = [
+export const HEXIE: ReadonlyArray<ReadonlyArray<readonly Pt[]>> = [
   [[[0.38, 0.97], [0.08, 0.88]], [[0.04, 0.7], [0.46, 0.7]], [[0.25, 0.9], [0.25, 0.0]], [[0.24, 0.62], [0.04, 0.28]], [[0.27, 0.6], [0.44, 0.42]],
     [[0.56, 0.22], [0.56, 0.76], [0.94, 0.76], [0.94, 0.22], [0.56, 0.22]]],
   [[[0.06, 0.94], [0.16, 0.84]], [[0.02, 0.62], [0.15, 0.62], [0.15, 0.08], [0.26, 0.2]],

@@ -19,6 +19,7 @@ import { crHxd3dBody, crHxd3dBodyLod } from "./cnHxd3d.ts";
 import { crSs1, crSs1Lod } from "./cnSs1.ts";
 import { buildDf11, buildDf11Lod } from "./cnDf11.ts";
 import { crHxd3c, crHxd3cLod } from "./cnHxd3c.ts";
+import { crHxd2, crHxd2Lod } from "./cnHxd2.ts";
 
 const HXN5_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { orange: "CR green" })];
 export function crHxn5(v?: ParamValues): MeshBuilder { return buildHxn5(HXN5_LIVERIES[resolveParams(HXN5_PARAMS, v).livery!]!); }
@@ -58,6 +59,8 @@ export function crDf4Lod(v?: ParamValues): MeshBuilder { return buildDf4Lod(DF4_
 // the DF11's own measured body (cnDf11.ts), in its one livery, blue and cream (no parameter)
 export function crDf11(): MeshBuilder { return buildDf11(); }
 export function crDf11Lod(): MeshBuilder { return buildDf11Lod(); }
+// the HXD2's own twin-section body (cnHxd2.ts), in its original blue and silver livery (no parameter)
+export { crHxd2, crHxd2Lod };
 
 const E = ELECTRIC_LOCO_CATALOG, D = DIESEL_LOCO_CATALOG;
 const d = (id: string, title: string, k: string, build: (v?: ParamValues) => MeshBuilder, buildLod: (v?: ParamValues) => MeshBuilder, weight: number, power: number, maxspeed: number, catalog = E): ProceduralDesign =>
@@ -71,6 +74,7 @@ export const CN_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-cr-ss8", title: "CR SS8 Shaoshan", build: crSs8, buildLod: crSs8Lod, game: locoGame(88, 3600, 170), catalog: E, references: "cr-ss8" },
   { id: "proc-vehicle-cr-df4", title: "CR DF4 Dongfeng", build: crDf4, buildLod: crDf4Lod, params: DF4_PARAMS, game: locoGame(138, 2430, 100), catalog: D, loadingGauge: "us", references: "cr-df4" },
   { id: "proc-vehicle-cr-df11", title: "CR DF11 Dongfeng", build: crDf11, buildLod: crDf11Lod, game: locoGame(138, 3040, 170), catalog: D, references: "cr-df11" },
+  { id: "proc-vehicle-cr-hxd2", title: "CR HXD2", build: crHxd2, buildLod: crHxd2Lod, game: locoGame(200, 10000, 120), catalog: E, references: "cr-hxd2" },
   // the HXD3C's own measured body (cnHxd3c.ts), in the blue "Hexie" livery (no parameter)
   { id: "proc-vehicle-cr-hxd3c", title: "CR HXD3C", build: crHxd3c, buildLod: crHxd3cLod, game: locoGame(138, 7200, 120), catalog: E, references: "cr-hxd3c" },
 ];
