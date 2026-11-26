@@ -26,6 +26,7 @@ import { CRH380D } from "./cnCrh380d.ts";
 import { CRH1A } from "./cnCrh1a.ts";
 import { CRH3A } from "./cnCrh3a.ts";
 import { CHINA_STAR_DESIGN } from "./cnChinaStar.ts";
+import { CRH6F } from "./cnCrh6f.ts";
 
 export { CRH380A };
 export { CRH3C };
@@ -65,6 +66,7 @@ const P_C1A = seriesParams(CRH1A);
 export { CRH3A };
 
 const P_CRH3A = seriesParams(CRH3A);
+const P_CRH6F = seriesParams(CRH6F);
 
 export function crCr400af(v?: ParamValues): MeshBuilder { return buildSeries(CR400AF, P.af, v); }
 export function crCr400afLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR400AF, P.af, v); }
@@ -103,6 +105,8 @@ export function crCrh1a(v?: ParamValues): MeshBuilder { return buildSeries(CRH1A
 export function crCrh1aLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH1A, P_C1A, v); }
 export function crCrh3a(v?: ParamValues): MeshBuilder { return buildSeries(CRH3A, P_CRH3A, v); }
 export function crCrh3aLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH3A, P_CRH3A, v); }
+export function crCrh6f(v?: ParamValues): MeshBuilder { return buildSeries(CRH6F, P_CRH6F, v); }
+export function crCrh6fLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH6F, P_CRH6F, v); }
 
 export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-cr400af", "Fuxing CR400AF", CR400AF, P.af, crCr400af, crCr400afLod, "cr-cr400af"),
@@ -122,6 +126,7 @@ export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-crh3a", "CRH3A", CRH3A, P_CRH3A, crCrh3a, crCrh3aLod, "cr-crh3a"),
   seriesDesign("proc-vehicle-cr-cr450af", "Fuxing CR450AF", CR450AF, P_CR450AF, crCr450af, crCr450afLod, "cr-cr450af"),
   seriesDesign("proc-vehicle-cr-cr300af", "Fuxing CR300AF", CR300AF, P_CR300AF, crCr300af, crCr300afLod, "cr-cr300af"),
+  seriesDesign("proc-vehicle-cr-crh6f", "CRH6F", CRH6F, P_CRH6F, crCrh6f, crCrh6fLod, "cr-crh6f"),
   seriesDesign("proc-vehicle-cr-crh380cl", "CRH380CL", CRH380CL, P380CL, crCrh380cl, crCrh380clLod, "cr-crh380cl", "uic"),
   CHINA_STAR_DESIGN,
 ];

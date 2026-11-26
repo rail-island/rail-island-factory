@@ -1112,6 +1112,8 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-crh6a": series(60, 90, ELRL, { cars: 8 }),
   // the power cars without seats at both ends of the trailers
   "proc-vehicle-cr-china-star": series(0, 80, ELRL, { cars: 8 }),
+  // seats only: the 4-car CRH6F-A's 240 (Wikipedia zh), about 50 an end car and 70 an intermediate car
+  "proc-vehicle-cr-crh6f": series(50, 70, ELRL, { cars: 8 }),
   // the sleeper: seat cars at the ends, 40 berths a sleeper
   "proc-vehicle-cr-crh2e": series(55, 40, ELRL, { cars: 8 }),
   "proc-vehicle-cr-cr450bf": series(32, 81, ELRL, { cars: 8 }),

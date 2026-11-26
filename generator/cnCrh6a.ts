@@ -150,7 +150,7 @@ const run = (d0: number, n: number, w: number, pitch: number): Array<readonly [n
 const MID_BODY = 25.0 - 0.5;
 
 /** A low roof fairing: a frustum from a rounded rectangle sunk in the roof to a smaller one at its top. */
-function fairing(m: MeshBuilder, x0: number, x1: number, y: number, hw: number, h: number, mat: string): void {
+export function fairing(m: MeshBuilder, x0: number, x1: number, y: number, hw: number, h: number, mat: string): void {
   const ring = (len: number, w: number): Ring => {
     const r = Math.min(w * 0.6, len / 2 - 0.01), x = (x0 + x1) / 2, out: Array<[number, number]> = [];
     for (const [cx, cz, a0] of [[len / 2 - r, -(w - r), -90], [len / 2 - r, w - r, 0], [-(len / 2 - r), w - r, 90], [-(len / 2 - r), -(w - r), 180]] as const)

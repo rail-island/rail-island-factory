@@ -428,6 +428,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 750 },
     ],
   },
+  "proc-vehicle-cr-crh6f": {
+    seats: 169,
+    source: "Wikipedia (zh): 8-car CRH6F 1,502 passengers at 4 standing a square metre (1,998 crush), the end cars a little fewer; passengers in all, as the CRH6A",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 194 },
+      { params: { unit: "train" }, seats: 726 },
+      { params: { unit: "train", cars: "2" }, seats: 338 },
+      { params: { unit: "train", cars: "3" }, seats: 532 },
+      { params: { unit: "train", cars: "5" }, seats: 920 },
+      { params: { unit: "train", cars: "6" }, seats: 1114 },
+      { params: { unit: "train", cars: "7" }, seats: 1308 },
+      { params: { unit: "train", cars: "8" }, seats: 1502 },
+    ],
+  },
   "proc-vehicle-cr-cr450bf": {
     seats: 32,
     source: "Wikipedia: 8-car CR450BF prototype 552 seats (end cars business/premium first ~32, intermediate cars ~81); seats only",
