@@ -73,10 +73,10 @@ const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 export function worldTrainsSuite(index: number, count: number): void {
 describe("the eight countries' trains", () => {
   if (index === 0) it("are all filed under their country", () => {
-    // the plan's 160 designs and the Class 378 and the Chinese units added after it
-    expect(FAMILIES.length).toBe(167);
+    // the plan's 160 designs and the Class 378 and the Chinese units added after it (the CRH6F too)
+    expect(FAMILIES.length).toBe(168);
     // the plan's 160 designs, the Class 378 and the CR300AF added after it
-    expect(FAMILIES.length).toBe(167);
+    expect(FAMILIES.length).toBe(168);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);
