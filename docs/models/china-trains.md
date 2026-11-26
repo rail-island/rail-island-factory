@@ -45,3 +45,4 @@ Railway's trains. Every design here is filed under China.
 
 `test/worldTrains.test.ts` (all 160 plan designs: gauge, budget, length, coplanar faces, LOD) and, for each module's
 first design, the catalog sweep; `test/cnJs.test.ts` pins the JS's length, wheelbase and bogie tender.
+`test/cnCr400bfNose.test.ts` holds the CR400BF's nose to one smooth convex curve, its tip at the hatch.
