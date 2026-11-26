@@ -515,6 +515,7 @@
     "proc-vehicle-obb-1144": 835,
     "proc-vehicle-obb-4024": 837,
     "proc-vehicle-obb-4744": 836,
+    "proc-vehicle-obb-railjet": 839,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
     "proc-vehicle-oslo-sl79": 778,
@@ -3266,6 +3267,26 @@
       },
       "proc-vehicle-obb-4744?unit=middleCar": {
         "id": 10224,
+        "size": 8
+      },
+      "proc-vehicle-obb-railjet?": {
+        "id": 10304,
+        "size": 8
+      },
+      "proc-vehicle-obb-railjet?formation=7 cars": {
+        "id": 10336,
+        "size": 32
+      },
+      "proc-vehicle-obb-railjet?livery=cd": {
+        "id": 10328,
+        "size": 8
+      },
+      "proc-vehicle-obb-railjet?unit=middleCar": {
+        "id": 10312,
+        "size": 8
+      },
+      "proc-vehicle-obb-railjet?unit=restaurant": {
+        "id": 10320,
         "size": 8
       },
       "proc-vehicle-odakyu-gse?": {

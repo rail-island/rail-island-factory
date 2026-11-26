@@ -5,7 +5,7 @@ import type { ProceduralDesign } from "./design.ts";
 // Each vehicle replaces its own `// import:<slot>` and `// design:<slot>` line and keeps
 // the blank lines between the slots, so the vehicles' branches merge without conflicts.
 
-// import:obb-railjet
+import { RAILJET_DESIGN } from "./atRailjet.ts";
 
 import { OBB_4024_DESIGN } from "./atObb4024.ts";
 
@@ -28,7 +28,7 @@ import { OBB4744_DESIGN } from "./atObb4744.ts";
 // import:obb-nightjet
 
 export const AT_UNITS: ProceduralDesign[] = [
-  // design:obb-railjet
+  RAILJET_DESIGN,
 
   OBB_4024_DESIGN,
 
