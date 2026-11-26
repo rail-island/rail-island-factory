@@ -23,14 +23,14 @@ function rec(id: string, game: Game | undefined, params?: CatalogRecord["params"
 const MILL = rec("mill", {
   traffic: {
     unit: "min", jobs: 200,
-    processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 360, stock: 3600 },
-    variants: [{ params: { size: "extended" }, jobs: 300, processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 540, stock: 5400 } }],
+    processes: { outputs: { coal: "goods", "iron-ore": "steel" }, rate: 360, stock: 3600 },
+    variants: [{ params: { size: "extended" }, jobs: 300, processes: { outputs: { coal: "goods", "iron-ore": "steel" }, rate: 540, stock: 5400 } }],
   },
 } as Game, SIZE);
 const MINE = rec("mine", {
   traffic: { unit: "min", jobs: 120, produces: { coal: 300 }, accepts: ["fuel"], variants: [{ params: { size: "extended" }, produces: { "iron-ore": 360 } }] },
 } as Game, SIZE);
-const HOUSE = rec("house", { traffic: { unit: "min", residents: 4, produces: { mail: 0.0017 }, accepts: ["food", "goods", "mail"] } } as Game);
+const HOUSE = rec("house", { traffic: { unit: "min", residents: 4, produces: { mail: 0.0017 }, accepts: ["cement", "goods", "mail"] } } as Game);
 const STATION = rec("station", { traffic: {} } as Game);
 const WAGON = rec("wagon", { capacity: { tonnes: 58, commodities: ["coal"] } } as Game);
 
@@ -43,7 +43,7 @@ describe("the passengers-and-cargo columns", () => {
     // 4 residents x 5 / 60 trips a minute
     expect(text("passengers", HOUSE)).toBe("0.33");
     expect(text("produces", HOUSE)).toBe("mail 0.0017");
-    expect(text("consumes", HOUSE)).toBe("food, goods, mail");
+    expect(text("consumes", HOUSE)).toBe("goods, cement, mail");
     expect(text("recipe", HOUSE)).toBe("-");
   });
 
@@ -51,7 +51,7 @@ describe("the passengers-and-cargo columns", () => {
     expect(text("jobs", MILL)).toBe("200-300");
     // jobs start no trips of their own: the workers' returns are their trips
     expect(text("passengers", MILL)).toBe("-");
-    expect(text("recipe", MILL)).toBe("1 iron ore + 0.5 coal -> steel, 360-540 t/min");
+    expect(text("recipe", MILL)).toBe("coal -> goods; iron ore -> steel, 360-540 t/min");
     // a recipe's inputs are taken in too
     expect(text("consumes", MILL)).toBe("coal, iron ore");
     expect(text("produces", MINE)).toBe("coal 300, iron ore 360");

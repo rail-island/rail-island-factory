@@ -15,7 +15,8 @@ import { readAccessor } from "../generator/glbParse.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
 import { readTriangles } from "../generator/renderGlbThumb.ts";
-import { LOAD_COMMODITIES, LOAD_PALETTE, isLoadName, loadPart } from "../generator/loadKit.ts";
+import { BULK_LOOKS, CONTAINER_COMMODITIES, LOAD_COMMODITIES, LOAD_PALETTE, cementLoad, isLoadName, loadPart, lumberLoad } from "../generator/loadKit.ts";
+import { COMMODITIES } from "../generator/traffic.ts";
 import { applyLoads, loadChoices, loadsOf } from "../src/viewerLoads.ts";
 import { design, jsModuleOf } from "./catalogCache";
 
@@ -79,17 +80,41 @@ describe("the load kit", () => {
     expect(m.loads()!.map((l) => l.part)).toEqual(["load-goods", "load-goods-2"]);
     expect(() => loadPart(m, [], [0, 0, 0], () => undefined)).toThrow(/at least one commodity/);
   });
+
+  it("knows the supply chain's commodities and gives the bulk ones a heap each", () => {
+    expect([...LOAD_COMMODITIES]).toEqual([...COMMODITIES]);
+    expect(BULK_LOOKS.map((l) => l.commodities.join("+"))).toEqual(["coal", "iron-ore", "grain", "stone", "sand"]);
+    expect([...CONTAINER_COMMODITIES]).toEqual(["goods"]);
+    for (const l of BULK_LOOKS) expect(LOAD_PALETTE[l.mat], l.mat).toBeDefined();
+  });
+
+  it("draws lumber bundles and cement pallets standing on the bed, in their own materials", () => {
+    const lumber = new MeshBuilder(PALETTE);
+    const top = lumberLoad(lumber, -5, 5, -1.2, 1.2, 1.2, { rows: 2, across: 2, high: 2, h: 0.8 });
+    expect(top).toBeCloseTo(1.2 + 2 * (0.1 + 0.8), 6);
+    const cement = new MeshBuilder(PALETTE);
+    expect(cementLoad(cement, -5, 5, -1.2, 1.2, 1.2, { rows: 4, across: 2 })).toBeCloseTo(1.2 + 0.14 + 8 * 0.12, 6);
+    for (const [m, mats] of [[lumber, ["loadLumber", "loadLumberEnd", "loadLumberGap", "loadStrap", "loadPallet"]], [cement, ["loadPallet", "loadCement"]]] as const) {
+      const ys = m.positions().filter((_, i) => i % 3 === 1);
+      expect(Math.min(...ys)).toBeCloseTo(1.2, 6);
+      const { json, bin } = parseGlb(m.toGlb("t", "t"));
+      const used = new Set(collectTriangles(json, bin).map((t) => t.material));
+      expect([...used].sort()).toEqual([...mats].sort());
+      // no face looks down: nothing is drawn under the bed
+      expect(collectTriangles(json, bin).some((t) => t.n[0][1] < -0.5)).toBe(false);
+    }
+  });
 });
 
 /** The freight designs that draw loads, and the commodities their parts stand for. */
-const BULK = ["coal", "iron-ore", "grain"];
-const CONTAINERS = ["goods", "food"];
+const BULK = ["coal", "iron-ore", "grain", "stone", "sand"];
+const CONTAINERS = ["goods"];
 const FREIGHT: Record<string, string[]> = {
   "proc-vehicle-eas-open-wagon": [...BULK, "wood"],
   "proc-vehicle-ua-open-wagon": [...BULK, "wood"],
-  "proc-vehicle-nas-flat-wagon": ["wood", "steel", "goods"],
+  "proc-vehicle-nas-flat-wagon": ["wood", "steel", "goods", "lumber", "cement"],
   "proc-vehicle-sqns-container-wagon": CONTAINERS,
-  "proc-vehicle-pao-flat-wagon": ["steel"],
+  "proc-vehicle-pao-flat-wagon": ["steel", "lumber", "cement"],
   "proc-vehicle-faccs-hopper-wagon": BULK,
   "proc-vehicle-falls-hopper-wagon": BULK,
   "proc-vehicle-wap-hopper-wagon": BULK,
@@ -98,12 +123,13 @@ const FREIGHT: Record<string, string[]> = {
   "proc-vehicle-ir-boxn-wagon": BULK,
   "proc-vehicle-legacy-open-wagon": BULK,
   "proc-vehicle-legacy-heavy-wagon": ["goods"],
-  "proc-vehicle-animal-rail-mine-tub": ["coal", "iron-ore"],
+  "proc-vehicle-animal-rail-mine-tub": ["coal", "iron-ore", "stone", "sand"],
   "proc-vehicle-tatra-815-tipper": BULK,
   "proc-vehicle-tatra-815": BULK,
   "proc-vehicle-kenworth-c500-log": ["wood"],
   "proc-vehicle-kenworth-t909-road-train": BULK,
   "proc-vehicle-lohr-car-transporter": ["goods"],
+  "proc-vehicle-mb-unimog": ["lumber", "cement"],
   "proc-vehicle-ship-triple-e": CONTAINERS,
   "proc-vehicle-ship-emma-maersk": CONTAINERS,
   "proc-vehicle-ship-msc-gulsun": CONTAINERS,

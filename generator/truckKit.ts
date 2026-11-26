@@ -142,7 +142,7 @@ export interface BodySpec {
   floor: number;
   top: number;
   hw?: number;
-  /** What it carries: cars on a car carrier, an excavator on a low loader, nothing. */
+  /** What it carries: cars on a car carrier, an excavator on a low loader, gravel (the bulk heaps) in a tipper, nothing; unset, a flatbed carries lumber and cement (docs/models/loads.md). */
   load?: "cars" | "machine" | "gravel" | "none";
   /** A tank's cross-section: round, or elliptical (wider than tall). */
   round?: boolean;
@@ -225,7 +225,7 @@ export function truckPalette(l: Livery): Record<string, MaterialSpec> {
     marker: { color: "#ffa01f", roughness: 0.3 },
     beaconBlue: { color: "#2f6bff", roughness: 0.3 },
     reflector: { color: "#d8341f", roughness: 0.4 },
-    // what a tipper, a log truck or a car carrier carries (loadKit.ts, docs/models/loads.md)
+    // what a tipper, a log truck, a flatbed or a car carrier carries (loadKit.ts, docs/models/loads.md)
     ...LOAD_PALETTE,
   };
 }

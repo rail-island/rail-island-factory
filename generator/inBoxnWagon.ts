@@ -259,7 +259,7 @@ function boxn(m: MeshBuilder): void {
     }
     for (const e of [-1, 1]) m.scope(e > 0 ? "front end" : "rear end", () => endWall(m, e, body, half, chord, BOXN_RIBS.slice(0, 2)));
   });
-  // the loads heaped over the top chord: a mound of coal, iron ore or grain falling to the chord on
+  // the loads heaped over the top chord: a mound of coal, iron ore, grain, stone or sand falling to the chord on
   // every side, each a hidden load part on the floor (docs/models/loads.md)
   bulkLoads(m, [0, BOXN_FLOOR, 0], (mat) => m.scope("heap", () => {
     const nx = 8, nz = 6, hx = body - 0.04, hz = half - 0.04, y0 = chord + 0.03, rise = 0.32;

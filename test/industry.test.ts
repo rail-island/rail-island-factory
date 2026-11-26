@@ -125,13 +125,15 @@ it('blocks the offshore platform on its jacket alone and marks it offshore', () 
 });
 
 // The primary industries of the supply chain (docs/models/industry.md, "Primary industries"):
-// a farm, a mine head and a logging camp. Each stands within its site's
-// plan, keeps a low detail of at most 500 triangles, and the mine's ore shows in its heap.
-it('draws the farm, mine and logging camp on their plans, with their low detail', async () => {
-  const { farmPlan, MINE, CAMP } = await import('../generator/primaryIndustry.ts');
+// a farm, a coal mine, an iron ore mine, a stone quarry, a sand pit and a logging camp. Each
+// stands within its site's plan and keeps a low detail of at most 500 triangles.
+it('draws the primary industries on their plans, with their low detail', async () => {
+  const { farmPlan, MINE, CAMP, QUARRY, SAND_PIT } = await import('../generator/primaryIndustry.ts');
   const plans: Record<string, (p: Record<string, string>) => { w: number; d: number }> = {
-    'proc-building-industry-farm': p => farmPlan(p.size!), 'proc-building-industry-mine': () => MINE, 'proc-building-industry-logging-camp': () => CAMP,
+    'proc-building-industry-farm': p => farmPlan(p.size!), 'proc-building-industry-mine': () => MINE, 'proc-building-industry-iron-mine': () => MINE,
+    'proc-building-industry-quarry': () => QUARRY, 'proc-building-industry-sand-pit': () => SAND_PIT, 'proc-building-industry-logging-camp': () => CAMP,
   };
+  expect(PRIMARY_INDUSTRY.map(d => proceduralId(d.id)).sort()).toEqual(Object.keys(plans).sort());
   for (const [id, plan] of Object.entries(plans)) {
     const d = PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === id)!;
     expect(d, id).toBeDefined();
@@ -145,18 +147,40 @@ it('draws the farm, mine and logging camp on their plans, with their low detail'
       expect(findCoplanarOverlaps(low.toGlb('low'))).toEqual([]);
     }
   }
-  const mine = PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-mine')!;
-  expect(materialPositions(mine.build({ type: 'coal' }), 'coalSpoil').length).toBeGreaterThan(0);
-  expect(materialPositions(mine.build({ type: 'iron' }), 'oreSpoil').length).toBeGreaterThan(0);
-  expect(materialPositions(mine.build({ type: 'iron' }), 'coalSpoil')).toHaveLength(0);
 });
 
-// The mine head's winder (docs/models/animation.md, "The mine head's winder"): the two
+// Each mine is its own design (docs/models/industry.md, "Mines, quarry and sand pit"): the
+// coal mine has no type parameter left, and each site shows its own commodity.
+it('splits the mines into a design per commodity, each showing its own', () => {
+  const find = (id: string) => PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === id)!;
+  const coal = find('proc-building-industry-mine'), iron = find('proc-building-industry-iron-mine');
+  const quarry = find('proc-building-industry-quarry'), sand = find('proc-building-industry-sand-pit');
+  expect(coal.params ?? []).toEqual([]);
+  expect([coal.title, iron.title, quarry.title, sand.title]).toEqual(['Coal mine', 'Iron ore mine', 'Stone quarry', 'Sand pit']);
+  for (const d of [iron, quarry, sand]) expect(d.params ?? []).toEqual([]);
+  const has = (d: typeof coal, mat: string): boolean => materialPositions(d.build({}), mat).length > 0;
+  expect(has(coal, 'coalSpoil')).toBe(true);
+  expect(has(coal, 'oreSpoil')).toBe(false);
+  expect(has(iron, 'oreSpoil')).toBe(true);
+  expect(has(iron, 'coalSpoil')).toBe(false);
+  // the quarry cuts benches into rock and heaps stone; the sand pit faces sand, washes it and heaps it
+  expect(has(quarry, 'rockFace') && has(quarry, 'stone')).toBe(true);
+  expect(has(sand, 'sandFace') && has(sand, 'sand') && has(sand, 'water')).toBe(true);
+  // only the two mine heads wind a cage: the quarry and the sand pit have no headframe
+  for (const d of [quarry, sand]) {
+    expect(d.build({}).animations()).toEqual([]);
+    expect(has(d, 'coal') || has(d, 'ore')).toBe(false);
+  }
+});
+
+// The mine heads' winder (docs/models/animation.md, "The mine head's winder"): the two
 // sheaves turn, the cage sinks into the shaft and back, on a closed time loop.
-it("winds the mine head's cage down the shaft and back, the sheaves turning", () => {
-  const mine = PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-mine')!;
+it("winds the mine heads' cages down the shaft and back, the sheaves turning", () => {
   expect(windingRun(0)).toBe(0); expect(windingRun(WINDING_CYCLE)).toBe(0); expect(windingRun(WINDING_CYCLE / 2)).toBe(WIND_DEPTH);
-  for (const p of paramCombinations(mine.params)) {
+  const mines = PRIMARY_INDUSTRY.filter(d => ['proc-building-industry-mine', 'proc-building-industry-iron-mine'].includes(proceduralId(d.id)));
+  expect(mines).toHaveLength(2);
+  for (const mine of mines) {
+    const p = {};
     const glb = mine.build(p).toGlb('t');
     const g = parseGlb(glb).json as unknown as { nodes: Array<{ name: string }>; scenes: Array<{ extras?: { clipDrives?: unknown } }>; animations: Array<{ name: string; channels: Array<{ target: { node: number } }> }> };
     expect(g.animations.map(a => a.name)).toEqual([WINDING_CLIP]);

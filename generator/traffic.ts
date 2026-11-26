@@ -19,7 +19,7 @@ import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign 
  * order lists and the UI show them. The ids are stored in players' saved games (the
  * game's traffic.json): never rename one.
  */
-export const COMMODITIES = ["grain", "wood", "coal", "iron-ore", "oil", "food", "steel", "fuel", "goods", "mail"] as const;
+export const COMMODITIES = ["grain", "wood", "coal", "iron-ore", "stone", "sand", "oil", "goods", "steel", "lumber", "cement", "fuel", "mail"] as const;
 export type Commodity = (typeof COMMODITIES)[number];
 
 /**
@@ -32,11 +32,14 @@ export const COMMODITY_KINDS: Readonly<Record<Commodity, "raw" | "processed" | "
   wood: "raw",
   coal: "raw",
   "iron-ore": "raw",
+  stone: "raw",
+  sand: "raw",
   oil: "raw",
-  food: "processed",
-  steel: "processed",
-  fuel: "processed",
   goods: "processed",
+  steel: "processed",
+  lumber: "processed",
+  cement: "processed",
+  fuel: "processed",
   mail: "town",
 };
 
@@ -44,18 +47,37 @@ export const COMMODITY_KINDS: Readonly<Record<Commodity, "raw" | "processed" | "
 export type Tonnes = Partial<Record<Commodity, number>>;
 
 /**
- * A processor's recipe: it turns delivered inputs into its output and makes nothing
- * without them. Its inputs are accepted implicitly (not listed in `accepts`).
+ * A processor's recipes: independent single-input recipes, each turning one tonne of
+ * a delivered input into one tonne of its output; it makes nothing without input.
+ * Its inputs are accepted implicitly (not listed in `accepts`). The inputs share one
+ * rate: the game splits it between them in proportion to their stockpiles.
  */
 export interface Recipe {
-  /** What it makes: a processed commodity. */
-  output: Commodity;
-  /** Tonnes of each input used per tonne of output. */
-  inputs: Tonnes;
-  /** At most this many tonnes of output per minute of game time. */
+  /** Each input and what one tonne of it becomes: a processed commodity. */
+  outputs: Partial<Record<Commodity, Commodity>>;
+  /** At most this many tonnes of output per minute of game time, all inputs together. */
   rate: number;
   /** The stockpile cap, tonnes, per input: about 10 minutes of input at the full rate. */
   stock: number;
+}
+
+/**
+ * The ground a primary industry harvests: the game counts that ground around the
+ * building and scales its `produces` by it (a farm's fields, a logging camp's woods,
+ * a sand pit's sand). The radius and the share for full output are the game's.
+ */
+export const HARVEST_GROUNDS = ["field", "woods", "sand"] as const;
+export type HarvestGround = (typeof HARVEST_GROUNDS)[number];
+
+/** The recipe's inputs, in COMMODITIES order. */
+export function recipeInputs(r: Pick<Recipe, "outputs">): Commodity[] {
+  return COMMODITIES.filter((c) => r.outputs[c] !== undefined);
+}
+
+/** What the recipe makes, in COMMODITIES order, each once. */
+export function recipeOutputs(r: Pick<Recipe, "outputs">): Commodity[] {
+  const made = new Set(Object.values(r.outputs));
+  return COMMODITIES.filter((c) => made.has(c));
 }
 
 /** A building's traffic fields; a variant states only those that differ. */
@@ -70,6 +92,8 @@ export interface BuildingTrafficFields {
   accepts?: Commodity[];
   /** Its recipe, when it is a processor; a variant replaces it whole. */
   processes?: Recipe;
+  /** The ground its `produces` needs around it (a farm's fields); none: it produces regardless. */
+  harvests?: HarvestGround;
   /** A visitor site (a cathedral, a lookout tower, a castle): the tourists it holds at once; a variant replaces it whole. */
   visitors?: VisitorSite;
 }
@@ -154,12 +178,12 @@ export function mustCarry(category: string, group: string): boolean {
 }
 
 /** Sanity bounds: anything above is a typo, not a design. */
-const MAX = { residents: 20_000, jobs: 20_000, produces: 2_000, seats: 3_000, tonnes: 250_000, rate: 2_000, stock: 100_000, input: 10, visitors: 20_000, stayMin: 240 } as const;
+const MAX = { residents: 20_000, jobs: 20_000, produces: 2_000, seats: 3_000, tonnes: 250_000, rate: 2_000, stock: 100_000, visitors: 20_000, stayMin: 240 } as const;
 
-const BUILDING_FIELDS = ["residents", "jobs", "produces", "accepts", "processes", "visitors"];
+const BUILDING_FIELDS = ["residents", "jobs", "produces", "accepts", "processes", "harvests", "visitors"];
 const VISITOR_FIELDS = ["capacity", "stayMin"];
 const VEHICLE_FIELDS = ["seats", "tonnes", "commodities"];
-const RECIPE_FIELDS = ["output", "inputs", "rate", "stock"];
+const RECIPE_FIELDS = ["outputs", "rate", "stock"];
 
 const isCommodity = (c: unknown): c is Commodity => (COMMODITIES as readonly unknown[]).includes(c);
 
@@ -202,15 +226,17 @@ function recipeProblems(where: string, r: unknown): string[] {
   const f = r as Record<string, unknown>;
   const out: string[] = [];
   for (const k of Object.keys(f)) if (!RECIPE_FIELDS.includes(k)) out.push(`${where} has an unknown field "${k}"`);
-  if (!isCommodity(f.output)) out.push(`${where}.output names an unknown commodity "${String(f.output)}"`);
-  else if (COMMODITY_KINDS[f.output] !== "processed") out.push(`${where}.output "${f.output}" is not a processed commodity (raw ones and mail are made with produces)`);
-  if (f.inputs === undefined) out.push(`${where} has no inputs`);
+  const outputs = f.outputs;
+  if (!outputs || typeof outputs !== "object" || Array.isArray(outputs)) out.push(`${where}.outputs is not an object of input -> output`);
+  else if (!Object.keys(outputs).length) out.push(`${where}.outputs is empty`);
   else {
-    const inputs = f.inputs as Record<string, unknown>;
-    const bad = tonnesProblems(`${where}.inputs`, inputs, MAX.input);
-    out.push(...bad);
-    if (!bad.length && !Object.keys(inputs).length) out.push(`${where}.inputs is empty`);
-    if (isCommodity(f.output) && inputs && typeof inputs === "object" && f.output in inputs) out.push(`${where}: its output "${f.output}" is among its inputs`);
+    for (const [input, output] of Object.entries(outputs as Record<string, unknown>)) {
+      if (!isCommodity(input)) out.push(`${where}.outputs names an unknown input "${input}"`);
+      else if (COMMODITY_KINDS[input] === "town") out.push(`${where}.outputs takes "${input}", a town commodity`);
+      if (!isCommodity(output)) out.push(`${where}.outputs.${input} names an unknown commodity "${String(output)}"`);
+      else if (COMMODITY_KINDS[output] !== "processed") out.push(`${where}.outputs.${input} "${output}" is not a processed commodity (raw ones and mail are made with produces)`);
+      if (input === output) out.push(`${where}.outputs.${input} makes its own input`);
+    }
   }
   out.push(...positive(`${where}.rate`, f.rate, MAX.rate));
   out.push(...positive(`${where}.stock`, f.stock, MAX.stock));
@@ -257,6 +283,7 @@ function fieldProblems(where: string, f: Record<string, unknown>, vehicle: boole
     }
     if (f.accepts !== undefined) out.push(...listProblems(`${where}.accepts`, f.accepts));
     if (f.processes !== undefined) out.push(...recipeProblems(`${where}.processes`, f.processes));
+    if (f.harvests !== undefined && !(HARVEST_GROUNDS as readonly unknown[]).includes(f.harvests)) out.push(`${where}.harvests names an unknown ground "${String(f.harvests)}" (${HARVEST_GROUNDS.join(", ")})`);
     if (f.visitors !== undefined) out.push(...visitorProblems(`${where}.visitors`, f.visitors));
   }
   return out;
@@ -264,11 +291,14 @@ function fieldProblems(where: string, f: Record<string, unknown>, vehicle: boole
 
 /** The problems between a building's fields as one selection resolves them (its recipe against what it makes and takes). */
 function selectionProblems(where: string, f: BuildingTrafficFields): string[] {
-  const r = f.processes;
-  if (!r || typeof r !== "object") return [];
   const out: string[] = [];
-  for (const c of f.accepts ?? []) if (r.inputs && c in r.inputs) out.push(`${where} accepts "${c}", which its recipe already takes`);
-  if (f.produces && r.output in f.produces) out.push(`${where} produces "${r.output}" from nothing and by its recipe`);
+  if (f.harvests !== undefined && !Object.keys(f.produces ?? {}).some((c) => isCommodity(c) && COMMODITY_KINDS[c] === "raw")) {
+    out.push(`${where} harvests "${f.harvests}" but produces no raw commodity`);
+  }
+  const r = f.processes;
+  if (!r || typeof r !== "object" || !r.outputs) return out;
+  for (const c of f.accepts ?? []) if (c in r.outputs) out.push(`${where} accepts "${c}", which its recipe already takes`);
+  for (const c of recipeOutputs(r)) if (f.produces && c in f.produces) out.push(`${where} produces "${c}" from nothing and by its recipe`);
   return out;
 }
 
@@ -402,7 +432,7 @@ export interface ChainDesign {
 
 /** Who makes, takes and carries each commodity, by model id (sorted). */
 export interface ChainLink {
-  /** Buildings that make it: from nothing (`produces`) or by a recipe (`processes.output`). */
+  /** Buildings that make it: from nothing (`produces`) or by a recipe (an output in `processes.outputs`). */
   producers: string[];
   /** Buildings that take it: as final consumption (`accepts`) or as a recipe input. */
   consumers: string[];
@@ -430,8 +460,10 @@ export function chainOf(buildings: readonly ChainDesign[], vehicles: readonly Ch
       for (const c of Object.keys(f.produces ?? {})) add(c, "producers", d.id);
       for (const c of f.accepts ?? []) add(c, "consumers", d.id);
       if (f.processes) {
-        add(f.processes.output, "producers", d.id);
-        for (const c of Object.keys(f.processes.inputs ?? {})) add(c, "consumers", d.id);
+        for (const [input, output] of Object.entries(f.processes.outputs ?? {})) {
+          add(output as string, "producers", d.id);
+          add(input, "consumers", d.id);
+        }
       }
     }
   }

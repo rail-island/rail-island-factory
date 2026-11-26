@@ -20,7 +20,7 @@ Three bands, left to right, each titled:
 | Band | Columns | Nodes |
 |---|---|---|
 | Raw materials | producers, raw commodities | per raw commodity, a **producer** box (its designs' titles, "N designs - 36-1800 t/min") beside the commodity's pill |
-| Processing | per recipe depth: processors, then their outputs | a **processor** box per recipe ("0.5 t coal + 1 t iron ore -> 1 t steel", "360-540 t/min - stock 3600-5400 t"), then the processed commodity's pill |
+| Processing | per recipe depth: processors, then their outputs | a **processor** box per recipe table ("grain, coal -> goods; wood -> lumber; iron ore -> steel; stone -> cement", "120-540 t/min - stock 1200-5400 t"), then each processed commodity's pill |
 | Consumers | one | **Towns** (every building that makes mail: homes, shops, offices, landmarks) and each other taker on its own (a tank farm, a power plant, a warehouse) |
 
 Curves with arrowheads join them: producer -> raw commodity -> processor -> output
@@ -82,8 +82,8 @@ lit edges show it in the graph, and a click on the maker opens its designs.
 |---|---|
 | A commodity | **Carries <commodity>**: the vehicles that may carry it |
 | A producer | **Producers**: its designs, "Makes 36-72 t/min" |
-| A processor | **Processors**: its designs, with their recipe and rate ("0.5 t coal + 1 t iron ore -> 1 t steel, 360-540 t/min") |
-| Towns or another consumer | **Buildings**: its designs, "Takes food, goods, mail" |
+| A processor | **Processors**: its designs, with their recipe and rate ("grain, coal -> goods; iron ore -> steel, 360-540 t/min") |
+| Towns or another consumer | **Buildings**: its designs, "Takes wood, stone, sand, goods, ..." |
 
 A building card is a link to the model page: its thumbnail (`Thumb`, so a draft's is
 rendered in the browser, [workshop.md](workshop.md)), its title, its line and, on a
@@ -114,9 +114,10 @@ by its numbers alone.
   (`formatAmount`).
 - **Roles.** A building that `produces` a commodity other than mail is a producer of
   it; one with a `processes` recipe is a processor, one node per recipe signature
-  (output and inputs: the two goods factories share one); one that makes mail is a
+  (its input -> output pairs: the four factories share one, the refinery has its own),
+  with an edge in from every input and out to every output; one that makes mail is a
   town; any other that `accepts` something is a consumer of its own. One building may
-  sit in several nodes (the offshore platform makes oil and takes food and goods).
+  sit in several nodes (a factory that also made something from nothing would).
 - **Commodities.** Every commodity named anywhere, in `COMMODITY_ORDER` (the site's
   copy of `COMMODITIES`; `src/` may import only types from `generator/`, so the
   type checker fails when the generator gains one the copy lacks and
@@ -153,7 +154,7 @@ The tab is `?section=chains` (the plain `/` page with a query, like the workshop
 `?section=workshop`: neither has a page of its own, so the build prerenders nothing
 for it, [seo-pages.md](seo-pages.md)), and the picked node `&chain=<id>`, kept only
 with that section. Node ids: the commodity's own id (`steel`), `make-<raw commodity>`
-(a producer), `process-<output>` (a processor; `-2`, `-3` for further recipes of
+(a producer), `process-<outputs>` (a processor, its outputs joined: `process-goods-steel-lumber-cement`; `-2`, `-3` for further recipe tables of
 the same output), `towns`, and `takes-<model id without proc-building->` (any other
 consumer). An unknown id selects nothing; one that is not lower-case letters, digits
 and hyphens is dropped when read. Picking a node is a history entry.

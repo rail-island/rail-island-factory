@@ -1,7 +1,7 @@
 # Surfaces
 
 **Covers** - the texture library (the photo sets in `assets/textures/`, their sources and
-licence, the 20-set cap, the fetch script), the named surfaces (a photo, its tile and the tint
+licence, the 21-set cap, the fetch script), the named surfaces (a photo, its tile and the tint
 rule), how a design opts a material into one, the UVs the JS model then carries, the export
 (`export/textures/`, `surfaces.meta.json`) and how the game and the site preview bind the photos.
 **Code** - `generator/surfaces.ts`, `generator/surfacesExport.ts`, `generator/fetchTextures.ts`,
@@ -11,15 +11,17 @@ rule), how a design opts a material into one, the UVs the JS model then carries,
 
 ## The library
 
-`assets/textures/<name>_{albedo,normal,rough,height}.jpg`: 20 photo sets from Poly Haven (CC0), every
+`assets/textures/<name>_{albedo,normal,rough,height}.jpg`: 21 photo sets from Poly Haven (CC0), every
 map 512 x 512, listed with slug, licence and use in `assets/textures/SOURCES.md`. They are the
 only photos the game draws with - terrain, track, roads, structures and any factory design that
-names a surface. `MAX_TEXTURES` caps the library at 20 sets: there is no texture compression and
+names a surface. `MAX_TEXTURES` caps the library at 21 sets: there is no texture compression and
 every set costs about 4 MiB of GPU memory with mips, so a new look reuses a photo where it can.
 The cap was 16 until `sandstone` and `limestone` were added for rock faces: each reads as its
 own stone and no photo in the library stood in for them; it rose to 20 for `tundra` (moss and
 lichen over grey stone) and `clay` (red laterite soil), the game's tundra and red-clay terrain,
-which re-tinted the soil photo before. The game's terrain binds these four by texture name (its
+which re-tinted the soil photo before; and to 21 for `field` (Poly Haven `farm_furrows`, ploughed
+furrows), the game's field terrain - the ground a farm harvests - since no soil photo in the
+library reads as farmland. The game's terrain binds these five by texture name (its
 `render/TerrainTextures.ts`), not through a surface preset; their site texture pages
 (`proc-preview-texture-*`) show them.
 `TEXTURE_AVERAGE` pins each albedo's mean colour; the test measures the files against it.

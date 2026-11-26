@@ -37,7 +37,7 @@ import { TAU } from "./characterKit.ts";
 import { lodBlock, lodSideBox, lodWheel } from "./lodKit.ts";
 import { BULK_LOOKS, LOAD_PALETTE, bulkLoads } from "./loadKit.ts";
 
-/** A mine tub carries what a mine sends out: coal or iron ore, never grain. */
+/** A mine tub carries what a mine or quarry sends out: coal, iron ore, stone or sand, never grain. */
 const MINE_LOOKS = /* @__PURE__ */ BULK_LOOKS.filter((l) => !l.commodities.includes("grain"));
 import type { CatalogFields, ParamValues, ProceduralDesign } from "./design.ts";
 import { animalVehicleDesign, buildAnimalVehicle, buildAnimalVehicleLod, type AnimalVehicleSpec } from "./animalVehicleKit.ts";

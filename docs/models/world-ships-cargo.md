@@ -55,8 +55,8 @@ Notes:
   `worldShipsCargo.ts`), shown by the game with what the ship carries, so the model at rest is the
   empty ship. The container ships' stacks on the hatch covers, the Ro-Ro's trailers, the
   Europaschiff's containers on its hatch covers and the Yangtze ship's in its hold stand for
-  `goods` and `food`; the heavy-lift ship's jack-up rig for `goods`; the push barge's heaps for
-  `coal`, `iron-ore` and `grain`, one part each, and it floats at its loaded 3.5 m draft. The bulk
+  `goods`; the heavy-lift ship's jack-up rig for `goods`; the push barge's heaps for
+  `coal`, `iron-ore`, `grain`, `stone` and `sand`, one part each, and it floats at its loaded 3.5 m draft. The bulk
   carriers' and tankers' cargo is under their hatches and decks: no load part. Each stack is one row of boxes (2.5 m) in two colours,
   its height and colours from a fixed seed, with lashing bridges in the bay gaps. The Triple E has its island bridge forward of midships and twin uptakes aft,
   Emma Maersk the bridge two-thirds forward, MSC Gulsun the bridge well forward.

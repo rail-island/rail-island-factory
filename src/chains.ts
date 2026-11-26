@@ -11,7 +11,7 @@ import type { BuildingTrafficFields, Commodity, TrafficVariant, VehicleCapacityF
 import { effectiveParams } from "./catalogQuery";
 
 /** The commodities in the order every list shows them (generator/traffic.ts COMMODITIES; test/chains.test.ts keeps the two equal). */
-export const COMMODITY_ORDER = ["grain", "wood", "coal", "iron-ore", "oil", "food", "steel", "fuel", "goods", "mail"] as const satisfies readonly Commodity[];
+export const COMMODITY_ORDER = ["grain", "wood", "coal", "iron-ore", "stone", "sand", "oil", "goods", "steel", "lumber", "cement", "fuel", "mail"] as const satisfies readonly Commodity[];
 // a compile error here when traffic.ts gains a commodity this list lacks
 const _complete: Exclude<Commodity, (typeof COMMODITY_ORDER)[number]> extends never ? true : never = true;
 void _complete;
@@ -23,11 +23,14 @@ export const COMMODITY_KIND: Readonly<Record<Commodity, CommodityKind>> = {
   wood: "raw",
   coal: "raw",
   "iron-ore": "raw",
+  stone: "raw",
+  sand: "raw",
   oil: "raw",
-  food: "processed",
-  steel: "processed",
-  fuel: "processed",
   goods: "processed",
+  steel: "processed",
+  lumber: "processed",
+  cement: "processed",
+  fuel: "processed",
   mail: "town",
 };
 
@@ -102,11 +105,13 @@ export function selectionsOf<F extends object>(record: Pick<CatalogRecord, "para
   return [resolve({}), ...(variants ?? []).map((v) => resolve(v.params))];
 }
 
-/** One recipe a building runs, by its signature (output and inputs), with its rates and stocks over its selections. */
+/** One recipe table a building runs, by its signature (its input -> output pairs), with its rates and stocks over its selections. */
 interface RecipeUse {
   key: string;
-  output: string;
-  inputs: Array<[string, number]>;
+  /** Each input and what it becomes, in commodity order. */
+  pairs: Array<[string, string]>;
+  inputs: string[];
+  outputs: string[];
   rates: number[];
   stocks: number[];
 }
@@ -131,8 +136,8 @@ interface VehicleFacts {
   tonnes: Map<string, number[]>;
 }
 
-function recipeKey(output: string, inputs: ReadonlyArray<[string, number]>): string {
-  return `${output}<${inputs.map(([c, n]) => `${c}:${n}`).join(",")}`;
+function recipeKey(pairs: ReadonlyArray<[string, string]>): string {
+  return pairs.map(([i, o]) => `${i}>${o}`).join(",");
 }
 
 function buildingFacts(r: ChainRecord): BuildingFacts | null {
@@ -144,11 +149,12 @@ function buildingFacts(r: ChainRecord): BuildingFacts | null {
     for (const c of f.accepts ?? []) facts.accepts.add(c);
     const p = f.processes;
     if (p) {
-      const inputs = Object.entries(p.inputs ?? {})
-        .filter((e): e is [string, number] => typeof e[1] === "number")
-        .sort((a, b) => order(a[0]) - order(b[0]) || a[0].localeCompare(b[0]));
-      const key = recipeKey(p.output, inputs);
-      const use = facts.recipes.get(key) ?? { key, output: p.output, inputs, rates: [], stocks: [] };
+      const pairs = (Object.entries(p.outputs ?? {}) as Array<[string, unknown]>)
+        .filter((e): e is [string, string] => typeof e[1] === "string")
+        .sort((a, b) => byOrder(a[0], b[0]));
+      const key = recipeKey(pairs);
+      const outputs = [...new Set(pairs.map(([, o]) => o))].sort(byOrder);
+      const use = facts.recipes.get(key) ?? { key, pairs, inputs: pairs.map(([i]) => i), outputs, rates: [], stocks: [] };
       use.rates.push(p.rate);
       use.stocks.push(p.stock);
       facts.recipes.set(key, use);
@@ -282,9 +288,8 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
     for (const c of b.produces.keys()) named.add(c), madeFromNothing.add(c);
     for (const c of b.accepts) named.add(c);
     for (const r of b.recipes.values()) {
-      outputs.add(r.output);
-      named.add(r.output);
-      for (const [c] of r.inputs) named.add(c);
+      for (const o of r.outputs) outputs.add(o), named.add(o);
+      for (const c of r.inputs) named.add(c);
     }
   }
   for (const v of vehicles.values()) for (const c of v.tonnes.keys()) named.add(c);
@@ -308,7 +313,7 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
   // commodity nodes, and a producer node per raw commodity
   for (const c of commodities) {
     const kind = kindOf(c);
-    const makers = sortedBuildings.filter((b) => b.produces.has(c) || [...b.recipes.values()].some((r) => r.output === c)).map((b) => b.id);
+    const makers = sortedBuildings.filter((b) => b.produces.has(c) || [...b.recipes.values()].some((r) => r.outputs.includes(c))).map((b) => b.id);
     add({
       id: c,
       kind: "commodity",
@@ -346,18 +351,19 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
       recipes.set(r.key, entry);
     }
   }
-  const recipeList = [...recipes.values()].sort((a, b) => byOrder(a.use.output, b.use.output) || a.use.key.localeCompare(b.use.key));
+  const recipeList = [...recipes.values()].sort((a, b) => byOrder(a.use.outputs[0]!, b.use.outputs[0]!) || a.use.key.localeCompare(b.use.key));
   const perOutput = new Map<string, number>();
   const processorOf = new Map<string, ChainNode>();
   for (const r of recipeList) {
-    const n = (perOutput.get(r.use.output) ?? 0) + 1;
-    perOutput.set(r.use.output, n);
+    const name = r.use.outputs.map(idPart).join("-");
+    const n = (perOutput.get(name) ?? 0) + 1;
+    perOutput.set(name, n);
     const node = add({
-      id: `process-${idPart(r.use.output)}${n > 1 ? `-${n}` : ""}`,
+      id: `process-${name}${n > 1 ? `-${n}` : ""}`,
       kind: "processor",
       title: r.ids.map((id) => buildings.get(id)!.title).join(", "),
       lines: [recipeText(r.use), `${range(r.rates, " t/min")} - stock ${range(r.stocks, " t")}`],
-      commodities: [...r.use.inputs.map(([c]) => c), r.use.output],
+      commodities: [...new Set([...r.use.inputs, ...r.use.outputs])],
       buildings: r.ids,
       recipe: r.use.key,
       empty: false,
@@ -401,8 +407,8 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
   for (const c of commodities) if (nodes.get(`make-${c}`)) edges.push({ from: `make-${c}`, to: c, commodity: c });
   for (const r of recipeList) {
     const p = processorOf.get(r.use.key)!;
-    for (const [c] of r.use.inputs) if (kindOf(c) !== "town") edges.push({ from: c, to: p.id, commodity: c });
-    edges.push({ from: p.id, to: r.use.output, commodity: r.use.output });
+    for (const c of r.use.inputs) if (kindOf(c) !== "town") edges.push({ from: c, to: p.id, commodity: c });
+    for (const o of r.use.outputs) edges.push({ from: p.id, to: o, commodity: o });
   }
   const consumers = [...nodes.values()].filter((n) => n.kind === "consumer");
   for (const n of consumers) for (const c of n.commodities) if (kindOf(c) !== "town" && (n.id !== "towns" || townTakes.includes(c))) edges.push({ from: c, to: n.id, commodity: c });
@@ -413,8 +419,8 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
     for (const r of recipeList) {
       const p = processorOf.get(r.use.key)!;
       let d = 0;
-      for (const [c] of r.use.inputs) {
-        for (const q of recipeList) if (q.use.output === c && q !== r && depth.has(processorOf.get(q.use.key)!.id)) d = Math.max(d, depth.get(processorOf.get(q.use.key)!.id)! + 1);
+      for (const c of r.use.inputs) {
+        for (const q of recipeList) if (q.use.outputs.includes(c) && q !== r && depth.has(processorOf.get(q.use.key)!.id)) d = Math.max(d, depth.get(processorOf.get(q.use.key)!.id)! + 1);
       }
       depth.set(p.id, Math.min(d, recipeList.length));
     }
@@ -427,7 +433,7 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
     else if (n.kind === "consumer") n.col = consumerCol;
     else if (n.commodityKind === "raw") n.col = 1;
     else if (n.commodityKind === "processed") {
-      const makers = recipeList.filter((r) => r.use.output === n.id).map((r) => depth.get(processorOf.get(r.use.key)!.id)!);
+      const makers = recipeList.filter((r) => r.use.outputs.includes(n.id)).map((r) => depth.get(processorOf.get(r.use.key)!.id)!);
       n.col = 3 + 2 * (makers.length ? Math.max(...makers) : 0);
     }
   }
@@ -492,9 +498,9 @@ function countLine(n: number): string {
   return n === 1 ? "1 design" : `${n} designs`;
 }
 
-/** "1 t iron ore + 0.5 t coal -> 1 t steel". */
-function recipeText(r: Pick<RecipeUse, "inputs" | "output">): string {
-  return `${r.inputs.map(([c, n]) => `${formatAmount(n)} t ${lower(c)}`).join(" + ")} -> 1 t ${lower(r.output)}`;
+/** "grain, coal -> goods; iron ore -> steel": each output after the inputs that make it, 1 t in, 1 t out. */
+function recipeText(r: Pick<RecipeUse, "pairs" | "outputs">): string {
+  return r.outputs.map((o) => `${r.pairs.filter(([, x]) => x === o).map(([i]) => lower(i)).join(", ")} -> ${lower(o)}`).join("; ");
 }
 
 /** A curve from the right edge of one box to the left edge of another. */

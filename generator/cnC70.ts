@@ -285,7 +285,7 @@ function buildC70(m: MeshBuilder): void {
     brakeWheel(m, 1, L + 0.07, -0.85, 2.35);
     for (const s of [-1, 1]) m.scope(s > 0 ? "right side" : "left side", () => c70Side(m, s));
   });
-  // the loads on the floor (docs/models/loads.md): coal, iron ore or grain heaped to a ridge over the top chord
+  // the loads on the floor (docs/models/loads.md): coal, iron ore, grain, stone or sand heaped to a ridge over the top chord
   bulkLoads(m, [0, c.floor, 0], (mat) => m.scope("heap", () => {
     const q: Ring = [[-c.hw + 0.04, c.floor], [c.hw - 0.04, c.floor], [c.hw - 0.04, c.top - 0.06], [0.5, c.top + 0.22], [-0.5, c.top + 0.22], [-c.hw + 0.04, c.top - 0.06]];
     m.sweep(mat, "x", q, -L + 0.05, q, L - 0.05);

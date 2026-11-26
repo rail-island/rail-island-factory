@@ -19,7 +19,7 @@ function record(id: string, title: string, game: ChainRecord["game"], draft = fa
 
 const ROWS = prepareRows([
   record("proc-building-pump", "Oil pump", { traffic: { produces: { oil: 3 } } } as ChainRecord["game"]),
-  record("proc-building-refinery", "Refinery", { traffic: { processes: { output: "fuel", inputs: { oil: 1 }, rate: 40, stock: 400 } } } as ChainRecord["game"]),
+  record("proc-building-refinery", "Refinery", { traffic: { processes: { outputs: { oil: "fuel" }, rate: 40, stock: 400 } } } as ChainRecord["game"]),
   record("proc-building-house", "House", { traffic: { produces: { mail: 0.1 }, accepts: ["fuel", "mail"] } } as ChainRecord["game"]),
   record("proc-vehicle-tank", "Tank wagon", { capacity: { tonnes: 60, commodities: ["oil", "fuel"] } } as ChainRecord["game"], true),
 ]);
@@ -38,7 +38,7 @@ describe("the Chains tab", () => {
     const html = render({});
     for (const band of ["Raw materials", "Processing", "Consumers"]) expect(html).toContain(band);
     expect(html).toContain('href="/?section=chains&amp;chain=process-fuel"');
-    expect(html).toContain("1 t oil -> 1 t fuel");
+    expect(html).toContain("oil -> fuel");
     // a raw commodity nothing makes yet
     expect(html).toContain("No producer yet");
     expect(html).toMatch(/class="factory-chains__edge ?"[^>]*d="M/);

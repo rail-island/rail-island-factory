@@ -29,13 +29,14 @@ const HOUSES = { category: "Village", group: "village" };
 const INDUSTRY = { category: "Industry", group: "industry" };
 const SIZED: ParamSpec[] = [{ name: "size", title: "Size", default: "compact", values: [{ value: "compact", title: "Compact" }, { value: "extended", title: "Extended" }] }];
 const works = { id: "proc-building-works", params: SIZED };
-const STEEL = { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 30, stock: 300 } as const;
+const FACTORY = { grain: "goods", wood: "lumber", coal: "goods", "iron-ore": "steel", stone: "cement" } as const;
+const STEEL = { outputs: { "iron-ore": "steel", coal: "goods" }, rate: 30, stock: 300 } as const;
 
 describe("the commodities", () => {
-  it("are the chain's ten, in the contract's order, each with its kind and an exported name", () => {
-    expect(COMMODITIES).toEqual(["grain", "wood", "coal", "iron-ore", "oil", "food", "steel", "fuel", "goods", "mail"]);
-    expect(COMMODITIES.filter((c) => COMMODITY_KINDS[c] === "raw")).toEqual(["grain", "wood", "coal", "iron-ore", "oil"]);
-    expect(COMMODITIES.filter((c) => COMMODITY_KINDS[c] === "processed")).toEqual(["food", "steel", "fuel", "goods"]);
+  it("are the chain's thirteen, in the contract's order, each with its kind and an exported name", () => {
+    expect(COMMODITIES).toEqual(["grain", "wood", "coal", "iron-ore", "stone", "sand", "oil", "goods", "steel", "lumber", "cement", "fuel", "mail"]);
+    expect(COMMODITIES.filter((c) => COMMODITY_KINDS[c] === "raw")).toEqual(["grain", "wood", "coal", "iron-ore", "stone", "sand", "oil"]);
+    expect(COMMODITIES.filter((c) => COMMODITY_KINDS[c] === "processed")).toEqual(["goods", "steel", "lumber", "cement", "fuel"]);
     const text = exportedText();
     for (const c of COMMODITIES) expect(text.get(`commodity.${c}`), c).toBe(COMMODITY_LABELS[c]);
   });
@@ -65,7 +66,7 @@ describe("trafficProblems", () => {
   it("accepts sane numbers and real variants", () => {
     const entry: VehicleCapacityEntry = { seats: 60, tonnes: 2, commodities: ["mail"], source: "size", variants: [{ params: { unit: "train" }, seats: 180, tonnes: 0, commodities: [] }, { params: { unit: "train", cars: "2" }, seats: 120 }] };
     expect(trafficProblems(unit, RAIL, entry)).toEqual([]);
-    expect(trafficProblems({ id: "proc-building-x" }, HOUSES, { residents: 4, jobs: 0, produces: { mail: 0.2 }, accepts: ["food", "goods", "mail"] })).toEqual([]);
+    expect(trafficProblems({ id: "proc-building-x" }, HOUSES, { residents: 4, jobs: 0, produces: { mail: 0.2 }, accepts: ["goods", "mail"] })).toEqual([]);
     const mill: BuildingTrafficEntry = { jobs: 200, processes: STEEL, variants: [{ params: { size: "extended" }, processes: { ...STEEL, rate: 45, stock: 450 } }] };
     expect(trafficProblems(works, INDUSTRY, mill)).toEqual([]);
     expect(trafficProblems(works, INDUSTRY, { jobs: 1, produces: { oil: 3 } })).toEqual([]);
@@ -103,13 +104,13 @@ describe("trafficProblems", () => {
   it("makes a processed commodity only by a recipe, and wants a sane recipe", () => {
     const p = (e: object) => trafficProblems(works, INDUSTRY, e as never).join("\n");
     expect(p({ jobs: 10, produces: { goods: 5 } })).toMatch(/produces "goods" from nothing/);
-    expect(p({ jobs: 10, processes: { ...STEEL, output: "coal" } })).toMatch(/"coal" is not a processed commodity/);
-    expect(p({ jobs: 10, processes: { ...STEEL, output: "plastics" } })).toMatch(/output names an unknown commodity "plastics"/);
-    expect(p({ jobs: 10, processes: { ...STEEL, inputs: { steel: 1, coal: 0.5 } } })).toMatch(/its output "steel" is among its inputs/);
-    expect(p({ jobs: 10, processes: { ...STEEL, inputs: {} } })).toMatch(/inputs is empty/);
-    expect(p({ jobs: 10, processes: { output: "steel", rate: 1, stock: 1 } })).toMatch(/has no inputs/);
-    expect(p({ jobs: 10, processes: { ...STEEL, inputs: { "iron-ore": 0 } } })).toMatch(/iron-ore is 0/);
-    expect(p({ jobs: 10, processes: { ...STEEL, inputs: { "iron-ore": 20 } } })).toMatch(/over 10/);
+    expect(p({ jobs: 10, processes: { ...STEEL, outputs: { "iron-ore": "coal" } } })).toMatch(/"coal" is not a processed commodity/);
+    expect(p({ jobs: 10, processes: { ...STEEL, outputs: { "iron-ore": "plastics" } } })).toMatch(/names an unknown commodity "plastics"/);
+    expect(p({ jobs: 10, processes: { ...STEEL, outputs: { rubber: "goods" } } })).toMatch(/unknown input "rubber"/);
+    expect(p({ jobs: 10, processes: { ...STEEL, outputs: { goods: "goods" } } })).toMatch(/makes its own input/);
+    expect(p({ jobs: 10, processes: { ...STEEL, outputs: { mail: "goods" } } })).toMatch(/takes "mail", a town commodity/);
+    expect(p({ jobs: 10, processes: { ...STEEL, outputs: {} } })).toMatch(/outputs is empty/);
+    expect(p({ jobs: 10, processes: { rate: 1, stock: 1 } })).toMatch(/outputs is not an object/);
     expect(p({ jobs: 10, processes: { ...STEEL, rate: 0 } })).toMatch(/rate is 0/);
     expect(p({ jobs: 10, processes: { ...STEEL, stock: 0 } })).toMatch(/stock is 0/);
     expect(p({ jobs: 10, processes: { ...STEEL, rate: 5000 } })).toMatch(/rate: 5000 is over 2000/);
@@ -117,11 +118,22 @@ describe("trafficProblems", () => {
     expect(p({ jobs: 10, processes: "steel" })).toMatch(/not a recipe object/);
     // a recipe's inputs are taken implicitly; what it makes is not made from nothing too
     expect(p({ jobs: 10, processes: STEEL, accepts: ["coal"] })).toMatch(/accepts "coal", which its recipe already takes/);
-    expect(p({ jobs: 10, processes: STEEL, accepts: ["food"] })).toBe("");
+    expect(p({ jobs: 10, processes: STEEL, accepts: ["fuel"] })).toBe("");
+    expect(p({ jobs: 10, processes: STEEL, produces: { goods: 1 } })).toMatch(/produces "goods" from nothing/);
     // ... also where only a variant brings the recipe
     expect(p({ jobs: 10, accepts: ["coal"], variants: [{ params: { size: "extended" }, processes: STEEL }] })).toMatch(/variant 1 accepts "coal", which its recipe already takes/);
     // a recipe alone is a role: the building takes and makes something
     expect(p({ processes: STEEL })).toBe("");
+  });
+
+  it("lets a raw producer name the ground it harvests, and nothing else", () => {
+    const p = (e: object) => trafficProblems(works, INDUSTRY, e as never).join("\n");
+    expect(p({ jobs: 4, produces: { grain: 10 }, harvests: "field" })).toBe("");
+    expect(p({ jobs: 4, produces: { wood: 10 }, harvests: "woods" })).toBe("");
+    expect(p({ jobs: 4, produces: { sand: 10 }, harvests: "sand" })).toBe("");
+    expect(p({ jobs: 4, produces: { grain: 10 }, harvests: "meadow" })).toMatch(/unknown ground "meadow"/);
+    expect(p({ jobs: 4, harvests: "field" })).toMatch(/harvests "field" but produces no raw commodity/);
+    expect(p({ jobs: 4, produces: { mail: 1 }, harvests: "field" })).toMatch(/produces no raw commodity/);
   });
 
   it("checks a visitor site: a whole capacity above 0 and a stay", () => {
@@ -165,9 +177,9 @@ describe("resolvedNumbers (the game's matching)", () => {
   });
 
   it("replaces a recipe whole", () => {
-    const mill: BuildingTrafficEntry = { jobs: 200, processes: STEEL, variants: [{ params: { size: "extended" }, processes: { output: "steel", inputs: { "iron-ore": 1 }, rate: 45, stock: 450 } }] };
+    const mill: BuildingTrafficEntry = { jobs: 200, processes: STEEL, variants: [{ params: { size: "extended" }, processes: { outputs: { "iron-ore": "steel" }, rate: 45, stock: 450 } }] };
     expect(resolvedNumbers(SIZED, mill, {}).processes).toEqual(STEEL);
-    expect(resolvedNumbers(SIZED, mill, { size: "extended" })).toEqual({ jobs: 200, processes: { output: "steel", inputs: { "iron-ore": 1 }, rate: 45, stock: 450 } });
+    expect(resolvedNumbers(SIZED, mill, { size: "extended" })).toEqual({ jobs: 200, processes: { outputs: { "iron-ore": "steel" }, rate: 45, stock: 450 } });
   });
 });
 
@@ -187,10 +199,10 @@ describe("the exported blocks", () => {
     expect(withTraffic(entry("proc-building-industry-factory-a", "Industry", "industry")).game!.traffic).toEqual({
       unit: "min",
       jobs: 200,
-      processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 360, stock: 3600 },
-      variants: [{ params: { size: "extended" }, jobs: 300, processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 540, stock: 5400 } }],
+      processes: { outputs: FACTORY, rate: 360, stock: 3600 },
+      variants: [{ params: { size: "extended" }, jobs: 300, processes: { outputs: FACTORY, rate: 540, stock: 5400 } }],
     });
-    expect(withTraffic(entry("proc-vehicle-eas-open-wagon", "Rail vehicles", "wagon")).game!.capacity).toEqual({ tonnes: 58, commodities: ["grain", "wood", "coal", "iron-ore"] });
+    expect(withTraffic(entry("proc-vehicle-eas-open-wagon", "Rail vehicles", "wagon")).game!.capacity).toEqual({ tonnes: 58, commodities: ["grain", "wood", "coal", "iron-ore", "stone", "sand"] });
     expect(withTraffic(entry("proc-vehicle-airbus-a380", "Aircraft", "aircraft")).game!.capacity).toEqual({ seats: 525, tonnes: 17, commodities: ["goods", "mail"] });
   });
 
@@ -198,7 +210,9 @@ describe("the exported blocks", () => {
     const mine = withTraffic(entry("proc-building-industry-mine", "Industry", "industry")).game!.traffic!;
     // the unit leads the block; a variant carries none (the block's applies)
     expect(Object.keys(mine)[0]).toBe("unit");
-    expect(mine).toEqual({ unit: TRAFFIC_UNIT, jobs: 120, produces: { coal: 300 }, accepts: ["fuel"], variants: [{ params: { type: "iron" }, produces: { "iron-ore": 360 } }] });
+    expect(mine).toEqual({ unit: TRAFFIC_UNIT, jobs: 120, produces: { coal: 300 } });
+    // a harvesting producer names its ground
+    expect(withTraffic(entry("proc-building-industry-farm", "Industry", "industry")).game!.traffic).toMatchObject({ produces: { grain: 180 }, harvests: "field" });
     expect(TRAFFIC_UNIT).toBe("min");
     expect(exportedTraffic({ jobs: 1, source: "a caretaker" })).toEqual({ unit: "min", jobs: 1 });
     // empty stays empty: a station, a design that carries nothing, none at all
@@ -262,32 +276,34 @@ describe("the tables", () => {
 describe("the supply chain", () => {
   const b = (id: string, block: object, params?: ParamSpec[]): ChainDesign => ({ id, params, block: block as ChainDesign["block"] });
   const FULL: ChainDesign[] = [
-    b("farm", { produces: { grain: 10 } }),
+    b("farm", { produces: { grain: 10 }, harvests: "field" }),
+    b("quarry", { produces: { stone: 10 } }),
+    b("pit", { produces: { sand: 10 }, harvests: "sand" }),
     b("camp", { produces: { wood: 10 } }),
     b("mine", { produces: { coal: 10 }, variants: [{ params: { type: "iron-ore" }, produces: { "iron-ore": 10 } }] }, [
       { name: "type", title: "Type", default: "coal", values: [{ value: "coal", title: "Coal" }, { value: "iron-ore", title: "Iron ore" }] },
     ]),
     b("well", { produces: { oil: 10 } }),
-    b("plant", { processes: { output: "food", inputs: { grain: 1 }, rate: 5, stock: 50 } }),
-    b("mill", { processes: STEEL }),
-    b("refinery", { processes: { output: "fuel", inputs: { oil: 1 }, rate: 5, stock: 50 } }),
-    b("factory", { processes: { output: "goods", inputs: { steel: 0.5, wood: 0.5 }, rate: 5, stock: 50 } }),
-    b("house", { residents: 4, produces: { mail: 0.01 }, accepts: ["food", "fuel", "goods", "mail"] }),
+    b("refinery", { processes: { outputs: { oil: "fuel" }, rate: 5, stock: 50 } }),
+    b("factory", { processes: { outputs: FACTORY, rate: 5, stock: 50 } }),
+    b("house", { residents: 4, produces: { mail: 0.01 }, accepts: ["wood", "stone", "sand", "goods", "steel", "lumber", "cement", "fuel", "mail"] }),
   ];
   const ALL_CARRIER = [b("truck", { tonnes: 10, commodities: [...COMMODITIES] })];
 
   it("finds no orphan in a whole chain, a variant's selection included", () => {
     expect(chainProblems(FULL, ALL_CARRIER)).toEqual([]);
-    expect(chainOf(FULL, ALL_CARRIER)["iron-ore"]).toEqual({ producers: ["mine"], consumers: ["mill"], carriers: ["truck"] });
+    expect(chainOf(FULL, ALL_CARRIER)["iron-ore"]).toEqual({ producers: ["mine"], consumers: ["factory"], carriers: ["truck"] });
     expect(chainOf(FULL, ALL_CARRIER).goods).toEqual({ producers: ["factory"], consumers: ["house"], carriers: ["truck"] });
+    // wood goes both ways: into a factory and straight to a town
+    expect(chainOf(FULL, ALL_CARRIER).wood.consumers).toEqual(["factory", "house"]);
   });
 
   it("names a commodity nothing makes, takes or carries", () => {
     const noFarm = FULL.filter((d) => d.id !== "farm");
     expect(chainProblems(noFarm, ALL_CARRIER)).toEqual(["grain: no building makes it (produces, or a recipe's output)"]);
     const noTown = FULL.filter((d) => d.id !== "house");
-    expect(chainProblems(noTown, ALL_CARRIER).join("\n")).toMatch(/food: no building takes it[\s\S]*goods: no building takes it[\s\S]*mail: no building makes it/);
-    expect(chainProblems(FULL, [b("tanker", { tonnes: 10, commodities: ["oil", "fuel"] })])).toHaveLength(8);
+    expect(chainProblems(noTown, ALL_CARRIER).join("\n")).toMatch(/sand: no building takes it[\s\S]*goods: no building takes it[\s\S]*mail: no building makes it/);
+    expect(chainProblems(FULL, [b("tanker", { tonnes: 10, commodities: ["oil", "fuel"] })])).toHaveLength(11);
     // an empty hold carries nothing, whatever it lists
     expect(chainOf(FULL, [b("van", { tonnes: 0, commodities: [] })]).mail.carriers).toEqual([]);
   });

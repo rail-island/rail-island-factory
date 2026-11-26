@@ -51,7 +51,7 @@ export function vteWagon():MeshBuilder {
   }
   for(const x of [.6,9.1])c.box('body',x,x+.1,1.2,2.79,-1.34,1.34);
  });
- // the loads on the floor at 1.2 m (docs/models/loads.md): coal, iron ore or grain heaped over the sides in two mounds
+ // the loads on the floor at 1.2 m (docs/models/loads.md): coal, iron ore, grain, stone or sand heaped over the sides in two mounds
  bulkLoads(m,[c.X(4.9),1.2,0],(mat)=>m.scope('heap',()=>c.heap(mat,.72,9.08,1.33,16,6,(x,z)=>2.66+.38*(.55+.45*Math.cos((x-.72)/8.36*4*Math.PI)**2)*(1-(z/1.33)**2)*Math.max(0,Math.min(1,(x-.72)/.25,(9.08-x)/.25,(1.33-Math.abs(z))/.15)))));
  return m;
 }

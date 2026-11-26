@@ -211,7 +211,7 @@ describe("the world ships", () => {
   it("draws a container ship's containers as a hidden load part, and changes only colours with a livery", () => {
     const t = CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-triple-e")!;
     const m = t.build();
-    expect(m.loads()).toEqual([{ part: "load-goods", commodities: ["goods", "food"] }]);
+    expect(m.loads()).toEqual([{ part: "load-goods", commodities: ["goods"] }]);
     // the model at rest is the empty ship: the stacks are most of the loaded one
     expect(m.exteriorTriangleCount()).toBeLessThan(m.triangleCount() * 0.7);
     for (const s of ALL.filter((x) => x.finishParams?.includes("livery"))) {

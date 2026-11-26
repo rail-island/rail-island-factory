@@ -9,11 +9,13 @@
 // the model.
 //
 // The commodities follow the body: an open wagon, hopper or tipper takes coal,
-// iron ore and grain (a covered grain hopper grain alone); a tank oil and fuel; a
-// reefer food; a box van, covered wagon, curtainsider or container goods and food;
-// a flat wagon or low loader steel, wood and goods; an aircraft's hold goods and
-// mail; a luggage van or mail room mail. A vehicle with several holds states their
-// tonnes summed and the union of what they take.
+// iron ore, grain, stone and sand (a mine tub no grain); a covered or pressure
+// hopper cement beside what it took before (grain); a tank oil and fuel; a reefer
+// goods; a box van, covered wagon or curtainsider goods, lumber and cement; a
+// container goods; a flat wagon or low loader steel, wood, goods, lumber and
+// cement; an aircraft's hold goods and mail; a luggage van or mail room mail. A
+// vehicle with several holds states their tonnes summed and the union of what
+// they take.
 
 import type { VehicleCapacityEntry } from "./traffic.ts";
 import { RAIL_UNITS_A } from "./capacity/railUnitsA.ts";

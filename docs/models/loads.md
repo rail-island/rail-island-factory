@@ -1,14 +1,15 @@
 # Freight loads
 
 **Covers** - what a freight vehicle carries, drawn as hidden load parts instead of a loaded/empty parameter: the `load-` parts and their pivot on the bed, `userData.loads` and the GLB's marks, the model at rest without them, the shared palette and looks, the budget's count, the distant models, the thumbnails, the site's Load select, OpenTTD, saved maps, the designs that carry loads and the tests.
-**Code** - `generator/loadKit.ts` (`LOAD_PALETTE`, `LOAD_COMMODITIES`, `BULK_LOOKS`, `bulkLoads`, `CONTAINER_COMMODITIES`, `isLoadName`, `loadLodPart`), `generator/loadPart.ts` (`loadPart`, `loadTriangleCounts`, `budgetTriangles`), `generator/meshCore.ts` (`loadParts`, `loadBudget`), `generator/meshBuilder.ts` (`loads`, `loadTriangleCounts`, `exteriorTriangleCount`, `budgetTriangleCount`, `toGlb`, `sourceTree`), `generator/jsModel.ts` (`bundleDesign`), `generator/glbTriangles.ts` (`collectTriangles`, `CollectOptions`, `firstLoad`, `loadCommodities`, `Tri.load`), `generator/glbStats.ts`, `generator/coplanar.ts`, `generator/renderGlbThumb.ts` (`ThumbOptions.loads`), `generator/generate.ts`, `generator/lodKit.ts` (`fitLod`, `fitParts`), `generator/lodClassic.ts` (`WagonLodItem.load`), `generator/hullKit.ts` (the `load` item), `generator/truckKit.ts` (`Kit.load`), `generator/truckBodies.ts`, `generator/openttdScenes/previewSheet.ts`, `src/viewerLoads.ts`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/exportRun.ts`, `src/thumbRender.ts`, `test/loads.test.ts`
+**Code** - `generator/loadKit.ts` (`LOAD_PALETTE`, `LOAD_COMMODITIES`, `BULK_LOOKS`, `bulkLoads`, `CONTAINER_COMMODITIES`, `lumberBundle`, `lumberLoad`, `bearers`, `cementPallet`, `cementLoad`, `isLoadName`, `loadLodPart`), `generator/loadPart.ts` (`loadPart`, `loadTriangleCounts`, `budgetTriangles`), `generator/meshCore.ts` (`loadParts`, `loadBudget`), `generator/meshBuilder.ts` (`loads`, `loadTriangleCounts`, `exteriorTriangleCount`, `budgetTriangleCount`, `toGlb`, `sourceTree`), `generator/jsModel.ts` (`bundleDesign`), `generator/glbTriangles.ts` (`collectTriangles`, `CollectOptions`, `firstLoad`, `loadCommodities`, `Tri.load`), `generator/glbStats.ts`, `generator/coplanar.ts`, `generator/renderGlbThumb.ts` (`ThumbOptions.loads`), `generator/generate.ts`, `generator/lodKit.ts` (`fitLod`, `fitParts`), `generator/lodClassic.ts` (`WagonLodItem.load`), `generator/hullKit.ts` (the `load` item), `generator/truckKit.ts` (`Kit.load`), `generator/truckBodies.ts` (`flatbedLoads`), `generator/openttdScenes/previewSheet.ts`, `src/viewerLoads.ts`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/exportRun.ts`, `src/thumbRender.ts`, `test/loads.test.ts`
 **See also** - [interiors.md](interiors.md), [js-format.md](js-format.md), [traffic.md](traffic.md), [wagons.md](wagons.md), [freight-wagons.md](freight-wagons.md), [us-freight.md](us-freight.md), [world-trucks.md](world-trucks.md), [world-ships-cargo.md](world-ships-cargo.md), [../site/openttd-export.md](../site/openttd-export.md)
 
 ## The idea
 
 A freight vehicle does not come loaded or empty any more. It is one model that
-draws every load it can show - a heap of coal, one of iron ore and one of grain,
-logs, steel, containers, cars - each as its own **load part**, hidden. The game
+draws every load it can show - a heap each of coal, iron ore, grain, stone and
+sand, logs, steel, bundles of lumber, pallets of cement, containers, cars - each as
+its own **load part**, hidden. The game
 shows the part whose commodities hold what the vehicle carries and scales it in
 height with how full it is; an empty vehicle shows none. So there is no `cargo`
 (or ship and car-carrier `load`) parameter and no weight variant tied to one: the
@@ -17,7 +18,8 @@ keeps its `load` parameter: it counts trailers, it is no cargo.
 
 Closed bodies - box vans, tanks, reefers, covered wagons and hoppers (the Hadgs,
 the Raj's pressure hoppers), the Praga RV under its canvas, aircraft, mail
-coaches - show no load and have no load parts.
+coaches - show no load and have no load parts, whatever their capacity lists (a box
+van's lumber and cement, a covered hopper's cement).
 
 ## The load part
 
@@ -31,10 +33,11 @@ its car or trailer), named:
 - `-2`, `-3` after either for a second one in the same car.
 
 Part names starting `load-` are reserved (`isLoadName`). A part stands for every
-commodity in its list: a container stack for `goods` and `food`. Every commodity is
-one of the supply chain's (`LOAD_COMMODITIES`: grain, wood, coal, iron-ore, oil,
-food, steel, fuel, goods, mail), and every one a design's loads name must be in its
-`game.capacity.commodities` ([traffic.md](traffic.md)).
+commodity in its list (`CONTAINER_COMMODITIES`: a container stack stands for
+`goods`). Every commodity is one of the supply chain's (`LOAD_COMMODITIES`, the same
+list as traffic.ts `COMMODITIES`: grain, wood, coal, iron-ore, stone, sand, oil,
+goods, steel, lumber, cement, fuel, mail), and every one a design's loads name must
+be in its `game.capacity.commodities` ([traffic.md](traffic.md)).
 
 **The pivot sits on the bed** the load rests on - a wagon's floor, a hopper's tub
 floor, a well car's deck, a ship's hatch covers or hold - so scaling the part in y
@@ -71,42 +74,70 @@ into its palette), so coal is the same black on every wagon, truck and barge:
 | `loadCoal` | near-black heap |
 | `loadIronOre` | rust brown heap |
 | `loadGrain` | golden heap |
+| `loadStone` | mid grey heap |
+| `loadSand` | pale ochre heap |
 | `loadBark`, `loadBarkDark`, `loadLogEnd` | logs: bark in two tones, pale cut ends |
 | `loadSteel`, `loadSteelDark`, `loadDark` | steel: tubes, coils, a transformer's fins; bores |
 | `loadBoxRed`, `loadBoxBlue`, `loadBoxGreen`, `loadBoxOrange`, `loadBoxGrey` | goods: containers, crates, a car carrier's cars |
+| `loadLumber`, `loadLumberEnd`, `loadLumberGap`, `loadStrap` | lumber: sawn plank faces, pale cut ends, the lines between planks and layers, blue strap bands |
+| `loadPallet`, `loadCement` | cement: the pallets and the bearers under lumber; light grey bags |
 
 A bulk body draws one heap per **bulk look** (`BULK_LOOKS`: coal, iron ore, grain,
-each its own part and colour) with `bulkLoads(m, floor, draw)`: the same heap
-geometry three times. The vlakosimdb wagons keep their measured load shapes: the
-Ua's coal heap is the coal look, its sand heap the iron ore and grain looks; the
-Maersk box keeps its livery and the well car its two lettered boxes, as goods and
-food.
+stone, sand, each its own part and colour) with `bulkLoads(m, floor, draw)`: the
+same heap geometry five times (the mine tub four: `MINE_LOOKS` leaves out grain).
+Since the budget counts only the largest load, the two new heaps cost nothing. The
+vlakosimdb wagons keep their measured load shapes: the Ua's coal heap is the coal
+look, its sand heap the iron ore, grain, stone and sand looks; the Maersk box keeps
+its livery and the well car its two lettered boxes, as goods.
+
+A flat bed draws two more looks, built from the kit so they match on every vehicle:
+
+- **Lumber** (`lumberLoad`): bundles of sawn planks on pairs of bearers, `rows`
+  along the bed, `across` side by side, `high` stacked. Each bundle
+  (`lumberBundle`, about 80 triangles) is one block - its long faces and top in
+  `loadLumber`, its ends in the paler `loadLumberEnd` - with thin `loadLumberGap`
+  strips just proud of it for the layers' lines on the sides and ends, the planks'
+  ends on the ends and the planks along the top, and two or three `loadStrap` bands
+  over the top and down the sides. The bundles stagger a few centimetres so a stack
+  does not look stamped.
+- **Cement** (`cementLoad`): pallets of bags, `rows` by `across`. A pallet
+  (`cementPallet`) is a deck board on three runners in `loadPallet` under `tiers`
+  (8 by default) of `loadCement` bags, two to a tier and laid crosswise in turn;
+  each bag's sides lean in to its top, so the groove between tiers reads, and the
+  tiers step in and out a little. About 200 triangles a pallet at 8 tiers.
+
+The truck kit's flatbed (`flatbedLoads`, a `flatbed` body with no `load`) draws both,
+as many bundles and pallets as its deck holds: lumber two high on a deck over 5 m,
+cement six tiers high (a truck counts all its triangles against its 10,000).
 
 ## The designs
 
 | Design | Load parts (commodities) | Bed |
 | --- | --- | --- |
-| Eas, Ua open wagons | coal, iron-ore, grain heaps; logs (wood) | floor 1.1 m |
-| Nas flat wagon | logs (wood), tubes (steel), cable reels (goods) | deck 1.2 m |
-| Sqns container wagon | the Maersk 40 ft box (goods, food) | pins 1.3 m |
-| Pao flat wagon | tubes on their bolsters (steel) | deck 1.2 m |
-| Faccs, Falls, Wap hoppers | coal, iron-ore, grain heaps over an inner tub | the tub's floor |
-| US double-stack well car | two containers (goods, food) | well deck |
-| CR C70, IR BOXN (open unit) | coal, iron-ore, grain heaps | floor |
-| Vte (legacy open wagon) | coal, iron-ore, grain heaps | floor 1.2 m |
+| Eas, Ua open wagons | coal, iron-ore, grain, stone, sand heaps; logs (wood) | floor 1.1 m |
+| Nas flat wagon | logs (wood), tubes (steel), cable reels (goods), lumber (4 x 2 bundles, 2 high), cement (14 x 2 pallets) | deck 1.2 m |
+| Sqns container wagon | the Maersk 40 ft box (goods) | pins 1.3 m |
+| Pao flat wagon | tubes on their bolsters (steel), lumber (3 x 2 bundles, 2 high), cement (10 x 2 pallets, 7 tiers) | deck 1.2 m |
+| Faccs, Falls, Wap hoppers | coal, iron-ore, grain, stone, sand heaps over an inner tub | the tub's floor |
+| US double-stack well car | two containers (goods) | well deck |
+| CR C70, IR BOXN (open unit) | coal, iron-ore, grain, stone, sand heaps | floor |
+| Vte (legacy open wagon) | coal, iron-ore, grain, stone, sand heaps | floor 1.2 m |
 | Uaaikk (legacy heavy wagon) | a power transformer on bearers (goods) | well deck 0.6 m |
-| animal-rail mine tub | coal, iron-ore heaps (a mine sends no grain) | the tub's floor |
-| Tatra 815 tipper, world-truck tippers, the T909's trailers, the truck kit's dump bodies with `load: gravel` | coal, iron-ore, grain heaps | the bin's floor |
+| animal-rail mine tub | coal, iron-ore, stone, sand heaps (a mine or quarry sends no grain) | the tub's floor |
+| Tatra 815 tipper, world-truck tippers, the T909's trailers, the truck kit's dump bodies with `load: gravel` | coal, iron-ore, grain, stone, sand heaps | the bin's floor |
 | Kenworth C500 log truck (truck kit `logs`) | logs (wood) | the bunks |
+| the truck kit's flatbeds (the Unimog, the Peterbilt 379, T680 and Western Star 4900 `body=flatbed`) | lumber, cement | the deck |
 | Lohr car transporter (truck kit `carCarrier`) | the cars on both decks (goods) | lower deck |
-| container ships (Triple E, Emma Maersk, Gulsun, Panamax, Feeder), Ro-Ro, Europaschiff, Yangtze | container stacks, trailers (goods, food) | hatch covers or deck |
+| container ships (Triple E, Emma Maersk, Gulsun, Panamax, Feeder), Ro-Ro, Europaschiff, Yangtze | container stacks, trailers (goods) | hatch covers or deck |
 | heavy-lift ship | the jack-up rig (goods) | deck |
-| push barge | coal, iron-ore, grain heaps | hold floor |
+| push barge | coal, iron-ore, grain, stone, sand heaps | hold floor |
 
 The hoppers that drew an open top over their load (Faccs, Falls, Wap) and the
 BOXN's solid box got an inside instead: a rim from the opening in, the walls
 facing in and a floor, so an empty one is never seen into. The Eas and Ua also
-carry wood: their capacity has to list `wood` beside the bulk commodities.
+carry wood: their capacity has to list `wood` beside the bulk commodities. The
+Uaaikk's capacity lists lumber and cement as a flat bed's, but it draws only its
+transformer.
 
 A ship's load is a hull-kit item, `{ k: "load", commodities, u, floor, items }`:
 its items drawn as one load part pivoted at `u` metres from the stern, `floor` up
@@ -117,8 +148,10 @@ also marks the masses the low detail keeps inside it as that load's.
 
 A LOD draws the same loads as hidden load parts, as simple masses: `WagonLodItem.load`
 (the classic wagons), `loadLodPart` (loadKit.ts; any `LodPart`: the lodSteam wagons, the C70,
-BOXN, Vte, Uaaikk, Tatra), the ship's `load` item as one primitive, a truck's kept
-load masses. `fitLod` and `fitParts` fit the budget by the budget's count (the
+BOXN, Vte, Uaaikk, Tatra, the Pao's lumber and cement), the ship's `load` item as
+one primitive, a truck's kept load masses. Lumber and cement are one block each from
+afar, in `loadLumber` (its ends `loadLumberEnd` on the Nas) and `loadCement`; a
+flatbed keeps each as one mass (`Kit.keep` inside `Kit.load`). `fitLod` and `fitParts` fit the budget by the budget's count (the
 builder's `loadBudget`, set by the first `loadPart`), so three bulk heaps cost the
 LOD one heap; the build's LOD check counts the same.
 

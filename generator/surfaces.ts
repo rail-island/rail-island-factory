@@ -27,6 +27,7 @@ export const TEXTURE_SLUGS = {
   clay: "red_laterite_soil_stones",
   cobblestone: "cobblestone_floor_04",
   concrete: "concrete_floor_worn_001",
+  field: "farm_furrows",
   grass: "aerial_grass_rock",
   limestone: "marble_cliff_01",
   gravel: "gravel_embedded_concrete",
@@ -62,9 +63,11 @@ export const TEXTURE_SIZE = 512;
  * limestone rock photos: each reads as its own stone, and no photo in the
  * library stands in for them. Raised again to 20 for the game's climate grounds
  * `tundra` (moss and lichen) and `clay` (red badlands soil), which were re-tinted
- * soil before and read as paint.
+ * soil before and read as paint. Raised to 21 for `field`, the ploughed furrows of
+ * the game's Field terrain (the ground a farm harvests): no soil photo in the library
+ * reads as farmland.
  */
-export const MAX_TEXTURES = 20;
+export const MAX_TEXTURES = 21;
 /**
  * The mean albedo of each photo, sRGB hex: what a surface's honest flat colour is
  * held near (test/surfaces.test.ts measures the files against it).
@@ -76,6 +79,7 @@ export const TEXTURE_AVERAGE: Readonly<Record<TextureName, string>> = {
   clay: "#653e2e",
   cobblestone: "#8a7d62",
   concrete: "#565754",
+  field: "#5b4b31",
   grass: "#726125",
   limestone: "#ac8f75",
   gravel: "#958e84",
@@ -181,6 +185,7 @@ export const SURFACES = {
   "swatch-clay": { texture: "clay", tile: 4, tintLift: 1 },
   "swatch-cobblestone": { texture: "cobblestone", tile: 4, tintLift: 1 },
   "swatch-concrete": { texture: "concrete", tile: 4, tintLift: 1 },
+  "swatch-field": { texture: "field", tile: 4, tintLift: 1 },
   "swatch-grass": { texture: "grass", tile: 4, tintLift: 1 },
   "swatch-limestone": { texture: "limestone", tile: 4, tintLift: 1 },
   "swatch-gravel": { texture: "gravel", tile: 4, tintLift: 1 },

@@ -99,16 +99,18 @@ export function consumesText(r: Pick<CatalogRecord, "params" | "game">): string 
   const set = new Set<string>();
   for (const f of all) {
     for (const c of f.accepts ?? []) set.add(c);
-    for (const c of Object.keys(f.processes?.inputs ?? {})) set.add(c);
+    for (const c of Object.keys(f.processes?.outputs ?? {})) set.add(c);
   }
   return set.size ? [...set].sort((a, b) => order(a) - order(b) || a.localeCompare(b)).map(lower).join(", ") : null;
 }
 
 function recipeSignature(p: Recipe): string {
-  return `${Object.entries(p.inputs).map(([c, n]) => `${formatAmount(n ?? 0)} ${lower(c)}`).join(" + ")} -> ${lower(p.output)}`;
+  const pairs = Object.entries(p.outputs).sort((a, b) => order(a[0]) - order(b[0]) || a[0].localeCompare(b[0]));
+  const outs = [...new Set(pairs.map(([, o]) => o as string))];
+  return outs.map((o) => `${pairs.filter(([, x]) => x === o).map(([c]) => lower(c)).join(", ")} -> ${lower(o)}`).join("; ");
 }
 
-/** Its recipe with its rate over the selections: "1 iron ore + 0.5 coal -> steel, 360-540 t/min"; several recipes joined by "; ". */
+/** Its recipe with its rate over the selections: "grain, coal -> goods; iron ore -> steel, 360-540 t/min"; several recipes joined by "; ". */
 export function recipeText(r: Pick<CatalogRecord, "params" | "game">): string | null {
   const all = selections(r);
   if (!all) return null;

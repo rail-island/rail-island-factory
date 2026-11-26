@@ -1,6 +1,6 @@
 # Procedural industry
 
-**Covers** - the Industry audit, fifteen parametric families (the offshore platform at sea with its helideck among them, and the supply chain's primary industries: a farm, a mine and a logging camp), geometry budgets and future game migration.
+**Covers** - the Industry audit, eighteen parametric families (the offshore platform at sea with its helideck among them, and the supply chain's primary industries: a farm, a coal mine, an iron ore mine, a stone quarry, a sand pit and a logging camp), geometry budgets and future game migration.
 **Code** - `generator/industry.ts`, `generator/offshorePlatform.ts`, `generator/primaryIndustry.ts`, `generator/oilWell.ts`, `generator/industryHall.ts`, `generator/industryMigration.ts`, `generator/generate.ts`, `test/industry.test.ts`
 **See also** - [parameters.md](parameters.md), [export.md](export.md), [animation.md](animation.md), [game-properties.md](game-properties.md#helipads), [hospital.md](hospital.md)
 
@@ -57,24 +57,27 @@ turbine hall:
 | industry-oil-pump | industry-oil-pump | A well site in two sizes: the pumpjack (open trestle, rounded gear reducer with its belt guard and electric motor, crank discs with fan counterweights, an I-section walking beam, a curved horsehead with its bridle, pitman arms), a pipe railing round the cranks, the wellhead with its valve, a power pole with its transformer and starter cabinet, and a tank battery behind a firewall (one stock tank compact, two with a catwalk large, a vertical separator and the flowlines); the `pumping` clip moves the mechanism ([animation.md](animation.md)). Its own module and JS bundle entry, `oilWell.ts` (`OIL_WELL`), so its code rides with no other industry design |
 | industry-wind-turbine | industry-wind-turbine | Two heights; three-section tapered tower with flanges, entrance platform and transformer kiosk; nacelle with cooler, wind sensors and obstruction light; spinner and three twisted aerofoil blades with red tips, turned by the `wind` clip ([animation.md](animation.md)) |
 | industry-offshore-platform | (new) | Steel jacket on the waterline, cellar and main decks, living quarters with a lifeboat station, process and power modules, workover derrick, pedestal crane, flare boom and a large helideck ([below](#offshore-platform)) |
-| industry-farm | (new, draft) | Arable farm: farmhouse, red barn, grain bins with a bucket elevator leg, machinery shed with a tractor in a fenced yard - the farmstead only, its fields lie freely on the map; compact or large ([below](#farm)) |
-| industry-mine | (new, draft) | Mine head: headframe with two turning sheave wheels and a cage that winds down the shaft (the `winding` clip), raking back legs, brick winding house with its smoking boiler chimney, conveyor gallery, bunker and loadout over a siding, spoil heap; coal or iron ore ([below](#mine)) |
-| industry-logging-camp | (new, draft) | Logging camp: a sawmill on piles with a monitor roof, jackladder, boiler house and guyed stack, a wigwam burner, a lumber yard, three log decks, a bunkhouse, a cookhouse with its dinner bell, a water tower and a false-front office ([below](#logging-camp)) |
+| industry-farm | (new) | Arable farm: farmhouse, red barn, grain bins with a bucket elevator leg, machinery shed with a tractor in a fenced yard - the farmstead only, its fields lie freely on the map; compact or large ([below](#farm)) |
+| industry-mine | (new) | Coal mine: headframe with two turning sheave wheels and a cage that winds down the shaft (the `winding` clip), raking back legs, brick winding house with its smoking boiler chimney, screening house on legs, conveyor gallery, bunker and loadout over a siding, dark spoil heap ([below](#coal-mine)) |
+| industry-iron-mine | (new, draft) | Iron ore mine: the coal mine's head painted red and rust, a sheeted winding house with its substation, a crusher house, a rust-red ore ridge and a waste rock heap on ore-stained ground ([below](#iron-ore-mine)) |
+| industry-quarry | (new, draft) | Stone quarry: three benches cut into a rock face with a haul road, a crusher plant fed from a hopper in the lowest bench, conveyors to loading silos over a siding and to graded stone heaps, an excavator ([below](#stone-quarry)) |
+| industry-sand-pit | (new, draft) | Sand pit: a shallow pit under a sand face, a feed hopper and loader, a washing and screening plant with a settling pond, stackers to conical sand heaps, a loading bin over a road bay with a tipper truck ([below](#sand-pit)) |
+| industry-logging-camp | (new) | Logging camp: a sawmill on piles with a monitor roof, jackladder, boiler house and guyed stack, a wigwam burner, a lumber yard, three log decks, a bunkhouse, a cookhouse with its dinner bell, a water tower and a false-front office ([below](#logging-camp)) |
 
 ## Geometry and export
 
 All geometry is generated from deterministic primitives in metres, +Y up, at
 ground y=0. Catalog defaultScale is 1. The budget is a ceiling of 10,000 triangles
 for **every** parameter combination, not a target to fill with invisible detail.
-The 57 combinations currently range from 598 to 9,202 triangles; the four factory
-buildings use 4,000-9,200, the primary industries 4,000-10,500, the oil well site 3,000-3,600, the wind turbine about 2,000 (its slender tower and
+The 59 combinations currently range from 598 to 9,202 triangles; the four factory
+buildings use 4,000-9,200, the primary industries 3,000-10,500, the oil well site 3,000-3,600, the wind turbine about 2,000 (its slender tower and
 blades need no more to read at game distance).
 Small standalone equipment deliberately uses fewer triangles. Named scopes expose
 structure in the factory's source tree. Geometry is shared by GLB and standalone
 JS exports; only default variants have static thumbnails and GLBs.
 
 The turbine's rotor node is retained and a six-second looping GLB animation turns
-it. The pumpjack's mechanism and the mine head's winder are animated too
+it. The pumpjack's mechanism and the two mine heads' winders are animated too
 ([animation.md](animation.md)). Every chimney, cooling tower and flare stack carries its
 own emitter where it is drawn ([emitters.md](emitters.md)); nothing is copied from
 the old geometry's coordinates.
@@ -140,18 +143,31 @@ centre, the flare is its only emitter, and the low detail keeps the deck's 27 m;
 
 ## Primary industries
 
-The supply chain's raw commodities (grain, coal, iron ore, wood) are made from nothing by
-three sites in `generator/primaryIndustry.ts` (`PRIMARY_INDUSTRY`, registered in
+The supply chain's raw commodities (grain, coal, iron ore, stone, sand, wood) are made from
+nothing by six sites in `generator/primaryIndustry.ts` (`PRIMARY_INDUSTRY`, registered in
 `generate.ts` with that module as their own JS entry, so the other industry bundles do not carry
-their code). They are **drafts** (not in `generator/catalogModels.json`, so in no game meta file),
-carry no traffic table entry yet (the build checks traffic only for confirmed models; the
-integrator adds the chain roles when confirming them) and are listed in `NOT_IN_CITIES`
-(`generator/cityVariants.ts`): no city stands an industry site on a house lot. Each is a site
-of several buildings on its own ground plate (y = 0 to 0.15-0.2 m), the front (+z) toward the
-road or track, held within its plan (`test/industry.test.ts` checks every vertex). Their low
-detail keeps every building as a block with its roof, the bins, tower, heap and decks as
-solids, at most 500 triangles (`lodTriangles: 500`, as the power and process plants).
-References with their licences and the judged dimensions are in `assets/<id>/SOURCES.md`.
+their code): one design per commodity, so each can look like what it makes. The farm, the coal
+mine and the logging camp are confirmed (`generator/catalogModels.json`); the iron ore mine, the
+quarry and the sand pit are **drafts** until the user confirms them, so no game meta file carries
+them yet. Each has its chain role in `generator/trafficTable.ts` ([traffic.md](traffic.md)):
+
+| design | produces (t/min) | jobs | harvests |
+|---|---|---|---|
+| `industry-farm` | grain 180 (large 300) | 6 (large 10) | `field` |
+| `industry-mine` | coal 300 | 120 | |
+| `industry-iron-mine` | iron-ore 360 | 120 | |
+| `industry-quarry` | stone 300 | 60 | |
+| `industry-sand-pit` | sand 240 | 20 | `sand` (sand ground around it) |
+| `industry-logging-camp` | wood 144 | 15 | `woods` |
+
+All six are listed in `NOT_IN_CITIES` (`generator/cityVariants.ts`): no city stands an industry
+site on a house lot. Each is a site of several buildings on its own ground plate (y = 0 to
+0.15-0.2 m), the front (+z) toward the road or track, held within its plan (`test/industry.test.ts`
+checks every vertex); a pit is never dug below the plate: the quarry's and the sand pit's faces
+rise from it as terraces of the ground around. Their low detail keeps every building as a block
+with its roof, the bins, tower, terraces, heaps and decks as solids, at most 500 triangles
+(`lodTriangles: 500`, as the power and process plants). References with their licences and the
+judged dimensions are in `assets/<id>/SOURCES.md`.
 
 ### Farm
 
@@ -166,10 +182,12 @@ front with a tractor, a trailer and a seed drill; round bales, a water trough, a
 and a yard lamp, a strip of front garden; a post-and-rail fence round the yard with an open
 gateway on the front.
 
-### Mine
+### Coal mine
 
-`proc-building-industry-mine`, 46 x 32 m, `type` coal (default) or iron (the commodity `iron-ore`), about 5,100
-triangles. The shaft's concrete collar carries a four-legged steel headframe (girts every
+`proc-building-industry-mine` ("Coal mine"), 46 x 32 m (`MINE`), no parameters, about 5,200
+triangles (low detail about 190). Until the split it had a `type` parameter (coal or iron); the
+coal mine keeps the id and draws exactly what `type: coal` drew, and the iron ore mine is its
+own design. The shaft's concrete collar carries a four-legged steel headframe (girts every
 4 m, X bracing, the guides of two cages) and its sheave deck with railing and two 4.2 m spoked
 sheave wheels, set back so each rope drops plumb into the shaft; the back legs rake 13 m to the
 brick winding house (round-arched engine windows, pilasters, a string course, the boiler's
@@ -180,12 +198,54 @@ down the shaft, waits and winds it back up - both sheaves turning (the second ag
 first, its unseen cage rising), the cage sinking into the collar and its rope paying out
 ([animation.md](animation.md#the-mine-heads-winder)). An enclosed conveyor gallery on trestles climbs from the banking level to the gallery
 on top of the bunker: a bin on four legs with two hoppers, gates and chutes over a standard-gauge
-siding with a hopper wagon being loaded. A spoil heap, a stockpile, spare mine cars, pit props
-and lamps fill the yard. The type changes the colours and one building: **coal** paints the
-headframe black and the bunker dark steel, with a near-black load and a grey-black heap, and
-puts the screening house on legs beside the shaft; **iron ore** paints the headframe red and
-the bunker and wagon rust, with a rust-red load and heap, and puts the crusher house on the
-ground in its place.
+siding with a hopper wagon being loaded. The headframe is painted black and the bunker dark
+steel, the load near black; the screening house stands on legs beside the shaft; a grey-black
+spoil heap, a coal stockpile, spare mine cars, pit props and lamps fill the yard.
+
+### Iron ore mine
+
+`proc-building-industry-iron-mine` ("Iron ore mine", draft), the same 46 x 32 m plan and mine
+head kit (`mineHead` in the module: headframe, winder and its `winding` clip, conveyor gallery,
+bunker over the siding), about 5,600 triangles (low detail about 200). It reads as its own mine:
+the headframe and the hopper wagon are red and rust, the load iron ore red, and the yard
+ore-stained (`oreYard`). The winding house is sheeted on a red steel frame with a strip of
+windows, its winder electric: a transformer on its plinth inside a fence and the incoming line on
+two poles stand where the coal mine's boiler chimney smokes. The primary crusher house stands on
+the ground where the coal mine's screening house stands on legs. At the back, a long rust-red ore
+stockpile lies beside a grey-brown waste rock heap in place of the coal mine's one dark spoil heap.
+
+### Stone quarry
+
+`proc-building-industry-quarry` ("Stone quarry", draft), 46 x 32 m (`QUARRY`), no parameters,
+about 3,600 triangles (low detail about 290). No headframe: the stone is won from an open face.
+The back and west of the site rise as three **benches** (`quarryBenches`: tops at 4.6, 8.8 and
+13 m, each a battered rock face with a gravel bench on top, the middle face a warmer grey), the
+top under a band of soil and grass, sloping down to the site's back and west edges like the hill
+it is cut into. A **haul road** climbs from the yard along the west face to the lowest bench;
+blasted boulders and a scree fan lie at the faces' feet, a row of blast-hole collars on the
+second bench, and an **excavator** works the foot of the face. The **crusher plant** stands
+against the lowest face: the primary hopper sunk into the bench (trucks tip from the bench),
+its chute into a sheeted hall, the screen house over it under a gabled roof, a dust cyclone and
+its duct, oversize and undersize chutes. Open **belt conveyors** on trestles (`belt`) carry the
+stone from the plant up to the gallery over two concrete **loading silos** on a braced table over
+the standard-gauge siding, where a hopper wagon is loaded, and out on two stackers to the light
+and dark grey **graded stone heaps**; a third heap, a yellow site cabin and lamps complete it.
+
+### Sand pit
+
+`proc-building-industry-sand-pit` ("Sand pit", draft), 46 x 32 m (`SAND_PIT`), no parameters,
+about 3,000 triangles (low detail about 200). No headframe: a shallow excavation. The back and
+west of the site are the **pit face** (`sandBank`): a pale ochre sand face sloping about 1:1 up
+3.2 m to a band of soil and grass, slumps of sand at its foot where a yellow **wheel loader** digs
+and feeds a **hopper** with its grizzly. A field conveyor climbs from it to the **washing and
+screening plant** (`washPlant`, painted blue): a stage on braced legs with its railing, carrying
+the inclined vibrating screen on its springs under a spray bar, two hydrocyclones and their
+dewatering frame; under it the control cabin, beside it the sump tank and the sand screw rising
+toward the sand heap. A water main runs from the **settling pond** (water with a wet sand margin)
+up to the plant. Stackers carry washed sand to two pale **conical sand heaps** and a conveyor to
+the **loading bin** over a concrete **road bay** with its kerbs, a red three-axle tipper under it
+being loaded; a small heap of oversize gravel, a site cabin and lamps complete it. The game
+counts sand ground around it (`harvests: "sand"`).
 
 ### Logging camp
 
