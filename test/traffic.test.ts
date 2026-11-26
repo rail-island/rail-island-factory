@@ -196,6 +196,12 @@ describe("the exported blocks", () => {
     expect(withTraffic(entry("proc-building-nothing", "Station", "station")).game).toEqual({ traffic: {} });
   });
 
+  it("seat the classic cable car cabin, which the game ships by default", () => {
+    // regression: it exported `{}` (a cablecar-group design need not state its numbers),
+    // so a cable car built with it carried nobody and earned nothing in the game
+    expect(withTraffic(entry("proc-vehicle-cabin-classic", "Cable car", "cablecar")).game).toEqual({ capacity: { seats: 8 } });
+  });
+
   it("carry a recipe and a hold in the contract's shape", () => {
     expect(withTraffic(entry("proc-building-industry-factory-a", "Industry", "industry")).game!.traffic).toEqual({
       unit: "min",

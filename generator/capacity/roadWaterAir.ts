@@ -20,6 +20,7 @@ export const ROAD_WATER_AIR: Readonly<Record<string, VehicleCapacityEntry>> = {
   "proc-vehicle-bristol-lodekka": { seats: 60, source: "Bristol Lodekka LD6G: 58-60 seats (Wikipedia)" },
   "proc-vehicle-bus-1": { seats: 85, source: "size: judged from a generic 12 m city bus" },
   "proc-vehicle-bussing-d2u": { seats: 95, source: "Bussing D2U double-decker: about 60 seated + standing (approx.)" },
+  "proc-vehicle-cabin-classic": { seats: 8, source: "size: judged from the classic cabin's 3.8 x 2.6 m floor, standing room for about 8" },
   "proc-vehicle-cablecar-cabin": { seats: 80, source: "size: judged from a large aerial tramway car" },
   "proc-vehicle-chairlift-chair": {
     seats: 6,
