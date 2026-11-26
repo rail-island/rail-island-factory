@@ -1,7 +1,7 @@
 # Procedural industry
 
-**Covers** - the Industry audit, twelve parametric families (the offshore platform at sea with its helideck among them), geometry budgets and future game migration.
-**Code** - `generator/industry.ts`, `generator/offshorePlatform.ts`, `generator/industryHall.ts`, `generator/industryMigration.ts`, `generator/generate.ts`, `test/industry.test.ts`
+**Covers** - the Industry audit, fifteen parametric families (the offshore platform at sea with its helideck among them, and the supply chain's primary industries: a farm, a mine and a logging camp), geometry budgets and future game migration.
+**Code** - `generator/industry.ts`, `generator/offshorePlatform.ts`, `generator/primaryIndustry.ts`, `generator/industryHall.ts`, `generator/industryMigration.ts`, `generator/generate.ts`, `test/industry.test.ts`
 **See also** - [parameters.md](parameters.md), [export.md](export.md), [animation.md](animation.md), [game-properties.md](game-properties.md#helipads), [hospital.md](hospital.md)
 
 ## Scope and design
@@ -57,14 +57,17 @@ turbine hall:
 | industry-oil-pump | industry-oil-pump | Two sizes, open trestle, crank wheels on the gear reducer, pitman arms and horsehead; the `pumping` clip moves the mechanism ([animation.md](animation.md)) |
 | industry-wind-turbine | industry-wind-turbine | Two heights; three-section tapered tower with flanges, entrance platform and transformer kiosk; nacelle with cooler, wind sensors and obstruction light; spinner and three twisted aerofoil blades with red tips, turned by the `wind` clip ([animation.md](animation.md)) |
 | industry-offshore-platform | (new) | Steel jacket on the waterline, cellar and main decks, living quarters with a lifeboat station, process and power modules, workover derrick, pedestal crane, flare boom and a large helideck ([below](#offshore-platform)) |
+| industry-farm | (new, draft) | Arable farm: farmhouse, red barn, grain bins with a bucket elevator leg, machinery shed with a tractor, fenced yard and a strip of ripe grain; compact or large ([below](#farm)) |
+| industry-mine | (new, draft) | Mine head: headframe with two sheave wheels and raking back legs, brick winding house, conveyor gallery, bunker and loadout over a siding, spoil heap; coal or iron ore ([below](#mine)) |
+| industry-logging-camp | (new, draft) | Logging camp: four log decks, a knuckle-boom log loader over a log truck, a log cabin, a sawhorse shed and the forest edge ([below](#logging-camp)) |
 
 ## Geometry and export
 
 All geometry is generated from deterministic primitives in metres, +Y up, at
 ground y=0. Catalog defaultScale is 1. The budget is a ceiling of 10,000 triangles
 for **every** parameter combination, not a target to fill with invisible detail.
-The 52 combinations currently range from 598 to 9,202 triangles; the four factory
-buildings use 4,000-9,200, the wind turbine about 2,000 (its slender tower and
+The 57 combinations currently range from 598 to 9,202 triangles; the four factory
+buildings use 4,000-9,200, the primary industries 4,000-8,100, the wind turbine about 2,000 (its slender tower and
 blades need no more to read at game distance).
 Small standalone equipment deliberately uses fewer triangles. Named scopes expose
 structure in the factory's source tree. Geometry is shared by GLB and standalone
@@ -133,6 +136,59 @@ the factory's counterpart of OpenTTD's oil rig. It is **confirmed** (in
 no coplanar faces) and on its own: the measured pad is large, at least 26 m, at the helideck's
 centre, the flare is its only emitter, and the low detail keeps the deck's 27 m;
 `test/emitters.test.ts` lists it among the smokers.
+
+## Primary industries
+
+The supply chain's raw commodities (grain, coal, iron ore, wood) are made from nothing by
+three sites in `generator/primaryIndustry.ts` (`PRIMARY_INDUSTRY`, registered in
+`generate.ts` with that module as their own JS entry, so the other industry bundles do not carry
+their code). They are **drafts** (not in `generator/catalogModels.json`, so in no game meta file),
+carry no traffic table entry yet (the build checks traffic only for confirmed models; the
+integrator adds the chain roles when confirming them) and are listed in `NOT_IN_CITIES`
+(`generator/cityVariants.ts`): no city stands an industry site on a house lot. Each is a site
+of several buildings on its own ground plate (y = 0 to 0.15-0.2 m), the front (+z) toward the
+road or track, held within its plan (`test/industry.test.ts` checks every vertex). Their low
+detail keeps every building as a block with its roof, the bins, tower, heap and decks as
+solids, at most 500 triangles (`lodTriangles: 500`, as the power and process plants).
+References with their licences and the judged dimensions are in `assets/<id>/SOURCES.md`.
+
+### Farm
+
+`proc-building-industry-farm`, `size` compact (42 x 30 m, about 4,000 triangles) or large
+(56 x 38 m, about 5,600). The west strip is the field: tilled soil with rows of ripe grain and
+a grass headland. On the gravel yard: the rendered two-storey farmhouse (tiled gable roof,
+chimney, porch, windows on every face), the red board barn (battens, double doors on a rail,
+a hay door in the gable, ridge ventilators), corrugated grain bins on ring footings (two, or
+four on the large farm) with stiffener rings, conical roofs, fans and ladders, fed by a bucket
+elevator leg in a lattice tower whose spouts fall to each bin; a machinery shed open to the
+front with a tractor, a trailer and a seed drill; round bales, a water trough, a diesel tank
+and a yard lamp; a post-and-rail fence with an open gateway on the front.
+
+### Mine
+
+`proc-building-industry-mine`, 46 x 32 m, `type` coal (default) or iron (the commodity `iron-ore`), about 4,900
+triangles. The shaft's concrete collar carries a four-legged steel headframe (girts every
+4 m, X bracing, the cage between timber guides) and its sheave deck with railing and two
+4.2 m spoked sheave wheels; the back legs rake 13 m to the brick winding house (round-arched
+engine windows, pilasters, a string course), which the two winding ropes reach through its
+gable. An enclosed conveyor gallery on trestles climbs from the banking level to the gallery
+on top of the bunker: a bin on four legs with two hoppers, gates and chutes over a standard-gauge
+siding with a hopper wagon being loaded. A spoil heap, a stockpile, spare mine cars, pit props
+and lamps fill the yard. The type changes the colours and one building: **coal** paints the
+headframe black and the bunker dark steel, with a near-black load and a grey-black heap, and
+puts the screening house on legs beside the shaft; **iron ore** paints the headframe red and
+the bunker and wagon rust, with a rust-red load and heap, and puts the crusher house on the
+ground in its place.
+
+### Logging camp
+
+`proc-building-industry-logging-camp`, 44 x 32 m, no parameters, about 8,100 triangles (most of
+them the logs: each a six-sided round of bark with pale sawn ends). Four log decks of 6-8 m
+logs on timber bearers stand at the back; a pedestal log loader (cab, knuckle boom with its
+rams, rotator and a grapple holding a log) swings over the gravel truck bay, where a log truck
+with bunks and stakes is half loaded. A log cabin (log courses crossing at the corners, a stone
+chimney, a porch), a sawhorse shed (two sawhorses with a log, a chopping block and split
+firewood), a fuel tank, a slash pile and a lamp complete the camp; spruces mark the forest edge.
 
 ## Future game import and saved maps
 
