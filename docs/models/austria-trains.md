@@ -28,7 +28,7 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   articulated vehicle, each car on its own bogies, hinged at the coupling planes; the last coach's
   rear coupler drawn.
 - **The nose**, measured on 80-90 728 (Wien Hbf), 80-90 721 (Landeck) and the set near
-  Pfarrwerfen: the dark grey buffer beam upright to 1.42 m with the rectangular buffers (0.45 m out)
+  Pfarrwerfen: the dark grey buffer beam upright to 1.42 m with the dark rectangular buffers (0.35 m out)
   and the beam's grey carried round the cab's lower corners; the red face set back 0.22 m and leaning
   back about 12 degrees past the tall dark lamp housings (head lamp over tail lamp, 1.56 - 2.2 m) and
   the grab rail; the wide windscreen in its dark frame, 2.47 - 3.45 m, raked about 45 degrees; the
@@ -39,7 +39,8 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 - **Sides**: single-leaf plug doors at both ends of every car with the narrow round-ended window;
   ten 1.5 m panes 1.88 m apart in a black band (1.95 - 2.77 m) on the coach (projective fit along the
   St. Valentin Bmpz), nine on the driving trailer, the reservation display beside the coach's first
-  door. OBB paint: red above 1.84 m, the umbra grey band below to the floor with the big outlined
+  door, each leaf in a dark frame with the class sign (1 or 2) beside it. OBB paint: red above the windows, a brighter red line
+  under them (1.84 - 1.95 m), the umbra grey band below to the floor with the big outlined
   "railjet", the light grey skirt between the bogies, a light grey roof; on the driving trailer the
   grey band ends in a rounded point 1.45 m up ahead of the door. CD paint: sky blue with the white
   cant-rail line and the navy line under the band, light grey below, a navy roof, door leaves and
@@ -51,8 +52,8 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   the Ampz and the Bmpvz are drawn as the coach (the Bmpvz's buffered, gangway-less loco end is a
   centre coupler); the brief's 27.3 m driving trailer is the German table's 26.85 m, which adds up to
   the published set length.
-- **Triangles**: driving trailer 13,186 (CD 15,475), coach 8,556, restaurant car 8,412; the distant
-  model 88 - 100 a car, at most 500 a train. Text: the title verbatim; the lowercase `j` added to the
+- **Triangles**: driving trailer 13,391 (CD 15,515), coach 8,846 (CD 9,012), restaurant car 8,678; the
+  distant model 78 - 100 a car, at most 500 a train. Text: the title verbatim; the lowercase `j` added to the
   stroke font (strokeFont.ts) for "railjet".
 
 <!-- design:obb-4024 -->

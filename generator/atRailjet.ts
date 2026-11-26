@@ -34,7 +34,7 @@ import type { LodSections } from "./lodKit.ts";
 /** Where the face meets the body: the cap has rounded down to the full 4.05 m roof. */
 const JOIN = 3.0;
 /** The buffer heads ahead of the tip (the beam's front). */
-const BUFFERS = 0.45;
+const BUFFERS = 0.35;
 /** A position measured behind the driving trailer's buffer heads, as d behind its body's front end. */
 const dt = (p: number): number => p - BUFFERS - JOIN;
 
@@ -147,6 +147,8 @@ const skirtTop = (mat: string): ShinkansenLivery["sideFields"] => ({
 const common: ShinkansenLivery["palette"] = {
   cabMask: c("#1b1c1e", 0.3), screen: c("#2f3a43", 0.08), lampG: c("#2a2c2f", 0.3), beam: c("#45474a", 0.6), under: c("#2a2c2f", 0.85),
   band: c("#141516", 0.25), display: c("#d8a84a", 0.3), faceText: c("#f2f2f2", 0.4), lettering: c("#e8e8e8", 0.4),
+  // the buffers, coupling and running gear dark, as on the photographs (not bright steel)
+  steel: c("#4a4c4f", 0.5),
 };
 
 /**
@@ -157,8 +159,9 @@ const common: ShinkansenLivery["palette"] = {
 function obbLivery(number: string): ShinkansenLivery {
   return {
     title: "OBB", number,
-    palette: { ...common, bigText: c("#9a9c9d", 0.4), red: c(RED), umbra: c(UMBRA, 0.45), skirtG: c(SILVER, 0.35), roofG: c("#b3b7ba", 0.55), cap: c(CAP, 0.4), face: c(RED) },
-    bands: [[0, BAND_TOP, "umbra"], [BAND_TOP, 9, "red"]],
+    palette: { ...common, bigText: c("#9a9c9d", 0.4), red: c(RED), redLine: c("#e4232c"), umbra: c(UMBRA, 0.45), skirtG: c(SILVER, 0.35), roofG: c("#b3b7ba", 0.55), cap: c(CAP, 0.4), face: c(RED) },
+    // the brighter red line between the grey band and the windows
+    bands: [[0, BAND_TOP, "umbra"], [BAND_TOP, WIN[0], "redLine"], [WIN[0], 9, "red"]],
     front: [[0, 0.62, "red"], [0.62, 1.44, "beam"], [1.44, 3.47, "red"], [3.47, 9, "cap"]],
     roof: "roofG", skirt: "skirtG", sideFields: skirtTop("skirtG"),
     frontRoof: "cap", capSlope: { y: S - 0.05, d: [0, 0.2, 0.7] },
@@ -238,15 +241,27 @@ const REST_LAYOUT = {
 };
 
 /** The black band behind every car's panes, from the first pane to the last; the display beside the coach's first door. */
-function fittings(layout: { windows: ReadonlyArray<readonly [number, number]> }, display: boolean) {
+function fittings(layout: { doors: ReadonlyArray<readonly [number, number, number]>; windows: ReadonlyArray<readonly [number, number]> }, display: boolean, cls: string) {
   return (m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void => {
     const own = car.end ? DT_LAYOUT : layout;
     const w = own.windows;
     m.scope("window band", () => { for (const sd of [1, -1]) sidePanel(m, b, X, sd, "band", w[0]![0] - 0.12, w[w.length - 1]![1] + 0.12, WIN[0] - 0.03, WIN[1] + 0.03, 0.003, 0.003); });
     if (car.end) m.scope("wc window", () => { for (const sd of [1, -1]) { sidePanel(m, b, X, sd, "cabMask", dt(5.2), dt(5.7), 2.3, 2.8, 0.004, 0.03); sidePanel(m, b, X, sd, "display", dt(5.28), dt(5.62), 2.38, 2.72, 0.01, 0.004); } });
     else if (display) m.scope("display", () => { for (const sd of [1, -1]) { sidePanel(m, b, X, sd, "cabMask", 2.7, 3.3, 2.3, 2.65, 0.004, 0.03); sidePanel(m, b, X, sd, "display", 2.76, 3.24, 2.36, 2.59, 0.01, 0.004); } });
+    // each door leaf's dark frame in the body, and the class sign (a dark plate with the white numeral) beside it toward the car's middle
+    m.scope("door frames", () => {
+      const [y0, y1] = [RAILJET.door[0], RAILJET.door[1]], t = 0.035, mid = (car.end ? DT_BODY : car.length) / 2;
+      for (const sd of [1, -1]) for (const [d0, d1] of own.doors) {
+        sidePanel(m, b, X, sd, "cabMask", d0 - t, d0, y0, y1 + t, 0.004, 0.003);
+        sidePanel(m, b, X, sd, "cabMask", d1, d1 + t, y0, y1 + t, 0.004, 0.003);
+        sidePanel(m, b, X, sd, "cabMask", d0, d1, y1, y1 + t, 0.004, 0.003);
+        const e = (d0 + d1) / 2 < mid ? d1 + 0.1 : d0 - 0.36;
+        sidePanel(m, b, X, sd, "cabMask", e, e + 0.26, 2.42, 2.74, 0.004, 0.003);
+        sideLettering(m, b, X, sd, car.end ? "1" : cls, e + 0.13, 2.47, 0.22, "faceText", 0.008, 0.035);
+      }
+    });
     // the big outlined "railjet" on the grey band (OBB; the CD paint keeps it in the band's own grey)
-    m.scope("railjet lettering", () => { for (const sd of [1, -1]) sideLettering(m, b, X, sd, "railjet", car.end ? DT_BODY / 2 + 1.5 : car.length / 2, 1.36, 0.42, "bigText", 0.004, 0.035); });
+    m.scope("railjet lettering", () => { for (const sd of [1, -1]) sideLettering(m, b, X, sd, "railjet", car.end ? DT_BODY / 2 + 1.5 : car.length / 2, 1.3, 0.5, "bigText", 0.004, 0.045); });
     // the underfloor equipment between the bogies, behind the skirt
     m.scope("underfloor", () => {
       const [t0, t1] = [Math.min(car.trucks[0]!, car.trucks[1]!), Math.max(car.trucks[0]!, car.trucks[1]!)];
@@ -269,12 +284,12 @@ export const RAILJET: ShinkansenSeries = {
   bogieCentres: 19.0, wheelR: 0.46, wheelbase: 2.5, endBogies: [dt(4.3), dt(4.3) + 19.0],
   traction: "none", cars: [4, 7],
   numberAt: [DT_BODY / 2 - 4.0, 1.38, 0.09],
-  fittings: fittings(COACH_LAYOUT, true),
+  fittings: fittings(COACH_LAYOUT, true, "2"),
   liveries: { obb: obbLivery("80-90 728"), cd: cdLivery("80-91 005") },
   weight: { end: 61, middle: 59 }, power: 0, maxspeed: 230,
 };
 /** The restaurant car: the coaches' series with its own layout. */
-const RAILJET_REST: ShinkansenSeries = { ...RAILJET, layout: { end: DT_LAYOUT, middle: REST_LAYOUT }, fittings: fittings(REST_LAYOUT, false), weight: { end: 61, middle: 60 } };
+const RAILJET_REST: ShinkansenSeries = { ...RAILJET, layout: { end: DT_LAYOUT, middle: REST_LAYOUT }, fittings: fittings(REST_LAYOUT, false, "1"), weight: { end: 61, middle: 60 } };
 
 // ---------------------------------------------------------------------------
 // The train
