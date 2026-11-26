@@ -1110,6 +1110,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-crh6a": series(60, 90, ELRL, { cars: 8 }),
   // the sleeper: seat cars at the ends, 40 berths a sleeper
   "proc-vehicle-cr-crh2e": series(55, 40, ELRL, { cars: 8 }),
+  "proc-vehicle-cr-cr450bf": series(32, 81, ELRL, { cars: 8 }),
   "proc-vehicle-cr-hxn5": loco(RAIL, { presets: presets() }),
   "proc-vehicle-cr-hxd1": loco(ELRL, { presets: presets() }),
   "proc-vehicle-cr-hxd3d": loco(ELRL, { presets: presets() }),

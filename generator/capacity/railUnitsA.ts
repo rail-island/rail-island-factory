@@ -317,6 +317,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 1478 },
     ],
   },
+  "proc-vehicle-cr-cr450bf": {
+    seats: 32,
+    source: "Wikipedia: 8-car CR450BF prototype 552 seats (end cars business/premium first ~32, intermediate cars ~81); seats only",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 81 },
+      { params: { unit: "train" }, seats: 226 },
+      { params: { unit: "train", cars: "2" }, seats: 64 },
+      { params: { unit: "train", cars: "3" }, seats: 145 },
+      { params: { unit: "train", cars: "5" }, seats: 307 },
+      { params: { unit: "train", cars: "6" }, seats: 388 },
+      { params: { unit: "train", cars: "7" }, seats: 469 },
+      { params: { unit: "train", cars: "8" }, seats: 550 },
+    ],
+  },
   "proc-vehicle-csd-m112": {
     seats: 40,
     source: "size: two-axle steam railcar of ~8 m, ~30 seats + ~10 standing",
