@@ -1131,6 +1131,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   }),
   "proc-vehicle-obb-4020": series(56, 64, ELRL, { cars: 3, liveries: ["trafficRed"] }), // 56 / 64 / 64 seats, 184 in three cars (de.wikipedia)
   "proc-vehicle-obb-5022": series(58, 58, RAIL, { cars: 2, liveries: ["cityjet"] }),
+  // the CityShuttle double-deck set: the driving trailer leading three coaches (the locomotive couples at the rear)
+  "proc-vehicle-obb-cityshuttle-dd": pax(86, RAIL, {
+    variants: [at({ unit: "coach" }, { capacity: 114 })],
+    presets: presets({ unit: "coach" }, { livery: "cityjet" }),
+    formations: [formation("4 cars", {}, { unit: "coach" }, { unit: "coach" }, { unit: "coach" })],
+  }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

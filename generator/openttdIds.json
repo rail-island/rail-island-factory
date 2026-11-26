@@ -517,6 +517,7 @@
     "proc-vehicle-obb-4024": 837,
     "proc-vehicle-obb-4744": 836,
     "proc-vehicle-obb-5022": 841,
+    "proc-vehicle-obb-cityshuttle-dd": 842,
     "proc-vehicle-obb-railjet": 839,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
@@ -3298,6 +3299,22 @@
       "proc-vehicle-obb-5022?livery=cityjet": {
         "id": 10410,
         "size": 6
+      },
+      "proc-vehicle-obb-cityshuttle-dd?": {
+        "id": 10428,
+        "size": 8
+      },
+      "proc-vehicle-obb-cityshuttle-dd?formation=4 cars": {
+        "id": 10452,
+        "size": 32
+      },
+      "proc-vehicle-obb-cityshuttle-dd?livery=cityjet": {
+        "id": 10444,
+        "size": 8
+      },
+      "proc-vehicle-obb-cityshuttle-dd?unit=coach": {
+        "id": 10436,
+        "size": 8
       },
       "proc-vehicle-obb-railjet?": {
         "id": 10304,

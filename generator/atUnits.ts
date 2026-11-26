@@ -23,7 +23,7 @@ import { OBB5022_DESIGN } from "./atObb5022.ts";
 
 // import:noevog-himmelstreppe
 
-// import:obb-cityshuttle-dd
+import { CITYSHUTTLE_DESIGN } from "./atCityShuttle.ts";
 
 // import:obb-nightjet
 
@@ -46,7 +46,7 @@ export const AT_UNITS: ProceduralDesign[] = [
 
   // design:noevog-himmelstreppe
 
-  // design:obb-cityshuttle-dd
+  CITYSHUTTLE_DESIGN,
 
   // design:obb-nightjet
 ];

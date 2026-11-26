@@ -345,6 +345,19 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikimedia Commons: OBB 5022 051 in Pachern.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_5022_051_in_Pachern.jpg" },
     { title: "Wikimedia Commons: OBB 5022 045 in Graz Ostbahnhof-Messe.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_5022_045_in_Graz_Ostbahnhof-Messe.jpg" },
   ],
+  "proc-vehicle-obb-cityshuttle-dd": [
+    { title: "Wikipedia (de): OBB Nahverkehrs-Doppelstockwagen", url: "https://de.wikipedia.org/wiki/%C3%96BB_Nahverkehrs-Doppelstockwagen" },
+    { title: "Wikimedia Commons: 2018-07-14 AT Wien 12 Meidling, Wien Meidling, OBB 86-33 102-3 (49104473828).jpg", url: "https://commons.wikimedia.org/wiki/File:2018-07-14_AT_Wien_12_Meidling,_Wien_Meidling,_%C3%96BB_86-33_102-3_(49104473828).jpg" },
+    { title: "Wikimedia Commons: Cityjet-Dosto neben Wiesel-Dosto.jpg", url: "https://commons.wikimedia.org/wiki/File:Cityjet-Dosto_neben_Wiesel-Dosto.jpg" },
+    { title: "Wikimedia Commons: OBB 8633 beim Ostbahnhof.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_8633_beim_Ostbahnhof.jpg" },
+    { title: "Wikimedia Commons: REX 2116 in Gmund NO.JPG", url: "https://commons.wikimedia.org/wiki/File:REX_2116_in_Gm%C3%BCnd_N%C3%96.JPG" },
+    { title: "Wikimedia Commons: 2018-07-14 AT Wien 12 Meidling, Wien Meidling, OBB 86-33 031-4 (49108847991).jpg", url: "https://commons.wikimedia.org/wiki/File:2018-07-14_AT_Wien_12_Meidling,_Wien_Meidling,_%C3%96BB_86-33_031-4_(49108847991).jpg" },
+    { title: "Wikimedia Commons: OBB 26-33.203 'OBB'.JPG", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_26-33.203_%22%C3%96BB%22.JPG" },
+    { title: "Wikimedia Commons: 2018-03-01 (421) OBB 50 81 86-33 033-0 at Bahnhof Krems an der Donau.jpg", url: "https://commons.wikimedia.org/wiki/File:2018-03-01_(421)_%C3%96BB_50_81_86-33_033-0_at_Bahnhof_Krems_an_der_Donau.jpg" },
+    { title: "Wikimedia Commons: OBB 8633 116 in Wien Westbahnhof.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_8633_116_in_Wien_Westbahnhof.jpg" },
+    { title: "Wikimedia Commons: OBB 8633 113 in Peggau.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_8633_113_in_Peggau.jpg" },
+    { title: "Wikimedia Commons: Wiesel 5914.JPG", url: "https://commons.wikimedia.org/wiki/File:Wiesel_5914.JPG" },
+  ],
   // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
   ...FLEET_LINKS,
 };
