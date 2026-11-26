@@ -830,7 +830,7 @@
     "proc-vehicle-vw-constellation": 421,
     "proc-vehicle-vw-t1-samba": 474,
     "proc-vehicle-wap-hopper-wagon": 43,
-    "proc-vehicle-westbahn-kiss": 840,
+    "proc-vehicle-westbahn-kiss": 844,
     "proc-vehicle-western-star-4900": 411,
     "proc-vehicle-white-3000": 415,
     "proc-vehicle-wroclaw-skoda-16t": 783,
@@ -4337,15 +4337,15 @@
         "size": 16
       },
       "proc-vehicle-westbahn-kiss?": {
-        "id": 10368,
+        "id": 10504,
         "size": 8
       },
       "proc-vehicle-westbahn-kiss?formation=6 cars": {
-        "id": 10384,
+        "id": 10520,
         "size": 32
       },
       "proc-vehicle-westbahn-kiss?unit=middleCar": {
-        "id": 10376,
+        "id": 10512,
         "size": 8
       },
       "proc-vehicle-zsr-coach?": {
