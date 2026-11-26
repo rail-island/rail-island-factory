@@ -135,7 +135,7 @@ const liveryOf = (v?: ParamValues): Livery2043 => LIVERIES[resolveParams(OBB2043
 const PITCH = 0.945;
 const ROW_START = -4.34;
 const OPENING_W = 0.86;
-const ROW_Y: readonly [number, number] = [2.86, 3.55];
+const ROW_Y: readonly [number, number] = [2.83, 3.61];
 /** The side emblem's centre: on the cab side under the cab window, at both ends. */
 const SIDE_EMBLEM: readonly [number, number] = [6.3, 2.3];
 
@@ -143,7 +143,7 @@ function openings(): SideItem[] {
   const out: SideItem[] = [];
   for (let k = 0; k < 10; k++) {
     const x = ROW_START + k * PITCH;
-    out.push({ kind: "window", name: `room window ${k + 1}`, x: [x, x + OPENING_W], y: ROW_Y, mat: "rim", r: 0.07 });
+    out.push({ kind: "window", name: `room window ${k + 1}`, x: [x, x + OPENING_W], y: ROW_Y, mat: "frameLight", r: 0.08 });
   }
   return out;
 }
@@ -162,7 +162,7 @@ function spec(l: Livery2043): LocoSpec {
     palette: {
       rim: c("#2c2e31", 0.6), louvre: c("#26282b", 0.85), slat: c("#3b3e42", 0.7), beam: c("#26272a", 0.75),
       bogie: c("#2a2b2d", 0.8), steel: c("#4a4d51", 0.5), spring: c("#323436", 0.7), wheel: c("#36383b", 0.6),
-      underframe: c("#2a2b2d", 0.8), white: c("#f2f2ee", 0.5), exhaust: c("#3a3a3a", 0.85), louvreRed: c("#b8401f", 0.7),
+      underframe: c("#2a2b2d", 0.8), white: c("#f2f2ee", 0.5), exhaust: c("#3a3a3a", 0.85), louvreRed: c("#b8401f", 0.7), frameLight: c("#c8cbcd", 0.45),
       ...l.palette,
     },
     y0: Y0,
@@ -180,8 +180,8 @@ function spec(l: Livery2043): LocoSpec {
     bogies: [-4.0, 4.0].map((xc) => ({ xc, axles: [-1.25, 1.25], wheelR: 0.475, frameTop: 0.74 })),
     sideItems: [
       ...l.sidePaint,
-      { kind: "window", name: "cab window", x: [5.98, 6.52], y: [2.87, 3.55], mat: "rim", r: 0.08, mirror: true },
-      { kind: "door", name: "door", x: [5.19, 5.85], y: [LOW + 0.08, 3.6], win: [2.87, 3.52], rails: true, mirror: true },
+      { kind: "window", name: "cab window", x: [5.98, 6.52], y: [2.84, 3.6], mat: "rim", r: 0.08, mirror: true },
+      { kind: "door", name: "door", x: [5.19, 5.85], y: [LOW + 0.08, 3.64], win: [2.84, 3.58], rails: true, mirror: true },
       ...openings(),
       // under the row's start at the "2" end: the radiator grille and the red louvre beside it
       { kind: "grille", name: "radiator grille", x: [-4.34, -3.27], y: [1.72, 2.42], mat: "slat", slats: "v", pitch: 0.06, r: 0.04 },

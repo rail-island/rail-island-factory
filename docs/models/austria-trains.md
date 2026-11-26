@@ -504,7 +504,7 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 - **Side** (2043 005-4's +z side, a projective fit over both body ends with the end heights 1.87:1):
   at each end the cab side window (5.98 - 6.52 m from the middle) ahead of the cab door (5.19 -
   5.85 m, its narrow window, handrails either side); ten machine-room windows 0.86 m wide at a
-  0.945 m pitch from -4.34 m to the "1" end's door (2.86 - 3.55 m); under the row's start at the "2"
+  0.945 m pitch from -4.34 m to the "1" end's door, nearly square in light frames (2.83 - 3.61 m); under the row's start at the "2"
   end (-x) the radiator grille (-4.34 to -3.27 m) and the red louvre beside it; the same on both sides
   (2043.54 shows the grilles at the same end on its other side). The side Pflatsch under each cab window,
   the running number amidships.
