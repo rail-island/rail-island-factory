@@ -633,4 +633,12 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 360 },
     ],
   },
+  "proc-vehicle-obb-4744": {
+    seats: 145,
+    source: "Wikipedia (de): OBB 4744 254 seats in 3 cars; standing room approx. 200",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 165 },
+      { params: { unit: "train" }, seats: 455 },
+    ],
+  },
 };

@@ -1119,6 +1119,8 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-sy": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-js": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-25t-coach": pax(36, RAIL, { variants: [at({ unit: "hardSeat" }, { capacity: 118 })], presets: presets({ unit: "hardSeat" }, ...each("livery", "green25b")) }),
+  // Austria (docs/models/austria-trains.md)
+  "proc-vehicle-obb-4744": series(80, 94, ELRL, { cars: 3 }),
 };
 
 // --- the world aircraft -------------------------------------------------------------
