@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import type { ParamSpec } from "../generator/design.ts";
 import {
-  chainOf, chainProblems, COMMODITIES, COMMODITY_KINDS, exportedBlock, mustCarry, type BuildingTrafficEntry, type ChainDesign,
+  chainOf, chainProblems, COMMODITIES, COMMODITY_KINDS, exportedBlock, exportedTraffic, mustCarry, TRAFFIC_UNIT, type BuildingTrafficEntry, type ChainDesign,
   type VehicleCapacityEntry, resolvedNumbers, trafficProblems, unknownTrafficIds,
 } from "../generator/traffic.ts";
 import { BUILDING_TRAFFIC } from "../generator/trafficTable.ts";
@@ -171,12 +171,28 @@ describe("the exported blocks", () => {
 
   it("carry a recipe and a hold in the contract's shape", () => {
     expect(withTraffic(entry("proc-building-industry-factory-a", "Industry", "industry")).game!.traffic).toEqual({
+      unit: "min",
       jobs: 200,
-      processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 30, stock: 300 },
-      variants: [{ params: { size: "extended" }, jobs: 300, processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 45, stock: 450 } }],
+      processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 360, stock: 3600 },
+      variants: [{ params: { size: "extended" }, jobs: 300, processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 540, stock: 5400 } }],
     });
     expect(withTraffic(entry("proc-vehicle-eas-open-wagon", "Rail vehicles", "wagon")).game!.capacity).toEqual({ tonnes: 58, commodities: ["grain", "wood", "coal", "iron-ore"] });
     expect(withTraffic(entry("proc-vehicle-airbus-a380", "Aircraft", "aircraft")).game!.capacity).toEqual({ seats: 525, tonnes: 17, commodities: ["goods", "mail"] });
+  });
+
+  it("mark a building's non-empty traffic block per minute, and only that", () => {
+    const mine = withTraffic(entry("proc-building-industry-mine", "Industry", "industry")).game!.traffic!;
+    // the unit leads the block; a variant carries none (the block's applies)
+    expect(Object.keys(mine)[0]).toBe("unit");
+    expect(mine).toEqual({ unit: TRAFFIC_UNIT, jobs: 120, produces: { coal: 300 }, accepts: ["fuel"], variants: [{ params: { type: "iron" }, produces: { "iron-ore": 360 } }] });
+    expect(TRAFFIC_UNIT).toBe("min");
+    expect(exportedTraffic({ jobs: 1, source: "a caretaker" })).toEqual({ unit: "min", jobs: 1 });
+    // empty stays empty: a station, a design that carries nothing, none at all
+    expect(exportedTraffic(undefined)).toEqual({});
+    expect(exportedTraffic({ nothing: true, source: "a shed" })).toEqual({});
+    expect(withTraffic(entry("proc-building-nothing", "Station", "station")).game!.traffic).toEqual({});
+    // a vehicle's capacity is no rate: no unit
+    expect(withTraffic(entry("proc-vehicle-eas-open-wagon", "Rail vehicles", "wagon")).game!.capacity).not.toHaveProperty("unit");
   });
 
   it("carry every confirmed vehicle's capacity and building's traffic", () => {
@@ -193,6 +209,8 @@ describe("the exported blocks", () => {
         // a design that must carry exports its numbers, unless it says it carries nothing
         const stated = list === ALL_VEHICLES ? VEHICLE_CAPACITY[id] : BUILDING_TRAFFIC[id];
         if (mustCarry(fields.category, fields.group) && !stated?.nothing) expect(Object.keys(block!).length, id).toBeGreaterThan(0);
+        // every non-empty building block states its unit, an empty one none
+        if (list !== ALL_VEHICLES) expect((block as { unit?: string }).unit, id).toBe(Object.keys(block!).length ? "min" : undefined);
       }
     }
   });

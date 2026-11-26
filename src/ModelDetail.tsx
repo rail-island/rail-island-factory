@@ -141,7 +141,7 @@ export function ModelDetail(props: {
     onCleanup(() => window.removeEventListener("keydown", onKey));
   });
 
-  const specs = () => COLUMNS.filter((c) => c.key !== "title");
+  const specs = () => COLUMNS.filter((c) => c.key !== "title" && (!c.only || c.only(props.record)));
   // An export built before source images existed has no list.
   const references = () => props.record.references ?? [];
   const links = () => props.record.links ?? [];

@@ -3,13 +3,13 @@
 **Covers** - the Solid site that lists every model the factory builds: its data,
 the table, card and thumbnail layouts, browser-rendered variant thumbnails, sorting and search, the model page with its 3D
 preview (its passenger view on structure pages included), and the URL state.
-**Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `generator/airframeKinds.ts`, `generator/factTable.ts`, `src/ModelTable.tsx`,
+**Code** - `src/main.tsx`, `src/App.tsx`, `src/catalogQuery.ts`, `src/trafficFigures.ts`, `generator/airframeKinds.ts`, `generator/factTable.ts`, `src/ModelTable.tsx`,
 `src/ModelCards.tsx`, `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/viewerHighlight.ts`, `src/viewerScenery.ts`, `src/viewerLine.ts`, `src/viewerMotions.ts`, `src/viewerGlass.ts`, `src/viewerInteriors.ts`, `src/viewerPassenger.ts`, `src/viewerOverlays.ts`,
 `src/SourceTreePanel.tsx`, `src/sourceTreeView.ts`, `src/Thumb.tsx`, `src/modelModule.ts`, `src/ExportPanel.tsx`,
 `src/ModelVariants.tsx`, `src/Link.tsx`, `src/VariantThumb.tsx`, `src/SoundsPanel.tsx`, `src/modelSounds.ts`, `src/soundAudition.ts`, `test/modelSounds.test.ts`, `src/variantThumbs.ts`, `src/thumbRender.ts`,
 `src/devCatalog.ts`, `src/devMeasure.ts`, `generator/devServer.ts`, `generator/devExport.ts`, `test/devExport.test.ts`,
 `src/factory.css`, `src/favicon.svg`, `src/apple-touch-icon.png`, `src/social-preview.png`, `src/boot.ts`, `src/bootEntry.ts`, `index.html`, `vite.config.ts`,
-`test/catalogQuery.test.ts`, `test/factTable.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
+`test/catalogQuery.test.ts`, `test/trafficFigures.test.ts`, `test/factTable.test.ts`, `test/boot.test.ts`, `test/siteMeta.test.ts`, `test/rig.test.ts` (the Pose sliders), `test/scenery.test.ts`, `test/viewerInteriors.test.ts`, `test/viewerPassenger.test.ts`, `test/characters.test.ts` (the Characters chip, ground and motion buttons)
 **See also** - [workshop.md](workshop.md) (the catalog and the workshop, web links), [chains.md](chains.md) (the Chains tab), [../models/export.md](../models/export.md), [../guide/deploy.md](../guide/deploy.md), [openttd-export.md](openttd-export.md), [seo-pages.md](seo-pages.md)
 
 The site is the factory's counterpart of the webapp Creator's model listing,
@@ -152,7 +152,7 @@ listing ([chains.md](chains.md)). On the Chains tab the toolbar holds the switch
   pixels, never wider than the panel), so vehicles compare by length.
 - **Wide (900 px and up): a table.** Thumbnail, title with the id beneath it, city
   pool, triangles, vertices, JS size, primitives, materials, width, depth,
-  height, sounds (the sound design ids the model plays, its variants' included,
+  height, residents, jobs, passengers, produces, sounds (the sound design ids the model plays, its variants' included,
   [../models/sounds.md](../models/sounds.md)) and license. The search also
   matches a model's sound ids, so `diesel-engine-railcar` lists every model with
   that engine. Every header sorts; a second click flips the direction.
@@ -164,6 +164,19 @@ listing ([chains.md](chains.md)). On the Chains tab the toolbar holds the switch
   game charges to unlock the whole design
   ([../models/token-prices.md](../models/token-prices.md)). An unpriced model
   shows a dash and sorts last.
+- **Passengers and cargo** (`src/trafficFigures.ts`, a building's `game.traffic`,
+  [../models/traffic.md](../models/traffic.md)), all per minute of game time:
+  **Residents**, **Jobs**, **Passengers** (trips/min, `5/60 x residents + 2.5/60 x
+  jobs`, the game's constants), **Produces** (t/min per commodity, "grain 180",
+  several joined by ", "), **Consumes** (what it takes in: `accepts` and its recipe's
+  inputs, "food, goods, mail") and **Recipe** ("1 iron ore + 0.5 coal -> steel,
+  360-540 t/min"). Each is the design's default, or a range "min-max" over its
+  default and variants when they differ (the Chains tab's way, [chains.md](chains.md));
+  Residents, Jobs, Passengers, Produces and Recipe sort by the default's figure
+  (a column's `sort`), a building that has none and every vehicle last. The table
+  shows the first four; the model page's spec list shows all six, but only for a
+  record with a traffic block (a column's `only`), so a vehicle's page has none of
+  them. Vehicles get no values.
 - **Narrow: cards.** Title and pool chip, then triangles, vertices, JS size and
   the price (when the model has one) -
   plus the sorted-by column when it is something else, so a reorder never hides

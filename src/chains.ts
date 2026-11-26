@@ -45,12 +45,17 @@ function lower(c: string): string {
   return c.replace(/-/g, " ");
 }
 
-/** A number as the cards print it: at most two decimals, trailing zeros dropped. */
+/**
+ * A number as the cards print it: at most two decimals, trailing zeros dropped; a
+ * small amount below 1 (a house's mail, 0.0017 t/min) keeps two significant digits
+ * so it never prints as 0.
+ */
 export function formatAmount(n: number): string {
+  if (n > 0 && n < 0.1) return String(Number(n.toPrecision(2)));
   return String(Math.round(n * 100) / 100);
 }
 
-/** "3 t/h" or "3-6 t/h": the range of a set of numbers. */
+/** "3 t/min" or "3-6 t/min": the range of a set of numbers. */
 function range(values: readonly number[], unit: string): string {
   const lo = Math.min(...values), hi = Math.max(...values);
   return lo === hi ? `${formatAmount(lo)}${unit}` : `${formatAmount(lo)}-${formatAmount(hi)}${unit}`;
@@ -95,7 +100,7 @@ interface BuildingFacts {
   id: string;
   title: string;
   draft: boolean;
-  /** Made from nothing: tonnes per hour by commodity, every selection's rate. */
+  /** Made from nothing: tonnes per minute by commodity, every selection's rate. */
   produces: Map<string, number[]>;
   /** Consumed on delivery. */
   accepts: Set<string>;
@@ -306,7 +311,7 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
       id: `make-${c}`,
       kind: "producer",
       title: producers.length ? producers.map((b) => b.title).join(", ") : "No producer yet",
-      lines: producers.length ? [`${countLine(ids.length)} - ${range(producers.flatMap((b) => b.produces.get(c)!), " t/h")}`] : [`nothing makes ${lower(c)}`],
+      lines: producers.length ? [`${countLine(ids.length)} - ${range(producers.flatMap((b) => b.produces.get(c)!), " t/min")}`] : [`nothing makes ${lower(c)}`],
       commodities: [c],
       buildings: ids,
       empty: !producers.length,
@@ -335,7 +340,7 @@ export function chainGraph(records: readonly ChainRecord[]): ChainGraph {
       id: `process-${idPart(r.use.output)}${n > 1 ? `-${n}` : ""}`,
       kind: "processor",
       title: r.ids.map((id) => buildings.get(id)!.title).join(", "),
-      lines: [recipeText(r.use), `${range(r.rates, " t/h")} - stock ${range(r.stocks, " t")}`],
+      lines: [recipeText(r.use), `${range(r.rates, " t/min")} - stock ${range(r.stocks, " t")}`],
       commodities: [...r.use.inputs.map(([c]) => c), r.use.output],
       buildings: r.ids,
       recipe: r.use.key,
@@ -546,7 +551,7 @@ export interface BuildingCard {
   id: string;
   title: string;
   draft: boolean;
-  /** What it does in this role: "Makes 3-6 t/h", a recipe, "Takes food, goods". */
+  /** What it does in this role: "Makes 36-72 t/min", a recipe, "Takes food, goods". */
   line: string;
 }
 
@@ -578,10 +583,10 @@ export function nodeCards(g: ChainGraph, id: string): CardGroup[] {
   if (node.kind === "commodity") return [{ title: `Carries ${lower(id)}`, empty: `No vehicle carries ${lower(id)} yet.`, vehicles: carriers(g, id) }];
   const line = (bid: string): string => {
     const b = g.buildingFacts.get(bid)!;
-    if (node.kind === "producer") return `Makes ${range(b.produces.get(node.commodities[0]!)!, " t/h")}`;
+    if (node.kind === "producer") return `Makes ${range(b.produces.get(node.commodities[0]!)!, " t/min")}`;
     if (node.kind === "processor") {
       const r = node.recipe ? b.recipes.get(node.recipe) : undefined;
-      return r ? `${recipeText(r)}, ${range(r.rates, " t/h")}` : "";
+      return r ? `${recipeText(r)}, ${range(r.rates, " t/min")}` : "";
     }
     return `Takes ${[...b.accepts].sort(byOrder).map(lower).join(", ")}`;
   };

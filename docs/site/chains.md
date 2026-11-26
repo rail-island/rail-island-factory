@@ -19,8 +19,8 @@ Three bands, left to right, each titled:
 
 | Band | Columns | Nodes |
 |---|---|---|
-| Raw materials | producers, raw commodities | per raw commodity, a **producer** box (its designs' titles, "N designs - 3-150 t/h") beside the commodity's pill |
-| Processing | per recipe depth: processors, then their outputs | a **processor** box per recipe ("0.5 t coal + 1 t iron ore -> 1 t steel", "30-45 t/h - stock 300-450 t"), then the processed commodity's pill |
+| Raw materials | producers, raw commodities | per raw commodity, a **producer** box (its designs' titles, "N designs - 36-1800 t/min") beside the commodity's pill |
+| Processing | per recipe depth: processors, then their outputs | a **processor** box per recipe ("0.5 t coal + 1 t iron ore -> 1 t steel", "360-540 t/min - stock 3600-5400 t"), then the processed commodity's pill |
 | Consumers | one | **Towns** (every building that makes mail: homes, shops, offices, landmarks) and each other taker on its own (a tank farm, a power plant, a warehouse) |
 
 Curves with arrowheads join them: producer -> raw commodity -> processor -> output
@@ -81,8 +81,8 @@ lit edges show it in the graph, and a click on the maker opens its designs.
 | Node | Group |
 |---|---|
 | A commodity | **Carries <commodity>**: the vehicles that may carry it |
-| A producer | **Producers**: its designs, "Makes 3-6 t/h" |
-| A processor | **Processors**: its designs, with their recipe and rate ("0.5 t coal + 1 t iron ore -> 1 t steel, 30-45 t/h") |
+| A producer | **Producers**: its designs, "Makes 36-72 t/min" |
+| A processor | **Processors**: its designs, with their recipe and rate ("0.5 t coal + 1 t iron ore -> 1 t steel, 360-540 t/min") |
 | Towns or another consumer | **Buildings**: its designs, "Takes food, goods, mail" |
 
 A building card is a link to the model page: its thumbnail (`Thumb`, so a draft's is
@@ -108,7 +108,10 @@ by its numbers alone.
 - **Selections.** A record's block is read at its defaults and at each variant,
   resolved the way the game resolves them (`selectionsOf`, the site's copy of
   `resolvedNumbers` in `generator/traffic.ts`, over `effectiveParams`). A rate
-  shown as a range ("30-45 t/h") spans them.
+  shown as a range ("360-540 t/min") spans them. Every rate is per minute of game
+  time ([../models/traffic.md](../models/traffic.md), "The unit marker"); an amount
+  below 0.1 keeps two significant digits (a house's mail, "0.0017"), never 0
+  (`formatAmount`).
 - **Roles.** A building that `produces` a commodity other than mail is a producer of
   it; one with a `processes` recipe is a processor, one node per recipe signature
   (output and inputs: the two goods factories share one); one that makes mail is a
