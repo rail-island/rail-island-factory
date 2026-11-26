@@ -4,8 +4,8 @@
 // reflow; a vehicle's side view keeps its scale -- one height for every
 // vehicle, the width following the image -- as the build's side thumbnails do.
 
-import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
-import type { CatalogRecord } from "./catalogQuery";
+import { Show, createEffect, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
+import { variantThumbKey, type CatalogRecord } from "./catalogQuery";
 import { variantThumb } from "./variantThumbs";
 
 export function VariantThumb(props: {
@@ -30,12 +30,19 @@ export function VariantThumb(props: {
     onCleanup(() => io.disconnect());
   });
 
+  // The render's key: a record replaced with the same picture (a `pnpm dev` measurement
+  // of another field, a rebuilt list) keeps its image instead of blinking back to the
+  // placeholder and queueing again. An unmeasured `pnpm dev` record has no JS hash to
+  // key the render on yet (devMeasure.ts).
+  const key = createMemo(() => (props.record.pending ? null : variantThumbKey(props.record, props.params)));
+  let shownKey: string | null = null;
   createEffect(() => {
-    const record = props.record;
-    const params = props.params;
-    // an unmeasured `pnpm dev` record has no JS hash to key the render on yet (devMeasure.ts)
-    if (!visible() || record.pending) return;
-    setUrl(null);
+    const k = key();
+    if (!visible() || !k) return;
+    // another picture (a new variant): the placeholder until it lands, never the old one
+    if (k !== shownKey) setUrl(null);
+    shownKey = k;
+    const [record, params] = untrack(() => [props.record, props.params] as const);
     setFailed(false);
     const req = variantThumb(record, params);
     let live = true;

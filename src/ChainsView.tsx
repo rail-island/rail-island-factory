@@ -254,10 +254,11 @@ function CardGroupView(props: { group: CardGroup; byId: Map<string, Row>; onOpen
         <ul class="factory-chaincards__list">
           <For each={shown()}>
             {(c) => {
-              const row = props.byId.get(c.id);
+              // read again when the record is replaced (a `pnpm dev` measurement), the card itself kept
+              const row = () => props.byId.get(c.id);
               return (
                 <li>
-                  <Show when={row} fallback={<span class="factory-chaincard">{c.title}</span>}>
+                  <Show when={row()} fallback={<span class="factory-chaincard">{c.title}</span>}>
                     {(r) => (
                       <Link class="factory-chaincard" href={props.hrefOpen(r())} onNavigate={() => props.onOpen(r())}>
                         <Thumb record={r()} />
