@@ -177,6 +177,19 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "trailer" }, seats: 120 },
     ],
   },
+  "proc-vehicle-cr-blue-arrow": {
+    seats: 0,
+    source: "zh Wikipedia (DJJ1): 1M6T set, 421-423 seats, per car 35, 78, 78, 66, 78, 78 - a coach 67 on average, the driving trailer 78; the power car carries nothing",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 67 },
+      { params: { unit: "drivingTrailer" }, seats: 78 },
+      { params: { unit: "train" }, seats: 212 },
+      { params: { unit: "train", cars: "3" }, seats: 145 },
+      { params: { unit: "train", cars: "5" }, seats: 279 },
+      { params: { unit: "train", cars: "6" }, seats: 346 },
+      { params: { unit: "train", cars: "7" }, seats: 413 },
+    ],
+  },
   "proc-vehicle-cr-cr200j": {
     seats: 0,
     source: "Wikipedia: CR200J short set (power car + 7 coaches + driving trailer) ~ 720 seats, ~90 a coach, driving trailer fewer; the power car carries nothing",
