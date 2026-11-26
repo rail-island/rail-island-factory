@@ -22,16 +22,24 @@ import type { ParamValues, ProceduralDesign } from "./design.ts";
 import type { SeriesCabFace } from "./seriesCab.ts";
 import type { Pt } from "./sliceLoft.ts";
 import { c, NO_NOSE } from "./seriesHelpers.ts";
-import { sidePanel, type SliceBody } from "./sliceBody.ts";
+import { crownPane, shapedCrownPane, sidePanel, type SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
 
 const OBB_RED = "#e2001a";
 
 /** Where the face meets the body; the coupling plane ahead of the tip. */
-const DJOIN = 2.6;
+const DJOIN = 2.4;
 const REACH = 0.35;
-/** The crown over the rail; the cab's cap stands on it. */
+/** The crown over the rail; the cab roof's hump (the dark grey cap) rises to CAB_C over the cab and falls back behind it. */
 const C = 3.85;
+const CAB_C = 4.02;
+/** The face's centre line, [y, d behind the tip] (see the face). */
+const CAB_PROFILE: Pt[] = [
+  [0.45, 0.18], [0.6, 0.07], [0.75, 0.01], [0.85, 0], [1.2, 0.03], [1.6, 0.1], [2.0, 0.2], [2.35, 0.3], [2.75, 0.5], [3.05, 0.74],
+  [3.35, 1.02], [3.58, 1.3], [3.75, 1.6], [3.9, 1.95], [3.98, 2.2], [CAB_C, DJOIN],
+];
+/** The hump behind the face's join: flat to 1.8 m, down to the crown by 2.9 m (body d). */
+const CAB_HUMP: Pt[] = [[0, CAB_C], [1.8, CAB_C], [2.3, 3.95], [2.9, C]];
 
 /**
  * The window bands, measured on the Ennstal photograph (28 px/m up the side at the door): over the
@@ -94,15 +102,21 @@ function maskHalf(g: number): Pt[] {
 const SCREEN: Pt[] = closed([[0, 2.24], [1.0, 2.24], [1.05, 2.5], [1.04, 2.9], [0.96, 3.12], [0, 3.16]]);
 
 const FACE: SeriesCabFace = {
-    dJoin: DJOIN, dSide: 2.2, reach: REACH, first: T_DOOR[0], roofFrom: 3.62, cols: [6, 4, 1, 1], tolerance: 0.03,
-    // the lower face upright from the coupler to the lamp panel, the windscreen raked about 21 degrees,
-    // the head rounding into the roof under the cap (Ennstal and MAV photographs, 34 px/m at the tip)
-    profile: [[0.45, 0.16], [0.6, 0.06], [0.72, 0.01], [0.8, 0], [1.45, 0], [1.62, 0.05], [1.75, 0.11], [2.0, 0.22], [2.24, 0.32], [2.7, 0.72], [3.17, 1.15], [3.42, 1.38], [3.58, 1.55], [3.7, 1.75], [3.78, 2.0], [3.83, 2.3], [C, DJOIN]],
-    // in plan a broad front with big round corners, swept back along the cab sides
-    corner: [[0.45, 0.7], [0.8, 0.75], [1.6, 0.85], [2.24, 0.95], [3.0, 1.05], [3.5, 0.95], [3.7, 0.7], [3.83, 0.35], [C, 0.2]],
-    cornerDepth: [[0.45, 1.0], [0.8, 1.1], [1.6, 1.25], [2.24, 1.4], [3.0, 1.4], [3.5, 1.0], [3.7, 0.75], [3.83, 0.24], [C, 0.15]],
-    bulge: 0.1,
-    rows: [0.45, 0.6, 0.72, 0.8, 1.2, 1.36, 1.45, 1.62, 1.75, 2.0, 2.24, 2.7, 3.17, 3.42, 3.58, 3.7, 3.78, 3.83, C],
+    dJoin: DJOIN, dSide: 2.0, reach: REACH, first: T_DOOR[0], roofFrom: 3.58, cols: [5, 3, 1, 1], tolerance: 0.035,
+    // the face's silhouette on the Ennstal photograph (8x crop at the tip: 251 px/m up, 208 px/m along):
+    // its foremost point at the coupler (0.85 m), leaning back ever more steeply past the logo, the mask's
+    // foot (0.1 m back at 1.6 m), the lamps and the windscreen (0.3 m at 2.35 m, 0.74 m at 3.05 m) to the
+    // display's head (1.3 m at 3.58 m), then rounding over into the cab roof's hump, 4.02 m high 2.4 m
+    // behind the tip - the whole nose about 2.75 m from the coupling plane to the full roof
+    profile: CAB_PROFILE,
+    // in plan a broad front rounding strongly into the sides, the corners swept back 1.0 - 1.45 m
+    corner: [[0.45, 0.7], [0.85, 0.75], [1.6, 0.85], [2.35, 0.95], [3.05, 1.05], [3.35, 1.0], [3.58, 0.9], [3.75, 0.75], [3.9, 0.5], [3.98, 0.3], [CAB_C, 0.12]],
+    cornerDepth: [[0.45, 1.0], [0.85, 1.1], [1.6, 1.3], [2.35, 1.45], [3.05, 1.4], [3.35, 1.25], [3.58, 1.0], [3.75, 0.7], [3.9, 0.38], [3.98, 0.15], [CAB_C, 0.08]],
+    // the front bowed: most at the lamps and the windscreen's foot, flattening toward the roof
+    bulge: [[0.45, 0.08], [1.6, 0.14], [2.35, 0.16], [3.05, 0.12], [3.58, 0.07], [CAB_C, 0.03]],
+    rows: [...new Set([...CAB_PROFILE.map(([y]) => y), 1.3, 1.36, 1.45, 1.62, 1.75, 2.24, 3.17, 3.42, 3.72, 3.84])].sort((a, b) => a - b),
+    // the dark grey cap: the roof's paint from the display's head over the hump (the body's part in the fittings)
+    paint: [{ mat: "capG", front: [[3.58, -9], [CAB_C + 0.1, -9]], back: [[3.58, DJOIN + 0.1], [CAB_C + 0.1, DJOIN + 0.1]], top: CAB_C + 0.1 }],
     // (the face's paint is the livery's `front`; the distant model's face red under the black mask)
     lodBands: [[0, 1.62, "red"], [1.62, 3.58, "band"]],
     fields: [
@@ -113,6 +127,8 @@ const FACE: SeriesCabFace = {
       // the destination display and the lamp panel's grille
       { mat: "recess", pts: box(-0.72, 0.72, 3.22, 3.42) },
       { mat: "grille", pts: box(-0.5, 0.5, 1.72, 2.1) },
+      // the cap's lamp slot over the display
+      { mat: "recess", pts: box(-0.5, 0.5, 3.72, 3.84) },
     ],
     panes: [],
     lodGlass: { hw: 1.0, y: [2.24, 3.16] },
@@ -122,7 +138,7 @@ const FACE: SeriesCabFace = {
       { text: "OBB", lat: 0, y: 1.3, h: 0.14, mat: "logo" },
     ],
     // the headlights outside, the tail lamps inside them, in the lamp panel
-    lamps: [[-0.82, 1.92, 0.075, "lampHead"], [0.82, 1.92, 0.075, "lampHead"], [-0.64, 1.92, 0.05, "lampRed"], [0.64, 1.92, 0.05, "lampRed"]],
+    lamps: [[-0.82, 1.92, 0.075, "lampHead"], [0.82, 1.92, 0.075, "lampHead"], [-0.64, 1.92, 0.05, "lampRed"], [0.64, 1.92, 0.05, "lampRed"], [-0.34, 3.78, 0.04, "lampHead"], [0.34, 3.78, 0.04, "lampHead"]],
     // one wiper parked leaning left from its pivot on the panel
     wipers: [[[0.05, 2.28], [-0.55, 3.0]]],
 };
@@ -186,15 +202,6 @@ function talentFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, 
   const L = car.length;
   const xs = (d0: number, d1: number): [number, number] => [Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1))];
   const at = (mat: string, d0: number, d1: number, y0: number, y1: number, hw: number) => { const [a, e] = xs(d0, d1); block(m, mat, a, e, y0, y1, -hw, hw); };
-  /** A housing on the roof swept from a low front (at d0) to its full section, then on to d2. */
-  const housing = (mat: string, d0: number, d1: number, d2: number, y0: number, y1: number, hw: number, hwTop: number, front: number) => {
-    const full: Ring = [[-hw, y0], [hw, y0], [hwTop, y1], [-hwTop, y1]];
-    const low: Ring = [[-hw + 0.1, y0], [hw - 0.1, y0], [hwTop - 0.1, y0 + front], [-hwTop + 0.1, y0 + front]];
-    const fwd = X(d1) < X(d0);
-    const [x0, x1, x2] = [X(d0), X(d1), X(d2)];
-    if (fwd) { m.sweep(mat, "x", full, x1, low, x0); m.sweep(mat, "x", full, x2, full, x1); }
-    else { m.sweep(mat, "x", low, x0, full, x1); m.sweep(mat, "x", full, x1, full, x2); }
-  };
   m.scope("window bands", () => {
     // the low band behind the end car's door and along an intermediate car, broken by its doors
     const spans: Array<[number, number]> = car.end ? [[t(T_DOOR[1]) + 0.05, L - 0.05]] : [[0.05, MID_DOORS[0]![0] - 0.05], [MID_DOORS[0]![1] + 0.05, MID_DOORS[1]![0] - 0.05], [MID_DOORS[1]![1] + 0.05, L - 0.05]];
@@ -203,16 +210,13 @@ function talentFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, 
   const R = C - 0.06;
   if (car.end) {
     m.scope("cab cap", () => {
-      // the dark grey cap on the cab roof: its sloping front over the display, grilles along its sides, the lamps in its front slot
-      housing("capG", t(1.45), t(2.5), t(5.4), R - 0.25, C + 0.28, 1.1, 0.9, 0.12);
-      const [a, e] = xs(t(2.9), t(5.0));
-      for (const sd of [1, -1]) for (let k = 0; k < 6; k++) {
-        const x = a + ((e - a) * (k + 0.5)) / 6;
-        block(m, "grille", x - 0.1, x + 0.1, C - 0.05, C + 0.2, sd > 0 ? 1.0 : -1.03, sd > 0 ? 1.03 : -1.0);
+      // the dark grey cap: paint over the roof's hump (the face carries it from the display's head), its
+      // rear edge rounding in where the hump falls back to the crown; the cab air conditioning's grilles on its flanks
+      const hw = (d: number) => (d <= 1.8 ? 1.08 : Math.max(0.05, 1.08 * Math.cos(((d - 1.8) / 1.15) * (Math.PI / 2))));
+      for (const sd of [1, -1]) {
+        shapedCrownPane(m, b, X, sd, "capG", [0, 2.9], () => 0, hw, 0.004, [1.8, 2.1, 2.4, 2.65]);
+        for (let k = 0; k < 4; k++) crownPane(m, b, X, sd, "grille", [0.3 + k * 0.38, 0.6 + k * 0.38], [0.78, 0.98], 0.008);
       }
-      const [s0, s1] = xs(t(2.0), t(2.16));
-      block(m, "recess", s0, s1, C + 0.0, C + 0.12, -0.5, 0.5);
-      for (const z of [-0.36, 0.36]) block(m, "lampHead", s0 - 0.01, s1 + 0.01, C + 0.02, C + 0.1, z - 0.05, z + 0.05);
     });
     if (!car.rearEndCar) m.scope("high-voltage module", () => {
       // the Triebwagen's module behind the pantograph: breaker, transformers, arresters on a low frame
@@ -255,7 +259,7 @@ export const OBB_4024: ShinkansenSeries = {
   // the coupler to the joint, the intermediate cars 14.75 m joint to joint (the three-car 4023's 52.12 m)
   endLength: 18.685, midLength: 14.75, W: 1.4625, Y: 0.62, S: 3.36, C, lean: 0.97, B: 0.42, A: 0.55,
   nose: NO_NOSE, windscreen: [0, 0, 0, 0], lamps: [0, 0], cabFace: FACE,
-  endCrown: [[0, 3.83], [0.4, C]],
+  endCrown: CAB_HUMP, endCrownStep: 0.45,
   windows: [LOW, HIGH], windowW: 1.3, pitch: 1.45, door: [0.59, 2.62, 1.42, 2.5], doorW: 1.5, doorGlassW: 0.22, doorGlassPair: 0.62,
   layout: { end: END_LAYOUT, middle: MID_LAYOUT },
   rearEnd: { layout: END_LAYOUT },
@@ -263,7 +267,7 @@ export const OBB_4024: ShinkansenSeries = {
   jacobs: true, bogieCentres: 18.685 - REACH - 4.05, wheelR: 0.38, wheelbase: 2.2,
   // the single-arm pantograph on the leading end car's module behind the cab (Graz and MAV photographs)
   endPantograph: "lead", pantographD: 7.6,
-  lodRoof: { d: [1.45, 5.4], hw: 1.0, y: [C - 0.1, C + 0.3], mat: "capG" },
+  lodRoof: { d: [1.6, 4.7], hw: 0.95, y: [C - 0.1, CAB_C - 0.02], mat: "capG" },
   fittings: talentFittings,
   cars: [3, 4],
   liveries: { obb: delivery(), cityjet: cityjetLivery() },
