@@ -514,6 +514,7 @@
     "proc-vehicle-obb-1040": 49,
     "proc-vehicle-obb-1116": 838,
     "proc-vehicle-obb-1144": 835,
+    "proc-vehicle-obb-1189": 846,
     "proc-vehicle-obb-4010": 842,
     "proc-vehicle-obb-4020": 840,
     "proc-vehicle-obb-4024": 837,
@@ -3258,6 +3259,18 @@
       "proc-vehicle-obb-1144?livery=bloodOrange": {
         "id": 10212,
         "size": 4
+      },
+      "proc-vehicle-obb-1189?": {
+        "id": 10582,
+        "size": 6
+      },
+      "proc-vehicle-obb-1189?livery=bloodOrange": {
+        "id": 10594,
+        "size": 6
+      },
+      "proc-vehicle-obb-1189?livery=brown": {
+        "id": 10588,
+        "size": 6
       },
       "proc-vehicle-obb-4010?": {
         "id": 10428,

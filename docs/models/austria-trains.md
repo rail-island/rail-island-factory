@@ -410,7 +410,42 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-1110 -->
 
-<!-- design:obb-1189 -->
+### OBB 1189 Krokodil (`proc-vehicle-obb-1189`)
+
+- **Built on**: the box locomotive kit (`generator/boxLocoKit.ts`) for the centre body, with the hoods'
+  own shells and its own rod running gear, `generator/atObb1189.ts`; no kit change.
+- **Parameters**: `livery` - `green` (default; 1189.05 in OBB fir green, RAL 6009, 1955-1979, red
+  coupling rods), `brown` (1189.08 in the OBB brown of 1953-55), `bloodOrange` (1189.02 from 1971, a
+  light line under the windows).
+- **Figures** (German Wikipedia "BBÖ 1100", the 1100.1 series): (1'C)(C1'), 20.4 m over buffers,
+  wheelbase 17.7 m, drivers 1,350 mm, carrying wheels 870 mm; `game` 116 t, 1,740 kW (continuous;
+  1,900 kW one-hour), 75 km/h. Built 1926/27 by Floridsdorf with Austrian Brown Boveri equipment.
+- **Running gear**, measured side-on on 1100.102 (60.3 px/m over the published wheelbase): per half
+  the pony at |x| 8.85, the drivers at 6.86, 3.01 and 1.30 m, the jackshaft at 4.6 m and 1.1 m up with
+  the gear cases of its wheel and a motor pinion between the frame and the wheels. Each half's three
+  drivers, jackshaft, inner frame and rods are one turning unit; the pony (an Adams axle) is its own.
+  The coupling rod runs on the drivers' crank pins (0.3 m cranks, the left side 90 degrees ahead); the
+  jackshaft's crank drives it through a vertical link, as photographed. Static: no running animation.
+- **Shape facts**: the centre body 6.84 m long and 3.0 m wide, eave 3.62 m, roof 3.85 m, the roof
+  running out 0.4 m over each end as a visor; the cab ends' corners chamfered 0.45 m with a narrow
+  window on each chamfer, two front windows 0.62 m wide (2.88-3.55 m) and the headlight between them.
+  Per side: the cab doors at |x| 1.92-2.58 with tall windows and handrails, windows at 0.85-1.45
+  (2.9-3.52 m) over grilles and low vents, the number plate and the OBB lettering in the middle, on the
+  right side the vertical louvre over them (photographed on 1189.09), the white slatted box with its Y
+  stays under the body (|x| < 1.97). The hoods 2.5 m wide and 2.72 m high to |x| 8.75, the top falling
+  0.3 m over the last 1.4 m into the front; three louvres a side (3.68-4.2, 6.15-6.7 tall, 7.4-8.3 low)
+  and the round cover low ahead of the first driver; the black frame band along the hood's foot
+  (1.28-1.72 m), the skirt arching over the first driver and down to 1.1 m; the headlights in housings
+  on the front's top corners, the number plate between them, the dark step box and buffer beam below.
+  Two red diamond pantographs at |x| 2.95, the rear raised, the roof line and the main switch.
+- **References**: `assets/obb-1189/` - 1100.102 (ex 1189.02) side-on and front three-quarter (1998),
+  1189.09 at Ampflwang (2012; 2013 with a hood off, the running gear bare), 1189.02 in blood orange,
+  E 89 002 in 1947.
+- **Deviations**: the brown livery has no photograph (the article's text only); the hood's top-edge
+  details and pipework, the brake rigging, sandboxes and the front hoses are not modelled; the hoods
+  are fixed to the body (on the prototype they ride on the frames), so on curves the running gear
+  turns under them. The jackshaft's exact position differs a little between the two sides' photos.
+- **Budget**: 15,454 triangles (green), 15,512 (brown), 15,462 (blood orange); distant model 100.
 
 <!-- design:obb-2016 -->
 
