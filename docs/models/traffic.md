@@ -257,7 +257,9 @@ something, a vehicle with seats or tonnes (a high-speed set's power car seats no
 trailers and the whole set do). A design of such a group that truly carries nothing -
 a harbour tug among the ships, a caboose among the wagons - says so with
 `{ nothing: true, source: "<why>" }`, exported as `{}`. A table may still give a quiet design numbers (a locomotive with a mail room);
-then they are exported as stated. The game reads an empty block as "nothing" and
+then they are exported as stated - the classic cable car cabin (`proc-vehicle-cabin-classic`,
+a legacy design in the `cablecar` group) states 8 seats, since the game ships it by default
+and a cable car carries riders. The game reads an empty block as "nothing" and
 never guesses for a design that has one. A draft states nothing until it is confirmed:
 the check skips drafts, and no game meta file carries them.
 
