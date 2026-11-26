@@ -331,6 +331,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 552 },
     ],
   },
+  "proc-vehicle-cr-crh380d": {
+    seats: 38,
+    source: "china-emu.cn: 8-car CRH380D 554 seats (car 1 32 first + 6 special, car 8 48 second + 6 special, the intermediate cars 84 or the dining car's 45, about 80 on average); seats only",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 80 },
+      { params: { unit: "train" }, seats: 236 },
+      { params: { unit: "train", cars: "2" }, seats: 76 },
+      { params: { unit: "train", cars: "3" }, seats: 156 },
+      { params: { unit: "train", cars: "5" }, seats: 316 },
+      { params: { unit: "train", cars: "6" }, seats: 396 },
+      { params: { unit: "train", cars: "7" }, seats: 476 },
+      { params: { unit: "train", cars: "8" }, seats: 556 },
+    ],
+  },
   "proc-vehicle-cr-crh5a": {
     seats: 60,
     source: "Wikipedia: 8-car CRH5A ~622 seats; seats only",
