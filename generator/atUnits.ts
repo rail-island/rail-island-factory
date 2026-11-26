@@ -7,7 +7,7 @@ import type { ProceduralDesign } from "./design.ts";
 
 // import:obb-railjet
 
-// import:obb-4024
+import { OBB_4024_DESIGN } from "./atObb4024.ts";
 
 // import:obb-4744
 
@@ -30,7 +30,7 @@ import type { ProceduralDesign } from "./design.ts";
 export const AT_UNITS: ProceduralDesign[] = [
   // design:obb-railjet
 
-  // design:obb-4024
+  OBB_4024_DESIGN,
 
   // design:obb-4744
 

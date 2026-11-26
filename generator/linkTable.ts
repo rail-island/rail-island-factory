@@ -316,6 +316,16 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-sncf-x73500": [{ title: "Wikipedia: A TER", url: "https://en.wikipedia.org/wiki/A_TER" }, { title: "Wikimedia Commons: Moreuil - X73595 en gare.jpg", url: "https://commons.wikimedia.org/wiki/File:Moreuil_-_X73595_en_gare.jpg" }],
   "proc-vehicle-sncf-z20500": [{ title: "Wikipedia: SNCF Class Z 20500", url: "https://en.wikipedia.org/wiki/SNCF_Class_Z_20500" }, { title: "Wikimedia Commons: Z 20500 IDF Mobilités Ligne P.jpg", url: "https://commons.wikimedia.org/wiki/File:Z_20500_IDF_Mobilit%C3%A9s_Ligne_P.jpg" }],
   "proc-vehicle-talgo-iii": [{ title: "Wikipedia: Talgo", url: "https://en.wikipedia.org/wiki/Talgo" }],
+  "proc-vehicle-obb-4024": [
+    { title: "Wikipedia (de): OBB 4023/4024/4124", url: "https://de.wikipedia.org/wiki/%C3%96BB_4023/4024/4124" },
+    { title: "Wikipedia: Bombardier Talent", url: "https://en.wikipedia.org/wiki/Bombardier_Talent" },
+    { title: "Wikimedia Commons: Bombardier Talent im Ennstal.jpg", url: "https://commons.wikimedia.org/wiki/File:Bombardier_Talent_im_Ennstal.jpg" },
+    { title: "Wikimedia Commons: OBB 4024 039 in Graz Hauptbahnhof.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4024_039_in_Graz_Hauptbahnhof.jpg" },
+    { title: "Wikimedia Commons: OBB 4024-076 near Seefeld in Tirol.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4024-076_near_Seefeld_in_Tirol,_Mittenwaldbahn,_20.02.2017.jpg" },
+    { title: "Wikimedia Commons: OBB 4024-006, Trattenbach.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4024-006,_Trattenbach,_23.09.2016.jpg" },
+    { title: "Wikimedia Commons: 4124 013 Cityjet Goe.jpg", url: "https://commons.wikimedia.org/wiki/File:4124_013_Cityjet_Goe.jpg" },
+    { title: "Wikimedia Commons: MAV 425 002 Hegyeshalom.jpg", url: "https://commons.wikimedia.org/wiki/File:M%C3%81V_425_002_Hegyeshalom_vas%C3%BAt%C3%A1llom%C3%A1s_9200.jpg" },
+  ],
   // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
   ...FLEET_LINKS,
 };
