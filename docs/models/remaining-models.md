@@ -47,7 +47,10 @@ The Pao and Wap draw their loads as hidden load parts ([loads.md](loads.md)); th
 `cargo` parameter they once gained is gone. Nas with a tram and Pao with a bus are intentionally omitted; both legacy IDs map to their corresponding empty wagon. New covered wagons share `body=box|beer|sliding` (Z, Lp,
 Zaz), with different length, roof profile, door span and axle arrangement. Vte is
 a short two-axle open wagon, Uaaikk a bogie low loader with a dropped deck, stakes
-and an end brake shelter. These bodies are based on the original XML profiles and
+and an end brake shelter; its well carries a power transformer (goods, one unit in two
+steps: the tank on its bearers, then the radiators and bushings) or a flat bed's steel
+tubes, logs, lumber bundles and cement pallets, each a stepped load
+([loads.md](loads.md)). These bodies are based on the original XML profiles and
 native, non-upscaled textures retained in `assets/remaining-wagons/native/`.
 
 Running gear reuses the factory's 1.435 m gauge wheelsets, bogies and 1.75 m buffer

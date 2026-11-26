@@ -12,6 +12,7 @@ export interface Gltf {
   nodes?: {
     mesh?: number;
     children?: number[];
+    name?: string;
     matrix?: number[];
     translation?: number[];
     rotation?: number[];

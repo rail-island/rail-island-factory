@@ -281,8 +281,8 @@ export function sweep(ids: readonly string[]): void {
           expect(Object.keys(lowRig).sort()).toEqual(["joints", "maxBendDeg", "sections"]);
           expect(lowRig.sections!.length).toBeGreaterThan(1);
         }
-        // (and its loads, hidden load parts: docs/models/loads.md)
-        low.traverse((o) => { if (o !== low && !(o instanceof THREE.Mesh)) expect(o.name).toMatch(/^(section|joint)[0-9]+$|^load-/); });
+        // (and its loads, hidden load parts, a stepped one's steps under it: docs/models/loads.md)
+        low.traverse((o) => { if (o !== low && !(o instanceof THREE.Mesh) && !(/^step-[0-9]+$/.test(o.name) && o.parent?.name.startsWith("load-"))) expect(o.name).toMatch(/^(section|joint)[0-9]+$|^load-/); });
         // the same triangles, in model space, as the generator's GLB (compared as sets: node order may differ)
         const { json, bin } = parseGlb(lodGlbOf(id));
         const key = (p: number[]) => p.map((v) => v.toFixed(4)).join(",");

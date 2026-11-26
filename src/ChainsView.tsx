@@ -2,8 +2,9 @@
 // wide screen a graph in three bands - raw materials and their producers, the
 // processors with their recipes, the consumers - with mail as a loop of its own; on
 // a phone a list of chains, each step expandable. A node opens cards in a panel beside
-// the graph (in place on a phone): a commodity the vehicles that may carry it, an
-// industry or a town its building designs. Everything comes from
+// the graph (in place on a phone): a commodity the vehicles that may carry it (each
+// card opens its model loaded with the commodity, `?load=`), an industry or a town
+// its building designs. Everything comes from
 // chains.ts, laid out from the records' numbers.
 
 import { For, Show, createMemo, createSignal } from "solid-js";
@@ -25,8 +26,9 @@ export interface ChainsProps {
   onSelect: (id: string | null) => void;
   /** The URL that selects a node (null: none). */
   hrefSelect: (id: string | null) => string;
-  onOpen: (r: Row) => void;
-  hrefOpen: (r: Row) => string;
+  /** Opens a card's model; a commodity's vehicle with `load`, the commodity, shown loaded. */
+  onOpen: (r: Row, load?: string) => void;
+  hrefOpen: (r: Row, load?: string) => string;
 }
 
 export function ChainsView(props: ChainsProps) {
@@ -238,7 +240,7 @@ export function NodeCards(props: ChainsProps & { node: ChainNode }) {
   );
 }
 
-function CardGroupView(props: { group: CardGroup; byId: Map<string, Row>; onOpen: (r: Row) => void; hrefOpen: (r: Row) => string }) {
+function CardGroupView(props: { group: CardGroup; byId: Map<string, Row>; onOpen: (r: Row, load?: string) => void; hrefOpen: (r: Row, load?: string) => string }) {
   const [all, setAll] = createSignal(false);
   const cards = () => [
     ...(props.group.buildings ?? []).map((c) => ({ ...c, tonnes: undefined as number | undefined })),
@@ -260,7 +262,7 @@ function CardGroupView(props: { group: CardGroup; byId: Map<string, Row>; onOpen
                 <li>
                   <Show when={row()} fallback={<span class="factory-chaincard">{c.title}</span>}>
                     {(r) => (
-                      <Link class="factory-chaincard" href={props.hrefOpen(r())} onNavigate={() => props.onOpen(r())}>
+                      <Link class="factory-chaincard" href={props.hrefOpen(r(), props.group.commodity)} onNavigate={() => props.onOpen(r(), props.group.commodity)}>
                         <Thumb record={r()} />
                         <span class="factory-chaincard__body">
                           <span class="factory-chaincard__title">{c.title}</span>

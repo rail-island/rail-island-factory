@@ -266,11 +266,11 @@ export class MeshBuilder extends MeshCore {
 
   /**
    * A freight vehicle's load parts (loadPart.ts, docs/models/loads.md): each
-   * part's name and the commodities it stands for, in drawing order; null for a
-   * model without one.
+   * part's name, the commodities it stands for and, for a stepped load, its
+   * `steps` (its `step-<i>` children), in drawing order; null for a model without one.
    */
-  loads(): Array<{ part: string; commodities: string[] }> | null {
-    return this.loadParts?.length ? this.loadParts.map((l) => ({ part: l.part, commodities: [...l.commodities] })) : null;
+  loads(): Array<{ part: string; commodities: string[]; steps?: number }> | null {
+    return this.loadParts?.length ? this.loadParts.map((l) => ({ part: l.part, commodities: [...l.commodities], ...(l.steps ? { steps: l.steps } : {}) })) : null;
   }
 
   /** The load part the part at `index` is (or is inside), or null. */

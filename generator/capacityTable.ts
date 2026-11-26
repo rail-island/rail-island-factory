@@ -12,7 +12,7 @@
 // iron ore, grain, stone and sand (a mine tub no grain); a covered or pressure
 // hopper cement beside what it took before (grain); a tank oil and fuel; a reefer
 // goods; a box van, covered wagon or curtainsider goods, lumber and cement; a
-// container goods; a flat wagon or low loader steel, wood, goods, lumber and
+// container goods, steel, lumber, cement and grain; a flat wagon or low loader steel, wood, goods, lumber and
 // cement; an aircraft's hold goods and mail; a luggage van or mail room mail. A
 // vehicle with several holds states their tonnes summed and the union of what
 // they take.

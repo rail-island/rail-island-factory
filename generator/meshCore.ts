@@ -286,8 +286,8 @@ export class MeshCore {
   protected readonly clips: AnimationClipSpec[] = [];
   /** Where the model smokes, steams or flares (see `emit`). */
   protected readonly emitterList: Emitter[] = [];
-  /** A freight vehicle's load parts (loadPart.ts), once it drew one: each part's name and the commodities it stands for. */
-  declare loadParts?: Array<{ part: string; commodities: string[] }>;
+  /** A freight vehicle's load parts (loadPart.ts), once it drew one: each part's name, the commodities it stands for and a stepped load's step count. */
+  declare loadParts?: Array<{ part: string; commodities: string[]; steps?: number }>;
   /** Once it drew a load: its triangles as its budget counts them (loadPart.ts `budgetTriangles`). */
   declare loadBudget?: () => number;
   /** Once it drew a load: hides the JS model's load Groups and lists them as `userData.loads` (loadPart.ts). */

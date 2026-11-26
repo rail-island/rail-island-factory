@@ -52,8 +52,8 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
     // no cargo parameter: the loads are hidden load parts (docs/models/loads.md)
     for (const id of ["proc-vehicle-sqns-container-wagon", "proc-vehicle-pao-flat-wagon", "proc-vehicle-wap-hopper-wagon"]) expect(design(id).params, id).toBeUndefined();
     const loads = (id: string) => design(id).build().loads()!.map((l) => l.commodities.join("+"));
-    expect(loads("proc-vehicle-sqns-container-wagon")).toEqual(["goods"]);
-    expect(loads("proc-vehicle-pao-flat-wagon")).toEqual(["steel", "lumber", "cement"]);
+    expect(loads("proc-vehicle-sqns-container-wagon")).toEqual(["goods+steel+lumber+cement+grain"]);
+    expect(loads("proc-vehicle-pao-flat-wagon")).toEqual(["steel", "wood", "goods", "lumber", "cement"]);
     for (const id of ["proc-vehicle-faccs-hopper-wagon", "proc-vehicle-falls-hopper-wagon", "proc-vehicle-wap-hopper-wagon"]) expect(loads(id), id).toEqual(["coal", "iron-ore", "grain", "stone", "sand"]);
     expect(design("proc-vehicle-hadgs-hopper-wagon").build().loads()).toBeNull();
     // the liveries name the vlakosimdb folder each one comes from
@@ -115,7 +115,7 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
     }
   });
 
-  it("carries exactly its own load: nothing at rest, a 40 ft Maersk box on the Sqns's pins, tubes on the Pao", () => {
+  it("carries exactly its own load: nothing at rest, a 40 ft Maersk box on the Sqns's pins, a stack of tubes on the Pao", () => {
     const load = (id: string, commodity: string) => {
       const { json, bin } = parseGlb(design(id).build().toGlb(id));
       expect(collectTriangles(json, bin).some((t) => t.load), id).toBe(false);
@@ -131,9 +131,15 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
     // the pins under the box's corner castings: the box ends over the 3.6 and 16.0 m pins
     expect(Math.min(...along) + 9.9).toBeGreaterThan(SQNS_PINS[1]!);
     expect(Math.max(...along) + 9.9).toBeLessThan(SQNS_PINS[5]! + 0.2);
-    const tubes = load("proc-vehicle-pao-flat-wagon", "steel").map((p) => p[1]);
-    expect(Math.max(...tubes)).toBeGreaterThan(1.68);
-    expect(Math.max(...tubes)).toBeLessThanOrEqual(1.75); // the XML `load` hull reaches 1.7 m
+    // the Pao's steel: nine tubes 0.7 m across, four, three and two high, over the deck from end to end (no longer the XML's thin bundle)
+    const tubes = load("proc-vehicle-pao-flat-wagon", "steel");
+    const ys = tubes.map((p) => p[1]);
+    const xs = tubes.map((p) => p[0]);
+    expect(Math.max(...ys)).toBeCloseTo(1.4 + 0.35 + 2 * 0.7 * Math.sqrt(3) / 2 + 0.35, 1);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(13);
+    expect(Math.max(...tubes.map((p) => Math.abs(p[2])))).toBeLessThanOrEqual(1.4 + 1e-6);
+    const steel = design("proc-vehicle-pao-flat-wagon").build().loads()!.find((l) => l.commodities.includes("steel"))!;
+    expect(steel.steps).toBe(9);
   });
 
   it("varies a livery's paint only: each livery builds the same faces in other colours", () => {

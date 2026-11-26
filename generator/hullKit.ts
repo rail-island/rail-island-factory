@@ -24,11 +24,11 @@
 import { MeshBuilder, chamferedRect, ngon, type MaterialSpec, type Ring } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { LOD_PALETTE, lodPolygon } from "./lodKit.ts";
-import { LOAD_PALETTE } from "./loadKit.ts";
+import { LOAD_PALETTE, orientedFace } from "./loadKit.ts";
 import { lodBar, lodStack } from "./lodAir.ts";
 import { rollWheels } from "./rolling.ts";
 import { measureWaterRig, type WaterChurn, type WaterRig } from "./waterRig.ts";
-import { loadPart } from "./loadPart.ts";
+import { MAX_LOAD_STEPS, loadPart, type Step } from "./loadPart.ts";
 
 // --- the spec ----------------------------------------------------------------------
 
@@ -123,9 +123,11 @@ export type Item =
   /**
    * A ship's load (docs/models/loads.md): its items drawn as one hidden load part
    * standing for `commodities`, pivoted on the deck or hatch covers it rests on --
-   * at u, height `floor`, on the centre line.
+   * at u, height `floor`, on the centre line. A load holding container stacks is
+   * stepped (containerLoad): bottom tiers first, along the ship from the stern;
+   * one with `stepOf` (each item's step, 0 first) is stepped so; else it is a heap.
    */
-  | { k: "load"; commodities: readonly string[]; u: number; floor: number; items: readonly Item[]; name?: string }
+  | { k: "load"; commodities: readonly string[]; u: number; floor: number; items: readonly Item[]; name?: string; stepOf?: readonly number[] }
   | { k: "box"; u: readonly [number, number]; z: readonly [number, number]; y: readonly [number, number]; mat: string; name?: string; top?: boolean }
   | { k: "cyl"; u: number; z?: number; y: readonly [number, number]; r: number; mat: string; n?: number; name?: string }
   | { k: "rod"; a: Vec3; b: Vec3; r: number; mat: string; n?: number; name?: string }
@@ -986,14 +988,128 @@ function ovalRing(cx: number, cz: number, rx: number, rz: number, n = 16, ex = 2
   return orient(ring);
 }
 
+/** One container stack of a `containers` item, as drawItem lays it out: its bay's middle and length, its middle and width across, its tiers, the tier its colour changes at and its two colours. */
+interface Stack { u: number; len: number; zc: number; w: number; tiers: number; split: number; ca: string; cb: string }
+
+/** The stacks of a `containers` item, in drawItem's order and with its seeded choices. */
+function planStacks(c: ShipCtx, it: Extract<Item, { k: "containers" }>): Stack[] {
+  const out: Stack[] = [];
+  const groups = it.groups ?? Math.max(2, Math.min(8, Math.round(it.hw / 2.5)));
+  const len = (it.u[1] - it.u[0] - 0.6 * (it.bays - 1)) / it.bays;
+  let seed = it.seed ?? 7;
+  const rnd = (): number => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let b = 0; b < it.bays; b++) {
+    const u = it.u[0] + b * (len + 0.6) + len / 2;
+    const hw = Math.min(it.hw, fitWidth(c, u - len / 2, u + len / 2, it.y));
+    if (it.rows) {
+      const nr = Math.max(1, Math.round((hw * 2) / it.rows));
+      const rw = (hw * 2) / nr;
+      for (let g = 0; g < nr; g++) {
+        const tiers = Math.max(1, it.tiers - (rnd() < 0.3 ? 1 + Math.floor(rnd() * 3) : 0));
+        const split = tiers > 1 && rnd() < 0.7 ? 1 + Math.floor(rnd() * (tiers - 1)) : tiers;
+        const ca = BOXES[Math.floor(rnd() * BOXES.length)]!;
+        const cb = BOXES[Math.floor(rnd() * BOXES.length)]!;
+        out.push({ u, len, zc: -hw + (g + 0.5) * rw, w: rw - 0.1, tiers, split, ca, cb });
+      }
+      continue;
+    }
+    const ng = Math.max(1, Math.round((groups * hw) / it.hw));
+    const gw = (hw * 2) / ng;
+    for (let g = 0; g < ng; g++) {
+      const tiers = Math.max(1, it.tiers - (rnd() < 0.35 ? 1 + Math.floor(rnd() * 2) : 0));
+      const ca = BOXES[Math.floor(rnd() * BOXES.length)]!;
+      out.push({ u, len, zc: -hw + g * gw + gw / 2, w: gw - 0.08, tiers, split: tiers, ca, cb: ca });
+    }
+  }
+  return out;
+}
+
+/** The most tier bands a stepped container load fills one after another. */
+const CONTAINER_BANDS = 3;
+
+/**
+ * A ship's container load as a stepped load part (docs/models/loads.md): the
+ * stacks of its `containers` items cut into up to three bands of tiers, each band
+ * of each bay one block per stack; the steps fill the bottom band from the stern
+ * forward in groups of bays, then the next band. A block draws its top and its
+ * fore and aft faces, and of its sides only what its neighbours in the bay leave
+ * bare (they are in the same step, so shown with it). The load's other items (the
+ * lashing bridges) go with the first step.
+ */
+function containerLoad(c: ShipCtx, it: Extract<Item, { k: "load" }>, floor: Vec3, name: string): void {
+  const { m, x } = c;
+  const conts = it.items.filter((sub): sub is Extract<Item, { k: "containers" }> => sub.k === "containers");
+  const plans = conts.map((ct) => ({ ct, stacks: planStacks(c, ct) }));
+  const T = Math.max(...conts.map((ct) => ct.tiers));
+  const B = Math.min(T, CONTAINER_BANDS);
+  const bandOf = (b: number): [number, number] => [Math.floor((b * T) / B), Math.floor(((b + 1) * T) / B)];
+  // the bays from the stern, in groups so bands x groups stays within the step cap
+  const bays = [...new Set(plans.flatMap((p) => p.stacks.map((s) => `${p.ct.y}:${s.u}`)))].sort((a, b) => Number(a.split(":")[1]) - Number(b.split(":")[1]));
+  const A = Math.max(1, Math.min(bays.length, Math.floor(MAX_LOAD_STEPS / B)));
+  const groupOf = (key: string): number => Math.floor((bays.indexOf(key) * A) / bays.length);
+  // every block: its step key, bay, place in the bay and band
+  interface Block { key: number; bay: string; s: Stack; y: number; y0: number; y1: number; mat: string; prev: Stack | null; next: Stack | null }
+  const blocks: Block[] = [];
+  for (const { ct, stacks } of plans) {
+    stacks.forEach((s, k) => {
+      const bay = `${ct.y}:${s.u}`;
+      const prev = k > 0 && stacks[k - 1]!.u === s.u ? stacks[k - 1]! : null;
+      const next = k + 1 < stacks.length && stacks[k + 1]!.u === s.u ? stacks[k + 1]! : null;
+      for (let b = 0; b < B; b++) {
+        const [t0, t1] = bandOf(b);
+        const top = Math.min(t1, s.tiers);
+        if (top <= t0) continue;
+        blocks.push({ key: b * A + groupOf(bay), bay, s, y: ct.y, y0: ct.y + t0 * 2.6, y1: ct.y + top * 2.6, mat: t0 < s.split ? s.ca : s.cb, prev, next });
+      }
+    });
+  }
+  const keys = [...new Set(blocks.map((b) => b.key))].sort((a, b) => a - b);
+  const stepOfKey = new Map(keys.map((k, i) => [k, i]));
+  const others = it.items.map((sub, j) => [sub, j] as const).filter(([sub]) => sub.k !== "containers");
+  const draw = (step: Step): void =>
+    m.scope(name, () => {
+      for (const [sub, j] of others) step(0, () => drawItem(c, sub, j));
+      m.scope("containers", () => {
+        for (const bl of blocks)
+          step(stepOfKey.get(bl.key) ?? 0, () => {
+            const { s, y0, y1, mat } = bl;
+            const [x0, x1] = [x(s.u - s.len / 2), x(s.u + s.len / 2)];
+            const [z0, z1] = [s.zc - s.w / 2, s.zc + s.w / 2];
+            orientedFace(m, mat, [x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], [0, 1, 0]);
+            orientedFace(m, mat, [x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], [-1, 0, 0]);
+            orientedFace(m, mat, [x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0], [1, 0, 0]);
+            // a side shows above its neighbour's block in this band (all of it without one)
+            for (const [z, n, nb] of [[z0, -1, bl.prev], [z1, 1, bl.next]] as const) {
+              const cover = nb ? Math.min(y1, Math.max(y0, bl.y + Math.min(nb.tiers, Math.round((y1 - bl.y) / 2.6)) * 2.6)) : y0;
+              if (cover < y1 - 1e-6) orientedFace(m, mat, [x0, cover, z], [x1, cover, z], [x1, y1, z], [x0, y1, z], [0, 0, n]);
+            }
+          });
+      });
+    });
+  if (keys.length < 2) loadPart(m, it.commodities, floor, () => draw((_, d) => d()));
+  else loadPart(m, it.commodities, floor, draw, { steps: keys.length });
+}
+
 function drawItem(c: ShipCtx, it: Item, i: number): void {
   const { m, x } = c;
   const nm = (fallback: string): string => it.name ?? `${fallback} ${i + 1}`;
   switch (it.k) {
     case "tier": drawTier(c, it, i); return;
-    case "load":
-      loadPart(m, it.commodities, [x(it.u), it.floor, 0], () => m.scope(nm("load"), () => it.items.forEach((sub, j) => drawItem(c, sub, j))));
+    case "load": {
+      const floor: Vec3 = [x(it.u), it.floor, 0];
+      if (it.items.some((sub) => sub.k === "containers")) {
+        containerLoad(c, it, floor, nm("load"));
+        return;
+      }
+      const stepOf = it.stepOf;
+      if (stepOf) {
+        if (stepOf.length !== it.items.length) throw new Error(`${nm("load")}: stepOf names ${stepOf.length} steps for ${it.items.length} items`);
+        loadPart(m, it.commodities, floor, (step) => m.scope(nm("load"), () => it.items.forEach((sub, j) => step(stepOf[j]!, () => drawItem(c, sub, j)))), { steps: Math.max(...stepOf) + 1 });
+        return;
+      }
+      loadPart(m, it.commodities, floor, () => m.scope(nm("load"), () => it.items.forEach((sub, j) => drawItem(c, sub, j))));
       return;
+    }
     case "box":
       m.scope(nm("block"), () => m.box(it.mat, x((it.u[0] + it.u[1]) / 2), (it.z[0] + it.z[1]) / 2, it.u[1] - it.u[0], it.z[1] - it.z[0], it.y[0], it.y[1], 0, it.top ?? true));
       return;

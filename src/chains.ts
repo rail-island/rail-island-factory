@@ -588,6 +588,8 @@ export interface VehicleCard {
 
 export interface CardGroup {
   title: string;
+  /** A commodity node's group: the commodity its vehicles open loaded with (`?load=`, docs/site/chains.md). */
+  commodity?: string;
   /** Shown when the group has no card. */
   empty: string;
   buildings?: BuildingCard[];
@@ -602,7 +604,7 @@ export interface CardGroup {
 export function nodeCards(g: ChainGraph, id: string): CardGroup[] {
   const node = g.nodes.get(id);
   if (!node) return [];
-  if (node.kind === "commodity") return [{ title: `Carries ${lower(id)}`, empty: `No vehicle carries ${lower(id)} yet.`, vehicles: carriers(g, id) }];
+  if (node.kind === "commodity") return [{ title: `Carries ${lower(id)}`, commodity: id, empty: `No vehicle carries ${lower(id)} yet.`, vehicles: carriers(g, id) }];
   const line = (bid: string): string => {
     const b = g.buildingFacts.get(bid)!;
     if (node.kind === "producer") return `Makes ${range(b.produces.get(node.commodities[0]!)!, " t/min")}`;

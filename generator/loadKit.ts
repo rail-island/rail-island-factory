@@ -1,6 +1,7 @@
 // The load kit (docs/models/loads.md): what a freight vehicle carries, drawn as
 // hidden parts named `load-<commodity>` (loadPart.ts), one per look, each
-// pivoted on the bed it rests on so the game can scale it in y with the fill.
+// pivoted on the bed it rests on: the game scales a heap in y with the fill and
+// shows a stepped load of discrete items step by step (`step-<i>` children).
 // A design draws every look it can show; the game shows the one whose
 // commodities hold what the vehicle carries. The looks share one palette: a
 // material per commodity look, so coal is the same black on every wagon.
@@ -8,9 +9,9 @@
 import type { MaterialSpec } from "./meshCore.ts";
 import { rect, type MeshCore, type Vec3 } from "./meshCore.ts";
 import type { LodPart } from "./lodKit.ts";
-import { loadPart } from "./loadPart.ts";
+import { itemLoadPart, loadPart, type Step } from "./loadPart.ts";
 
-export { loadPart } from "./loadPart.ts";
+export { itemLoadPart, itemSteps, loadPart, MAX_LOAD_STEPS, type Step } from "./loadPart.ts";
 
 /** The commodity ids a load part may stand for (the supply chain's; stored in saved maps). */
 export const LOAD_COMMODITIES = ["grain", "wood", "coal", "iron-ore", "stone", "sand", "oil", "goods", "steel", "lumber", "cement", "fuel", "mail"] as const;
@@ -65,8 +66,14 @@ export const BULK_LOOKS: readonly BulkLook[] = [
 /** The commodities of a flat wagon or a flatbed's loads. */
 export const FLAT_COMMODITIES = ["steel", "wood", "goods", "lumber", "cement"] as const;
 
-/** What a container stack stands for. */
-export const CONTAINER_COMMODITIES = ["goods"] as const;
+/**
+ * What a container stands for: anything boxed or bagged -- goods, steel, sawn
+ * lumber, bagged cement -- and grain, which ships in lined boxes by rail and sea.
+ */
+export const CONTAINER_COMMODITIES = ["goods", "steel", "lumber", "cement", "grain"] as const;
+
+/** What a ro-ro's road trailers stand for: a container's commodities but grain. */
+export const TRAILER_COMMODITIES = ["goods", "steel", "lumber", "cement"] as const;
 
 /**
  * Draws one heap per bulk look (`looks`, every bulk look by default), each in its
@@ -85,7 +92,7 @@ export function loadLodPart(commodities: readonly string[], floor: number, part:
 }
 
 /** A planar quad wound so its face looks along `n`. */
-function face(m: MeshCore, mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3, n: Vec3): void {
+export function orientedFace(m: MeshCore, mat: string, a: Vec3, b: Vec3, c: Vec3, d: Vec3, n: Vec3): void {
   const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
   const f = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
@@ -125,27 +132,27 @@ export function lumberBundle(m: MeshCore, x0: number, x1: number, z0: number, z1
   const s = 0.009; // the straps further
   const W = "loadLumber", E = "loadLumberEnd", L = "loadLumberGap";
   // the faces: the long sides and the top in sawn wood, the ends in pale cut grain
-  face(m, W, [x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], [0, 1, 0]);
-  for (const [z, n] of [[z0, -1], [z1, 1]] as const) face(m, W, [x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z], [0, 0, n]);
-  for (const [x, n] of [[x0, -1], [x1, 1]] as const) face(m, E, [x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0], [n, 0, 0]);
+  orientedFace(m, W, [x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], [0, 1, 0]);
+  for (const [z, n] of [[z0, -1], [z1, 1]] as const) orientedFace(m, W, [x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z], [0, 0, n]);
+  for (const [x, n] of [[x0, -1], [x1, 1]] as const) orientedFace(m, E, [x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0], [n, 0, 0]);
   // the layers' lines on the long sides and across the ends
   for (let i = 1; i < layers; i++) {
     const y = y0 + ((y1 - y0) * i) / layers;
-    for (const [z, n] of [[z0 - e, -1], [z1 + e, 1]] as const) face(m, L, [x0, y - g, z], [x1, y - g, z], [x1, y + g, z], [x0, y + g, z], [0, 0, n]);
-    for (const [x, n] of [[x0 - e, -1], [x1 + e, 1]] as const) face(m, L, [x, y - g, z0], [x, y - g, z1], [x, y + g, z1], [x, y + g, z0], [n, 0, 0]);
+    for (const [z, n] of [[z0 - e, -1], [z1 + e, 1]] as const) orientedFace(m, L, [x0, y - g, z], [x1, y - g, z], [x1, y + g, z], [x0, y + g, z], [0, 0, n]);
+    for (const [x, n] of [[x0 - e, -1], [x1 + e, 1]] as const) orientedFace(m, L, [x, y - g, z0], [x, y - g, z1], [x, y + g, z1], [x, y + g, z0], [n, 0, 0]);
   }
   // the planks' lines on the ends and along the top
   for (let i = 1; i < planks; i++) {
     const z = z0 + ((z1 - z0) * i) / planks;
-    for (const [x, n] of [[x0 - e, -1], [x1 + e, 1]] as const) face(m, L, [x, y0, z - g], [x, y0, z + g], [x, y1, z + g], [x, y1, z - g], [n, 0, 0]);
-    face(m, L, [x0, y1 + e, z - g], [x1, y1 + e, z - g], [x1, y1 + e, z + g], [x0, y1 + e, z + g], [0, 1, 0]);
+    for (const [x, n] of [[x0 - e, -1], [x1 + e, 1]] as const) orientedFace(m, L, [x, y0, z - g], [x, y0, z + g], [x, y1, z + g], [x, y1, z - g], [n, 0, 0]);
+    orientedFace(m, L, [x0, y1 + e, z - g], [x1, y1 + e, z - g], [x1, y1 + e, z + g], [x0, y1 + e, z + g], [0, 1, 0]);
   }
   // the strap bands: over the top and down both sides
   for (let i = 0; i < straps; i++) {
     const x = x0 + ((x1 - x0) * (i + 0.5)) / straps;
     const [a, b] = [x - 0.03, x + 0.03];
-    face(m, "loadStrap", [a, y1 + s, z0 - s], [b, y1 + s, z0 - s], [b, y1 + s, z1 + s], [a, y1 + s, z1 + s], [0, 1, 0]);
-    for (const [z, n] of [[z0 - s, -1], [z1 + s, 1]] as const) face(m, "loadStrap", [a, y0, z], [b, y0, z], [b, y1 + s, z], [a, y1 + s, z], [0, 0, n]);
+    orientedFace(m, "loadStrap", [a, y1 + s, z0 - s], [b, y1 + s, z0 - s], [b, y1 + s, z1 + s], [a, y1 + s, z1 + s], [0, 1, 0]);
+    for (const [z, n] of [[z0 - s, -1], [z1 + s, 1]] as const) orientedFace(m, "loadStrap", [a, y0, z], [b, y0, z], [b, y1 + s, z], [a, y1 + s, z], [0, 0, n]);
   }
 }
 
@@ -154,26 +161,34 @@ export function bearers(m: MeshCore, xs: readonly number[], z0: number, z1: numb
   for (const x of xs) crate(m, mat, x - 0.06, x + 0.06, y0, y1, z0, z1);
 }
 
+/** How many bundles a lumberLoad draws: its items, in fill order. */
+export const lumberItems = (o: { rows: number; across: number; high: number }): number => o.rows * o.across * o.high;
+
 /**
  * Stacks of lumber bundles on a bed (docs/models/loads.md): `rows` bundles along
  * x0..x1, `across` side by side over z0..z1, `high` stacked, each on two bearers
- * from the bed at y0; `h` a bundle's height. Returns the top of the load.
+ * from the bed at y0; `h` a bundle's height. Returns the top of the load. With
+ * `item` each bundle (its bearers with the first across) is an item of a stepped
+ * load (itemLoadPart), the bottom layer first, along the bed, then across.
  */
-export function lumberLoad(m: MeshCore, x0: number, x1: number, z0: number, z1: number, y0: number, o: { rows: number; across: number; high: number; h: number; gap?: number }): number {
+export function lumberLoad(m: MeshCore, x0: number, x1: number, z0: number, z1: number, y0: number, o: { rows: number; across: number; high: number; h: number; gap?: number; item?: Step }): number {
   const gap = o.gap ?? 0.15;
   const bear = 0.1;
   const len = (x1 - x0 - gap * (o.rows - 1)) / o.rows;
   const wid = (z1 - z0 - 0.08 * (o.across - 1)) / o.across;
+  const item = o.item ?? ((_: number, draw: () => void) => draw());
   let y = y0;
   for (let k = 0; k < o.high; k++) {
     for (let r = 0; r < o.rows; r++) {
       const a = x0 + r * (len + gap);
-      bearers(m, [a + len * 0.2, a + len * 0.8], z0 + 0.04, z1 - 0.04, y, y + bear);
       for (let i = 0; i < o.across; i++) {
         const c = z0 + i * (wid + 0.08);
         // a slight stagger, so the stacks do not look stamped
         const d = ((r + i + k) % 3) * 0.04;
-        lumberBundle(m, a + d, a + len - 0.08 + d, c, c + wid, y + bear, y + bear + o.h);
+        item((k * o.rows + r) * o.across + i, () => {
+          if (i === 0) bearers(m, [a + len * 0.2, a + len * 0.8], z0 + 0.04, z1 - 0.04, y, y + bear);
+          lumberBundle(m, a + d, a + len - 0.08 + d, c, c + wid, y + bear, y + bear + o.h);
+        });
       }
     }
     y += bear + o.h;
@@ -210,11 +225,16 @@ export function cementPallet(m: MeshCore, x0: number, x1: number, z0: number, z1
   return y;
 }
 
+/** How many pallets a cementLoad draws: its items, in fill order. */
+export const cementItems = (o: { rows: number; across: number }): number => o.rows * o.across;
+
 /**
  * Pallets of cement over a bed (docs/models/loads.md): `rows` along x0..x1,
- * `across` side by side over z0..z1, at y0. Returns the top of the load.
+ * `across` side by side over z0..z1, at y0. Returns the top of the load. With
+ * `item` each pallet is an item of a stepped load (itemLoadPart), along the bed,
+ * then across.
  */
-export function cementLoad(m: MeshCore, x0: number, x1: number, z0: number, z1: number, y0: number, o: { rows: number; across: number; tiers?: number }): number {
+export function cementLoad(m: MeshCore, x0: number, x1: number, z0: number, z1: number, y0: number, o: { rows: number; across: number; tiers?: number; item?: Step }): number {
   const gap = 0.1;
   const len = (x1 - x0 - gap * (o.rows - 1)) / o.rows;
   const wid = (z1 - z0 - gap * (o.across - 1)) / o.across;
@@ -222,7 +242,27 @@ export function cementLoad(m: MeshCore, x0: number, x1: number, z0: number, z1: 
   for (let r = 0; r < o.rows; r++)
     for (let i = 0; i < o.across; i++) {
       const a = x0 + r * (len + gap), c = z0 + i * (wid + gap);
-      top = Math.max(top, cementPallet(m, a, a + len, c, c + wid, y0, o.tiers));
+      const draw = () => { top = Math.max(top, cementPallet(m, a, a + len, c, c + wid, y0, o.tiers)); };
+      if (o.item) o.item(r * o.across + i, draw);
+      else draw();
     }
   return top;
+}
+
+/**
+ * Lumber bundles (lumberLoad) as their own stepped load part standing for lumber,
+ * pivoted at `floor`: a bundle a step, the bottom layer first (more than 16
+ * bundles share steps). Returns the top of the load.
+ */
+export function lumberLoadPart(m: MeshCore, floor: Vec3, x0: number, x1: number, z0: number, z1: number, y0: number, o: { rows: number; across: number; high: number; h: number; gap?: number }): number {
+  return itemLoadPart(m, ["lumber"], floor, lumberItems(o), (item) => m.scope("lumber", () => lumberLoad(m, x0, x1, z0, z1, y0, { ...o, item })));
+}
+
+/**
+ * Cement pallets (cementLoad) as their own stepped load part standing for cement,
+ * pivoted at `floor`: a pallet a step (more than 16 share steps, a row across at a
+ * time). Returns the top of the load.
+ */
+export function cementLoadPart(m: MeshCore, floor: Vec3, x0: number, x1: number, z0: number, z1: number, y0: number, o: { rows: number; across: number; tiers?: number }): number {
+  return itemLoadPart(m, ["cement"], floor, cementItems(o), (item) => m.scope("cement", () => cementLoad(m, x0, x1, z0, z1, y0, { ...o, item })));
 }

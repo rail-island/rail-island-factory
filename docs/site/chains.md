@@ -1,7 +1,7 @@
 # The Chains tab
 
 **Covers** - the site's Chains tab next to Workshop: the supply-chain graph on a wide screen (three bands, the mail loop) with its side panel, the cards a node opens, the phone's list of chains, how the graph is derived and laid out from the catalog's records, its URL and its tests.
-**Code** - `src/chains.ts` (`chainGraph`, `nodeCards`, `sameChainInput`, `carriers`, `selectionsOf`, `COMMODITY_ORDER`, `COMMODITY_KIND`, `LAYOUT`), `src/ChainsView.tsx`, `src/VariantThumb.tsx`, `src/App.tsx`, `src/catalogQuery.ts` (`Section`, `SECTIONS`, `sectionLabel`, `ViewState.chain`), `src/factory.css` (`factory-chains*`, `factory-chaincard*`, `factory-chainlist*`), `vite.config.ts` (the test-mode server compile), `test/chains.test.ts`, `test/chainsView.test.ts`, `test/catalogQuery.test.ts`
+**Code** - `src/chains.ts` (`chainGraph`, `nodeCards`, `sameChainInput`, `carriers`, `selectionsOf`, `COMMODITY_ORDER`, `COMMODITY_KIND`, `LAYOUT`), `src/ChainsView.tsx`, `src/VariantThumb.tsx`, `src/App.tsx`, `src/catalogQuery.ts` (`Section`, `SECTIONS`, `sectionLabel`, `ViewState.chain`, `ViewState.load`), `src/viewerLoads.ts` (`initialLoad`), `src/ModelDetail.tsx`, `src/ModelViewer.tsx`, `src/factory.css` (`factory-chains*`, `factory-chaincard*`, `factory-chainlist*`), `vite.config.ts` (the test-mode server compile), `test/chains.test.ts`, `test/chainsView.test.ts`, `test/catalogQuery.test.ts`
 **See also** - [../models/traffic.md](../models/traffic.md) (the commodities, roles and recipes the tab draws), [catalog-site.md](catalog-site.md), [workshop.md](workshop.md), [seo-pages.md](seo-pages.md)
 
 ## What it shows
@@ -97,6 +97,17 @@ a phone's opened step shows two columns and more, one below 600 px.
 Opening a model from a card is a history entry; its page keeps `?section=chains&chain=`
 in the URL, so closing it (the app bar's back arrow) returns to the tab with the node
 still picked.
+
+A vehicle card under a commodity (the group's `commodity`) opens its model **loaded
+with that commodity**: the link carries `?load=<commodity>` (`linkUrl`, so the plain
+href has it too, `/model/<id>/?load=fuel`), `ViewState.load` keeps it on the model
+page, and the viewer's Load select opens on it at full fill (`initialLoad` in
+`src/viewerLoads.ts`; [../models/loads.md](../models/loads.md)). The value is read
+only on a model page and only in the shape of a commodity id (or `empty`); the viewer
+shows it only when the model's load parts stand for it, else its first load, as
+before - a tank wagon from the fuel node shows nothing more than it would have. A
+change of the Load select writes the address's `load` (Empty as `load=empty`),
+stepping to another model or closing the page drops it.
 
 ## Where the data comes from
 

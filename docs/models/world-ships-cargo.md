@@ -53,12 +53,21 @@ Notes:
 
 - **Loads** ([loads.md](loads.md)): a cargo ship's deck cargo is a hidden load part (`cargo` in
   `worldShipsCargo.ts`), shown by the game with what the ship carries, so the model at rest is the
-  empty ship. The container ships' stacks on the hatch covers, the Ro-Ro's trailers, the
-  Europaschiff's containers on its hatch covers and the Yangtze ship's in its hold stand for
-  `goods`; the heavy-lift ship's jack-up rig for `goods`; the push barge's heaps for
+  empty ship. The container ships' stacks on the hatch covers, the Europaschiff's containers on
+  its hatch covers and the Yangtze ship's in its hold stand for anything boxed or bagged -
+  `goods`, `steel`, `lumber`, `cement` and `grain` (`CONTAINER_COMMODITIES`); the Ro-Ro's
+  trailers for a road trailer's `goods`, `steel`, `lumber` and `cement` (`TRAILER_COMMODITIES`);
+  the heavy-lift ship's jack-up rig for `goods`; the push barge's heaps for
   `coal`, `iron-ore`, `grain`, `stone` and `sand`, one part each, and it floats at its loaded 3.5 m draft. The bulk
-  carriers' and tankers' cargo is under their hatches and decks: no load part. Each stack is one row of boxes (2.5 m) in two colours,
-  its height and colours from a fixed seed, with lashing bridges in the bay gaps. The Triple E has its island bridge forward of midships and twin uptakes aft,
+  carriers' and tankers' cargo is under their hatches and decks: no load part. Each stack is one row of boxes (2.5 m),
+  its height and colours from a fixed seed, with lashing bridges in the bay gaps. The container
+  and trailer loads are **stepped** (the hull kit's `containerLoad`): each stack cut into up to
+  three bands of tiers, a block per band in the band's colour, and the steps fill the bottom
+  band from the stern forward in groups of bays, then the next band (15 steps on the ocean
+  container ships and the Yangtze ship, 10 on the Europaschiff, 9 on the Ro-Ro, a bay of
+  trailers each); a block draws only the sides its neighbours in the bay leave bare. The
+  rig is one unit in two steps (`stepOf`): its hull, accommodation and helideck, then its
+  legs, crane, drill floor and derrick. The Triple E has its island bridge forward of midships and twin uptakes aft,
   Emma Maersk the bridge two-thirds forward, MSC Gulsun the bridge well forward.
   The feeder is the Vega Scorpio (Zhejiang 950 type): seven 40 ft bays on green coamings, the
   lashing bridges and the cell guides at the house standing on the deck between the covers, two
@@ -162,7 +171,7 @@ Notes:
 ## Deviations
 
 - No hull lettering or company logos (trade marks), funnel colours only.
-- Container stacks are one block per row and bay, not single boxes (the 25,000-triangle
+- Container stacks are one block per row, bay and band of tiers, not single boxes (the 25,000-triangle
   budget would hold about a tenth of a Triple E's 18,000 TEU).
 - Railings, ladders and running rigging are left out; cranes are a pedestal, cab
   and a round jib.

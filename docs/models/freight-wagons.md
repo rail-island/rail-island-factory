@@ -14,8 +14,8 @@ The vlakosimdb wagons the game has archived are not transferred (below).
 
 | id | vlakosimdb | parameter, load parts | over buffers | triangles |
 |---|---|---|---|---|
-| `veh-sqns-container-wagon` | `n_sqns`, `n_sqns-full#1` | load: a Maersk 40 ft box (`goods`) | 19.8 m | 3,500 / 5,100 loaded |
-| `veh-pao-flat-wagon` | `n_pao`, `n_pao-full#1` | loads: steel tubes on bolsters (`steel`), lumber bundles (`lumber`), cement pallets (`cement`; [loads.md](loads.md)) | 15.3 m | 3,800 at rest / 7,400 with the cement |
+| `veh-sqns-container-wagon` | `n_sqns`, `n_sqns-full#1` | load: a Maersk 40 ft box (a container: `goods`, `steel`, `lumber`, `cement`, `grain`), stepped in two: the box, then its Maersk livery | 19.8 m | 3,500 / 5,100 loaded |
+| `veh-pao-flat-wagon` | `n_pao`, `n_pao-full#1` | loads, each stepped ([loads.md](loads.md)): nine steel tubes 0.7 m across on two bolsters (`steel`, 9 steps), 18 logs between stakes (`wood`, 9), four cable reels (`goods`, 4), lumber bundles (`lumber`, 12), cement pallets (`cement`, 10) | 15.3 m | 3,800 at rest / 7,400 with the cement |
 | `veh-habis-sliding-wall-wagon` | `n_habis_tw1`, `n_habis_tw2` | `livery`: `tw1` (default, grey), `tw2` (weathered brown) | 23.2 m | 4,100 |
 | `veh-hadgs-hopper-wagon` | `n_hadgs` | - | 16.8 m | 4,000 |
 | `veh-faccs-hopper-wagon` | `n_faccs`, `viamont_faccs` | `livery`: `cd` (default), `viamont`; loads: `coal`, `iron-ore`, `grain`, `stone`, `sand` heaps | 12.8 m | 3,900 / 4,000 |
@@ -79,8 +79,11 @@ correctly); `x_dec` paints the x = 0 end, `x_inc` the other.
 
 `freightWagons.ts` builds the Sqns (side beams, fishbelly, cross members, the
 yellow container pins and handbrake wheel), the Pao (planked deck, fishbelly
-frame, stake pockets; tubes on two timber bolsters, or the bus chocked on the
-deck), the Habis (two sliding walls per side with posts and rails, the light
+frame, stake pockets; its loads: a stack of nine 0.7 m steel tubes, four, three
+and two high, from end to end on two timber bolsters - a full load, no longer the
+native's thin bundle of 21 tubes, so the comparison of `n_pao-full#1` measures the
+frame, buffers and bolsters only (its tube-bundle landmarks R04/L04 were dropped) -
+logs between stakes set in the pockets, cable reels as goods, lumber and cement), the Habis (two sliding walls per side with posts and rails, the light
 roof, the end frames, the TRANSWAGGON plate, label board and data panel) and the
 Hadgs (body and curved roof, the two sliding doors with stiffeners and inverted-V
 braces on their rails, posts, X-braced ends, roof hatches). `hopperWagons.ts`

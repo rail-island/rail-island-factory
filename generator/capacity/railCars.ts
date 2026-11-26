@@ -203,7 +203,7 @@ export const RAIL_CARS: Readonly<Record<string, VehicleCapacityEntry>> = {
     source: "Grand Confort A8u 48 seats, bar car about 30 (approx.)",
     variants: [{ params: { unit: "a7d" }, seats: 30 }],
   },
-  "proc-vehicle-sqns-container-wagon": { tonnes: 69, commodities: ["goods"], source: "Sqns 60 ft container wagon: payload about 69 t" },
+  "proc-vehicle-sqns-container-wagon": { tonnes: 69, commodities: ["goods", "steel", "lumber", "cement", "grain"], source: "Sqns 60 ft container wagon: payload about 69 t; containers carry anything boxed or bagged: goods, steel, lumber, cement, and grain in lined boxes" },
   "proc-vehicle-strasbourg-eurotram": { seats: 210, source: "Eurotram (33 m): about 210 seated and standing" },
   "proc-vehicle-talgo-iii": {
     seats: 22,
@@ -233,7 +233,7 @@ export const RAIL_CARS: Readonly<Record<string, VehicleCapacityEntry>> = {
     ],
   },
   "proc-vehicle-us-boxcar": { tonnes: 70, commodities: ["goods", "lumber", "cement"], source: "50 ft boxcar: payload about 70 t" },
-  "proc-vehicle-us-well-car": { tonnes: 63, commodities: ["goods"], source: "Double-stack well car: payload about 63 t (approx.)" },
+  "proc-vehicle-us-well-car": { tonnes: 63, commodities: ["goods", "steel", "lumber", "cement", "grain"], source: "Double-stack well car: payload about 63 t (approx.); containers carry anything boxed or bagged: goods, steel, lumber, cement, and grain in lined boxes" },
   "proc-vehicle-wap-hopper-wagon": { tonnes: 60, commodities: ["grain", "coal", "iron-ore", "stone", "sand"], source: "Wap hopper wagon: about 60 t (approx.)" },
   "proc-vehicle-zsr-coach": {
     seats: 80,

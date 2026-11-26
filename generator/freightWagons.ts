@@ -2,7 +2,7 @@
 // vlakosimdb, and (from hopperWagons.ts) the open hoppers -- seven designs:
 //
 //   veh-sqns-container-wagon      n_sqns, n_sqns-full#1           load: a Maersk box (goods)
-//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      loads: steel tubes, lumber, cement
+//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      loads: steel tubes, logs, cable reels, lumber, cement
 //   veh-habis-sliding-wall-wagon  n_habis_tw1, n_habis_tw2        `livery`: tw1, tw2
 //   veh-hadgs-hopper-wagon        n_hadgs                         fixed
 //   veh-faccs-hopper-wagon        n_faccs, viamont_faccs          `livery`: cd, viamont
@@ -26,7 +26,7 @@ import { drawGearLod, freightWagonLod, openBoxPart, platesPart, roofBoxPart, wag
 import type { LodShell } from "./lodKit.ts";
 import { FREIGHT_NUMBERS, boldText, clipSolid, container40, maerskStar, numberLines, type Pt } from "./freightWagonParts.ts";
 import { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod, FACCS_PARAMS, FALLS_PARAMS } from "./hopperWagons.ts";
-import { CONTAINER_COMMODITIES, LOAD_PALETTE, cementLoad, loadLodPart, lumberLoad } from "./loadKit.ts";
+import { CONTAINER_COMMODITIES, LOAD_PALETTE, cementLoadPart, itemLoadPart, loadLodPart, lumberLoadPart } from "./loadKit.ts";
 import { loadPart } from "./loadPart.ts";
 
 export { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod } from "./hopperWagons.ts";
@@ -94,19 +94,21 @@ export function sqnsContainerWagon(): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.75, 1.8));
     m.scope("bogie 2", () => c.freightBogie(17.05, 1.8));
   });
-  // the load on the pins at 1.3 m (docs/models/loads.md): a Maersk box of goods
-  loadPart(m, CONTAINER_COMMODITIES, [c.X(9.9), 1.3, 0], () =>
+  // the load on the pins at 1.3 m (docs/models/loads.md): a Maersk box, one unit, stepped in two so it
+  // never shrinks: the box itself from the first tonne, its Maersk livery with the second half
+  loadPart(m, CONTAINER_COMMODITIES, [c.X(9.9), 1.3, 0], (step) =>
     m.scope("container", () => {
       // a 40 ft Maersk box on the pins: the star square at the low-x end of the +z side, MAERSK beside it (native z_dec/z_inc)
-      const box = container40(c, 9.9, 1.3);
+      let half = 0;
+      step(0, () => { half = container40(c, 9.9, 1.3).half; });
       for (const s of [1, -1])
-        m.scope(`${sideName(s)} livery`, () => {
-          const face = box.half + 0.012;
+        step(1, () => m.scope(`${sideName(s)} livery`, () => {
+          const face = half + 0.012;
           maerskStar(c, s, face, s > 0 ? 5.45 : 14.25, 1.3 + 1.35, 1.45);
           m.scope("lettering", () => boldText(c, "ink", s, face + 0.004, s > 0 ? 10.65 : 9.05, 2.1, "MAERSK", 0.97, 0.98, 0.29, 0.18));
-        });
+        }));
     }),
-  );
+  { steps: 2 });
   return m;
 }
 
@@ -139,8 +141,23 @@ const PAO_PALETTE: Record<string, MaterialSpec> = {
   deck: { color: "#505750", roughness: 0.9 },
   plankGap: { color: "#2f2f2f", roughness: 0.9 },
   bolster: { color: "#709880", roughness: 0.85 },
+  reel: { color: "#7f3f00", roughness: 0.8 },
+  cable: { color: "#26292a", roughness: 0.8 },
   ...LOAD_PALETTE,
 };
+
+/** The Pao's steel tubes: their radius, and each tube's centre (z, y) in fill order, the bottom row first. */
+const PAO_TUBE_R = 0.35;
+const PAO_TUBES: Array<[number, number]> = (() => {
+  const r = PAO_TUBE_R, rise = 2 * r * Math.sqrt(3) / 2;
+  const out: Array<[number, number]> = [];
+  [4, 3, 2].forEach((count, row) => { for (let k = 0; k < count; k++) out.push([(k - (count - 1) / 2) * 2 * r, 1.4 + r + row * rise]); });
+  return out;
+})();
+/** The timber bolsters under the tubes: source x0..x1. */
+const PAO_BOLSTERS: Pt[] = [[3.8, 4.8], [10.5, 11.5]];
+/** The cable reels' source x. */
+const PAO_REELS = [2.3, 5.75, 9.55, 13.0];
 
 /** The Pao flat wagon with a load (vlakosimdb n_pao-full#1, n_pao-full#2). */
 export function paoFlatWagon(): MeshBuilder {
@@ -172,29 +189,56 @@ export function paoFlatWagon(): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.6, 1.9));
     m.scope("bogie 2", () => c.freightBogie(12.7, 1.9));
   });
-  // the load on the deck at 1.2 m (docs/models/loads.md): steel tubes on their bolsters
-  loadPart(m, ["steel"], [c.X(7.65), 1.2, 0], () =>
-    m.scope("steel tubes", () => {
-      // two timber bolsters (XML `load` 3.8..4.8 and 10.5..11.5, 1.2..1.4 m) under a bundle of 21 tubes, 2.8..12.5 m up to 1.7 m
-      m.scope("bolsters", () => {
-        ([[3.8, 4.8], [10.5, 11.5]] as Pt[]).forEach(([x0, x1], i) => m.scope(`bolster ${i + 1}`, () => c.sideSweep("bolster", [[x0, 1.205], [x1, 1.205], [x1, 1.4], [x0, 1.4]], -1.25, 1.25)));
-      });
-      m.scope("tubes", () => {
-        const r = 0.06;
-        [8, 7, 6].forEach((count, layer) => {
+  // the loads on the deck at 1.2 m (docs/models/loads.md), each stepped: a tube, a log, a reel, a bundle or a row of pallets a step
+  const floor: Vec3 = [c.X(7.65), 1.2, 0];
+  // steel: nine tubes 0.7 m across on two timber bolsters, four below, three and two above, 1.0..14.3 m
+  itemLoadPart(m, ["steel"], floor, PAO_TUBES.length, (item) =>
+    m.scope("steel tubes", () =>
+      PAO_TUBES.forEach(([z, y], k) =>
+        item(k, () => {
+          // the bolsters go down with the first tube
+          if (k === 0) m.scope("bolsters", () => PAO_BOLSTERS.forEach(([x0, x1], i) => m.scope(`bolster ${i + 1}`, () => c.sideSweep("bolster", [[x0, 1.205], [x1, 1.205], [x1, 1.4], [x0, 1.4]], -1.3, 1.3))));
+          m.scope("tube", () => c.tube(k % 3 ? "loadSteel" : "loadSteelDark", "loadDark", 1.0 + (k % 2) * 0.04, 14.3 - ((k + 1) % 2) * 0.04, z, y, PAO_TUBE_R, 0.03, 16));
+        }),
+      ),
+    ),
+  );
+  // wood: four stakes in the pockets each side, then a pile of 18 logs in four layers, 1.1..14.2 m
+  itemLoadPart(m, ["wood"], floor, 18, (item) =>
+    m.scope("logs", () => {
+      let n = 0;
+      [6, 5, 4, 3].forEach((count, layer) =>
+        m.scope(`layer ${layer + 1}`, () => {
           for (let k = 0; k < count; k++) {
-            const z = (k - (count - 1) / 2) * 2 * r;
-            const y = 1.4 + r + layer * r * Math.sqrt(3);
-            c.tube((k + layer) % 3 ? "loadSteel" : "loadSteelDark", "loadDark", 2.8 + (k % 2) * 0.02, 12.5 - ((k + 1) % 2) * 0.02, z, y, r, 0.012, 8);
+            const z = (k - (count - 1) / 2) * 0.42;
+            const y = 1.2 + 0.21 + layer * 0.364;
+            const j = n % 5;
+            item(n++, () => {
+              if (n === 1) m.scope("stakes", () => { for (const s of [1, -1]) for (const x of [1.95, 4.25, 11.15, 13.45]) c.sideBox("frameLight", s, x, x + 0.1, 1.205, 2.9, 1.36, 1.44); });
+              c.logX(j % 2 ? "loadBark" : "loadBarkDark", 1.1 + j * 0.04, 14.2 - ((j * 3) % 5) * 0.04, z, y, 0.21, 8, "loadLogEnd");
+            });
           }
-        });
-      });
+        }),
+      );
     }),
   );
+  // goods: four cable reels standing across the wagon, 2 m across
+  itemLoadPart(m, ["goods"], floor, PAO_REELS.length, (item) =>
+    m.scope("cable reels", () =>
+      PAO_REELS.forEach((x, k) =>
+        item(k, () => m.scope("reel", () => {
+          const flange = ngon(8, 1.0 / Math.cos(Math.PI / 8), Math.PI / 8, c.X(x), 2.205);
+          for (const [z0, z1] of [[-1.0, -0.9], [0.9, 1.0]]) m.sweep("reel", "z", flange, z0!, flange, z1!);
+          const core = ngon(8, 0.8 / Math.cos(Math.PI / 8), Math.PI / 8, c.X(x), 2.205);
+          m.sweep("cable", "z", core, -0.9, core, 0.9, false);
+        })),
+      ),
+    ),
+  );
   // sawn lumber: three bundles along, two across, two high, on bearers
-  loadPart(m, ["lumber"], [c.X(7.65), 1.2, 0], () => m.scope("lumber", () => lumberLoad(m, c.X(0.9), c.X(14.4), -1.3, 1.3, 1.2, { rows: 3, across: 2, high: 2, h: 0.8 })));
+  lumberLoadPart(m, floor, c.X(0.9), c.X(14.4), -1.3, 1.3, 1.2, { rows: 3, across: 2, high: 2, h: 0.8 });
   // cement: ten pallets of bags along, two across, seven tiers high
-  loadPart(m, ["cement"], [c.X(7.65), 1.2, 0], () => m.scope("cement", () => cementLoad(m, c.X(0.7), c.X(14.6), -1.3, 1.3, 1.2, { rows: 10, across: 2, tiers: 7 })));
+  cementLoadPart(m, floor, c.X(0.7), c.X(14.6), -1.3, 1.3, 1.2, { rows: 10, across: 2, tiers: 7 });
   return m;
 }
 
@@ -207,10 +251,13 @@ export function paoFlatWagonLod(): MeshBuilder {
     wagonBogies(C, [[2.6, 1.9], [12.7, 1.9]], 0.7),
     drawGearLod(C, [[0.45, 0.5], [14.8, 14.85]], 0.8, 1.19, 1.45, "frame"),
   ];
-  // three layers of tubes, 8, 7 and 6 across, on two bolsters: a hidden load part (docs/models/loads.md)
-  const tubes = roofBoxPart(C, "loadSteel", 2.8, 12.5, 0.48, 0.36, 1.4, 1.4 + 0.12 + 2 * 0.06 * Math.sqrt(3));
-  const bolsters = ([[3.8, 4.8], [10.5, 11.5]] as Pt[]).map(([x0, x1]) => roofBoxPart(C, "bolster", x0, x1, 1.25, 1.25, 1.205, 1.4));
+  // the loads, each one mass, hidden load parts scaled in y (docs/models/loads.md): the tube stack on its bolsters, the log pile, the reels
+  const top = PAO_TUBES[PAO_TUBES.length - 1]![1] + PAO_TUBE_R;
+  const tubes = roofBoxPart(C, "loadSteel", 1.0, 14.3, 4 * PAO_TUBE_R, 2 * PAO_TUBE_R, 1.4, top);
+  const bolsters = PAO_BOLSTERS.map(([x0, x1]) => roofBoxPart(C, "bolster", x0, x1, 1.3, 1.3, 1.205, 1.4));
   parts.push(loadLodPart(["steel"], 1.2, { draw: (m) => { tubes.draw(m); for (const b of bolsters) b.draw(m); } }));
+  parts.push(loadLodPart(["wood"], 1.2, roofBoxPart(C, "loadBark", 1.1, 14.2, 1.26, 0.42, 1.2, 1.2 + 0.42 + 3 * 0.364)));
+  parts.push(loadLodPart(["goods"], 1.2, roofBoxPart(C, "reel", PAO_REELS[0]! - 1, PAO_REELS[PAO_REELS.length - 1]! + 1, 1.0, 1.0, 1.205, 3.2)));
   parts.push(loadLodPart(["lumber"], 1.2, roofBoxPart(C, "loadLumber", 0.9, 14.4, 1.3, 1.3, 1.2, 3.0)));
   parts.push(loadLodPart(["cement"], 1.2, roofBoxPart(C, "loadCement", 0.7, 14.6, 1.3, 1.3, 1.2, 2.18)));
   return freightWagonLod({ palette: { ...WAGON_PALETTE, ...PAO_PALETTE }, shells, parts });

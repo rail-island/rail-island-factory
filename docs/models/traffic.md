@@ -125,7 +125,7 @@ states `tonnes: 0, commodities: []`. The commodities follow the body
 and sand (a mine tub no grain); covered and pressure hoppers (the Hadgs, the Raj)
 cement beside what they took before (grain, no stone or sand); tanks oil and fuel (an LNG
 carrier too: gas is no commodity); reefers goods; box vans, covered wagons and
-curtainsiders goods, lumber and cement; containers goods; flat wagons and low loaders
+curtainsiders goods, lumber and cement; containers goods, steel, lumber, cement and grain (anything boxed or bagged, grain in lined boxes); flat wagons and low loaders
 steel, wood, goods, lumber and cement; an aircraft's hold goods and mail; luggage
 vans and mail rooms mail. A vehicle with several holds (an airliner's goods and mail)
 states their tonnes summed and the union of what they take. A concrete mixer carries no commodity (`nothing`).

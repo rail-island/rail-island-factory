@@ -57,23 +57,6 @@
    "uncertainty": "The BMP paints the buffers from 14.7 m; the model beam ends the deck at 14.8 m."
   },
   {
-   "id": "R04",
-   "view": "z_both",
-   "side": "right",
-   "element": "tube bundle",
-   "box": [
-    28,
-    3,
-    125,
-    6
-   ],
-   "nodes": [
-    "load-steel/steel-tubes/tubes"
-   ],
-   "tolerancePixels": 1.01,
-   "uncertainty": "XML `load` 2.8..12.5 m, 1.4..1.7 m; 21 tubes 0.12 m across in three layers."
-  },
-  {
    "id": "R05",
    "view": "z_both",
    "side": "right",
@@ -159,23 +142,6 @@
    ],
    "tolerancePixels": 1.51,
    "uncertainty": "The BMP paints the buffers from 14.7 m; the model beam ends the deck at 14.8 m."
-  },
-  {
-   "id": "L04",
-   "view": "z_both",
-   "side": "left",
-   "element": "tube bundle",
-   "box": [
-    28,
-    3,
-    125,
-    6
-   ],
-   "nodes": [
-    "load-steel/steel-tubes/tubes"
-   ],
-   "tolerancePixels": 1.01,
-   "uncertainty": "XML `load` 2.8..12.5 m, 1.4..1.7 m; 21 tubes 0.12 m across in three layers."
   },
   {
    "id": "L05",

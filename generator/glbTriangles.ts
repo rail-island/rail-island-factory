@@ -34,17 +34,29 @@ export interface Tri {
 /**
  * What collectTriangles reads besides the model at rest: a vehicle's `interiors`,
  * and its `loads` (docs/models/loads.md) -- every load part (true) or those
- * standing for one commodity (its id).
+ * standing for one commodity (its id) -- shown `fill` full (0..1, 1 by default)
+ * as the game shows them: a stepped load's first `ceil(fill * steps)` steps, a
+ * heap scaled in y from its pivot; nothing at 0.
  */
 export interface CollectOptions {
   interiors?: boolean;
   loads?: boolean | string;
+  fill?: number;
+}
+
+/** A GLB's load parts as its scene's `extras.loads` lists them (docs/models/loads.md); empty without any. */
+export function loadEntries(json: Gltf): Array<{ part: string; commodities: string[]; steps?: number }> {
+  return (json.scenes?.[json.scene ?? 0] as { extras?: { loads?: Array<{ part: string; commodities: string[]; steps?: number }> } } | undefined)?.extras?.loads ?? [];
+}
+
+/** How many of a stepped load's `steps` the game shows at `fill` (0..1). */
+export function shownSteps(steps: number, fill: number): number {
+  return Math.ceil(Math.min(1, Math.max(0, fill)) * steps - 1e-9);
 }
 
 /** The first commodity of a GLB's first load part (the thumbnails' loaded look), or null for a model without loads. */
 export function firstLoad(json: Gltf): string | null {
-  const loads = (json.scenes?.[json.scene ?? 0] as { extras?: { loads?: Array<{ commodities: string[] }> } } | undefined)?.extras?.loads;
-  return loads?.[0]?.commodities[0] ?? null;
+  return loadEntries(json)[0]?.commodities[0] ?? null;
 }
 
 /** Every commodity a GLB's load parts stand for, in their order, each once (docs/models/loads.md). */
@@ -56,7 +68,9 @@ export function loadCommodities(glb: Uint8Array): string[] {
 
 export function collectTriangles(json: Gltf, bin: Uint8Array, opts: CollectOptions = {}): Tri[] {
   const tris: Tri[] = [];
-  const visit = (nodeIndex: number, parent: Mat4, inside = false, inLoad = false): void => {
+  const fill = Math.min(1, Math.max(0, opts.fill ?? 1));
+  const stepsOf = new Map(loadEntries(json).map((l) => [l.part, l.steps ?? 0]));
+  const visit = (nodeIndex: number, parent: Mat4, inside = false, inLoad = false, shown = Infinity): void => {
     const node = json.nodes?.[nodeIndex];
     if (!node) return;
     // a vehicle's interior is hidden while its doors are shut, so the model at
@@ -65,9 +79,15 @@ export function collectTriangles(json: Gltf, bin: Uint8Array, opts: CollectOptio
     // a freight vehicle's load is hidden while it carries nothing (docs/models/loads.md)
     const load = (node.extras as { load?: string[] } | undefined)?.load;
     if (load && !(opts.loads === true || (typeof opts.loads === "string" && load.includes(opts.loads)))) return;
+    if (load && fill <= 0) return;
+    // a stepped load shows its first steps, a heap scales in y from its pivot
+    const steps = load ? (stepsOf.get(node.name ?? "") ?? 0) : 0;
+    const step = /^step-(\d+)$/.exec(node.name ?? "");
+    if (inLoad && step && Number(step[1]) >= shown) return;
     const loadTri = inLoad || !!load;
     const interior = inside || !!node.extras?.interior;
-    const world = mul(parent, node.matrix ? (node.matrix as Mat4) : trs(node.translation, node.rotation, node.scale));
+    let world = mul(parent, node.matrix ? (node.matrix as Mat4) : trs(node.translation, node.rotation, node.scale));
+    if (load && !steps && fill < 1) world = mul(world, trs(undefined, undefined, [1, fill, 1]));
     if (node.mesh != null) {
       for (const prim of json.meshes?.[node.mesh]?.primitives ?? []) {
         if ((prim.mode ?? 4) !== 4) continue; // triangles only
@@ -106,7 +126,7 @@ export function collectTriangles(json: Gltf, bin: Uint8Array, opts: CollectOptio
         }
       }
     }
-    for (const c of node.children ?? []) visit(c, world, interior, loadTri);
+    for (const c of node.children ?? []) visit(c, world, interior, loadTri, load ? (steps ? shownSteps(steps, fill) : Infinity) : shown);
   };
   const scene = json.scenes?.[json.scene ?? 0];
   for (const n of scene?.nodes ?? []) visit(n, ident());

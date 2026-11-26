@@ -229,6 +229,8 @@ export interface ThumbOptions {
    * first commodity: a thumbnail shows the vehicle loaded.
    */
   loads?: boolean | string;
+  /** How full the shown load is (0..1, 1 by default), as the game shows it (CollectOptions.fill). */
+  fill?: number;
   cull?: boolean;
   cutAbove?: number;
   xRange?: [number, number];

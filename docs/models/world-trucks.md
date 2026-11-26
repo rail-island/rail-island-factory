@@ -174,11 +174,12 @@ axles, so the rig's Ackermann angles turn the second axle less.
 elliptical, bands, walkway, manholes, saddles), `tipper` (bin, headboard, ribs, ram; with
 `load: gravel` a coal, an iron ore, a grain, a stone and a sand heap, each a hidden load part on the bin's floor,
 [loads.md](loads.md)), `dump` (a mining body with its canopy), `flatbed` (with no `load`, bundles of
-lumber and pallets of cement, each a hidden load part on the deck), `dropside`, `canvas` (dropside and
-tilt), `logs` (the logs a hidden `wood` load part on the bunks), `mixer` (the tilted drum, its stripe, water tank, hopper and chute), `refuse`
+lumber and pallets of cement, each a hidden stepped load part on the deck: a bundle or a pallet a step,
+the bottom layer first), `dropside`, `canvas` (dropside and
+tilt), `logs` (the logs a hidden `wood` load part on the bunks, stepped a log or two at a time, the bottom row first), `mixer` (the tilted drum, its stripe, water tank, hopper and chute), `refuse`
 (rounded body, rear loader), `crane` (loader crane behind the cab), `boom` (a mobile
 crane's superstructure; the boom is a part), `carCarrier` (two decks; with `load: cars` the
-cars a hidden `goods` load part on the lower deck),
+cars a hidden `goods` load part on the lower deck, stepped a car a step, the lower deck first),
 `fire` (roller-shutter lockers, roof ladder or monitor), `ladder` (turntable; the ladder set
 is a part), `sweeper`, `plough` (front blade), `lowLoader` (gooseneck, well deck, an
 excavator as `load: machine`, part of the model: no commodity), `artBox` (painted panels and lamps), `van`/`none`.

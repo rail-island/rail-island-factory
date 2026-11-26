@@ -16,7 +16,7 @@ import { MeshBuilder, ngon, type MaterialSpec, type Ring } from "./meshBuilder.t
 import type { Vec3 } from "./meshCore.ts";
 import { arc, block, plate } from "./vehicleParts.ts";
 import { LOAD_PALETTE } from "./loadKit.ts";
-import { loadPart } from "./loadPart.ts";
+import { itemLoadPart, loadPart, type Step } from "./loadPart.ts";
 
 // ---------------------------------------------------------------------------
 // the spec
@@ -274,10 +274,23 @@ export class Kit {
    * `commodities`, pivoted on the bed at (x, floor) on the centre line; what it
    * keeps for the low detail is that load's there too.
    */
-  load(commodities: readonly string[], x: number, floor: number, fn: () => void): void {
+  load(commodities: readonly string[], x: number, floor: number, fn: (step: Step) => void, opts: { steps?: number } = {}): void {
     this.loading = { commodities, floor };
     try {
-      loadPart(this.m, commodities, [x, floor, 0], fn);
+      loadPart(this.m, commodities, [x, floor, 0], fn, opts);
+    } finally {
+      this.loading = null;
+    }
+  }
+  /**
+   * A stepped load of `count` items (loadPart.ts `itemLoadPart`): `fn` draws item
+   * k through `item(k, draw)`, in fill order; what it keeps for the low detail is
+   * that load's, one mass scaled in y.
+   */
+  itemLoad(commodities: readonly string[], x: number, floor: number, count: number, fn: (item: Step) => void): void {
+    this.loading = { commodities, floor };
+    try {
+      itemLoadPart(this.m, commodities, [x, floor, 0], count, fn);
     } finally {
       this.loading = null;
     }

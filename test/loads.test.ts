@@ -10,14 +10,15 @@ import * as THREE from "three";
 import { MeshBuilder } from "../generator/meshBuilder.ts";
 import { MeshBuilder as ThreeMeshBuilder } from "../generator/threeBuilder.ts";
 import { ALL_VEHICLES, toGlb } from "../generator/generate.ts";
-import { collectTriangles, firstLoad, parseGlb, type Tri } from "../generator/glbTriangles.ts";
+import { collectTriangles, firstLoad, loadEntries, parseGlb, type Tri } from "../generator/glbTriangles.ts";
 import { readAccessor } from "../generator/glbParse.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { buildLodModel } from "../generator/lodModel.ts";
 import { readTriangles } from "../generator/renderGlbThumb.ts";
-import { BULK_LOOKS, CONTAINER_COMMODITIES, LOAD_COMMODITIES, LOAD_PALETTE, cementLoad, isLoadName, loadPart, lumberLoad } from "../generator/loadKit.ts";
+import { BULK_LOOKS, CONTAINER_COMMODITIES, LOAD_COMMODITIES, LOAD_PALETTE, MAX_LOAD_STEPS, TRAILER_COMMODITIES, cementLoad, isLoadName, itemLoadPart, itemSteps, loadPart, lumberLoad } from "../generator/loadKit.ts";
+import { proceduralId } from "../generator/modelId.ts";
 import { COMMODITIES } from "../generator/traffic.ts";
-import { applyLoads, loadChoices, loadsOf } from "../src/viewerLoads.ts";
+import { applyLoads, loadChoices, loadsOf, shownSteps } from "../src/viewerLoads.ts";
 import { design, jsModuleOf } from "./catalogCache";
 
 const PALETTE = { body: { color: "#808080" }, ...LOAD_PALETTE };
@@ -81,10 +82,82 @@ describe("the load kit", () => {
     expect(() => loadPart(m, [], [0, 0, 0], () => undefined)).toThrow(/at least one commodity/);
   });
 
+  it("draws a stepped load as step-<i> children in fill order, every triangle under a step", () => {
+    /** A flat wagon with a heap and five crates, a stepped load of three steps (two, two and one crate). */
+    const draw = <M extends MeshBuilder | ThreeMeshBuilder>(m: M): M => {
+      m.part("car", [0, 0, 0], () => {
+        m.box("body", 0, 0, 10, 2.6, 1, 1.2);
+        loadPart(m, ["coal"], [0, 1.2, 0], () => m.box("loadCoal", 0, 0, 9, 2.4, 1.21, 2.2));
+        itemLoadPart(m, ["goods"], [0, 1.2, 0], 5, (item) => {
+          for (let k = 0; k < 5; k++) item(k, () => m.box("loadBoxRed", -4 + 2 * k, 0, 1.8, 2, 1.21, 2.4));
+        });
+      });
+      return m;
+    };
+    expect(itemSteps(5, 3)).toMatchObject({ steps: 3 });
+    expect(itemSteps(28).steps).toBe(14);
+    expect(itemSteps(16).steps).toBe(16);
+    expect(itemSteps(17).steps).toBe(9);
+    const m = draw(new MeshBuilder(PALETTE));
+    // five crates: five steps (at most MAX_LOAD_STEPS, more items share one)
+    expect(m.loads()).toEqual([{ part: "load-coal-car", commodities: ["coal"] }, { part: "load-goods-car", commodities: ["goods"], steps: 5 }]);
+    expect(m.loadTriangleCounts()).toEqual([10, 50]);
+    expect(m.budgetTriangleCount()).toBe(60);
+    // the GLB: the list with steps, the load node holding no triangles of its own and its steps in order
+    const glb = m.toGlb("t", "t");
+    const { json, bin } = parseGlb(glb);
+    expect(loadEntries(json)).toEqual(m.loads());
+    const nodes = json.nodes!;
+    const load = nodes.find((n) => n.name === "load-goods-car")!;
+    expect(load.extras).toEqual({ load: ["goods"] });
+    expect(json.meshes![load.mesh!]!.primitives).toHaveLength(0);
+    expect(load.children!.map((c) => nodes[c]!.name)).toEqual(["step-0", "step-1", "step-2", "step-3", "step-4"]);
+    for (const c of load.children!) expect(nodes[c]!.translation ?? [0, 0, 0]).toEqual([0, 0, 0]);
+    // the fill as the game shows it: ceil(fill * steps) steps, a heap scaled from its pivot
+    const crates = (fill: number) => collectTriangles(json, bin, { loads: "goods", fill }).filter((t) => t.load).length;
+    expect([0, 0.1, 0.2, 0.21, 0.5, 0.99, 1].map(crates)).toEqual([0, 10, 10, 20, 30, 50, 50]);
+    const heap = collectTriangles(json, bin, { loads: "coal", fill: 0.5 }).filter((t) => t.load).flatMap((t) => t.p.map((p) => p[1]));
+    expect(Math.max(...heap)).toBeCloseTo(1.2 + 0.5, 6);
+    expect(shownSteps(5, 0.2)).toBe(1);
+    expect(shownSteps(5, 0.21)).toBe(2);
+    // the JS model: the same list, the step Groups under the hidden load Group
+    const three = draw(new ThreeMeshBuilder(PALETTE));
+    const group = three.toGroup(THREE, "t");
+    three.hideLoads!(group);
+    expect(group.userData.loads).toEqual(m.loads());
+    const part = group.getObjectByName("load-goods-car")!;
+    expect(part.visible).toBe(false);
+    expect(part.children.map((c) => c.name)).toEqual(["step-0", "step-1", "step-2", "step-3", "step-4"]);
+    // the site shows steps by the fill and leaves a stepped load unscaled
+    const loads = loadsOf(group);
+    applyLoads(loads, "goods", 0.5);
+    expect(loads[1]!.group.visible).toBe(true);
+    expect(loads[1]!.group.scale.y).toBe(1);
+    expect(loads[1]!.steps!.map((s) => s.visible)).toEqual([true, true, true, false, false]);
+    applyLoads(loads, "coal", 0.3);
+    expect(loads[0]!.steps).toBeNull();
+    expect(loads[0]!.group.scale.y).toBeCloseTo(0.3, 6);
+  });
+
+  it("refuses a stepped load drawn wrong", () => {
+    const m = () => new MeshBuilder(PALETTE);
+    const crate = (b: MeshBuilder) => b.box("loadBoxRed", 0, 0, 1, 1, 0, 1);
+    for (const steps of [1, 1.5, MAX_LOAD_STEPS + 1]) expect(() => loadPart(m(), ["goods"], [0, 0, 0], () => undefined, { steps }), String(steps)).toThrow(/2 to 16 steps/);
+    const b1 = m();
+    expect(() => loadPart(b1, ["goods"], [0, 0, 0], (step) => { step(0, () => crate(b1)); crate(b1); }, { steps: 2 })).toThrow(/outside its steps/);
+    const b2 = m();
+    expect(() => loadPart(b2, ["goods"], [0, 0, 0], (step) => step(0, () => crate(b2)), { steps: 2 })).toThrow(/step 1 of 2 draws nothing/);
+    const b3 = m();
+    expect(() => loadPart(b3, ["goods"], [0, 0, 0], (step) => step(2, () => crate(b3)), { steps: 2 })).toThrow(/no step 2/);
+    const b4 = m();
+    expect(() => loadPart(b4, ["coal"], [0, 0, 0], (step) => step(0, () => crate(b4)))).toThrow(/without steps/);
+  });
+
   it("knows the supply chain's commodities and gives the bulk ones a heap each", () => {
     expect([...LOAD_COMMODITIES]).toEqual([...COMMODITIES]);
     expect(BULK_LOOKS.map((l) => l.commodities.join("+"))).toEqual(["coal", "iron-ore", "grain", "stone", "sand"]);
-    expect([...CONTAINER_COMMODITIES]).toEqual(["goods"]);
+    expect([...CONTAINER_COMMODITIES]).toEqual(["goods", "steel", "lumber", "cement", "grain"]);
+    expect([...TRAILER_COMMODITIES]).toEqual(["goods", "steel", "lumber", "cement"]);
     for (const l of BULK_LOOKS) expect(LOAD_PALETTE[l.mat], l.mat).toBeDefined();
   });
 
@@ -108,13 +181,14 @@ describe("the load kit", () => {
 
 /** The freight designs that draw loads, and the commodities their parts stand for. */
 const BULK = ["coal", "iron-ore", "grain", "stone", "sand"];
-const CONTAINERS = ["goods"];
+const CONTAINERS = ["goods", "steel", "lumber", "cement", "grain"];
+const TRAILERS = ["goods", "steel", "lumber", "cement"];
 const FREIGHT: Record<string, string[]> = {
   "proc-vehicle-eas-open-wagon": [...BULK, "wood"],
   "proc-vehicle-ua-open-wagon": [...BULK, "wood"],
   "proc-vehicle-nas-flat-wagon": ["wood", "steel", "goods", "lumber", "cement"],
   "proc-vehicle-sqns-container-wagon": CONTAINERS,
-  "proc-vehicle-pao-flat-wagon": ["steel", "lumber", "cement"],
+  "proc-vehicle-pao-flat-wagon": ["steel", "wood", "goods", "lumber", "cement"],
   "proc-vehicle-faccs-hopper-wagon": BULK,
   "proc-vehicle-falls-hopper-wagon": BULK,
   "proc-vehicle-wap-hopper-wagon": BULK,
@@ -122,7 +196,7 @@ const FREIGHT: Record<string, string[]> = {
   "proc-vehicle-cr-c70-wagon": BULK,
   "proc-vehicle-ir-boxn-wagon": BULK,
   "proc-vehicle-legacy-open-wagon": BULK,
-  "proc-vehicle-legacy-heavy-wagon": ["goods"],
+  "proc-vehicle-legacy-heavy-wagon": ["goods", "steel", "wood", "lumber", "cement"],
   "proc-vehicle-animal-rail-mine-tub": ["coal", "iron-ore", "stone", "sand"],
   "proc-vehicle-tatra-815-tipper": BULK,
   "proc-vehicle-tatra-815": BULK,
@@ -135,7 +209,7 @@ const FREIGHT: Record<string, string[]> = {
   "proc-vehicle-ship-msc-gulsun": CONTAINERS,
   "proc-vehicle-ship-panamax-container": CONTAINERS,
   "proc-vehicle-ship-feeder-container": CONTAINERS,
-  "proc-vehicle-ship-roro": CONTAINERS,
+  "proc-vehicle-ship-roro": TRAILERS,
   "proc-vehicle-ship-heavy-lift": ["goods"],
   "proc-vehicle-ship-europaschiff": CONTAINERS,
   "proc-vehicle-ship-push-barge": BULK,
@@ -151,6 +225,27 @@ describe("loads against capacities", () => {
       const carried = new Set<string>([...(entry.commodities ?? []), ...(entry.variants ?? []).flatMap((v) => v.commodities ?? [])]);
       for (const c of drawn) if (!carried.has(c)) problems.push(`${id} draws ${c} but its capacity does not carry it`);
     }
+    expect(problems).toEqual([]);
+  });
+
+  it("every vehicle that draws a load can show every commodity its capacity carries, at its defaults and in each capacity variant", () => {
+    const problems: string[] = [];
+    let drawn = 0;
+    for (const d of ALL_VEHICLES) {
+      const entry = VEHICLE_CAPACITY[proceduralId(d.id)];
+      if (!entry) continue;
+      const cases: Array<[Record<string, string>, readonly string[]]> = [[{}, entry.commodities ?? []], ...(entry.variants ?? []).filter((v) => v.commodities).map((v): [Record<string, string>, readonly string[]] => [v.params, v.commodities!])];
+      for (const [params, carried] of cases) {
+        if (!carried.length) continue;
+        const loads = d.build(params).loads();
+        // a closed body (a box van, a tank, an aircraft) draws no load at all
+        if (!loads) continue;
+        drawn++;
+        const shown = new Set(loads.flatMap((l) => l.commodities));
+        for (const c of carried) if (!shown.has(c)) problems.push(`${d.id} ${JSON.stringify(params)} carries ${c} but no load part shows it`);
+      }
+    }
+    expect(drawn).toBeGreaterThan(10);
     expect(problems).toEqual([]);
   });
 });
@@ -206,12 +301,17 @@ describe("freight designs", () => {
       const node = nodes[index]!;
       expect(node.extras, l.part).toEqual({ load: l.commodities });
       const pivot = world.get(index)!;
-      // the part's own vertices, in the model
+      // the part's vertices (a stepped load's in its steps), in the model
       const pts: number[][] = [];
-      for (const prim of json.meshes![node.mesh!]!.primitives) {
-        const pos = readAccessor(json, bin, prim.attributes.POSITION!);
-        for (let k = 0; k < pos.length; k += 3) pts.push([pos[k]! + pivot[0]!, pos[k + 1]! + pivot[1]!, pos[k + 2]! + pivot[2]!]);
-      }
+      const gather = (i: number): void => {
+        const at = world.get(i)!;
+        for (const prim of json.meshes![nodes[i]!.mesh!]!.primitives) {
+          const pos = readAccessor(json, bin, prim.attributes.POSITION!);
+          for (let k = 0; k < pos.length; k += 3) pts.push([pos[k]! + at[0]!, pos[k + 1]! + at[1]!, pos[k + 2]! + at[2]!]);
+        }
+        for (const c of nodes[i]!.children ?? []) gather(c);
+      };
+      gather(index);
       expect(pts.length, l.part).toBeGreaterThan(0);
       expect(pivot[1], `${l.part} pivot under its load`).toBeLessThanOrEqual(Math.min(...pts.map((p) => p[1]!)) + 0.02);
       expect(onBed(rest, pts, pivot[1]!), `${l.part} pivot on a floor`).toBe(true);
@@ -221,11 +321,55 @@ describe("freight designs", () => {
     for (const l of low.loads() ?? []) for (const c of l.commodities) expect(commodities).toContain(c);
   });
 
-  it.each(["proc-vehicle-eas-open-wagon", "proc-vehicle-lohr-car-transporter", "proc-vehicle-ship-push-barge"])("%s's JS model builds its loads hidden", async (id) => {
+  it.each(Object.keys(FREIGHT))("%s steps every load of discrete items and scales only its heaps", (id) => {
+    const m = design(id).build();
+    const { json, bin } = parseGlb(toGlb(id, m));
+    const entries = loadEntries(json);
+    expect(entries).toEqual(m.loads());
+    const nodes = json.nodes!;
+    const problems: string[] = [];
+    for (const l of entries) {
+      const node = nodes.find((n) => n.name === l.part)!;
+      const children = (node.children ?? []).map((c) => nodes[c]!);
+      // a heap is a load of bulk commodities only; anything else is items, stepped
+      const heap = l.commodities.every((c) => BULK.includes(c));
+      if (heap) {
+        if (l.steps !== undefined) problems.push(`${l.part}: a heap with steps`);
+        if (children.some((c) => /^step-/.test(c.name ?? ""))) problems.push(`${l.part}: a heap with step children`);
+        continue;
+      }
+      if (!l.steps) { problems.push(`${l.part}: items without steps`); continue; }
+      if (!Number.isInteger(l.steps) || l.steps < 2 || l.steps > MAX_LOAD_STEPS) problems.push(`${l.part}: ${l.steps} steps`);
+      // exactly N direct children step-0 .. step-<N-1> in order, at the load's pivot, every triangle under one
+      expect(children.map((c) => c.name), l.part).toEqual(Array.from({ length: l.steps }, (_, i) => `step-${i}`));
+      expect(json.meshes![node.mesh!]!.primitives, `${l.part} draws outside its steps`).toHaveLength(0);
+      const counts = Array.from({ length: l.steps + 1 }, (_, k) => collectTriangles(json, bin, { loads: l.commodities[0]!, fill: k / l.steps! }).filter((t) => t.load).length);
+      // each step adds triangles: step i shows from fill i / N
+      for (let k = 1; k <= l.steps; k++) if (counts[k]! <= counts[k - 1]!) problems.push(`${l.part}: step ${k - 1} adds nothing`);
+    }
+    expect(problems).toEqual([]);
+    // the distant model's loads: each one mass scaled in y, or stepped as a full model's load of the same commodities
+    const low = buildLodModel(design(id));
+    for (const l of low.loads() ?? []) {
+      if (!l.steps) continue;
+      expect(entries.some((e) => e.steps === l.steps && e.commodities.join() === l.commodities.join()), `${id} LOD ${l.part}`).toBe(true);
+    }
+  });
+
+  it.each(["proc-vehicle-eas-open-wagon", "proc-vehicle-lohr-car-transporter", "proc-vehicle-ship-push-barge", "proc-vehicle-ship-feeder-container"])("%s's JS model builds its loads hidden, a stepped one with its steps", async (id) => {
     const mod = await jsModuleOf(id);
     const group = mod.default(THREE);
-    const loads = group.userData.loads as Array<{ part: string; commodities: string[] }>;
-    expect(loads.length).toBeGreaterThan(0);
-    for (const l of loads) expect(group.getObjectByName(l.part)!.visible).toBe(false);
+    const loads = group.userData.loads as Array<{ part: string; commodities: string[]; steps?: number }>;
+    expect(loads).toEqual(design(id).build().loads());
+    for (const l of loads) {
+      const part = group.getObjectByName(l.part)!;
+      expect(part.visible).toBe(false);
+      if (l.steps) expect(part.children.map((c) => c.name)).toEqual(Array.from({ length: l.steps }, (_, i) => `step-${i}`));
+    }
+    // the site's Fill slider shows the steps as the game does
+    const shown = loadsOf(group);
+    applyLoads(shown, loads[loads.length - 1]!.commodities[0]!, 0.5);
+    const last = shown[shown.length - 1]!;
+    if (last.steps) expect(last.steps.filter((s) => s.visible)).toHaveLength(Math.ceil(last.steps.length / 2));
   });
 });

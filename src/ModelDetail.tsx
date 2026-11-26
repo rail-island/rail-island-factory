@@ -78,6 +78,10 @@ export function ModelDetail(props: {
   /** The chosen parameter values (from the URL), and the setter, which keeps only non-defaults. */
   params: Record<string, string>;
   onParams: (params: Record<string, string>) => void;
+  /** The load the viewer shows (`?load=`, a Chains card's commodity), or null for the model's first. */
+  load?: string | null;
+  /** The viewer's Load select changed (a commodity, or `empty`). */
+  onLoad?: (load: string) => void;
   /** Whether the variant on screen is already in the export list. */
   exported: boolean;
   /** Add the variant on screen (the chosen parameter values) to the export list. */
@@ -217,6 +221,8 @@ export function ModelDetail(props: {
                 selected={props.node}
                 onPick={props.onNode}
                 pose={posed()}
+                load={props.load}
+                onLoad={props.onLoad}
               />
             }
           >

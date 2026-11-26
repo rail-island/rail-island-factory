@@ -55,11 +55,13 @@ coupling), `logX`/`logZ` (logs with light cut ends), `tube` (a hollow tube),
 
 - **Nas**: deck with plank gaps every 0.4 m (native `y_dec`), 0.5 m drop sides,
   solebar and fishbelly, eight stakes per side and end walls with corner posts.
-  Its loads on the deck at 1.2 m: a five-layer pile of 25 logs (wood), five
-  0.9 m steel tubes (steel), six 2 m cable reels standing across the wagon (goods),
-  and two looks from the load kit ([loads.md](loads.md)): bundles of sawn lumber
-  four along, two across and two high on bearers (lumber), 28 pallets of cement
-  bags (cement).
+  Its loads on the deck at 1.2 m, each stepped ([loads.md](loads.md)): a five-layer
+  pile of 25 logs (wood, 13 steps, the bottom layer first), five 0.9 m steel tubes
+  (steel, 5), six 2 m cable reels standing across the wagon (goods, 6), and two
+  looks from the load kit: bundles of sawn lumber four along, two across and two
+  high on bearers (lumber, 16), 28 pallets of cement bags (cement, 14: a row of
+  two a step). The Eas's 15 bundles of logs fill a bundle a step from one end, the
+  Ua's 13 logs the lower layer first, the straps with the last.
 - **Ua**: 0.2 m walls, lighter rim and painted stanchions, two doors per side
   with seams and J-shaped locking bars, end posts, a red handbrake box and
   underframe equipment. Its loads on the floor at 1.1 m: the coal heap and the

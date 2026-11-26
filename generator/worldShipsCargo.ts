@@ -9,18 +9,20 @@ import type { MeshBuilder } from "./meshBuilder.ts";
 import type { ParamSpec, ParamValues } from "./design.ts";
 import { shipLod, worldShip, type Item, type ShipSpec } from "./hullKit.ts";
 import { aftHouse, bayGaps, deckhouse, exhausts, fittings, funnel, liveryParam, mast, oceanHull, pick, shipDesigns, type WorldShip } from "./worldShips.ts";
-import { BULK_LOOKS, CONTAINER_COMMODITIES } from "./loadKit.ts";
+import { BULK_LOOKS, CONTAINER_COMMODITIES, TRAILER_COMMODITIES } from "./loadKit.ts";
 
 /** A rod between two points (u, y, z). */
 const rod = (a: [number, number, number], b: [number, number, number], r: number, mat: string, name?: string): Item => ({ k: "rod", a, b, r, mat, ...(name ? { name } : {}) });
 /**
  * A ship's load (docs/models/loads.md): `items` as one hidden load part standing
- * for `commodities` (containers: goods), pivoted midway along them on
- * the hatch covers or the deck at height `floor`.
+ * for `commodities` (containers: CONTAINER_COMMODITIES), pivoted midway along them
+ * on the hatch covers or the deck at height `floor`. Container stacks are stepped
+ * by the hull kit (bottom tiers first); `stepOf` steps any other load, an item's
+ * step each.
  */
-function cargo(floor: number, items: Item[], commodities: readonly string[] = CONTAINER_COMMODITIES): Item {
+function cargo(floor: number, items: Item[], commodities: readonly string[] = CONTAINER_COMMODITIES, stepOf?: readonly number[]): Item {
   const us = items.flatMap((it) => ("u" in it && Array.isArray(it.u) ? [it.u[0] as number, it.u[1] as number] : []));
-  return { k: "load", commodities, u: (Math.min(...us) + Math.max(...us)) / 2, floor, items };
+  return { k: "load", commodities, u: (Math.min(...us) + Math.max(...us)) / 2, floor, items, ...(stepOf ? { stepOf } : {}) };
 }
 
 // ---------------------------------------------------------------------------
@@ -857,7 +859,7 @@ export function roroSpec(p?: ParamValues): ShipSpec {
       ...deckhouse({ u: [L - 30, L - 14], y0: D + 2.8, decks: 4, hw: 12, wings: 13, step: 0.4, detail: true }),
       mast(L - 20, D + 2.8 + 4 * 2.8, D + 22),
       ...[9, -9].flatMap((z): Item[] => [funnel([14, 22], 2.4, [D, D + 9], [["funnel", 0.86], ["black", 1]], 0.4, z), { k: "cyl", u: 20.6, z, y: [D + 8.4, D + 10], r: 0.5, mat: "black", name: "exhaust pipe" }]),
-      cargo(D, [{ k: "containers", u: [26, L - 34], bays: 9, hw: 11.5, y: D, tiers: 1, seed: 41, rows: 2.6, name: "trailers" }]),
+      cargo(D, [{ k: "containers", u: [26, L - 34], bays: 9, hw: 11.5, y: D, tiers: 1, seed: 41, rows: 2.6, name: "trailers" }], TRAILER_COMMODITIES),
       { k: "plate", pts: [[0.3, D - 6], [0.3, D + 0.2], [1.2, D + 9], [1.2, D - 6]], z: 0, t: 18, mat: "steel", name: "stern ramp" },
       { k: "bulwark", u: [22, L - 30], h: 1.1, t: 0.25 },
       { k: "freefall", u: L - 34, y: D + 5.6, len: 7, tilt: 0.55 },
@@ -896,7 +898,7 @@ export function heavyLiftSpec(): ShipSpec {
         { k: "crane", u: 96, z: 20, y: D + 8, h: 10, jib: 34, dir: Math.PI * 0.95, lift: 0.4, mat: "orange", name: "cargo crane" },
         { k: "tier", u: [84, 104], y: [D + 8, D + 12], hw: 9, mat: "grey", name: "drill floor" },
         { k: "tier", u: [90, 98], y: [D + 12, D + 40], hw: 4, mat: "white", taper: [0.08, 28], name: "derrick" },
-      ], ["goods"]),
+      ], ["goods"], [0, 0, 0, 1, 1, 1, 1, 1, 1, 1]),
     ],
   };
 }

@@ -440,6 +440,13 @@ export interface ViewState extends ChipPath {
   stage: Stage;
   /** A parametric model's chosen values (`?p.<name>=<value>`), as given; see effectiveParams. */
   params: Record<string, string>;
+  /**
+   * The load the model page's viewer shows (`?load=<commodity>`, or `empty`): a
+   * Chains card opens its vehicle loaded with the card's commodity
+   * (docs/site/chains.md). The viewer shows it only when the model's loads stand for
+   * it, else its first (viewerLoads.ts initialLoad). Null for the first; kept only on a model page.
+   */
+  load?: string | null;
   /** The country chip's pick as a slug (`?country=<slug>`), or null for every country. */
   country: string | null;
   /** The maker page's maker as a slug (`/maker/<slug>/`), or null. */
@@ -542,6 +549,7 @@ export function parseView(search: string, pathname = "/"): ViewState {
   const stage: Stage = model && p.get("stage") === "openttd" ? "openttd" : "3d";
   const params: Record<string, string> = {};
   if (model) for (const [k, v] of p) if (k.startsWith("p.") && k.length > 2 && v) params[k.slice(2)] = v;
+  const load = model ? readLoad(p.get("load")) : null;
   // the chips from a category path, else as the Creator writes them: ?cat=<group>&sub=<l2>&sub2=<l3>, each only under the one above
   const chips = route.chips ?? [p.get("cat"), p.get("sub"), p.get("sub2")];
   const rawGroup = readChip(chips[0] ?? null);
@@ -566,12 +574,18 @@ export function parseView(search: string, pathname = "/"): ViewState {
     node: node ?? null,
     stage,
     params,
+    ...(load ? { load } : {}),
     country,
     maker,
     openttd,
     section,
     chain: section === "chains" ? readChain(p.get("chain")) : null,
   };
+}
+
+/** A load from the address bar (a commodity id, lower-case words and hyphens, or `empty`), else null; the viewer checks it against the model's loads. */
+function readLoad(raw: string | null): string | null {
+  return raw && raw.length <= 40 && /^[a-z]+(-[a-z]+)*$/.test(raw) ? raw : null;
 }
 
 /** A model, category, country, maker or OpenTTD path's parts; none for `/` or any other path. */
@@ -660,6 +674,7 @@ export function serializeView(v: ViewState): string {
     if (v.tab === "source" && v.node != null) p.set("node", v.node);
     if (v.stage === "openttd") p.set("stage", "openttd");
     for (const k of Object.keys(v.params).sort()) p.set(`p.${k}`, v.params[k]!);
+    if (v.load) p.set("load", v.load);
   }
   const s = p.toString();
   return s ? `?${s}` : "";
@@ -672,7 +687,7 @@ export function viewUrl(v: ViewState): string {
 
 /**
  * The href of an in-site link to a view: its page (viewPath), plus a model's variant
- * parameters (`p.<name>`). The list state - chips kept on a model page, a country,
+ * parameters (`p.<name>`) and the load its viewer shows (`load`). The list state - chips kept on a model page, a country,
  * maker or OpenTTD filter that is not the page, search, sort, layout, section - stays
  * out, so the links a crawler follows name the canonical pages, not query duplicates
  * of them (docs/site/seo-pages.md). A plain click still opens the whole view (viewUrl).
@@ -680,6 +695,8 @@ export function viewUrl(v: ViewState): string {
 export function linkUrl(v: ViewState): string {
   const p = new URLSearchParams();
   if (v.model) for (const k of Object.keys(v.params).sort()) p.set(`p.${k}`, v.params[k]!);
+  // a Chains card's commodity, shown loaded (docs/site/chains.md)
+  if (v.model && v.load) p.set("load", v.load);
   const s = p.toString();
   return `${viewPath(v)}${s ? `?${s}` : ""}`;
 }

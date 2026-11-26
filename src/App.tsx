@@ -153,19 +153,20 @@ export function App() {
     update({ sort: col.key, dir: v.sort === col.key ? (v.dir === "asc" ? "desc" : "asc") : col.dir });
   };
   // A node belongs to one model's tree: opening, closing or stepping drops it.
-  const openPatch = (r: Row, params: Record<string, string> = {}): Partial<ViewState> => ({ model: r.id, tab: "specs", node: null, stage: "3d", params: { ...params } });
+  // `load`: the commodity a Chains card opens its vehicle loaded with (docs/site/chains.md)
+  const openPatch = (r: Row, params: Record<string, string> = {}, load: string | null = null): Partial<ViewState> => ({ model: r.id, tab: "specs", node: null, stage: "3d", params: { ...params }, load });
   // closing returns to the list of the model's own section
   // (a model opened from the Chains tab returns to it, its node still selected)
-  const closePatch = (): Partial<ViewState> => ({ model: null, tab: "specs", node: null, stage: "3d", params: {}, section: view().section === "chains" ? "chains" : section() });
-  const onOpen = (r: Row, params: Record<string, string> = {}) => update(openPatch(r, params), true);
-  const hrefOpen = (r: Row, params: Record<string, string> = {}) => hrefOf(openPatch(r, params));
+  const closePatch = (): Partial<ViewState> => ({ model: null, tab: "specs", node: null, stage: "3d", params: {}, load: null, section: view().section === "chains" ? "chains" : section() });
+  const onOpen = (r: Row, params: Record<string, string> = {}, load: string | null = null) => update(openPatch(r, params, load), true);
+  const hrefOpen = (r: Row, params: Record<string, string> = {}, load: string | null = null) => hrefOf(openPatch(r, params, load));
   const onClose = () => update(closePatch(), true);
   const stepPatch = (delta: number): Partial<ViewState> | null => {
     const list = listed();
     if (list.length === 0) return null;
     const at = list.findIndex((r) => r.id === view().model);
     const next = list[(((at < 0 ? 0 : at + delta) % list.length) + list.length) % list.length]!;
-    return { model: next.id, node: null, params: {} };
+    return { model: next.id, node: null, params: {}, load: null };
   };
   const onStep = (delta: number) => {
     const patch = stepPatch(delta);
@@ -328,6 +329,8 @@ export function App() {
                 onStage={(stage) => update({ stage })}
                 params={view().params}
                 onParams={(params) => update({ params, node: null })}
+                load={view().load ?? null}
+                onLoad={(load) => update({ load })}
                 exported={hasEntry(exportState().entries, entryFor(record(), view().params))}
                 onAddExport={() => setExportState(addEntry(exportState(), entryFor(record(), view().params)))}
                 onGo={goPath}
@@ -345,8 +348,8 @@ export function App() {
                   selected={view().chain}
                   onSelect={(chain) => pick({ chain })}
                   hrefSelect={(chain) => viewUrl({ ...view(), ...chainPatch(chain) })}
-                  onOpen={(r) => onOpen(r)}
-                  hrefOpen={(r) => hrefOpen(r)}
+                  onOpen={(r, load) => onOpen(r, {}, load ?? null)}
+                  hrefOpen={(r, load) => hrefOpen(r, {}, load ?? null)}
                 />
               </>
             )}

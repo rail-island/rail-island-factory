@@ -83,7 +83,7 @@ export const ROAD_WATER_AIR: Readonly<Record<string, VehicleCapacityEntry>> = {
   "proc-vehicle-roosevelt-island-tram": { seats: 110, source: "Roosevelt Island Tramway: 110 passengers per cabin (RIOC)" },
   "proc-vehicle-ship-cutty-sark": { tonnes: 600, commodities: ["goods"], source: "Cutty Sark: about 1.3 million lb (590 t) of tea per voyage (Royal Museums Greenwich); food for the tea, goods for the general cargo she carried outbound" },
   "proc-vehicle-ship-elbe-paddle": { seats: 600, source: "size: judged from the Dresden paddle steamer (several hundred passengers)" },
-  "proc-vehicle-ship-feeder-container": { tonnes: 12_000, commodities: ["goods"], source: "about 1,000 TEU feeder: about 12,000 t of cargo (approx.)" },
+  "proc-vehicle-ship-feeder-container": { tonnes: 12_000, commodities: ["goods", "steel", "lumber", "cement", "grain"], source: "about 1,000 TEU feeder: about 12,000 t of cargo (approx.); containers carry anything boxed or bagged: goods, steel, lumber, cement, and grain in lined boxes" },
   "proc-vehicle-ship-lng-moss": { tonnes: 56_000, commodities: ["oil", "fuel"], source: "Moss LNG carrier of 125,000 m3: about 56,000 t of LNG (approx.); gas is no commodity, so it rides the oil and fuel chain, the nearest liquid cargo" },
   "proc-vehicle-ship-olympic": { seats: 2435, tonnes: 50, commodities: ["mail"], source: "RMS Olympic: 2,435 passengers (Wikipedia); Royal Mail cargo judged" },
   "proc-vehicle-ship-product-tanker": { tonnes: 47_000, commodities: ["oil", "fuel"], source: "MR product tanker of about 50,000 dwt: about 47,000 t of cargo" },

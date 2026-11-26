@@ -4,7 +4,7 @@ import type { GameProperties } from './design.ts';
 import { WAGON_PALETTE, Wagon } from './wagonParts.ts';
 import { drawGearLod, freightWagonLod, openBoxPart, roofBoxPart, wagonAxles, wagonBogies, wagonBox, zSweep } from './lodSteam.ts';
 import type { LodPart } from './lodKit.ts';
-import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, loadLodPart } from './loadKit.ts';
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, cementLoadPart, itemLoadPart, loadLodPart, lumberLoadPart } from './loadKit.ts';
 import { WAGON_CATALOG } from './wagons.ts';
 import { numberLines } from './freightWagonParts.ts';
 import { resolveParams, type ParamValues, type ParamSpec, type ProceduralDesign } from './design.ts';
@@ -55,6 +55,8 @@ export function vteWagon():MeshBuilder {
  bulkLoads(m,[c.X(4.9),1.2,0],(mat)=>m.scope('heap',()=>c.heap(mat,.72,9.08,1.33,16,6,(x,z)=>2.66+.38*(.55+.45*Math.cos((x-.72)/8.36*4*Math.PI)**2)*(1-(z/1.33)**2)*Math.max(0,Math.min(1,(x-.72)/.25,(9.08-x)/.25,(1.33-Math.abs(z))/.15)))));
  return m;
 }
+/** The Uaaikk's steel tubes, each centre (z, y) in fill order: three on the bolsters, two above. */
+const UAAIKK_TUBES:Array<[number,number]>=[[-.82,1.2],[0,1.2],[.82,1.2],[-.41,1.2+.82*Math.sqrt(3)/2],[.41,1.2+.82*Math.sqrt(3)/2]];
 export function heavyWagon():MeshBuilder {
  const c=new Wagon({...palette,...LOAD_PALETTE},12.05),m=c.m;
  m.scope('running gear',()=>{for(const x of [3.15,20.75])c.freightBogie(x,2.5);});
@@ -67,15 +69,38 @@ export function heavyWagon():MeshBuilder {
   c.box('frame',1.1,2,2.6,2.7,-1,1);
   for(const s of [-1,1])c.letters(s,1.51,7,numberLines('31 54 3999 001-3','CD',.65,.07),'ink');
  });
- // the load in the well (docs/models/loads.md): a power transformer as goods, on its timber bearers
- loadPart(m, ['goods'],[c.X(12.1),.6,0],()=>m.scope('transformer',()=>{
+ // the loads in the well (docs/models/loads.md), each stepped: a power transformer as goods, one unit in two
+ // steps -- its tank on its timber bearers, then the radiators and bushings, which travel apart from it --
+ // and a flat bed's steel tubes, logs, lumber bundles and cement pallets, an item a step, the bottom layer first
+ const floor:[number,number,number]=[c.X(12.1),.6,0];
+ loadPart(m,['goods'],floor,(step)=>m.scope('transformer',()=>{
   // each piece set into the one below it, so no face lies on another
-  for(const x of [8.2,15.9])c.box('loadBark',x,x+.3,.605,.8,-1.2,1.2);
-  c.box('loadBoxGrey',7.6,16.6,.78,3.3,-1.25,1.25);
-  c.box('loadSteelDark',8.2,16,3.28,3.5,-1.05,1.05);
-  for(const s of [-1,1])for(let x=8.4;x<16;x+=1.2)c.sideBox('loadSteel',s,x,x+.12,1.1,3.0,1.24,1.38);
-  for(const x of [10,12.1,14.2])m.box('loadSteel',c.X(x),0,.3,.3,3.45,4.1);
+  step(0,()=>{
+   for(const x of [8.2,15.9])c.box('loadBark',x,x+.3,.605,.8,-1.2,1.2);
+   c.box('loadBoxGrey',7.6,16.6,.78,3.3,-1.25,1.25);
+   c.box('loadSteelDark',8.2,16,3.28,3.5,-1.05,1.05);
+  });
+  step(1,()=>{
+   for(const s of [-1,1])for(let x=8.4;x<16;x+=1.2)c.sideBox('loadSteel',s,x,x+.12,1.1,3.0,1.24,1.38);
+   for(const x of [10,12.1,14.2])m.box('loadSteel',c.X(x),0,.3,.3,3.45,4.1);
+  });
+ }),{steps:2});
+ // steel: five tubes 0.8 m across on two bolsters, three below and two above
+ itemLoadPart(m,['steel'],floor,UAAIKK_TUBES.length,(item)=>m.scope('steel tubes',()=>UAAIKK_TUBES.forEach(([z,y],k)=>item(k,()=>{
+  if(k===0)for(const x of [8.4,15.4])c.box('loadBark',x,x+.4,.605,.8,-1.3,1.3);
+  c.tube(k%2?'loadSteel':'loadSteelDark','loadDark',7.0,17.2,z,y,.4,.035,16);
+ }))));
+ // wood: a pile of 18 logs in four layers
+ itemLoadPart(m,['wood'],floor,18,(item)=>m.scope('logs',()=>{
+  let n=0;
+  [6,5,4,3].forEach((count,layer)=>{for(let k=0;k<count;k++){
+   const z=(k-(count-1)/2)*.42,y=.6+.21+layer*.364,j=n%5;
+   item(n++,()=>c.logX(j%2?'loadBark':'loadBarkDark',7.0+j*.04,17.2-((j*3)%5)*.04,z,y,.21,8,'loadLogEnd'));
+  }});
  }));
+ // sawn lumber: two bundles along, two across, three high; cement: eight pallets along, two across
+ lumberLoadPart(m,floor,c.X(7.0),c.X(17.2),-1.3,1.3,.6,{rows:2,across:2,high:3,h:.8});
+ cementLoadPart(m,floor,c.X(7.0),c.X(17.2),-1.3,1.3,.6,{rows:8,across:2});
  for(const s of [-1,1])m.scope('buffers',()=>c.drawGear(s,s>0?23.2:.9,s>0?22.75:1.35,s>0?22.7:1.4,.75,1.05,1.4,'frame'));
  return m;
 }
@@ -126,8 +151,12 @@ export function heavyWagonLod():MeshBuilder {
    {draw:m=>m.scope('low deck',()=>{for(const [poly,walls] of pieces)zSweep(m,'body',X(poly),1.4,walls);})},
    wagonBogies(C,[[3.15,2.5],[20.75,2.5]],.9),
    drawGearLod(C,[[1.35,1.4],[22.7,22.75]],.75,1.05,1.4,'frame'),
-   // the transformer in the well, a hidden load part (docs/models/loads.md)
+   // the loads in the well, each one mass, hidden load parts scaled in y (docs/models/loads.md)
    loadLodPart(['goods'],.6,roofBoxPart(C,'loadBoxGrey',7.6,16.6,1.25,1.05,.6,3.5)),
+   loadLodPart(['steel'],.6,roofBoxPart(C,'loadSteel',7.0,17.2,1.22,.81,.6,1.2+.82*Math.sqrt(3)/2+.4)),
+   loadLodPart(['wood'],.6,roofBoxPart(C,'loadBark',7.0,17.2,1.26,.42,.6,.6+.42+3*.364)),
+   loadLodPart(['lumber'],.6,roofBoxPart(C,'loadLumber',7.0,17.2,1.3,1.3,.6,.6+3*.9)),
+   loadLodPart(['cement'],.6,roofBoxPart(C,'loadCement',7.0,17.2,1.3,1.3,.6,.6+.14+8*.12)),
   ],
  });
 }

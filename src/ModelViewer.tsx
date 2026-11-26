@@ -46,8 +46,9 @@
 //
 // A freight vehicle with loads (userData.loads, docs/models/loads.md) gets a Load
 // select -- each commodity its parts stand for, or Empty -- and a Fill slider that
-// scales the shown load in y from its bed, as the game shows what a vehicle
-// carries (viewerLoads.ts). It opens loaded with the first, as the thumbnail.
+// shows the load as the game does: a stepped load's first ceil(fill * steps) items,
+// a heap scaled in y from its bed (viewerLoads.ts). It opens loaded with the first,
+// as the thumbnail.
 //
 // A vehicle with lamps (userData.lamps, docs/models/lamps.md) gets a Lights
 // button that shows every tagged lamp lit, indicators blinking, so a design's
@@ -71,7 +72,7 @@
 // mesh per material and the tree's triangle ranges index into them, so both work
 // through draw groups and the face index; nothing is split or re-uploaded.
 
-import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
 import {
   AmbientLight, AnimationClip, AnimationMixer, type AnimationAction, Box3, LoopOnce, LoopRepeat, Color, DirectionalLight, Mesh, PerspectiveCamera, Plane,
   Raycaster, Scene, Vector2, Vector3, WebGLRenderer, type Object3D,
@@ -85,7 +86,7 @@ import { applyHighlight, makeParts, type Part } from "./viewerHighlight";
 import { applyLamps, disposeLamps, lampsOf, type Lamp } from "./viewerLamps";
 import { applySurfaces } from "./viewerSurfaces";
 import { applyInteriors, cutHeight, interiorsOf, type DoorSide, type Interior } from "./viewerInteriors";
-import { applyLoads, commodityTitle, loadChoices, loadsOf, type Load } from "./viewerLoads";
+import { EMPTY_LOAD, applyLoads, commodityTitle, initialLoad, loadChoices, loadsOf, type Load } from "./viewerLoads";
 import { buildScenery } from "./viewerScenery";
 import { lineParams, loadLine, type Line } from "./viewerLine";
 import { motionButtons, motionTitle, restingMotion, type MotionButton } from "./viewerMotions";
@@ -177,6 +178,10 @@ export function ModelViewer(props: {
   onPick?: (id: string | null) => void;
   /** A rigged model's pose (poseOf): its steering and hinge bends, radians. */
   pose?: { steer: number; bend: number[] } | null;
+  /** The load to show (`?load=`, catalogQuery.ts): a commodity its loads stand for or `empty`; anything else shows the first. */
+  load?: string | null;
+  /** The Load select changed: the commodity shown, or `empty`. */
+  onLoad?: (load: string) => void;
 }) {
   let canvas!: HTMLCanvasElement;
   let pane!: HTMLDivElement;
@@ -232,6 +237,15 @@ export function ModelViewer(props: {
     applyLoads(loads, loadShown(), loadFill());
     render();
   };
+  // the address's load changed under the same model (Back, a Chains card): show it full
+  createEffect(on(() => props.load, (want) => {
+    if (!loads.length) return;
+    const next = initialLoad(loadChoices(loads), want);
+    if (next === loadShown()) return;
+    setLoadShown(next);
+    setLoadFill(1);
+    showLoads();
+  }, { defer: true }));
   let cut = new Plane(new Vector3(0, -1, 0), Infinity);
   // A character's motions (viewerMotions.ts): its buttons, the one playing and its action.
   const [motions, setMotions] = createSignal<MotionButton[]>([]);
@@ -935,7 +949,8 @@ export function ModelViewer(props: {
         showInteriors();
         loads = loadsOf(group);
         setLoadOptions(loadChoices(loads));
-        setLoadShown(loadChoices(loads)[0] ?? null);
+        // the load the address asks for (a Chains card's commodity), full, else the first as the thumbnail
+        setLoadShown(initialLoad(loadChoices(loads), props.load));
         setLoadFill(1);
         applyLoads(loads, loadShown(), loadFill());
         dropScenery();
@@ -1194,7 +1209,7 @@ export function ModelViewer(props: {
           <Show when={loadOptions().length > 0}>
             <label class="factory-viewer__check" title="What the vehicle carries: the load parts of one commodity, or none">
               Load
-              <select aria-label="Load" value={loadShown() ?? ""} onChange={(e) => { setLoadShown(e.currentTarget.value || null); showLoads(); }}>
+              <select aria-label="Load" value={loadShown() ?? ""} onChange={(e) => { setLoadShown(e.currentTarget.value || null); showLoads(); props.onLoad?.(e.currentTarget.value || EMPTY_LOAD); }}>
                 <option value="">Empty</option>
                 <For each={loadOptions()}>{(c) => <option value={c}>{commodityTitle(c)}</option>}</For>
               </select>

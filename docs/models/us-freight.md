@@ -70,8 +70,10 @@ body and length with it, so it is not a finish parameter.
   blind end, a ribbed roof, the door end at -x with two leaves, hinges and four locking bars with
   their keepers and handles, the eight corner castings with their apertures, the owner's code and
   number (RIXU, valid check digits) and the high-cube stripes. The distant model is the girders' box,
-  the two containers over the well (a hidden load part) and the trucks. Its load is the
-  double stack, pivoted on the well's deck, so the game grows it from the deck with the fill. It reaches 6.18 m: this design is held
+  the two containers over the well (a hidden load part, stepped as the full model's) and the trucks. Its load is the
+  double stack, pivoted on the well's deck and stepped ([loads.md](loads.md)): the lower box from
+  the first tonne, the upper one (on its inter-box connectors) at more than half full. The boxes
+  stand for anything boxed or bagged: `goods`, `steel`, `lumber`, `cement`, `grain`. It reaches 6.18 m: this design is held
   to the `usDoubleStack` gauge (3.3 by 6.2 m; [loading-gauge.md](loading-gauge.md)).
 - **Cable car** - measured from photographs (assets/sf-cable-car/SOURCES.md; Powell car 5 side-on at
   50.6 px/m). `powell` is the single-ended Powell Street car (27 ft 6 in, car 24): the open grip section

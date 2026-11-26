@@ -5,8 +5,9 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "solid-js/web";
 import { ChainsView, type ChainsProps } from "../src/ChainsView";
-import { chainGraph, type ChainRecord } from "../src/chains";
-import { prepareRows } from "../src/catalogQuery";
+import { chainGraph, nodeCards, type ChainRecord } from "../src/chains";
+import { linkUrl, parseView, prepareRows, viewUrl } from "../src/catalogQuery";
+import { EMPTY_LOAD, initialLoad } from "../src/viewerLoads";
 import type { CatalogRecord } from "../generator/catalog.ts";
 
 function record(id: string, title: string, game: ChainRecord["game"], draft = false): CatalogRecord {
@@ -66,6 +67,27 @@ describe("the Chains tab", () => {
     expect(html).toContain("Workshop draft");
     // picking the picked node again clears it
     expect(html).toContain('href="/?section=chains"');
+  });
+
+  it("opens a commodity's vehicle loaded with that commodity, through the link and the click", () => {
+    const opened: Array<[string, string | undefined]> = [];
+    const hrefOpen = (r: { id: string }, load?: string) => linkUrl({ ...parseView(""), model: r.id, load: load ?? null });
+    const html = render({ selected: "fuel", hrefOpen, onOpen: (r, load) => opened.push([r.id, load]) });
+    expect(html).toContain('href="/model/proc-vehicle-tank/?load=fuel"');
+    // the same vehicle from the oil node opens loaded with oil; a building's card names no load
+    expect(render({ selected: "oil", hrefOpen })).toContain('href="/model/proc-vehicle-tank/?load=oil"');
+    expect(render({ selected: "process-fuel", hrefOpen })).toContain('href="/model/proc-building-refinery/"');
+    expect(nodeCards(chainGraph(ROWS), "fuel")[0]!.commodity).toBe("fuel");
+    // the model page keeps it in the address, and the viewer shows it when the model's loads stand for it
+    const v = parseView("?load=fuel", "/model/proc-vehicle-tank/");
+    expect(v.load).toBe("fuel");
+    expect(viewUrl(v)).toBe("/model/proc-vehicle-tank/?load=fuel");
+    expect(parseView("?load=fuel").load ?? null).toBeNull();
+    expect(parseView("?load=%3Cb%3E", "/model/proc-vehicle-tank/").load ?? null).toBeNull();
+    expect(initialLoad(["oil", "fuel"], v.load)).toBe("fuel");
+    expect(initialLoad(["coal", "sand"], v.load)).toBe("coal");
+    expect(initialLoad(["coal", "sand"], EMPTY_LOAD)).toBeNull();
+    expect(initialLoad([], "fuel")).toBeNull();
   });
 
   it("opens a picked industry's building designs in the panel, no vehicles", () => {

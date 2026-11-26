@@ -15,12 +15,12 @@ import type { Vec3 } from "./meshCore.ts";
 import { steeredWheels } from "./vehicleParts.ts";
 import type { SteerAxle, VehicleRig } from "./rig.ts";
 import { fitLod, lodBlock, lodPolygon, lodWheel, LOD_GLASS, LOD_PALETTE, type LodPart } from "./lodKit.ts";
-import { BULK_LOOKS, cementLoad, lumberLoad } from "./loadKit.ts";
+import { BULK_LOOKS, cementItems, cementLoad, lumberItems, lumberLoad } from "./loadKit.ts";
 import {
   Kit, axleY, caboverCab, freeOf, fender, hoodCab, miningCab, ord, sweepR, tyre, tyreSpans, tyreWidth, truckPalette, vanCab,
   type AxleSpec, type BodySpec, type CabPlace, type CabResult, type ChassisSpec, type TrailerSpec, type TruckSpec,
 } from "./truckKit.ts";
-import { loadPart } from "./loadPart.ts";
+import { loadPart, type Step } from "./loadPart.ts";
 
 // ---------------------------------------------------------------------------
 // the layout: where every unit of the chain stands
@@ -392,13 +392,15 @@ function flatbedLoads(k: Kit, x0: number, x1: number, hw: number, floor: number)
   const len = x1 - x0;
   const high = len > 5 ? 2 : 1;
   const top = floor + high * 0.8;
-  k.load(["lumber"], (x0 + x1) / 2, floor, () => k.m.scope("lumber", () => {
-    lumberLoad(k.m, x0, x1, -hw, hw, floor, { rows: Math.max(1, Math.round(len / 4.2)), across: 2, high, h: 0.7 });
+  // each stepped: a bundle or a pallet a step, the bottom layer first (more than 16 share steps)
+  const lumber = { rows: Math.max(1, Math.round(len / 4.2)), across: 2, high, h: 0.7 };
+  k.itemLoad(["lumber"], (x0 + x1) / 2, floor, lumberItems(lumber), (item) => k.m.scope("lumber", () => {
+    lumberLoad(k.m, x0, x1, -hw, hw, floor, { ...lumber, item });
     k.keep("loadLumber", x0, x1, floor, top, -hw, hw);
   }));
-  const rows = Math.max(1, Math.floor((len + 0.1) / 1.25));
-  k.load(["cement"], (x0 + x1) / 2, floor, () => k.m.scope("cement", () => {
-    const y = cementLoad(k.m, x0, x1, -hw, hw, floor, { rows, across: 2, tiers: 6 });
+  const cement = { rows: Math.max(1, Math.floor((len + 0.1) / 1.25)), across: 2, tiers: 6 };
+  k.itemLoad(["cement"], (x0 + x1) / 2, floor, cementItems(cement), (item) => k.m.scope("cement", () => {
+    const y = cementLoad(k.m, x0, x1, -hw, hw, floor, { ...cement, item });
     k.keep("loadCement", x0, x1, floor, y, -hw, hw);
   }));
 }
@@ -424,21 +426,28 @@ function logsBody(k: Kit, b: BodySpec, p: BodyPlace, bunks: readonly number[]): 
   const [x0, x1] = bx(b, p);
   const hw = b.hw ?? 1.2;
   // the logs are the load (docs/models/loads.md): a hidden load part on the bunks
-  k.load(["wood"], (x0 + x1) / 2, b.floor, () => k.m.scope("logs", () => logs(k, b, x0, x1, hw)));
+  // stepped: a log a step, the bottom row first (more than 16 share steps)
+  k.itemLoad(["wood"], (x0 + x1) / 2, b.floor, logRows(b, hw).reduce((a, n) => a + n, 0), (item) => k.m.scope("logs", () => logs(k, b, x0, x1, hw, item)));
   for (const x of bunks) {
     k.blk("chassis", x - 0.12, x + 0.12, b.floor - 0.2, b.floor - 0.004, -hw - 0.05, hw + 0.05);
     k.pair("steel", x - 0.06, x + 0.06, b.floor - 0.2, b.top + 0.1, hw + 0.06, hw + 0.14);
   }
 }
 
-/** The rows of logs, their pale cut ends. */
-function logs(k: Kit, b: BodySpec, x0: number, x1: number, hw: number): void {
+/** How many logs each row on the bunks holds, the bottom row first. */
+function logRows(b: BodySpec, hw: number): number[] {
   const r = 0.2;
   const rows = Math.max(1, Math.round((b.top - b.floor) / (2 * r * 0.9)));
-  for (let row = 0; row < rows; row++) {
-    const n = Math.max(2, Math.floor((2 * hw - (row % 2) * r) / (2 * r)) - (row % 2));
+  return Array.from({ length: rows }, (_, row) => Math.max(2, Math.floor((2 * hw - (row % 2) * r) / (2 * r)) - (row % 2)));
+}
+
+/** The rows of logs, their pale cut ends; each log an item of the stepped load (`item`), the bottom row first. */
+function logs(k: Kit, b: BodySpec, x0: number, x1: number, hw: number, item: Step): void {
+  const r = 0.2;
+  let count = 0;
+  logRows(b, hw).forEach((n, row) => {
     const w = n * 2 * r;
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) item(count++, () => {
       const z = -w / 2 + r + i * 2 * r;
       const y = b.floor + r + row * 2 * r * 0.88;
       const xa = x0 + ((i + row) % 3) * 0.12;
@@ -446,8 +455,8 @@ function logs(k: Kit, b: BodySpec, x0: number, x1: number, hw: number): void {
       k.cylX((i + row) % 2 ? "loadBark" : "loadBarkDark", xa, xb, y, z, r * 0.97, 8);
       k.slab("loadLogEnd", ngon(8, r * 0.8, Math.PI / 8, z, y).map(([zz, yy]): Vec3 => [xa - 0.005, yy, zz]), [0.02, 0, 0]);
       k.slab("loadLogEnd", ngon(8, r * 0.8, Math.PI / 8, z, y).map(([zz, yy]): Vec3 => [xb + 0.005, yy, zz]), [-0.02, 0, 0]);
-    }
-  }
+    });
+  });
   k.keep("loadBark", x0, x1, b.floor, b.top, -hw, hw);
 }
 
@@ -649,15 +658,19 @@ function carCarrierBody(k: Kit, b: BodySpec, p: BodyPlace): void {
   subframe(k, x0, x1, p.frame, b.floor - 0.1);
   if (b.load !== "cars") return;
   // the cars on both decks are the load (docs/models/loads.md): goods, a hidden load part on the lower deck
-  k.load(["goods"], (x0 + x1) / 2, b.floor + 0.08, () => k.m.scope("cars", () => carCarrierCars(k, b, x0, x1, up)));
+  // stepped: a car a step, the lower deck first
+  k.itemLoad(["goods"], (x0 + x1) / 2, b.floor + 0.08, 2 * carCount(x0, x1), (item) => k.m.scope("cars", () => carCarrierCars(k, b, x0, x1, up, item)));
 }
 
-/** A car carrier's cars on its two decks, in turn red, blue and grey. */
-function carCarrierCars(k: Kit, b: BodySpec, x0: number, x1: number, up: number): void {
-  const cars = Math.max(1, Math.floor((x1 - x0 - 0.3) / 4.4));
+/** How many cars a car carrier's deck over x0..x1 holds. */
+const carCount = (x0: number, x1: number): number => Math.max(1, Math.floor((x1 - x0 - 0.3) / 4.4));
+
+/** A car carrier's cars on its two decks, in turn red, blue and grey; each car an item of the stepped load (`item`), the lower deck first. */
+function carCarrierCars(k: Kit, b: BodySpec, x0: number, x1: number, up: number, item: Step): void {
+  const cars = carCount(x0, x1);
   const len = (x1 - x0 - 0.3) / cars;
   for (const [deck, y] of [[0, b.floor + 0.08], [1, up + 0.08]] as const) {
-    for (let i = 0; i < cars; i++) {
+    for (let i = 0; i < cars; i++) item(deck * cars + i, () => {
       const a = x0 + 0.2 + i * len;
       const c = a + len - 0.35;
       const colour = (i + deck) % 3 === 0 ? "loadBoxRed" : (i + deck) % 3 === 1 ? "loadBoxBlue" : "loadBoxGrey";
@@ -665,7 +678,7 @@ function carCarrierCars(k: Kit, b: BodySpec, x0: number, x1: number, up: number)
       k.blk("glass", a + (c - a) * 0.3, c - (c - a) * 0.22, y + 0.8, y + 1.32, -0.75, 0.75);
       k.blk(colour, a + (c - a) * 0.32, c - (c - a) * 0.24, y + 1.32, y + 1.36, -0.72, 0.72);
       for (const x of [a + 0.6, c - 0.6]) for (const sd of [-1, 1]) k.cylZ("rubber", x, y + 0.3, ...ord(sd * 0.62, sd * 0.84), 0.3, 8);
-    }
+    });
   }
 }
 

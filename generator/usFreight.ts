@@ -5,7 +5,7 @@
 // US trucks and knuckle couplers. See docs/models/us-freight.md.
 
 import { MeshBuilder, ngon, type MaterialSpec } from "./meshBuilder.ts";
-import { CONTAINER_COMMODITIES, loadLodPart } from "./loadKit.ts";
+import { CONTAINER_COMMODITIES } from "./loadKit.ts";
 import type { Vec3 } from "./meshCore.ts";
 import { resolveParams, type GameProperties, type ParamSpec, type ParamValues, type ProceduralDesign } from "./design.ts";
 import { paint } from "./dieselParts.ts";
@@ -1023,15 +1023,16 @@ export function wellCar(): MeshBuilder {
     for (const e of [1, -1]) m.scope(e > 0 ? "front end" : "rear end", () => wcEnd(m, e));
   });
   // the load (docs/models/loads.md): two containers stacked in the well, a hidden load part on its deck
-  loadPart(m, CONTAINER_COMMODITIES, [0, WL.deck, 0], () =>
+  // stepped: the lower box first, the upper one (on its inter-box connectors) at more than half full
+  loadPart(m, CONTAINER_COMMODITIES, [0, WL.deck, 0], (step) =>
     m.scope("containers", () => {
-      m.scope("lower", () => container(m, WL.deck, "cBlue", "RIXU 401235 0"));
-      m.scope("upper", () => {
+      step(0, () => m.scope("lower", () => container(m, WL.deck, "cBlue", "RIXU 401235 0")));
+      step(1, () => m.scope("upper", () => {
         wcIbcs(m, WL.deck + CONTAINER.h);
         container(m, WL.deck + CONTAINER.h + 0.02, "cRed", "RIXU 512870 3");
-      });
+      }));
     }),
-  );
+  { steps: 2 });
   m.scope("trucks", () => {
     m.scope("front truck", () => m.bogie(() => bxTruck(m, WL.centre)));
     m.scope("rear truck", () => m.bogie(() => bxTruck(m, -WL.centre)));
@@ -1047,8 +1048,8 @@ export function wellCarLod(): MeshBuilder {
   const boxes: Array<[number, string]> = [[WL.deck, "cBlue"], [WL.deck + CONTAINER.h + 0.02, "cRed"]];
   const parts: LodPart[] = [
     ...bogieParts([[WL.centre, 1.3], [-WL.centre, 1.3]], WL.endUnder),
-    // the two containers, one hidden load part (docs/models/loads.md)
-    loadLodPart(CONTAINER_COMMODITIES, WL.deck, { draw: (m) => m.scope("containers", () => { for (const [y0, mat] of boxes) block(m, mat, x0, x1, Math.max(y0, WL.top - 0.1), y0 + CONTAINER.h, -CONTAINER.half, CONTAINER.half); }) }),
+    // the two containers, one hidden load part stepped as the full model's, a box a step (docs/models/loads.md)
+    { draw: (m) => loadPart(m, CONTAINER_COMMODITIES, [0, WL.deck, 0], (step) => m.scope("containers", () => boxes.forEach(([y0, mat], i) => step(i, () => block(m, mat, x0, x1, Math.max(y0, WL.top - 0.1), y0 + CONTAINER.h, -CONTAINER.half, CONTAINER.half)))), { steps: 2 }) },
   ];
   return fitUnit({ palette: WC_PALETTE, bodies: [body], parts }, 100);
 }

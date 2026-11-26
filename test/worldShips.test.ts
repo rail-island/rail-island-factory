@@ -15,6 +15,7 @@ import { DESIGNS } from "../generator/generate";
 import { OPENTTD_TABLE } from "../generator/openttdTable";
 import { proceduralId } from "../generator/modelId";
 import { findCoplanarOverlaps } from "../generator/coplanar";
+import { collectTriangles, parseGlb } from "../generator/glbTriangles";
 import { coverageCombinations, type ParamValues } from "../generator/design";
 import { sample } from "./catalogCache";
 import { UNPOWERED_ACCEL } from "../generator/worldShips";
@@ -208,10 +209,22 @@ describe("the world ships", () => {
     expect(load.some((it) => it.k === "lashing")).toBe(true);
   });
 
-  it("draws a container ship's containers as a hidden load part, and changes only colours with a livery", () => {
+  it("draws a container ship's containers as a hidden stepped load part, and changes only colours with a livery", () => {
     const t = CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-triple-e")!;
     const m = t.build();
-    expect(m.loads()).toEqual([{ part: "load-goods", commodities: ["goods"] }]);
+    // anything boxed or bagged; three bands of tiers, bottom first, each in five groups of bays from the stern
+    expect(m.loads()).toEqual([{ part: "load-goods", commodities: ["goods", "steel", "lumber", "cement", "grain"], steps: 15 }]);
+    const { json, bin } = parseGlb(m.toGlb("t", "t"));
+    const tops = (fill: number) => collectTriangles(json, bin, { loads: "goods", fill }).filter((t) => t.load);
+    // a third full: the bottom band only, the whole ship's length; full: the stacks' tops
+    const third = tops(1 / 3), full = tops(1);
+    const height = (ts: typeof full) => Math.max(...ts.flatMap((t) => t.p.map((p) => p[1])));
+    const along = (ts: typeof full) => { const xs = ts.flatMap((t) => t.p.map((p) => p[0])); return Math.max(...xs) - Math.min(...xs); };
+    expect(height(third)).toBeLessThan(height(full) - 10);
+    expect(along(third)).toBeCloseTo(along(full), 0);
+    // the ro-ro's trailers stand for what a road trailer carries, the heavy-lift's rig is one unit in two steps
+    expect(CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-roro")!.build().loads()).toEqual([{ part: "load-goods", commodities: ["goods", "steel", "lumber", "cement"], steps: 9 }]);
+    expect(CARGO_SHIP_SPECS.find((s) => s.id === "veh-ship-heavy-lift")!.build().loads()).toEqual([{ part: "load-goods", commodities: ["goods"], steps: 2 }]);
     // the model at rest is the empty ship: the stacks are most of the loaded one
     expect(m.exteriorTriangleCount()).toBeLessThan(m.triangleCount() * 0.7);
     for (const s of ALL.filter((x) => x.finishParams?.includes("livery"))) {

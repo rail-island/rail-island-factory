@@ -179,7 +179,8 @@ describe("the US passenger cars, urban rail and freight cars", () => {
 
   it("stacks the well car's two containers, a hidden load part, to the double-stack gauge", () => {
     expect(US_FREIGHT.find((d) => d.id === "proc-vehicle-us-well-car")!.params).toBeUndefined();
-    expect(wellCar().loads()).toEqual([{ part: "load-goods", commodities: ["goods"] }]);
+    // stepped: the lower box first, the upper one at more than half full
+    expect(wellCar().loads()).toEqual([{ part: "load-goods", commodities: ["goods", "steel", "lumber", "cement", "grain"], steps: 2 }]);
     const h = (loads: boolean) => glbStats(wellCar().toGlb("w"), { loads }).max[1];
     expect(h(false)).toBeLessThanOrEqual(LOADING_GAUGES.us.height);
     expect(h(true)).toBeGreaterThan(LOADING_GAUGES.us.height);

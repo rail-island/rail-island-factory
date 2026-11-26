@@ -16,11 +16,10 @@
 import { ngon, rect, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields, GameProperties, ParamSpec, ParamValues } from "./design.ts";
-import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, cementLoad, lumberLoad } from "./loadKit.ts";
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, cementLoadPart, itemLoadPart, lumberLoadPart } from "./loadKit.ts";
 import { WAGON_PALETTE, Wagon } from "./wagonParts.ts";
 import { wagonLod, type WagonLodItem } from "./lodClassic.ts";
 import { strokeText } from "./strokeFont.ts";
-import { loadPart } from "./loadPart.ts";
 
 /** The game-catalog fields of the wagons: rail vehicles in their own `wagon` group. */
 export const WAGON_CATALOG: CatalogFields = {
@@ -151,18 +150,19 @@ export function easOpenWagon(): MeshBuilder {
     const sect: Array<[number, number]> = [[-1.3, 3.15], [-0.65, 3.4], [-0.4, 3.5], [0.4, 3.5], [0.7, 3.4], [1.3, 3.15]];
     m.scope("heap", () => c.heap(mat, 0.4, 13.5, 1.3, 26, 8, (x, z) => Math.min(lerp(elev, x), lerp(sect, z))));
   });
-  loadPart(m, ["wood"], floor, () =>
+  // a stepped load: a bundle a step, from one end
+  itemLoadPart(m, ["wood"], floor, 15, (item) =>
     m.scope("logs", () => {
       // fifteen bundles of five logs laid across the wagon, their tops 3.7 to 3.9 m (the native n_eas-drevo)
       for (let i = 0; i < 15; i++)
-        m.scope(`bundle ${i + 1}`, () => {
+        item(i, () => m.scope(`bundle ${i + 1}`, () => {
           // the end bundles rest on the end walls' top rails, as the native load reaches 0.3..13.6 m
           const x = 0.735 + i * 0.888;
           const r = 0.145;
           const lift = [0, 0.04, 0, 0.06][i % 4]! + (i === 14 ? 0.08 : 0);
           for (const d of [-0.29, 0, 0.29]) c.logZ(i % 2 ? "loadBark" : "loadBarkDark", x + d, 3.3 + lift, -1.27 + (i % 3) * 0.01, 1.27 - (i % 2) * 0.015, r, 8, "loadLogEnd");
           for (const d of [-0.145, 0.145]) c.logZ(i % 2 ? "loadBarkDark" : "loadBark", x + d, 3.3 + 0.25 + lift, -1.25 + (i % 2) * 0.02, 1.25 - (i % 3) * 0.02, r, 8, "loadLogEnd");
-        });
+        }));
     }),
   );
   return m;
@@ -257,27 +257,28 @@ export function uaOpenWagon(): MeshBuilder {
     }),
   );
   // the logs and the straps down to the solebar: pivoted at the straps' foot, 0.95 m
-  loadPart(m, ["wood"], [floor[0], 0.95, 0], () => {
+  // a stepped load: a log a step, the lower layer first, the straps with the last log
+  itemLoadPart(m, ["wood"], [floor[0], 0.95, 0], 13, (item) => {
       // logs along the wagon, their top layer 3.4 to 3.6 m (the native n_ua#2 `load`)
       m.scope("logs", () => {
         for (let k = 0; k < 7; k++) {
           const z = -1.08 + k * 0.36;
-          c.logX(k % 2 ? "loadBark" : "loadBarkDark", 0.85 + (k % 3) * 0.04, 12.85 - (k % 2) * 0.05, z, 3.21, 0.18, 8, "loadLogEnd");
+          item(k, () => c.logX(k % 2 ? "loadBark" : "loadBarkDark", 0.85 + (k % 3) * 0.04, 12.85 - (k % 2) * 0.05, z, 3.21, 0.18, 8, "loadLogEnd"));
         }
         for (let k = 0; k < 6; k++) {
           const z = -0.9 + k * 0.36;
-          c.logX(k % 2 ? "loadBarkDark" : "loadBark", 1.4 - (k % 2) * 0.1, 12.3 + (k % 3) * 0.12, z, 3.43, 0.18, 8, "loadLogEnd");
+          item(7 + k, () => c.logX(k % 2 ? "loadBarkDark" : "loadBark", 1.4 - (k % 2) * 0.1, 12.3 + (k % 3) * 0.12, z, 3.43, 0.18, 8, "loadLogEnd"));
         }
       });
       // four steel straps over the load and down both sides (native z_both columns 23, 55, 81, 112)
-      m.scope("straps", () => {
+      m.scope("straps", () => item(12, () => {
         [2.3, 5.5, 8.1, 11.2].forEach((x, i) =>
           m.scope(`strap ${i + 1}`, () => {
             c.box("strap", x, x + 0.1, 3.61, 3.63, -1.545, 1.545);
             for (const s of [-1, 1]) c.sideBox("strap", s, x, x + 0.1, 0.95, 3.61, 1.535, 1.545);
           }),
         );
-      });
+      }));
   });
   return m;
 }
@@ -344,7 +345,8 @@ export function nasFlatWagon(): MeshBuilder {
   });
   // the loads on the deck at 1.2 m (docs/models/loads.md): logs, steel tubes, cable reels as goods, lumber, cement
   const floor: Vec3 = [c.X(10.45), 1.2, 0];
-  loadPart(m, ["wood"], floor, () =>
+  // each a stepped load (docs/models/loads.md): a log, a tube, a reel, a bundle or a row of pallets a step, the bottom layer first
+  itemLoadPart(m, ["wood"], floor, 25, (item) =>
     m.scope("logs", () => {
       // a pile of 25 logs in five layers, 2.9 to 18.1 m (n_nas-full#1's wood inlines)
       const counts = [7, 6, 5, 4, 3];
@@ -354,36 +356,36 @@ export function nasFlatWagon(): MeshBuilder {
           for (let k = 0; k < count; k++) {
             const z = (k - (count - 1) / 2) * 0.4;
             const y = 1.2 + 0.2 + layer * 0.3464;
-            const j = n++ % 5;
-            c.logX(j % 2 ? "loadBark" : "loadBarkDark", 2.82 + j * 0.04, 18.18 - ((j * 3) % 5) * 0.04, z, y, 0.2, 8, "loadLogEnd");
+            const j = n % 5;
+            item(n++, () => c.logX(j % 2 ? "loadBark" : "loadBarkDark", 2.82 + j * 0.04, 18.18 - ((j * 3) % 5) * 0.04, z, y, 0.2, 8, "loadLogEnd"));
           }
         }),
       );
     }),
   );
-  loadPart(m, ["steel"], floor, () =>
+  itemLoadPart(m, ["steel"], floor, 5, (item) =>
     m.scope("tubes", () => {
       // five steel tubes 0.9 m across, three below and two above (n_nas-full#2's tube inlines)
-      for (const [z, y] of [[-0.95, 1.65], [0.0, 1.65], [0.95, 1.65], [-0.475, 2.42], [0.475, 2.42]] as Array<[number, number]>)
-        m.scope("tube", () => c.tube("loadSteel", "loadDark", 2.8, 18.3, z, y, 0.45, 0.04, 16));
+      ([[-0.95, 1.65], [0.0, 1.65], [0.95, 1.65], [-0.475, 2.42], [0.475, 2.42]] as Array<[number, number]>).forEach(([z, y], k) =>
+        item(k, () => m.scope("tube", () => c.tube("loadSteel", "loadDark", 2.8, 18.3, z, y, 0.45, 0.04, 16))));
     }),
   );
-  loadPart(m, ["goods"], floor, () =>
+  itemLoadPart(m, ["goods"], floor, 6, (item) =>
     m.scope("cable reels", () => {
       // six cable reels standing across the wagon, 2 m across (n_nas-full#3's reel inlines)
-      for (const x of [2.9, 5.8, 9.0, 11.9, 15.1, 18.0])
-        m.scope("reel", () => {
+      [2.9, 5.8, 9.0, 11.9, 15.1, 18.0].forEach((x, k) =>
+        item(k, () => m.scope("reel", () => {
           const flange = ngon(8, 1.0 / Math.cos(Math.PI / 8), Math.PI / 8, c.X(x), 2.205);
           for (const [z0, z1] of [[-1.0, -0.9], [0.9, 1.0]]) m.sweep("reel", "z", flange, z0!, flange, z1!);
           const core = ngon(8, 0.8 / Math.cos(Math.PI / 8), Math.PI / 8, c.X(x), 2.205);
           m.sweep("cable", "z", core, -0.9, core, 0.9, false);
-        });
+        })));
     }),
   );
   // sawn lumber: four bundles along, two across, two high, on bearers between the stakes
-  loadPart(m, ["lumber"], floor, () => m.scope("lumber", () => lumberLoad(m, c.X(1.0), c.X(19.9), -1.26, 1.26, 1.2, { rows: 4, across: 2, high: 2, h: 0.8 })));
+  lumberLoadPart(m, floor, c.X(1.0), c.X(19.9), -1.26, 1.26, 1.2, { rows: 4, across: 2, high: 2, h: 0.8 });
   // cement: fourteen pallets of bags along, two across
-  loadPart(m, ["cement"], floor, () => m.scope("cement", () => cementLoad(m, c.X(0.9), c.X(20.0), -1.25, 1.25, 1.2, { rows: 14, across: 2 })));
+  cementLoadPart(m, floor, c.X(0.9), c.X(20.0), -1.25, 1.25, 1.2, { rows: 14, across: 2 });
   return m;
 }
 
