@@ -131,30 +131,29 @@ describe("the graph", () => {
 describe("the cards", () => {
   const g = chainGraph(CATALOG);
 
-  it("list a commodity's makers, takers and carriers", () => {
-    const [made, taken, carried] = nodeCards(g, "fuel");
-    expect(made!.buildings!.map((c) => [c.id, c.line])).toEqual([["proc-building-refinery", "1 t oil -> 1 t fuel, 40 t/h"]]);
-    expect(taken!.buildings!.map((c) => [c.id, c.line])).toEqual([
-      ["proc-building-power", "Takes coal, fuel"],
-      ["proc-building-shop", "Takes fuel, goods, mail"],
-    ]);
-    expect(taken!.buildings!.find((c) => c.id === "proc-building-shop")!.draft).toBe(true);
-    expect(carried!.title).toBe("Carries fuel");
-    expect(carried!.vehicles!.map((v) => [v.id, v.line])).toEqual([["proc-vehicle-tank", "60 t - oil, fuel"]]);
+  it("open a commodity's carriers only: what makes and takes it is in the graph", () => {
+    const groups = nodeCards(g, "fuel");
+    expect(groups.map((x) => x.title)).toEqual(["Carries fuel"]);
+    expect(groups[0]!.buildings).toBeUndefined();
+    expect(groups[0]!.vehicles!.map((v) => [v.id, v.line])).toEqual([["proc-vehicle-tank", "60 t - oil, fuel"]]);
+    expect(nodeCards(g, "steel")[0]!.vehicles!.map((v) => [v.id, v.tonnes, v.draft])).toEqual([["proc-vehicle-flat", 70, true]]);
+    expect(nodeCards(g, "food")[0]!.vehicles).toEqual([]);
+    expect(nodeCards(g, "food")[0]!.empty).toBe("No vehicle carries food yet.");
   });
 
   it("say when nothing makes a raw commodity yet", () => {
-    const [made] = nodeCards(g, "coal");
-    expect(made!.buildings).toEqual([]);
-    expect(made!.empty).toBe("No producer yet: nothing makes coal.");
+    expect(nodeCards(g, "make-coal")[0]!.buildings).toEqual([]);
     expect(nodeCards(g, "make-coal")[0]!.empty).toBe("No producer yet: nothing makes coal.");
   });
 
-  it("list an industry's designs, then a group of carriers per commodity it handles", () => {
+  it("open an industry's or a town's building designs only, no carriers", () => {
     const groups = nodeCards(g, "process-steel");
-    expect(groups.map((x) => x.title)).toEqual(["Processors", "Carries coal", "Carries iron ore", "Carries steel"]);
+    expect(groups.map((x) => x.title)).toEqual(["Processors"]);
+    expect(groups[0]!.vehicles).toBeUndefined();
     expect(groups[0]!.buildings!.map((c) => c.line)).toEqual(["0.5 t coal + 1 t iron ore -> 1 t steel, 30-45 t/h"]);
-    expect(groups[3]!.vehicles!.map((v) => [v.id, v.tonnes, v.draft])).toEqual([["proc-vehicle-flat", 70, true]]);
+    const towns = nodeCards(g, "towns");
+    expect(towns.map((x) => x.title)).toEqual(["Buildings"]);
+    expect(towns[0]!.buildings!.find((c) => c.id === "proc-building-shop")!.draft).toBe(true);
   });
 
   it("sort carriers by tonnes, the biggest first, and skip vehicles that carry nothing", () => {

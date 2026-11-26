@@ -1,6 +1,6 @@
 # The Chains tab
 
-**Covers** - the site's Chains tab next to Workshop: the supply-chain graph on a wide screen (three bands, the mail loop), the cards a node opens, the phone's list of chains, how the graph is derived and laid out from the catalog's records, its URL and its tests.
+**Covers** - the site's Chains tab next to Workshop: the supply-chain graph on a wide screen (three bands, the mail loop) with its side panel, the cards a node opens, the phone's list of chains, how the graph is derived and laid out from the catalog's records, its URL and its tests.
 **Code** - `src/chains.ts` (`chainGraph`, `nodeCards`, `carriers`, `selectionsOf`, `COMMODITY_ORDER`, `COMMODITY_KIND`, `LAYOUT`), `src/ChainsView.tsx`, `src/App.tsx`, `src/catalogQuery.ts` (`Section`, `SECTIONS`, `sectionLabel`, `ViewState.chain`), `src/factory.css` (`factory-chains*`, `factory-chaincard*`, `factory-chainlist*`), `vite.config.ts` (the test-mode server compile), `test/chains.test.ts`, `test/chainsView.test.ts`, `test/catalogQuery.test.ts`
 **See also** - [../models/traffic.md](../models/traffic.md) (the commodities, roles and recipes the tab draws), [catalog-site.md](catalog-site.md), [workshop.md](workshop.md), [seo-pages.md](seo-pages.md)
 
@@ -39,10 +39,18 @@ pill reading "no recipe yet"; a commodity no vehicle carries reads "no vehicle
 carries it". A node whose every design is a workshop draft has a dashed outline in
 the accent colour.
 
+**The side panel.** The graph and the mail loop fill the left column; a panel on the
+right (28 % of the window, 300-420 px) holds the picked node's cards, so a click never
+sends the reader scrolling down. The panel stays in view under the sticky toolbar
+(`position: sticky`) and scrolls on its own when its cards are taller than the
+window; the node's title and Close stay at its top. With nothing picked it holds a
+hint: "Pick a commodity to see the vehicles that may carry it, or an industry or a
+town to see its building designs." The graph scrolls sideways inside the left column
+when the column is narrower than the graph.
+
 **Picking a node** (a click on any box or pill) selects it: its outline and the
-edges that touch it light up, and its cards open below the graph (and below the mail
-loop) under the node's title with a Close link. A second click on it, or Close,
-clears the selection.
+edges that touch it light up, and its cards fill the panel under the node's title
+with a Close link. A second click on it, or Close, clears the selection.
 
 ### Phone (below 900 px): the list of chains
 
@@ -65,12 +73,17 @@ chain that has it.
 
 ## The cards
 
-`nodeCards(graph, id)` gives the groups a node opens, each a heading with its count:
+`nodeCards(graph, id)` gives the one group a node opens, a heading with its count.
+What the reader clicked decides what it lists: a commodity its vehicles, anything
+else its buildings. What makes and takes a commodity is not repeated as cards: the
+lit edges show it in the graph, and a click on the maker opens its designs.
 
-| Node | Groups |
+| Node | Group |
 |---|---|
-| A commodity | **Made by** (producers "Makes 3-6 t/h", processors with their recipe and rate), **Taken by** (processors "Uses 0.5 t per t of goods", takers "Takes food, goods, mail"), **Carries <commodity>** |
-| A producer, processor or consumer | **Producers** / **Processors** / **Buildings**: its designs, with the same line; then **Carries <commodity>** for every commodity it makes or takes |
+| A commodity | **Carries <commodity>**: the vehicles that may carry it |
+| A producer | **Producers**: its designs, "Makes 3-6 t/h" |
+| A processor | **Processors**: its designs, with their recipe and rate ("0.5 t coal + 1 t iron ore -> 1 t steel, 30-45 t/h") |
+| Towns or another consumer | **Buildings**: its designs, "Takes food, goods, mail" |
 
 A building card is a link to the model page: its thumbnail (`Thumb`, so a draft's is
 rendered in the browser, [workshop.md](workshop.md)), its title, its line and, on a
@@ -78,8 +91,8 @@ draft, the **Workshop draft** badge the model page uses. A vehicle card is the s
 with "60 t - oil, fuel": the most tonnes it carries over its variants and every
 commodity it may take. Vehicles are listed biggest first; a group shows the first 12
 with a **Show all N** button. An empty group says so ("No producer yet: nothing
-makes coal.", "No vehicle carries mail yet."). Two columns of cards and more on a
-wide screen, one below 600 px.
+makes coal.", "No vehicle carries mail yet."). The panel shows one column of cards;
+a phone's opened step shows two columns and more, one below 600 px.
 
 Opening a model from a card is a history entry; its page keeps `?section=chains&chain=`
 in the URL, so closing it (the app bar's back arrow) returns to the tab with the node
@@ -139,10 +152,13 @@ and hyphens is dropped when read. Picking a node is a history entry.
 `test/chains.test.ts` drives `chainGraph` on a synthetic catalog: the node set, the
 columns and depths, no overlapping boxes, the edges (mail kept apart), "No producer
 yet", the recipe and rate lines, the towns, the cards (makers, takers and carriers,
-the draft flag, biggest carrier first), the phone's chains and their steps, and a new
+a commodity's vehicles only, an industry's or the towns' buildings only, the draft
+flag, biggest carrier first), the phone's chains and their steps, and a new
 producer landing by its numbers. `test/chainsView.test.ts` renders `ChainsView` to a
 string with `solid-js/web`'s `renderToString` - under Vitest the site's components
 compile for the server (`vite.config.ts`), the production build is unchanged - and
-checks the bands, the node links, the edges, the mail loop, a picked node's cards
-with model links and the draft badge, and the phone's list with a step open.
+checks the bands, the node links, the edges, the mail loop, the side panel's hint, a
+picked commodity's vehicles and a picked industry's buildings in the panel (each
+without the other) with model links and the draft badge, and the phone's list with a
+step open.
 `test/catalogQuery.test.ts` covers the URL.

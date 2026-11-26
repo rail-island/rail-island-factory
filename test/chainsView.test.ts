@@ -43,22 +43,37 @@ describe("the Chains tab", () => {
     expect(html).toContain("No producer yet");
     expect(html).toMatch(/class="factory-chains__edge ?"[^>]*d="M/);
     expect(html).toContain("Mail between towns");
-    // no node picked: no cards
+    // no node picked: the panel beside the graph holds a hint, no cards
+    expect(html).toContain("factory-chains__panel");
+    expect(html).toContain("Pick a commodity to see the vehicles");
     expect(html).not.toContain("factory-chaincards");
   });
 
-  it("opens a picked node's cards, with links to the models and the draft badge", () => {
+  it("opens a picked commodity's vehicles in the panel, with links to the models and the draft badge", () => {
     const html = render({ selected: "fuel" });
     expect(html).toContain("factory-chains__node--on");
     expect(html).toContain("factory-chains__edge--on");
-    expect(html).toContain("Made by");
-    expect(html).toContain('href="/model/proc-building-refinery/"');
-    expect(html).toContain("Carries fuel");
+    // the cards sit in the panel, after the graph and the mail loop
+    const panel = html.slice(html.indexOf('class="factory-chains__panel"'));
+    expect(html.indexOf('class="factory-chains__panel"')).toBeGreaterThan(html.indexOf("Mail between towns"));
+    expect(panel).toContain("Carries fuel");
+    expect(panel).not.toContain("Pick a commodity");
+    // a commodity opens vehicles only: its makers are the lit edges
+    expect(panel).not.toContain("Made by");
+    expect(panel).not.toContain('href="/model/proc-building-refinery/"');
     expect(html).toContain('href="/model/proc-vehicle-tank/"');
     expect(html).toContain("60 t - oil, fuel");
     expect(html).toContain("Workshop draft");
     // picking the picked node again clears it
     expect(html).toContain('href="/?section=chains"');
+  });
+
+  it("opens a picked industry's building designs in the panel, no vehicles", () => {
+    const panel = render({ selected: "process-fuel" }).split('class="factory-chains__panel"')[1]!;
+    expect(panel).toContain("Processors");
+    expect(panel).toContain('href="/model/proc-building-refinery/"');
+    expect(panel).not.toContain("Carries");
+    expect(panel).not.toContain('href="/model/proc-vehicle-tank/"');
   });
 
   it("lists the chains on a phone, a picked step open in place", () => {

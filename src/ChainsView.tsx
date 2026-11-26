@@ -1,8 +1,9 @@
 // The Chains tab (docs/site/chains.md): the supply chain the catalog describes. On a
 // wide screen a graph in three bands - raw materials and their producers, the
 // processors with their recipes, the consumers - with mail as a loop of its own; on
-// a phone a list of chains, each step expandable. A node opens cards: its building
-// designs and the vehicles that may carry its commodities. Everything comes from
+// a phone a list of chains, each step expandable. A node opens cards in a panel beside
+// the graph (in place on a phone): a commodity the vehicles that may carry it, an
+// industry or a town its building designs. Everything comes from
 // chains.ts, laid out from the records' numbers.
 
 import { For, Show, createMemo, createSignal } from "solid-js";
@@ -33,45 +34,60 @@ export function ChainsView(props: ChainsProps) {
   return (
     <section class="factory-chains" aria-label="Supply chains">
       <p class="factory-muted factory-chains__intro">
-        How the game's commodities flow: what makes each one, which recipes turn it into another, and who takes it in the end.{" "}
-        {props.wide ? "Pick a commodity or an industry" : "Open a step"} to see its building designs and the vehicles that may carry it.
+        How the game's commodities flow: what makes each one, which recipes turn it into another, and who takes it in the end.
+        <Show when={!props.wide}> Open a commodity to see the vehicles that may carry it, or an industry to see its building designs.</Show>
       </p>
       <Show when={props.wide} fallback={<ChainList {...props} />}>
-        <div class="factory-chains__graph">
-          <Drawing
-            graph={props.graph}
-            nodes={[...props.graph.nodes.values()].filter((n) => n.commodityKind !== "town")}
-            edges={props.graph.edges}
-            width={props.graph.width}
-            height={props.graph.height}
-            bands={props.graph.bands}
-            label="The supply chain"
-            selected={props.selected}
-            onSelect={props.onSelect}
-            hrefSelect={props.hrefSelect}
-          />
-        </div>
-        <Show when={props.graph.mail}>
-          {(mail) => (
-            <div class="factory-chains__mail">
-              <h2 class="factory-chains__heading">Mail</h2>
-              <p class="factory-muted factory-chains__note">Outside the industry chain: homes, shops and offices send mail to each other.</p>
+        <div class="factory-chains__layout">
+          <div class="factory-chains__main">
+            <div class="factory-chains__graph">
               <Drawing
                 graph={props.graph}
-                nodes={mail().nodes.map((b) => ({ ...props.graph.nodes.get(b.id)!, ...b }))}
-                edges={mail().edges}
-                width={mail().width}
-                height={mail().height}
-                bands={[]}
-                label="Mail between towns"
+                nodes={[...props.graph.nodes.values()].filter((n) => n.commodityKind !== "town")}
+                edges={props.graph.edges}
+                width={props.graph.width}
+                height={props.graph.height}
+                bands={props.graph.bands}
+                label="The supply chain"
                 selected={props.selected}
                 onSelect={props.onSelect}
                 hrefSelect={props.hrefSelect}
               />
             </div>
-          )}
-        </Show>
-        <Show when={selectedNode()}>{(node) => <NodeCards {...props} node={node()} />}</Show>
+            <Show when={props.graph.mail}>
+              {(mail) => (
+                <div class="factory-chains__mail">
+                  <h2 class="factory-chains__heading">Mail</h2>
+                  <p class="factory-muted factory-chains__note">Outside the industry chain: homes, shops and offices send mail to each other.</p>
+                  <Drawing
+                    graph={props.graph}
+                    nodes={mail().nodes.map((b) => ({ ...props.graph.nodes.get(b.id)!, ...b }))}
+                    edges={mail().edges}
+                    width={mail().width}
+                    height={mail().height}
+                    bands={[]}
+                    label="Mail between towns"
+                    selected={props.selected}
+                    onSelect={props.onSelect}
+                    hrefSelect={props.hrefSelect}
+                  />
+                </div>
+              )}
+            </Show>
+          </div>
+          <aside class="factory-chains__panel" aria-label="The picked node">
+            <Show
+              when={selectedNode()}
+              fallback={
+                <p class="factory-muted factory-chains__hint">
+                  Pick a commodity to see the vehicles that may carry it, or an industry or a town to see its building designs.
+                </p>
+              }
+            >
+              {(node) => <NodeCards {...props} node={node()} />}
+            </Show>
+          </aside>
+        </div>
       </Show>
     </section>
   );

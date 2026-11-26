@@ -567,63 +567,36 @@ export interface CardGroup {
   vehicles?: VehicleCard[];
 }
 
-/** The cards a node opens: its building designs, then the vehicles that may carry each of its commodities. */
+/**
+ * The cards a node opens: a commodity its carriers (the vehicles that may take it), an
+ * industry or a consumer its building designs. What makes and takes a commodity is
+ * read from the graph's lit edges, so the commodity's cards hold only vehicles.
+ */
 export function nodeCards(g: ChainGraph, id: string): CardGroup[] {
   const node = g.nodes.get(id);
   if (!node) return [];
-  const card = (bid: string, line: string): BuildingCard => {
+  if (node.kind === "commodity") return [{ title: `Carries ${lower(id)}`, empty: `No vehicle carries ${lower(id)} yet.`, vehicles: carriers(g, id) }];
+  const line = (bid: string): string => {
     const b = g.buildingFacts.get(bid)!;
-    return { id: b.id, title: b.title, draft: b.draft, line };
-  };
-  const sortCards = (cs: BuildingCard[]) => cs.sort((a, b) => collator.compare(a.title, b.title) || a.id.localeCompare(b.id));
-  const facts = [...g.buildingFacts.values()];
-  const recipeLine = (r: RecipeUse) => `${recipeText(r)}, ${range(r.rates, " t/h")}`;
-  const out: CardGroup[] = [];
-  if (node.kind === "commodity") {
-    const c = id;
-    const made: BuildingCard[] = [];
-    const taken: BuildingCard[] = [];
-    for (const b of facts) {
-      const rates = b.produces.get(c);
-      if (rates) made.push(card(b.id, `Makes ${range(rates, " t/h")}`));
-      for (const r of b.recipes.values()) if (r.output === c) made.push(card(b.id, recipeLine(r)));
-      for (const r of b.recipes.values()) {
-        const input = r.inputs.find(([x]) => x === c);
-        if (input) taken.push(card(b.id, `Uses ${formatAmount(input[1])} t per t of ${lower(r.output)}`));
-      }
-      if (b.accepts.has(c)) taken.push(card(b.id, `Takes ${[...b.accepts].sort(byOrder).map(lower).join(", ")}`));
+    if (node.kind === "producer") return `Makes ${range(b.produces.get(node.commodities[0]!)!, " t/h")}`;
+    if (node.kind === "processor") {
+      const r = node.recipe ? b.recipes.get(node.recipe) : undefined;
+      return r ? `${recipeText(r)}, ${range(r.rates, " t/h")}` : "";
     }
-    out.push({ title: "Made by", empty: node.commodityKind === "raw" ? `No producer yet: nothing makes ${lower(c)}.` : `No recipe makes ${lower(c)} yet.`, buildings: sortCards(dedupe(made)) });
-    out.push({ title: "Taken by", empty: `Nothing takes ${lower(c)} yet.`, buildings: sortCards(dedupe(taken)) });
-  } else {
-    const line = (bid: string): string => {
-      const b = g.buildingFacts.get(bid)!;
-      if (node.kind === "producer") return `Makes ${range(b.produces.get(node.commodities[0]!)!, " t/h")}`;
-      if (node.kind === "processor") {
-        const r = node.recipe ? b.recipes.get(node.recipe) : undefined;
-        return r ? recipeLine(r) : "";
-      }
-      return `Takes ${[...b.accepts].sort(byOrder).map(lower).join(", ")}`;
-    };
-    out.push({
+    return `Takes ${[...b.accepts].sort(byOrder).map(lower).join(", ")}`;
+  };
+  const cards: BuildingCard[] = node.buildings.map((bid) => {
+    const b = g.buildingFacts.get(bid)!;
+    return { id: b.id, title: b.title, draft: b.draft, line: line(bid) };
+  });
+  cards.sort((a, b) => collator.compare(a.title, b.title) || a.id.localeCompare(b.id));
+  return [
+    {
       title: node.kind === "producer" ? "Producers" : node.kind === "processor" ? "Processors" : "Buildings",
       empty: node.kind === "producer" ? `No producer yet: nothing makes ${lower(node.commodities[0]!)}.` : "No building yet.",
-      buildings: sortCards(node.buildings.map((bid) => card(bid, line(bid)))),
-    });
-  }
-  for (const c of node.commodities) out.push({ title: `Carries ${lower(c)}`, empty: `No vehicle carries ${lower(c)} yet.`, vehicles: carriers(g, c) });
-  return out;
-}
-
-/** A building listed twice in one group (a variant playing the same role) once. */
-function dedupe(cards: BuildingCard[]): BuildingCard[] {
-  const seen = new Set<string>();
-  return cards.filter((c) => {
-    const key = `${c.id}\n${c.line}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+      buildings: cards,
+    },
+  ];
 }
 
 /** The vehicles that may carry a commodity, the biggest first. */
