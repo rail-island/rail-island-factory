@@ -39,6 +39,8 @@ const COVERED = new Set([
   "proc-vehicle-ir-wap5", "proc-vehicle-ir-wag12b",
   // aprons and nose skirts over the bogies (the Fliegender Hamburger's almost to the rail)
   "proc-vehicle-drg-svt877", "proc-vehicle-db-ice4", "proc-vehicle-ns-v250", "proc-vehicle-sbb-roter-pfeil", "proc-vehicle-cr-crh5a",
+  // the CR450AF's enclosed bogies, the leading one under the nose's skirt
+  "proc-vehicle-cr-cr450af",
 ]);
 
 /** The length (m) each default build spans over its buffers or couplers, where the design states one. */
@@ -59,7 +61,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-ir-wam4": 18.79, "proc-vehicle-ir-wap4": 18.79, "proc-vehicle-ir-wap7": 20.56, "proc-vehicle-ir-wap5": 18.16, "proc-vehicle-ir-wag12b": 38.4,
   "proc-vehicle-ir-lhb-coach": 24.0, "proc-vehicle-ir-icf-coach": 22.3, "proc-vehicle-ir-boxn-wagon": 10.71, "proc-vehicle-cr-c70-wagon": 13.98,
   "proc-vehicle-cr-hxd1": 35.2, "proc-vehicle-cr-hxd3d": 22.99, "proc-vehicle-cr-ss1": 20.4, "proc-vehicle-cr-ss8": 17.5, "proc-vehicle-cr-df4": 21.1, "proc-vehicle-cr-df11": 21.25,
-  "proc-vehicle-cr-25t-coach": 26.6,
+  "proc-vehicle-cr-25t-coach": 26.6, "proc-vehicle-cr-cr450af": 28.725,
   "proc-vehicle-sbb-ew4-coach": 26.4, "proc-vehicle-sbb-ic2000": 26.8, "proc-vehicle-glacier-express": 18.4,
 };
 
@@ -71,8 +73,8 @@ const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 export function worldTrainsSuite(index: number, count: number): void {
 describe("the eight countries' trains", () => {
   if (index === 0) it("are all filed under their country", () => {
-    // the plan's 160 designs and the Class 378 added after it
-    expect(FAMILIES.length).toBe(161);
+    // the plan's 160 designs and the Class 378 and the CR450AF added after it
+    expect(FAMILIES.length).toBe(162);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);
