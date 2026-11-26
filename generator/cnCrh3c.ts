@@ -44,16 +44,16 @@ const LOUNGE_FRONT: Pt[] = [[2.02, 2.6], [2.3, 2.92], [2.55, 3.3], [2.73, 3.65]]
 
 /** One lamp cluster (viewer's right, mirrored): a lens leaning out at its top, the lamps on its outer half, slats on its inner half. */
 const CLUSTER: Pt[] = [[0.13, 1.55], [0.88, 1.55], [0.99, 1.98], [0.27, 1.98]];
-const mirror = (pts: readonly Pt[]): Pt[] => pts.map(([l, y]): Pt => [-l, y]).reverse();
+export const mirror = (pts: readonly Pt[]): Pt[] => pts.map(([l, y]): Pt => [-l, y]).reverse();
 const SLATS = [1.61, 1.67, 1.73, 1.79, 1.85, 1.91].map((y): Pt[] => {
   const inner = (yy: number) => 0.13 + ((yy - 1.55) / 0.43) * 0.14 + 0.04;
   return [[inner(y), y], [0.52, y], [0.52, y + 0.026], [inner(y + 0.026), y + 0.026]];
 });
 
 /** The coupler cover's seam: a thin dark line over its top and down its flanks (viewer's right half, mirrored). */
-const COVER: Pt[] = [[0.86, 0.86], [0.88, 1.1], [0.84, 1.3], [0.72, 1.46], [0.5, 1.55], [0.2, 1.575], [0, 1.58]];
+export const COVER: Pt[] = [[0.86, 0.86], [0.88, 1.1], [0.84, 1.3], [0.72, 1.46], [0.5, 1.55], [0.2, 1.575], [0, 1.58]];
 /** A polyline as thin quads, each counter-clockwise seen head-on. */
-const seam = (pts: readonly Pt[], t: number): Pt[][] => pts.slice(1).map((b, i): Pt[] => {
+export const seam = (pts: readonly Pt[], t: number): Pt[][] => pts.slice(1).map((b, i): Pt[] => {
   const a = pts[i]!, len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const nx = (-(b[1] - a[1]) / len) * t, ny = ((b[0] - a[0]) / len) * t;
   const q: Pt[] = [[a[0] - nx, a[1] - ny], [b[0] - nx, b[1] - ny], [b[0] + nx, b[1] + ny], [a[0] + nx, a[1] + ny]];
@@ -66,7 +66,7 @@ const seam = (pts: readonly Pt[], t: number): Pt[][] => pts.slice(1).map((b, i):
  * (x right, y up): he over the left cluster, xie between them, hao over the right one (seen head-on),
  * just under the canopy's lip.
  */
-const HEXIE: ReadonlyArray<ReadonlyArray<readonly Pt[]>> = [
+export const HEXIE: ReadonlyArray<ReadonlyArray<readonly Pt[]>> = [
   [[[0.38, 0.97], [0.08, 0.88]], [[0.04, 0.7], [0.46, 0.7]], [[0.25, 0.9], [0.25, 0.0]], [[0.24, 0.62], [0.04, 0.28]], [[0.27, 0.6], [0.44, 0.42]],
     [[0.56, 0.22], [0.56, 0.76], [0.94, 0.76], [0.94, 0.22], [0.56, 0.22]]],
   [[[0.06, 0.94], [0.16, 0.84]], [[0.02, 0.62], [0.15, 0.62], [0.15, 0.08], [0.26, 0.2]],
@@ -111,7 +111,7 @@ export const CRH3C_FACE: SeriesCabFace = {
 };
 
 /** The CRH livery: white, the thin blue band under the windows on every car, diving down the nose to its point. */
-const CRH_LIVERY: ShinkansenLivery = {
+export const CRH_LIVERY: ShinkansenLivery = {
   title: "CRH blue", number: "CRH3-037C",
   palette: {
     white: c(CRH_WHITE), blue: c(CRH_BLUE), navy: c("#1b2547"), lip: c("#b9bec2", 0.35), lens: c("#bfc6ca", 0.2), seam: c("#8d9396", 0.5),
