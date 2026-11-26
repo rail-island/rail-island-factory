@@ -270,7 +270,41 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   "2" and small markings are left out; the Cityjet's red shades are drawn as one, the white gap inside its
   red line round the mask is left out and the red line runs under the lamp boxes (the face's budget).
 
-<!-- design:westbahn-kiss -->
+### WESTbahn KISS (`proc-vehicle-westbahn-kiss`)
+
+| | |
+|---|---|
+| Built on | the series kit from Stadler's KISS base (`seriesHelpers.ts` `kiss()`, unchanged) with its own cab face, layout and paint (`atWestbahnKiss.ts`: `WESTBAHN_KISS`); one additive kit field, `endCarDoorsEach` (shinkansen.ts) and `doorBandsEach` (usTransit.ts): an end car's door leaves painted one by one |
+| Parameters | `unit` endCar (default) / middleCar / train; `cars` 2 - 6 (default 4; the class 4010's six cars the longest); one livery (WESTbahn) |
+| Figures | Stadler KISS class 4010, Bo'Bo' + 2'2' + ... + Bo'Bo', 150.0 m over the couplers as six cars and 100.36 m as four (end cars 25.36 m tip to coupling plane, middle cars 24.82 m), 2.8 m wide, 4.595 m high, wheels 920 mm, wheelbase 2.5 m; 6,000 kW (1,000 kW a car for the game, as the SBB KISS), 200 km/h, 296 t (end 62 t, middle 43 t); 501 seats (end car 70, middle car 90) |
+| Number | 4010 008 (the Melk photograph's six-car set) |
+
+- **Face** (head-on photo at about 189 px/m at the lamps): the KISS's face (the SBB KISS's profile and plan),
+  painted white: the light blue apron to 1.58 m with two big black grilles beside the coupler and a plate over
+  it, the white band with two silver-rimmed lamp pods (0.68 x 0.27 m, a round lamp inboard and an LED bar
+  outboard, 0.87 m either side) and the WESTbahn mark between them; the dark dome from 2.05 m (2.0 m wide at
+  its foot, widening to 2.36 m) to the roof with white wedges at the corners, the KISS 2's smaller
+  rectangular windscreen (1.36 x 1.1 m) and the roof lamp.
+- **Side** (a projective fit along the near side-on Wien photo, the Melk photo for the middle cars): the end
+  car's raked cab window in a dark surround, a tall cab-section window 4.0 - 4.8 m behind the tip and a
+  mid-floor one at 6.45 - 7.05 m, the first door 8.7 - 10.2 m, four lower-deck windows 11.0 - 17.7 m, six
+  upper ones 8.9 - 19.5 m, the second door 18.2 - 19.7 m, a mid-floor and a tall window over the rear bogie.
+  The middle car: a narrow window over each bogie, doors 5.5 - 7.0 and 17.3 - 18.8 m behind its end, five
+  lower and seven upper windows. Lower deck 1.36 - 2.15 m, upper 3.2 - 4.0 m, doors 0.68 - 2.8 m with a narrow
+  window (the KISS 2's single leaf). Bogies 5.5 m and 22.5 m behind the tip, the middle cars' 18.7 m apart.
+- **Paint** (the KISS 2 scheme of 2017, which the 4010 and the third series carry): light blue below 1.5 m on
+  every car; on the end car a light blue sweep rising from behind the cab to the upper deck, which stays blue
+  to the end, white ahead of it, a dark wedge under the cab's roof fairing, a white wedge over the lower
+  windows, lime behind them; a blue first door and a lime second one. The middle cars: a lime band at the
+  lower windows, white above, a lime and a blue diagonal behind the first door. Dark window bands round each
+  deck, orange door frames, a light roof. The distant end car is blue behind the white cab section.
+- **Roof**: one single-arm pantograph on each end car (the leading one raised), as the SBB KISS.
+- **References**: `assets/westbahn-kiss/` (six Commons photographs: 4010 003, 008, 023, a 4110 and the third
+  series head on; SOURCES.md). 14,424 triangles (end car), 9,078 (middle car); the six-car train 64,480.
+- **Deviations**: the windows are square (the KISS 2's rounded corners cost 1,800 triangles); the
+  "westbahn.at" name is a blue bar (the stroke font has no lower case); the roof fairings, the small slot
+  windows between the decks, the "First" lettering and the middle cars' varying diagonals (car 2 has none)
+  are not drawn; the 2011 delivery paint (white with a narrower blue sweep) is not offered.
 
 <!-- design:noevog-himmelstreppe -->
 

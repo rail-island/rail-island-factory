@@ -695,4 +695,16 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
     seats: 62,
     source: "Wikipedia (de): OBB 5047 62 seats, 2nd class only",
   },
+  "proc-vehicle-westbahn-kiss": {
+    seats: 70,
+    source: "Wikipedia (de): Stadler KISS, WESTbahn 4010 six-car 501 seats (KISS 2 523), four-car 4110 337 seats",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 90 },
+      { params: { unit: "train" }, seats: 320 },
+      { params: { unit: "train", cars: "2" }, seats: 140 },
+      { params: { unit: "train", cars: "3" }, seats: 230 },
+      { params: { unit: "train", cars: "5" }, seats: 410 },
+      { params: { unit: "train", cars: "6" }, seats: 500 },
+    ],
+  },
 };

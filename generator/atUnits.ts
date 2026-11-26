@@ -19,7 +19,8 @@ import { OBB5047_DESIGN } from "./atObb5047.ts";
 
 import { OBB5022_DESIGN } from "./atObb5022.ts";
 
-// import:westbahn-kiss
+import { WESTBAHN_KISS_DESIGN } from "./atWestbahnKiss.ts";
+export { westbahnKiss, westbahnKissLod } from "./atWestbahnKiss.ts";
 
 // import:noevog-himmelstreppe
 
@@ -42,7 +43,7 @@ export const AT_UNITS: ProceduralDesign[] = [
 
   OBB5022_DESIGN,
 
-  // design:westbahn-kiss
+  WESTBAHN_KISS_DESIGN,
 
   // design:noevog-himmelstreppe
 

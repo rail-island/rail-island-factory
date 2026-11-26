@@ -1139,6 +1139,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-obb-4020": series(56, 64, ELRL, { cars: 3, liveries: ["trafficRed"] }), // 56 / 64 / 64 seats, 184 in three cars (de.wikipedia)
   "proc-vehicle-obb-5022": series(58, 58, RAIL, { cars: 2, liveries: ["cityjet"] }),
   "proc-vehicle-obb-5047": series(62, 62, RAIL, { single: true, liveries: ["valousek"] }),
+  "proc-vehicle-westbahn-kiss": series(70, 90, ELRL, { cars: 6 }),
 };
 
 // --- the world aircraft -------------------------------------------------------------
