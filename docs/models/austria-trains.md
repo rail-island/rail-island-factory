@@ -377,7 +377,39 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-1142 -->
 
-<!-- design:obb-1110 -->
+### OBB 1110 (`proc-vehicle-obb-1110`)
+
+- **Built on**: the box locomotive kit (`generator/boxLocoKit.ts`) with its own profile tables and its
+  three-axle `bogie3`, `generator/atObb1110.ts`; no kit change. The registry re-exports `obb1110` and
+  `obb1110Lod`.
+- **Parameters**: `livery` - `firGreen` (default; 1110.21 as delivered and photographed in 1964: fir green,
+  aluminium lines, silver roof, two scissor pantographs), `bloodOrange` (the preserved 1110.505, a 1110.500:
+  cream lines, black skirt, the rheostatic brake's resistor boxes over the cabs, single-arm pantographs).
+  The roof equipment follows the livery: the ten 1110.500 were rebuilt in 1974-75, in the blood orange era.
+- **Figures** (German Wikipedia "ÖBB 1110", "ÖBB 1010"): 17.86 m over buffers, 3.09 m wide (over the
+  handrails; the walls 3.0 m), 4.26 m high, bogie centres 8.6 m, bogie wheelbase 4.1 m, wheels 1.3 m;
+  `game` 106 t, 4,000 kW, 110 km/h.
+- **Shape facts**: head-on (1110 028, 226 px/m over the 3.09 m body): roof crown 4.2 m, eave 3.81 m,
+  windscreens 2.88-3.62 m at |z| 0.17-1.11, the line under them 2.67-2.8 m all round, headlights at
+  |z| 0.94, 2.14 m in pods 0.5 m across, one red tail lamp under the right-hand headlight, the top light on
+  the roof dome. The front upright to the line, the windscreen band leaning back 0.13 m to the eave, the
+  roof doming 0.72 m back to the crown; in plan a flat face with 0.38 m round corners. The skirt from
+  1.0 m, the lower line 1.46-1.51 m.
+- **Side** (1-D projective fits on 1110 003 and 1110 023, the doors taken as symmetric): a door behind
+  each cab at |x| 6.55-7.2 with its window and handrails; between them on the left side, from +x, three
+  grilles (4.38-5.2, 3.4-4.22, 2.42-3.24), two windows (0.25-0.95, -1.75 to -1.05), a grille (-3.72 to
+  -2.95), a window (-4.72 to -4.05), a grille (-5.85 to -5.08); the right side the same turned about, as
+  the photos of both sides show. Windows and grilles 2.88-3.62/3.66 m, the grilles' louvres in the body colour.
+- **Roof**: the pantographs at |x| 4.7 (scissor) or 4.55 (single arm), the rear raised; the roof line
+  on post insulators with the main breaker in the middle; on the 1110.500 the resistor boxes |x| 5.5-7.5,
+  0.6 m high, louvred along the sides and across the front.
+- **Front paint**: the winged wheel (ring, feathers, B and B, the Umlaut dots) and the number in white.
+- **References**: `assets/obb-1110/` - 1110.505 (three-quarter), 1110 003 and 023 (both sides), 1110 028
+  (head-on), 1110.21 in 1964 (green, roof), the 1010 sisters 1010.10 (green) and 1010 003.
+- **Deviations**: the side positions come from oblique photos (no side-on view or drawing was available);
+  the 1990s "Pflatsch" emblem and the rebuilt 1110.500 fronts are not modelled; the 1010 (130 km/h) is not
+  a separate parameter; the bogies are the kit's generic three-axle bogie.
+- **Budget**: 13,590 triangles (fir green), 14,254 (blood orange); distant model within 100.
 
 <!-- design:obb-1189 -->
 

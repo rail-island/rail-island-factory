@@ -63,6 +63,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-sbb-ew4-coach": 26.4, "proc-vehicle-sbb-ic2000": 26.8, "proc-vehicle-glacier-express": 18.4,
   "proc-vehicle-obb-1144": 16.1,
   "proc-vehicle-obb-1116": 19.28,
+  "proc-vehicle-obb-1110": 17.86,
   "proc-vehicle-obb-railjet": 26.85,
 };
 
