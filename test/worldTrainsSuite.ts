@@ -39,6 +39,7 @@ const COVERED = new Set([
   "proc-vehicle-ir-wap5", "proc-vehicle-ir-wag12b",
   // aprons and nose skirts over the bogies (the Fliegender Hamburger's almost to the rail)
   "proc-vehicle-drg-svt877", "proc-vehicle-db-ice4", "proc-vehicle-ns-v250", "proc-vehicle-sbb-roter-pfeil", "proc-vehicle-cr-crh5a",
+  "proc-vehicle-cr-crh5g",
   // the CR450AF's enclosed bogies, the leading one under the nose's skirt
   "proc-vehicle-cr-cr450af",
 ]);
@@ -74,7 +75,7 @@ export function worldTrainsSuite(index: number, count: number): void {
 describe("the eight countries' trains", () => {
   if (index === 0) it("are all filed under their country", () => {
     // the plan's 160 designs and the Class 378 and the Chinese units added after it
-    expect(FAMILIES.length).toBe(173);
+    expect(FAMILIES.length).toBe(174);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);

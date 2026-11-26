@@ -386,6 +386,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 624 },
     ],
   },
+  "proc-vehicle-cr-crh5g": {
+    seats: 56,
+    source: "Wikipedia (zh): CRH5G 613 seats, cars 48 / 90 / 90 / 77 / 63 / 90 / 90 / 65; the end cars' mean, the intermediate cars' mean; seats only",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 83 },
+      { params: { unit: "train" }, seats: 278 },
+      { params: { unit: "train", cars: "2" }, seats: 112 },
+      { params: { unit: "train", cars: "3" }, seats: 195 },
+      { params: { unit: "train", cars: "5" }, seats: 361 },
+      { params: { unit: "train", cars: "6" }, seats: 444 },
+      { params: { unit: "train", cars: "7" }, seats: 527 },
+      { params: { unit: "train", cars: "8" }, seats: 610 },
+    ],
+  },
   "proc-vehicle-cr-cr450af": {
     seats: 32,
     source: "china-emu.cn: CR450AF-0201 552 seats, end cars 30 and 34 (first and business), intermediate cars 63 - 90; seats only",
