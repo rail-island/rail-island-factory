@@ -29,18 +29,20 @@ const BAND = "#3b3936";
 const CANOPY = "#1d2128";
 
 /**
- * The nose's centre line: the skirt's foot 0.25 m up 2.2 m back, the coupler hatch's rounded front
- * 1.05 m up at the tip, its top seam 1.45 m up 1.3 m back, then the long rise over the windscreen
- * (1.85 m 2.3 m back, 2.4 m at 3.4 m, 2.95 m at 4.6 m) to the roof's full 3.85 m about 8 m back.
+ * The nose's centre line (measured on the side-on photograph, about 54 px/m at the tip): the underside
+ * running back almost level from the hatch (0.59 m up 0.6 m back, 0.39 m at 1.8 m, the skirt's 0.25 m
+ * at 4.2 m), the coupler hatch a blunt rounded bullet 0.77 - 1.32 m tall 0.24 m back, its front
+ * round 1.03 m up at the tip, its top 1.47 m up 0.54 m back, then the long rise over the windscreen
+ * (1.78 m 1.8 m back, 2.4 m at 3.4 m, 2.95 m at 4.6 m) to the roof's full 3.85 m about 8 m back.
  */
 const PROFILE: Pt[] = [
-  [0.25, 2.2], [0.42, 1.65], [0.6, 1.1], [0.77, 0.42], [0.9, 0.14], [1.05, 0], [1.2, 0.13], [1.34, 0.55],
-  [1.47, 1.2], [1.65, 1.75], [1.85, 2.3], [2.12, 2.85], [2.4, 3.42], [2.68, 4.0], [2.95, 4.6], [3.2, 5.1],
+  [0.25, 4.2], [0.33, 2.6], [0.39, 1.82], [0.46, 1.25], [0.59, 0.63], [0.77, 0.24], [0.86, 0.1], [0.95, 0.02], [1.03, 0], [1.12, 0.02], [1.2, 0.07], [1.32, 0.24],
+  [1.47, 0.54], [1.6, 1.25], [1.78, 1.82], [1.9, 2.3], [2.12, 2.85], [2.4, 3.42], [2.68, 4.0], [2.95, 4.6], [3.2, 5.1],
   [3.42, 5.6], [3.6, 6.2], [3.72, 6.8], [3.8, 7.5], [3.84, 8.3], [3.85, JOIN],
 ];
 
 /** How far behind the centre line the plan reaches the body's width, by height: a nose tapering to its narrow hatch. */
-const DEPTH: Pt[] = [[0.25, 5.6], [0.9, 6.2], [1.5, 6.4], [2.0, 6.0], [2.5, 5.4], [3.0, 4.6], [3.4, 3.6], [3.7, 2.4], [3.85, 0.05]];
+const DEPTH: Pt[] = [[0.25, 5.0], [0.6, 4.6], [1.0, 4.6], [1.4, 4.9], [1.8, 5.6], [2.2, 5.8], [2.5, 5.4], [3.0, 4.6], [3.4, 3.6], [3.7, 2.4], [3.85, 0.05]];
 const edge = (pts: readonly Pt[], y: number): number => {
   if (y <= pts[0]![0]) return pts[0]![1];
   for (let i = 1; i < pts.length; i++) if (y <= pts[i]![0]) { const [a, b] = [pts[i - 1]!, pts[i]!]; return a[1] + ((y - a[0]) / (b[0] - a[0])) * (b[1] - a[1]); }
@@ -63,27 +65,27 @@ const TOPWIN_BACK: Pt[] = [[3.14, 6.85], [3.33, 6.95]];
 /** The cab side window in the band's point, its front leaning back with the chevron. */
 const CABWIN_FRONT: Pt[] = [[2.17, 6.85], [2.68, 7.95]];
 const CABWIN_BACK: Pt[] = [[2.17, 8.2], [2.68, 8.2]];
-const grow = (front: readonly Pt[], back: readonly Pt[], k: number) => ({ front: front.map(([y, d], i): Pt => [y + (i === 0 ? -k : i === front.length - 1 ? k : 0), d - k]), back: back.map(([y, d], i): Pt => [y + (i === 0 ? -k : i === back.length - 1 ? k : 0), d + k]) });
 
-/** The coupler hatch's seam seen head-on: a thin dark ring segment round its sides and foot (about 1.2 m behind the tip at its sides). */
+/** The coupler hatch's seam seen head-on: two thin dark arcs down its sides (about 1.25 m behind the tip), none across its front or foot. */
 const HATCH_SEAM = Array.from({ length: 12 }, (_, i) => {
-  const at = (a: number, k: number): Pt => [Math.cos(a) * 0.95 * k, 1.04 + Math.sin(a) * 0.42 * k];
-  const [a0, a1] = [((160 + (220 * i) / 12) * Math.PI) / 180, ((160 + (220 * (i + 1)) / 12) * Math.PI) / 180];
-  return { mat: "under", pts: [at(a0, 0.955), at(a1, 0.955), at(a1, 1.0), at(a0, 1.0)], fine: 2 };
+  const at = (a: number, k: number): Pt => [Math.cos(a) * 1.2 * k, 1.04 + Math.sin(a) * 0.43 * k];
+  const a = (j: number) => ((j < 6 ? -55 + (110 * j) / 6 : 125 + (110 * (j - 6)) / 6) * Math.PI) / 180;
+  const [a0, a1] = [a(i), i === 5 ? (55 * Math.PI) / 180 : i === 11 ? (235 * Math.PI) / 180 : a(i + 1)];
+  return { mat: "under", pts: [at(a0, 0.97), at(a1, 0.97), at(a1, 1.0), at(a0, 1.0)], fine: 2 };
 });
 
 /** The distant model's centre line: the same nose from fewer rows. */
-const LOD_PROFILE: Pt[] = [[0.25, 2.2], [0.6, 1.1], [0.9, 0.14], [1.05, 0], [1.34, 0.55], [1.65, 1.75], [2.12, 2.85], [2.68, 4.0], [3.2, 5.1], [3.6, 6.2], [3.8, 7.5], [3.85, JOIN]];
+const LOD_PROFILE: Pt[] = [[0.25, 4.2], [0.46, 1.25], [0.77, 0.24], [1.03, 0], [1.32, 0.24], [1.6, 1.25], [2.12, 2.85], [2.68, 4.0], [3.2, 5.1], [3.6, 6.2], [3.8, 7.5], [3.85, JOIN]];
 
-const ROWS = [0.25, 0.6, 0.9, 1.05, 1.25, 1.47, 1.85, 2.4, 2.95, 3.42, 3.72, 3.85];
+const ROWS = [0.25, 0.46, 0.59, 0.77, 0.9, 1.03, 1.2, 1.32, 1.47, 1.78, 2.12, 2.4, 2.95, 3.42, 3.72, 3.85];
 
 export const CR450AF_FACE: SeriesCabFace = {
   dJoin: JOIN, reach: 0.07, first: 8.53, roofFrom: 9, cols: [1, 8, 1, 1], tolerance: 0.1, wrap: true,
   profile: PROFILE,
   // a round, narrow hatch low down; a broad, gently bowed top over it under the canopy
-  corner: [[0.25, 2.0], [1.4, 2.0], [1.7, 1.3], [2.1, 1.0], [2.5, 0.85], [3.0, 0.85], [3.4, 0.9], [3.7, 1.5], [3.85, 2.0]],
+  corner: [[0.25, 1.3], [0.6, 1.0], [1.3, 1.0], [1.55, 1.1], [1.8, 1.2], [2.1, 1.0], [2.5, 0.85], [3.0, 0.85], [3.4, 0.9], [3.7, 1.5], [3.85, 2.0]],
   cornerDepth: CORNER_DEPTH,
-  bulge: [[0.25, 0], [1.4, 0], [1.7, 0.08], [2.4, 0.14], [3.2, 0.14], [3.6, 0.07], [3.85, 0]],
+  bulge: [[0.25, 0.15], [0.6, 0.28], [1.3, 0.28], [1.6, 0.2], [2.0, 0.14], [2.4, 0.14], [3.2, 0.14], [3.6, 0.07], [3.85, 0]],
   rows: ROWS,
   // silver (the dark skirt from 5 m back is painted); the canopy, lamps and windows are painted below, the livery's sweeps under them
   bands: () => [[0, 9, "silver"]],
@@ -94,15 +96,20 @@ export const CR450AF_FACE: SeriesCabFace = {
     // the dark canopy from the hatch's top over the windscreen and back over the cab to the roof
     { mat: "canopy", front: [[1.46, -9], [4.0, -9]], back: CANOPY_BACK },
     // the red line along its edge
-    { mat: "red", front: shift(RED_LINE, -0.22), back: RED_LINE.map(([y, d]): Pt => [y, d + 0.02]) },
-    // the headlamp, the small canopy window and the cab side window, each in a thin dark rim
+    // (as two fills, red up to the line's back edge and the canopy again up to its front edge: a thin strip
+    // painted on its own would fill across the corner where the surface runs nearly along the line)
+    { mat: "red", front: [[RED_LINE[0]![0], -9], [RED_LINE[RED_LINE.length - 1]![0], -9]], back: shift(RED_LINE, 0.04) },
+    { mat: "canopy", front: [[RED_LINE[0]![0], -9], [RED_LINE[RED_LINE.length - 1]![0], -9]], back: shift(RED_LINE, -0.04) },
+    // the headlamp, the small canopy window and the cab side window
     { mat: "lampHead", front: LAMP_FRONT, back: LAMP_BACK },
-    { mat: "frameDark", ...grow(TOPWIN_FRONT, TOPWIN_BACK, 0.035) },
     { mat: "cabGlass", front: TOPWIN_FRONT, back: TOPWIN_BACK },
-    { mat: "frameDark", ...grow(CABWIN_FRONT, CABWIN_BACK, 0.04) },
     { mat: "cabGlass", front: CABWIN_FRONT, back: CABWIN_BACK },
     // the dark skirt along the cab sides from 5 m behind the tip, the nose silver ahead of it
     { mat: "skirtG", front: [[0.2, 5.0], [0.9, 5.0]], back: [[0.2, 99], [0.9, 99]] },
+    // the crease along the nose's lower flank (a line in the paint, not a step): the flank under it in
+    // shade from the hatch back to the skirt, its back edge falling from the crease 2.7 m back to the skirt
+    // 5 m back: the silver "wing" above it points forward under the red chevron
+    { mat: "silverShade", front: [[0.2, 1.28], [1.0, 1.28]], back: [[0.2, 5.0], [0.9, 5.0], [1.0, 2.7]] },
   ],
   // the windscreen: one broad rounded pane in the canopy, in a thin dark rim
   masks: [{ lat: [-0.95, 0.95], y: [1.9, 3.12], r: 0.36, mat: "frameDark" }],
@@ -113,12 +120,12 @@ export const CR450AF_FACE: SeriesCabFace = {
     ...HATCH_SEAM,
     // China Railway's emblem in gold on the canopy under the windscreen: a ring over a rail's foot
     ...Array.from({ length: 10 }, (_, i) => {
-      const at = (a: number, k: number): Pt => [Math.cos(a) * 0.16 * k, 1.66 + Math.sin(a) * 0.07 * k];
+      const at = (a: number, k: number): Pt => [Math.cos(a) * 0.2 * k, 1.76 + Math.sin(a) * 0.085 * k];
       const [a0, a1] = [(2 * Math.PI * i) / 10, (2 * Math.PI * (i + 1)) / 10];
       return { mat: "gold", pts: [at(a0, 0.72), at(a1, 0.72), at(a1, 1.0), at(a0, 1.0)], fine: 1 };
     }),
-    { mat: "gold", pts: [[-0.022, 1.565], [0.022, 1.565], [0.022, 1.66], [-0.022, 1.66]], fine: 1 },
-    { mat: "gold", pts: [[-0.09, 1.565], [0.09, 1.565], [0.09, 1.585], [-0.09, 1.585]], fine: 1 },
+    { mat: "gold", pts: [[-0.027, 1.645], [0.027, 1.645], [0.027, 1.76], [-0.027, 1.76]], fine: 1 },
+    { mat: "gold", pts: [[-0.11, 1.645], [0.11, 1.645], [0.11, 1.67], [-0.11, 1.67]], fine: 1 },
   ],
 };
 
@@ -142,7 +149,7 @@ function cr450afLivery(): ShinkansenLivery {
     palette: {
       silver: c(SILVER, 0.28), red: c(CR_RED), orange: c(ORANGE), band: c(BAND, 0.3), canopy: c(CANOPY, 0.2),
       gold: c("#d8a53a", 0.35), white: c("#f2f2ef"), frameDark: c("#101215", 0.4),
-      roofG: c("#b8bbbe", 0.45), skirtG: c("#55585c", 0.7), cabMask: c("#15181c", 0.3),
+      roofG: c("#b8bbbe", 0.45), skirtG: c("#55585c", 0.7), silverShade: c("#a6aaae", 0.3), cabMask: c("#15181c", 0.3),
     },
     bands: BANDS, doors: DOOR_BANDS, endCarDoors: BANDS,
     roof: "roofG", skirt: "skirtG",
