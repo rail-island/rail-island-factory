@@ -9,7 +9,7 @@
 // See docs/models/china-units.md, "The CRH1A's body".
 //
 // Heights over the rail, d behind the nose's tip (the lower nose's front, 1.0 m up). The constants
-// are exported for the CRH1E sleeper, which shares this face and body.
+// are exported for the CRH1E sleeper, which shares the body (its nose is its own, cnCrh1e.ts).
 
 import type { MeshBuilder } from "./meshBuilder.ts";
 import type { Ring } from "./meshCore.ts";
@@ -116,7 +116,7 @@ const VENT: Array<{ mat: string; pts: Pt[]; fine: number }> = [0.82, 0.87, 0.92,
   { mat: "seam", pts: [[-1.3, y], [-1.1, y], [-1.1, y + 0.025], [-1.3, y + 0.025]] as Pt[], fine: 2 },
 ]);
 
-/** The cab face shared by the CRH1A and the original CRH1E. */
+/** The CRH1A's cab face (the CRH1E has its own nose, cnCrh1e.ts). */
 export const CRH1A_FACE: SeriesCabFace = {
   // the skirt's cut over the leading bogie (3.8 m behind the tip, 2.7 m wheelbase) runs on into the face
   wheelCut: { d: 3.8 - 1.95, y: A },
