@@ -19,6 +19,7 @@ import { crHxd3dBody, crHxd3dBodyLod } from "./cnHxd3d.ts";
 import { crSs1, crSs1Lod } from "./cnSs1.ts";
 import { buildDf11, buildDf11Lod } from "./cnDf11.ts";
 import { crHxd3c, crHxd3cLod } from "./cnHxd3c.ts";
+export { crHxd3c, crHxd3cLod };
 import { crHxd2, crHxd2Lod } from "./cnHxd2.ts";
 import { crSs4, crSs4Lod } from "./cnSs4.ts";
 import { buildDf8b, buildDf8bLod } from "./cnDf8b.ts";

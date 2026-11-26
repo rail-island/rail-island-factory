@@ -26,6 +26,7 @@ import { CRH380D } from "./cnCrh380d.ts";
 import { CRH1A } from "./cnCrh1a.ts";
 import { CRH3A } from "./cnCrh3a.ts";
 import { CHINA_STAR_DESIGN } from "./cnChinaStar.ts";
+export { chinaStar, chinaStarLod } from "./cnChinaStar.ts";
 import { CRH6F } from "./cnCrh6f.ts";
 import { CRH5G } from "./cnCrh5g.ts";
 import { CRH2G } from "./cnCrh2g.ts";
