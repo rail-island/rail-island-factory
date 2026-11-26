@@ -86,7 +86,9 @@ workshop. A draft's page shows a **Workshop draft** badge above its export butto
 one (the table's and cards' thumbnail, the model page's Specs tab) it renders the
 default variant from the JS model in the browser (`VariantThumb`, `variantThumbs.ts`),
 as `pnpm dev` does for every model: only once the box scrolls into view, and cached in
-the browser keyed on the model's JS hash.
+the browser keyed on the model's JS hash. A thumbnail whose record is replaced with
+the same key (a `pnpm dev` measurement) keeps its image; only a new key (another
+variant, a rebuilt model) shows the placeholder again and renders.
 
 ## Web links
 

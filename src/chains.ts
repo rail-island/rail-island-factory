@@ -34,6 +34,22 @@ export const COMMODITY_KIND: Readonly<Record<Commodity, CommodityKind>> = {
 /** What the chain reads of a record. */
 export type ChainRecord = Pick<CatalogRecord, "id" | "title" | "draft" | "params" | "game">;
 
+/**
+ * Whether two record lists draw the same graph: the same records in the same order
+ * with the same fields `chainGraph` reads (by reference). Under `pnpm dev` the page
+ * replaces records as it measures them (`{ ...record, ...measured }`), which keeps
+ * these fields; rebuilding the graph then would remount every card and restart its
+ * thumbnail (docs/site/chains.md).
+ */
+export function sameChainInput(a: readonly ChainRecord[] | null, b: readonly ChainRecord[] | null): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  return a.every((r, i) => {
+    const o = b[i]!;
+    return r === o || (r.id === o.id && r.title === o.title && r.draft === o.draft && r.params === o.params && r.game === o.game);
+  });
+}
+
 /** "iron-ore" -> "Iron ore". */
 export function commodityLabel(c: string): string {
   const s = c.replace(/-/g, " ");

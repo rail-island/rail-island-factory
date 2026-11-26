@@ -20,7 +20,7 @@ import { ModelVariants } from "./ModelVariants";
 import { ModelDetail } from "./ModelDetail";
 import { ExportPanel } from "./ExportPanel";
 import { ChainsView } from "./ChainsView";
-import { chainGraph } from "./chains";
+import { chainGraph, nodeCards, sameChainInput } from "./chains";
 import { EMPTY_EXPORT, addEntry, entryFor, hasEntry, loadExport, saveExport, type ExportState } from "./exportList";
 import logoUrl from "./rail-island-logo.webp";
 
@@ -115,7 +115,19 @@ export function App() {
   const counts = createMemo((): Partial<Record<Section, number>> => ({ catalog: sectionRows(rows() ?? [], "catalog").length, workshop: sectionRows(rows() ?? [], "workshop").length }));
   // The Chains tab's graph (chains.ts, docs/site/chains.md): built from the records once the tab is first shown.
   const onChains = createMemo(() => section() === "chains");
-  const graph = createMemo(() => (onChains() && rows() ? chainGraph(rows()!) : null));
+  // A dev measurement replaces records without touching what the graph reads: keep the graph (and its cards) then.
+  const chainInput = createMemo(() => (onChains() ? (rows() ?? null) : null), null, { equals: sameChainInput });
+  const graph = createMemo(() => {
+    const list = chainInput();
+    return list ? chainGraph(list) : null;
+  });
+  /** The models the Chains tab's picked node shows as cards: measured first under `pnpm dev`. */
+  const chainCardIds = createMemo(() => {
+    const g = graph();
+    const id = view().chain;
+    if (!g || !id) return [];
+    return nodeCards(g, id).flatMap((c) => [...(c.buildings ?? []), ...(c.vehicles ?? [])].map((x) => x.id));
+  });
   const chainPatch = (chain: string | null): Partial<ViewState> => ({ section: "chains", chain });
   const listed = createMemo(() => queryRows(inSection(), view().q, view().sort, view().dir, view()));
   // What each chip row offers, from every model of the section rather than the
@@ -202,7 +214,8 @@ export function App() {
   };
 
   // `pnpm dev` lists every model unmeasured (generator/devExport.ts): measure them
-  // from their JS models in the browser, the open model first, then as listed.
+  // from their JS models in the browser, the open model first, then the Chains tab's
+  // picked node's cards, then as listed.
   if (import.meta.env.DEV) {
     let started = false;
     createEffect(() => {
@@ -213,7 +226,10 @@ export function App() {
           (skip) => {
             const wanted = (r: Row | undefined) => r?.pending && !skip.has(r.id);
             const opened = open();
-            return wanted(opened) ? opened : (listed().find(wanted) ?? (rows() ?? []).find(wanted));
+            if (wanted(opened)) return opened;
+            const all = rows() ?? [];
+            const chainCard = chainCardIds().map((id) => all.find((r) => r.id === id)).find(wanted);
+            return chainCard ?? listed().find(wanted) ?? all.find(wanted);
           },
           (measured) => mutate((list) => list?.map((r) => measured.get(r.id) ?? r)),
         ),

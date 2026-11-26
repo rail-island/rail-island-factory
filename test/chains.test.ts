@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import { COMMODITIES, COMMODITY_KINDS } from "../generator/traffic.ts";
-import { COMMODITY_KIND, COMMODITY_ORDER, LAYOUT, chainGraph, carriers, commodityLabel, nodeCards, selectionsOf, type ChainRecord } from "../src/chains";
+import { COMMODITY_KIND, COMMODITY_ORDER, LAYOUT, chainGraph, carriers, commodityLabel, nodeCards, sameChainInput, selectionsOf, type ChainRecord } from "../src/chains";
 
 type Game = NonNullable<ChainRecord["game"]>;
 
@@ -191,3 +191,18 @@ function order(title: string): number {
   const ends: Record<string, number> = { "Coal -> Power plant": 2, "Food -> Towns": 5, "Wood + Coal + Iron ore -> Steel -> Goods -> Towns": 8, "Oil -> Fuel -> Towns, Power plant": 7, "Mail: town to town": 99 };
   return ends[title]!;
 }
+
+describe("the graph's input under pnpm dev", () => {
+  // regression: every dev measurement replaced the records, rebuilt the graph and
+  // remounted the panel's cards, so their thumbnails blinked and queued again
+  it("is the same when records are only measured, and differs when the chain changes", () => {
+    const measured = CATALOG.map((r) => ({ ...r, triangles: 1234, jsHash: "abc" }) as ChainRecord);
+    expect(sameChainInput(CATALOG, measured)).toBe(true);
+    const retitled = CATALOG.map((r, i) => (i === 0 ? { ...r, title: "Other" } : r));
+    expect(sameChainInput(CATALOG, retitled)).toBe(false);
+    const regamed = CATALOG.map((r, i) => (i === 0 ? { ...r, game: { ...r.game } } : r));
+    expect(sameChainInput(CATALOG, regamed)).toBe(false);
+    expect(sameChainInput(CATALOG, CATALOG.slice(1))).toBe(false);
+    expect(sameChainInput(null, CATALOG)).toBe(false);
+  });
+});

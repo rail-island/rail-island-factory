@@ -1,7 +1,7 @@
 # The Chains tab
 
 **Covers** - the site's Chains tab next to Workshop: the supply-chain graph on a wide screen (three bands, the mail loop) with its side panel, the cards a node opens, the phone's list of chains, how the graph is derived and laid out from the catalog's records, its URL and its tests.
-**Code** - `src/chains.ts` (`chainGraph`, `nodeCards`, `carriers`, `selectionsOf`, `COMMODITY_ORDER`, `COMMODITY_KIND`, `LAYOUT`), `src/ChainsView.tsx`, `src/App.tsx`, `src/catalogQuery.ts` (`Section`, `SECTIONS`, `sectionLabel`, `ViewState.chain`), `src/factory.css` (`factory-chains*`, `factory-chaincard*`, `factory-chainlist*`), `vite.config.ts` (the test-mode server compile), `test/chains.test.ts`, `test/chainsView.test.ts`, `test/catalogQuery.test.ts`
+**Code** - `src/chains.ts` (`chainGraph`, `nodeCards`, `sameChainInput`, `carriers`, `selectionsOf`, `COMMODITY_ORDER`, `COMMODITY_KIND`, `LAYOUT`), `src/ChainsView.tsx`, `src/VariantThumb.tsx`, `src/App.tsx`, `src/catalogQuery.ts` (`Section`, `SECTIONS`, `sectionLabel`, `ViewState.chain`), `src/factory.css` (`factory-chains*`, `factory-chaincard*`, `factory-chainlist*`), `vite.config.ts` (the test-mode server compile), `test/chains.test.ts`, `test/chainsView.test.ts`, `test/catalogQuery.test.ts`
 **See also** - [../models/traffic.md](../models/traffic.md) (the commodities, roles and recipes the tab draws), [catalog-site.md](catalog-site.md), [workshop.md](workshop.md), [seo-pages.md](seo-pages.md)
 
 ## What it shows
@@ -125,6 +125,14 @@ by its numbers alone.
   made from nothing.
 - **Carriers.** A vehicle carries a commodity when a selection with `tonnes > 0` lists
   it.
+
+- **Under `pnpm dev`** the page measures the records in the browser one batch at a
+  time and replaces each measured record ([workshop.md](workshop.md), `devMeasure.ts`).
+  The graph is rebuilt only when what it reads changes (`sameChainInput`: the
+  records' ids, titles, drafts, parameters and `game` blocks), so a measurement never
+  remounts the panel's cards; a card reads its record again and its thumbnail
+  (`VariantThumb`) restarts only when its render key changes. The picked node's cards
+  are measured first, after the open model and before the list.
 
 ### Layout
 
