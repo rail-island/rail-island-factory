@@ -54,6 +54,7 @@
     "proc-vehicle-avia-a31": 374,
     "proc-vehicle-bac-111": 549,
     "proc-vehicle-bae-146": 550,
+    "proc-vehicle-bbo-214": 853,
     "proc-vehicle-bedford-tk": 389,
     "proc-vehicle-beech-king-air": 606,
     "proc-vehicle-belaz-75710": 386,
@@ -938,6 +939,18 @@
       },
       "proc-vehicle-animal-rail-trolley?team=none": {
         "id": 10190,
+        "size": 4
+      },
+      "proc-vehicle-bbo-214?": {
+        "id": 10754,
+        "size": 4
+      },
+      "proc-vehicle-bbo-214?formation=with tender": {
+        "id": 10762,
+        "size": 6
+      },
+      "proc-vehicle-bbo-214?unit=tender": {
+        "id": 10758,
         "size": 4
       },
       "proc-vehicle-blue-train-24?": {
