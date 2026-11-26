@@ -137,7 +137,7 @@ When the user asks for more than one vehicle (a list, a fleet, "each model from 
    earlier ones finish, or accept slower downloads.
 2. **A shared brief file** in the scratchpad, read by every agent: the goal (match the photos), the
    references rule (section 1), the scripts, the kit's options and the rule to extend it additively with a
-   hash check, "do not touch build-cache, do not run `pnpm build:models` or the full `pnpm test`, do not
+   hash check, "do not touch build-cache, do not run `pnpm build:models`, `pnpm test` or `pnpm test:full`, do not
    push, commit on your branch", the check loop (section 4) with "at least three rounds", the mistakes
    list (section 5), and the report format (what changed with measurements, sheet paths, checklist
    result, what still differs, branch and commits). Add each vehicle's own facts and every piece of user
@@ -155,8 +155,9 @@ When the user asks for more than one vehicle (a list, a fleet, "each model from 
    with the acceptance check: each vehicle hashes (`scripts/hash.mts`) identically to its own branch tip
    and every other kit design identically to the base.
 6. **Then once**: `pnpm build:models` (it also rejects z-fighting the agents' sampled tests missed), commit
-   `build-cache/`, `pnpm exec tsc --noEmit -p .`, the full `pnpm test`, and compare its duration with the
-   base branch on the same machine (the suite must stay under five minutes; heavier models cost time -
-   speed the kit up, byte-identically, rather than drop checks). Look at every model once more in one
+   `build-cache/`, `pnpm exec tsc --noEmit -p .`, `pnpm test` (the quick suite: under two minutes) and
+   the family suites the vehicles touch by name (`pnpm test test/<suite>.test.ts`, which runs a full-only
+   suite too); `pnpm test:full` only when the user asks. Heavier models cost time - speed the kit up,
+   byte-identically, rather than drop checks. Look at every model once more in one
    overview sheet, then push. Merge to `master` only when the user asks; fetch it first and merge it in
    (`pnpm cache:resolve` for build-cache conflicts).

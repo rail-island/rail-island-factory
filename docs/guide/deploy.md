@@ -30,7 +30,7 @@ There is one environment. The site is public and has no sign-in.
 | Workflow | Runs on | Does |
 |---|---|---|
 | `deploy.yml` | push to `master`, or by hand on any branch | restores the last `export/` from the Actions cache, `pnpm build`, then `wrangler deploy` ([build-cache.md](build-cache.md)) |
-| `test.yml` | by hand only, on any branch | `pnpm typecheck`, then `pnpm test` (even if the typecheck failed) |
+| `test.yml` | by hand only, on any branch | `pnpm typecheck`, then `pnpm test` - or `pnpm test:full` when the run's `suite` input says `full` - even if the typecheck failed ([setup-and-build.md](setup-and-build.md), "Quick and full") |
 
 Pushes to `master` run only the deploy: the tests are not run there, so run
 `pnpm typecheck` and `pnpm test` locally before landing a change, or dispatch

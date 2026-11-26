@@ -12,7 +12,9 @@ import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import type { CatalogRecord } from "../src/catalogQuery";
 import { checkOpenttdProperties, OPENTTD_REQUIRED_FACTS, type ProceduralDesign } from "../generator/design";
-import { ALL_VEHICLES, catalogFields, checkOpenttdDesign, DESIGNS } from "../generator/generate";
+import { ALL_VEHICLES, catalogFields, checkOpenttdDesign, designKeys, DESIGNS, toGlb } from "../generator/generate";
+import { BUILD_CACHE_DIR, BuildCache, paramsKey } from "../generator/buildCache";
+import { glbStats } from "../generator/glbStats";
 import { catalogOpenttd, deriveBalance, openttdFeatureOf } from "../generator/openttd";
 import { OPENTTD_TABLE } from "../generator/openttdTable";
 import { anchorRgb, ANCHOR_COPIES, MASK, maskImages, readAnchor } from "../generator/openttdScenes/markers";
@@ -51,8 +53,26 @@ describe("every vehicle a GRF can hold", () => {
   // one test a design: a single test measuring them all ran over a minute, past the worker's report timeout
   describe("measures its formations' parts on the built cars", () => {
     const withFormations = exportable.filter((d) => d.openttd?.formations?.length);
+    // as the build measures them (generate.ts): a car's length stored in build-cache/ under the
+    // design's current key, else measured on the built car - so a changed model is still measured,
+    // and a current one is not built again (test/buildCache.test.ts keeps the stored ones current)
+    const cache = new BuildCache(BUILD_CACHE_DIR);
+    const keys = designKeys(withFormations);
+    const measured = (d: ProceduralDesign, params: Record<string, string>): number[] => {
+      const stats = glbStats(toGlb(d.id, d.build(params)));
+      return stats.max.map((v, i) => v - stats.min[i]!);
+    };
     it("more than fifteen designs offer formations", () => expect(withFormations.length).toBeGreaterThan(15));
-    for (const d of withFormations) it(d.id, () => expect(() => checkOpenttdDesign(d), d.id).not.toThrow());
+    it("measures the first one's cars on the built models, as stored in the build cache", () => {
+      const d = withFormations[0]!;
+      expect(() => checkOpenttdDesign(d), d.id).not.toThrow();
+      const stored = cache.get(d.id, keys.get(d.id) ?? null);
+      for (const car of d.openttd!.formations!.flatMap((f) => f.cars)) {
+        const known = stored?.extents[paramsKey(car.params)];
+        if (known) expect(known[0]!, `${d.id} ${paramsKey(car.params)}`).toBeCloseTo(measured(d, car.params)[0]!, 6);
+      }
+    });
+    for (const d of withFormations) it(d.id, () => expect(() => checkOpenttdDesign(d, (params) => cache.extents(d.id, keys.get(d.id) ?? null, params, () => measured(d, params))[0]!), d.id).not.toThrow());
   });
 });
 

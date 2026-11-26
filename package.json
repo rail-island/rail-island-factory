@@ -13,6 +13,7 @@
     "build": "pnpm build:models && pnpm build:parade && tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:full": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "deploy": "pnpm build && wrangler deploy",

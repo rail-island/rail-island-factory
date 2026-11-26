@@ -79,6 +79,6 @@ joints, the silhouette of the back and neck. Barrel rings are cheap to cut with 
    a side view, a head close-up (front, side, three-quarter) and the gait at four phases
    (pose the GLB's nodes from the `gait` clip, then rasterize with `rasterize` from
    `generator/renderGlbThumb.ts`), and one vehicle with its biggest team.
-5. `pnpm typecheck`, `pnpm test` (test/animalDrawn.test.ts), commit `build-cache/`.
+5. `pnpm typecheck`, `pnpm test` and `pnpm test test/animalDrawn.test.ts` (a full-only suite, run by name), commit `build-cache/`.
 6. Send the user the images (AGENTS.md, "Show the user the model") and update
    `docs/models/draft-animals.md`.

@@ -466,14 +466,18 @@ describe("categories and play order", () => {
   it("plays every chain once per round, never two of one category in a row, across rounds too", () => {
     const trains = resolveTrains(TRAIN_PARADE, FACTORY_TRAIN_CONTEXT).map((t) => ({ id: t.id, category: t.category }));
     let last: { id: string; category: string } | null = null;
+    const ids = trains.map((t) => t.id).sort().join(",");
+    // the failures collected, one expect at the end (an expect per pair cost seconds over the rounds)
+    const problems: string[] = [];
     for (let round = 0; round < 2000; round++) {
       // the first round opens as PARADE_OPENING says; every later one is the plain spread
       const order: { id: string; category: string }[] = playOrder(trains, last, seeded(round + 1), round === 0 ? PARADE_OPENING : null);
-      expect(order.map((t) => t.id).sort()).toEqual(trains.map((t) => t.id).sort());
-      if (last) expect(order[0]!.category).not.toBe(last.category);
-      for (let i = 1; i < order.length; i++) expect(order[i]!.category).not.toBe(order[i - 1]!.category);
+      if (order.map((t) => t.id).sort().join(",") !== ids) problems.push(`round ${round}: not every chain once`);
+      if (last && order[0]!.category === last.category) problems.push(`round ${round}: opens with ${last.category} again`);
+      for (let i = 1; i < order.length; i++) if (order[i]!.category === order[i - 1]!.category) problems.push(`round ${round}: ${order[i]!.category} twice at ${i}`);
       last = order[order.length - 1]!;
     }
+    expect(problems.slice(0, 10)).toEqual([]);
   });
 
   it("spreads a category evenly over the round", () => {

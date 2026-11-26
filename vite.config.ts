@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-import { readFileSync } from "node:fs";
+import fs, { readFileSync } from "node:fs";
 import { buildSync } from "esbuild";
 import { defineConfig, type Plugin } from "vite";
 import solid from "vite-plugin-solid";
@@ -99,6 +99,69 @@ function assetHeaders(): Plugin {
 // it stands, so the deployed site serves the very files the game would import.
 // `pnpm dev` uses no export folder: generator/devServer.ts serves the data on
 // demand and the browser measures and renders the rest (docs/site/catalog-site.md).
+/**
+ * The suites only the full run (`pnpm test:full`, on demand) runs: the whole-catalog
+ * sweeps and the heaviest family suites, each over ten seconds of a worker's time.
+ * `pnpm test` runs every other file - the quick suite, under two minutes
+ * (docs/guide/setup-and-build.md, "Quick and full"). A new suite that takes more
+ * than that joins this list.
+ */
+export const FULL_ONLY_TESTS: readonly string[] = [
+  "test/airfield.test.ts",
+  "test/animalDrawn.test.ts",
+  "test/buses.test.ts",
+  "test/catalog-*.test.ts",
+  "test/cd230.test.ts",
+  "test/characters.test.ts",
+  "test/csdCoaches.test.ts",
+  "test/czechEmus.test.ts",
+  "test/czechEmusClassic.test.ts",
+  "test/doors*.test.ts",
+  "test/emitters.test.ts",
+  "test/export.test.ts",
+  "test/foreignUnits.test.ts",
+  "test/glass.test.ts",
+  "test/interiors.test.ts",
+  "test/loads.test.ts",
+  "test/lod.test.ts",
+  "test/models.test.ts",
+  "test/mtrMTrain.test.ts",
+  "test/openttdOneClick.test.ts",
+  "test/pantographs.test.ts",
+  "test/plazaLandmarks.test.ts",
+  "test/railSupports.test.ts",
+  "test/rig.test.ts",
+  "test/rolling.test.ts",
+  "test/seriesCabFace.test.ts",
+  "test/stationSet.test.ts",
+  "test/trainParade.test.ts",
+  "test/trams.test.ts",
+  "test/treeSpecies.test.ts",
+  "test/usCarbodies.test.ts",
+  "test/woods.test.ts",
+  "test/worldAircraft.test.ts",
+  "test/worldBuses2.test.ts",
+  "test/worldTrains*.test.ts",
+  "test/worldTrams.test.ts",
+  "test/worldTrucks.test.ts",
+];
+
+/**
+ * A run's file filters (`pnpm test test/buses.test.ts`, `pnpm test buses`): Vitest applies
+ * `exclude` before them, so a named full-only suite would match nothing without this.
+ */
+const TEST_FILES = fs.existsSync("test") ? fs.readdirSync("test").filter((f) => f.endsWith(".test.ts")).map((f) => `test/${f}`) : [];
+const NAMES_FILES = process.argv.slice(2).some((a) => !a.startsWith("-") && a !== "run" && TEST_FILES.some((f) => f.includes(a.replace(/\\/g, "/").replace(/^\.\//, ""))));
+
+/**
+ * Whether this run is the full one: `pnpm test:full`, a run that asks for every variant,
+ * design or fleet option, or one that names its files.
+ */
+const FULL_RUN =
+  process.env.npm_lifecycle_event === "test:full" ||
+  ["TEST_FULL", "TEST_ALL_VARIANTS", "TEST_ALL_DESIGNS", "TEST_FLEET_COVER"].some((k) => process.env[k] === "1") ||
+  NAMES_FILES;
+
 export default defineConfig(({ command, mode }) => ({
   // Under Vitest the components compile for the server, so a test renders them to
   // markup with solid-js/web renderToString (test/chainsView.test.ts); the site build is unchanged.
@@ -112,6 +175,7 @@ export default defineConfig(({ command, mode }) => ({
   test: {
     environment: "node",
     include: ["test/**/*.test.ts"],
+    exclude: FULL_RUN ? [] : [...FULL_ONLY_TESTS],
     setupFiles: ["test/setup.ts"],
     // The files share their worker's modules: the generator is loaded once per
     // worker, not once per file, and test/catalogCache.ts keeps each design's
@@ -119,6 +183,9 @@ export default defineConfig(({ command, mode }) => ({
     isolate: false,
     // Every core: the tests are CPU-bound and the main process only reports.
     maxWorkers: "100%",
+    // A larger young generation: the builds allocate fast and short-lived, and the default's
+    // scavenges took over a quarter of the workers' time (about a tenth less wall time).
+    poolOptions: { forks: { execArgv: ["--max-semi-space-size=64"] } },
     // Some tests build whole families; 5 s is too tight on a small machine.
     testTimeout: 120_000,
   },

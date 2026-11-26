@@ -283,6 +283,15 @@ function warbonnet(m: MeshBuilder, b: SliceBody, X: (d: number) => number, s: nu
   }
 }
 
+/** Each body's station slices, by station index: the nose searches (frontD) read them thousands of times. Read only, never changed. */
+const STATION_SLICES = new WeakMap<SliceBody, Pt[][]>();
+
+function stationSlice(b: SliceBody, i: number): Pt[] {
+  let list = STATION_SLICES.get(b);
+  if (!list) STATION_SLICES.set(b, (list = []));
+  return (list[i] ??= halfSlice(b, b.stations[i]!));
+}
+
 /** The lofted shell's half slice at d: its neighbouring stations' slices interpolated point by point, as the loft draws it. */
 function shellSlice(b: SliceBody, d: number): Pt[] {
   const st = b.stations;
@@ -290,7 +299,7 @@ function shellSlice(b: SliceBody, d: number): Pt[] {
   while (i + 2 < st.length && st[i + 1]! < d) i++;
   const [d0, d1] = [st[i]!, st[i + 1]!];
   const t = d1 > d0 ? Math.min(1, Math.max(0, (d - d0) / (d1 - d0))) : 0;
-  const [h0, h1] = [halfSlice(b, d0), halfSlice(b, d1)];
+  const [h0, h1] = [stationSlice(b, i), stationSlice(b, i + 1)];
   return h0.map((p, k): Pt => [p[0] + (h1[k]![0] - p[0]) * t, p[1] + (h1[k]![1] - p[1]) * t]);
 }
 

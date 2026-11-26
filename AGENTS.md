@@ -161,18 +161,24 @@ document that owns it in the same change.** Conventions:
 
 ## Verify changes
 
-`pnpm typecheck`, `pnpm test` and `pnpm build`. `pnpm test` checks each
-design's defaults and a fixed sample of its other parameter combinations
-(docs/guide/setup-and-build.md).
+`pnpm typecheck`, `pnpm test` and `pnpm build`. `pnpm test` is the **quick
+suite**: every test file but the heavy ones `FULL_ONLY_TESTS` in `vite.config.ts`
+lists (the whole-catalog sweeps and the largest family suites). `pnpm test:full`
+runs every file, checking each design's defaults and a fixed sample of its other
+parameter combinations (docs/guide/setup-and-build.md, "Quick and full").
 
-- **The whole `pnpm test` must finish in under 5 minutes.** A change that
-  pushes it past that makes the tests faster (share builds, sample variants,
-  test fewer designs) in the same change; never by skipping a check that
-  guards behaviour.
+- **`pnpm test` must finish in under 2 minutes.** A new suite that takes more than
+  about ten seconds of a worker's time goes on the `FULL_ONLY_TESTS` list; a change
+  that slows the quick suite past that makes it faster in the same change.
+- **Run `pnpm test:full` only when the user asks for it** (it takes over eight
+  minutes). Run the suites a change touches by name instead - `pnpm test
+  test/buses.test.ts` (or `pnpm test buses`) runs a named suite even when it is
+  full-only. A bug fix's regression test belongs in the suite that owns the
+  behaviour, quick or full.
 - **Do not run `TEST_ALL_VARIANTS=1 pnpm test`** (every parameter
-  combination; it takes far longer) unless the user asks for it. To check
-  more of a changed design's combinations, run a scratch test on that design
-  alone.
+  combination of every suite; it takes far longer) unless the user asks for it.
+  To check more of a changed design's combinations, run a scratch test on that
+  design alone.
 
 For a model change, also look at `export/thumbs/<id>.png` after
 `pnpm build:models`, and commit the `build-cache/` it updated.

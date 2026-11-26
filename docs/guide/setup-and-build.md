@@ -21,7 +21,8 @@ packages `pnpm.onlyBuiltDependencies` allows.
 | `pnpm build:parade` | renders the train parade's cars that changed (WebP, animated ones as sprites), writes `export/parade.json` and the overview page `export/parade/index.html` ([../site/train-parade.md](../site/train-parade.md)) |
 | `pnpm build` | `build:models`, `build:parade`, `tsc --noEmit`, then `vite build` into `dist/`, which ends by writing the prerendered model and category pages, `sitemap.xml`, `robots.txt` and `404.html` ([../site/seo-pages.md](../site/seo-pages.md)) |
 | `pnpm preview` | serves `dist/` locally |
-| `pnpm test` | Vitest, once |
+| `pnpm test` | Vitest, once: the quick suite, under two minutes ("Quick and full" below) |
+| `pnpm test:full` | Vitest, once, every suite: on demand only, about eight and a half minutes |
 | `pnpm typecheck` | `tsc --noEmit` over `src/`, `generator/`, `test/` |
 | `pnpm import:sounds` | mirrors the sibling rail-island-music export into the committed `sounds/` ([../models/sounds.md](../models/sounds.md)) |
 | `pnpm refs:fetch` | downloads Commons photographs into a model's `assets/<name>/` and lists them in its `SOURCES.md` ([../models/world-fleet.md](../models/world-fleet.md)) |
@@ -53,9 +54,33 @@ for it.
 
 ## Tests
 
-`pnpm test` runs every suite under `test/` and **must finish in under five
-minutes** (AGENTS.md); it takes about four and a half on a four-core machine
-(`vite.config.ts`). Five things keep it there:
+### Quick and full
+
+`pnpm test` runs the **quick suite** and **must finish in under two minutes**
+(AGENTS.md): every file under `test/` but those `FULL_ONLY_TESTS` lists in
+`vite.config.ts` - the whole-catalog sweeps (`catalog-*`, `doors*`, `worldTrains*`)
+and the family suites that take over about ten seconds of a worker's time (the buses,
+the rig, the pantographs, the emitters, the parade, the loads, the export...). It
+takes about 90 s on a four-core machine, and keeps every cheap guard a change needs:
+the build cache's freshness, the exported text, the traffic and capacity tables, the
+OpenTTD ids, the site's logic, most family suites.
+
+`pnpm test:full` runs **every** file, on demand only (it takes about eight and a half minutes on
+a four-core cloud machine): before a release, after a kit or builder change that
+many designs share, or when the user asks. A run also goes full when it sets
+`TEST_FULL=1`, `TEST_ALL_VARIANTS=1`, `TEST_ALL_DESIGNS=1` or `TEST_FLEET_COVER=1`,
+or names its files: `pnpm test test/buses.test.ts` (or `pnpm test buses`) runs that
+suite though it is full-only (Vitest applies `exclude` before a run's filters, so the
+config drops it when the command line names a test file). A new suite that takes more
+than about ten seconds joins `FULL_ONLY_TESTS`.
+
+The test workers run with a larger young generation (`--max-semi-space-size=64`,
+`poolOptions` in `vite.config.ts`): the builds allocate fast and short-lived, and the
+default's scavenges took over a quarter of the workers' time.
+
+### What keeps the full suite short
+
+`pnpm test:full` runs every suite under `test/`. Five things keep it as short as it is:
 
 - **Shared workers.** `isolate: false` runs the files of a worker in one module
   registry: the generator is loaded once per worker, not once per file, and

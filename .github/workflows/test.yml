@@ -1,12 +1,19 @@
 # Typecheck + Vitest, run by hand only (Run workflow, on any branch).
 #
 # Pushes to `master` no longer run it: run the tests locally before landing a
-# change (`pnpm typecheck`, `pnpm test`). It never gated deploy.yml.
+# change (`pnpm typecheck`, `pnpm test`). It never gated deploy.yml. The `suite`
+# input picks the quick suite (the default) or every suite (`pnpm test:full`).
 
 name: Tests
 
 on:
   workflow_dispatch:
+    inputs:
+      suite:
+        description: "quick (pnpm test, under two minutes) or full (pnpm test:full, every suite)"
+        type: choice
+        options: [quick, full]
+        default: quick
 
 concurrency:
   group: test-${{ github.ref }}
@@ -38,4 +45,4 @@ jobs:
       # Runs even when the typecheck failed, so one run reports both problems.
       - name: Test
         if: '!cancelled()'
-        run: pnpm test
+        run: ${{ inputs.suite == 'full' && 'pnpm test:full' || 'pnpm test' }}
