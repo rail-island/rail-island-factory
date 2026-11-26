@@ -2,12 +2,13 @@
 // (shinkansen.ts) with its own cab face (seriesCab.ts): the blunt, rounded Pendolino snout with its
 // bulbous coupler cover, the dark glass canopy reaching back over the cab roof, the slanted lamp
 // lozenges under its lower corners and the "eye" cab side window, matched to the photographs in
-// assets/cr-crh5a/ (SOURCES.md). See docs/models/china-units.md, "The CRH5A's body".
+// assets/cr-crh5a/ (SOURCES.md). See docs/models/china-units.md, "The CRH5A's body". The coupler
+// cover is the snout's own lower part - one smooth convex profile from the spoiler over the cover to
+// the canopy - its joint only a painted seam (test/crh5aNose.test.ts).
 //
 // Heights over the rail, d behind the snout's tip (the coupler cover's front, 1.0 m up).
 
 import type { MeshBuilder } from "./meshBuilder.ts";
-import type { Vec3 } from "./meshCore.ts";
 import type { Pt } from "./sliceLoft.ts";
 import type { SliceBody } from "./sliceBody.ts";
 import { block } from "./vehicleParts.ts";
@@ -25,18 +26,28 @@ const B = 0.4;
 const A = 1.15;
 
 /**
- * The snout's centre line, behind the coupler cover (drawn apart, `coverDome`): upright from the
- * spoiler to 1.5 m, 0.5 m back, then rounding over to the canopy's foot at 2.1 m, 1.3 m back, the
- * glass leaning back at about 25 degrees (3.0 m at 3.1 m back, 3.4 m at 4.0 m back) to the crown
- * about 6.4 m back (photo-crh5a-5043d6930.jpg, 48 px/m).
+ * The snout's centre line, one convex curve (photo-crh5a-5043d6930.jpg, about 60 px/m up, 48 px/m
+ * along): the coupler cover's round front 1.0 m up is the tip, its underside tucking back to the
+ * spoiler 0.72 m behind it at the body's foot; above the tip the face leans back ever more steeply
+ * (0.38 m back at the cover's top 1.45 m up, 1.2 m back 2.0 m up) to the canopy's foot at 2.1 m,
+ * the glass leaning back at about 25 degrees (3.0 m at 3.1 m back, 3.4 m at 4.0 m back) to the crown
+ * about 6.4 m back.
  */
 const PROFILE: Pt[] = [
-  [B, 0.95], [0.5, 0.66], [0.62, 0.53], [0.75, 0.48], [1.0, 0.48], [1.25, 0.5], [1.5, 0.56], [1.7, 0.7], [1.85, 0.86], [2.0, 1.08], [2.15, 1.42],
+  [B, 0.72], [0.5, 0.47], [0.62, 0.26], [0.75, 0.11], [0.88, 0.03], [1.0, 0.0], [1.1, 0.03], [1.2, 0.1], [1.3, 0.2], [1.45, 0.38], [1.6, 0.58], [1.75, 0.8],
+  [1.9, 1.03], [2.0, 1.19], [2.15, 1.42],
   [2.3, 1.68], [2.5, 1.98], [2.7, 2.3], [2.9, 2.65], [3.1, 3.03], [3.3, 3.45], [3.5, 3.95], [3.7, 4.55], [3.85, 5.15], [3.95, 5.7], [4.02, 6.3], [4.05, JOIN],
 ];
 
-/** The coupler cover: half an ellipsoid on the snout's foot - its centre height, half width and half height, its tip's d and how deep it reaches back. */
-const COVER = { y: 0.93, hw: 0.76, hh: 0.52, d: 0.0, depth: 0.95 };
+/** The coupler cover's seam seen head-on: an ellipse 1.6 m wide, 0.5 - 1.5 m up (its top at the lamps' inner ends). */
+const COVER = { y: 1.0, hw: 0.8, hh: 0.5 };
+/** The seam as a ring of thin convex quads (decals), and the coupler's slot low on the cover. */
+const SEAM = Array.from({ length: 16 }, (_, i) => {
+  const at = (a: number, k: number): Pt => [Math.cos(a) * COVER.hw * k, COVER.y + Math.sin(a) * COVER.hh * k];
+  const [a0, a1] = [(2 * Math.PI * i) / 16, (2 * Math.PI * (i + 1)) / 16];
+  return { mat: "seam", pts: [at(a0, 0.965), at(a1, 0.965), at(a1, 1.0), at(a0, 1.0)], fine: 2 };
+});
+const SLOT: Pt[] = [[-0.13, 0.72], [0.13, 0.72], [0.13, 0.79], [-0.13, 0.79]];
 
 /**
  * The canopy's lower edge on the snout's sides ([y, d]): its foot 2.1 m up on the centre line, nearly
@@ -51,7 +62,7 @@ const EYE_BACK: Pt[] = [[2.3, 4.0], [2.55, 5.2], [2.7, 5.95], [2.8, 6.2], [3.05,
 const BAND_FRONT: Pt[] = [[1.66, 3.0], [1.94, 6.6]];
 const BAND_BACK: Pt[] = [[1.66, 3.0], [1.82, 6.6], [1.8201, JOIN + 0.05], [1.94, JOIN + 0.05]];
 
-const ROWS = [...new Set([...PROFILE.map(([y]) => y), 0.46, 0.62, 0.85, 1.12, 1.38, 1.6, 1.66, 1.78, 1.82, 1.94, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6])].sort((a, b) => a - b);
+const ROWS = [...new Set([...PROFILE.map(([y]) => y), 0.46, 0.56, 0.69, 0.81, 0.94, 1.05, 1.15, 1.25, 1.38, 1.52, 1.6, 1.66, 1.78, 1.82, 1.94, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6])].sort((a, b) => a - b);
 
 /** A lamp lozenge under the canopy's lower corner (viewer's right), rising toward the outside; `k` scales it about its centre (the lens inside the housing). */
 const lozenge = (k: number, s: 1 | -1): Pt[] => {
@@ -72,7 +83,7 @@ export const CRH5A_FACE: SeriesCabFace = {
   // the face is white; its paint (the canopy, the eye, the lamps, the band) is drawn below
   bands: (l) => [[0, 9, l.bands[0]![2]]],
   lodBands: [[0, 9, "white"]],
-  lod: { profile: PROFILE, corner: [[B, 2.0], [4.05, 2.0]], rows: [B, 0.75, 1.0, 1.5, 2.0, 2.3, 2.7, 3.1, 3.5, 3.85, 4.05], cornerDepth: [[B, 2.6], [2.0, 2.6], [2.7, 4.1], [3.1, 3.7], [3.5, 2.75], [3.85, 1.65], [4.05, 0.05]] },
+  lod: { profile: PROFILE, corner: [[B, 2.0], [4.05, 2.0]], rows: [B, 0.62, 0.8, 1.0, 1.2, 1.5, 2.0, 2.3, 2.7, 3.1, 3.5, 3.85, 4.05], cornerDepth: [[B, 2.6], [2.0, 2.6], [2.7, 4.1], [3.1, 3.7], [3.5, 2.75], [3.85, 1.65], [4.05, 0.05]] },
   lodGlass: { hw: 1.1, y: [2.15, 3.95] },
   paint: [
     // white below the skirts' top on the snout's sides
@@ -90,6 +101,8 @@ export const CRH5A_FACE: SeriesCabFace = {
     // the windscreen proper in the canopy's front: a lighter pane inside the dark frame
     { mat: "screen", pts: [[-0.9, 2.26], [0.9, 2.26], [0.98, 2.36], [0.9, 2.66], [0.7, 2.78], [-0.7, 2.78], [-0.9, 2.66], [-0.98, 2.36]] },
   ],
+  // the coupler cover's seam, a thin dark line flush with the face, and the coupler's slot
+  decals: [...SEAM, { mat: "seam", pts: SLOT, fine: 1 }],
   wipers: [[[0.08, 2.3], [0.48, 2.7]], [[-0.62, 2.3], [-0.22, 2.7]]],
   panes: [],
   lamps: [[1.12, 1.86, 0.05, "lampHead"], [-1.12, 1.86, 0.05, "lampHead"], [0.8, 1.66, 0.035, "lampRed"], [-0.8, 1.66, 0.035, "lampRed"]],
@@ -101,7 +114,7 @@ function crhLivery(): ShinkansenLivery {
     title: "CRH blue", number: "CRH5A-5043",
     palette: {
       white: c(WHITE), blue: c(CRH_BLUE), roofG: c("#dcdfe1", 0.55), skirtG: c("#e7e9e8", 0.55), cabMask: c("#15181b", 0.3),
-      seam: c("#8d9296", 0.6), lampLens: { color: "#c9d3dc", metallic: 0.3, roughness: 0.1, glass: true }, slat: c("#b3b8bc", 0.6), screen: { color: "#3d4d5b", metallic: 0.25, roughness: 0.08, glass: true },
+      seam: c("#5f6468", 0.6), lampLens: { color: "#c9d3dc", metallic: 0.3, roughness: 0.1, glass: true }, slat: c("#b3b8bc", 0.6), screen: { color: "#3d4d5b", metallic: 0.25, roughness: 0.08, glass: true },
     },
     bands: [[0, 1.82, "white"], [1.82, 1.94, "blue"], [1.94, 9, "white"]],
     roof: "roofG", skirt: "skirtG",
@@ -118,46 +131,9 @@ const MID_BODY = 25.0 - 0.5;
 /** The roof's air-conditioning hood on every car (d span on the car's body). */
 const hoodAt = (end: boolean, L: number): readonly [number, number] => (end ? [22.4 - JOIN, 25.4 - JOIN] : [L - 4.5, L - 1.5]);
 
-/** A triangle wound outward from a centre point. */
-function outward(m: MeshBuilder, mat: string, c: Vec3, a: Vec3, b: Vec3, e: Vec3): void {
-  const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [e[0] - a[0], e[1] - a[1], e[2] - a[2]];
-  const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-  const g = [a[0] + b[0] + e[0] - 3 * c[0], a[1] + b[1] + e[1] - 3 * c[1], a[2] + b[2] + e[2] - 3 * c[2]];
-  if (n[0] * g[0] + n[1] * g[1] + n[2] * g[2] >= 0) m.tri(mat, a, b, e);
-  else m.tri(mat, a, e, b);
-}
-
-/**
- * The coupler cover: half an ellipsoid standing forward of the snout's foot, its rim sunk in the face
- * (the joint reads as a dark line: the rim's last ring is the seam's paint), a slot for the coupler low on it.
- */
-function coverDome(m: MeshBuilder, X: (d: number) => number): void {
-  const xc = X(COVER.d + COVER.depth - JOIN), fwd = Math.sign(X(-1) - X(0));
-  const [na, nb] = [7, 18];
-  // the rings from the tip (0) to the rim (na): the last a thin seam, 3 % of the quarter arc
-  const PHI = Array.from({ length: na + 1 }, (_, i) => (Math.PI / 2) * (i < na ? (0.97 * i) / (na - 1) : 1));
-  const at = (i: number, j: number): Vec3 => {
-    // i: from the tip (0) to the rim (na); j: round the rim
-    const phi = PHI[i]!, th = (2 * Math.PI * j) / nb;
-    return [xc + fwd * COVER.depth * Math.cos(phi), COVER.y + COVER.hh * Math.sin(phi) * Math.sin(th), COVER.hw * Math.sin(phi) * Math.cos(th)];
-  };
-  const ctr: Vec3 = [xc, COVER.y, 0];
-  for (let i = 0; i < na; i++)
-    for (let j = 0; j < nb; j++) {
-      const mat = i === na - 1 ? "seam" : "white";
-      const [a, b, e, f] = [at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1)];
-      outward(m, mat, ctr, a, b, e);
-      if (i > 0) outward(m, mat, ctr, a, e, f);
-    }
-  // the coupler's slot, a dark plate on the dome's lower front
-  const ys = COVER.y - 0.3, k = Math.sqrt(1 - ((ys - COVER.y) / COVER.hh) ** 2), xs = X(-JOIN) - fwd * (COVER.depth * (1 - k)) ;
-  m.scope("slot", () => block(m, "seam", Math.min(xs - fwd * 0.08, xs + fwd * 0.01), Math.max(xs - fwd * 0.08, xs + fwd * 0.01), ys - 0.035, ys + 0.035, -0.13, 0.13));
-}
-
-/** The CRH5A's own fittings: the coupler cover, the underfloor, the slats of the white skirt panels between the bogies and the roof's air-conditioning hood. */
+/** The CRH5A's own fittings: the underfloor, the slats of the white skirt panels between the bogies and the roof's air-conditioning hood. */
 function crh5aFittings(m: MeshBuilder, b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
   const [t0, t1] = car.trucks as [number, number];
-  if (car.end) m.scope("coupler cover", () => coverDome(m, X));
   m.scope("underfloor", () => block(m, "under", X(t1 - 2.6), X(t0 + 2.6), B - 0.1, B + 0.05, -1.6 * 0.8, 1.6 * 0.8));
   // the skirts' vertical slats, about 0.5 m apart between the bogies (photo-crh5a-5043d6930.jpg), on the skirt's tucked-in face
   m.scope("skirt slats", () => {

@@ -173,13 +173,17 @@ the Shinkansen gauge as it is), the crown 4.05 m and the roof hoods 4.27 m up.
 - **Section.** The Pendolino's wide body: widest 1.55 m up, the sides leaning in to 0.9 of the half width
   at the 3.2 m shoulder, the white skirt panels (faint light-grey slats between the bogies) tucked in below
   1.15 m down to 0.4 m; the nose's flanks white to the bottom edge.
-- **Snout** (a cab face, `CRH5A_FACE`, 7.0 m long): upright from the spoiler to 1.5 m, 0.5 m behind the
-  tip, rounding over to the canopy's foot (2.1 m up, 1.3 m back), the glass leaning back at about 25
-  degrees to the crown 6.4 m back; in plan one elliptic corner over the whole half width, reaching full
-  width 2.6 m back low down and further back over the canopy. The **coupler cover** is half an ellipsoid
-  (1.52 m wide, 1.04 m tall, centred 0.93 m up: its foot at the body's bottom, its top at the lamps') standing
-  0.48 m forward of the face, its joint a thin grey seam,
-  a slot for the coupler on its foot (`coverDome`, drawn with the end car's fittings).
+- **Snout** (a cab face, `CRH5A_FACE`, 7.0 m long): one smooth convex profile, no step or ledge. The
+  tip is the coupler cover's round front 1.0 m up; below it the underside tucks back to the spoiler 0.72 m
+  behind the tip at the body's foot; above it the face leans back ever more steeply (0.38 m back at the
+  cover's top 1.45 m up, 1.2 m back 2.0 m up) to the canopy's foot (2.1 m up, 1.3 - 1.4 m back), the glass
+  leaning back at about 25 degrees to the crown 6.4 m back; in plan one elliptic corner over the whole half
+  width, reaching full width 2.6 m back low down and further back over the canopy. The **coupler cover** is
+  the snout's own lower part, as on the photographs: only its seam is drawn, a thin dark line flush with
+  the face (seen head-on an ellipse 1.6 m wide, 0.5 - 1.5 m up, its top at the lamps' inner ends), with
+  the coupler's slot low on it. (It was once a separate half ellipsoid standing 0.48 m forward of the face,
+  a snout under a step; `test/crh5aNose.test.ts` keeps the side profile convex.) The distant model
+  follows the same profile.
 - **Paint on the face**: one dark glass canopy from its foot over the cab roof (its lower edge nearly
   level across the face, then rising along the sides to the crown 6.5 m back), a black rim round it, the
   windscreen proper a lighter pane in its front (2.26 - 2.78 m) with two wipers; the
