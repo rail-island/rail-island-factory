@@ -1,7 +1,7 @@
-// Chinese locomotives: the registry of the HXN5, the HXD1, HXD3D, SS1 and SS8
-// electrics and the DF4 and DF11 diesels. Each is measured from photographs in
+// Chinese locomotives: the registry of the HXN5, the HXD1, HXD3D, SS1, SS8 and
+// HXD3C electrics and the DF4 and DF11 diesels. Each is measured from photographs in
 // its own module (cnHxn5.ts, cnHxd1.ts, cnHxd3d.ts, cnSs1.ts, cnSs8.ts, cnDf4.ts,
-// cnDf11.ts), with knuckle couplers. The HXD3D keeps its `livery` parameter
+// cnDf11.ts, cnHxd3c.ts), with knuckle couplers. The HXD3D keeps its `livery` parameter
 // from the box locomotive kit's livery table here. See docs/models/china-trains.md.
 
 import type { MeshBuilder } from "./meshBuilder.ts";
@@ -18,6 +18,7 @@ import { crHxd1, crHxd1Lod } from "./cnHxd1.ts";
 import { crHxd3dBody, crHxd3dBodyLod } from "./cnHxd3d.ts";
 import { crSs1, crSs1Lod } from "./cnSs1.ts";
 import { buildDf11, buildDf11Lod } from "./cnDf11.ts";
+import { crHxd3c, crHxd3cLod } from "./cnHxd3c.ts";
 
 const HXN5_PARAMS: ParamSpec[] = [enumParam("livery", "Livery", { orange: "CR green" })];
 export function crHxn5(v?: ParamValues): MeshBuilder { return buildHxn5(HXN5_LIVERIES[resolveParams(HXN5_PARAMS, v).livery!]!); }
@@ -70,4 +71,6 @@ export const CN_LOCOS: ProceduralDesign[] = [
   { id: "proc-vehicle-cr-ss8", title: "CR SS8 Shaoshan", build: crSs8, buildLod: crSs8Lod, game: locoGame(88, 3600, 170), catalog: E, references: "cr-ss8" },
   { id: "proc-vehicle-cr-df4", title: "CR DF4 Dongfeng", build: crDf4, buildLod: crDf4Lod, params: DF4_PARAMS, game: locoGame(138, 2430, 100), catalog: D, loadingGauge: "us", references: "cr-df4" },
   { id: "proc-vehicle-cr-df11", title: "CR DF11 Dongfeng", build: crDf11, buildLod: crDf11Lod, game: locoGame(138, 3040, 170), catalog: D, references: "cr-df11" },
+  // the HXD3C's own measured body (cnHxd3c.ts), in the blue "Hexie" livery (no parameter)
+  { id: "proc-vehicle-cr-hxd3c", title: "CR HXD3C", build: crHxd3c, buildLod: crHxd3cLod, game: locoGame(138, 7200, 120), catalog: E, references: "cr-hxd3c" },
 ];
