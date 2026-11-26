@@ -485,6 +485,7 @@
     "proc-vehicle-new-flyer-xcelsior": 342,
     "proc-vehicle-new-orleans-perley-thomas": 793,
     "proc-vehicle-new-routemaster": 321,
+    "proc-vehicle-noevog-himmelstreppe": 845,
     "proc-vehicle-nottingham-incentro": 765,
     "proc-vehicle-nova-lfs": 497,
     "proc-vehicle-ns-1100": 217,
@@ -2968,6 +2969,18 @@
       },
       "proc-vehicle-ncrtc-namo-bharat?unit=middleCar": {
         "id": 9212,
+        "size": 6
+      },
+      "proc-vehicle-noevog-himmelstreppe?": {
+        "id": 10552,
+        "size": 6
+      },
+      "proc-vehicle-noevog-himmelstreppe?formation=3 cars": {
+        "id": 10564,
+        "size": 18
+      },
+      "proc-vehicle-noevog-himmelstreppe?unit=middleCar": {
+        "id": 10558,
         "size": 6
       },
       "proc-vehicle-ns-1100?": {

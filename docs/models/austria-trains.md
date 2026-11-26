@@ -306,7 +306,38 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   windows between the decks, the "First" lettering and the middle cars' varying diagonals (car 2 has none)
   are not drawn; the 2011 delivery paint (white with a narrower blue sweep) is not offered.
 
-<!-- design:noevog-himmelstreppe -->
+### Himmelstreppe (`proc-vehicle-noevog-himmelstreppe`)
+
+- **Built on** the series kit (`generator/atHimmelstreppe.ts`; shinkansen.ts, seriesCab.ts) with its own
+  cab face, like the RhB Allegra (`chUnits.ts`); no kit change. The NOVOG ET 1 - ET 9 of the
+  Mariazellerbahn (Stadler 2012 - 2013, 760 mm gauge, 6.5 kV 25 Hz).
+- **Parameters**: `unit` `endCar` (default), `middleCar`, `train` (always three cars); one livery
+  (`novog`, ET 5).
+- **Figures** (de.wikipedia "NOVOG ET1-ET9"): 50.74 m over the couplers (end cars 17.07 m, middle car
+  16.6 m, the three bodies alike on the side photograph), 2.65 m wide, crown 3.45 m (3.55 m over the roof
+  equipment), 770 mm wheels, Bo'2'2'Bo'; 75 t (end car 26 t with 600 kW, middle car 23 t), 1,200 kW,
+  80 km/h, 0.9 m/s2; 116 seats (36 / 44 / 36).
+- **Measured** on the whole unit side-on (Himmelstreppe1.JPG, 19.41 px/m over its 49.84 m of body): the
+  end car's cab window 0.64 - 1.62 m behind the tip, the emblem, a narrow and two wide windows in the
+  high-floor section (sill 1.66 m), the double door 8.6 - 10.1 m, a blank stretch and two tall
+  low-floor windows (sill 1.2 m) to the joint; the middle car's three windows, door at 6.0 - 7.5 m and
+  four windows; the grey band 1.08 - 2.75 m, from 1.6 m between the cab and the door. The face head-on
+  (St. Poelten, about 190 px/m): nearly body-wide, corners rounded 0.3 m (0.5 m at the cap), leaning
+  back 0.3 m by 2.6 m and rounding into the roof 1 m behind the tip; the grey shield round the windscreen
+  (1.75 - 3.14 m, +-0.96 m, its upper corners cut along the A-pillars) with the display, the round lamps
+  at +-0.68 m, 1.36 m, the "Die Himmelstreppe" plate; the gold bumper bulging forward, the dark foot,
+  the ribbed crash boxes and the Scharfenberg coupler at 0.42 m.
+- **Roof**: the two single-arm pantographs on the middle car 3.1 m inside its ends, the one at the
+  +X end raised (knee toward the car's middle, as photographed), the other folded; gold housings
+  with dark grilles. The emblem (gold drop with the white crescent and steps) behind the cab window,
+  "Die Himmelstreppe" in white under the high-floor windows (the stroke font's new `p`).
+- **References**: `assets/noevog-himmelstreppe/` (five Commons photographs, SOURCES.md).
+- **Deviations**: the middle car's trailer bogies are drawn under the joints, carrying both cars
+  (`jacobsInset` 2.0 m: a lone car stands on its own bogie 2.0 m inside its inner end); on the
+  prototype they stand under the middle car and the end cars hang on it, hidden by the skirts either
+  way. The kit's 2.2 m bogies everywhere (trailers 1.9 m) on the game's one track gauge; the script
+  lettering and the station names over the windows are drawn as upright stroke letters / left out.
+- **Triangles**: end car 15,890, middle car 8,870, train 35,618; distant model 92 / 86 / 292.
 
 <!-- design:obb-cityshuttle-dd -->
 

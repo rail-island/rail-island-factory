@@ -1140,6 +1140,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-obb-5022": series(58, 58, RAIL, { cars: 2, liveries: ["cityjet"] }),
   "proc-vehicle-obb-5047": series(62, 62, RAIL, { single: true, liveries: ["valousek"] }),
   "proc-vehicle-westbahn-kiss": series(70, 90, ELRL, { cars: 6 }),
+  "proc-vehicle-noevog-himmelstreppe": series(36, 44, ELRL, { cars: 3 }), // 116 seats in three cars (de.wikipedia; 760 mm gauge drawn on the game's one track)
 };
 
 // --- the world aircraft -------------------------------------------------------------

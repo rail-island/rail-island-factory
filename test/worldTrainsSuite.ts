@@ -67,7 +67,7 @@ const LENGTHS: Record<string, number> = {
 };
 
 /** A design's country by the operator prefix of its id. */
-const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl", sbb: "ch", rhb: "ch", mgb: "ch", glacier: "ch", renfe: "es", talgo: "es", iryo: "es", br: "gb", lner: "gb", gwr: "gb", lms: "gb", lu: "gb", eurostar: "gb", rocket: "gb", ir: "in", eir: "in", dhr: "in", ncrtc: "in", dmrc: "in", cr: "cn", obb: "at" };
+const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl", sbb: "ch", rhb: "ch", mgb: "ch", glacier: "ch", renfe: "es", talgo: "es", iryo: "es", br: "gb", lner: "gb", gwr: "gb", lms: "gb", lu: "gb", eurostar: "gb", rocket: "gb", ir: "in", eir: "in", dhr: "in", ncrtc: "in", dmrc: "in", cr: "cn", obb: "at", noevog: "at" };
 
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 
@@ -75,7 +75,7 @@ export function worldTrainsSuite(index: number, count: number): void {
 describe("the eight countries' trains", () => {
   if (index === 0) it("are all filed under their country", () => {
     // the plan's 160 designs, the Class 378 added after it and the Austrian designs (docs/models/austria-trains.md)
-    expect(FAMILIES.length).toBe(162);
+    expect(FAMILIES.length).toBe(168);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);
