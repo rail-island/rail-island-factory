@@ -158,23 +158,43 @@
     "proc-vehicle-concorde": 544,
     "proc-vehicle-convair-880": 535,
     "proc-vehicle-cr-25t-coach": 305,
+    "proc-vehicle-cr-blue-arrow": 847,
     "proc-vehicle-cr-c70-wagon": 301,
+    "proc-vehicle-cr-china-star": 850,
     "proc-vehicle-cr-cr200j": 312,
+    "proc-vehicle-cr-cr300af": 844,
+    "proc-vehicle-cr-cr300bf": 840,
     "proc-vehicle-cr-cr400af": 306,
     "proc-vehicle-cr-cr400bf": 307,
+    "proc-vehicle-cr-cr450af": 842,
+    "proc-vehicle-cr-cr450bf": 838,
+    "proc-vehicle-cr-crh1a": 839,
+    "proc-vehicle-cr-crh1e": 848,
     "proc-vehicle-cr-crh2a": 309,
+    "proc-vehicle-cr-crh2e": 837,
+    "proc-vehicle-cr-crh2g": 849,
     "proc-vehicle-cr-crh380a": 308,
+    "proc-vehicle-cr-crh380b": 835,
+    "proc-vehicle-cr-crh380cl": 846,
+    "proc-vehicle-cr-crh380d": 836,
+    "proc-vehicle-cr-crh3a": 841,
     "proc-vehicle-cr-crh3c": 310,
     "proc-vehicle-cr-crh5a": 311,
+    "proc-vehicle-cr-crh5g": 843,
     "proc-vehicle-cr-crh6a": 313,
+    "proc-vehicle-cr-crh6f": 845,
     "proc-vehicle-cr-df11": 320,
     "proc-vehicle-cr-df4": 319,
+    "proc-vehicle-cr-df8b": 851,
     "proc-vehicle-cr-hxd1": 315,
+    "proc-vehicle-cr-hxd2": 853,
+    "proc-vehicle-cr-hxd3c": 854,
     "proc-vehicle-cr-hxd3d": 316,
     "proc-vehicle-cr-hxn5": 314,
     "proc-vehicle-cr-js": 304,
     "proc-vehicle-cr-qj": 302,
     "proc-vehicle-cr-ss1": 317,
+    "proc-vehicle-cr-ss4": 852,
     "proc-vehicle-cr-ss8": 318,
     "proc-vehicle-cr-sy": 303,
     "proc-vehicle-croydon-cr4000": 761,
@@ -1542,6 +1562,18 @@
         "id": 9556,
         "size": 8
       },
+      "proc-vehicle-cr-blue-arrow?": {
+        "id": 10784,
+        "size": 6
+      },
+      "proc-vehicle-cr-blue-arrow?formation=7 cars": {
+        "id": 10798,
+        "size": 32
+      },
+      "proc-vehicle-cr-blue-arrow?unit=middleCar": {
+        "id": 10790,
+        "size": 8
+      },
       "proc-vehicle-cr-c70-wagon?": {
         "id": 9490,
         "size": 4
@@ -1549,6 +1581,18 @@
       "proc-vehicle-cr-c70-wagon?unit=covered": {
         "id": 9494,
         "size": 6
+      },
+      "proc-vehicle-cr-china-star?": {
+        "id": 10926,
+        "size": 6
+      },
+      "proc-vehicle-cr-china-star?formation=8 cars": {
+        "id": 10940,
+        "size": 32
+      },
+      "proc-vehicle-cr-china-star?unit=middleCar": {
+        "id": 10932,
+        "size": 8
       },
       "proc-vehicle-cr-cr200j?": {
         "id": 9876,
@@ -1564,6 +1608,30 @@
       },
       "proc-vehicle-cr-cr200j?unit=middleCar": {
         "id": 9882,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr300af?": {
+        "id": 10640,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr300af?formation=8 cars": {
+        "id": 10656,
+        "size": 32
+      },
+      "proc-vehicle-cr-cr300af?unit=middleCar": {
+        "id": 10648,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr300bf?": {
+        "id": 10448,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr300bf?formation=8 cars": {
+        "id": 10464,
+        "size": 32
+      },
+      "proc-vehicle-cr-cr300bf?unit=middleCar": {
+        "id": 10456,
         "size": 8
       },
       "proc-vehicle-cr-cr400af?": {
@@ -1598,6 +1666,54 @@
         "id": 9636,
         "size": 8
       },
+      "proc-vehicle-cr-cr450af?": {
+        "id": 10544,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr450af?formation=8 cars": {
+        "id": 10560,
+        "size": 32
+      },
+      "proc-vehicle-cr-cr450af?unit=middleCar": {
+        "id": 10552,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr450bf?": {
+        "id": 10352,
+        "size": 8
+      },
+      "proc-vehicle-cr-cr450bf?formation=8 cars": {
+        "id": 10368,
+        "size": 32
+      },
+      "proc-vehicle-cr-cr450bf?unit=middleCar": {
+        "id": 10360,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh1a?": {
+        "id": 10400,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh1a?formation=8 cars": {
+        "id": 10416,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh1a?unit=middleCar": {
+        "id": 10408,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh1e?": {
+        "id": 10830,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh1e?formation=8 cars": {
+        "id": 10846,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh1e?unit=middleCar": {
+        "id": 10838,
+        "size": 8
+      },
       "proc-vehicle-cr-crh2a?": {
         "id": 9732,
         "size": 8
@@ -1610,6 +1726,30 @@
         "id": 9740,
         "size": 8
       },
+      "proc-vehicle-cr-crh2e?": {
+        "id": 10304,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh2e?formation=8 cars": {
+        "id": 10320,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh2e?unit=middleCar": {
+        "id": 10312,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh2g?": {
+        "id": 10878,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh2g?formation=8 cars": {
+        "id": 10894,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh2g?unit=middleCar": {
+        "id": 10886,
+        "size": 8
+      },
       "proc-vehicle-cr-crh380a?": {
         "id": 9684,
         "size": 8
@@ -1620,6 +1760,54 @@
       },
       "proc-vehicle-cr-crh380a?unit=middleCar": {
         "id": 9692,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380b?": {
+        "id": 10208,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380b?formation=8 cars": {
+        "id": 10224,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh380b?unit=middleCar": {
+        "id": 10216,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380cl?": {
+        "id": 10736,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380cl?formation=8 cars": {
+        "id": 10752,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh380cl?unit=middleCar": {
+        "id": 10744,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380d?": {
+        "id": 10256,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh380d?formation=8 cars": {
+        "id": 10272,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh380d?unit=middleCar": {
+        "id": 10264,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh3a?": {
+        "id": 10496,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh3a?formation=8 cars": {
+        "id": 10512,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh3a?unit=middleCar": {
+        "id": 10504,
         "size": 8
       },
       "proc-vehicle-cr-crh3c?": {
@@ -1646,6 +1834,18 @@
         "id": 9836,
         "size": 8
       },
+      "proc-vehicle-cr-crh5g?": {
+        "id": 10592,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh5g?formation=8 cars": {
+        "id": 10608,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh5g?unit=middleCar": {
+        "id": 10600,
+        "size": 8
+      },
       "proc-vehicle-cr-crh6a?": {
         "id": 9928,
         "size": 8
@@ -1656,6 +1856,18 @@
       },
       "proc-vehicle-cr-crh6a?unit=middleCar": {
         "id": 9936,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh6f?": {
+        "id": 10688,
+        "size": 8
+      },
+      "proc-vehicle-cr-crh6f?formation=8 cars": {
+        "id": 10704,
+        "size": 32
+      },
+      "proc-vehicle-cr-crh6f?unit=middleCar": {
+        "id": 10696,
         "size": 8
       },
       "proc-vehicle-cr-df11?": {
@@ -1670,9 +1882,21 @@
         "id": 10016,
         "size": 6
       },
+      "proc-vehicle-cr-df8b?": {
+        "id": 10972,
+        "size": 6
+      },
       "proc-vehicle-cr-hxd1?": {
         "id": 9982,
         "size": 10
+      },
+      "proc-vehicle-cr-hxd2?": {
+        "id": 10988,
+        "size": 10
+      },
+      "proc-vehicle-cr-hxd3c?": {
+        "id": 10998,
+        "size": 6
       },
       "proc-vehicle-cr-hxd3d?": {
         "id": 9992,
@@ -1709,6 +1933,10 @@
       "proc-vehicle-cr-ss1?": {
         "id": 9998,
         "size": 6
+      },
+      "proc-vehicle-cr-ss4?": {
+        "id": 10978,
+        "size": 10
       },
       "proc-vehicle-cr-ss8?": {
         "id": 10004,
