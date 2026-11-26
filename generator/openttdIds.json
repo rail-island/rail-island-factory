@@ -511,6 +511,7 @@
     "proc-vehicle-nyc-r160": 136,
     "proc-vehicle-obb-1012": 48,
     "proc-vehicle-obb-1040": 49,
+    "proc-vehicle-obb-1116": 835,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
     "proc-vehicle-oslo-sl79": 778,
@@ -3219,6 +3220,14 @@
       "proc-vehicle-obb-1040?": {
         "id": 1952,
         "size": 16
+      },
+      "proc-vehicle-obb-1116?": {
+        "id": 10208,
+        "size": 6
+      },
+      "proc-vehicle-obb-1116?livery=railjet": {
+        "id": 10214,
+        "size": 6
       },
       "proc-vehicle-odakyu-gse?": {
         "id": 5546,

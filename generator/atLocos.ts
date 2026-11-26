@@ -6,7 +6,7 @@ import type { ProceduralDesign } from "./design.ts";
 // Each vehicle replaces its own `// import:<slot>` and `// design:<slot>` line and keeps
 // the blank lines between the slots, so the vehicles' branches merge without conflicts.
 
-// import:obb-1116
+import { OBB1116 } from "./atObb1116.ts";
 
 // import:obb-1144
 
@@ -25,7 +25,7 @@ import type { ProceduralDesign } from "./design.ts";
 // import:bbo-214
 
 export const AT_LOCOS: ProceduralDesign[] = [
-  // design:obb-1116
+  OBB1116,
 
   // design:obb-1144
 
