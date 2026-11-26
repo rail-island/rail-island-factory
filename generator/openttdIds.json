@@ -518,6 +518,7 @@
     "proc-vehicle-obb-4024": 837,
     "proc-vehicle-obb-4744": 836,
     "proc-vehicle-obb-5022": 841,
+    "proc-vehicle-obb-nightjet": 843,
     "proc-vehicle-obb-railjet": 839,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
@@ -3319,6 +3320,26 @@
       "proc-vehicle-obb-5022?livery=cityjet": {
         "id": 10410,
         "size": 6
+      },
+      "proc-vehicle-obb-nightjet?": {
+        "id": 10488,
+        "size": 8
+      },
+      "proc-vehicle-obb-nightjet?formation=7 cars": {
+        "id": 10520,
+        "size": 32
+      },
+      "proc-vehicle-obb-nightjet?unit=couchette": {
+        "id": 10504,
+        "size": 8
+      },
+      "proc-vehicle-obb-nightjet?unit=middleCar": {
+        "id": 10496,
+        "size": 8
+      },
+      "proc-vehicle-obb-nightjet?unit=sleeper": {
+        "id": 10512,
+        "size": 8
       },
       "proc-vehicle-obb-railjet?": {
         "id": 10304,

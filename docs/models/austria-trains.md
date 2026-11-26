@@ -244,7 +244,45 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-cityshuttle-dd -->
 
-<!-- design:obb-nightjet -->
+### OBB Nightjet (`proc-vehicle-obb-nightjet`)
+
+| | |
+|---|---|
+| Built on | the series kit (`generator/atNightjet.ts`; shinkansen.ts, seriesCab.ts) on the Railjet's section, bogies and doors (`...RAILJET`, atRailjet.ts unchanged), unwired (`traction: "none"`); the couchette and sleeping cars copies of the series with their own layouts |
+| Parameters | `unit` `endCar` (the control car Bfmpz, default), `middleCar` (the multi-purpose car ABbmpvz), `couchette` (Bcmz), `sleeper` (WLAmz), `train`; `cars` 3 .. 7 (default 4) with `train` |
+| Figures | de.wikipedia "Nightjet": coaches 26.5 m, the control car taken as the Railjet's 26.85 m (the set 185.85 m), 2.825 m wide, 4.05 m high, bogie centres 19.0 m, 230 km/h; 70 / 30 / 40 / 20 places, 260 the set; 57 t the couchette car (its plate), the others estimated on the Railjet's |
+
+- **The set is push-pull**: the new Nightjet has a control car with a cab (not a coach train), so the
+  default unit is that control car (railroad-vehicle skill: the car leading the train). `nightjetTrain`:
+  the control car, the multi-purpose car (from four cars), couchette cars, the sleeping cars at the rear
+  where the locomotive couples (seven: Bfmpz, ABbmpvz, 3 x Bcmz, 2 x WLAmz; three: control car, couchette,
+  sleeper).
+- **The face** (80-91 721 side-on at Wien Hbf, 120 px/m; 80-91 713 head-on at Hamburg): the Vectron-like
+  face of the second Railjet generation. The dark grey beam upright to 1.38 m with the buffers 0.33 m out;
+  the blue face set back 0.38 m over it, leaning slightly forward to 2.3 m (0.31 m back), then back ever
+  more steeply to the cap (3.55 m, 0.93 m back) and rounding into the roof 2.3 m behind the tip. Head-on:
+  the black louvred panel (1.47 - 2.04 m) between the tall lamp housings (head lamp over tail lamp), the
+  blue band with "nightjet" to 2.39 m, then the black band, the two-pane windscreen (2.72 - 3.54 m) and
+  the black cap with "OBB", the roof lamp and the number, all between blue corner pillars.
+- **The control car's side**: the cab side window in a black field following the face's corner; the red
+  swoosh ahead of the door, its top falling from the side's red band (2.23 m at the door) to a point
+  1.5 m behind the tip low over the bogie, with the dark grey wedge in it (to 3.45 m behind the tip);
+  "OBB nightjet" at 3.05 m; the door 6.25 - 7.25 m behind the tip, nine panes from 8.1 m.
+- **Sides**: navy, the dark grey line 1.71 - 1.86 m, the red band 1.86 - 2.23 m reaching into the panes'
+  lower part, navy above, the light grey skirt between the bogies, a light grey roof; every door in a
+  light grey frame, its leaf's window as tall as the panes. Seats and sleeping cars: one black window
+  band; the big outlined "nightjet" low on the seats' cars. Couchette car: a narrow pane and the three
+  four-berth compartments' panes in their own frames behind the door, then seven columns of mini cabins,
+  each an upper (2.45 - 3.33 m) and a lower (1.5 - 2.29 m) black frame of two panes, the big "nightjet"
+  high near the door end. Sleeping car: a narrow pane and ten cabins' panes, two small low windows.
+- **References**: `assets/obb-nightjet/` (eight Commons photographs, SOURCES.md).
+- **Deviations**: no moon or star motif - the new generation's photographs show none; the multi-purpose
+  car's layout (seats, bicycle room, barrier-free compartment) is laid out from one close photograph and
+  the published figures; the sleeping car's panes from one oblique photograph; the control car's length
+  and the cars' order are not published (Railjet's 26.85 m; sleeping cars at the locomotive's end as
+  photographed); the lettering is the stroke font (c, g, h and p added to strokeFont.ts).
+- **Triangles**: control car 15,099, coach 9,296, couchette 10,040, sleeper 9,456; the distant model 90 - 94 a
+  car (the couchette's mini cabins do not fit its 100), at most 500 a train. Text: the title verbatim, "Couchette car" translated.
 
 ### OBB 1116 Taurus (`proc-vehicle-obb-1116`)
 

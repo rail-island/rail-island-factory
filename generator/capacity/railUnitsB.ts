@@ -691,4 +691,18 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "6" }, seats: 282 },
     ],
   },
+  "proc-vehicle-obb-nightjet": {
+    seats: 70,
+    source: "de.wikipedia Nightjet (new generation): 260 places a set - control car Bfmpz 70 seats, multi-purpose car ABbmpvz 26 seats + 2 barrier-free berths + 2 companions' places, couchette cars Bcmz 40 berths (28 mini cabins, 3 four-berth compartments), sleeping cars WLAmz 20 beds (10 compartments)",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 30 },
+      { params: { unit: "couchette" }, seats: 40 },
+      { params: { unit: "sleeper" }, seats: 20 },
+      { params: { unit: "train", cars: "3" }, seats: 130 },
+      { params: { unit: "train" }, seats: 160 },
+      { params: { unit: "train", cars: "5" }, seats: 200 },
+      { params: { unit: "train", cars: "6" }, seats: 240 },
+      { params: { unit: "train", cars: "7" }, seats: 260 },
+    ],
+  },
 };

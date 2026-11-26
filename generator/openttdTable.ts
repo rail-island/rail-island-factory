@@ -1138,6 +1138,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   }),
   "proc-vehicle-obb-4020": series(56, 64, ELRL, { cars: 3, liveries: ["trafficRed"] }), // 56 / 64 / 64 seats, 184 in three cars (de.wikipedia)
   "proc-vehicle-obb-5022": series(58, 58, RAIL, { cars: 2, liveries: ["cityjet"] }),
+  // the new Nightjet: the control car leading the multi-purpose car, three couchette and two sleeping cars (the locomotive couples at the rear)
+  "proc-vehicle-obb-nightjet": pax(70, RAIL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 30 }), at({ unit: "couchette" }, { capacity: 40 }), at({ unit: "sleeper" }, { capacity: 20 })],
+    presets: presets({ unit: "middleCar" }, { unit: "couchette" }, { unit: "sleeper" }),
+    formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "sleeper" }, { unit: "sleeper" })],
+  }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

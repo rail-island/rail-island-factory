@@ -346,6 +346,18 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikimedia Commons: OBB 5022 045 in Graz Ostbahnhof-Messe.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_5022_045_in_Graz_Ostbahnhof-Messe.jpg" },
   ],
   "proc-vehicle-obb-4010": [{ title: "Wikipedia (de): ÖBB 4010", url: "https://de.wikipedia.org/wiki/%C3%96BB_4010" }, { title: "Wikimedia Commons: 4010027 wien west.jpg", url: "https://commons.wikimedia.org/wiki/File:4010027_wien_west.jpg" }, { title: "Wikimedia Commons: K00 001 Bf Salzburg Hbf, 4010 008.jpg", url: "https://commons.wikimedia.org/wiki/File:K00_001_Bf_Salzburg_Hbf,_4010_008.jpg" }, { title: "Wikimedia Commons: K00 002 Bf Salzburg Hbf, 6010 008.jpg", url: "https://commons.wikimedia.org/wiki/File:K00_002_Bf_Salzburg_Hbf,_6010_008.jpg" }, { title: "Wikimedia Commons: ÖBB 4010 021 selzthal 1993-02-20.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4010_021_selzthal_1993-02-20.jpg" }, { title: "Wikimedia Commons: Leoben Hbf 4010 002.jpg", url: "https://commons.wikimedia.org/wiki/File:Leoben_Hbf_4010_002.jpg" }],
+  "proc-vehicle-obb-nightjet": [
+    { title: "Wikipedia (de): Nightjet", url: "https://de.wikipedia.org/wiki/Nightjet" },
+    { title: "Wikipedia: Nightjet", url: "https://en.wikipedia.org/wiki/Nightjet" },
+    { title: "Wikimedia Commons: 20260601 ÖBB DANI 8091721 Wbf side view.jpg", url: "https://commons.wikimedia.org/wiki/File:20260601_%C3%96BB_DANI_8091721_Wbf_side_view.jpg" },
+    { title: "Wikimedia Commons: Steuerwagen Siemens Viaggio Next Level ÖBB nightjet 2023-12 - 03.jpg", url: "https://commons.wikimedia.org/wiki/File:Steuerwagen_Siemens_Viaggio_Next_Level_%C3%96BB_nightjet_2023-12_-_03.jpg" },
+    { title: "Wikimedia Commons: Siemens Viaggio Next Level ÖBB nightjet unit 13 at Hamburg Hbf 2023-12 - 46.jpg", url: "https://commons.wikimedia.org/wiki/File:Siemens_Viaggio_Next_Level_%C3%96BB_nightjet_unit_13_at_Hamburg_Hbf_2023-12_-_46.jpg" },
+    { title: "Wikimedia Commons: Exterior of the seated coaches of Siemens Viaggio Next Level ÖBB nightjet 2023-12 - 04.jpg", url: "https://commons.wikimedia.org/wiki/File:Exterior_of_the_seated_coaches_of_Siemens_Viaggio_Next_Level_%C3%96BB_nightjet_2023-12_-_04.jpg" },
+    { title: "Wikimedia Commons: Siemens Viaggio Next Level ÖBB nightjet 2023-12 - 05.jpg", url: "https://commons.wikimedia.org/wiki/File:Siemens_Viaggio_Next_Level_%C3%96BB_nightjet_2023-12_-_05.jpg" },
+    { title: "Wikimedia Commons: Couchette and mini cabin coach of Siemens Viaggio Next Level ÖBB nightjet 2023-12 - 07.jpg", url: "https://commons.wikimedia.org/wiki/File:Couchette_and_mini_cabin_coach_of_Siemens_Viaggio_Next_Level_%C3%96BB_nightjet_2023-12_-_07.jpg" },
+    { title: "Wikimedia Commons: Mini cabin coach of Siemens Viaggio Next Level ÖBB nightjet 2023-12 - 06.jpg", url: "https://commons.wikimedia.org/wiki/File:Mini_cabin_coach_of_Siemens_Viaggio_Next_Level_%C3%96BB_nightjet_2023-12_-_06.jpg" },
+    { title: "Wikimedia Commons: NJ2 Schlafwagen WLAmz, Ende.jpg", url: "https://commons.wikimedia.org/wiki/File:NJ2_Schlafwagen_WLAmz,_Ende.jpg" },
+  ],
   // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
   ...FLEET_LINKS,
 };
