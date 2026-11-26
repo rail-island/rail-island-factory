@@ -1100,6 +1100,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-crh2a": series(50, 100, ELRL, { cars: 8 }),
   "proc-vehicle-cr-crh3c": series(40, 80, ELRL, { cars: 8 }),
   "proc-vehicle-cr-crh380b": series(36, 80, ELRL, { cars: 8 }),
+  "proc-vehicle-cr-crh380d": series(38, 80, ELRL, { cars: 8 }),
   "proc-vehicle-cr-crh5a": series(50, 90, ELRL, { cars: 8 }),
   // the power car (no seats) leading six coaches and the driving trailer, turned
   "proc-vehicle-cr-cr200j": pax(0, ELRL, {
