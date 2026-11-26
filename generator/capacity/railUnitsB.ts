@@ -672,4 +672,12 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "7" }, seats: 404 },
     ],
   },
+  "proc-vehicle-noevog-himmelstreppe": {
+    seats: 36,
+    source: "de.wikipedia NOVOG ET1-ET9: 116 (+11 folding) seats and 113 standing places in three cars; about 36 a high-floor end car, 44 the low-floor middle car",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 44 },
+      { params: { unit: "train" }, seats: 116 },
+    ],
+  },
 };
