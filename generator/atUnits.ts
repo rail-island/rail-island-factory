@@ -9,7 +9,7 @@ import type { ProceduralDesign } from "./design.ts";
 
 // import:obb-4024
 
-// import:obb-4744
+import { OBB4744_DESIGN } from "./atObb4744.ts";
 
 // import:obb-4020
 
@@ -32,7 +32,7 @@ export const AT_UNITS: ProceduralDesign[] = [
 
   // design:obb-4024
 
-  // design:obb-4744
+  OBB4744_DESIGN,
 
   // design:obb-4020
 

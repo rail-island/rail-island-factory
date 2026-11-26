@@ -316,6 +316,7 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-sncf-x73500": [{ title: "Wikipedia: A TER", url: "https://en.wikipedia.org/wiki/A_TER" }, { title: "Wikimedia Commons: Moreuil - X73595 en gare.jpg", url: "https://commons.wikimedia.org/wiki/File:Moreuil_-_X73595_en_gare.jpg" }],
   "proc-vehicle-sncf-z20500": [{ title: "Wikipedia: SNCF Class Z 20500", url: "https://en.wikipedia.org/wiki/SNCF_Class_Z_20500" }, { title: "Wikimedia Commons: Z 20500 IDF Mobilités Ligne P.jpg", url: "https://commons.wikimedia.org/wiki/File:Z_20500_IDF_Mobilit%C3%A9s_Ligne_P.jpg" }],
   "proc-vehicle-talgo-iii": [{ title: "Wikipedia: Talgo", url: "https://en.wikipedia.org/wiki/Talgo" }],
+  "proc-vehicle-obb-4744": [{ title: "Wikipedia (de): OBB 4744", url: "https://de.wikipedia.org/wiki/%C3%96BB_4744" }, { title: "Wikipedia: Siemens Desiro ML", url: "https://en.wikipedia.org/wiki/Siemens_Desiro_ML" }, { title: "Wikimedia Commons: Eisenbahn O BB 4744 065-5.jpg", url: "https://commons.wikimedia.org/wiki/File:Eisenbahn_%C3%96_BB_4744_065-5.jpg" }, { title: "Wikimedia Commons: OBB 4744 053.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4744_053.jpg" }, { title: "Wikimedia Commons: Class 4744 Desiro EMU.jpg", url: "https://commons.wikimedia.org/wiki/File:Class_4744_Desiro_EMU.jpg" }],
   // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
   ...FLEET_LINKS,
 };
