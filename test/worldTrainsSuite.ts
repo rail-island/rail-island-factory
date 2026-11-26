@@ -32,7 +32,6 @@ const FAMILIES = [...DESIGNS.values()].filter((d) => KIT_FAMILY_MODULES.has(desi
 const COVERED = new Set([
   // the cab doors' ladders and steps over the outer wheels
   "proc-vehicle-sncf-cc6500", "proc-vehicle-sncf-bb22200", "proc-vehicle-sncf-bb27000", "proc-vehicle-sncf-bb67400", "proc-vehicle-sncf-cc72000",
-  "proc-vehicle-br-class-55", "proc-vehicle-br-class-47", "proc-vehicle-cr-hxd1", "proc-vehicle-ir-icf-coach", "proc-vehicle-ir-memu", "proc-vehicle-ns-plan-v",
   "proc-vehicle-br-class-55", "proc-vehicle-br-class-47", "proc-vehicle-cr-hxd1", "proc-vehicle-cr-hxd2", "proc-vehicle-ir-icf-coach", "proc-vehicle-ir-memu", "proc-vehicle-ns-plan-v",
   // the Renfe 354's cab door steps over its leading wheel
   "proc-vehicle-renfe-354",
