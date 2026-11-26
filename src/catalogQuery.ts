@@ -11,7 +11,7 @@ import type { CatalogRecord, Scenery } from "../generator/catalog.ts";
 import { soundIdsOf } from "./modelSounds";
 import { openttdFeature } from "./openttd/properties";
 import {
-  consumesText, hasTraffic, jobsSort, jobsText, passengersSort, passengersText, producesSort, producesText, recipeSort, recipeText, residentsSort, residentsText,
+  consumesText, hasTraffic, jobsSort, jobsText, passengersSort, passengersText, producesSort, producesText, recipeSort, recipeText, residentsSort, residentsText, visitorsSort, visitorsText,
 } from "./trafficFigures";
 
 export type { CatalogRecord, Scenery };
@@ -68,6 +68,7 @@ export const COLUMNS: readonly Column[] = [
   // the default's figure, or a range over its variants; sorted by the default's.
   { key: "residents", label: "Residents", unit: null, type: "num", dir: "desc", table: true, value: residentsText, sort: residentsSort, only: hasTraffic },
   { key: "jobs", label: "Jobs", unit: null, type: "num", dir: "desc", table: true, value: jobsText, sort: jobsSort, only: hasTraffic },
+  { key: "visitors", label: "Visitors", unit: null, type: "text", dir: "desc", table: false, value: visitorsText, sort: visitorsSort, only: hasTraffic },
   { key: "passengers", label: "Passengers", unit: "trips/min", type: "num", dir: "desc", table: true, value: passengersText, sort: passengersSort, only: hasTraffic },
   { key: "produces", label: "Produces", unit: "t/min", type: "text", dir: "desc", table: true, value: producesText, sort: producesSort, only: hasTraffic },
   { key: "consumes", label: "Consumes", unit: null, type: "text", dir: "asc", table: false, value: consumesText, only: hasTraffic },

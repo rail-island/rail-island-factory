@@ -124,6 +124,20 @@ describe("trafficProblems", () => {
     expect(p({ processes: STEEL })).toBe("");
   });
 
+  it("checks a visitor site: a whole capacity above 0 and a stay", () => {
+    const p = (fields: object) => trafficProblems({ id: "proc-building-x", params: [] } as never, { category: "Historical", group: "historical" }, fields as never).join("\n");
+    expect(p({ jobs: 4, visitors: { capacity: 800, stayMin: 15 } })).toBe("");
+    // a visitor site alone is a role: it draws tourists
+    expect(p({ visitors: { capacity: 80, stayMin: 10 } })).toBe("");
+    expect(p({ visitors: { capacity: 0, stayMin: 10 } })).toMatch(/capacity is 0/);
+    expect(p({ visitors: { capacity: 10.5, stayMin: 10 } })).toMatch(/not a whole number/);
+    expect(p({ visitors: { capacity: 50_000, stayMin: 10 } })).toMatch(/over 20000/);
+    expect(p({ visitors: { capacity: 80 } })).toMatch(/stayMin: undefined is not a number/);
+    expect(p({ visitors: { capacity: 80, stayMin: 0 } })).toMatch(/stayMin is 0/);
+    expect(p({ visitors: { capacity: 80, stayMin: 10, draw: 2 } })).toMatch(/unknown field "draw"/);
+    expect(p({ visitors: 800 })).toMatch(/not a visitor site object/);
+  });
+
   it("refuses a variant that is no real selection", () => {
     const p = (variants: object[]) => trafficProblems(unit, RAIL, { seats: 10, variants } as never).join("\n");
     expect(p([{ params: {}, seats: 5 }])).toMatch(/lists no parameters/);

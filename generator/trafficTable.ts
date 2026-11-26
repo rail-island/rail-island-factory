@@ -14,6 +14,11 @@
 // A building of every category but Station and Decor must have an entry
 // (traffic.ts mustCarry); the export writes `game.traffic`, `{}` for the rest.
 //
+// A tourist destination (a cathedral, a castle, a lookout tower) also states
+// `visitors`: how many tourists it holds at once and their mean stay in minutes -
+// its pull, independent of its staff. The capacities follow the site's fame, from a
+// village chapel (30) to Prague Castle and the Louvre (3,000).
+//
 // The numbers are for the model as drawn at scale 1; the game scales them by the
 // building's on-map size itself, so a variant states only what the parameter changes.
 
@@ -22,38 +27,46 @@ import type { BuildingTrafficEntry } from "./traffic.ts";
 export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = {
   "proc-building-arc-de-triomphe": {
     jobs: 12,
-    source: "monument: ticket and museum staff in the attic, visitors attracted through jobs",
+    visitors: { capacity: 800, stayMin: 10 },
+    source: "monument: ticket and museum staff in the attic; its tourists are its visitors",
   },
   "proc-building-atomium": {
     jobs: 60, produces: { mail: 0.0083 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 600, stayMin: 15 },
     source: "museum, exhibition and the top-sphere restaurant staff",
   },
   "proc-building-bandstand": {
     jobs: 2,
+    visitors: { capacity: 60, stayMin: 10 },
     source: "park bandstand: musicians and a caretaker",
   },
   "proc-building-baroque-church": {
     jobs: 4,
+    visitors: { capacity: 150, stayMin: 10 },
     source: "parish church: priest, sexton, organist, verger",
   },
   "proc-building-belfry-of-bruges": {
     jobs: 25, produces: { mail: 0.0083 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 500, stayMin: 10 },
     source: "belfry and its market halls: tower staff, shops and a museum in the halls",
   },
   "proc-building-brandenburg-gate": {
     jobs: 4,
+    visitors: { capacity: 800, stayMin: 5 },
     source: "city gate monument: an information point and guards",
   },
   "proc-building-brussels-town-hall": {
     jobs: 300, produces: { mail: 0.2 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 400, stayMin: 10 },
     source: "size: 71 x 49 m, about 4 office floors around the courtyard, city administration and ceremonial rooms",
   },
   "proc-building-castle": {
     residents: 8, jobs: 40, produces: { mail: 0.03 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 600, stayMin: 20 },
     source: "size: 72 x 63 m courtyard castle, a castellan's household and museum, shop and cafe staff",
     variants: [
-      { params: { layout: "keep" }, residents: 4, jobs: 15, produces: { mail: 0.0117 } },
-      { params: { layout: "fortress" }, residents: 20, jobs: 70, produces: { mail: 0.0567 } },
+      { params: { layout: "keep" }, residents: 4, jobs: 15, produces: { mail: 0.0117 }, visitors: { capacity: 300, stayMin: 15 } },
+      { params: { layout: "fortress" }, residents: 20, jobs: 70, produces: { mail: 0.0567 }, visitors: { capacity: 1000, stayMin: 25 } },
     ],
   },
   "proc-building-chemical-factory": {
@@ -65,10 +78,12 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-church-vrchlabi": {
     jobs: 4,
+    visitors: { capacity: 100, stayMin: 10 },
     source: "town parish church: priest, sexton, organist, verger",
   },
   "proc-building-cloth-hall": {
     jobs: 120, produces: { mail: 0.0333 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 800, stayMin: 15 },
     source: "Krakow Sukiennice: about 40 market stalls on the ground floor and the gallery museum upstairs",
   },
   "proc-building-comm-balcony-house": {
@@ -313,34 +328,42 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-equestrian-statue": {
     jobs: 1,
+    visitors: { capacity: 40, stayMin: 5 },
     source: "statue: a caretaker; visitors attracted through jobs",
   },
   "proc-building-gate-of-heavenly-peace": {
     jobs: 40, produces: { mail: 0.0083 }, accepts: ["mail"],
+    visitors: { capacity: 1500, stayMin: 10 },
     source: "Tiananmen gate tower: museum, ticket and guard staff",
   },
   "proc-building-gateway-of-india": {
     jobs: 6,
+    visitors: { capacity: 800, stayMin: 5 },
     source: "monument: guards and guides",
   },
   "proc-building-hagia-sophia": {
     jobs: 150, produces: { mail: 0.0167 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 2000, stayMin: 15 },
     source: "size: 88 x 87 m mosque and visitor site: imams, attendants, guards and guides",
   },
   "proc-building-half-timbered-town-hall": {
     jobs: 30, produces: { mail: 0.025 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 150, stayMin: 10 },
     source: "size: 22 x 16.5 m, three floors of town offices and a ground-floor tavern",
   },
   "proc-building-hist-colosseum": {
     jobs: 150, produces: { mail: 0.0083 }, accepts: ["goods", "mail"],
+    visitors: { capacity: 2500, stayMin: 20 },
     source: "amphitheatre site: ticket, guard, guide and conservation staff",
   },
   "proc-building-hist-pagoda": {
     residents: 6, jobs: 4, produces: { mail: 0.0033 }, accepts: ["food", "mail"],
+    visitors: { capacity: 400, stayMin: 10 },
     source: "temple pagoda: monks living in it and temple staff",
   },
   "proc-building-hist-palace": {
     residents: 20, jobs: 200, produces: { mail: 0.1 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 1000, stayMin: 20 },
     source: "size: 73 x 68 m palace: a household of about 20 and court, museum and service staff",
   },
   "proc-building-hospital": {
@@ -433,14 +456,17 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-leaning-tower-of-pisa": {
     jobs: 10,
+    visitors: { capacity: 1000, stayMin: 10 },
     source: "bell tower open to visitors: ticket and guide staff",
   },
   "proc-building-louvre-pyramid": {
     jobs: 200, produces: { mail: 0.0333 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 3000, stayMin: 25 },
     source: "the museum's main entrance hall: reception, security and shop staff",
   },
   "proc-building-market-cross": {
     jobs: 1,
+    visitors: { capacity: 40, stayMin: 5 },
     source: "market cross: a caretaker",
   },
   "proc-building-market-hall": {
@@ -449,10 +475,12 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-nelsons-column": {
     jobs: 1,
+    visitors: { capacity: 300, stayMin: 5 },
     source: "column monument: a caretaker",
   },
   "proc-building-notre-dame": {
     jobs: 60, produces: { mail: 0.0083 }, accepts: ["food", "mail"],
+    visitors: { capacity: 2000, stayMin: 15 },
     source: "cathedral: clergy, sacristans, musicians, guides and guards",
   },
   "proc-building-panel-slab": {
@@ -481,26 +509,32 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-pantheon": {
     jobs: 20, produces: { mail: 0.0033 }, accepts: ["mail"],
+    visitors: { capacity: 1200, stayMin: 10 },
     source: "church and visitor site: clergy, guards and guides",
   },
   "proc-building-parthenon": {
     jobs: 25,
+    visitors: { capacity: 1500, stayMin: 15 },
     source: "temple ruin on its site: guards, guides and conservators",
   },
   "proc-building-plague-column": {
     jobs: 1,
+    visitors: { capacity: 50, stayMin: 5 },
     source: "column monument: a caretaker",
   },
   "proc-building-prague-castle-st-vitus": {
     jobs: 300, produces: { mail: 0.1667 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 3000, stayMin: 25 },
     source: "Prague Castle with St Vitus: the President's office, cathedral clergy, castle guard and visitor staff",
   },
   "proc-building-prague-old-town-hall": {
     jobs: 60, produces: { mail: 0.0333 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 800, stayMin: 10 },
     source: "town hall with the astronomical clock: municipal ceremonial offices, guides and tower staff",
   },
   "proc-building-reichstag": {
     jobs: 1200, produces: { mail: 0.5 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 800, stayMin: 15 },
     source: "size: 140 x 100 m, 4 floors: the Bundestag's plenary, groups' offices and visitor services",
   },
   "proc-building-sky-art-deco": {
@@ -595,34 +629,42 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-st-basils-cathedral": {
     jobs: 30, produces: { mail: 0.0033 }, accepts: ["mail"],
+    visitors: { capacity: 1200, stayMin: 15 },
     source: "cathedral museum: curators, guides, guards and clergy",
   },
   "proc-building-st-nicholas-church": {
     jobs: 6,
+    visitors: { capacity: 500, stayMin: 10 },
     source: "town church: clergy, sexton, organist and concert staff",
   },
   "proc-building-statue-of-liberty": {
     jobs: 50, produces: { mail: 0.005 }, accepts: ["food", "mail"],
+    visitors: { capacity: 1500, stayMin: 20 },
     source: "statue on its star fort: National Park rangers, security and concession staff",
   },
   "proc-building-taj-mahal": {
     jobs: 200, produces: { mail: 0.0083 }, accepts: ["mail"],
+    visitors: { capacity: 2500, stayMin: 20 },
     source: "mausoleum complex: guards, guides, gardeners and conservators",
   },
   "proc-building-temple-of-heaven": {
     jobs: 60, produces: { mail: 0.005 }, accepts: ["mail"],
+    visitors: { capacity: 1500, stayMin: 15 },
     source: "temple complex in its park: guards, guides and park staff",
   },
   "proc-building-tower-bell": {
     jobs: 2,
+    visitors: { capacity: 100, stayMin: 10 },
     source: "bell tower: a bell-ringer and caretaker",
   },
   "proc-building-tower-bigben": {
     jobs: 10,
+    visitors: { capacity: 800, stayMin: 10 },
     source: "clock tower: clock keepers, guides and guards",
   },
   "proc-building-tower-eiffel": {
     jobs: 500, produces: { mail: 0.0167 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 2500, stayMin: 20 },
     source: "Eiffel Tower operator staff (about 360) and its restaurants and shops",
   },
   "proc-building-tower-kenney": {
@@ -650,14 +692,17 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-tower-watch": {
     jobs: 2,
+    visitors: { capacity: 80, stayMin: 15 },
     source: "watch tower: two lookouts or guards",
   },
   "proc-building-twin-tower-baroque-church": {
     jobs: 6,
+    visitors: { capacity: 300, stayMin: 10 },
     source: "large baroque church: clergy, sexton, organist and guides",
   },
   "proc-building-us-capitol": {
     jobs: 2000, produces: { mail: 0.8333 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 800, stayMin: 15 },
     source: "United States Capitol: members' and committee staff, Capitol Police and visitor centre in the 195 x 104 m building",
   },
   "proc-building-village-alpine-hut": {
@@ -669,6 +714,7 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-village-chapel": {
     jobs: 1,
+    visitors: { capacity: 30, stayMin: 5 },
     source: "village chapel: a sexton",
   },
   "proc-building-village-cottage": {
@@ -716,10 +762,12 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-war-memorial": {
     jobs: 1,
+    visitors: { capacity: 50, stayMin: 5 },
     source: "memorial: a caretaker; visitors attracted through jobs",
   },
   "proc-building-white-house": {
     residents: 4, jobs: 500, produces: { mail: 0.3333 }, accepts: ["food", "goods", "mail"],
+    visitors: { capacity: 500, stayMin: 10 },
     source: "White House: the first family and about 100 residence staff, West Wing and visitor staff",
   },
 };

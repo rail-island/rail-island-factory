@@ -2,7 +2,7 @@
 
 **Covers** - the numbers the game's passenger and cargo engine reads from each model:
 a building's residents, jobs and supply-chain role - what it makes from nothing,
-consumes, or processes by a recipe (`game.traffic`) - and a vehicle's seats, tonnes
+consumes, or processes by a recipe, and a tourist destination's visitors (`game.traffic`) - and a vehicle's seats, tonnes
 and the commodities it may carry (`game.capacity`); the commodities, the chain and
 its check, the per-minute unit and its marker, the tuning, which designs must state
 their numbers, variants and how they match, the checks, the export and where the
@@ -25,11 +25,13 @@ numbers came from.
 The game's traffic engine (its `docs/gameplay/traffic.md`) makes every placed building
 generate groups of passengers and cargo with a target building, and carries them on
 the player's vehicles up to their capacity. A building generates
-`5/60 x residents + 2.5/60 x jobs` passenger trips per minute of game time (the
-game's constants: the factory states people, not trips) and its `produces` rates of
+`5/60 x residents` passenger trips per minute of game time (the game's constant: the
+factory states people, not trips) - to work, to a visitor site or elsewhere; a worker
+and a tourist travel back home after their stay, so jobs and visitor sites start no
+trips of their own - and its `produces` rates of
 raw commodities and mail; a processor turns delivered inputs into its
 output by its recipe and makes nothing without them; a building attracts passengers
-by its jobs and residents and takes in the commodities it `accepts` or its recipe
+by its free jobs, its free visitor places and its residents and takes in the commodities it `accepts` or its recipe
 uses. Until a design carried these numbers, the game guessed
 them from the building's category and the vehicle's group and title; it keeps that
 guess only for model ids this export no longer carries.
@@ -79,6 +81,7 @@ A building's `game.traffic`:
     rate: number;                             // at most this many t of output a minute
     stock: number;                            // stockpile cap in t, per input (about 10 minutes)
   };
+  visitors?: { capacity: number; stayMin: number }; // a tourist destination (below)
   variants?: [{ params, ...fields }];
 }
 ```
@@ -106,6 +109,27 @@ goods and food; flat wagons and low loaders steel, wood and goods; an aircraft's
 goods and mail; luggage vans and mail rooms mail. A vehicle with several holds (an
 airliner's goods and mail) states their tonnes summed and the union of what they
 take. A concrete mixer carries no commodity (`nothing`).
+
+## Visitor sites
+
+A tourist destination - a cathedral, a castle, a monument, a lookout tower - states
+`visitors`: `capacity`, how many tourists it holds **at once** (a whole number above
+0, at most 20,000), and `stayMin`, their mean stay in minutes of game time (above 0,
+at most 240). A variant replaces it whole (a castle's keep holds fewer than its
+fortress). The game sends people from their homes to it, keeps them there for the stay
+and sends them back home the way they came; its pull falls as it fills, so the
+capacity is its absorption - independent of its staff, which stay `jobs`. Workplaces
+need no field: the game treats every job the same way (a worker travels in, stays
+and travels home), the job count being its capacity. Visitors alone are a role, so a
+statue with no staff states only `visitors`.
+
+The capacities follow the site's fame (`trafficTable.ts`): a village chapel or a
+market cross 30-40, a parish church 100-150, a lookout tower 80, a town's main
+church or town hall 300-800, a capital's monument 800-1,500, and the world's most
+visited sites 2,000-3,000 (Notre-Dame, Hagia Sophia, the Colosseum, the Taj Mahal,
+the Eiffel Tower, Prague Castle and the Louvre). A stay runs from 5 minutes (a
+column, a gate) to 25 (a castle, a museum). Like every number here they are first
+drafts; the balance is the game's.
 
 ## The chain
 

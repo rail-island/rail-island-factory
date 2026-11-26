@@ -166,15 +166,17 @@ listing ([chains.md](chains.md)). On the Chains tab the toolbar holds the switch
   shows a dash and sorts last.
 - **Passengers and cargo** (`src/trafficFigures.ts`, a building's `game.traffic`,
   [../models/traffic.md](../models/traffic.md)), all per minute of game time:
-  **Residents**, **Jobs**, **Passengers** (trips/min, `5/60 x residents + 2.5/60 x
-  jobs`, the game's constants), **Produces** (t/min per commodity, "grain 180",
+  **Residents**, **Jobs**, **Visitors** (a visitor site's capacity and stay,
+  "800 (15 min)"), **Passengers** (trips/min, `5/60 x residents`, the game's
+  constant: a job or a visitor site starts no trips of its own, its trips are the
+  returns of the people it draws), **Produces** (t/min per commodity, "grain 180",
   several joined by ", "), **Consumes** (what it takes in: `accepts` and its recipe's
   inputs, "food, goods, mail") and **Recipe** ("1 iron ore + 0.5 coal -> steel,
   360-540 t/min"). Each is the design's default, or a range "min-max" over its
   default and variants when they differ (the Chains tab's way, [chains.md](chains.md));
-  Residents, Jobs, Passengers, Produces and Recipe sort by the default's figure
+  Residents, Jobs, Visitors, Passengers, Produces and Recipe sort by the default's figure
   (a column's `sort`), a building that has none and every vehicle last. The table
-  shows the first four; the model page's spec list shows all six, but only for a
+  shows Residents, Jobs, Passengers and Produces; the model page's spec list shows all seven, but only for a
   record with a traffic block (a column's `only`), so a vehicle's page has none of
   them. Vehicles get no values.
 - **Narrow: cards.** Title and pool chip, then triangles, vertices, JS size and

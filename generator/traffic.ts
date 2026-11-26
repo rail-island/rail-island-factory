@@ -70,6 +70,21 @@ export interface BuildingTrafficFields {
   accepts?: Commodity[];
   /** Its recipe, when it is a processor; a variant replaces it whole. */
   processes?: Recipe;
+  /** A visitor site (a cathedral, a lookout tower, a castle): the tourists it holds at once; a variant replaces it whole. */
+  visitors?: VisitorSite;
+}
+
+/**
+ * A tourist destination: people travel to it from their homes, stay `stayMin`
+ * minutes of game time and travel back the way they came. `capacity` is how many
+ * visitors it holds at once - its pull falls as it fills - and is independent of
+ * its staff (`jobs`).
+ */
+export interface VisitorSite {
+  /** Visitors present at once, whole people. */
+  capacity: number;
+  /** The mean stay, minutes of game time. */
+  stayMin: number;
 }
 
 /** A vehicle's capacity fields; a variant states only those that differ. */
@@ -139,9 +154,10 @@ export function mustCarry(category: string, group: string): boolean {
 }
 
 /** Sanity bounds: anything above is a typo, not a design. */
-const MAX = { residents: 20_000, jobs: 20_000, produces: 2_000, seats: 3_000, tonnes: 250_000, rate: 2_000, stock: 100_000, input: 10 } as const;
+const MAX = { residents: 20_000, jobs: 20_000, produces: 2_000, seats: 3_000, tonnes: 250_000, rate: 2_000, stock: 100_000, input: 10, visitors: 20_000, stayMin: 240 } as const;
 
-const BUILDING_FIELDS = ["residents", "jobs", "produces", "accepts", "processes"];
+const BUILDING_FIELDS = ["residents", "jobs", "produces", "accepts", "processes", "visitors"];
+const VISITOR_FIELDS = ["capacity", "stayMin"];
 const VEHICLE_FIELDS = ["seats", "tonnes", "commodities"];
 const RECIPE_FIELDS = ["output", "inputs", "rate", "stock"];
 
@@ -201,6 +217,18 @@ function recipeProblems(where: string, r: unknown): string[] {
   return out;
 }
 
+function visitorProblems(where: string, v: unknown): string[] {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return [`${where} is not a visitor site object`];
+  const f = v as Record<string, unknown>;
+  const out: string[] = [];
+  for (const k of Object.keys(f)) if (!VISITOR_FIELDS.includes(k)) out.push(`${where} has an unknown field "${k}"`);
+  const cap = count(f.capacity, MAX.visitors, true);
+  if (cap) out.push(`${where}.capacity: ${cap}`);
+  else if (f.capacity === 0) out.push(`${where}.capacity is 0 (leave visitors out)`);
+  out.push(...positive(`${where}.stayMin`, f.stayMin, MAX.stayMin));
+  return out;
+}
+
 function fieldProblems(where: string, f: Record<string, unknown>, vehicle: boolean): string[] {
   const out: string[] = [];
   for (const k of Object.keys(f)) if (!(vehicle ? VEHICLE_FIELDS : BUILDING_FIELDS).includes(k)) out.push(`${where} has an unknown field "${k}"`);
@@ -229,6 +257,7 @@ function fieldProblems(where: string, f: Record<string, unknown>, vehicle: boole
     }
     if (f.accepts !== undefined) out.push(...listProblems(`${where}.accepts`, f.accepts));
     if (f.processes !== undefined) out.push(...recipeProblems(`${where}.processes`, f.processes));
+    if (f.visitors !== undefined) out.push(...visitorProblems(`${where}.visitors`, f.visitors));
   }
   return out;
 }
@@ -251,7 +280,8 @@ function carriesAnything(f: Record<string, unknown>, vehicle: boolean): boolean 
     (f.jobs as number) > 0 ||
     Object.keys((f.produces as object | undefined) ?? {}).length > 0 ||
     ((f.accepts as unknown[] | undefined) ?? []).length > 0 ||
-    f.processes !== undefined
+    f.processes !== undefined ||
+    f.visitors !== undefined
   );
 }
 
