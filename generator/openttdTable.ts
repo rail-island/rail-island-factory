@@ -1129,6 +1129,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     presets: presets({ unit: "middleCar" }, { unit: "restaurant" }, { livery: "cd" }),
     formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "restaurant" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" })],
   }),
+  "proc-vehicle-westbahn-kiss": series(70, 90, ELRL, { cars: 6 }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

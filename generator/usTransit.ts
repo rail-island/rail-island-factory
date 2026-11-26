@@ -49,6 +49,8 @@ export interface CarDef {
   doors: { spans: ReadonlyArray<readonly [number, number]>; y: readonly [number, number]; glass: readonly [number, number]; slides?: readonly number[]; glassW?: number; glassPair?: number; spanSides?: readonly number[]; glassCornerR?: number; glassSurround?: boolean; glassInward?: number; leafEdgeStripe?: { w: number; mat: string; glassShift?: number } };
   /** The door leaves' own paint bands (default the side's bands). */
   doorBands?: readonly Band[];
+  /** Door leaf i's own paint bands, over `doorBands` (undefined keeps them): the WESTbahn KISS end car's blue and lime doors. */
+  doorBandsEach?: ReadonlyArray<readonly Band[] | undefined>;
   /** A cab front painted apart from the sides: its bands, on the shell from the +X tip back to d. */
   front?: { d: number; bands: readonly Band[]; roof?: string };
   /** Both ends painted apart from the middle: their bands on the sides up to d from each end, and the end walls' paint (`cap`). */
@@ -117,7 +119,7 @@ function door(m: MeshBuilder, c: CarDef, b: SliceBody, X: (d: number) => number,
   openable(m, (mm, o) =>
     mm.moved(plugMove(o, s, dx), () => {
       mm.scope("leaf", () => {
-        for (const [a, cc, mat] of c.doorBands ?? c.bands) {
+        for (const [a, cc, mat] of c.doorBandsEach?.[i] ?? c.doorBands ?? c.bands) {
           const [lo, hi] = [Math.max(a, y0 + 0.02), Math.min(cc, y1 - 0.02)];
           if (hi - lo > 1e-6) sidePanel(mm, b, X, s, mat, d0 + 0.02, d1 - 0.02, lo, hi, 0.008, 0.003);
         }

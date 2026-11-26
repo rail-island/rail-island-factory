@@ -52,6 +52,8 @@ export interface ShinkansenLivery {
   doors?: readonly Band[];
   /** The end car's own door leaves' bands, over `doors` (a power car whose cab door keeps the body's paint while the trailers' doors are coloured: the TGV M's). */
   endCarDoors?: readonly Band[];
+  /** The end car's door leaves' bands by door index (front first, on the car's own layout), over `endCarDoors` (undefined keeps it): the WESTbahn KISS's blue first and lime second door. */
+  endCarDoorsEach?: ReadonlyArray<readonly Band[] | undefined>;
   /** The cab front's bands, over the nose (default the side's). */
   front?: readonly Band[];
   /** How far behind the tip the front's bands reach (default the nose's length and 5 cm): a cab roof painted with the nose. */
@@ -588,7 +590,7 @@ function carDef(s: ShinkansenSeries, l: ShinkansenLivery, end: boolean, pantogra
     ...(s.fluting ? { fluting: s.fluting } : {}),
     doors: { spans: doors, y: [s.door[0], s.door[1]], glass: [s.door[2], s.door[3]], ...(s.doorGlassW ? { glassW: s.doorGlassW } : {}), ...(s.doorGlassPair ? { glassPair: s.doorGlassPair } : {}), ...(s.doorGlassR ? { glassCornerR: s.doorGlassR } : {}), ...(l.leafEdgeStripe ? { leafEdgeStripe: l.leafEdgeStripe } : {}), ...(own && !(end && s.endSides) ? { slides: own.doors.map((o) => o[2]) } : {}) },
     ...(s.roofWells && !power ? { strips: wellStrips(s, end, L, l.roof) } : {}),
-    ...((end && l.endCarDoors) || l.doors ? { doorBands: (end && l.endCarDoors) || l.doors } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
+    ...((end && l.endCarDoors) || l.doors ? { doorBands: (end && l.endCarDoors) || l.doors } : {}), ...(end && l.endCarDoorsEach ? { doorBandsEach: l.endCarDoorsEach } : {}), ...(end && l.front && !s.flatCab ? { front: { d: l.frontD ?? s.nose.len + 0.05, bands: l.front, ...(l.frontRoof ? { roof: l.frontRoof } : {}) } } : {}),
     // a cab face draws its own panes and lamps: an empty cab keeps the gangway frame off its end
     ...(s.flatCab ? { cab: s.flatCab } : end && s.noseCab ? { cab: s.noseCab } : end && s.cabFace ? { cab: { panes: [], lamps: [] } } : {}), cabEnds: end && (s.flatCab || s.noseCab || s.cabFace) ? (twoCabs(s) ? [1, -1] : [1]) : [], diaphragm: [s.door[0], s.door[1] + 0.3],
     trucks: tr, truck: {
