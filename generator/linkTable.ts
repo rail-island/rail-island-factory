@@ -318,6 +318,16 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-talgo-iii": [{ title: "Wikipedia: Talgo", url: "https://en.wikipedia.org/wiki/Talgo" }],
   "proc-vehicle-obb-1144": [{ title: "Wikipedia (de): ÖBB 1044", url: "https://de.wikipedia.org/wiki/%C3%96BB_1044" }, { title: "Wikimedia Commons: ÖBB 1044.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_1044.jpg" }, { title: "Wikimedia Commons: 2017-10-12 (288) ÖBB 1144 259-9 at Wiener Neustadt Hauptbahnhof.jpg", url: "https://commons.wikimedia.org/wiki/File:2017-10-12_(288)_%C3%96BB_1144_259-9_at_Wiener_Neustadt_Hauptbahnhof.jpg" }, { title: "Wikimedia Commons: ÖBB 1144 268 Wien Stadlau.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_1144_268_Wien_Stadlau.jpg" }, { title: "Wikimedia Commons: ÖBB 1144 092 in Graz Hauptbahnhof.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_1144_092_in_Graz_Hauptbahnhof.jpg" }, { title: "Wikimedia Commons: 30.07.85 Munchen Hbf ÖBB 1044.20", url: "https://commons.wikimedia.org/wiki/File:30.07.85_Munchen_Hbf_%C3%96BB_1044.20_(12488955244).jpg" }, { title: "Wikimedia Commons: ÖBB 1144 040 in Don Bosco.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_1144_040_in_Don_Bosco.jpg" }],
   "proc-vehicle-obb-4744": [{ title: "Wikipedia (de): OBB 4744", url: "https://de.wikipedia.org/wiki/%C3%96BB_4744" }, { title: "Wikipedia: Siemens Desiro ML", url: "https://en.wikipedia.org/wiki/Siemens_Desiro_ML" }, { title: "Wikimedia Commons: Eisenbahn O BB 4744 065-5.jpg", url: "https://commons.wikimedia.org/wiki/File:Eisenbahn_%C3%96_BB_4744_065-5.jpg" }, { title: "Wikimedia Commons: OBB 4744 053.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4744_053.jpg" }, { title: "Wikimedia Commons: Class 4744 Desiro EMU.jpg", url: "https://commons.wikimedia.org/wiki/File:Class_4744_Desiro_EMU.jpg" }],
+  "proc-vehicle-obb-4024": [
+    { title: "Wikipedia (de): OBB 4023/4024/4124", url: "https://de.wikipedia.org/wiki/%C3%96BB_4023/4024/4124" },
+    { title: "Wikipedia: Bombardier Talent", url: "https://en.wikipedia.org/wiki/Bombardier_Talent" },
+    { title: "Wikimedia Commons: Bombardier Talent im Ennstal.jpg", url: "https://commons.wikimedia.org/wiki/File:Bombardier_Talent_im_Ennstal.jpg" },
+    { title: "Wikimedia Commons: OBB 4024 039 in Graz Hauptbahnhof.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4024_039_in_Graz_Hauptbahnhof.jpg" },
+    { title: "Wikimedia Commons: OBB 4024-076 near Seefeld in Tirol.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4024-076_near_Seefeld_in_Tirol,_Mittenwaldbahn,_20.02.2017.jpg" },
+    { title: "Wikimedia Commons: OBB 4024-006, Trattenbach.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4024-006,_Trattenbach,_23.09.2016.jpg" },
+    { title: "Wikimedia Commons: 4124 013 Cityjet Goe.jpg", url: "https://commons.wikimedia.org/wiki/File:4124_013_Cityjet_Goe.jpg" },
+    { title: "Wikimedia Commons: MAV 425 002 Hegyeshalom.jpg", url: "https://commons.wikimedia.org/wiki/File:M%C3%81V_425_002_Hegyeshalom_vas%C3%BAt%C3%A1llom%C3%A1s_9200.jpg" },
+  ],
   // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
   ...FLEET_LINKS,
 };
