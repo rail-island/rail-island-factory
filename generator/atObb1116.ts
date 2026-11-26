@@ -3,14 +3,14 @@
 // locomotive kit (boxLocoKit.ts) with its own profile, measured on the reference
 // photographs (assets/obb-1116/SOURCES.md; docs/models/austria-trains.md):
 //
-// - the cab end: the rounded, bulging nose, bowed in plan, its corners rounding
-//   well back into the sides; the face leans back about 12 degrees below the
+// - the cab end: the rounded, bulging nose, one superellipse in plan from the
+//   centre line to the side walls, no flat middle; the face leans back about 12 degrees below the
 //   windscreen and curves back ever more steeply over it into the roof; the red
 //   nose ends in a lip at 1.5 m over the grey corner blocks of the headstock,
 //   the buffers and the coupling between them;
-// - the large windscreen, two panes in a black field with the top headlight under
-//   them and the wiper rail along its foot; the two tall lamp clusters at the face's
-//   lower corners (headlight over tail lamp);
+// - the large windscreen, two panes in a black field nearly as wide as the face,
+//   the top headlight under them and the wiper rail along its foot; the two tall
+//   lamp clusters in round-topped black surrounds on the lower corners;
 // - the side: the cab side window with its front edge raked along the joint of the
 //   nose module, the joint running on down to the lamp; the grey sill band; one
 //   machine-room door; the dark filter grilles in the roof's slopes (two at one end,
@@ -39,7 +39,7 @@ const Y0 = 0.98;
 /** The grey sill's top on the sides; the red nose's lip on the ends. */
 const SILL = 1.5;
 /** The windscreen's black field: foot and head on the centre line. */
-const FIELD = [2.47, 3.76] as const;
+const FIELD = [2.47, 3.78] as const;
 /** Where the side walls end and the roof's slopes begin. */
 const EAVES = 3.5;
 /** The machine room's roof; the cab roofs rise to CAP above it. */
@@ -57,34 +57,30 @@ const TIP: Table = [
 ];
 /** The half width [y, hw]: the upright walls, the roof's rounded slopes. */
 const HW: Table = [[Y0, 1.47], [1.1, 1.5], [EAVES, 1.5], [3.8, 1.39], [3.92, 1.28], [4.02, 1.13], [CROWN, 0.92]];
-/** The nose corner's width across (m of z) and its depth back into the side (m of x), by height. */
-const CORNER_Z: Table = [[Y0, 0.25], [SILL, 0.4], [2.5, 0.55], [EAVES, 0.7], [CROWN, 0.6]];
-const CORNER_X: Table = [[Y0, 0.15], [SILL, 0.42], [2.5, 0.7], [EAVES, 0.95], [CROWN, 0.8]];
-/** How far the face's middle bows ahead of the corners' start. */
-const BOW = 0.22;
-const ANGLES = [22.5, 45, 67.5, 90].map((a) => (a * Math.PI) / 180);
+/**
+ * How far the end's plan reaches back from the centre line to the side wall, by height: the face is
+ * one bulging surface, no flat middle, its corners rolling into the sides (head-on photo of 1116 141).
+ */
+const DEPTH: Table = [[Y0, 0.3], [SILL, 0.7], [2.5, 0.82], [3.0, 0.85], [EAVES, 0.8], [CROWN, 0.75]];
+/** The plan's superellipse exponent: lower is rounder. */
+const ROUND = 2.4;
+/** The plan's sample points as fractions of the half width, so items on the face are cut into few columns. */
+const PLAN_T = [0.3, 0.55, 0.72, 0.84, 0.92, 0.97, 1];
 
-/** The end's plan at height y and half width w: the headstock's recess below the lip, the bowed face, an elliptic corner. */
+/**
+ * The end's plan at height y and half width w: one superellipse from the centre line to the side wall
+ * (smooth across the middle, tangent to the side at the wall), the headstock's recess below the lip.
+ */
 function endPlan(y: number, w: number): ReadonlyArray<readonly [number, number]> {
-  const rz = Math.min(lerpTable(CORNER_Z, y), w * 0.9);
-  const cx = lerpTable(CORNER_X, y);
-  const flat = w - rz;
-  // the bow: a parabola from the centre line out to the corner's start
-  const face = (z: number) => BOW * (z / flat) ** 2;
-  const d = y < SILL - 0.031 ? NOTCH.depth : 0;
-  // the face sampled at fixed |z| (narrowed only near the crown) so items on it are cut into few columns
-  const mid = [[0.3, 0.45], [0.6, 0.7], [0.85, 0.9]].map(([z, k]) => Math.min(z!, flat * k!)).map((z) => [z, face(z)] as const);
-  const below = y < SILL - 0.031;
-  return [
-    ...(below
-      ? [[0, d], [NOTCH.hw, d], [NOTCH.hw + 0.02, face(NOTCH.hw + 0.02)], [flat * 0.75, face(flat * 0.75)]] as const
-      : [[0, 0], ...mid] as const),
-    [flat, BOW], ...ANGLES.map((a) => [flat + rz * Math.sin(a), BOW + (cx - BOW) * (1 - Math.cos(a))] as const),
-  ];
+  const D = lerpTable(DEPTH, y);
+  const back = (t: number) => D * (1 - (1 - Math.min(1, t) ** ROUND) ** (1 / ROUND));
+  if (y < SILL - 0.031)
+    return [[0, NOTCH.depth], [NOTCH.hw, NOTCH.depth], [NOTCH.hw + 0.02, back((NOTCH.hw + 0.02) / w)], ...PLAN_T.slice(2).map((t) => [t * w, back(t)] as const)];
+  return [[0, 0], ...PLAN_T.map((t) => [t * w, back(t)] as const)];
 }
 
 /** Where the flat side wall ends at height y (the nose corner begins). */
-const wallEnd = (y: number) => lerpTable(TIP, y) - lerpTable(CORNER_X, y);
+const wallEnd = (y: number) => lerpTable(TIP, y) - lerpTable(DEPTH, y);
 
 // --- liveries ----------------------------------------------------------------------
 
@@ -176,7 +172,16 @@ const CAB_WINDOW = { x: 7.15, y: [2.8, 3.47] as const, round: 0.12 };
 const JOINT: Table = [[1.58, LIP - 0.78], [2.8, LIP - 1.3], [EAVES, LIP - 1.5]];
 const jointX = (y: number) => lerpTable(JOINT, y);
 /** The lamp clusters: z span (outer), y span, the headlight over the tail lamp. */
-const LAMPS = { z: [0.82, 1.2] as const, y: [1.58, 2.08] as const };
+const LAMPS = { z: [0.8, 1.3] as const, y: [1.55, 2.12] as const };
+
+/** A convex outline (u, v) with square foot corners and a rounded top of radius r. */
+function roundTop(u0: number, u1: number, v0: number, v1: number, r: number): Ring {
+  const arc = (cu: number, a0: number) => [0, 1, 2, 3].map((i) => {
+    const a = ((a0 + i * 30) * Math.PI) / 180;
+    return [cu + r * Math.cos(a), v1 - r + r * Math.sin(a)] as [number, number];
+  });
+  return [[u0, v0], [u1, v0], ...arc(u1 - r, 0), ...arc(u0 + r, 90)];
+}
 
 function spec(l: TaurusLivery, lod = false): LocoSpec {
   const turned = (sd: number, x: readonly [number, number]): [number, number] => (sd < 0 ? [x[0], x[1]] : [-x[1], -x[0]]);
@@ -219,20 +224,20 @@ function spec(l: TaurusLivery, lod = false): LocoSpec {
     ],
     endItems: [
       // the corner blocks of the headstock, the black windscreen field and the wiper rail at its foot
-      { kind: "paint", name: "windscreen field", z: [-1.04, 1.04], y: FIELD, mat: "black", poly: [[-1.04, FIELD[0]], [1.04, FIELD[0]], [0.98, FIELD[1]], [-0.98, FIELD[1]]], layer: 4 },
-      { kind: "window", name: "windscreen left", z: [0.035, 0.96], y: [2.86, 3.7], mat: "black", wiper: true },
-      { kind: "window", name: "windscreen right", z: [-0.96, -0.035], y: [2.86, 3.7], mat: "black", wiper: true },
+      { kind: "paint", name: "windscreen field", z: [-1.1, 1.1], y: FIELD, mat: "black", poly: [[-1.1, FIELD[0]], [1.1, FIELD[0]], [1.08, FIELD[1]], [-1.08, FIELD[1]]], layer: 4 },
+      { kind: "window", name: "windscreen left", z: [0.025, 1.03], y: [2.85, 3.72], mat: "black", wiper: true },
+      { kind: "window", name: "windscreen right", z: [-1.03, -0.025], y: [2.85, 3.72], mat: "black", wiper: true },
       { kind: "lamp", name: "top headlight", z: [-0.07, 0.07], y: [2.6, 2.74], rect: true },
       { kind: "paint", name: "wiper rail", z: [-1.02, 1.02], y: [2.41, 2.46], mat: "rubber", layer: 5 },
       // the lamp clusters: a black housing, the headlight over the tail lamp
       ...[-1, 1].flatMap((s): EndItem[] => {
         const z = (s > 0 ? [LAMPS.z[0], LAMPS.z[1]] : [-LAMPS.z[1], -LAMPS.z[0]]) as [number, number];
-        const zi = [z[0] + 0.04, z[1] - 0.04] as const;
+        const zi = [z[0] + 0.1, z[1] - 0.1] as const;
         const side = s > 0 ? "left" : "right";
         return [
-          { kind: "paint", name: `lamp housing ${side}`, z, y: LAMPS.y, mat: "black", layer: 1 },
-          { kind: "lamp", name: `headlight ${side}`, z: zi, y: [1.74, 2.03], rect: true },
-          { kind: "lamp", name: `tail lamp ${side}`, z: zi, y: [1.62, 1.69], rect: true, mat: "tailLamp" },
+          { kind: "paint", name: `lamp housing ${side}`, z, y: LAMPS.y, mat: "black", layer: 1, poly: roundTop(z[0], z[1], LAMPS.y[0], LAMPS.y[1], 0.16) },
+          { kind: "lamp", name: `headlight ${side}`, z: zi, y: [1.72, 1.98], rect: true },
+          { kind: "lamp", name: `tail lamp ${side}`, z: zi, y: [1.61, 1.67], rect: true, mat: "tailLamp" },
         ];
       }),
       ...l.endPaint,
@@ -256,9 +261,9 @@ function cabRoofs(m: MeshBuilder, sp: ShellSpec, l: TaurusLivery): void {
   // shell's roof edge stays inside the cab roof
   const y0 = CROWN - 0.06;
   const levels = [
-    { y: y0, w: lerpTable(HW, y0) + 0.012, front: lerpTable(TIP, y0) + 0.015, back: CAP_X, at: CROWN },
-    { y: CROWN + 0.07, w: 0.84, front: 7.53, back: CAP_X + 0.02, at: CROWN },
-    { y: CROWN + 0.12, w: 0.72, front: 7.38, back: CAP_X + 0.06, at: CROWN },
+    { y: y0, w: lerpTable(HW, y0) + 0.015, front: lerpTable(TIP, y0) + 0.03, back: CAP_X, at: CROWN },
+    { y: CROWN + 0.07, w: 0.85, front: 7.6, back: CAP_X + 0.02, at: CROWN },
+    { y: CROWN + 0.12, w: 0.73, front: 7.42, back: CAP_X + 0.06, at: CROWN },
     { y: CAP, w: 0.55, front: 7.2, back: CAP_X + 0.12, at: CROWN },
   ];
   // counter-clockwise from above for the front cab (as the kit's frame): the rear edge from -z to +z,
