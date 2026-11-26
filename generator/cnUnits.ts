@@ -25,6 +25,7 @@ import { CRH380CL } from "./cnCrh380cl.ts";
 import { CRH380D } from "./cnCrh380d.ts";
 import { CRH1A } from "./cnCrh1a.ts";
 import { CRH3A } from "./cnCrh3a.ts";
+import { CHINA_STAR_DESIGN } from "./cnChinaStar.ts";
 
 export { CRH380A };
 export { CRH3C };
@@ -122,4 +123,5 @@ export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-cr450af", "Fuxing CR450AF", CR450AF, P_CR450AF, crCr450af, crCr450afLod, "cr-cr450af"),
   seriesDesign("proc-vehicle-cr-cr300af", "Fuxing CR300AF", CR300AF, P_CR300AF, crCr300af, crCr300afLod, "cr-cr300af"),
   seriesDesign("proc-vehicle-cr-crh380cl", "CRH380CL", CRH380CL, P380CL, crCrh380cl, crCrh380clLod, "cr-crh380cl", "uic"),
+  CHINA_STAR_DESIGN,
 ];

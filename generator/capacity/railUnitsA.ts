@@ -177,6 +177,19 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "trailer" }, seats: 120 },
     ],
   },
+  "proc-vehicle-cr-china-star": {
+    seats: 0,
+    source: "Wikipedia (en, zh): 726 seats in 9 trailers (2 first class 2+2, 6 second class 2+3, a bar car), about 80 a trailer; the power cars carry nothing",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 80 },
+      { params: { unit: "train" }, seats: 160 },
+      { params: { unit: "train", cars: "3" }, seats: 80 },
+      { params: { unit: "train", cars: "5" }, seats: 240 },
+      { params: { unit: "train", cars: "6" }, seats: 320 },
+      { params: { unit: "train", cars: "7" }, seats: 400 },
+      { params: { unit: "train", cars: "8" }, seats: 480 },
+    ],
+  },
   "proc-vehicle-cr-cr200j": {
     seats: 0,
     source: "Wikipedia: CR200J short set (power car + 7 coaches + driving trailer) ~ 720 seats, ~90 a coach, driving trailer fewer; the power car carries nothing",
