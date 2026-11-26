@@ -124,7 +124,7 @@ function blueIvory(number: string): ShinkansenLivery {
     palette: {
       blue: c("#1f3f8f", 0.45), ivory: c("#ece3c4", 0.45), roofI: c("#e4dbbd", 0.55), red: c("#d22a2e", 0.45),
       skirtG: c("#2f3236", 0.7), rubber: c("#1b1c1e", 0.6), chrome: { color: "#d4d7da", metallic: 0.8, roughness: 0.2 },
-      lettering: c("#2a2c30", 0.4), emblem: c("#f2efe6", 0.4), faceNumber: c("#f2efe6", 0.4), lampPlate: c("#ece3c4", 0.45), domeLamp: c("#e4dbbd", 0.5), resFrame: c("#2a4a94", 0.5), steel: c("#3a3d40", 0.55), underframe: c("#1f2124", 0.7), frame: c("#9da3a8", 0.4), grid: c("#26292c", 0.7),
+      lettering: c("#2a2c30", 0.4), emblem: c("#f2efe6", 0.4), faceNumber: c("#f2efe6", 0.4), lampPlate: c("#ece3c4", 0.45), domeLamp: c("#e4dbbd", 0.5), resFrame: c("#a3a8ad", 0.45), steel: c("#3a3d40", 0.55), underframe: c("#1f2124", 0.7), frame: c("#9da3a8", 0.4), grid: c("#26292c", 0.7),
     },
     bands: [[0, LOW_LINE[0], "ivory"], [LOW_LINE[0], LOW_LINE[1], "blue"], [LOW_LINE[1], LINE_BLUE[0], "ivory"], [LINE_BLUE[0], LINE_BLUE[1], "blue"], [LINE_IVORY[0], LINE_IVORY[1], "ivory"], [BLUE_BAND[0], BLUE_BAND[1], "blue"], [BLUE_BAND[1], 9, "ivory"]],
     // the face: the blue under the ivory dome, the ivory line along its foot and the blue line over the windscreens
@@ -209,21 +209,21 @@ const POWER_GRILLES: ReadonlyArray<readonly [number, number, number, number, num
   [...span(3.2, 4.6), 2.15, 3.02, 6], [...span(5.75, 7.1), 2.15, 3.02, 6], [...span(10.4, 11.55), 2.15, 3.02, 5], [...span(12.25, 13.5), 2.15, 3.02, 5],
 ];
 
-/** The power car's roof: the brake resistors' housing (d behind the body's front), its louvred sides and grid top. */
-const RESISTORS: readonly [number, number] = span(2.0, 8.6);
+/** The power car's roof: the brake resistors' unpainted housing (d behind the body's front; 0.22 m over the crown on 4010 008), its louvred sides and grid top. */
+const RESISTORS: readonly [number, number] = span(2.4, 8.6);
 
 function powerFittings(m: MeshBuilder, _b: SliceBody, X: (d: number) => number, car: { end: boolean; length: number; trucks: readonly number[] }): void {
   const at = (mat: string, d0: number, d1: number, y0: number, y1: number, z0: number, z1: number) => block(m, mat, Math.min(X(d0), X(d1)), Math.max(X(d0), X(d1)), y0, y1, z0, z1);
   m.scope("resistors", () => {
     const [d0, d1] = RESISTORS, hw = 0.95;
     // the housing's frame on the roof, its louvred sides and the grids on its top
-    at("resFrame", d0, d1, C - 0.12, C + 0.32, -hw, hw);
+    at("resFrame", d0, d1, C - 0.12, C + 0.22, -hw, hw);
     for (const sd of [1, -1]) {
-      at("grid", d0 + 0.15, d1 - 0.15, C + 0.02, C + 0.27, sd > 0 ? hw - 0.003 : -hw - 0.006, sd > 0 ? hw + 0.006 : -hw + 0.003);
-      for (let d = d0 + 0.3; d < d1 - 0.2; d += 1.1) at("resFrame", d - 0.03, d + 0.03, C + 0.02, C + 0.27, sd > 0 ? hw + 0.006 : -hw - 0.012, sd > 0 ? hw + 0.012 : -hw - 0.006);
+      at("grid", d0 + 0.15, d1 - 0.15, C + 0.02, C + 0.18, sd > 0 ? hw - 0.003 : -hw - 0.006, sd > 0 ? hw + 0.006 : -hw + 0.003);
+      for (let d = d0 + 0.3; d < d1 - 0.2; d += 1.1) at("resFrame", d - 0.03, d + 0.03, C + 0.02, C + 0.18, sd > 0 ? hw + 0.006 : -hw - 0.012, sd > 0 ? hw + 0.012 : -hw - 0.006);
     }
-    at("grid", d0 + 0.1, d1 - 0.1, C + 0.317, C + 0.326, -hw + 0.08, hw - 0.08);
-    for (let d = d0 + 1.1; d < d1 - 0.2; d += 1.1) at("resFrame", d - 0.03, d + 0.03, C + 0.31, C + 0.335, -hw + 0.07, hw - 0.07);
+    at("grid", d0 + 0.1, d1 - 0.1, C + 0.217, C + 0.226, -hw + 0.08, hw - 0.08);
+    for (let d = d0 + 1.1; d < d1 - 0.2; d += 1.1) at("resFrame", d - 0.03, d + 0.03, C + 0.21, C + 0.235, -hw + 0.07, hw - 0.07);
   });
   m.scope("roof line", () => {
     // from the pantograph forward along the roof to the main switch beside the housing's rear

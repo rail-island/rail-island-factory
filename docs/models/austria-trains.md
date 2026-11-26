@@ -40,7 +40,7 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   under it; rectangular buffers.
 - **Sides** (projective fits on 4010 008 and 6010 008, the Leoben photograph): power car - cab door and
   its high window, two louvred grilles, the luggage door and window, two grilles, two narrow windows by
-  the gangway; the brake resistor housing on the roof from 2.0 to 8.6 m behind the tip, the single-arm
+  the gangway; the unpainted brake resistor housing on the roof from 2.4 to 8.6 m behind the tip, 0.22 m high, the single-arm
   pantograph at 11 m (knee to the inner end), Bo'Bo' 9.0 m apart. Driving trailer - cab door, luggage
   window, door at 6.6 m, seven saloon windows at a 2.3 m pitch, rear door. 7010 - a door at each end,
   eleven windows 1.22 m wide at 1.95 m. Bogies 19.0 m apart on the coaches.
