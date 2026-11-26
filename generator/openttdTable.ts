@@ -1109,6 +1109,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     presets: presets({ unit: "middleCar" }, { livery: "whiteRed" }),
     formations: [formation("8 cars", {}, ...Array.from({ length: 6 }, () => ({ unit: "middleCar" })), [{ unit: "drivingTrailer" }, "turned"])],
   }),
+  // the power car (no seats) leading five coaches and the driving trailer, turned
+  "proc-vehicle-cr-blue-arrow": pax(0, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 67 }), at({ unit: "drivingTrailer" }, { capacity: 78 })],
+    presets: presets({ unit: "middleCar" }),
+    formations: [formation("7 cars", {}, ...Array.from({ length: 5 }, () => ({ unit: "middleCar" })), [{ unit: "drivingTrailer" }, "turned"])],
+  }),
   "proc-vehicle-cr-crh6a": series(60, 90, ELRL, { cars: 8 }),
   // the power cars without seats at both ends of the trailers
   "proc-vehicle-cr-china-star": series(0, 80, ELRL, { cars: 8 }),
