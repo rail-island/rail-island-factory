@@ -7,10 +7,13 @@ import type { ProceduralDesign } from "./design.ts";
 // the blank lines between the slots, so the vehicles' branches merge without conflicts.
 
 import { OBB1116 } from "./atObb1116.ts";
+export { obb1116, obb1116Lod } from "./atObb1116.ts";
 
 import { OBB1144_DESIGN } from "./atObb1144.ts";
+export { obb1144, obb1144Lod } from "./atObb1144.ts";
 
 import { OBB1142_DESIGN } from "./atObb1142.ts";
+export { obb1142, obb1142Lod } from "./atObb1142.ts";
 
 // import:obb-1110
 
