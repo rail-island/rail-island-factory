@@ -225,9 +225,12 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   under the cab (the face's skirt cut open over it). Door leaves white, one narrow window each.
 - **The face** (head-on 86-33 100, 129 px/m; three-quarter 102, 80-33 008): the grey buffer beam to
   1.21 m with the rectangular buffers, the red lower face (two lamp pairs at 1.70 m, the grille between,
-  the white OBB letters and number), the grey windscreen band 2.38 - 3.35 m raked about 27 degrees and
-  wrapping round onto the cab sides, the red cap raked about 45 degrees with the marker lamp and two
-  grilles, its arched top (4.08 m in the middle, 3.73 m at the corners) under the grey roof, the horn on it.
+  the white OBB letters and number), the grey windscreen band 2.38 - 3.35 m raked about 28 degrees and
+  its glass wrapping round the corners onto the cab sides (rear edge raked) inside the grey frame that runs back round the cab side window, the red cap raked about 45 degrees with the marker lamp and two
+  grilles, its arched top (4.3 m in the middle, 3.95 m at the corners) under the grey roof, the horn on it.
+- **The red head**: the face reaches 1.8 m behind its tip (86-33 102: the red begins on the side just ahead of
+  the cab side window's grey frame, 4.5 m ahead of the front door), red from the beam to the roof except the
+  windscreen band.
 - **CityShuttle** (1997, OBB wordmark): light grey, the rear half red behind a diagonal across the
   well's middle (1.9 m behind it at the belly, 2.2 m ahead at the shoulder), the red OBB letters ahead
   of it, CITYSHUTTLE in white on the red end section. **Cityjet** (2019 - , 86-33 113): white over a
@@ -236,8 +239,8 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 - **Kit change** (sliceBody.ts `sliceCabin`, additive): the cabin's width is taken only from slices that
   reach down to its floor, so a door in a double-deck well (floor 0.5 m) no longer collapses the cabin to
   nothing over the raised end sections; every other design builds byte-identical (hash diff empty).
-- References: `assets/obb-cityshuttle-dd/` (ten Commons photographs). 14,962 triangles (driving
-  trailer, CityShuttle; Cityjet 15,684), coach 11,914, the 4-car train 49,204; distant model 100 a car.
+- References: `assets/obb-cityshuttle-dd/` (ten Commons photographs). 15,716 triangles (driving
+  trailer, CityShuttle; Cityjet 15,872), coach 11,914, the 4-car train 49,958; distant model 100 a car.
 - Deviations: lettering in capitals (the kit fonts have no lower case "CityShuttle" / "cityjet"); the
   first series' red front half and raised Pflatsch emblem, the Wiesel and "Wiener Szene" lettering, the
   two blanked lower windows of the rebuilt driving trailers and the Cityjet's darker red line are not

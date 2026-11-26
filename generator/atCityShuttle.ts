@@ -42,7 +42,7 @@ const W = 1.4;
 const S = 4.18;
 const C = 4.632;
 /** The face meets the body this far behind its tip; the buffer heads ahead of the tip. */
-const JOIN = 1.71;
+const JOIN = 1.8;
 const BUFFERS = 0.6;
 /** Over the bogies and at the ends (the intermediate level): the belly, skirt top and bottom. */
 const Y_END = 1.2;
@@ -121,10 +121,10 @@ const COACH = sides(COACH_L / 2, true);
  * mirror housing, the intermediate level over the leading bogie with one tall window, the front door
  * 4.6 m behind the face's join; then the coach's well, rear door and rear end section.
  */
-const DT_FRONT_DOOR = 4.6;
+const DT_FRONT_DOOR = 4.51;
 const DT = sides(DT_FRONT_DOOR + DOOR_W + DOOR_IN, false);
 /** The driving trailer's window at the intermediate level ahead of the front door (d on its body). */
-const DT_MID_WIN: readonly [number, number] = [1.95, 2.9];
+const DT_MID_WIN: readonly [number, number] = [1.86, 2.81];
 
 // ---------------------------------------------------------------------------
 // The cab face
@@ -133,12 +133,12 @@ const DT_MID_WIN: readonly [number, number] = [1.95, 2.9];
  * The face's centre line (the head-on photograph of 86-33 100 at Graz Ostbahnhof, 129 px/m, and the
  * three-quarter views of 102, 031 and 80-33 008): the grey buffer beam upright from 0.55 to 1.21 m, the
  * red lower face over it leaning back slightly to the windscreen band's foot (2.38 m), the windscreen
- * raked about 27 degrees to its head (3.35 m), the red cap raked about 45 degrees to the arched roof line
- * (4.08 m at the middle), the grey roof rounding over to the crown 1.71 m behind the tip.
+ * raked about 28 degrees to its head (3.35 m), the red cap raked about 45 degrees to the arched roof line
+ * (4.08 m at the middle), the grey roof rounding over to the crown 1.8 m behind the tip.
  */
 const PROFILE: Pt[] = [
-  [0.55, 0.04], [0.6, 0], [1.2, 0], [1.24, 0.06], [1.7, 0.09], [2.38, 0.14], [2.45, 0.17], [3.35, 0.63], [3.42, 0.7],
-  [3.85, 1.12], [4.08, 1.33], [4.3, 1.5], [4.5, 1.63], [C, JOIN],
+  [0.55, 0.04], [0.6, 0], [1.2, 0], [1.24, 0.06], [1.7, 0.14], [2.38, 0.28], [2.45, 0.32], [3.35, 0.8], [3.42, 0.86],
+  [3.85, 1.25], [4.08, 1.45], [4.3, 1.6], [4.5, 1.72], [C, JOIN],
 ];
 /** The plan's corners: the beam's tight, the face's and the band's rounder, the cap rolling into the roof. */
 const CORNER: Pt[] = [[0.55, 0.12], [1.2, 0.12], [1.24, 0.3], [2.38, 0.34], [3.35, 0.38], [4.08, 0.42], [4.5, 0.32], [C, 0.15]];
@@ -155,17 +155,17 @@ const lerpAt = (pts: readonly Pt[], y: number): number => {
 const CORNER_DEPTH: Pt[] = PROFILE.map(([y, d]): Pt => [y, Math.max(0.03, Math.min(lerpAt(CORNER, y), JOIN - d - 0.03))]);
 
 const box = (l0: number, l1: number, y0: number, y1: number): Pt[] => [[l0, y0], [l1, y0], [l1, y1], [l0, y1]];
-/** The red cap's arched top: 4.08 m over the middle, 3.85 m 1.1 m out, 3.73 m at the corners. */
-const CAP_TOP: Pt[] = [[-1.6, 3.73], [-1.35, 3.73], [-1.1, 3.85], [-0.6, 4.0], [0, 4.08], [0.6, 4.0], [1.1, 3.85], [1.35, 3.73], [1.6, 3.73], [1.6, 4.8], [-1.6, 4.8]];
+/** The red cap's arched top under the grey roof: 4.3 m over the middle, 3.95 m at the corners. */
+const CAP_TOP: Pt[] = [[-1.6, 3.95], [-1.3, 3.97], [-1.0, 4.1], [-0.5, 4.25], [0, 4.3], [0.5, 4.25], [1.0, 4.1], [1.3, 3.97], [1.6, 3.95], [1.6, 4.8], [-1.6, 4.8]];
 
-const ROWS_FACE = [0.55, 0.6, 1.2, 1.24, 1.62, 1.78, 1.95, 2.12, 2.38, 2.45, 3.35, 3.42, 3.73, 3.85, 4.08, 4.3, 4.5, C];
+const ROWS_FACE = [0.55, 0.6, 1.2, 1.24, 1.62, 1.78, 1.95, 2.12, 2.38, 2.45, 3.35, 3.42, 3.85, 3.95, 4.08, 4.3, 4.32, 4.5, C];
 
 /** The face of one livery: its bands and the paint of its cap and windscreen band by material. */
 function wieselFace(bands: ReadonlyArray<readonly [number, number, string]>, cityjet: boolean): SeriesCabFace {
   return {
     dJoin: JOIN, dSide: 1.2, first: JOIN + DT_FRONT_DOOR, roofFrom: 9, reach: BUFFERS, wrap: true, bulge: 0.04, cols: [5, 3, 1, 1], tolerance: cityjet ? 0.08 : 0.05,
     // the leading bogie stands under the cab's sides: the skirt left open over it
-    wheelCut: { d: JOIN + 1.5 - 1.25 - 0.55, y: A_END },
+    wheelCut: { d: JOIN + 1.41 - 1.25 - 0.55, y: A_END },
     profile: PROFILE, corner: CORNER, cornerDepth: CORNER_DEPTH, rows: ROWS_FACE,
     bands: () => bands,
     lodGlass: { hw: 1.09, y: [2.45, 3.3] },
@@ -179,6 +179,8 @@ function wieselFace(bands: ReadonlyArray<readonly [number, number, string]>, cit
       { lat: [-0.15, 0.15], y: [3.42, 3.58], r: 0.01, mat: "black" },
     ],
     panes: [{ lat: [-1.09, 1.09], y: [2.47, 3.29], r: 0.06 }],
+    // the windscreen's glass wrapping round the corners onto the cab sides, its rear edge raked (the Cityjet's anthracite band reads as one with it)
+    ...(cityjet ? {} : { paint: [{ mat: "cabGlass", front: [[2.47, -9], [3.29, -9]], back: [[2.47, 0.85], [3.29, 1.3]] }] }),
     decals: [
       // the two small grilles on the cap
       { mat: "grille", pts: box(-0.55, -0.3, 3.87, 3.97), fine: 1 },
@@ -257,8 +259,8 @@ function cityShuttle(kind: Kind): ShinkansenLivery {
     lodSideFields: { end: [{ d: [JOIN + DT.m, JOIN + DT_L], bands: [[0, S, "red"], [S, 9, "roofG"]] }], middle: [{ d: [COACH.m, COACH_L], bands: [[0, S, "red"], [S, 9, "roofG"]] }] },
     endSweeps: [
       // the windscreen band carried back over the cab sides, the cab side window in it
-      { mat: "bandG", front: [[2.38, -9], [3.35, -9]], back: [[2.38, JOIN + 1.15], [3.35, JOIN + 1.15]] },
-      { mat: "cabGlass", front: [[2.5, JOIN + 0.62], [3.24, JOIN + 0.62]], back: [[2.5, JOIN + 1.05], [3.24, JOIN + 1.05]] },
+      { mat: "bandG", front: [[2.38, -9], [3.35, -9]], back: [[2.38, JOIN + 1.08], [3.35, JOIN + 1.08]] },
+      { mat: "cabGlass", front: [[2.5, JOIN + 0.56], [3.24, JOIN + 0.56]], back: [[2.5, JOIN + 0.95], [3.24, JOIN + 0.95]] },
     ],
   };
 }
@@ -269,7 +271,7 @@ function cityShuttle(kind: Kind): ShinkansenLivery {
  * part under a white band, the anthracite windscreen band and cap carried back over the cab sides
  * behind a slanted edge with a red line along it.
  */
-const CJ_EDGE: Pt[] = [[2.38, JOIN - 0.3], [3.35, JOIN + 0.15], [4.18, JOIN + 0.7]];
+const CJ_EDGE: Pt[] = [[2.38, JOIN - 0.25], [3.35, JOIN + 0.2], [4.18, JOIN + 0.7]];
 function cityjet(kind: Kind): ShinkansenLivery {
   return {
     title: "Cityjet", number: NUMBERS.cityjet[kind],
@@ -281,7 +283,7 @@ function cityjet(kind: Kind): ShinkansenLivery {
       // the anthracite cap swept back over the cab sides, a red line along its edge, the cab window behind it
       { mat: "bandG", front: [[2.38, -9], [4.18, -9]], back: CJ_EDGE },
       { mat: "red", front: CJ_EDGE, back: CJ_EDGE.map(([y, d]): Pt => [y, d + 0.07]) },
-      { mat: "cabGlass", front: [[2.5, JOIN + 0.62], [3.24, JOIN + 0.62]], back: [[2.5, JOIN + 1.05], [3.24, JOIN + 1.05]] },
+      { mat: "cabGlass", front: [[2.5, JOIN + 0.56], [3.24, JOIN + 0.56]], back: [[2.5, JOIN + 0.95], [3.24, JOIN + 0.95]] },
     ],
   };
 }
@@ -289,8 +291,8 @@ function cityjet(kind: Kind): ShinkansenLivery {
 const LIVERIES: Record<LiveryKey, (kind: Kind) => ShinkansenLivery> = { cityShuttle, cityjet };
 
 const FACES: Record<LiveryKey, SeriesCabFace> = {
-  cityShuttle: wieselFace([[0, 1.21, "beam"], [1.21, 2.38, "red"], [2.38, 3.35, "bandG"], [3.35, 4.1, "red"], [4.1, 9, "body"]], false),
-  cityjet: wieselFace([[0, 1.21, "beam"], [1.21, 1.96, "red"], [1.96, 2.38, "white"], [2.38, 4.1, "bandG"], [4.1, 9, "body"]], true),
+  cityShuttle: wieselFace([[0, 1.21, "beam"], [1.21, 2.38, "red"], [2.38, 3.35, "bandG"], [3.35, 4.32, "red"], [4.32, 9, "body"]], false),
+  cityjet: wieselFace([[0, 1.21, "beam"], [1.21, 1.96, "red"], [1.96, 2.38, "white"], [2.38, 4.32, "bandG"], [4.32, 9, "body"]], true),
 };
 
 // ---------------------------------------------------------------------------
@@ -343,10 +345,10 @@ function fittings(key: LiveryKey) {
           sidePanel(m, b, X, s, "rubber", DT_MID_WIN[0], DT_MID_WIN[1], MID_ROW[0], MID_ROW[1], 0.007, 0.03);
           sidePanel(m, b, X, s, "glass", DT_MID_WIN[0] + 0.05, DT_MID_WIN[1] - 0.05, MID_ROW[0] + 0.05, MID_ROW[1] - 0.05, 0.012, 0.004);
           // the destination display's small box behind the mid window
-          sidePanel(m, b, X, s, "grille", 3.45, 3.8, 2.5, 2.72, 0.006, 0.03);
+          sidePanel(m, b, X, s, "grille", 3.36, 3.71, 2.5, 2.72, 0.006, 0.03);
         }
         // the mirror housings standing out ahead of the cab side windows (d on the body, just behind the join)
-        for (const s of [1, -1]) at("bandG", 0.03, 0.6, 2.47, 3.3, s > 0 ? W - 0.12 : -W - 0.1, s > 0 ? W + 0.1 : -W + 0.12);
+        for (const s of [1, -1]) at("bandG", 0.03, 0.5, 2.5, 3.25, s > 0 ? W - 0.12 : -W - 0.06, s > 0 ? W + 0.06 : -W + 0.12);
         // the horn housing on the roof over the face
         at("roofG", 0.1, 0.55, C - 0.1, C + 0.06, -0.09, 0.09);
         // the roof hatch over the cab
@@ -381,7 +383,7 @@ function wieselSeries(key: LiveryKey, kind: Kind): ShinkansenSeries {
     layout: { end: DT.layout, middle: COACH.layout },
     lowWell: { end: DT.well, middle: COACH.well, Y: Y_WELL, A: A_WELL, B: B_WELL, lodMat: key === "cityjet" ? "red" : "body" },
     // bogie centres 20 m, 2.5 m wheelbase, 920 mm wheels: the coach's 3.15 m in from its ends, the driving trailer's leading one 1.5 m behind the join
-    bogieCentres: 20.0, wheelR: 0.46, wheelbase: 2.5, endBogies: [1.5, 21.5], midBogies: [3.15, COACH_L - 3.15],
+    bogieCentres: 20.0, wheelR: 0.46, wheelbase: 2.5, endBogies: [1.41, 21.41], midBogies: [3.15, COACH_L - 3.15],
     traction: "none", cars: [3, 5],
     numberAt: [-5.2, Y_END + 0.12, 0.09],
     fittings: fittings(key),
