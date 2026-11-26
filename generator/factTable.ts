@@ -474,6 +474,7 @@ export const FACTS: Readonly<Record<string, ModelFacts>> = {
   },
   "proc-vehicle-cr-cr300bf": { country: "cn", maker: "CRRC", year: 2020,
     blurb: "The Fuxing CR300BF is the 250 km/h member of China Railway's Fuxing family, an eight-car train built by CRRC Changchun and CRRC Tangshan on the CR400BF's platform. In service since December 2020, it is painted sky blue and nicknamed the Blue Warm Guy.",
+  },
   "proc-vehicle-cr-cr450af": { country: "cn", maker: "CRRC", year: 2024,
     blurb: "The Fuxing CR450AF is a Chinese high-speed train built by CRRC Qingdao Sifang, unveiled in December 2024 and designed for 400 km/h in service; a test train reached 453 km/h. Lower and about a tenth lighter than the CR400AF, it hides its bogies behind closed skirts.",
   },
