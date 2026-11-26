@@ -582,11 +582,11 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   19.5 px diameter agrees): the leading axle 1.41 m behind the buffer heads, the drivers at 4.41,
   6.56, 8.71, 10.86 m (2.15 m apart), the trailing truck's axles at 12.55 and 14.6 m (the first
   moved 0.1 m back from the photo's 12.45 to clear the last driver), the cab from 13.44 to 15.7 m;
-  the running board 2.3 m up, the deflectors from 1.3 to 3.95 m and up to 4.05 m; the tender's
+  the running board 2.3 m up, the deflectors from 1.5 to 3.95 m and up to 4.15 m (their front 0.2 m behind the smokebox front, as the 1980 and 2002 photographs show), the smokebox from 1.3 m with the door dished 0.18 m further forward; the tender's
   four axles 1.45 m apart, its tall front part (to 4.0 m) 3.4 m long over the low rear tank (3.1 m).
-- **Shape facts**: the short wide chimney close behind the big flush smokebox door (number 12.10
+- **Shape facts**: the short wide chimney close behind the smokebox door, dished to a flat centre with two hinge straps and the handle (number 12.10
   painted on it), the long flat-topped casing over the domes (1.24 m wide, 6.5 m long, to 4.5 m),
-  the round-topped firebox over the trailing truck; the large flat deflectors at the running
+  the round-topped firebox over the trailing truck; the large flat deflectors standing clear of the smokebox (open space between plate and drum) at the running
   board's edge with the step plates under their front, the running board falling steeply to the
   black buffer beam, the two lamps on the beam with their bright hand loops; the feed-water
   heater drum and the box behind the deflector on the +z side (the side the 1980 photograph shows),
@@ -601,4 +601,4 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   (about +-0.15 m); the cylinders are horizontal and the Lentz valve gear is drawn as the kit's
   Walschaerts motion; pipes, sand boxes, brake rigging, ladders and the tender's hatch detail are
   omitted; the boiler-top casing has chamfered plan ends where the real one has a sloping front.
-- **Budget**: engine 13,670 triangles, tender 3,684; distant model 98 and 44.
+- **Budget**: engine 13,830 triangles, tender 3,684; distant model 98 and 44.

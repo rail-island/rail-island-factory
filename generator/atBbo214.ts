@@ -24,7 +24,7 @@
 
 import type { MaterialSpec } from "./meshBuilder.ts";
 import { resolveParams, type GameProperties, type ParamValues, type ProceduralDesign } from "./design.ts";
-import type { MeshBuilder } from "./meshBuilder.ts";
+import { ngon, type MeshBuilder } from "./meshBuilder.ts";
 import { buildLoco, type LocoSpec } from "./steamLoco.ts";
 import { steamLocoLod } from "./lodSteam.ts";
 import { STEAM_CATALOG, UNIT_PARAM } from "./steamLocos.ts";
@@ -39,7 +39,7 @@ const PALETTE: Record<string, MaterialSpec> = {
   frame: mat("#232325", 0.8),
   red: mat("#a3221f", 0.55),
   beam: mat("#1d1e20", 0.6),
-  smokebox: mat("#1b1c1f", 0.85),
+  smokebox: mat("#2a2c30", 0.85),
   roof: mat("#28292b", 0.8),
   plate: mat("#1a1b1d", 0.6),
   plateText: mat("#e6e4dc", 0.5),
@@ -60,14 +60,16 @@ const END = 16.13;
 const BY = 3.3;
 const BR = 0.95;
 const RB = 2.3;
-const SMOKEBOX = [1.5, 3.2] as const;
+const SMOKEBOX = [1.3, 3.2] as const;
 const CAB0 = 13.44;
 const CAB1 = 15.7;
 const HALF = 1.47;
 /** The deflector plates' plane, their front, back and top. */
 const DEFL_Z = 1.44;
-const DEFL = [1.3, 3.95] as const;
-const DEFL_TOP = 4.05;
+const DEFL = [1.5, 3.95] as const;
+const DEFL_TOP = 4.15;
+/** The flat centre of the dished smokebox door. */
+const DOOR_DISH = BR * 0.5;
 
 /** The cab's right half section: the sheets down to 1.7 m, the arched roof to 4.5 m. */
 const CAB_HALF: Pt[] = [[HALF, 1.7], [HALF, 3.95], [1.38, 4.22], [0.9, 4.42], [0, 4.48]];
@@ -104,6 +106,18 @@ function engineExtras(t: Steam): void {
   });
   m.scope("smokebox door ring", () => {
     m.tube("doorRing", "x", 0, BY, BR + 0.05, BR * 0.9, t.X(SMOKEBOX[0]) - 0.01, t.X(SMOKEBOX[0]) + 0.035, 28);
+  });
+  m.scope("smokebox door dish", () => {
+    // the door bulges forward 0.18 m ahead of the smokebox front: a dished cone to a flat centre
+    const X0 = t.X(SMOKEBOX[0]);
+    const dish = DOOR_DISH;
+    m.sweep("smokebox", "x", ngon(28, BR * 0.8, Math.PI / 28, 0, BY), X0 + 0.055, ngon(28, dish, Math.PI / 28, 0, BY), X0 + 0.18);
+    // two hinge straps across the dish from the hinges on the left, the locking handle between them
+    for (const dy of [-0.1, -0.34]) {
+      const half = Math.sqrt(dish * dish - (Math.abs(dy) + 0.03) ** 2);
+      t.box("steel", SMOKEBOX[0] - 0.205, SMOKEBOX[0] - 0.17, BY + dy - 0.03, BY + dy + 0.03, -half, Math.min(0.15, half));
+    }
+    t.cylX("steel", SMOKEBOX[0] - 0.25, SMOKEBOX[0] - 0.17, 0, BY - 0.22, 0.05, 8);
   });
   m.scope("cab roof vent", () => t.box("roof", 13.9, 15.0, 4.5, 4.58, -0.3, 0.3));
 }
@@ -152,7 +166,7 @@ function engine(): LocoSpec {
       cylinderZ: 1.12, reference: 1, wheelMaterial: "wheel", couplingMat: "red", mainMat: "red", cylinderCoverMat: "paint",
     },
     lamps: { front: [[0.62, 1.45, 0.85], [0.62, 1.45, -0.85]], rear: [[CAB1 - 0.05, 1.45, 0.7], [CAB1 - 0.05, 1.45, -0.7]] },
-    number: { text: NUMBER, side: [13.95, 2.75, HALF], front: [SMOKEBOX[0] - 0.075, BY + 0.35] },
+    number: { text: NUMBER, side: [13.95, 2.75, HALF], front: [SMOKEBOX[0] - 0.181, BY + 0.12] },
     extras: engineExtras,
   };
 }
