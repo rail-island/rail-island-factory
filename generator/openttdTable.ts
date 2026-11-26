@@ -1118,6 +1118,13 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-sy": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-js": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-25t-coach": pax(36, RAIL, { variants: [at({ unit: "hardSeat" }, { capacity: 118 })], presets: presets({ unit: "hardSeat" }, ...each("livery", "green25b")) }),
+  // Austria (docs/models/austria-trains.md)
+  // the Railjet: the driving trailer leading the first-class coach, the restaurant car and four coaches (the locomotive couples at the rear)
+  "proc-vehicle-obb-railjet": pax(27, RAIL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 80 }), at({ unit: "restaurant" }, { capacity: 10 })],
+    presets: presets({ unit: "middleCar" }, { unit: "restaurant" }, { livery: "cd" }),
+    formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "restaurant" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" })],
+  }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

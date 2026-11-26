@@ -633,4 +633,17 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 360 },
     ],
   },
+  "proc-vehicle-obb-railjet": {
+    seats: 27,
+    source: "de.wikipedia Railjet 1. Generation (sets 01-51): 404 seats - driving trailer Afmpz 27 (business 16), first-class Ampz 55, restaurant car ARbmpz 10 (and 14 restaurant seats), economy Bmpz 80, coupling car Bmpvz 72; a train's second car the Ampz, its last the Bmpvz",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 80 },
+      { params: { unit: "restaurant" }, seats: 10 },
+      { params: { unit: "train" }, seats: 164 },
+      { params: { unit: "train", cars: "3" }, seats: 109 },
+      { params: { unit: "train", cars: "5" }, seats: 244 },
+      { params: { unit: "train", cars: "6" }, seats: 324 },
+      { params: { unit: "train", cars: "7" }, seats: 404 },
+    ],
+  },
 };
