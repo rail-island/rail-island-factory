@@ -33,7 +33,10 @@ lives in the workshop until somebody confirms it.
   The 20 Dutch trains (2026-11): the Mat '46, Mat '54, Plan V, DE-I, ICM, VIRM, DDZ, SGM,
   SLT, SNG, ICNG, Flirt and Fyra V250, the 1100, 1200, 1300, 1600 / 1700, 2200 and 3700
   and the ICR coach (docs/models/netherlands-trains.md). The Chinese and Dutch trams stay
-  drafts.
+  drafts, and so do the 20 further Chinese trains (2026-11): the Fuxing CR300AF, CR300BF,
+  CR450AF and CR450BF, the CRH380B, CRH380CL and CRH380D, the CRH1A, CRH1E, CRH2E, CRH2G,
+  CRH3A, CRH5G and CRH6F, the DJJ1 Blue Arrow and DJJ2 China Star, the HXD2, HXD3C, SS4
+  and DF8B (docs/models/china-trains.md).
   The 20 Spanish trains of the detail pass (2026-11): the AVE S-100, S-102, S-103 and S-106,
   the Alvia S-130 and S-120, the Talgo III, the Civia, 446, 440 and 592, Iryo's S-109, the
   354, 252, 269, 277, 319 and 333, and the 141F and 242F (docs/models/spain-trains.md).

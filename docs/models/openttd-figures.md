@@ -326,14 +326,34 @@ field but the vehicle's own, which the export reads ([../site/openttd-export.md]
 | `cr-crh3c` | CRH3C | train ELRL | 2008 | 40 PASS | 128 / 39 | 2 | 8 cars |
 | `cr-crh5a` | CRH5A | train ELRL | 2007 | 50 PASS | 110 / 40 | 2 | 8 cars |
 | `cr-cr200j` | Fuxing CR200J | train ELRL | 2019 | 0 PASS | 192 / 122 | 3 | 8 cars |
-| `cr-crh6a` | CRH6A | train ELRL | 2014 | 60 PASS | 90 / 32 | 2 | 8 cars |
+| `cr-crh6a` | CRH6A | train ELRL | 2014 | 60 PASS | 92 / 34 | 2 | 8 cars |
+| `cr-cr300af` | Fuxing CR300AF | train ELRL | 2020 | 48 PASS | 100 / 32 | 2 | 8 cars |
+| `cr-cr300bf` | Fuxing CR300BF | train ELRL | 2020 | 54 PASS | 101 / 33 | 2 | 8 cars |
+| `cr-cr450af` | Fuxing CR450AF | train ELRL | 2024 | 32 PASS | 146 / 45 | 2 | 8 cars |
+| `cr-cr450bf` | Fuxing CR450BF | train ELRL | 2024 | 32 PASS | 141 / 41 | 2 | 8 cars |
+| `cr-crh380b` | CRH380B | train ELRL | 2010 | 36 PASS | 128 / 39 | 2 | 8 cars |
+| `cr-crh380cl` | CRH380CL | train ELRL | 2012 | 36 PASS | 129 / 40 | 2 | 8 cars |
+| `cr-crh380d` | CRH380D | train ELRL | 2014 | 38 PASS | 131 / 42 | 2 | 8 cars |
+| `cr-crh1a` | CRH1A | train ELRL | 2007 | 72 PASS | 95 / 35 | 2 | 8 cars |
+| `cr-crh1e` | CRH1E | train ELRL | 2009 | 61 PASS | 102 / 34 | 2 | 8 cars |
+| `cr-crh2e` | CRH2E | train ELRL | 2008 | 55 PASS | 99 / 31 | 2 | 8 cars |
+| `cr-crh2g` | CRH2G | train ELRL | 2015 | 48 PASS | 105 / 36 | 2 | 8 cars |
+| `cr-crh3a` | CRH3A | train ELRL | 2017 | 54 PASS | 100 / 32 | 2 | 8 cars |
+| `cr-crh5g` | CRH5G | train ELRL | 2015 | 56 PASS | 112 / 41 | 2 | 8 cars |
+| `cr-crh6f` | CRH6F | train ELRL | 2015 | 50 PASS | 81 / 31 | 2 | 8 cars |
+| `cr-blue-arrow` | DJJ1 Blue Arrow | train ELRL | 2000 | 0 PASS | 180 / 106 | 2 | 7 cars |
+| `cr-china-star` | DJJ2 China Star | train ELRL | 2002 | 0 PASS | 194 / 106 | 2 | 8 cars |
 | `cr-hxn5` | CR HXN5 | train RAIL | 2008 | 0 PASS | 161 / 103 | 1 | - |
 | `cr-hxd1` | CR HXD1 | train ELRL | 2006 | 0 PASS | 255 / 202 | 1 | - |
+| `cr-hxd2` | CR HXD2 | train ELRL | 2006 | 0 PASS | 255 / 210 | 1 | - |
 | `cr-hxd3d` | CR HXD3D | train ELRL | 2013 | 0 PASS | 232 / 154 | 1 | - |
+| `cr-hxd3c` | CR HXD3C | train ELRL | 2010 | 0 PASS | 224 / 154 | 1 | - |
 | `cr-ss1` | CR SS1 Shaoshan | train ELRL | 1958 | 0 PASS | 134 / 86 | 1 | - |
 | `cr-ss8` | CR SS8 Shaoshan | train ELRL | 1997 | 0 PASS | 144 / 82 | 1 | - |
+| `cr-ss4` | CR SS4 Shaoshan | train ELRL | 1993 | 0 PASS | 200 / 138 | 1 | - |
 | `cr-df4` | CR DF4 Dongfeng | train RAIL | 1969 | 0 PASS | 90 / 50 | 2 | - |
 | `cr-df11` | CR DF11 Dongfeng | train RAIL | 1992 | 0 PASS | 130 / 71 | 1 | - |
+| `cr-df8b` | CR DF8B Dongfeng | train RAIL | 1997 | 0 PASS | 118 / 72 | 1 | - |
 | `cr-qj` | CR QJ | train RAIL | 1956 | 0 PASS | 91 / 54 | 2 | with tender |
 | `cr-sy` | CR SY | train RAIL | 1960 | 0 PASS | 64 / 32 | 2 | with tender |
 | `cr-js` | CR JS | train RAIL | 1957 | 0 PASS | 75 / 40 | 2 | with tender |

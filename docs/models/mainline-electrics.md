@@ -72,9 +72,14 @@ the native mapping.
 - **running gear** - the kit's two-axle `bogie`, or `bogie3` (three wheelsets on
   a long dipping plate frame) for the Co'Co' 180; the kit's `buffers`, or a centre coupler at
   `centreCoupler`'s height in their place (the metre-gauge MGB HGe 4/4 II,
-  [switzerland-trains.md](switzerland-trains.md)); a plough;
+  [switzerland-trains.md](switzerland-trains.md)), with the optional `knuckle` an
+  AAR-type knuckle coupler (`usHoodKit.ts`) in place of the plain head (the CR
+  DF8B, [china-locos.md](china-locos.md)); a plough;
 - **roof** - trapezoidal boxes, an optional high-voltage line, and the kit's
-  `diamond` or `singleArm` pantographs.
+  `diamond` or `singleArm` pantographs; a single arm's knee points toward its cab
+  end unless the optional `pantograph.kneeIn` turns both toward the middle, the
+  folded arm lying inboard of its base (the CR HXD3C,
+  [china-locos.md](china-locos.md)); every other design is unchanged.
 
 ## The bodies
 

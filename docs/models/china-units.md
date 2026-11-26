@@ -1,8 +1,8 @@
 # China's units: bodies
 
-**Covers** - how each of China's eight multiple units is drawn, measured from its photographs: the Fuxing CR400AF and CR400BF, the CRH380A, CRH2A, CRH3C, CRH5A, the CR200J and the CRH6A - noses, cab faces, liveries, window and door layouts, pantographs.
-**Code** - `generator/cnCr400af.ts`, `generator/cnCr400bf.ts`, `generator/cnCrh380a.ts`, `generator/cnCrh2a.ts`, `generator/cnCrh3c.ts`, `generator/cnCrh5a.ts`, `generator/cnCr200j.ts`, `generator/cnCrh6a.ts`, `generator/cnUnits.ts` (`CN_UNITS`), `assets/cr-*/`
-**See also** - [china-trains.md](china-trains.md) (the designs, deviations, tests), [china-locos.md](china-locos.md) (the locomotives, coach and wagons), [shinkansen.md](shinkansen.md) (the series kit and its cab faces)
+**Covers** - how the first eight of China's multiple units are drawn (the sixteen added later are in [china-units-2.md](china-units-2.md) and [china-units-3.md](china-units-3.md)), measured from its photographs: the Fuxing CR400AF and CR400BF, the CRH380A, CRH2A, CRH3C, CRH5A, the CR200J and the CRH6A - noses, cab faces, liveries, window and door layouts, pantographs.
+**Code** - `generator/cnCr400af.ts`, `generator/cnCr400bf.ts`, `generator/cnCrh380a.ts`, `generator/cnCrh2a.ts`, `generator/cnCrh3c.ts`, `generator/cnCrh5a.ts`, `generator/cnCr200j.ts`, `generator/cnCrh6a.ts`, `generator/cnUnits.ts` (`CN_UNITS`), `test/cnCr400bfNose.test.ts`, `test/cnCrh380aNose.test.ts`, `test/crh5aNose.test.ts`, `assets/cr-*/`
+**See also** - [china-trains.md](china-trains.md) (the designs, deviations, tests), [china-units-2.md](china-units-2.md) (the CR300AF, CR300BF, CR450AF, CR450BF, CRH380B, CRH380CL and CRH380D), [china-units-3.md](china-units-3.md) (the CRH1A, CRH1E, CRH2E, CRH2G, CRH3A, CRH5G, CRH6F, DJJ1 and DJJ2), [china-locos.md](china-locos.md) (the locomotives, coach and wagons), [shinkansen.md](shinkansen.md) (the series kit and its cab faces)
 
 ## The CR400AF's body
 

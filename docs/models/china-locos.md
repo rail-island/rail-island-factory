@@ -1,8 +1,8 @@
 # China's locomotives, coach and wagons: bodies
 
-**Covers** - how each of China's locomotives, its coach and its wagons is drawn, measured from photographs and drawings: the HXN5, HXD1, HXD3D, SS1, SS8, DF4 and DF11, the QJ, SY and JS steam engines, the 25-series coach and the C70 / P70 wagons.
-**Code** - `generator/cnHxn5.ts`, `generator/cnHxd1.ts`, `generator/cnHxd3d.ts`, `generator/cnSs1.ts`, `generator/cnSs8.ts`, `generator/cnDf4.ts`, `generator/cnDf11.ts`, `generator/cnLocos.ts` (`CN_LOCOS`), `generator/cnQj.ts`, `generator/cnSy.ts`, `generator/cnJs.ts`, `generator/worldSteamLocos.ts`, `generator/cnCoach25.ts`, `generator/worldCoaches.ts`, `generator/cnC70.ts`, `generator/worldWagons.ts`, `test/cnJs.test.ts`, `test/cnSs1.test.ts`, `assets/cr-*/`
-**See also** - [china-trains.md](china-trains.md) (the designs, deviations, tests), [china-units.md](china-units.md) (the multiple units), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md), [world-wagons.md](world-wagons.md)
+**Covers** - how each of China's locomotives, its coach and its wagons is drawn, measured from photographs and drawings: the HXN5, HXD1, HXD2, HXD3D, HXD3C, SS1, SS8, SS4, DF4, DF11 and DF8B, the QJ, SY and JS steam engines, the 25-series coach and the C70 / P70 wagons.
+**Code** - `generator/cnHxn5.ts`, `generator/cnHxd1.ts`, `generator/cnHxd2.ts`, `generator/cnHxd3d.ts`, `generator/cnHxd3c.ts`, `generator/cnSs1.ts`, `generator/cnSs8.ts`, `generator/cnSs4.ts`, `generator/cnDf4.ts`, `generator/cnDf11.ts`, `generator/cnDf8b.ts`, `generator/boxLocoKit.ts`, `generator/cnLocos.ts` (`CN_LOCOS`), `generator/cnQj.ts`, `generator/cnSy.ts`, `generator/cnJs.ts`, `generator/worldSteamLocos.ts`, `generator/cnCoach25.ts`, `generator/worldCoaches.ts`, `generator/cnC70.ts`, `generator/worldWagons.ts`, `test/cnJs.test.ts`, `test/cnSs1.test.ts`, `assets/cr-*/`
+**See also** - [china-trains.md](china-trains.md) (the designs, deviations, tests), [china-units.md](china-units.md), [china-units-2.md](china-units-2.md) and [china-units-3.md](china-units-3.md) (the multiple units), [world-locos.md](world-locos.md), [world-steam.md](world-steam.md), [world-coaches.md](world-coaches.md), [world-wagons.md](world-wagons.md)
 
 ## The CR HXN5's body
 
@@ -68,6 +68,41 @@ side) and the published figures.
 - **Distant model.** Both sections with their noses, the silver trapezoid as a band, the bogies,
   frame, transformer, cooler boxes and pantographs, 196 triangles of 200.
 
+## The HXD2's body
+
+`generator/cnHxd2.ts`, measured from the photographs in `assets/cr-hxd2/` (SOURCES.md; units 0001,
+0021, 0045, 0053 and 0163 of the original batch in the as-delivered livery) and the published figures.
+
+- **Two sections.** Two identical single-cab Bo'Bo' sections of 19.025 m over the couplers (38.05 m),
+  coupled back to back: one articulated vehicle of two sections hinged at the coupler plane between
+  them, a grey bellows over the 0.6 m between their flat inner ends, a knuckle coupler at each cab.
+  Each section stands on its own two bogies, 9.4 m apart (a projective fit on the side photograph),
+  2.6 m wheelbase, 1.25 m wheels. The body is 2.86 m wide (2.85 m published), 2.99 m over the handrails.
+- **Cab.** The Alstom Prima cab: the silver lamp band upright (1.56 - 2.66 m) with rounded corners, a
+  sunshade ledge across it at 2.71 - 2.83 m, the one-piece windscreen (2.98 - 3.86 m) raked back 0.4 m,
+  blue chamfers beside it narrowing the face to the hood's roof. The lamp band holds the white head
+  lamps outboard, the red tail lamps inboard, a lighter lamp panel with two perforated grilles either
+  side of the red CR emblem, the red "Hexie" characters above and the running number below. A dark grey
+  buffer beam and a plough with yellow and black stripes under it; a dark grille on each cab corner.
+- **Cab hood.** The cab's roof stands 0.43 m above the machine room's (4.35 m against 3.92 m), from the
+  face back to 4.4 m behind the coupler, grey, its rear wall leaning; the twin headlight box and a horn
+  on its front.
+- **Sides.** A narrow cab side window and the cab door with its window (handrails and steps beside
+  and under it); behind it on the left side a tall machine-room window, on both sides horizontal ribs
+  (0.114 m pitch) over the machine room up to the eave (3.55 m), the sloped shoulder above with a row
+  of vent slots. The left side has a box with two small windows just inside the silver and a door with
+  a window near the inner end; the right side a window door and a plain leaf next to the inner end.
+- **Livery.** Blue, a dark grey band along the bottom (1.05 - 1.56 m); on each side a silver trapezoid
+  from 6.5 m behind the cab's coupler (7.55 m at the eave) to 17.3 m (16.3 m at the eave), up over the
+  shoulder, holding the red characters (0.9 m high) and the running number HXD2 0021 - read from the cab
+  rearward on the left side, toward the cab on the right. The number again in small red on the cab side.
+- **Roof.** A single-arm pantograph right behind each cab hood, the knee toward the inner end (the
+  rear section's raised); the cooler hood with sloped ends and its grille 7.6 - 9.7 m behind the
+  coupler, two insulators, the breaker box and two low boxes further back.
+- **Distant model.** Both sections with their noses, the silver trapezoid as a band, the cab hoods,
+  cooler hoods, bogies, frame, transformer and pantographs, within 200 triangles. The full model:
+  about 21,500 triangles for both sections.
+
 ## The HXD3D's body
 
 `generator/cnHxd3d.ts`, its own profile tables on the box locomotive kit, matched to the photographs in
@@ -97,6 +132,37 @@ side) and the published figures.
 - **Distant model.** The kit's, with the maroon wedges painted on its sides.
 - **Not drawn.** The small cab-side number and depot lettering, the face panel's grille, the brake
   hoses and sockets.
+
+## The HXD3C's body
+
+`generator/cnHxd3c.ts`, its own profile tables on the box locomotive kit, matched to the photographs in
+`assets/cr-hxd3c/` (unit HXD3C 0736 of Beijing, in the blue "Hexie" livery every photograph shows; no red
+HXD3C was found).
+
+- **Size.** 20.846 m over the automatic couplers (published), 19.76 m over the silver panels, 4.1 m high.
+  The body is drawn 3.0 m wide, not the real 3.1 m, so the cab doors' handrails stay inside the UIC gauge.
+  Bogie pivots 9.9 m apart (a projective fit of HXD3C 0736's side photograph scaled to the published
+  length; no published figure), each bogie's wheelbase 2.25 + 2.0 m with the longer pair outboard, 1.25 m wheels.
+- **Cab.** The HXD3 family's flat cab (the HXD3B's carbody), not the HXD3D's raked one: the silver panel
+  (1.58 - 2.38 m) standing 0.08 m proud of the upright lower face, the two flat windscreens (2.69 - 3.5 m,
+  each 1.18 m across) raked 0.34 m back above a handrail, the dark grey cab cap rounding back 1.6 m to the
+  roof with the double top headlight in its dark housing. In plan the face is flat over the windscreens and
+  its corners sweep 0.48 m back; the blue sides wrap round them up to the roof. On the panel the red "Hexie"
+  characters, the dark CR emblem between two grilles, the red "HXD3C0736" under it, and at each end a dark
+  lamp housing with the headlight over the red tail lamp. Under it two red marker lamps, the grey lower cab
+  with red hose cocks, the knuckle coupler at 0.88 m and the wide yellow plough with black chevrons.
+- **Sides.** The cab window (7.74 - 8.2 m from the centre, 2.66 - 3.24 m) with a grab rail under it, ahead
+  of the cab door (6.88 - 7.48 m) and its handrails and steps; the small red number under the window; ten
+  dark louvre panels on a 1.32 m pitch along the sloped cantrail (3.66 - 3.96 m).
+- **Paint.** Blue body, grey skirt to 1.58 m, the white trapezoid in the middle of each side (8.1 m long at
+  its foot on the skirt, 6.7 m at its head under the louvres) with the red "Hexie" (0.85 m) and "HXD3C0736"
+  (0.48 m), read left to right from either side; dark grey cab caps, grey roof.
+- **Roof.** Two single-arm pantographs 10 m apart on red-oxide patches, their knees toward the middle and
+  the folded arm lying inboard (the kit's `kneeIn`), the trailing one raised; the roof line between them,
+  the main breaker's base, the roof hatch, two horns behind each top headlight.
+- **Distant model.** The kit's, with the white trapezoids on the sides and the silver panels on the faces:
+  98 triangles. The full model: 14,736 triangles.
+- **Not drawn.** The depot lettering, the panel's grab handles, the skirt's intake grilles, brake hoses.
 
 ## The SS1's body
 
@@ -167,6 +233,39 @@ couplers, a 16.3 m body, 3.1 m wide, 88 t, 1.25 m wheels. Drawn as SS8 0228 (Gua
   single-arm pantograph behind each at 4.4 m from the middle (the rear raised), the roof cable and the main
   breaker between them. Bogie centres 8.2 m and a 2.8 m wheelbase (measured; not published).
 - **Distant model.** The kit's: the same profile and bands, the louvre panel as a band along the side.
+
+## The SS4's body
+
+`generator/cnSs4.ts`, the improved SS4G, measured from the photographs in `assets/cr-ss4/` (SOURCES.md; SS4
+1081 and 0844 by projective fits along both sides, 1089A head-on, 1072B three-quarter, 0849 for the roof) and
+the published figures. Drawn as SS4 1072 (sections 1072A and 1072B).
+
+- **Two sections.** Two identical single-cab Bo-Bo sections of 16.416 m over the couplers (32.832 m), coupled
+  back to back: one articulated vehicle of two sections hinged at the coupler plane between them (as the HXD1),
+  a dark bellows over the 0.3 m between the flat inner ends, a knuckle coupler at each cab 0.55 m ahead of the
+  face. Bogie centres 8.7 m, 2.9 m wheelbase, 1.25 m wheels (measured; not published).
+- **Cab.** The face flat and upright from the side's foot (1.0 m) to the eave (3.56 m), its corners rounded
+  0.17 m; the cab's hipped roof cap slopes back 0.62 m and in to the 4.02 m crown, the big round headlight
+  (3.86 m) on its front, two horns beside it and a louvred box behind. Two large windscreens (0.08 - 1.27 m
+  from the middle, 2.65 - 3.34 m) with hanging wipers and trims under them; the CR emblem (red disc, white ring
+  and rail, 2.3 m) between the lamp boxes (0.72 - 1.3 m, 1.86 - 2.14 m: white lamp outboard, red inboard) and
+  two small markers; the dark grey stripe (1.55 - 1.69 m) with the light blue and red handrail at its foot; the
+  red number plate "SS4 1072A" / "B" on the light blue below; the light blue skirt down to 0.62 m over the
+  first 1.1 m, the coupler pocket, the hoses and the red barred plough.
+- **Sides** (both alike, mirrored, d behind the face): a small fixed cab window (0.22 - 0.47 m) and the sliding
+  one (0.72 - 1.26 m, 2.62 - 3.34 m) with its folded mirror, the number plate under them, the cab door
+  (1.58 - 2.06 m) between long grab rails, the steps before the front wheel; then the machine room's recessed
+  louvred grille (2.95 - 14.45 m, 1.8 - 2.85 m, darker frame) and six portholes (4.35 - 14.85 m, 2.1 m apart) in
+  the cream band.
+- **Livery.** Light blue `#4a9ccb` below; the cab cream `#eadd9f` above the dark grey stripe on face and sides
+  to 2.3 m behind the face, cap included; the cream porthole band (2.95 - 3.38 m) to the inner end; light blue
+  roof shoulders and crown with dark cover seams; colours sampled from 1072, 1081 and 1089.
+- **Roof.** A single-arm pantograph behind each cab (base 2.0 - 3.45 m behind the face, hinge to the rear, knee
+  toward the cab; the rear section's raised, as on 1081), the big louvred box (3.6 - 5.6 m), the low louvred
+  box (6.5 - 7.85 m), the high voltage line on insulators, the main breaker and the resistor stacks.
+- **Distant model.** Both sections with the cab cream, the porthole band, the grille as a band, windscreens,
+  skirts, bogies, frames, the big boxes and pantographs: 196 triangles of 200. The full model: 19,820
+  triangles (about 9,900 a section).
 
 ## The CR DF4 Dongfeng's body
 
@@ -246,6 +345,45 @@ projective fit over the louvre panels. The running number is DF11 0010.
 - **Distant model.** The shell's silhouette with both cab noses, the paint bands, windscreens and
   cab side windows, and the two bogies reaching the rail: 98 triangles of 100 (the fuel tank and
   the exhaust box are optional parts the budget leaves out).
+
+## The CR DF8B Dongfeng's body
+
+`generator/cnDf8b.ts`, its own LocoSpec on the box locomotive kit (`boxLocoKit.ts`, with the kit's
+new optional `knuckle` coupler), measured from the photographs in `assets/cr-df8b/` (SOURCES.md):
+lengths along the side from DF8B 5034 (near-orthographic, 46.7 px/m over the axles), the face's
+heights from the eye-level three-quarter of 5458, the face layout from 5620, whose number it carries.
+
+- **Size.** 22.0 m over the knuckle couplers, the lamp band 10.68 m from the centre (the frame
+  20.9 m); 3.2 m wide (real 3.304 m, narrowed so the handrails stay within the US gauge's 3.3 m:
+  `loadingGauge: "us"`, the real height 4.736 m being over the UIC gauge's 4.7 m); the body's foot
+  1.10 m, the eave 4.05 m, the roof's crown 4.72 m, the horns 4.91 m. Two three-axle bogies on
+  12.0 m centres (the photograph; the traction seats are published at 12.3 m), axles 1.8 m apart,
+  1.05 m wheels.
+- **Cab ends** (both alike, as the works describe them). The lower face leans back 20 degrees
+  from the lamp band to the foot (0.40 m), the 300 mm lamp band (2.22 - 2.52 m) stands forward
+  with the two black lamp housings (white head lamp outboard, red marker inboard) and the red
+  "DF8B 5620" plate between them; the face above leans a little to the windscreens (3.07 -
+  3.93 m, 0.11 - 1.30 m either side of the centre, leaning back 15 degrees, with wipers) and the
+  grab rail under them; the standardised cab's rounded roof cap rises 1.0 m back to the crown,
+  the round headlight standing out of its front edge at 4.5 m, the air conditioner and two horns
+  behind it. In plan the face is flat with its corners rounded back 0.26 m. Below, the grey apron
+  with its slots and brake cocks, the low red plough with its holes, the knuckle coupler at 0.88 m.
+- **Livery.** Blue and cream with the red line: cream band 1.87 - 2.22 m across the face and the
+  cab sides; along the machine room cream 1.87 - 2.46 m with the red line at 2.35 - 2.42 m, the
+  blue panel to 3.85 m and a cream strip under the roof to the eave. Behind each cab door a cream
+  strip leans back between the cab's blue (its rear edge from 9.28 m at the waist to 8.75 m at the
+  eave, through the door) and the machine room's panel. Grey roof, apron and running gear.
+- **Sides** (every photograph shows the same side; the other is drawn alike): the cab window and
+  door with its handrails; the electrical room's two windows and two louvres (upper part in the
+  blue, lower part in the cream under the red line); a window, six slot windows across the cream
+  band with the CR emblem above them in the middle, a window; the cooling room's three louvres and
+  a last window toward the No. 2 cab. Red number plates under each cab window.
+- **Roof.** The electrical room's raised hood with louvred slopes (No. 1 end), three power room
+  hatches and the exhaust, the cooling room's radiator frame with two 1.6 m fans (No. 2 end).
+- **Underframe.** The fuel tank between the bogies with the battery boxes' handles and the main
+  reservoirs at its ends.
+- **Distant model.** The kit's box locomotive LOD from the same tables and paint (100 triangles).
+  The full model: 14,648 triangles.
 
 ## The QJ's body
 
