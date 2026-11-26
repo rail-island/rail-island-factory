@@ -38,7 +38,7 @@ const N = 8.3;
 /** The body's bottom: the skirt's lower edge. */
 const Y0 = 1.0;
 /** The eave (the walls' top), the roof's crown. */
-const EAVE = 3.81;
+const EAVE = 3.88;
 const CROWN = 4.2;
 /** The body's half width: 3.0 m over the walls, 3.09 m over the handrails. */
 const W = 1.5;
@@ -51,10 +51,10 @@ const LOW: readonly [number, number] = [1.46, 1.51];
 
 /** The front's centre line [y, |x|], bottom first: upright, the windscreen band leaning back, the roof dome. */
 const TIP: Table = [
-  [Y0, N - 0.02], [LINE[1], N], [EAVE, N - 0.13], [3.95, N - 0.24], [4.08, N - 0.4], [4.16, N - 0.56], [CROWN, N - 0.72],
+  [Y0, N - 0.02], [LINE[1], N], [EAVE, N - 0.14], [3.99, N - 0.27], [4.08, N - 0.4], [4.16, N - 0.56], [CROWN, N - 0.72],
 ];
 /** The half width [y, hw]: upright walls, the round roof shoulder. */
-const HW: Table = [[Y0, 1.46], [1.4, W], [EAVE, W], [3.95, 1.455], [4.08, 1.37], [4.16, 1.25], [CROWN, 1.09]];
+const HW: Table = [[Y0, 1.46], [1.4, W], [EAVE, W], [3.99, 1.44], [4.08, 1.37], [4.16, 1.25], [CROWN, 1.09]];
 /** The corners' radius in plan. */
 const R = 0.38;
 
@@ -108,8 +108,8 @@ const SIDE: readonly Band[] = [[Y0, LOW[0], "skirt"], [LOW[0], LOW[1], "line"], 
 // --- the side ----------------------------------------------------------------------
 
 /** The windows' and grilles' sill and head. */
-const ROW: readonly [number, number] = [2.88, 3.62];
-const GRILLE_Y: readonly [number, number] = [2.88, 3.66];
+const ROW: readonly [number, number] = [2.84, 3.74];
+const GRILLE_Y: readonly [number, number] = [2.84, 3.74];
 /** The side door behind each cab. */
 const DOOR: readonly [number, number] = [6.55, 7.2];
 
@@ -119,9 +119,9 @@ const DOOR: readonly [number, number] = [6.55, 7.2];
  * the right side, 1110 023 and 505, is the same turned about).
  */
 const ROW_ITEMS: ReadonlyArray<readonly ["window" | "grille", number, number]> = [
-  ["grille", 4.38, 5.2], ["grille", 3.4, 4.22], ["grille", 2.42, 3.24],
-  ["window", 0.25, 0.95], ["window", -1.75, -1.05],
-  ["grille", -3.72, -2.95], ["window", -4.72, -4.05], ["grille", -5.85, -5.08],
+  ["grille", 4.36, 5.2], ["grille", 3.42, 4.26], ["grille", 2.48, 3.32],
+  ["window", 0.17, 1.02], ["window", -1.83, -0.98],
+  ["grille", -3.76, -2.92], ["window", -4.81, -3.96], ["grille", -5.88, -5.04],
 ];
 
 function sideRow(): SideItem[] {
@@ -172,7 +172,7 @@ function spec(l: Livery1110): LocoSpec {
       ? { kind: "singleArm", x: 4.55, roofY: CROWN, baseY: CROWN + 0.27 }
       : { kind: "diamond", x: 4.7, roofY: CROWN, baseY: CROWN + 0.3 },
     sideItems: [
-      { kind: "door", name: "door", x: DOOR, y: [LOW[1], 3.74], win: [2.92, 3.62], rails: true, mirror: true },
+      { kind: "door", name: "door", x: DOOR, y: [LOW[1], 3.82], win: [2.84, 3.74], rails: true, mirror: true },
       ...sideRow(),
     ],
     endItems: [

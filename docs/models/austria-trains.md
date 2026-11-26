@@ -389,7 +389,7 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 - **Figures** (German Wikipedia "ÖBB 1110", "ÖBB 1010"): 17.86 m over buffers, 3.09 m wide (over the
   handrails; the walls 3.0 m), 4.26 m high, bogie centres 8.6 m, bogie wheelbase 4.1 m, wheels 1.3 m;
   `game` 106 t, 4,000 kW, 110 km/h.
-- **Shape facts**: head-on (1110 028, 226 px/m over the 3.09 m body): roof crown 4.2 m, eave 3.81 m,
+- **Shape facts**: head-on (1110 028, 226 px/m over the 3.09 m body): roof crown 4.2 m, eave 3.81 m on the face (3.88 m on the side),
   windscreens 2.88-3.62 m at |z| 0.17-1.11, the line under them 2.67-2.8 m all round, headlights at
   |z| 0.94, 2.14 m in pods 0.5 m across, one red tail lamp under the right-hand headlight, the top light on
   the roof dome. The front upright to the line, the windscreen band leaning back 0.13 m to the eave, the
@@ -397,9 +397,10 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   1.0 m, the lower line 1.46-1.51 m.
 - **Side** (1-D projective fits on 1110 003 and 1110 023, the doors taken as symmetric): a door behind
   each cab at |x| 6.55-7.2 with its window and handrails; between them on the left side, from +x, three
-  grilles (4.38-5.2, 3.4-4.22, 2.42-3.24), two windows (0.25-0.95, -1.75 to -1.05), a grille (-3.72 to
-  -2.95), a window (-4.72 to -4.05), a grille (-5.85 to -5.08); the right side the same turned about, as
-  the photos of both sides show. Windows and grilles 2.88-3.62/3.66 m, the grilles' louvres in the body colour.
+  grilles (4.36-5.2, 3.42-4.26, 2.48-3.32), two windows (0.17-1.02, -1.83 to -0.98), a grille (-3.76 to
+  -2.92), a window (-4.81 to -3.96), a grille (-5.88 to -5.04); the right side the same turned about, as
+  the photos of both sides show. Windows, grilles and the door window 2.84-3.74 m (0.9 m tall, about 0.85 m wide, from just
+  over the line to 0.14 m under the eave, as on 1110 003), the grilles' louvres in the body colour.
 - **Roof**: the pantographs at |x| 4.7 (scissor) or 4.55 (single arm), the rear raised; the roof line
   on post insulators with the main breaker in the middle; on the 1110.500 the resistor boxes |x| 5.5-7.5,
   0.6 m high, louvred along the sides and across the front.
@@ -409,7 +410,7 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 - **Deviations**: the side positions come from oblique photos (no side-on view or drawing was available);
   the 1990s "Pflatsch" emblem and the rebuilt 1110.500 fronts are not modelled; the 1010 (130 km/h) is not
   a separate parameter; the bogies are the kit's generic three-axle bogie.
-- **Budget**: 13,590 triangles (fir green), 14,254 (blood orange); distant model within 100.
+- **Budget**: 13,790 triangles (fir green), 14,454 (blood orange); distant model within 100.
 
 <!-- design:obb-1189 -->
 
