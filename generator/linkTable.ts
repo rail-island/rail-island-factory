@@ -106,6 +106,13 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-nyc-r160": [
     { title: "Wikipedia: R160 (New York City Subway car)", url: "https://en.wikipedia.org/wiki/R160_(New_York_City_Subway_car)" },
   ],
+  "proc-vehicle-obb-1116": [
+    { title: "Wikipedia: OBB 1016/1116 (German)", url: "https://de.wikipedia.org/wiki/%C3%96BB_1016/1116" },
+    { title: "Wikimedia Commons: OBB 1116 005 Penzing.jpg", url: "https://commons.wikimedia.org/wiki/File:OBB_1116_005_Penzing.jpg" },
+    { title: "Wikimedia Commons: 4 OEBB 1116 038 Basel SBB 151216 EN470.jpg", url: "https://commons.wikimedia.org/wiki/File:4_OEBB_1116_038_Basel_SBB_151216_EN470.jpg" },
+    { title: "Wikimedia Commons: CAT 1116 + rote 1116.jpg", url: "https://commons.wikimedia.org/wiki/File:CAT_1116_%2B_rote_1116.jpg" },
+    { title: "Wikimedia Commons: RJ 568.jpg", url: "https://commons.wikimedia.org/wiki/File:RJ_568.jpg" },
+  ],
   "proc-vehicle-odakyu-gse": [
     { title: "Wikipedia: Odakyu 70000 series GSE", url: "https://en.wikipedia.org/wiki/Odakyu_70000_series_GSE" },
   ],

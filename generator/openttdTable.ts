@@ -192,6 +192,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-obb-1012": loco(ELRL, { presets: presets() }),
   "proc-vehicle-obb-1040": loco(ELRL, { presets: presets() }),
   "proc-vehicle-obb-1144": loco(ELRL, { presets: presets(...each("livery", "bloodOrange")) }),
+  "proc-vehicle-obb-1116": loco(ELRL, { presets: presets(...each("livery", "railjet")) }),
   "proc-vehicle-vectron": loco(ELRL, { presets: presets(...each("livery", "regiojet", "cdWhite")) }),
 
   // --- diesel locomotives ----------------------------------------------------------

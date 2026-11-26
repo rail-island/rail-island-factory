@@ -511,6 +511,7 @@
     "proc-vehicle-nyc-r160": 136,
     "proc-vehicle-obb-1012": 48,
     "proc-vehicle-obb-1040": 49,
+    "proc-vehicle-obb-1116": 838,
     "proc-vehicle-obb-1144": 835,
     "proc-vehicle-obb-4024": 837,
     "proc-vehicle-obb-4744": 836,
@@ -3222,6 +3223,14 @@
       "proc-vehicle-obb-1040?": {
         "id": 1952,
         "size": 16
+      },
+      "proc-vehicle-obb-1116?": {
+        "id": 10292,
+        "size": 6
+      },
+      "proc-vehicle-obb-1116?livery=railjet": {
+        "id": 10298,
+        "size": 6
       },
       "proc-vehicle-obb-1144?": {
         "id": 10208,
