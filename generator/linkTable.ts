@@ -106,6 +106,16 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-nyc-r160": [
     { title: "Wikipedia: R160 (New York City Subway car)", url: "https://en.wikipedia.org/wiki/R160_(New_York_City_Subway_car)" },
   ],
+  "proc-vehicle-obb-1110": [
+    { title: "Wikipedia (de): ÖBB 1110", url: "https://de.wikipedia.org/wiki/%C3%96BB_1110" },
+    { title: "Wikipedia (de): ÖBB 1010", url: "https://de.wikipedia.org/wiki/%C3%96BB_1010" },
+    { title: "Wikimedia Commons: ÖBB 1110.505 in Jenbach.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_1110.505_in_Jenbach.jpg" },
+    { title: "Wikimedia Commons: 1110 003-9 1994-08-18 St Michael.jpg", url: "https://commons.wikimedia.org/wiki/File:1110_003-9_1994-08-18_St_Michael.jpg" },
+    { title: "Wikimedia Commons: 1110 028-6 1994-09-09 Poeckau.jpg", url: "https://commons.wikimedia.org/wiki/File:1110_028-6_1994-09-09_Poeckau.jpg" },
+    { title: "Wikimedia Commons: ÖBB Class 1110.JPG", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_Class_1110.JPG" },
+    { title: "Wikimedia Commons: 101010 Graz.jpg", url: "https://commons.wikimedia.org/wiki/File:101010_Graz.jpg" },
+    { title: "Wikimedia Commons: Bregenz Bahnhof 1964 OS 0137-0016.webp", url: "https://commons.wikimedia.org/wiki/File:Bregenz_Bahnhof_1964_OS_0137-0016.webp" },
+  ],
   "proc-vehicle-obb-1116": [
     { title: "Wikipedia: OBB 1016/1116 (German)", url: "https://de.wikipedia.org/wiki/%C3%96BB_1016/1116" },
     { title: "Wikimedia Commons: OBB 1116 005 Penzing.jpg", url: "https://commons.wikimedia.org/wiki/File:OBB_1116_005_Penzing.jpg" },

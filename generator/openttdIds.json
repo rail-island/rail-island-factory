@@ -512,6 +512,7 @@
     "proc-vehicle-nyc-r160": 136,
     "proc-vehicle-obb-1012": 48,
     "proc-vehicle-obb-1040": 49,
+    "proc-vehicle-obb-1110": 850,
     "proc-vehicle-obb-1116": 838,
     "proc-vehicle-obb-1142": 846,
     "proc-vehicle-obb-1144": 835,
@@ -3246,6 +3247,14 @@
       "proc-vehicle-obb-1040?": {
         "id": 1952,
         "size": 16
+      },
+      "proc-vehicle-obb-1110?": {
+        "id": 10728,
+        "size": 6
+      },
+      "proc-vehicle-obb-1110?livery=bloodOrange": {
+        "id": 10734,
+        "size": 6
       },
       "proc-vehicle-obb-1116?": {
         "id": 10292,
