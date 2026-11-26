@@ -49,8 +49,8 @@ describe("the passengers-and-cargo columns", () => {
 
   it("show a range over the variants", () => {
     expect(text("jobs", MILL)).toBe("200-300");
-    // 200 jobs x 2.5 / 60 = 8.33, 300 jobs = 12.5
-    expect(text("passengers", MILL)).toBe("8.33-12.5");
+    // jobs start no trips of their own: the workers' returns are their trips
+    expect(text("passengers", MILL)).toBe("-");
     expect(text("recipe", MILL)).toBe("1 iron ore + 0.5 coal -> steel, 360-540 t/min");
     // a recipe's inputs are taken in too
     expect(text("consumes", MILL)).toBe("coal, iron ore");
@@ -59,28 +59,42 @@ describe("the passengers-and-cargo columns", () => {
   });
 
   it("count trips per minute with the game's constants", () => {
-    expect(tripsPerMinute({ residents: 12, jobs: 24 })).toBeCloseTo(2);
+    expect(tripsPerMinute({ residents: 12, jobs: 24 })).toBeCloseTo(1);
     expect(tripsPerMinute({})).toBe(0);
   });
 
   it("sort by the default's figure, blanks last", () => {
     const rows = prepareRows([HOUSE, MILL, MINE, STATION, WAGON]);
     const sorted = (key: string) => [...rows].sort((a, b) => compareRows(a, b, column(key)!, "desc")).map((r) => r.id);
-    // a mill's default 8.33 trips, a mine's 120 jobs = 5, a house 0.33; the station and the wagon have none
-    expect(sorted("passengers")).toEqual(["mill", "mine", "house", "station", "wagon"]);
+    // only residents start trips: the house's 0.33 first, the rest have none
+    expect(sorted("passengers")[0]).toBe("house");
     // the mine's default makes 300 t/min, not the 360 of its variant
     expect(sorted("produces")).toEqual(["mine", "house", "mill", "station", "wagon"]);
     expect(sorted("recipe")[0]).toBe("mill");
   });
 
   it("are a building's only: a vehicle's spec list leaves them out, the table shows four", () => {
-    const traffic = ["residents", "jobs", "passengers", "produces", "consumes", "recipe"].map((k) => column(k)!);
+    const traffic = ["residents", "jobs", "visitors", "passengers", "produces", "consumes", "recipe"].map((k) => column(k)!);
     for (const c of traffic) {
       expect(c.only!(WAGON), c.key).toBe(false);
       expect(c.only!(STATION), c.key).toBe(true);
       expect(text(c.key, WAGON), c.key).toBe("-");
     }
     expect(traffic.filter((c) => c.table).map((c) => c.key)).toEqual(["residents", "jobs", "passengers", "produces"]);
+  });
+});
+
+describe("the visitors column", () => {
+  const CASTLE = rec("castle", {
+    traffic: { unit: "min", jobs: 40, visitors: { capacity: 600, stayMin: 20 }, variants: [{ params: { size: "extended" }, visitors: { capacity: 1000, stayMin: 25 } }] },
+  } as Game, SIZE);
+  it("shows the capacity and the stay, a range over the variants", () => {
+    expect(text("visitors", CASTLE)).toBe("600-1000 (20-25 min)");
+    expect(text("visitors", HOUSE)).toBe("-");
+  });
+  it("sorts by the default's capacity", () => {
+    const rows = prepareRows([HOUSE, CASTLE]);
+    expect([...rows].sort((a, b) => compareRows(a, b, column("visitors")!, "desc")).map((r) => r.id)).toEqual(["castle", "house"]);
   });
 });
 

@@ -1,5 +1,5 @@
 // A building's passengers and cargo as the catalog's columns show them
-// (docs/site/catalog-site.md, "Passengers and cargo"): residents, jobs, the trips
+// (docs/site/catalog-site.md, "Passengers and cargo"): residents, jobs, visitors, the trips
 // they make, what it produces, what it takes in and its recipe, all per minute of
 // game time (docs/models/traffic.md). Each figure is the design's default, or a
 // range "min-max" over its default and every variant when they differ - the
@@ -10,12 +10,12 @@ import type { BuildingTrafficFields, Recipe, TrafficVariant } from "../generator
 import { COMMODITY_ORDER, formatAmount, selectionsOf } from "./chains";
 
 /**
- * The trips a resident and a job start per minute of game time (the game's
- * TRIPS_PER_RESIDENT_MIN and TRIPS_PER_JOB_MIN). The factory states people; the
- * game turns them into trips.
+ * The trips a resident starts per minute of game time (the game's
+ * TRIPS_PER_RESIDENT). The factory states people; the game turns them into trips.
+ * A job or a visitor site starts none of its own: the workers and tourists it draws
+ * travel back home after their stay, so its trips are those returns.
  */
 export const TRIPS_PER_RESIDENT_MIN = 5 / 60;
-export const TRIPS_PER_JOB_MIN = 2.5 / 60;
 
 type Block = BuildingTrafficFields & { variants?: TrafficVariant<BuildingTrafficFields>[] };
 
@@ -51,7 +51,7 @@ function countText(r: Pick<CatalogRecord, "params" | "game">, of: (f: BuildingTr
 
 /** A selection's passenger trips per minute. */
 export function tripsPerMinute(f: BuildingTrafficFields): number {
-  return (f.residents ?? 0) * TRIPS_PER_RESIDENT_MIN + (f.jobs ?? 0) * TRIPS_PER_JOB_MIN;
+  return (f.residents ?? 0) * TRIPS_PER_RESIDENT_MIN;
 }
 
 /** The default's figure, for sorting: null when it has none above 0. */
@@ -65,6 +65,15 @@ export const residentsText = (r: Pick<CatalogRecord, "params" | "game">) => coun
 export const residentsSort = (r: Pick<CatalogRecord, "params" | "game">) => defaultFigure(r, (f) => f.residents ?? 0);
 export const jobsText = (r: Pick<CatalogRecord, "params" | "game">) => countText(r, (f) => f.jobs ?? 0);
 export const jobsSort = (r: Pick<CatalogRecord, "params" | "game">) => defaultFigure(r, (f) => f.jobs ?? 0);
+
+/** A visitor site's capacity and stay over the selections: "800 (15 min)", "300-1000 (15-25 min)"; null when it is none. */
+export function visitorsText(r: Pick<CatalogRecord, "params" | "game">): string | null {
+  const all = selections(r);
+  const sites = (all ?? []).map((f) => f.visitors).filter((v): v is NonNullable<BuildingTrafficFields["visitors"]> => !!v);
+  if (!sites.length) return null;
+  return `${range(sites.map((v) => v.capacity))} (${range(sites.map((v) => v.stayMin))} min)`;
+}
+export const visitorsSort = (r: Pick<CatalogRecord, "params" | "game">) => defaultFigure(r, (f) => f.visitors?.capacity ?? 0);
 /** Trips per minute: "0.33", "0.17-0.42". */
 export const passengersText = (r: Pick<CatalogRecord, "params" | "game">) => countText(r, tripsPerMinute);
 export const passengersSort = (r: Pick<CatalogRecord, "params" | "game">) => defaultFigure(r, tripsPerMinute);
