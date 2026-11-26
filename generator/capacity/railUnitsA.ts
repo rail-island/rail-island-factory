@@ -219,6 +219,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 574 },
     ],
   },
+  "proc-vehicle-cr-crh3a": {
+    seats: 54,
+    source: "zh.wikipedia: 8 cars, one first class, six second class, one second class and buffet car; seats taken as the China standard 250 km/h layout of about 610 (end cars about 54, intermediate cars 84); seats only",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 84 },
+      { params: { unit: "train" }, seats: 276 },
+      { params: { unit: "train", cars: "2" }, seats: 108 },
+      { params: { unit: "train", cars: "3" }, seats: 192 },
+      { params: { unit: "train", cars: "5" }, seats: 360 },
+      { params: { unit: "train", cars: "6" }, seats: 444 },
+      { params: { unit: "train", cars: "7" }, seats: 528 },
+      { params: { unit: "train", cars: "8" }, seats: 612 },
+    ],
+  },
   "proc-vehicle-cr-cr300bf": {
     seats: 54,
     source: "Wikipedia: 8-car CR300BF 613 seats (48 first class, 565 second class; end cars about 48 and 60); seats only",
