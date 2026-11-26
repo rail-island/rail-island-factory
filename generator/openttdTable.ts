@@ -1149,6 +1149,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     presets: presets({ unit: "middleCar" }, { unit: "couchette" }, { unit: "sleeper" }),
     formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "sleeper" }, { unit: "sleeper" })],
   }),
+  // the CityShuttle double-deck set: the driving trailer leading three coaches (the locomotive couples at the rear)
+  "proc-vehicle-obb-cityshuttle-dd": pax(86, RAIL, {
+    variants: [at({ unit: "coach" }, { capacity: 114 })],
+    presets: presets({ unit: "coach" }, { livery: "cityjet" }),
+    formations: [formation("4 cars", {}, { unit: "coach" }, { unit: "coach" }, { unit: "coach" })],
+  }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

@@ -522,6 +522,7 @@
     "proc-vehicle-obb-4744": 836,
     "proc-vehicle-obb-5022": 841,
     "proc-vehicle-obb-5047": 843,
+    "proc-vehicle-obb-cityshuttle-dd": 849,
     "proc-vehicle-obb-nightjet": 847,
     "proc-vehicle-obb-railjet": 839,
     "proc-vehicle-ocean-liner": 4,
@@ -3364,6 +3365,22 @@
       },
       "proc-vehicle-obb-5047?livery=valousek": {
         "id": 10496,
+        "size": 8
+      },
+      "proc-vehicle-obb-cityshuttle-dd?": {
+        "id": 10672,
+        "size": 8
+      },
+      "proc-vehicle-obb-cityshuttle-dd?formation=4 cars": {
+        "id": 10696,
+        "size": 32
+      },
+      "proc-vehicle-obb-cityshuttle-dd?livery=cityjet": {
+        "id": 10688,
+        "size": 8
+      },
+      "proc-vehicle-obb-cityshuttle-dd?unit=coach": {
+        "id": 10680,
         "size": 8
       },
       "proc-vehicle-obb-nightjet?": {

@@ -339,7 +339,51 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   lettering and the station names over the windows are drawn as upright stroke letters / left out.
 - **Triangles**: end car 15,890, middle car 8,870, train 35,618; distant model 92 / 86 / 292.
 
-<!-- design:obb-cityshuttle-dd -->
+### OBB CityShuttle double-deck coach (`proc-vehicle-obb-cityshuttle-dd`)
+
+- **Built on** the series kit (`generator/atCityShuttle.ts`; shinkansen.ts, seriesCab.ts), unwired
+  (`traction: "none"`) like the Railjet: the driving trailer (80-33 / 86-33, "Wiesel" Steuerwagen) is
+  the series' end car with a cab face, the coach (26-33) its intermediate car; both double-deck with the
+  lower deck in a well between the doors (`lowWell`). One small kit change (below).
+- **Parameters**: `unit` `drivingTrailer` (default), `coach`, `train`; `cars` 3 .. 5 (default 4) with
+  `train`; `livery` `cityShuttle` (default), `cityjet`.
+- **Figures** (de.wikipedia "OBB Nahverkehrs-Doppelstockwagen"): driving trailer 27.1 m, coach 26.8 m
+  over the buffers, 4.632 m high, 2.8 m wide, bogie centres 20 m (2.5 m wheelbase, 920 mm wheels),
+  140 km/h (the brief's 160 km/h is not in the sources); 49 / 48 t, 86 / 114 seats (the 4-car set 428).
+- **The train** (`wieselTrain`): the driving trailer leading, coaches behind it, every second one turned
+  so the red halves meet as on the Meidling photographs; the locomotive (its own design) couples at the
+  rear. A driving trailer and up to four coaches is the usual set, so 3 .. 5 cars.
+- **Sides** (projective fits along the coach at Moedling on its six lower windows, 86-33 033 and 102):
+  both decks on one 1.7 m pitch, six lower windows (1.15 - 1.95 m) between the 1.6 m double doors
+  5.17 m either side of the well's middle, eight upper windows (3.28 - 4.1 m) with the outer ones over
+  the doors; each end section over a bogie has a small upper window over a narrow intermediate-level
+  window, a wider one (1.97 - 2.95 m), the tall louvred locker and two intakes under the roof's edge.
+  The driving trailer's front section: the cab side window behind the mirror housing in the grey band,
+  one tall window, the destination box, the front door 4.6 m behind the face's join; its leading bogie
+  under the cab (the face's skirt cut open over it). Door leaves white, one narrow window each.
+- **The face** (head-on 86-33 100, 129 px/m; three-quarter 102, 80-33 008): the grey buffer beam to
+  1.21 m with the rectangular buffers, the red lower face (two lamp pairs at 1.70 m, the grille between,
+  the white OBB letters and number), the grey windscreen band 2.38 - 3.35 m raked about 28 degrees and
+  its glass wrapping round the corners onto the cab sides (rear edge raked) inside the grey frame that runs back round the cab side window, the red cap raked about 45 degrees with the marker lamp and two
+  grilles, its arched top (4.3 m in the middle, 3.95 m at the corners) under the grey roof, the horn on it.
+- **The red head**: the face reaches 1.8 m behind its tip (86-33 102: the red begins on the side just ahead of
+  the cab side window's grey frame, 4.5 m ahead of the front door), red from the beam to the roof except the
+  windscreen band.
+- **CityShuttle** (1997, OBB wordmark): light grey, the rear half red behind a diagonal across the
+  well's middle (1.9 m behind it at the belly, 2.2 m ahead at the shoulder), the red OBB letters ahead
+  of it, CITYSHUTTLE in white on the red end section. **Cityjet** (2019 - , 86-33 113): white over a
+  red band to 2.05 m, black window bands, dark grey doors, the anthracite cap swept back over the cab
+  sides behind a red line, the white band with the red OBB under the windscreen.
+- **Kit change** (sliceBody.ts `sliceCabin`, additive): the cabin's width is taken only from slices that
+  reach down to its floor, so a door in a double-deck well (floor 0.5 m) no longer collapses the cabin to
+  nothing over the raised end sections; every other design builds byte-identical (hash diff empty).
+- References: `assets/obb-cityshuttle-dd/` (ten Commons photographs). 15,716 triangles (driving
+  trailer, CityShuttle; Cityjet 15,872), coach 11,914, the 4-car train 49,958; distant model 100 a car.
+- Deviations: lettering in capitals (the kit fonts have no lower case "CityShuttle" / "cityjet"); the
+  first series' red front half and raised Pflatsch emblem, the Wiesel and "Wiener Szene" lettering, the
+  two blanked lower windows of the rebuilt driving trailers and the Cityjet's darker red line are not
+  drawn; the louvred locker is drawn on both sides of every end section; the upper deck has no interior
+  (the kit's cabin is the lower deck behind the doors).
 
 ### OBB Nightjet (`proc-vehicle-obb-nightjet`)
 

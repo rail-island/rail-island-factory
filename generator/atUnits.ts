@@ -24,7 +24,7 @@ export { westbahnKiss, westbahnKissLod } from "./atWestbahnKiss.ts";
 
 import { HIMMELSTREPPE_DESIGN } from "./atHimmelstreppe.ts";
 
-// import:obb-cityshuttle-dd
+import { CITYSHUTTLE_DESIGN } from "./atCityShuttle.ts";
 
 import { NIGHTJET_DESIGN } from "./atNightjet.ts";
 
@@ -47,7 +47,7 @@ export const AT_UNITS: ProceduralDesign[] = [
 
   HIMMELSTREPPE_DESIGN,
 
-  // design:obb-cityshuttle-dd
+  CITYSHUTTLE_DESIGN,
 
   NIGHTJET_DESIGN,
 ];

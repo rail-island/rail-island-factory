@@ -672,6 +672,16 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "7" }, seats: 404 },
     ],
   },
+  "proc-vehicle-obb-cityshuttle-dd": {
+    seats: 86,
+    source: "de.wikipedia OBB Nahverkehrs-Doppelstockwagen: driving trailer 86 seats, coach 114 seats; usually a driving trailer and up to four coaches",
+    variants: [
+      { params: { unit: "coach" }, seats: 114 },
+      { params: { unit: "train" }, seats: 428 },
+      { params: { unit: "train", cars: "3" }, seats: 314 },
+      { params: { unit: "train", cars: "5" }, seats: 542 },
+    ],
+  },
   "proc-vehicle-obb-5022": {
     seats: 108,
     source: "Wikipedia (de): OBB 5022 117 seats (10 tip-up) in 2 cars; standing room as the DB 642 (approx. 99)",
