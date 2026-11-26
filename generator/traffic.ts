@@ -64,9 +64,11 @@ export interface Recipe {
 /**
  * The ground a primary industry harvests: the game counts that ground around the
  * building and scales its `produces` by it (a farm's fields, a logging camp's woods,
- * a sand pit's sand). The radius and the share for full output are the game's.
+ * a sand pit's sand, a quarry's building stone, an iron mine's ore rock, a coal mine's
+ * marsh and shale, an oil pump's flat land, an offshore platform's water). Which cells
+ * count, the radius and the share for full output are the game's.
  */
-export const HARVEST_GROUNDS = ["field", "woods", "sand"] as const;
+export const HARVEST_GROUNDS = ["field", "woods", "sand", "stone", "ore", "marsh", "flatland", "water"] as const;
 export type HarvestGround = (typeof HARVEST_GROUNDS)[number];
 
 /** The recipe's inputs, in COMMODITIES order. */

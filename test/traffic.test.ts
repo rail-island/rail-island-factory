@@ -131,6 +131,7 @@ describe("trafficProblems", () => {
     expect(p({ jobs: 4, produces: { grain: 10 }, harvests: "field" })).toBe("");
     expect(p({ jobs: 4, produces: { wood: 10 }, harvests: "woods" })).toBe("");
     expect(p({ jobs: 4, produces: { sand: 10 }, harvests: "sand" })).toBe("");
+    for (const g of ["stone", "ore", "marsh", "flatland", "water"]) expect(p({ jobs: 4, produces: { coal: 10 }, harvests: g })).toBe("");
     expect(p({ jobs: 4, produces: { grain: 10 }, harvests: "meadow" })).toMatch(/unknown ground "meadow"/);
     expect(p({ jobs: 4, harvests: "field" })).toMatch(/harvests "field" but produces no raw commodity/);
     expect(p({ jobs: 4, produces: { mail: 1 }, harvests: "field" })).toMatch(/produces no raw commodity/);
@@ -206,11 +207,22 @@ describe("the exported blocks", () => {
     expect(withTraffic(entry("proc-vehicle-airbus-a380", "Aircraft", "aircraft")).game!.capacity).toEqual({ seats: 525, tonnes: 17, commodities: ["goods", "mail"] });
   });
 
+  it("every extracting producer names the ground it works", () => {
+    const ground = (id: string) => withTraffic(entry(id, "Industry", "industry")).game!.traffic!.harvests;
+    expect(ground("proc-building-industry-mine")).toBe("marsh");
+    expect(ground("proc-building-industry-iron-mine")).toBe("ore");
+    expect(ground("proc-building-industry-quarry")).toBe("stone");
+    expect(ground("proc-building-industry-oil-pump")).toBe("flatland");
+    expect(ground("proc-building-industry-offshore-platform")).toBe("water");
+    expect(ground("proc-building-industry-sand-pit")).toBe("sand");
+    expect(ground("proc-building-industry-logging-camp")).toBe("woods");
+  });
+
   it("mark a building's non-empty traffic block per minute, and only that", () => {
     const mine = withTraffic(entry("proc-building-industry-mine", "Industry", "industry")).game!.traffic!;
     // the unit leads the block; a variant carries none (the block's applies)
     expect(Object.keys(mine)[0]).toBe("unit");
-    expect(mine).toEqual({ unit: TRAFFIC_UNIT, jobs: 120, produces: { coal: 300 } });
+    expect(mine).toEqual({ unit: TRAFFIC_UNIT, jobs: 120, produces: { coal: 300 }, harvests: "marsh" });
     // a harvesting producer names its ground
     expect(withTraffic(entry("proc-building-industry-farm", "Industry", "industry")).game!.traffic).toMatchObject({ produces: { grain: 180 }, harvests: "field" });
     expect(TRAFFIC_UNIT).toBe("min");

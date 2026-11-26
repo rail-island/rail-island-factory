@@ -82,7 +82,7 @@ A building's `game.traffic`:
   unit?: "min";                               // the rates' unit; on every non-empty block (export only)
   produces?: { [commodity]: tonnesPerMinute }; // made from nothing: raw commodities, mail
   accepts?: commodity[];                      // consumed on delivery: towns and sinks
-  harvests?: "field" | "woods" | "sand";      // the ground its `produces` needs around it
+  harvests?: "field" | "woods" | "sand" | "stone" | "ore" | "marsh" | "flatland" | "water"; // the ground its `produces` needs around it
   processes?: {                               // a processor's recipes
     outputs: { [input]: commodity };          // each input -> what 1 t of it becomes (1 t)
     rate: number;                             // at most this many t of output a minute, all inputs together
@@ -102,10 +102,14 @@ fields: a **primary industry** `produces` a raw commodity, a **processor**
 `processes`, a **sink** or a **town** `accepts` (a town also `produces` mail).
 
 `harvests` names the ground a primary industry works: `field` (a farm), `woods` (a
-logging camp) or `sand` (a sand pit). The game counts that ground in a disc around the
-building and scales its `produces` by it - no ground, no output; the radius and the
-share for full output are the game's tuning (its `docs/gameplay/traffic.md`). A block
-that `harvests` must produce a raw commodity.
+logging camp), `sand` (a sand pit), `stone` (a quarry: loose rock, limestone,
+sandstone), `ore` (an iron mine: mountain rock, red clay), `marsh` (a coal mine: mud,
+marsh grass, slate), `flatland` (an oil pump: level natural land) or `water` (an
+offshore platform). The game counts that ground in a disc around the building, splits
+cells that several producers of the same ground reach between them, and scales its
+`produces` by its share - no ground, no output; which cells count, the radius and the
+share for full output are the game's tuning (its `docs/gameplay/harvest-grounds.md`).
+A block that `harvests` must produce a raw commodity.
 
 A vehicle's `game.capacity`:
 
@@ -153,11 +157,11 @@ drafts; the balance is the game's.
 |---|---|---|
 | grain | farm (`industry-farm`, harvests `field`) | factories -> goods |
 | wood | logging camp (`industry-logging-camp`, harvests `woods`) | factories -> lumber; towns |
-| coal | coal mine (`industry-mine`) | factories -> goods; power plant, coal type |
-| iron-ore | iron ore mine (`industry-iron-mine`) | factories -> steel |
-| stone | quarry (`industry-quarry`) | factories -> cement; towns |
+| coal | coal mine (`industry-mine`, harvests `marsh`) | factories -> goods; power plant, coal type |
+| iron-ore | iron ore mine (`industry-iron-mine`, harvests `ore`) | factories -> steel |
+| stone | quarry (`industry-quarry`, harvests `stone`) | factories -> cement; towns |
 | sand | sand pit (`industry-sand-pit`, harvests `sand`) | towns |
-| oil | oil pump (36 t/min, large 72), offshore platform (1,800 t/min) | refineries (`chemical-factory`, both types) -> fuel |
+| oil | oil pump (36 t/min, large 72; harvests `flatland`), offshore platform (1,800 t/min; harvests `water`) | refineries (`chemical-factory`, both types) -> fuel |
 | goods | factories, from grain and coal | towns |
 | steel | factories, from iron ore | towns |
 | lumber | factories, from wood | towns |

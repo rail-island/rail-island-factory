@@ -435,11 +435,11 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
     ],
   },
   "proc-building-industry-iron-mine": {
-    jobs: 120, produces: { "iron-ore": 360 },
+    jobs: 120, produces: { "iron-ore": 360 }, harvests: "ore",
     source: "size: 46 x 32 m iron ore mine head with its crusher house and a bunker over the siding, about 120 miners a shift; iron ore out",
   },
   "proc-building-industry-offshore-platform": {
-    jobs: 120, produces: { oil: 1800 },
+    jobs: 120, produces: { oil: 1800 }, harvests: "water",
     source: "offshore oil platform: a crew of about 120 on rotation, some 150 t of crude oil an hour in reality, x12 a minute in game time as the whole chain; oil out only",
   },
   "proc-building-industry-logging-camp": {
@@ -447,11 +447,11 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
     source: "size: 44 x 32 m logging camp with four log decks and a loader, a felling crew of about 15; logs out, from the woods around it",
   },
   "proc-building-industry-mine": {
-    jobs: 120, produces: { coal: 300 },
+    jobs: 120, produces: { coal: 300 }, harvests: "marsh",
     source: "size: 46 x 32 m coal mine head with a bunker over the siding, about 120 miners a shift; coal out",
   },
   "proc-building-industry-oil-pump": {
-    jobs: 1, produces: { oil: 36 },
+    jobs: 1, produces: { oil: 36 }, harvests: "flatland",
     source: "a single pumpjack: about 3 t of crude oil an hour in reality, x12 a minute in game time as the whole chain, one visiting operator",
     variants: [
       { params: { size: "large" }, produces: { oil: 72 } },
@@ -466,7 +466,7 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
     ],
   },
   "proc-building-industry-quarry": {
-    jobs: 60, produces: { stone: 300 },
+    jobs: 60, produces: { stone: 300 }, harvests: "stone",
     source: "size: 46 x 32 m stone quarry: benches cut into a rock face, a crusher plant and loading silos over the siding, about 60 drillers, blasters, drivers and plant staff a shift; crushed stone out",
   },
   "proc-building-industry-sand-pit": {
