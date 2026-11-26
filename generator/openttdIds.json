@@ -517,6 +517,7 @@
     "proc-vehicle-obb-1142": 846,
     "proc-vehicle-obb-1144": 835,
     "proc-vehicle-obb-1189": 848,
+    "proc-vehicle-obb-2043": 851,
     "proc-vehicle-obb-4010": 842,
     "proc-vehicle-obb-4020": 840,
     "proc-vehicle-obb-4024": 837,
@@ -3291,6 +3292,14 @@
       "proc-vehicle-obb-1189?livery=brown": {
         "id": 10660,
         "size": 6
+      },
+      "proc-vehicle-obb-2043?": {
+        "id": 10740,
+        "size": 4
+      },
+      "proc-vehicle-obb-2043?livery=trafficRed": {
+        "id": 10744,
+        "size": 4
       },
       "proc-vehicle-obb-4010?": {
         "id": 10428,
