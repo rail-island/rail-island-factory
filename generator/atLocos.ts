@@ -1,0 +1,45 @@
+// Austrian electric, diesel and steam locomotives, each in its own module
+// (generator/at*.ts) measured on photographs and drawings. This file is their registry.
+// See docs/models/austria-trains.md.
+import type { ProceduralDesign } from "./design.ts";
+
+// Each vehicle replaces its own `// import:<slot>` and `// design:<slot>` line and keeps
+// the blank lines between the slots, so the vehicles' branches merge without conflicts.
+
+// import:obb-1116
+
+// import:obb-1144
+
+// import:obb-1142
+
+// import:obb-1110
+
+// import:obb-1189
+
+// import:obb-2016
+
+// import:obb-2043
+
+// import:obb-1099
+
+// import:bbo-214
+
+export const AT_LOCOS: ProceduralDesign[] = [
+  // design:obb-1116
+
+  // design:obb-1144
+
+  // design:obb-1142
+
+  // design:obb-1110
+
+  // design:obb-1189
+
+  // design:obb-2016
+
+  // design:obb-2043
+
+  // design:obb-1099
+
+  // design:bbo-214
+];
