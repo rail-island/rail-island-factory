@@ -10,6 +10,9 @@
 import type { CatalogRecord, Scenery } from "../generator/catalog.ts";
 import { soundIdsOf } from "./modelSounds";
 import { openttdFeature } from "./openttd/properties";
+import {
+  consumesText, hasTraffic, jobsSort, jobsText, passengersSort, passengersText, producesSort, producesText, recipeSort, recipeText, residentsSort, residentsText,
+} from "./trafficFigures";
 
 export type { CatalogRecord, Scenery };
 
@@ -36,6 +39,10 @@ export interface Column {
   value: (r: CatalogRecord) => number | string | null;
   /** Site-relative URL of the file the cell is the size of; the cell then downloads it. */
   file?: (r: CatalogRecord) => string;
+  /** What the column sorts by when it is not the shown value (a range "3-6" sorts by its default figure). */
+  sort?: (r: CatalogRecord) => number | string | null;
+  /** The records whose spec list shows it; every record when absent (the passengers-and-cargo rows are a building's only). */
+  only?: (r: CatalogRecord) => boolean;
 }
 
 // The order here is the order of the table's columns, of the sort <select> and of
@@ -57,6 +64,14 @@ export const COLUMNS: readonly Column[] = [
   { key: "sizeX", label: "Width", unit: "m", type: "num", dir: "desc", table: true, value: (r) => r.sizeX },
   { key: "sizeZ", label: "Depth", unit: "m", type: "num", dir: "desc", table: true, value: (r) => r.sizeZ },
   { key: "sizeY", label: "Height", unit: "m", type: "num", dir: "desc", table: true, value: (r) => r.sizeY },
+  // A building's passengers and cargo, per minute of game time (src/trafficFigures.ts):
+  // the default's figure, or a range over its variants; sorted by the default's.
+  { key: "residents", label: "Residents", unit: null, type: "num", dir: "desc", table: true, value: residentsText, sort: residentsSort, only: hasTraffic },
+  { key: "jobs", label: "Jobs", unit: null, type: "num", dir: "desc", table: true, value: jobsText, sort: jobsSort, only: hasTraffic },
+  { key: "passengers", label: "Passengers", unit: "trips/min", type: "num", dir: "desc", table: true, value: passengersText, sort: passengersSort, only: hasTraffic },
+  { key: "produces", label: "Produces", unit: "t/min", type: "text", dir: "desc", table: true, value: producesText, sort: producesSort, only: hasTraffic },
+  { key: "consumes", label: "Consumes", unit: null, type: "text", dir: "asc", table: false, value: consumesText, only: hasTraffic },
+  { key: "recipe", label: "Recipe", unit: null, type: "text", dir: "desc", table: false, value: recipeText, sort: recipeSort, only: hasTraffic },
   { key: "defaultScale", label: "Scale", unit: null, type: "num", dir: "desc", table: false, value: (r) => r.defaultScale ?? null },
   { key: "country", label: "Country", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.country ?? null },
   { key: "author", label: "Author", unit: null, type: "text", dir: "asc", table: false, value: (r) => r.author },
@@ -104,8 +119,9 @@ const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" })
  * the top. Ties fall back to the title, then the id, so the order is total.
  */
 export function compareRows(a: Row, b: Row, col: Column, dir: SortDir): number {
-  const va = col.value(a);
-  const vb = col.value(b);
+  const by = col.sort ?? col.value;
+  const va = by(a);
+  const vb = by(b);
   const sign = dir === "asc" ? 1 : -1;
   if (va == null || vb == null) {
     if (va == null && vb != null) return 1;

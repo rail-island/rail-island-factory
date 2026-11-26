@@ -113,11 +113,11 @@ describe("the graph", () => {
 
   it("shows a raw commodity with no producer as 'No producer yet'", () => {
     expect(node("make-coal")).toMatchObject({ title: "No producer yet", empty: true, buildings: [] });
-    expect(node("make-oil")).toMatchObject({ title: "Oil pump", empty: false, buildings: ["proc-building-pump"], lines: ["1 design - 3-6 t/h"] });
+    expect(node("make-oil")).toMatchObject({ title: "Oil pump", empty: false, buildings: ["proc-building-pump"], lines: ["1 design - 3-6 t/min"] });
   });
 
   it("names each processor's recipe, rate and stock over its variants", () => {
-    expect(node("process-steel").lines).toEqual(["0.5 t coal + 1 t iron ore -> 1 t steel", "30-45 t/h - stock 300-450 t"]);
+    expect(node("process-steel").lines).toEqual(["0.5 t coal + 1 t iron ore -> 1 t steel", "30-45 t/min - stock 300-450 t"]);
     expect(node("process-steel").commodities).toEqual(["coal", "iron-ore", "steel"]);
   });
 
@@ -133,7 +133,7 @@ describe("the cards", () => {
 
   it("list a commodity's makers, takers and carriers", () => {
     const [made, taken, carried] = nodeCards(g, "fuel");
-    expect(made!.buildings!.map((c) => [c.id, c.line])).toEqual([["proc-building-refinery", "1 t oil -> 1 t fuel, 40 t/h"]]);
+    expect(made!.buildings!.map((c) => [c.id, c.line])).toEqual([["proc-building-refinery", "1 t oil -> 1 t fuel, 40 t/min"]]);
     expect(taken!.buildings!.map((c) => [c.id, c.line])).toEqual([
       ["proc-building-power", "Takes coal, fuel"],
       ["proc-building-shop", "Takes fuel, goods, mail"],
@@ -153,7 +153,7 @@ describe("the cards", () => {
   it("list an industry's designs, then a group of carriers per commodity it handles", () => {
     const groups = nodeCards(g, "process-steel");
     expect(groups.map((x) => x.title)).toEqual(["Processors", "Carries coal", "Carries iron ore", "Carries steel"]);
-    expect(groups[0]!.buildings!.map((c) => c.line)).toEqual(["0.5 t coal + 1 t iron ore -> 1 t steel, 30-45 t/h"]);
+    expect(groups[0]!.buildings!.map((c) => c.line)).toEqual(["0.5 t coal + 1 t iron ore -> 1 t steel, 30-45 t/min"]);
     expect(groups[3]!.vehicles!.map((v) => [v.id, v.tonnes, v.draft])).toEqual([["proc-vehicle-flat", 70, true]]);
   });
 
