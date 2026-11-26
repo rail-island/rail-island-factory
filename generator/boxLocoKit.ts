@@ -21,6 +21,7 @@ import { block, plate, side } from "./vehicleParts.ts";
 import { coil, tubeX, type Band } from "./cd163.ts";
 import { exhaust } from "./dieselParts.ts";
 import { centreCoupler } from "./emuParts.ts";
+import { knuckleCoupler } from "./usHoodKit.ts";
 import { fitLod, lodBogie, lodPantograph, lodRoofBox, lodSideBox, windowBands, type LodPart, type LodShell, type Table as LodTable } from "./lodKit.ts";
 import {
   KIT_PALETTE, bogie, buffers, diamond, insulator, kinks, lerpTable, numberOn, onEnd, onSide, rect, roundRect, shell, singleArm,
@@ -115,6 +116,8 @@ export interface LocoSpec {
   bufferHead?: "round" | "rect";
   /** A centre coupler at this height in place of the side buffers and the screw coupling (metre-gauge stock). */
   centreCoupler?: number;
+  /** With `centreCoupler`: an AAR-type knuckle coupler (usHoodKit.ts) in place of the plain centre coupler head. */
+  knuckle?: boolean;
   /** The underframe under the shell: from y0 to y1, `half` long, `hw` wide. */
   frame: { y0: number; y1: number; half: number; hw: number; mat: string };
   bogies: readonly BogieSpec[];
@@ -321,7 +324,8 @@ function cabEnd(m: MeshBuilder, s: LocoSpec, sp: ShellSpec, e: number, vB: reado
       }
     });
   m.scope("lower end", () => {
-    if (s.centreCoupler !== undefined) m.scope("coupler", () => centreCoupler(m, e, e * s.beam, e * s.buffers, s.centreCoupler!, "underframe"));
+    if (s.centreCoupler !== undefined && s.knuckle) m.scope("coupler", () => knuckleCoupler(m, e, s.beam, s.buffers, s.centreCoupler!));
+    else if (s.centreCoupler !== undefined) m.scope("coupler", () => centreCoupler(m, e, e * s.beam, e * s.buffers, s.centreCoupler!, "underframe"));
     else buffers(m, e, s.beam, s.buffers, s.bufferY ?? 1.03, s.bufferHead ?? "round");
     if (s.plough) {
       const pl = s.plough;
