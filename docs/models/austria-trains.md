@@ -522,6 +522,45 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-2043 -->
 
-<!-- design:obb-1099 -->
+### OBB 1099 (`proc-vehicle-obb-1099`)
+
+- **Built on**: the box locomotive kit (`generator/boxLocoKit.ts`) for the body, with its own headlight
+  housings, lettering, one diamond pantograph and its own 760 mm rod running gear,
+  `generator/atObb1099.ts`; no kit change, no shared gauge type (the game lays one track).
+- **Parameters**: `livery` - `bloodOrange` (default; 1099.011 in OBB blood orange and ivory, 2004: the
+  orange eave line, the ivory line and orange pinstripe under the windows, the ivory foot line, the OBB
+  emblem and number on the face, the Puchenstuben arms on the side), `brown` (E 10 in the NOVOG gold and
+  brown of 2021, the light grey roof, silver louvres, the Oetscherbaer's bear and "E 10" on the face).
+- **Figures** (German Wikipedia "NÖLB E"): C'C', 760 mm, 11.02 m over the Bosna couplers, 2.48 m wide,
+  3.4 m high, wheels 800 mm, bogie wheelbase 2.4 m, pivots 6.1 m apart; `game` 49.8 t, 420 kW (one-hour;
+  320 kW continuous), 50 km/h. Built 1909-14 by Krauss Linz with Austrian Siemens-Schuckert equipment;
+  the body modelled is the one of the 1959-62 rebuild.
+- **Measured** on 1099.011 side-on three-quarter: a projective fit over the two equal cab doors (the
+  vertical scale 100-114 px/m along the side, the horizontal one falling with its square) gives the
+  side from cab 1 (-x; the left side point-symmetric): cab door 3.7-4.28 m from the middle (0.58 m, its
+  window 2.18-2.89 m), the dark louvre -2.68 to -1.53, the long ribbed louvre -1.14 to 0.28, the short one
+  0.69-1.45, the window 1.88-3.03 (2.33-2.88 m high), the low grille under the first louvre, the low
+  hatch under the window, the number at -0.35 and the arms at 1.2. Bands: body 1.15 m, ivory foot to
+  1.21, orange to 2.06, ivory line, orange pinstripe 2.12-2.16, ivory to 3.07, orange eave line to 3.12.
+- **Shape facts**: the body 10.1 m over the end walls and 2.4 m wide, the roof an arc from the eave
+  (3.12 m) to 3.4 m, falling over both end walls in a 0.55 m curve with the top lamp on it; the end walls
+  upright, bowed 4 cm, their corners rounded 0.22 m; two equal front windows (|z| 0.07-1.0, 2.2-2.97 m);
+  the round headlights in housings standing 7 cm off the wall at |z| 0.72, 1.78 m; the vacuum hoses; the
+  black frame under the body, the bogies' headstocks with the centre coupler at 0.6 m and red tail lamps.
+- **Running gear**: two bogies at |x| 3.05 (the pivots), axles 1.2 m apart, each a turning unit: outside
+  frame plates, the motor high in the middle, the jackshaft between the inner and the middle axle at
+  0.66 m with its large Hall crank disc, Hall cranks on the axles, the coupling rod over all three, the
+  triangular link from the jackshaft's crank to the rod's slot, and the long brace from the bogie's outer
+  end down to the middle (0.5 m), as photographed. One red diamond pantograph at x -1.6 (raised, arm
+  1.5 m for its long reach), the roof line to an insulator over the machine room.
+- **References**: `assets/obb-1099/` - 1099.011 (2004, side), 1099.02 (2002, cab three-quarter),
+  1099.004 (front three-quarter at speed), 1099.06 (face close-up, 2018; three-quarter, 2020), E 10
+  (gold and brown, 2021).
+- **Deviations**: the total wheelbase is drawn 8.5 m (the pivots at the bogie centres; the article's
+  7.9 m does not fit its own 6.1 m + 2.4 m, and the side photo puts the outer axle 0.8 m inside the end
+  wall); only the right side was photographed side-on, the left side is drawn point-symmetric; the OBB
+  emblem is simplified; brake rigging, sandboxes, the step ladders' detail and the roof horn are not
+  modelled; the rods are static.
+- **Budget**: 11,785 triangles (blood orange), 11,404 (gold and brown); distant model 94.
 
 <!-- design:bbo-214 -->
