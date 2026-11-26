@@ -70,6 +70,7 @@ import { PLAZA_FAMILIES } from "./plazaLandmarks.ts";
 import { INDUSTRY_MIGRATION } from "./industryMigration.ts";
 import { INDUSTRY } from "./industry.ts";
 import { PRIMARY_INDUSTRY } from "./primaryIndustry.ts";
+import { OIL_WELL } from "./oilWell.ts";
 import { HOSPITALS } from "./hospital.ts";
 import { STATIONS } from "./stations.ts";
 import { AIRCRAFT } from "./aircraft.ts";
@@ -244,6 +245,7 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   ...PLAZA_FAMILIES.map((f) => ({ ...f, meta: "buildings" as const })),
   { designs: INDUSTRY, source: "industry.ts", meta: "buildings" },
   { designs: PRIMARY_INDUSTRY, source: "primaryIndustry.ts", meta: "buildings" },
+  { designs: OIL_WELL, source: "oilWell.ts", meta: "buildings" },
   { designs: HOSPITALS, source: "hospital.ts", meta: "buildings" },
   { designs: STATIONS, source: "stations.ts", meta: "buildings" },
   { designs: VILLAGE_HOUSES, source: "village.ts", meta: "village" },

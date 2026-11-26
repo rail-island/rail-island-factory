@@ -1,7 +1,7 @@
 # Procedural industry
 
 **Covers** - the Industry audit, fifteen parametric families (the offshore platform at sea with its helideck among them, and the supply chain's primary industries: a farm, a mine and a logging camp), geometry budgets and future game migration.
-**Code** - `generator/industry.ts`, `generator/offshorePlatform.ts`, `generator/primaryIndustry.ts`, `generator/industryHall.ts`, `generator/industryMigration.ts`, `generator/generate.ts`, `test/industry.test.ts`
+**Code** - `generator/industry.ts`, `generator/offshorePlatform.ts`, `generator/primaryIndustry.ts`, `generator/oilWell.ts`, `generator/industryHall.ts`, `generator/industryMigration.ts`, `generator/generate.ts`, `test/industry.test.ts`
 **See also** - [parameters.md](parameters.md), [export.md](export.md), [animation.md](animation.md), [game-properties.md](game-properties.md#helipads), [hospital.md](hospital.md)
 
 ## Scope and design
@@ -54,12 +54,12 @@ turbine hall:
 | industry-factory-a | industry-factory-a,b,c | Heavy works with three stacks; two sizes and three finishes |
 | industry-power-plant | industry-power-plant, coal-plant, nuclear-plant | Thermal/coal/nuclear installations, cooling towers, turbine hall and switchyard |
 | chemical-factory | chemical-factory, oil-refinery | Chemical/refinery process train, columns, platforms, pipe rack and storage |
-| industry-oil-pump | industry-oil-pump | Two sizes, open trestle, crank wheels on the gear reducer, pitman arms and horsehead; the `pumping` clip moves the mechanism ([animation.md](animation.md)) |
+| industry-oil-pump | industry-oil-pump | A well site in two sizes: the pumpjack (open trestle, rounded gear reducer with its belt guard and electric motor, crank discs with fan counterweights, an I-section walking beam, a curved horsehead with its bridle, pitman arms), a pipe railing round the cranks, the wellhead with its valve, a power pole with its transformer and starter cabinet, and a tank battery behind a firewall (one stock tank compact, two with a catwalk large, a vertical separator and the flowlines); the `pumping` clip moves the mechanism ([animation.md](animation.md)). Its own module and JS bundle entry, `oilWell.ts` (`OIL_WELL`), so its code rides with no other industry design |
 | industry-wind-turbine | industry-wind-turbine | Two heights; three-section tapered tower with flanges, entrance platform and transformer kiosk; nacelle with cooler, wind sensors and obstruction light; spinner and three twisted aerofoil blades with red tips, turned by the `wind` clip ([animation.md](animation.md)) |
 | industry-offshore-platform | (new) | Steel jacket on the waterline, cellar and main decks, living quarters with a lifeboat station, process and power modules, workover derrick, pedestal crane, flare boom and a large helideck ([below](#offshore-platform)) |
-| industry-farm | (new, draft) | Arable farm: farmhouse, red barn, grain bins with a bucket elevator leg, machinery shed with a tractor, fenced yard and a strip of ripe grain; compact or large ([below](#farm)) |
-| industry-mine | (new, draft) | Mine head: headframe with two sheave wheels and raking back legs, brick winding house, conveyor gallery, bunker and loadout over a siding, spoil heap; coal or iron ore ([below](#mine)) |
-| industry-logging-camp | (new, draft) | Logging camp: four log decks, a knuckle-boom log loader over a log truck, a log cabin, a sawhorse shed and the forest edge ([below](#logging-camp)) |
+| industry-farm | (new, draft) | Arable farm: farmhouse, red barn, grain bins with a bucket elevator leg, machinery shed with a tractor in a fenced yard - the farmstead only, its fields lie freely on the map; compact or large ([below](#farm)) |
+| industry-mine | (new, draft) | Mine head: headframe with two turning sheave wheels and a cage that winds down the shaft (the `winding` clip), raking back legs, brick winding house with its smoking boiler chimney, conveyor gallery, bunker and loadout over a siding, spoil heap; coal or iron ore ([below](#mine)) |
+| industry-logging-camp | (new, draft) | Logging camp: a sawmill on piles with a monitor roof, jackladder, boiler house and guyed stack, a wigwam burner, a lumber yard, three log decks, a bunkhouse, a cookhouse with its dinner bell, a water tower and a false-front office ([below](#logging-camp)) |
 
 ## Geometry and export
 
@@ -67,14 +67,15 @@ All geometry is generated from deterministic primitives in metres, +Y up, at
 ground y=0. Catalog defaultScale is 1. The budget is a ceiling of 10,000 triangles
 for **every** parameter combination, not a target to fill with invisible detail.
 The 57 combinations currently range from 598 to 9,202 triangles; the four factory
-buildings use 4,000-9,200, the primary industries 4,000-8,100, the wind turbine about 2,000 (its slender tower and
+buildings use 4,000-9,200, the primary industries 4,000-10,500, the oil well site 3,000-3,600, the wind turbine about 2,000 (its slender tower and
 blades need no more to read at game distance).
 Small standalone equipment deliberately uses fewer triangles. Named scopes expose
 structure in the factory's source tree. Geometry is shared by GLB and standalone
 JS exports; only default variants have static thumbnails and GLBs.
 
 The turbine's rotor node is retained and a six-second looping GLB animation turns
-it. The pumpjack is static. Every chimney, cooling tower and flare stack carries its
+it. The pumpjack's mechanism and the mine head's winder are animated too
+([animation.md](animation.md)). Every chimney, cooling tower and flare stack carries its
 own emitter where it is drawn ([emitters.md](emitters.md)); nothing is copied from
 the old geometry's coordinates.
 
@@ -154,24 +155,30 @@ References with their licences and the judged dimensions are in `assets/<id>/SOU
 
 ### Farm
 
-`proc-building-industry-farm`, `size` compact (42 x 30 m, about 4,000 triangles) or large
-(56 x 38 m, about 5,600). The west strip is the field: tilled soil with rows of ripe grain and
-a grass headland. On the gravel yard: the rendered two-storey farmhouse (tiled gable roof,
+`proc-building-industry-farm`, `size` compact (30 x 30 m, about 4,000 triangles) or large
+(38 x 38 m, about 5,500). The model is the farmstead alone: its fields are not part of it, the
+game lays them out freely on the map around the farm. On the gravel yard: the rendered two-storey farmhouse (tiled gable roof,
 chimney, porch, windows on every face), the red board barn (battens, double doors on a rail,
 a hay door in the gable, ridge ventilators), corrugated grain bins on ring footings (two, or
 four on the large farm) with stiffener rings, conical roofs, fans and ladders, fed by a bucket
 elevator leg in a lattice tower whose spouts fall to each bin; a machinery shed open to the
 front with a tractor, a trailer and a seed drill; round bales, a water trough, a diesel tank
-and a yard lamp; a post-and-rail fence with an open gateway on the front.
+and a yard lamp, a strip of front garden; a post-and-rail fence round the yard with an open
+gateway on the front.
 
 ### Mine
 
-`proc-building-industry-mine`, 46 x 32 m, `type` coal (default) or iron (the commodity `iron-ore`), about 4,900
+`proc-building-industry-mine`, 46 x 32 m, `type` coal (default) or iron (the commodity `iron-ore`), about 5,100
 triangles. The shaft's concrete collar carries a four-legged steel headframe (girts every
-4 m, X bracing, the cage between timber guides) and its sheave deck with railing and two
-4.2 m spoked sheave wheels; the back legs rake 13 m to the brick winding house (round-arched
-engine windows, pilasters, a string course), which the two winding ropes reach through its
-gable. An enclosed conveyor gallery on trestles climbs from the banking level to the gallery
+4 m, X bracing, the guides of two cages) and its sheave deck with railing and two 4.2 m spoked
+sheave wheels, set back so each rope drops plumb into the shaft; the back legs rake 13 m to the
+brick winding house (round-arched engine windows, pilasters, a string course, the boiler's
+brick chimney beside it, smoking), which the two winding ropes reach through its gable.
+The winder moves: the model's parts are `site` (everything fixed), `sheave-a`, `sheave-b`,
+`cage` and `rope`, and the `winding` clip (drive `time`, 40 s) waits at bank, winds the cage
+down the shaft, waits and winds it back up - both sheaves turning (the second against the
+first, its unseen cage rising), the cage sinking into the collar and its rope paying out
+([animation.md](animation.md#the-mine-heads-winder)). An enclosed conveyor gallery on trestles climbs from the banking level to the gallery
 on top of the bunker: a bin on four legs with two hoppers, gates and chutes over a standard-gauge
 siding with a hopper wagon being loaded. A spoil heap, a stockpile, spare mine cars, pit props
 and lamps fill the yard. The type changes the colours and one building: **coal** paints the
@@ -182,13 +189,24 @@ ground in its place.
 
 ### Logging camp
 
-`proc-building-industry-logging-camp`, 44 x 32 m, no parameters, about 8,100 triangles (most of
-them the logs: each a six-sided round of bark with pale sawn ends). Four log decks of 6-8 m
-logs on timber bearers stand at the back; a pedestal log loader (cab, knuckle boom with its
-rams, rotator and a grapple holding a log) swings over the gravel truck bay, where a log truck
-with bunks and stakes is half loaded. A log cabin (log courses crossing at the corners, a stone
-chimney, a porch), a sawhorse shed (two sawhorses with a log, a chopping block and split
-firewood), a fuel tank, a slash pile and a lamp complete the camp; spruces mark the forest edge.
+`proc-building-industry-logging-camp`, 44 x 32 m, no parameters, about 10,500 triangles. No trees
+and no vehicles: the camp is its buildings and its wood. At the back stand three log decks of
+6-8 m logs on timber bearers (each log a six-sided round of bark with pale sawn ends). In the
+middle the **sawmill** (`SAWMILL`): an 18 x 8 m boarded mill raised on timber piles, battens and
+windows along both faces, a corrugated gable roof with a louvred clerestory monitor along its
+ridge, the log door in the west gable fed by an inclined **jackladder** on trestles with a log
+riding up it, the lumber door in the east gable onto the **sorting deck** (the green chain's
+deck on posts, boards crossing it); behind it the brick **boiler house** under a lean-to with
+its guyed steel stack, smoking. An enclosed sawdust conveyor climbs on a trestle to the
+**wigwam burner** (`BURNER`): a rusted steel cone with bands, a charging door and a wire-mesh
+spark dome, smoking. Stickered **lumber piles** under tin sheets stand beside it. Along the
+front, across a gravel lane: the **bunkhouse** (a long log house, courses crossing at the
+corners, a porch on the lane with bench and wash stand, two stovepipes), the **cookhouse**
+(board and batten, its gable to the lane with a hooded door, a stone chimney, the dinner bell
+on its post, split firewood stacked against it), the **water tower** (a hooped wooden tank with
+a conical roof on a braced timber trestle, its spout swung to the lane) and the camp **office**
+(a false front with its sign over a boardwalk and an awning). A fuel tank and two lamps complete
+the camp.
 
 ## Future game import and saved maps
 

@@ -85,10 +85,12 @@ const quatZ = (a: number): number[] => [0, 0, Math.sin(a / 2), Math.cos(a / 2)];
 
 /**
  * The clip's tracks for the parts `cranks` (pivot: the crank axle), `beam`
- * (pivot: the saddle), `pitman-arms` (pivot: the pin at rest) and `polished-rod`
- * (pivot: `rodTop`, the rod's top under the horsehead).
+ * (pivot: the saddle), `pitman-arms` (pivot: the pin at rest), `polished-rod`
+ * (pivot: `rodTop`, the rod's top under the horsehead) and, given `bridleTop` (the
+ * point where the bridle leaves the horsehead's face, level with the saddle), the
+ * `bridle`: its wire lines, scaled along y about that point to reach the carrier bar.
  */
-export function pumpjackTracks(l: PumpjackLayout, rodTop: [number, number, number]): { times: number[]; tracks: AnimationTrack[] } {
+export function pumpjackTracks(l: PumpjackLayout, rodTop: [number, number, number], bridleTop?: [number, number, number]): { times: number[]; tracks: AnimationTrack[] } {
   const poses = pumpjackPoses(l);
   const times = poses.map((_, k) => (PUMP_STROKE * k) / PUMP_SAMPLES);
   const rest = Math.atan2(l.equalizer[1] - l.pin[1], l.equalizer[0] - l.pin[0]);
@@ -101,5 +103,10 @@ export function pumpjackTracks(l: PumpjackLayout, rodTop: [number, number, numbe
     { node: "pitman-arms", path: "rotation", values: poses.flatMap((p) => quatZ(Math.atan2(p.equalizer[1] - p.pin[1], p.equalizer[0] - p.pin[0]) - rest)) },
     { node: "polished-rod", path: "translation", values: poses.flatMap((p) => [rodTop[0], rodTop[1] + l.head * p.beam, rodTop[2]]) },
   ];
+  // the horsehead's face is an arc about the saddle, so the bridle leaves it at the same point at every tilt
+  if (bridleTop) {
+    const rest = bridleTop[1] - rodTop[1];
+    tracks.push({ node: "bridle", path: "scale", values: poses.flatMap((p) => [1, (rest - l.head * p.beam) / rest, 1]) });
+  }
   return { times, tracks };
 }

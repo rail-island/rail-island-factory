@@ -2,7 +2,6 @@ import { lodBox, lodLoft, lodCylinder } from './lodPrimitives.ts';
 // Industrial architecture in metres. See docs/models/industry.md.
 import { chamferedRect, MeshBuilder, ngon, type Ring } from './meshBuilder.ts';
 import { airUnit, drums, hall, lamp, pallets, PLINTH, roofVent, rooflight, type HallSpec } from './industryHall.ts';
-import { PUMP_CLIP, pumpjackLayout, pumpjackTracks } from './pumpjack.ts';
 import { resolveParams, type ParamSpec, type ParamValues, type ProceduralDesign, type CatalogFields } from './design.ts';
 import { offshorePlatform, offshorePlatformLod } from './offshorePlatform.ts';
 // the offshore platform's build functions, re-exported: this module is its JS bundle's entry (generate.ts)
@@ -205,62 +204,6 @@ export function industrialFoundry(given?: ParamValues): MeshBuilder {
   ladder(m, w / 2 + 4.1, 0, .35, 5); return m;
   });
 }
-export function industrialOilPump(given?: ParamValues): MeshBuilder {
-  const p = resolveParams(MACHINE_PARAMS, given), m = model(), h = p.size === 'large' ? 9 : 6;
-  const l = pumpjackLayout(h), [cx, cy] = l.crank, [ex, ey] = l.equalizer, [kx, ky] = l.pin;
-  const rodTop: [number, number, number] = [5.5, h - .9, 0];
-  // a straight link of width w from a to b in the side view, between z0 and z1
-  const link = (mat: string, a: [number, number], b: [number, number], w: number, z0: number, z1: number) => {
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]), nx = -(b[1] - a[1]) / len * w / 2, ny = (b[0] - a[0]) / len * w / 2;
-    m.slab(mat, [[a[0] - nx, a[1] - ny, z0], [b[0] - nx, b[1] - ny, z0], [b[0] + nx, b[1] + ny, z0], [a[0] + nx, a[1] + ny, z0]], [0, 0, z1 - z0]);
-  };
-  m.part('frame', [0, 0, 0], () => {
-    base(m, 14, 8);
-    for (const z of [-1.3, 1.3]) {
-      m.slab('steel', [[-2,.4,z],[-.8,h,z],[-.4,h,z],[-1.6,.4,z]], [0,0,.22]);
-      m.slab('steel', [[.6,.4,z],[-.4,h,z],[0,h,z],[1,.4,z]], [0,0,.22]);
-      for (let y = 1.5; y < h; y += 1.3) m.box('steel', -.5, z, 2.2 - y / h, .25, y, y + .14);
-    }
-    m.box('steel', 0, 0, 1, 3.3, h, h + .6);
-    cyl(m, 'yellow', 5.5, 0, .4, .4, .6);
-    m.box('roof', cx, 0, 1.6, 2, .36, 2.3); ladder(m, -1, 1.65, .4, h);
-  });
-  // the crank axle, a crank disc, pin and counterweight (opposite the pin) each side, turning about the axle
-  m.part('cranks', [cx, cy, 0], () => {
-    const shaft = ngon(12, .15, 0, cx, cy);
-    m.sweep('steel', 'z', shaft, -1.2, shaft, 1.2);
-    for (const z of [-1.3, 1.3]) {
-      const wheel = ngon(20, .95, 0, cx, cy);
-      m.sweep('steel', 'z', wheel, z-.14, wheel, z+.14);
-      const hub = ngon(12, .25, 0, cx, cy);
-      m.sweep('yellow', 'z', hub, z-.2, hub, z+.2);
-      const out = Math.sign(z), pin = ngon(10, .12, 0, kx, ky);
-      m.sweep('steel', 'z', pin, z + out * .05, pin, z + out * .45);
-      const z0 = out > 0 ? 1.08 : -1.46;
-      m.slab('yellow', [[cx-.45,cy-.5,z0],[cx-.45,cy+.5,z0],[cx-1.15,cy+.65,z0],[cx-1.15,cy-.65,z0]], [0,0,.38]);
-    }
-  });
-  // the walking beam with the equalizer at its tail and the horsehead at its nose
-  m.part('beam', [l.saddle[0], l.saddle[1], 0], () => {
-    m.slab('steel', [[-5,h+.5,-.35],[5,h+1,-.35],[5,h+1.6,-.35],[-5,h+1.1,-.35]], [0,0,.7]);
-    m.slab('red', [[4.5,h+1,-.6],[5.5,h+1.8,-.6],[6,h+.8,-.6],[5.7,h-1,-.6],[4.9,h-1,-.6]], [0,0,1.2]);
-    const bar = ngon(10, .15, 0, ex, ey);
-    m.sweep('steel', 'z', bar, -1.75, bar, 1.75);
-  });
-  // both pitman arms, from the crank pins up to the equalizer
-  m.part('pitman-arms', [kx, ky, 0], () => {
-    link('light', [kx, ky], [ex, ey], .22, 1.5, 1.65);
-    link('light', [kx, ky], [ex, ey], .22, -1.65, -1.5);
-  });
-  // the polished rod and its carrier bar, hanging from the horsehead into the wellhead
-  m.part('polished-rod', rodTop, () => {
-    cyl(m, 'steel', rodTop[0], 0, .09, 1.6, rodTop[1] - 1.6, 8);
-    m.box('steel', rodTop[0], 0, .3, .5, rodTop[1] - .12, rodTop[1]);
-  });
-  const motion = pumpjackTracks(l, rodTop);
-  m.animate({ name: PUMP_CLIP, times: motion.times, tracks: motion.tracks, drive: { drive: 'time' } });
-  return m;
-}
 /** The rotor's hub height above the tower top, and its plane in front of the tower. */
 const HUB_RISE = 1.05, BLADE_Z = 2.05;
 // A blade's stations from root to tip: span (absolute metres, or a fraction of the
@@ -365,7 +308,7 @@ export function industrialWind(given?: ParamValues): MeshBuilder {
   m.animate({ name: 'wind', times: [0, 2, 4, 6], tracks: [{ node: 'rotor', path: 'rotation', values: [0,0,0,1, 0,0,-Math.sin(Math.PI/3),Math.cos(Math.PI/3), 0,0,-Math.sin(2*Math.PI/3),Math.cos(2*Math.PI/3), 0,0,0,-1] }], drive: { drive: 'time' } });
   return m;
 }
-const lowBuilders: Record<string, ProceduralDesign['build']> = {industrialMill:industrialMillLod,industrialHall:industrialHallLod,industrialSaw:industrialSawLod,industrialWarehouse:industrialWarehouseLod,industrialChimney:industrialChimneyLod,industrialTank:industrialTankLod,industrialFoundry:industrialFoundryLod,industrialPower:industrialPowerLod,industrialProcess:industrialProcessLod,industrialOilPump:industrialOilPumpLod,industrialWind:industrialWindLod};
+const lowBuilders: Record<string, ProceduralDesign['build']> = {industrialMill:industrialMillLod,industrialHall:industrialHallLod,industrialSaw:industrialSawLod,industrialWarehouse:industrialWarehouseLod,industrialChimney:industrialChimneyLod,industrialTank:industrialTankLod,industrialFoundry:industrialFoundryLod,industrialPower:industrialPowerLod,industrialProcess:industrialProcessLod,industrialWind:industrialWindLod};
 const design = (id: string, title: string, build: ProceduralDesign['build'], params: ParamSpec[]): ProceduralDesign => ({ id, title, build, buildLod:lowBuilders[build.name], lodTriangles: /power-plant|chemical-factory/.test(id) ? 500 : 100, params, catalog: INDUSTRY_CATALOG, ...(params.includes(FINISH) ? { finishParams: ['finish'] } : {}) });
 export const INDUSTRY: readonly ProceduralDesign[] = [
   design('ind-building-a', 'Brick manufacturing mill', industrialMill, BUILDING_PARAMS),
@@ -377,7 +320,6 @@ export const INDUSTRY: readonly ProceduralDesign[] = [
   design('industry-factory-a', 'Heavy industrial works', industrialFoundry, BUILDING_PARAMS),
   design('industry-power-plant', 'Power generation plant', industrialPower, POWER_PARAMS),
   design('chemical-factory', 'Chemical and refining plant', industrialProcess, PROCESS_PARAMS),
-  design('industry-oil-pump', 'Oil pumpjack', industrialOilPump, MACHINE_PARAMS),
   { ...design('industry-wind-turbine', 'Wind turbine', industrialWind, MACHINE_PARAMS), game: { block: { rects: [{ x: 0, z: 0, w: 0.2, d: 0.59 }] } } },
   // at sea, with a helideck (docs/models/industry.md, "Offshore platform"); no city builds it (cityVariants.ts)
   {
@@ -445,16 +387,6 @@ export function industrialProcessLod(given?:ParamValues):MeshBuilder {
   const p=resolveParams(PROCESS_PARAMS,given),m=model('blue');
   for(let i=0;i<3;i++){const x=-11+i*7;lodCylinder(m,'light',x,8,2.5,.76,7.6,8);lodCylinder(m,'light',x,-6,1.6,.76,(p.type==='refinery'?18:12)+i*2+1.6,8);}
   lodBox(m,'wall',13,6,6,9,.36,4.3);if(p.type==='refinery')lowStack(m,13,-8,23,'light');return m;
-}
-export function industrialOilPumpLod(given?:ParamValues):MeshBuilder {
-  const p=resolveParams(MACHINE_PARAMS,given),m=model(),h=p.size==='large'?9:6;
-  for(const z of [-1.3,1.3]){
-    m.slab('steel',[[-2,.4,z],[-.8,h,z],[-.4,h,z],[-1.6,.4,z]],[0,0,.22]);
-    m.slab('steel',[[.6,.4,z],[-.4,h,z],[0,h,z],[1,.4,z]],[0,0,.22]);
-  }
-  m.slab('steel',[[-5,h+.5,-.35],[5,h+1,-.35],[5,h+1.6,-.35],[-5,h+1.1,-.35]],[0,0,.7]);
-  m.slab('red',[[4.5,h+1,-.6],[5.5,h+1.8,-.6],[6,h+.8,-.6],[5.7,h-1,-.6],[4.9,h-1,-.6]],[0,0,1.2]);
-  lodBox(m,'roof',-4.4,0,1.6,2,.36,2.3);return m;
 }
 export function industrialWindLod(given?:ParamValues):MeshBuilder {
   const p=resolveParams(MACHINE_PARAMS,given),m=model(),h=p.size==='large'?42:28,r=h*.4,hy=h+HUB_RISE;

@@ -1,7 +1,9 @@
 import { proceduralId } from "../generator/modelId.ts";
 import { expect, it } from 'vitest';
 import { buildingSpec, INDUSTRY } from '../generator/industry.ts';
-import { PRIMARY_INDUSTRY } from '../generator/primaryIndustry.ts';
+import { CAGE_SINK, PRIMARY_INDUSTRY, WINDING_CLIP, WINDING_CYCLE, WIND_DEPTH, windingRun } from '../generator/primaryIndustry.ts';
+import { poseGlb, sampleCount } from '../generator/glbPose.ts';
+import { OIL_WELL } from '../generator/oilWell.ts';
 import { bayLayout, FACES, faceLength, hallOpenings, PLINTH } from '../generator/industryHall.ts';
 import { INDUSTRY_MIGRATION } from '../generator/industryMigration.ts';
 import { paramCombinations, resolveParams } from '../generator/design.ts';
@@ -17,7 +19,7 @@ it('covers the 35 audited Industry entries with valid target parameters', () => 
   expect(new Set(INDUSTRY_MIGRATION.map(e => e.sourceId)).size).toBe(35);
   expect(INDUSTRY_MIGRATION.filter(e => e.sourceGroup === 'industry')).toHaveLength(31);
   for (const entry of INDUSTRY_MIGRATION) {
-    const d = INDUSTRY.find(d => proceduralId(d.id) === proceduralId(entry.designId))!;
+    const d = [...INDUSTRY, ...OIL_WELL].find(d => proceduralId(d.id) === proceduralId(entry.designId))!;
     expect(d).toBeDefined();
     expect(() => resolveParams(d.params ?? [], entry.params)).not.toThrow();
   }
@@ -25,7 +27,7 @@ it('covers the 35 audited Industry entries with valid target parameters', () => 
   expect(buildings).toHaveLength(20);
   expect(new Set(buildings.map(e => e.designId)).size).toBe(4);
 });
-for (const d of [...INDUSTRY, ...PRIMARY_INDUSTRY]) it(`${d.id}: all variants deterministic, grounded and under 10k triangles`, () => {
+for (const d of [...INDUSTRY, ...PRIMARY_INDUSTRY, ...OIL_WELL]) it(`${d.id}: all variants deterministic, grounded and under 10k triangles`, () => {
   const shapes = new Set<string>();
   for (const p of paramCombinations(d.params)) {
     const m = d.build(p), glb = m.toGlb('industry test');
@@ -147,4 +149,32 @@ it('draws the farm, mine and logging camp on their plans, with their low detail'
   expect(materialPositions(mine.build({ type: 'coal' }), 'coalSpoil').length).toBeGreaterThan(0);
   expect(materialPositions(mine.build({ type: 'iron' }), 'oreSpoil').length).toBeGreaterThan(0);
   expect(materialPositions(mine.build({ type: 'iron' }), 'coalSpoil')).toHaveLength(0);
+});
+
+// The mine head's winder (docs/models/animation.md, "The mine head's winder"): the two
+// sheaves turn, the cage sinks into the shaft and back, on a closed time loop.
+it("winds the mine head's cage down the shaft and back, the sheaves turning", () => {
+  const mine = PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-mine')!;
+  expect(windingRun(0)).toBe(0); expect(windingRun(WINDING_CYCLE)).toBe(0); expect(windingRun(WINDING_CYCLE / 2)).toBe(WIND_DEPTH);
+  for (const p of paramCombinations(mine.params)) {
+    const glb = mine.build(p).toGlb('t');
+    const g = parseGlb(glb).json as unknown as { nodes: Array<{ name: string }>; scenes: Array<{ extras?: { clipDrives?: unknown } }>; animations: Array<{ name: string; channels: Array<{ target: { node: number } }> }> };
+    expect(g.animations.map(a => a.name)).toEqual([WINDING_CLIP]);
+    expect(g.scenes[0]!.extras?.clipDrives).toEqual({ [WINDING_CLIP]: { drive: 'time' } });
+    const moved = new Set(g.animations[0]!.channels.map(c => g.nodes[c.target.node]!.name));
+    expect([...moved].sort()).toEqual(['cage', 'rope', 'sheave-a', 'sheave-b']);
+    const n = sampleCount(glb), rest = glbStats(poseGlb(glb, 0));
+    for (const k of [0, Math.floor(n / 4), Math.floor(n / 2)]) expect(findCoplanarOverlaps(poseGlb(glb, k)), `sample ${k}`).toEqual([]);
+    // at the bottom of the wind the cage (its floor 1.27 m over the 0.2 m yard at bank) has sunk into the shaft
+    expect(rest.min[1]).toBe(0);
+    expect(glbStats(poseGlb(glb, Math.floor(n / 2))).min[1]).toBeCloseTo(0.2 + 1.27 - CAGE_SINK, 2);
+    expect(glbStats(poseGlb(glb, n - 1))).toEqual(rest);
+    expect(mine.buildLod!(p).animations()).toEqual([]);
+  }
+});
+
+// The logging camp is buildings and wood: no trees and no vehicles (the game places those).
+it('keeps trees and vehicles out of the logging camp', () => {
+  const camp = PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-logging-camp')!;
+  for (const mat of ['needle', 'tyre']) expect(materialPositions(camp.build({}), mat)).toHaveLength(0);
 });

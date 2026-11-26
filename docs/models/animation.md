@@ -1,7 +1,7 @@
 # Animation
 
-**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled, a state, a door or a chosen motion), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the animal-drawn vehicles' team `gait`, the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the aircraft's `flaps` and `droop` clips, the site's Start/Stop, Up/Down, gear, flaps and nose buttons and a character's motion buttons, and the tests.
-**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`, `industrialOilPump`), `generator/pumpjack.ts`, `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/hullKit.ts` (the `paddle` item, `worldShip`), `generator/cd150.ts`, `generator/photoTrucks.ts`, `generator/busDetail.ts` and `generator/busAssembly.ts` (their rolling wheels), `generator/draftAnimals.ts` (`GAIT_CLIP`, `gaitPose`, `addGait`), `generator/animalTrams.ts` (its wheels), `generator/glbPose.ts`, `generator/propellers.ts`, `src/ModelViewer.tsx`, `src/viewerMotions.ts`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/animalDrawn.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
+**Covers** - animated models: the mesh builder's animation clips and how they reach the GLB and the JS model, what plays each clip (`clipDrives`: a time loop, the distance travelled, a state, a door or a chosen motion), the wind turbine's `wind` clip, the oil pumpjack's `pumping` mechanism, the mine head's `winding` clip, the steam locomotives' `running` clip (wheelsets, rods, Walschaerts valve gear), the `rolling` clip of the wheels with spokes or wheel nuts (`spin` parts), the animal-drawn vehicles' team `gait`, the pantographs as `liftable` mechanisms (`state` clips) and the `rod` primitive they are drawn with, the collector heights they reach (`collector.ts`), the timing contract for consumers, the aircraft's `flaps` and `droop` clips, the site's Start/Stop, Up/Down, gear, flaps and nose buttons and a character's motion buttons, and the tests.
+**Code** - `generator/meshCore.ts` (`animate`, `AnimationClipSpec`, `ClipDrive`, `clipDrives`, `tube`, `rod`, `sampleDraw`, `movingPart`, `drawRouted`), `generator/liftable.ts`, `generator/collector.ts`, `generator/cd163.ts` (`pushRod`), the pantograph builders (`czElectricKit.ts` `singleArm`/`diamond`, `cd150.ts`, `cd163.ts`, `cd230.ts`, `emuParts.ts`, `shinkansen0.ts`, `tramKit.ts`), `test/liftable.test.ts`, `test/pantographs.test.ts`, `generator/industry.ts` (`industrialWind`), `generator/oilWell.ts` (`industrialOilPump`), `generator/pumpjack.ts`, `generator/primaryIndustry.ts` (`windingGear`, `windingRun`), `generator/meshBuilder.ts` (`toGlb`), `generator/threeBuilder.ts` (`toGroup`), `generator/steamGear.ts` (`RunningGear`, `N_SAMPLES`, `RUNNING_SPEED`, `RUNNING_CLIP`), `generator/rolling.ts` (`rollWheels`, `ROLLING_CLIP`, `ROLLING_SPEED`, `ROLLING_SAMPLES`), `MeshCore.spin`, `generator/hullKit.ts` (the `paddle` item, `worldShip`), `generator/cd150.ts`, `generator/photoTrucks.ts`, `generator/busDetail.ts` and `generator/busAssembly.ts` (their rolling wheels), `generator/draftAnimals.ts` (`GAIT_CLIP`, `gaitPose`, `addGait`), `generator/animalTrams.ts` (its wheels), `generator/glbPose.ts`, `generator/propellers.ts`, `src/ModelViewer.tsx`, `src/viewerMotions.ts`, `test/animation.test.ts`, `test/steam.test.ts`, `test/rolling.test.ts`, `test/animalDrawn.test.ts`, `test/pumpjack.test.ts`, `test/jsModel.test.ts`
 **See also** - [../site/train-parade.md](../site/train-parade.md) (the distance clips drawn as sprites for railisland.com), [steam-locomotives.md](steam-locomotives.md), [doors.md](doors.md) (the `door` clips), [characters.md](characters.md) (the `motion` clips), [lamps.md](lamps.md), [vehicles.md](vehicles.md) (parts), [export.md](export.md), [js-format.md](js-format.md), [industry.md](industry.md), [../site/catalog-site.md](../site/catalog-site.md)
 
 ## Clips in the mesh builder
@@ -112,12 +112,14 @@ from the front, sampled at thirds of a turn; drive `time`.
 
 ## The oil pumpjack
 
-`industry-oil-pump` (`pumpjack.ts`) is a conventional beam pump: the parts
-`frame` (base, samson post, saddle, gear reducer, wellhead, ladder), `cranks`
+`industry-oil-pump` (`oilWell.ts`, its mechanism in `pumpjack.ts`) is a conventional beam pump on its well site: the parts
+`frame` (the pad, samson post, saddle, gear reducer with its belt guard and motor, ladder,
+crank guard, wellhead, power pole and the tank battery), `cranks`
 (axle, a crank disc, crank pin and counterweight each side, pivot on the crank
 axle above the reducer), `beam` (walking beam, horsehead and the equalizer bar,
 pivot on the saddle bearing), `pitman-arms` (both arms, pivot on the crank pin)
-and `polished-rod` (rod and carrier bar, pivot at its top under the horsehead).
+`polished-rod` (rod and carrier bar, pivot at its top under the horsehead) and `bridle`
+(its two wire lines, pivot where they leave the horsehead's face).
 
 - The clip **`pumping`** is one crank revolution in `PUMP_STROKE` = 6 s,
   `PUMP_SAMPLES` = 48 steps plus the closing sample; drive `time`.
@@ -125,7 +127,27 @@ and `polished-rod` (rod and carrier bar, pivot at its top under the horsehead).
   equalizer, and the beam level. Per sample the beam's tilt is solved by Newton's
   method so the pitman arm keeps its rest length; the arm is translated with the
   pin and turned to the equalizer, and the polished rod rises and falls by the
-  horsehead's arc (its radius times the tilt).
+  horsehead's arc (its radius times the tilt). The horsehead's face is an arc about
+  the saddle, so the bridle always leaves it at the same point, level with the
+  saddle: the `bridle` is scaled along y about that point to reach the carrier bar.
+- The low-detail build stays one static mesh.
+
+## The mine head's winder
+
+`industry-mine` (`primaryIndustry.ts`, `windingGear`) draws its fixed site as the part
+`site` and the winder as `sheave-a` and `sheave-b` (the two spoked sheave wheels, pivot on
+their axles, turning about x), `cage` (the cage at bank, pivot on its floor) and `rope`
+(its winding rope, pivot where it leaves the sheave).
+
+- The clip **`winding`** (`WINDING_CLIP`) is one winding cycle in `WINDING_CYCLE` = 40 s,
+  sampled every 0.25 s; drive `time`. `windingRun(t)` is the rope's run from bank: 6 s at
+  bank, 12 s down `WIND_DEPTH` = 90 m (easing in and out), 6 s at the bottom, 12 s up, 4 s
+  at bank.
+- The sheaves turn the run over their radius, the second against the first (two cages
+  in balance: as one sinks the other, unseen in the shaft, rises); at most about 1.8
+  rad between samples, so the interpolation never takes the short way round.
+- The cage sinks `CAGE_SINK` = 4.6 m - into the shaft collar, out of sight - and stays
+  there while the sheaves run on; the rope's scale along y lengthens it to the cage.
 - The low-detail build stays one static mesh.
 
 ## The steam locomotives' running gear
@@ -347,9 +369,11 @@ below its rest at four samples; a JS model steering and rolling a front wheel at
 once; plain-wheeled vehicles without the clip. `test/animalDrawn.test.ts`: the gait's drive, closed loop
 and planted feet, every species on the ground.
 `test/pumpjack.test.ts`: the pitman arm, beam tail and crank keep their lengths at
-every sample, the beam rocks both ways and returns, one `time` clip on the four
-moving parts, no z-fighting and nothing below ground at every sixth sample, and a
-static low-detail build. `test/characters.test.ts`: the avatar's six clips and their
+every sample, the beam rocks both ways and returns, one `time` clip on the five
+moving parts (the bridle reaching the carrier bar at every sample), no z-fighting and nothing below ground at every sixth sample, and a
+static low-detail build. `test/industry.test.ts`: the mine head's `winding` clip on its
+four moving parts, a closed loop, the cage hidden at the bottom of the wind, no
+z-fighting at several samples and a static low detail. `test/characters.test.ts`: the avatar's six clips and their
 drives, closed loops, the feet on the ground through the walk and the run, and the
 site's motion buttons derived from the drives. The catalog sweep (`test/catalogSweep.ts`) checks that every design's JS model builds
 the GLB's clips track for track.

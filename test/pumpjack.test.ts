@@ -4,16 +4,16 @@
 
 import { describe, expect, it } from "vitest";
 import { proceduralId } from "../generator/modelId.ts";
-import { INDUSTRY } from "../generator/industry.ts";
+import { OIL_WELL } from "../generator/oilWell.ts";
 import { paramCombinations } from "../generator/design.ts";
 import { parseGlb } from "../generator/glbTriangles.ts";
 import { findCoplanarOverlaps } from "../generator/coplanar.ts";
 import { glbStats } from "../generator/glbStats.ts";
 import { poseGlb, sampleCount } from "../generator/glbPose.ts";
-import { PUMP_CLIP, PUMP_SAMPLES, PUMP_STROKE, pumpjackLayout, pumpjackPoses } from "../generator/pumpjack.ts";
+import { PUMP_CLIP, PUMP_SAMPLES, PUMP_STROKE, pumpjackLayout, pumpjackPoses, pumpjackTracks } from "../generator/pumpjack.ts";
 import { sample } from "./catalogCache";
 
-const design = INDUSTRY.find((d) => proceduralId(d.id) === proceduralId("industry-oil-pump"))!;
+const design = OIL_WELL.find((d) => proceduralId(d.id) === proceduralId("industry-oil-pump"))!;
 const dist = (a: [number, number], b: [number, number]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 describe("the oil pumpjack", () => {
@@ -49,7 +49,7 @@ describe("the oil pumpjack", () => {
       expect(g.animations.map((a) => a.name)).toEqual([PUMP_CLIP]);
       expect(g.scenes[0]!.extras?.clipDrives).toEqual({ [PUMP_CLIP]: { drive: "time" } });
       const moved = new Set(g.animations[0]!.channels.map((c) => g.nodes[c.target.node]!.name));
-      expect([...moved].sort()).toEqual(["beam", "cranks", "pitman-arms", "polished-rod"]);
+      expect([...moved].sort()).toEqual(["beam", "bridle", "cranks", "pitman-arms", "polished-rod"]);
       expect(g.nodes.map((n) => n.name).filter((n) => !moved.has(n))).toEqual(["frame"]);
     }
   });
@@ -62,6 +62,19 @@ describe("the oil pumpjack", () => {
         const posed = poseGlb(glb, k);
         expect(findCoplanarOverlaps(posed), `sample ${k}`).toEqual([]);
         expect(glbStats(posed).min[1], `sample ${k}`).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  it("keeps the bridle reaching from the horsehead's face down to the carrier bar", () => {
+    for (const h of [6, 9]) {
+      const l = pumpjackLayout(h), rodTop: [number, number, number] = [5.5, h - 0.9, 0], top: [number, number, number] = [l.head, l.saddle[1], 0];
+      const { tracks } = pumpjackTracks(l, rodTop, top);
+      const rod = tracks.find((t) => t.node === "polished-rod" && t.path === "translation")!.values;
+      const scale = tracks.find((t) => t.node === "bridle" && t.path === "scale")!.values;
+      for (let k = 0; k <= PUMP_SAMPLES; k++) {
+        expect(scale[k * 3 + 1]!).toBeGreaterThan(0.05);
+        expect(top[1] - (top[1] - rodTop[1]) * scale[k * 3 + 1]!).toBeCloseTo(rod[k * 3 + 1]!, 9);
       }
     }
   });
