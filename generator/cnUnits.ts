@@ -18,6 +18,7 @@ import { CR200J, CR200J_DESIGN, cr200j, cr200jLod } from "./cnCr200j.ts";
 import { CRH380B } from "./cnCrh380b.ts";
 import { CRH2E } from "./cnCrh2e.ts";
 import { CR450BF } from "./cnCr450bf.ts";
+import { CRH1A } from "./cnCrh1a.ts";
 
 export { CRH380A };
 export { CRH3C };
@@ -38,6 +39,9 @@ const P_C2E = seriesParams(CRH2E);
 export { CR450BF };
 
 const P_BF450 = seriesParams(CR450BF);
+export { CRH1A };
+
+const P_C1A = seriesParams(CRH1A);
 
 export function crCr400af(v?: ParamValues): MeshBuilder { return buildSeries(CR400AF, P.af, v); }
 export function crCr400afLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR400AF, P.af, v); }
@@ -61,6 +65,8 @@ export function crCrh2e(v?: ParamValues): MeshBuilder { return buildSeries(CRH2E
 export function crCrh2eLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH2E, P_C2E, v); }
 export function crCr450bf(v?: ParamValues): MeshBuilder { return buildSeries(CR450BF, P_BF450, v); }
 export function crCr450bfLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR450BF, P_BF450, v); }
+export function crCrh1a(v?: ParamValues): MeshBuilder { return buildSeries(CRH1A, P_C1A, v); }
+export function crCrh1aLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH1A, P_C1A, v); }
 
 export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-cr400af", "Fuxing CR400AF", CR400AF, P.af, crCr400af, crCr400afLod, "cr-cr400af"),
@@ -74,4 +80,5 @@ export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-crh380b", "CRH380B", CRH380B, P380B, crCrh380b, crCrh380bLod, "cr-crh380b", "uic"),
   seriesDesign("proc-vehicle-cr-crh2e", "CRH2E", CRH2E, P_C2E, crCrh2e, crCrh2eLod, "cr-crh2e"),
   seriesDesign("proc-vehicle-cr-cr450bf", "Fuxing CR450BF", CR450BF, P_BF450, crCr450bf, crCr450bfLod, "cr-cr450bf"),
+  seriesDesign("proc-vehicle-cr-crh1a", "CRH1A", CRH1A, P_C1A, crCrh1a, crCrh1aLod, "cr-crh1a"),
 ];
