@@ -182,6 +182,7 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-cr-crh380b": [{ title: "Wikipedia: China Railway CRH3 (CRH380B/BL)", url: "https://en.wikipedia.org/wiki/China_Railway_CRH3#CRH380B/BL" }],
   "proc-vehicle-cr-crh3c": [{ title: "Wikipedia: China Railway CRH3", url: "https://en.wikipedia.org/wiki/China_Railway_CRH3" }],
   "proc-vehicle-cr-crh5a": [{ title: "Wikipedia: China Railway CRH5", url: "https://en.wikipedia.org/wiki/China_Railway_CRH5" }],
+  "proc-vehicle-cr-crh2e": [{ title: "Wikipedia: China Railway CRH2", url: "https://en.wikipedia.org/wiki/China_Railway_CRH2#CRH2E" }],
   "proc-vehicle-cr-crh6a": [{ title: "Wikipedia: China Railway CRH6", url: "https://en.wikipedia.org/wiki/China_Railway_CRH6" }],
   "proc-vehicle-cr-df11": [{ title: "Wikipedia: China Railways DF11", url: "https://en.wikipedia.org/wiki/China_Railways_DF11" }],
   "proc-vehicle-cr-df4": [{ title: "Wikipedia: China Railways DF4", url: "https://en.wikipedia.org/wiki/China_Railways_DF4" }],

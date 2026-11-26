@@ -233,6 +233,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 612 },
     ],
   },
+  "proc-vehicle-cr-crh2e": {
+    seats: 55,
+    source: "zh.wikipedia: 16-car CRH2E 630 passengers: two ZE seat cars of 55 at the ends, 13 soft sleepers of 40 berths; berths counted as seats",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 40 },
+      { params: { unit: "train" }, seats: 190 },
+      { params: { unit: "train", cars: "2" }, seats: 110 },
+      { params: { unit: "train", cars: "3" }, seats: 150 },
+      { params: { unit: "train", cars: "5" }, seats: 230 },
+      { params: { unit: "train", cars: "6" }, seats: 270 },
+      { params: { unit: "train", cars: "7" }, seats: 310 },
+      { params: { unit: "train", cars: "8" }, seats: 350 },
+    ],
+  },
   "proc-vehicle-cr-crh380a": {
     seats: 40,
     source: "Wikipedia: 8-car CRH380A ~494 seats (end cars with sightseeing/business ~40); seats only",

@@ -16,6 +16,7 @@ import { CRH380A } from "./cnCrh380a.ts";
 import { CRH6A } from "./cnCrh6a.ts";
 import { CR200J, CR200J_DESIGN, cr200j, cr200jLod } from "./cnCr200j.ts";
 import { CRH380B } from "./cnCrh380b.ts";
+import { CRH2E } from "./cnCrh2e.ts";
 
 export { CRH380A };
 export { CRH3C };
@@ -30,6 +31,9 @@ export { CRH380B };
 
 const P = { af: seriesParams(CR400AF), bf: seriesParams(CR400BF), a380: seriesParams(CRH380A), c2a: seriesParams(CRH2A), c3c: seriesParams(CRH3C), c5a: seriesParams(CRH5A), j: seriesParams(CR200J), c6a: seriesParams(CRH6A) };
 const P380B = seriesParams(CRH380B);
+export { CRH2E };
+
+const P_C2E = seriesParams(CRH2E);
 
 export function crCr400af(v?: ParamValues): MeshBuilder { return buildSeries(CR400AF, P.af, v); }
 export function crCr400afLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR400AF, P.af, v); }
@@ -49,6 +53,8 @@ export function crCrh6a(v?: ParamValues): MeshBuilder { return buildSeries(CRH6A
 export function crCrh6aLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH6A, P.c6a, v); }
 export function crCrh380b(v?: ParamValues): MeshBuilder { return buildSeries(CRH380B, P380B, v); }
 export function crCrh380bLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH380B, P380B, v); }
+export function crCrh2e(v?: ParamValues): MeshBuilder { return buildSeries(CRH2E, P_C2E, v); }
+export function crCrh2eLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH2E, P_C2E, v); }
 
 export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-cr400af", "Fuxing CR400AF", CR400AF, P.af, crCr400af, crCr400afLod, "cr-cr400af"),
@@ -60,4 +66,5 @@ export const CN_UNITS: ProceduralDesign[] = [
   CR200J_DESIGN(crCr200j, crCr200jLod),
   seriesDesign("proc-vehicle-cr-crh6a", "CRH6A", CRH6A, P.c6a, crCrh6a, crCrh6aLod, "cr-crh6a"),
   seriesDesign("proc-vehicle-cr-crh380b", "CRH380B", CRH380B, P380B, crCrh380b, crCrh380bLod, "cr-crh380b", "uic"),
+  seriesDesign("proc-vehicle-cr-crh2e", "CRH2E", CRH2E, P_C2E, crCrh2e, crCrh2eLod, "cr-crh2e"),
 ];
