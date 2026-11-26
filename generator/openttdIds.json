@@ -515,6 +515,7 @@
     "proc-vehicle-obb-1144": 835,
     "proc-vehicle-obb-4024": 837,
     "proc-vehicle-obb-4744": 836,
+    "proc-vehicle-obb-5022": 839,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
     "proc-vehicle-oslo-sl79": 778,
@@ -3267,6 +3268,18 @@
       "proc-vehicle-obb-4744?unit=middleCar": {
         "id": 10224,
         "size": 8
+      },
+      "proc-vehicle-obb-5022?": {
+        "id": 10304,
+        "size": 6
+      },
+      "proc-vehicle-obb-5022?formation=2 cars": {
+        "id": 10316,
+        "size": 12
+      },
+      "proc-vehicle-obb-5022?livery=cityjet": {
+        "id": 10310,
+        "size": 6
       },
       "proc-vehicle-odakyu-gse?": {
         "id": 5546,

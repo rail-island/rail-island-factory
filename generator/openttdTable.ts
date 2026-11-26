@@ -1123,6 +1123,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   // Austria (docs/models/austria-trains.md)
   "proc-vehicle-obb-4744": series(80, 94, ELRL, { cars: 3 }),
   "proc-vehicle-obb-4024": series(45, 55, ELRL, { cars: 4, liveries: ["cityjet"] }),
+  "proc-vehicle-obb-5022": series(58, 58, RAIL, { cars: 2, liveries: ["cityjet"] }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

@@ -87,7 +87,37 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-5047 -->
 
-<!-- design:obb-5022 -->
+### OBB 5022 Desiro (`proc-vehicle-obb-5022`)
+
+| | |
+|---|---|
+| Built on | the series kit, spreading the DB 642's data (`generator/atObb5022.ts` on `BR642` from `deBr642.ts`): its body, face shape, Jacobs running gear, windows and doors; own face fields, liveries and fittings (the low window band split for the Cityjet); no kit change, DB 642 byte-identical |
+| Parameters | `unit` endCar / train; `livery` obb (the delivery "Schraegdesign", default) / cityjet (the repaint every unit wears since 2017) |
+| Figures | 41.7 m over the couplers, 2.83 m wide, B'2'B'; 70.3 t, 2 x 315 kW (5022 021 - 060 2 x 335 kW), 120 km/h; 117 seats (10 tip-up) |
+| Number | 5022 007-8 (delivery paint), 5022 051-6 (Cityjet) |
+
+- **Shape**: the DB 642's, unchanged (docs/models/germany-trains.md); the photographs show no difference
+  in body, face, windows, doors or roof equipment.
+- **Delivery paint** (Uebersbach photograph, scaled on the door 11.3 m behind the tip; Graz Hbf photograph):
+  silver sides over a dark grey skirt (0.82 m), no light stripe; the red front's rear edge leaning forward
+  from 6.45 m behind the tip at the skirt to 5.9 m at the window band's foot and 5.2 m at the roof (over the
+  first high-floor window's middle); the dark grey window bands (2.05 - 3.3 m over the high floor, 1.28 -
+  3.3 m over the low floor), light grey doors, the light grey cap; the red OBB letters (0.33 m) on the
+  silver ahead of the door.
+- **Face** (Graz Hbf and Graz Ostbahnhof photographs, about 230 px/m up the face): the white OBB letters
+  centred in the lamp panel (1.81 - 1.98 m) between the headlights, the display over them, the number on
+  the grey strip, the coupler's black recess across most of the face.
+- **Cityjet** (Pachern photograph): white over a red band to 2.02 m, the
+  low-floor windows reaching into it with red posts below 2.02 m; the red rising from 1.55 m at the face's
+  corners to the band's head behind the cab side window; no dark window band; the black cap, a red line
+  round the mask with white inside it, the white lamp panel under a red line with black lamp boxes and the
+  red OBB letters (the mask reaching down round the lamps as their boxes), the white number strip; dark
+  grey doors, a darker grey roof.
+- References: `assets/obb-5022/` (four Commons photographs). 14,784 triangles (end car, delivery paint;
+  Cityjet 15,966: the face's paint-edge tolerance 0.08 m), 27,052 the two-car train; distant model 100 a car.
+- Deviations: the S-Bahn Steiermark and other advertising paints are not drawn; the side's class figure
+  "2" and small markings are left out; the Cityjet's red shades are drawn as one, the white gap inside its
+  red line round the mask is left out and the red line runs under the lamp boxes (the face's budget).
 
 <!-- design:westbahn-kiss -->
 

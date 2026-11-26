@@ -335,6 +335,14 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikimedia Commons: 4124 013 Cityjet Goe.jpg", url: "https://commons.wikimedia.org/wiki/File:4124_013_Cityjet_Goe.jpg" },
     { title: "Wikimedia Commons: MAV 425 002 Hegyeshalom.jpg", url: "https://commons.wikimedia.org/wiki/File:M%C3%81V_425_002_Hegyeshalom_vas%C3%BAt%C3%A1llom%C3%A1s_9200.jpg" },
   ],
+  "proc-vehicle-obb-5022": [
+    { title: "Wikipedia (de): OBB 5022", url: "https://de.wikipedia.org/wiki/%C3%96BB_5022" },
+    { title: "Wikipedia: Siemens Desiro Classic", url: "https://en.wikipedia.org/wiki/Siemens_Desiro_Classic" },
+    { title: "Wikimedia Commons: 5022007 graz.jpg", url: "https://commons.wikimedia.org/wiki/File:5022007_graz.jpg" },
+    { title: "Wikimedia Commons: Uebersbach Thermenbahn Bhf Ausfahrt.JPG", url: "https://commons.wikimedia.org/wiki/File:%C3%9Cbersbach_Thermenbahn_Bhf_Ausfahrt.JPG" },
+    { title: "Wikimedia Commons: OBB 5022 051 in Pachern.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_5022_051_in_Pachern.jpg" },
+    { title: "Wikimedia Commons: OBB 5022 045 in Graz Ostbahnhof-Messe.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_5022_045_in_Graz_Ostbahnhof-Messe.jpg" },
+  ],
   // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
   ...FLEET_LINKS,
 };

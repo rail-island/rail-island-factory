@@ -650,4 +650,11 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "3" }, seats: 330 },
     ],
   },
+  "proc-vehicle-obb-5022": {
+    seats: 108,
+    source: "Wikipedia (de): OBB 5022 117 seats (10 tip-up) in 2 cars; standing room as the DB 642 (approx. 99)",
+    variants: [
+      { params: { unit: "train" }, seats: 216 },
+    ],
+  },
 };
