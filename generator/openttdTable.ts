@@ -1111,6 +1111,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-crh6a": series(60, 90, ELRL, { cars: 8 }),
   // the sleeper: seat cars at the ends, 40 berths a sleeper
   "proc-vehicle-cr-crh2e": series(55, 40, ELRL, { cars: 8 }),
+  "proc-vehicle-cr-crh2g": series(48, 83, ELRL, { cars: 8 }),
   "proc-vehicle-cr-cr450bf": series(32, 81, ELRL, { cars: 8 }),
   "proc-vehicle-cr-cr300bf": series(54, 84, ELRL, { cars: 8 }),
   "proc-vehicle-cr-cr450af": series(32, 81, ELRL, { cars: 8 }),
