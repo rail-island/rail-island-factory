@@ -568,4 +568,37 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-1099 -->
 
-<!-- design:bbo-214 -->
+### BBO 214 (`proc-vehicle-bbo-214`)
+
+- **Built on** the steam kit (`generator/atBbo214.ts`; steamLoco.ts `buildLoco`, the distant model
+  `steamLocoLod`), its own spec module like the DRG 01 (deSteam01.ts), registered in atLocos.ts.
+- **Parameters**: `unit` `locomotive` (default), `tender` (the steam kit's `UNIT_PARAM`); one
+  paint, the preserved 12.10 as restored (no photograph shows another).
+- **Figures** (de.wikipedia "BBÖ 214"): 1'D2' h2, 22.58 m over the buffers with the tender (the
+  model: engine 16.13 m, tender 6.45 m), 3.15 m wide (the model 3.09 m, the test gauge's 3.1 m), 4.65 m high (the model 4.60 m), drivers
+  1,940 mm, carrying wheels 1,034 mm, cylinders 650 x 720 mm, 123.5 t (1936 batch) plus the 60 t
+  tender, 2,162 kW indicated, 120 km/h (game: 123.5 t, 2,162 kW, 120 km/h; tender 60 t).
+- **Measured** on the 2007 side photograph of 12.10 at 18.6 px/m (22.58 m over 418 px; the drivers'
+  19.5 px diameter agrees): the leading axle 1.41 m behind the buffer heads, the drivers at 4.41,
+  6.56, 8.71, 10.86 m (2.15 m apart), the trailing truck's axles at 12.55 and 14.6 m (the first
+  moved 0.1 m back from the photo's 12.45 to clear the last driver), the cab from 13.44 to 15.7 m;
+  the running board 2.3 m up, the deflectors from 1.3 to 3.95 m and up to 4.05 m; the tender's
+  four axles 1.45 m apart, its tall front part (to 4.0 m) 3.4 m long over the low rear tank (3.1 m).
+- **Shape facts**: the short wide chimney close behind the big flush smokebox door (number 12.10
+  painted on it), the long flat-topped casing over the domes (1.24 m wide, 6.5 m long, to 4.5 m),
+  the round-topped firebox over the trailing truck; the large flat deflectors at the running
+  board's edge with the step plates under their front, the running board falling steeply to the
+  black buffer beam, the two lamps on the beam with their bright hand loops; the feed-water
+  heater drum and the box behind the deflector on the +z side (the side the 1980 photograph shows),
+  the two air pumps on the other; the cab with its small front and larger rear side window. The
+  outside cylinders behind the leading axle, the 4.25 m main rods driving the third coupled axle;
+  rods red, wheels black with bright tyres. The tender's outside plate frames with axle boxes and
+  springs, the lid on the tall part, the rear handrail.
+- **References**: `assets/bbo-214/` - 12.10 side-on (Strasshof 2007), front three-quarter (2002),
+  left three-quarter (1980), restored tender rear (2020), the CFR 142.050 works photo (shared
+  running gear only).
+- **Deviations**: no works drawing was found, so the wheelbase is measured on a 500 px photograph
+  (about +-0.15 m); the cylinders are horizontal and the Lentz valve gear is drawn as the kit's
+  Walschaerts motion; pipes, sand boxes, brake rigging, ladders and the tender's hatch detail are
+  omitted; the boiler-top casing has chamfered plan ends where the real one has a sloping front.
+- **Budget**: engine 13,670 triangles, tender 3,684; distant model 98 and 44.

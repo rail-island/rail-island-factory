@@ -363,6 +363,14 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikimedia Commons: NJ2 Schlafwagen WLAmz, Ende.jpg", url: "https://commons.wikimedia.org/wiki/File:NJ2_Schlafwagen_WLAmz,_Ende.jpg" },
   ],
   "proc-vehicle-obb-1189": [{ title: "Wikipedia (de): BBÖ 1100", url: "https://de.wikipedia.org/wiki/BB%C3%96_1100" }, { title: "Wikimedia Commons: 1100102petrzalka1998a.jpg", url: "https://commons.wikimedia.org/wiki/File:1100102petrzalka1998a.jpg" }, { title: "Wikimedia Commons: 110002petrzalka1998b.jpg", url: "https://commons.wikimedia.org/wiki/File:110002petrzalka1998b.jpg" }, { title: "Wikimedia Commons: 1189 09 2012 Ampflwang.JPG", url: "https://commons.wikimedia.org/wiki/File:1189_09_2012_Ampflwang.JPG" }, { title: "Wikimedia Commons: 1189.09 Ampflwang 2013.jpg", url: "https://commons.wikimedia.org/wiki/File:1189.09_Ampflwang_2013.jpg" }, { title: "Wikimedia Commons: ÖBB Baureihe 1189.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_Baureihe_1189.jpg" }, { title: "Wikimedia Commons: SBB Historic - E 89 002 in Zurich (1947)", url: "https://commons.wikimedia.org/wiki/File:SBB_Historic_-_F_108_01_03102_-_In_der_Werkstaette_Zuerich_revidierte_Krokodillokomotive_E_89_002_der_oesterreichischen_Bundesbahnen_oeBB.tif" }],
+  "proc-vehicle-bbo-214": [
+    { title: "Wikipedia (de): BBÖ 214", url: "https://de.wikipedia.org/wiki/BB%C3%96_214" },
+    { title: "Wikimedia Commons: Strasshof 2007 12.10.jpg", url: "https://commons.wikimedia.org/wiki/File:Strasshof_2007_12.10.jpg" },
+    { title: "Wikimedia Commons: Oebb1210.jpg", url: "https://commons.wikimedia.org/wiki/File:Oebb1210.jpg" },
+    { title: "Wikimedia Commons: ÖBB 12.10 Wien 1980.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_12.10_Wien_1980.jpg" },
+    { title: "Wikimedia Commons: 006b 12.10 TMW 09.12.20.jpg", url: "https://commons.wikimedia.org/wiki/File:006b_12.10_TMW_09.12.20.jpg" },
+    { title: "Wikimedia Commons: CFR 142.050 Werkfoto.jpg", url: "https://commons.wikimedia.org/wiki/File:CFR_142.050_Werkfoto.jpg" },
+  ],
   "proc-vehicle-obb-cityshuttle-dd": [
     { title: "Wikipedia (de): OBB Nahverkehrs-Doppelstockwagen", url: "https://de.wikipedia.org/wiki/%C3%96BB_Nahverkehrs-Doppelstockwagen" },
     { title: "Wikimedia Commons: 2018-07-14 AT Wien 12 Meidling, Wien Meidling, OBB 86-33 102-3 (49104473828).jpg", url: "https://commons.wikimedia.org/wiki/File:2018-07-14_AT_Wien_12_Meidling,_Wien_Meidling,_%C3%96BB_86-33_102-3_(49104473828).jpg" },

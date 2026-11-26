@@ -67,6 +67,8 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-obb-railjet": 26.85,
   "proc-vehicle-obb-nightjet": 26.85,
   "proc-vehicle-obb-1189": 20.4,
+  // the engine alone (the default unit): 22.58 m with its 6.45 m tender
+  "proc-vehicle-bbo-214": 16.13,
   "proc-vehicle-obb-cityshuttle-dd": 27.1,
 };
 
