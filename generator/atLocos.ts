@@ -8,7 +8,7 @@ import type { ProceduralDesign } from "./design.ts";
 
 // import:obb-1116
 
-// import:obb-1144
+import { OBB1144_DESIGN } from "./atObb1144.ts";
 
 // import:obb-1142
 
@@ -27,7 +27,7 @@ import type { ProceduralDesign } from "./design.ts";
 export const AT_LOCOS: ProceduralDesign[] = [
   // design:obb-1116
 
-  // design:obb-1144
+  OBB1144_DESIGN,
 
   // design:obb-1142
 
