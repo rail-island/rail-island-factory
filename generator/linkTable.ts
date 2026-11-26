@@ -345,6 +345,7 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
     { title: "Wikimedia Commons: OBB 5022 051 in Pachern.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_5022_051_in_Pachern.jpg" },
     { title: "Wikimedia Commons: OBB 5022 045 in Graz Ostbahnhof-Messe.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_5022_045_in_Graz_Ostbahnhof-Messe.jpg" },
   ],
+  "proc-vehicle-obb-4010": [{ title: "Wikipedia (de): ÖBB 4010", url: "https://de.wikipedia.org/wiki/%C3%96BB_4010" }, { title: "Wikimedia Commons: 4010027 wien west.jpg", url: "https://commons.wikimedia.org/wiki/File:4010027_wien_west.jpg" }, { title: "Wikimedia Commons: K00 001 Bf Salzburg Hbf, 4010 008.jpg", url: "https://commons.wikimedia.org/wiki/File:K00_001_Bf_Salzburg_Hbf,_4010_008.jpg" }, { title: "Wikimedia Commons: K00 002 Bf Salzburg Hbf, 6010 008.jpg", url: "https://commons.wikimedia.org/wiki/File:K00_002_Bf_Salzburg_Hbf,_6010_008.jpg" }, { title: "Wikimedia Commons: ÖBB 4010 021 selzthal 1993-02-20.jpg", url: "https://commons.wikimedia.org/wiki/File:%C3%96BB_4010_021_selzthal_1993-02-20.jpg" }, { title: "Wikimedia Commons: Leoben Hbf 4010 002.jpg", url: "https://commons.wikimedia.org/wiki/File:Leoben_Hbf_4010_002.jpg" }],
   // the world fleet: its articles and its photographs' Commons pages (docs/models/world-fleet.md)
   ...FLEET_LINKS,
 };

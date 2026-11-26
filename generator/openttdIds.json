@@ -513,6 +513,7 @@
     "proc-vehicle-obb-1040": 49,
     "proc-vehicle-obb-1116": 838,
     "proc-vehicle-obb-1144": 835,
+    "proc-vehicle-obb-4010": 842,
     "proc-vehicle-obb-4020": 840,
     "proc-vehicle-obb-4024": 837,
     "proc-vehicle-obb-4744": 836,
@@ -3242,6 +3243,26 @@
       "proc-vehicle-obb-1144?livery=bloodOrange": {
         "id": 10212,
         "size": 4
+      },
+      "proc-vehicle-obb-4010?": {
+        "id": 10428,
+        "size": 6
+      },
+      "proc-vehicle-obb-4010?formation=6 cars": {
+        "id": 10456,
+        "size": 32
+      },
+      "proc-vehicle-obb-4010?livery=trafficRed": {
+        "id": 10450,
+        "size": 6
+      },
+      "proc-vehicle-obb-4010?unit=endCar": {
+        "id": 10442,
+        "size": 8
+      },
+      "proc-vehicle-obb-4010?unit=middleCar": {
+        "id": 10434,
+        "size": 8
       },
       "proc-vehicle-obb-4020?": {
         "id": 10368,
