@@ -1,7 +1,8 @@
 // The CRH380A (CSR Sifang; assets/cr-crh380a/SOURCES.md): its 12 m "fish head"
 // nose as a cab face (seriesCab.ts) whose depth is a solid of its own
-// (`a380Depth`): a silver coupler dome on the tip, behind it the slender nose
-// rising in a long gentle line, its lower flank narrow over the leading bogie and
+// (`a380Depth`): a white rounded tip flowing into the slender nose as one
+// surface (the coupler cover only a thin flush seam), the nose rising in a long
+// gentle line, its lower flank narrow over the leading bogie and
 // flaring out behind it, and the raised cab canopy - a bubble standing out of the
 // nose's top - with its black windscreen oval and the almond headlights beside
 // its foot. The livery: white, a dark window band ending in a rounded point
@@ -55,17 +56,25 @@ function smooth(t: Tab): (x: number) => number {
 
 /**
  * The nose's section by d: a superellipse round its widest height (half width, top, bottom, the
- * widest height, the upper and lower powers), the tip a blunt bullet - the coupler cover, as wide and
- * high as the nose there and flowing into it - drawn into the body's own section over the last 4 m.
+ * widest height, the upper and lower powers), the tip a rounded bullet whose top, bottom and width
+ * only flatten going back (no neck behind a ball: test/cnCrh380aNose.test.ts), drawn into the body's
+ * own section over the last 4 m.
  */
 const NA = smooth([[0, 0], [0.08, 0.36], [0.25, 0.6], [0.5, 0.76], [0.9, 0.88], [1.4, 0.96], [2.0, 1.04], [3.0, 1.16], [4.5, 1.3], [6.0, 1.42], [8.0, 1.53], [10.0, 1.6], [12.0, W]]);
-const NT = smooth([[0, 1.08], [0.08, 1.28], [0.25, 1.4], [0.5, 1.5], [0.9, 1.59], [1.4, 1.68], [2.0, 1.82], [3.0, 2.04], [4.0, 2.22], [5.0, 2.38], [6.0, 2.53], [7.0, 2.7], [8.0, 2.88], [9.0, 3.07], [10.0, 3.27], [11.0, 3.5], [11.6, 3.64], [12.0, C]]);
-const NB = smooth([[0, 1.08], [0.08, 0.88], [0.25, 0.74], [0.5, 0.64], [0.9, 0.56], [1.4, 0.5], [2.0, 0.42], [3.0, 0.3], [12.0, 0.3]]);
+/** The tip's height (the nose's centre there; the distant model's tip too). */
+const TIP_Y = 1.08;
+/** The tip's length: the round of the bullet eases out over its first TIP_L m into the long nose. */
+const TIP_L = 3.0;
+/** A quarter ellipse over the tip, 0 at the tip (vertical there) to 1 at TIP_L (level there): no neck, its slope only falls. */
+const ell = (d: number) => { const u = Math.min(1, Math.max(0, d / TIP_L)); return Math.sqrt(1 - (1 - u) ** 2); };
+/** The top line over the tip: the round plus a steady 0.18 rise, meeting the long nose's table at TIP_L with its slope. */
+const NT_LONG = smooth([[3.0, 2.04], [4.0, 2.22], [5.0, 2.38], [6.0, 2.53], [7.0, 2.7], [8.0, 2.88], [9.0, 3.07], [10.0, 3.27], [11.0, 3.5], [11.6, 3.64], [12.0, C]]);
+const NT = (d: number) => (d >= TIP_L ? NT_LONG(d) : TIP_Y + 0.42 * ell(d) + 0.18 * d);
+/** The bottom line: the round down to the nose's 0.3 m floor at TIP_L, level there. */
+const NB = (d: number) => TIP_Y - 0.78 * ell(d);
 const YC = smooth([[0, 1.08], [1.4, 1.08], [3.0, 1.2], [5.0, 1.35], [8.0, 1.45], [12.0, Y]]);
 const NTE = smooth([[0, 2.3], [1.4, 2.3], [3.0, 2.15], [6.0, 2.05], [12.0, 2.0]]);
 const NBE = smooth([[0, 2.3], [1.4, 2.4], [3.0, 3.0], [6.0, 5.0], [12.0, 6.0]]);
-/** The tip's height (the coupler cover's centre) for the distant model. */
-const TIP_Y = 1.08;
 /** The canopy, by d: its crown, its half width and how far its rounded top drops to its walls. */
 const HB = smooth([[4.2, 2.3], [4.6, 2.55], [5.2, 2.8], [5.8, 3.0], [6.5, 3.15], [7.3, 3.26], [8.2, 3.34], [9.2, 3.42], [10.2, 3.5], [11.2, 3.62], [12.0, 3.7]]);
 const WB = smooth([[4.2, 0.0], [4.4, 0.45], [4.8, 0.65], [5.4, 0.78], [6.2, 0.86], [7.5, 0.92], [9.0, 0.97], [10.2, 1.05], [11.0, 1.18], [12.0, 1.3]]);
@@ -73,7 +82,7 @@ const DROP = smooth([[4.2, 0.2], [4.8, 0.32], [6.0, 0.45], [7.5, 0.52], [9.0, 0.
 const CANOPY_D = 4.2;
 /** The lower flank over the leading bogie: narrow below BOGIE_TOP from BOGIE_START back to BOGIE_END, flaring out to the body behind it. */
 const [BOGIE_TOP, BOGIE_HW, BOGIE_START, BOGIE_END, FLARE_END] = [0.95, 0.55, 2.0, 7.25, 7.9];
-/** The coupler cover's seam, d behind the tip: the silver ahead of it. */
+/** The coupler cover's seam, d behind the tip: a thin line, the cover painted white like the nose. */
 const SEAM_D = 1.0;
 
 /** The body's own section's half width at height y. */
@@ -154,7 +163,7 @@ function onCanopy(back: Pt[], gap: number): Pt[] {
 /** The coupler cover's seam seen head on: a thin dark line round the nose's section SEAM_D behind the tip, short bars [lat, y]. */
 function seam(): Array<{ mat: string; pts: Pt[]; fine: number }> {
   const [a, top, bot, yc, nt, nb] = [NA(SEAM_D), NT(SEAM_D), NB(SEAM_D), YC(SEAM_D), NTE(SEAM_D), NBE(SEAM_D)];
-  const [t, n] = [0.009, 40];
+  const [t, n] = [0.004, 40];
   const o = (th: number, e: number): Pt => {
     const c = Math.cos(th), s = Math.sin(th), up = s >= 0, pw = up ? nt : nb, h = up ? top - yc : yc - bot;
     const k = (v: number) => Math.sign(v) * Math.pow(Math.abs(v), 2 / pw);
@@ -210,8 +219,6 @@ const A380_FACE: SeriesCabFace = {
     // the nose's lower flank white down to its bottom ahead of the skirts, the grey skirt behind the leading bogie
     { mat: "white", front: [[B - 0.1, -9], [A, -9]], back: [[B - 0.1, FLARE_END], [A, FLARE_END]], top: A },
     { mat: "skirtG", front: [[B - 0.1, FLARE_END - 0.7], [A - 0.02, FLARE_END - 0.7]], back: [[B - 0.1, 99], [A - 0.02, 99]], top: A - 0.02 },
-    // the coupler dome's seam and its silver
-    { mat: "dome", front: [[B - 0.1, -9], [2.0, -9]], back: [[B - 0.1, SEAM_D - 0.01], [2.0, SEAM_D - 0.01]], top: 2.0 },
     // the canopy's black oval round its glass, then the side windows in it
     { mat: "cabMask", front: [[2.42, -9], [3.2, -9]], back: onCanopy([[2.42, 5.2], [2.5, 6.6], [2.6, 8.0], [2.75, 9.0], [2.95, 9.5], [3.2, 9.7]], 0), top: 3.2, lat: 1.1 },
   ],
@@ -227,8 +234,8 @@ const A380_FACE: SeriesCabFace = {
     const p = (t: number): Pt => [0.08 - 0.34 * t, 2.54 + 0.4 * t];
     return [p(i / 5), p((i + 1) / 5)];
   }),
-  // the distant model's nose: the dome, the long rising top and the canopy, on few rows
-  lod: { profile: [[B, 1.9], [TIP_Y, 0], [1.7, 1.6], [2.5, 4.9], [3.25, 7.8], [C, JOIN]], corner: [[B, 1.4], [C, 1.2]], cornerDepth: [[B, 6.5], [TIP_Y, 5.5], [1.7, 5.5], [2.5, 4.5], [3.25, 3.0], [C, 0.02]], rows: [B, TIP_Y, 1.7, 2.5, 3.25, C] },
+  // the distant model's nose: the rounded tip, the long rising top and the canopy, on few rows
+  lod: { profile: [[B, 1.05], [TIP_Y, 0], [1.7, 1.45], [2.5, 4.9], [3.25, 7.8], [C, JOIN]], corner: [[B, 1.4], [C, 1.2]], cornerDepth: [[B, 6.5], [TIP_Y, 5.5], [1.7, 5.5], [2.5, 4.5], [3.25, 3.0], [C, 0.02]], rows: [B, TIP_Y, 1.7, 2.5, 3.25, C] },
 };
 
 const WHITE = "#f1f2f0";
@@ -236,7 +243,7 @@ export const CRH380A_LIVERY: ShinkansenLivery = {
   title: "CRH blue", number: "CRH380A-2670",
   palette: {
     white: c(WHITE), blue: c("#1d47a5", 0.4), dark: c("#24282d", 0.3), roofG: c("#e8eae9", 0.55), skirtG: c("#8f969c", 0.7),
-    cabMask: { color: "#16191c", metallic: 0.3, roughness: 0.15, glass: true }, dome: c("#b9bec3", 0.25), seam: c("#3b3f44", 0.5), lampCover: { color: "#d3d8dc", metallic: 0.3, roughness: 0.12, glass: true }, lampRim: c("#5d646a", 0.35),
+    cabMask: { color: "#16191c", metallic: 0.3, roughness: 0.15, glass: true }, seam: c("#6b7177", 0.5), lampCover: { color: "#d3d8dc", metallic: 0.3, roughness: 0.12, glass: true }, lampRim: c("#5d646a", 0.35),
     screenGlass: { color: "#34444f", metallic: 0.4, roughness: 0.08, glass: true },
   },
   // white, the blue stripe, a white gap and the dark window band up to the shoulder

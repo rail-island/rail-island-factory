@@ -79,10 +79,13 @@ leading bogie 5.35 m behind the tip.
 
 - **The nose** is a cab face (seriesCab.ts) whose depth is a solid of the module's own (`a380Depth`):
   each section a superellipse round its widest height, its half width, top, bottom and powers smooth
-  (monotone cubic) tables of d, drawn into the body's own section over the last 4 m. The tip is one
-  blunt bullet - the silver coupler cover, as wide and high as the nose there (1.9 m wide at 1.4 m
-  back) and flowing into it, a thin dark seam 1 m behind the tip; the nose then rises in a long line
-  (2.0 m 3 m back, 2.5 m at 6 m, the roof's 3.7 m at the join). The lower flank is narrow below 0.95 m
+  (monotone cubic) tables of d, drawn into the body's own section over the last 4 m. The tip is a
+  rounded bullet, white like the nose and one surface with it (1.9 m wide at 1.4 m back): its top
+  and bottom a quarter ellipse over the first 3 m (centre 1.08 m, the top plus a steady 0.18 m/m
+  rise), so the top, bottom and width only flatten going back, no neck or knob behind the tip. The
+  coupler cover is only a thin grey seam 1 m behind the tip, flush with the surface. The nose then
+  rises in a long line (2.0 m 3 m back, 2.5 m at 6 m, the roof's 3.7 m at the join).
+  test/cnCrh380aNose.test.ts holds the tip to this (it was once a grey ball on a tube). The lower flank is narrow below 0.95 m
   over the leading bogie and flares to the skirt behind it, so the bogie shows under the nose.
 - **The canopy** stands out of the nose's top from 4.2 m behind the tip, 1.7 - 1.9 m wide, its crown
   3.26 m at 7.3 m and merging into the roof at the join. Its glazing is one dark wrap-around outline
@@ -100,7 +103,8 @@ leading bogie 5.35 m behind the tip.
 - **Pantographs**: single arms on cars 4 and 6 of eight (in shorter trains the third car from the end
   and the one two ahead of it), only the rear one raised; each stands between four raked side shields
   on the roof's edges.
-- **Distant model**: the nose from five rows (dome, rising top, canopy) with the windscreen as glass.
+- **Distant model**: the nose from five rows (the rounded tip, rising top, canopy) with the windscreen
+  as glass; its tip reaches the skirt 1.05 m back, as the full model's does.
 
 ## The CRH2A's body
 
