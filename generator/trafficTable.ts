@@ -434,6 +434,10 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
       { params: { size: "large" }, residents: 6, jobs: 10, produces: { grain: 300 } },
     ],
   },
+  "proc-building-industry-iron-mine": {
+    jobs: 120, produces: { "iron-ore": 360 },
+    source: "size: 46 x 32 m iron ore mine head with its crusher house and a bunker over the siding, about 120 miners a shift; iron ore out",
+  },
   "proc-building-industry-offshore-platform": {
     jobs: 120, produces: { oil: 1800 },
     source: "offshore oil platform: a crew of about 120 on rotation, some 150 t of crude oil an hour in reality, x12 a minute in game time as the whole chain; oil out only",
@@ -444,10 +448,7 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
   },
   "proc-building-industry-mine": {
     jobs: 120, produces: { coal: 300 },
-    source: "size: 46 x 32 m mine head with a bunker over the siding, about 120 miners a shift; coal out, fuel for the winding engine and the plant in",
-    variants: [
-      { params: { type: "iron" }, produces: { "iron-ore": 360 } },
-    ],
+    source: "size: 46 x 32 m coal mine head with a bunker over the siding, about 120 miners a shift; coal out",
   },
   "proc-building-industry-oil-pump": {
     jobs: 1, produces: { oil: 36 },
@@ -463,6 +464,14 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
       { params: { type: "coal" }, jobs: 250, accepts: ["coal"] },
       { params: { type: "nuclear" }, jobs: 600, accepts: [] },
     ],
+  },
+  "proc-building-industry-quarry": {
+    jobs: 60, produces: { stone: 300 },
+    source: "size: 46 x 32 m stone quarry: benches cut into a rock face, a crusher plant and loading silos over the siding, about 60 drillers, blasters, drivers and plant staff a shift; crushed stone out",
+  },
+  "proc-building-industry-sand-pit": {
+    jobs: 20, produces: { sand: 240 }, harvests: "sand",
+    source: "size: 46 x 32 m sand pit: a loader at the pit face, a washing and screening plant and a loading bin over a road bay, about 20 hands; washed sand out, dug from the sand ground around it",
   },
   "proc-building-industry-wind-turbine": {
     jobs: 1,

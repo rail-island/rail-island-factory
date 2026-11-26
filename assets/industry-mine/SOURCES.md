@@ -23,4 +23,4 @@ No drawing of a pit head was used; the rest is judged from the photographs and c
 | headframe | a 4.8 m square tower, sheaves at 23 m, back legs raking to 13 m behind the shaft | the tower, the deck and the two 4.2 m sheave wheels side by side |
 | winding house | 10 x 8 m, eaves 8 m, 17.4 m behind the shaft | the brick house the ropes run to |
 | bunker | 9 x 6.4 m bin from 8 to 13.5 m on four legs over a standard-gauge siding (1,435 mm) | the loadout, its two hoppers and chutes, the hopper wagon under them |
-| iron ore | rust red (#8e3d24), coal near black (#232427) | the `type` parameter's heap, stockpile, bunker and wagon colours |
+| coal | near black (#232427), its spoil grey-black (#4b4a48) | the heap, stockpile, bunker and wagon colours (the iron ore mine is its own design: `industry-iron-mine`) |

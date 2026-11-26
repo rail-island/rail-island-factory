@@ -1540,8 +1540,8 @@ export function loggingCampLod(_given?: ParamValues): MeshBuilder {
 const CATALOG: CatalogFields = { category: 'Industry', group: 'industry', defaultScale: 1, license: 'CC0', author: 'Rail Island', source: 'Rail Island procedural industry' };
 /**
  * The primary industries of the supply chain (docs/models/industry.md, "Primary industries"),
- * drafts until confirmed: sites of several buildings, so their low detail has the process
- * plants' 500 triangles.
+ * one design per raw commodity (a new one is a draft until confirmed in catalogModels.json):
+ * sites of several buildings, so their low detail has the process plants' 500 triangles.
  */
 export const PRIMARY_INDUSTRY: readonly ProceduralDesign[] = [
   { id: 'industry-farm', title: 'Arable farm', build: farm, buildLod: farmLod, lodTriangles: 500, params: FARM_PARAMS, references: 'industry-farm', catalog: CATALOG },

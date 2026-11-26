@@ -134,7 +134,7 @@ pivot on the saddle bearing), `pitman-arms` (both arms, pivot on the crank pin)
 
 ## The mine head's winder
 
-`industry-mine` (`primaryIndustry.ts`, `windingGear`) draws its fixed site as the part
+`industry-mine` and `industry-iron-mine` (`primaryIndustry.ts`, `mineHead`, `windingGear`) each draw their fixed site as the part
 `site` and the winder as `sheave-a` and `sheave-b` (the two spoked sheave wheels, pivot on
 their axles, turning about x), `cage` (the cage at bank, pivot on its floor) and `rope`
 (its winding rope, pivot where it leaves the sheave).
