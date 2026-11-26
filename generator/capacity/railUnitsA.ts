@@ -302,6 +302,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 350 },
     ],
   },
+  "proc-vehicle-cr-crh2g": {
+    seats: 48,
+    source: "zh.wikipedia: 8-car CRH2G 613 seats: ZY end car 48, ZE end car 65, intermediate cars 90/90/77/63/90/90 (83 on average); drawn as the first-class end car",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 83 },
+      { params: { unit: "train" }, seats: 262 },
+      { params: { unit: "train", cars: "2" }, seats: 96 },
+      { params: { unit: "train", cars: "3" }, seats: 179 },
+      { params: { unit: "train", cars: "5" }, seats: 345 },
+      { params: { unit: "train", cars: "6" }, seats: 428 },
+      { params: { unit: "train", cars: "7" }, seats: 511 },
+      { params: { unit: "train", cars: "8" }, seats: 594 },
+    ],
+  },
   "proc-vehicle-cr-crh380a": {
     seats: 40,
     source: "Wikipedia: 8-car CRH380A ~494 seats (end cars with sightseeing/business ~40); seats only",
