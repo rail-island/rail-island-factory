@@ -191,6 +191,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 608 },
     ],
   },
+  "proc-vehicle-cr-cr300af": {
+    seats: 48,
+    source: "Wikipedia (zh): 8-car CR300AF 613 seats - car 1 48 first class, car 8 65, the middle cars 63-90 (83 on average); seats only",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 83 },
+      { params: { unit: "train" }, seats: 279 },
+      { params: { unit: "train", cars: "2" }, seats: 113 },
+      { params: { unit: "train", cars: "3" }, seats: 196 },
+      { params: { unit: "train", cars: "5" }, seats: 362 },
+      { params: { unit: "train", cars: "6" }, seats: 445 },
+      { params: { unit: "train", cars: "7" }, seats: 528 },
+      { params: { unit: "train", cars: "8" }, seats: 613 },
+    ],
+  },
   "proc-vehicle-cr-cr400af": {
     seats: 50,
     source: "Wikipedia: 8-car CR400AF 576 seats (end cars with business class ~50); seats only",
