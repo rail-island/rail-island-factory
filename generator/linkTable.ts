@@ -197,6 +197,7 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-cr-df11": [{ title: "Wikipedia: China Railways DF11", url: "https://en.wikipedia.org/wiki/China_Railways_DF11" }],
   "proc-vehicle-cr-df4": [{ title: "Wikipedia: China Railways DF4", url: "https://en.wikipedia.org/wiki/China_Railways_DF4" }],
   "proc-vehicle-cr-hxd1": [{ title: "Wikipedia: China Railways HXD1", url: "https://en.wikipedia.org/wiki/China_Railways_HXD1" }],
+  "proc-vehicle-cr-hxd2": [{ title: "Wikipedia: China Railways HXD2", url: "https://en.wikipedia.org/wiki/China_Railways_HXD2" }],
   "proc-vehicle-cr-hxd3d": [{ title: "Wikipedia: China Railways HXD3D", url: "https://en.wikipedia.org/wiki/China_Railways_HXD3D" }],
   "proc-vehicle-cr-hxn5": [{ title: "Wikipedia: China Railways HXN5", url: "https://en.wikipedia.org/wiki/China_Railways_HXN5" }],
   "proc-vehicle-cr-js": [{ title: "Wikipedia: China Railways JS", url: "https://en.wikipedia.org/wiki/China_Railways_JS" }, { title: "Wikimedia Commons: JS-5151 (Xi'ang).jpg", url: "https://commons.wikimedia.org/wiki/File:JS-5151_(Xi%27ang).jpg" }],

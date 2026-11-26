@@ -32,7 +32,7 @@ const FAMILIES = [...DESIGNS.values()].filter((d) => KIT_FAMILY_MODULES.has(desi
 const COVERED = new Set([
   // the cab doors' ladders and steps over the outer wheels
   "proc-vehicle-sncf-cc6500", "proc-vehicle-sncf-bb22200", "proc-vehicle-sncf-bb27000", "proc-vehicle-sncf-bb67400", "proc-vehicle-sncf-cc72000",
-  "proc-vehicle-br-class-55", "proc-vehicle-br-class-47", "proc-vehicle-cr-hxd1", "proc-vehicle-ir-icf-coach", "proc-vehicle-ir-memu", "proc-vehicle-ns-plan-v",
+  "proc-vehicle-br-class-55", "proc-vehicle-br-class-47", "proc-vehicle-cr-hxd1", "proc-vehicle-cr-hxd2", "proc-vehicle-ir-icf-coach", "proc-vehicle-ir-memu", "proc-vehicle-ns-plan-v",
   // the Renfe 354's cab door steps over its leading wheel
   "proc-vehicle-renfe-354",
   // a pilot ahead of the leading wheels
@@ -60,7 +60,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-br-mk1-coach": 19.66, "proc-vehicle-br-class-378": 20.4,
   "proc-vehicle-ir-wam4": 18.79, "proc-vehicle-ir-wap4": 18.79, "proc-vehicle-ir-wap7": 20.56, "proc-vehicle-ir-wap5": 18.16, "proc-vehicle-ir-wag12b": 38.4,
   "proc-vehicle-ir-lhb-coach": 24.0, "proc-vehicle-ir-icf-coach": 22.3, "proc-vehicle-ir-boxn-wagon": 10.71, "proc-vehicle-cr-c70-wagon": 13.98,
-  "proc-vehicle-cr-hxd1": 35.2, "proc-vehicle-cr-hxd3d": 22.99, "proc-vehicle-cr-ss1": 20.4, "proc-vehicle-cr-ss8": 17.5, "proc-vehicle-cr-df4": 21.1, "proc-vehicle-cr-df11": 21.25,
+  "proc-vehicle-cr-hxd1": 35.2, "proc-vehicle-cr-hxd2": 38.05,"proc-vehicle-cr-hxd3d": 22.99, "proc-vehicle-cr-ss1": 20.4, "proc-vehicle-cr-ss8": 17.5, "proc-vehicle-cr-df4": 21.1, "proc-vehicle-cr-df11": 21.25,
   "proc-vehicle-cr-25t-coach": 26.6, "proc-vehicle-cr-cr450af": 28.725,
   "proc-vehicle-sbb-ew4-coach": 26.4, "proc-vehicle-sbb-ic2000": 26.8, "proc-vehicle-glacier-express": 18.4,
 };
@@ -74,7 +74,7 @@ export function worldTrainsSuite(index: number, count: number): void {
 describe("the eight countries' trains", () => {
   if (index === 0) it("are all filed under their country", () => {
     // the plan's 160 designs and the Class 378 and the Chinese units added after it
-    expect(FAMILIES.length).toBe(173);
+    expect(FAMILIES.length).toBe(174);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);
