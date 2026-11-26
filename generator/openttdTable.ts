@@ -1130,6 +1130,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "restaurant" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" })],
   }),
   "proc-vehicle-obb-4020": series(56, 64, ELRL, { cars: 3, liveries: ["trafficRed"] }), // 56 / 64 / 64 seats, 184 in three cars (de.wikipedia)
+  "proc-vehicle-obb-5022": series(58, 58, RAIL, { cars: 2, liveries: ["cityjet"] }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

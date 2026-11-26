@@ -17,7 +17,7 @@ import { OBB4020_DESIGN } from "./atObb4020.ts";
 
 // import:obb-5047
 
-// import:obb-5022
+import { OBB5022_DESIGN } from "./atObb5022.ts";
 
 // import:westbahn-kiss
 
@@ -40,7 +40,7 @@ export const AT_UNITS: ProceduralDesign[] = [
 
   // design:obb-5047
 
-  // design:obb-5022
+  OBB5022_DESIGN,
 
   // design:westbahn-kiss
 
