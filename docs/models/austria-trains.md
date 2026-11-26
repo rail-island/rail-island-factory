@@ -485,7 +485,42 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-2016 -->
 
-<!-- design:obb-2043 -->
+### OBB 2043 (`proc-vehicle-obb-2043`)
+
+| | |
+|---|---|
+| Built on | the box locomotive kit (`boxLocoKit.ts`) with its own profile, `generator/atObb2043.ts`; no kit change |
+| Parameters | `livery` bloodOrange (ivory lines and roof, the Pflatsch, 2043 005-4; default) / trafficRed (light grey band, dark grey cab cap, 2043 043-5) |
+| Figures | the series 2043.05 - 77: 15.76 m over the buffers, 3.0 m wide, eave 3.66 m, crown 4.08 m; B'B', bogies 8.0 m apart, 2.5 m wheelbase, 950 mm wheels; 70 t, 1,104 kW, 110 km/h (de.wikipedia "OBB 2043"; the four pre-series locomotives were 14.76 m long) |
+
+- **Front** (head-on 2043 005 at Kritzendorf, 206 px/m from the buffers 1.75 m apart; 2043.54,
+  220 px/m): flat and upright to the line under the windscreens (2.74 - 2.80 m), leaning back 0.17 m
+  above it to the eave and rounding over into the roof; corners rounded 0.26 m in plan below the line,
+  0.42 m above it, the cab narrowing to about 2.8 m at the windscreen head. Two windscreens side by side
+  (z 0.13 - 1.10 m, 2.84 - 3.50 m), the round headlights (1.55 m, z +-0.86 m) with the tail lamps over
+  them (1.85 m) in a stadium-shaped pod, the top headlight between two small lamps in a housing on the
+  roof edge (body colour; cap grey in traffic red), a grab rail over the line, upright handrails at the
+  corners, the Pflatsch at 2.24 m and the running number under it, side buffers and the plough.
+- **Side** (2043 005-4's +z side, a projective fit over both body ends with the end heights 1.87:1):
+  at each end the cab side window (5.98 - 6.52 m from the middle) ahead of the cab door (5.19 -
+  5.85 m, its narrow window, handrails either side); ten machine-room windows 0.86 m wide at a
+  0.945 m pitch from -4.34 m to the "1" end's door (2.86 - 3.55 m); under the row's start at the "2"
+  end (-x) the radiator grille (-4.34 to -3.27 m) and the red louvre beside it; the same on both sides
+  (2043.54 shows the grilles at the same end on its other side). The side Pflatsch under each cab window,
+  the running number amidships.
+- **Roof**: the engine room hatch (-3.1 to 0.15 m), a small hatch and a fan cover; the exhaust stack,
+  a roof-coloured cylinder, behind the "2" end's cab off the centre line (-5.55 m, z -0.5 m).
+- **Paint**: blood orange, ivory lines at 1.36 and 2.74 m the whole way round, the ivory roof, a
+  dark grey frame below. Traffic red: the light grey band 1.36 - 1.80 m round the lamps, the dark grey
+  cab cap from the line to the red line at 3.57 - 3.64 m, swept back onto the cab side to behind the
+  door, the grey roof and frame.
+- **References**: `assets/obb-2043/` (eight Commons photographs: 2043 005, 035, 043, 034, 2043.54 and
+  2043.70; SOURCES.md).
+- **Deviations**: all ten machine-room openings are glazed as delivered (2043 005 later had five of them
+  replaced by grilles); the 1979 winged-wheel emblem is not drawn (both liveries carry the Pflatsch);
+  width and heights are photo estimates; the bogie arches and the underframe's small boxes are simplified.
+- **Triangles**: 13,052 (traffic red 13,288); the distant model the coarser profile, the window row as
+  one band and the ivory lines left out, within 100.
 
 <!-- design:obb-1099 -->
 

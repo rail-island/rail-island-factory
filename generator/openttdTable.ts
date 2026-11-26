@@ -213,6 +213,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-csd-t679-0": loco(RAIL, { presets: presets() }),
   "proc-vehicle-csd-t499": loco(RAIL, { presets: presets() }),
   "proc-vehicle-cd-771": loco(RAIL, { presets: presets(...each("livery", "cd771", "cd771No421")) }),
+  "proc-vehicle-obb-2043": loco(RAIL, { presets: presets(...each("livery", "trafficRed")) }),
 
   // --- North American diesels ------------------------------------------------------
   "proc-vehicle-emd-gp9": loco(RAIL, { presets: presets(...each("livery", "pennsylvania", "santaFe")) }),

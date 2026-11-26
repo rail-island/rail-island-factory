@@ -66,6 +66,7 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-obb-1116": 19.28,
   "proc-vehicle-obb-railjet": 26.85,
   "proc-vehicle-obb-nightjet": 26.85,
+  "proc-vehicle-obb-2043": 15.76,
 };
 
 /** A design's country by the operator prefix of its id. */
