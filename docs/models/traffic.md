@@ -29,8 +29,9 @@ the player's vehicles up to their capacity. A building generates
 factory states people, not trips) - to work, to a visitor site or elsewhere; a worker
 and a tourist travel back home after their stay, so jobs and visitor sites start no
 trips of their own - and its `produces` rates of
-raw commodities and mail; a processor turns delivered inputs into its
-output by its recipe and makes nothing without them; a building attracts passengers
+raw commodities and mail - a producer that names the ground it `harvests` only as
+much as that ground around it allows; a processor turns each delivered input into its
+output by its recipe and makes nothing without input; a building attracts passengers
 by its free jobs, its free visitor places and its residents and takes in the commodities it `accepts` or its recipe
 uses. Until a design carried these numbers, the game guessed
 them from the building's category and the vehicle's group and title; it keeps that
@@ -38,8 +39,8 @@ guess only for model ids this export no longer carries.
 
 ## The commodities and the unit
 
-Besides passengers there are ten commodities (`COMMODITIES`, in this order in every
-list):
+Besides passengers there are thirteen commodities (`COMMODITIES`, in this order in
+every list):
 
 | Commodity | Kind | What |
 |---|---|---|
@@ -47,12 +48,18 @@ list):
 | `wood` | raw | logs from logging camps |
 | `coal` | raw | coal from coal mines |
 | `iron-ore` | raw | ore from iron mines |
+| `stone` | raw | broken stone from quarries |
+| `sand` | raw | sand from sand pits |
 | `oil` | raw | crude oil from wells and offshore platforms |
-| `food` | processed | made from grain by a food plant |
-| `steel` | processed | made from iron ore and coal by a steel mill |
+| `goods` | processed | made by a factory from grain or coal |
+| `steel` | processed | made by a factory from iron ore |
+| `lumber` | processed | sawn timber, made by a factory from wood |
+| `cement` | processed | made by a factory from stone |
 | `fuel` | processed | made from oil by a refinery |
-| `goods` | processed | made from steel and wood by a goods factory |
 | `mail` | town | post and parcels, between houses, shops and offices |
+
+There is no `food` any more: food and goods were one delivery to the same towns, so
+food became goods (the chains were never deployed, so nothing was migrated).
 
 The ids are stored in players' saved games (the game's `traffic.json`): never rename
 one. A **raw** commodity is made from nothing at a fixed rate (`produces`), a
@@ -75,10 +82,10 @@ A building's `game.traffic`:
   unit?: "min";                               // the rates' unit; on every non-empty block (export only)
   produces?: { [commodity]: tonnesPerMinute }; // made from nothing: raw commodities, mail
   accepts?: commodity[];                      // consumed on delivery: towns and sinks
-  processes?: {                               // a processor's recipe
-    output: commodity;                        // a processed commodity
-    inputs: { [commodity]: tonnesPerTonneOfOutput };
-    rate: number;                             // at most this many t of output a minute
+  harvests?: "field" | "woods" | "sand";      // the ground its `produces` needs around it
+  processes?: {                               // a processor's recipes
+    outputs: { [input]: commodity };          // each input -> what 1 t of it becomes (1 t)
+    rate: number;                             // at most this many t of output a minute, all inputs together
     stock: number;                            // stockpile cap in t, per input (about 10 minutes)
   };
   visitors?: { capacity: number; stayMin: number }; // a tourist destination (below)
@@ -86,11 +93,19 @@ A building's `game.traffic`:
 }
 ```
 
-A recipe's inputs are accepted implicitly: they are not repeated in `accepts`. So a
-building's role reads off its fields: a **primary industry** `produces` a raw
-commodity, a **processor** `processes`, a **sink** or a **town** `accepts` (a town
-also `produces` mail). A building may combine them (an offshore platform produces oil
-and accepts food and goods for its crew).
+A recipe is a table of **independent single-input recipes**: every input is turned
+into its output one tonne for one tonne, whatever else is delivered, so a factory fed
+only coal works at its full rate. The inputs share the one `rate`; the game splits it
+between them in proportion to their stockpiles. A recipe's inputs are accepted
+implicitly: they are not repeated in `accepts`. So a building's role reads off its
+fields: a **primary industry** `produces` a raw commodity, a **processor**
+`processes`, a **sink** or a **town** `accepts` (a town also `produces` mail).
+
+`harvests` names the ground a primary industry works: `field` (a farm), `woods` (a
+logging camp) or `sand` (a sand pit). The game counts that ground in a disc around the
+building and scales its `produces` by it - no ground, no output; the radius and the
+share for full output are the game's tuning (its `docs/gameplay/traffic.md`). A block
+that `harvests` must produce a raw commodity.
 
 A vehicle's `game.capacity`:
 
@@ -102,13 +117,14 @@ A vehicle's `game.capacity`:
 `commodities` is non-empty; the vehicle carries one commodity at a time. A variant
 that empties a car's hold (a dining car of a set whose power car has a luggage room)
 states `tonnes: 0, commodities: []`. The commodities follow the body
-(`capacityTable.ts`): open wagons, hoppers and tippers coal, iron ore and grain (a
-covered grain hopper grain alone); tanks oil and fuel (an LNG carrier too: gas is no
-commodity); reefers food; box vans, covered wagons, curtainsiders and containers
-goods and food; flat wagons and low loaders steel, wood and goods; an aircraft's hold
-goods and mail; luggage vans and mail rooms mail. A vehicle with several holds (an
-airliner's goods and mail) states their tonnes summed and the union of what they
-take. A concrete mixer carries no commodity (`nothing`).
+(`capacityTable.ts`): open wagons, hoppers and tippers coal, iron ore, grain, stone
+and sand (a mine tub no grain); covered and pressure hoppers (the Hadgs, the Raj)
+cement beside what they took before (grain, no stone or sand); tanks oil and fuel (an LNG
+carrier too: gas is no commodity); reefers goods; box vans, covered wagons and
+curtainsiders goods, lumber and cement; containers goods; flat wagons and low loaders
+steel, wood, goods, lumber and cement; an aircraft's hold goods and mail; luggage
+vans and mail rooms mail. A vehicle with several holds (an airliner's goods and mail)
+states their tonnes summed and the union of what they take. A concrete mixer carries no commodity (`nothing`).
 
 ## Visitor sites
 
@@ -135,27 +151,38 @@ drafts; the balance is the game's.
 
 | Commodity | Made by | Taken by |
 |---|---|---|
-| grain | farm (`industry-farm`) | food plant (`ind-building-a`) |
-| wood | logging camp (`industry-logging-camp`) | goods factories (`ind-building-h`, `ind-building-k`) |
-| coal | mine (`industry-mine`) | steel mill (`industry-factory-a`); power plant, coal type (a sink) |
-| iron-ore | mine, `type: iron` | steel mill |
-| oil | oil pump (36 t/min, large 72), offshore platform (1,800 t/min) | refineries (`chemical-factory`, both types) |
-| food | food plant: 1 t grain -> 1 t food, 180 t/min (extended 264) | homes, shops and landmarks, the warehouse (`ind-building-s`), the offshore platform |
-| steel | steel mill: 1 t iron ore + 0.5 t coal -> 1 t steel, 360 t/min (extended 540) | goods factories |
-| fuel | refinery: 1 t oil -> 1 t fuel, 480 t/min (refinery type 960) | shops (corner shop, market block, shop, annex), tank farm (`ind-detail-tank`), power plant (default oil and gas type) |
-| goods | goods factory: 0.5 t steel + 0.5 t wood -> 1 t goods, 144 t/min (`h`, extended 216) and 120 t/min (`k`, extended 180) | homes, shops, offices and landmarks, the warehouse, the offshore platform |
+| grain | farm (`industry-farm`, harvests `field`) | factories -> goods |
+| wood | logging camp (`industry-logging-camp`, harvests `woods`) | factories -> lumber; towns |
+| coal | coal mine (`industry-mine`) | factories -> goods; power plant, coal type |
+| iron-ore | iron ore mine (`industry-iron-mine`) | factories -> steel |
+| stone | quarry (`industry-quarry`) | factories -> cement; towns |
+| sand | sand pit (`industry-sand-pit`, harvests `sand`) | towns |
+| oil | oil pump (36 t/min, large 72), offshore platform (1,800 t/min) | refineries (`chemical-factory`, both types) -> fuel |
+| goods | factories, from grain and coal | towns |
+| steel | factories, from iron ore | towns |
+| lumber | factories, from wood | towns |
+| cement | factories, from stone | towns |
+| fuel | refinery: 1 t oil -> 1 t fuel, 480 t/min (refinery type 960) | towns |
 | mail | homes, shops, offices, landmarks | homes, shops, offices, landmarks |
 
-The model ids above drop their `proc-building-` prefix. The raw producers: farm
-180 t/min (large 300), logging camp 144, coal mine 300, iron mine 360. A processor's
-stock cap is ten minutes of its input ("The tuning"). Offices (the glass, bullet, dark slab, art deco, pagoda,
-pyramid and twin-tower skyscrapers) take goods and mail; homes and shops food, goods
-and mail; the nuclear power plant takes no commodity. The rates are first drafts;
-balancing is the game's.
+The model ids above drop their `proc-building-` prefix. **The factories** are the four
+processor designs - `ind-building-a` (180 t/min, extended 264), `ind-building-h` (144,
+extended 216), `ind-building-k` (120, extended 180) and `industry-factory-a` (360,
+extended 540) - and all four carry the one table `FACTORY_OUTPUTS` (`trafficTable.ts`):
+grain and coal -> goods, iron ore -> steel, wood -> lumber, stone -> cement. **The
+towns** are every building that makes mail and takes goods: they all take the one list
+`TOWN` - wood, stone, sand, goods, steel, lumber, cement, fuel and mail - so a delivery
+never depends on which block it reaches (a chapel or a post box that took mail alone
+still does). The raw producers: farm 180 t/min (large 300), logging camp 144, coal mine
+300, iron mine 360, quarry 300, sand pit 240. A processor's stock cap is ten minutes of
+its rate ("The tuning"). Nothing else takes a commodity: the warehouse
+(`ind-building-s`), the tank farm (`ind-detail-tank`), the offshore platform, the
+farm, the mines and the oil, gas and nuclear power plants keep their jobs only. The
+rates are first drafts; balancing is the game's.
 
 **The chain check.** A whole build (`generate.ts`, `supplyChainProblems`) fails when a
-commodity has no confirmed building that makes it (`produces` or a recipe's
-`output`), none that takes it (`accepts` or a recipe's input), or no confirmed vehicle
+commodity has no confirmed building that makes it (`produces` or an output in a
+recipe's `outputs`), none that takes it (`accepts` or a recipe's input), or no confirmed vehicle
 that carries it, over every confirmed design at its defaults and in each of its
 variants (`chainOf`, `chainProblems`); `test/traffic.test.ts` runs it too.
 
@@ -184,9 +211,8 @@ three rules applied to every design and variant:
 - **Mail: x10/60.** Mail stays town-scale - a town of about 100 buildings makes about
   1 t a minute - so a house's 0.01 t/h became 0.0017 t/min (rounded to 4 decimals,
   never to 0). Any other commodity a town produces would follow mail.
-- **Stock: 10 minutes of input.** `stock = 10 x rate x the largest input ratio`,
-  rounded: a steel mill at 540 t/min with 1 t ore and 0.5 t coal per tonne keeps
-  5,400 t.
+- **Stock: 10 minutes of input.** `stock = 10 x rate` (every recipe is 1 t in, 1 t
+  out): a factory at 540 t/min keeps 5,400 t of each input.
 
 Residents, jobs and `accepts` did not change; the game's per-minute passenger
 constants (`5/60` a resident, `2.5/60` a job) carry the passengers' retune. The
@@ -256,11 +282,13 @@ and fail the build on any problem: a missing entry where one is needed, a block 
 carries nothing at its defaults, an unknown field or commodity, a commodity at 0
 (leave it out), a number below 0 or above the sanity bounds (people above 20,000 per
 building field or 3,000 seats, production or a recipe's rate above 2,000 t/min, a stock
-above 100,000 t, an input above 10 t per tonne, tonnes above 250,000), a fraction of a
+above 100,000 t, tonnes above 250,000), a fraction of a
 person, a commodity listed twice, `tonnes` without `commodities` or the other way
 round, tonnes above 0 with no commodity or a commodity with 0 tonnes, a processed
-commodity produced from nothing, a recipe whose output is not a processed commodity
-or among its inputs, with no inputs or a rate or stock of 0, a building that accepts
+commodity produced from nothing, a recipe with no `outputs`, an output that is not a
+processed commodity or makes its own input, a town commodity as an input, a rate or
+stock of 0, an unknown `harvests` ground or one on a block that produces no raw
+commodity, a building that accepts
 what its recipe already takes or produces what its recipe makes (checked for every
 variant's selection), an empty `source`, and a variant without
 parameters or numbers, with a parameter or value the design does not have, with
@@ -281,9 +309,7 @@ unit marker"). The coal mine lands as:
 "traffic": {
   "unit": "min",
   "jobs": 120,
-  "produces": { "coal": 300 },
-  "accepts": ["fuel"],
-  "variants": [{ "params": { "type": "iron" }, "produces": { "iron-ore": 360 } }]
+  "produces": { "coal": 300 }
 }
 ```
 

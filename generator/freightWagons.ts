@@ -1,13 +1,13 @@
 // The container, flat, sliding-wall and covered hopper wagons transferred from
 // vlakosimdb, and (from hopperWagons.ts) the open hoppers -- seven designs:
 //
-//   veh-sqns-container-wagon      n_sqns, n_sqns-full#1           load: a Maersk box (goods, food)
-//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      load: steel tubes
+//   veh-sqns-container-wagon      n_sqns, n_sqns-full#1           load: a Maersk box (goods)
+//   veh-pao-flat-wagon            n_pao-full#1, n_pao-full#2      loads: steel tubes, lumber, cement
 //   veh-habis-sliding-wall-wagon  n_habis_tw1, n_habis_tw2        `livery`: tw1, tw2
 //   veh-hadgs-hopper-wagon        n_hadgs                         fixed
 //   veh-faccs-hopper-wagon        n_faccs, viamont_faccs          `livery`: cd, viamont
 //   veh-falls-hopper-wagon        n_falls, sd_falls, viamont_falls `livery`: cd, sd, viamont
-//   veh-wap-hopper-wagon          n_wap-full#2                    loads: coal, iron ore, grain
+//   veh-wap-hopper-wagon          n_wap-full#2                    loads: coal, iron ore, grain, stone, sand
 //
 // Each follows its simplemodel's XML clip shapes and the native BMPs at 0.1 m a
 // pixel (assets/wagon-<name>/native/<key>/landmarks.json). Source coordinates
@@ -26,7 +26,7 @@ import { drawGearLod, freightWagonLod, openBoxPart, platesPart, roofBoxPart, wag
 import type { LodShell } from "./lodKit.ts";
 import { FREIGHT_NUMBERS, boldText, clipSolid, container40, maerskStar, numberLines, type Pt } from "./freightWagonParts.ts";
 import { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod, FACCS_PARAMS, FALLS_PARAMS } from "./hopperWagons.ts";
-import { CONTAINER_COMMODITIES, LOAD_PALETTE, loadLodPart } from "./loadKit.ts";
+import { CONTAINER_COMMODITIES, LOAD_PALETTE, cementLoad, loadLodPart, lumberLoad } from "./loadKit.ts";
 import { loadPart } from "./loadPart.ts";
 
 export { faccsHopperWagon, fallsHopperWagon, wapHopperWagon, faccsHopperWagonLod, fallsHopperWagonLod, wapHopperWagonLod } from "./hopperWagons.ts";
@@ -94,7 +94,7 @@ export function sqnsContainerWagon(): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.75, 1.8));
     m.scope("bogie 2", () => c.freightBogie(17.05, 1.8));
   });
-  // the load on the pins at 1.3 m (docs/models/loads.md): a Maersk box of goods or food
+  // the load on the pins at 1.3 m (docs/models/loads.md): a Maersk box of goods
   loadPart(m, CONTAINER_COMMODITIES, [c.X(9.9), 1.3, 0], () =>
     m.scope("container", () => {
       // a 40 ft Maersk box on the pins: the star square at the low-x end of the +z side, MAERSK beside it (native z_dec/z_inc)
@@ -191,10 +191,14 @@ export function paoFlatWagon(): MeshBuilder {
       });
     }),
   );
+  // sawn lumber: three bundles along, two across, two high, on bearers
+  loadPart(m, ["lumber"], [c.X(7.65), 1.2, 0], () => m.scope("lumber", () => lumberLoad(m, c.X(0.9), c.X(14.4), -1.3, 1.3, 1.2, { rows: 3, across: 2, high: 2, h: 0.8 })));
+  // cement: ten pallets of bags along, two across, seven tiers high
+  loadPart(m, ["cement"], [c.X(7.65), 1.2, 0], () => m.scope("cement", () => cementLoad(m, c.X(0.7), c.X(14.6), -1.3, 1.3, 1.2, { rows: 10, across: 2, tiers: 7 })));
   return m;
 }
 
-/** The Pao from afar (lodSteam.ts): the deck over its solebars, fishbelly, bogies, beams and the tube bundle on its bolsters. */
+/** The Pao from afar (lodSteam.ts): the deck over its solebars, fishbelly, bogies, beams and the loads: the tube bundle on its bolsters, the lumber, the cement. */
 export function paoFlatWagonLod(): MeshBuilder {
   const C = 7.65;
   const shells = [wagonBox(C, 0.5, 14.8, [[0.7, 1.5], [1.2, 1.5]], [[0.7, 1.1, "frame"], [1.1, 1.2, "frameLight"]], { roof: "deck" })];
@@ -207,6 +211,8 @@ export function paoFlatWagonLod(): MeshBuilder {
   const tubes = roofBoxPart(C, "loadSteel", 2.8, 12.5, 0.48, 0.36, 1.4, 1.4 + 0.12 + 2 * 0.06 * Math.sqrt(3));
   const bolsters = ([[3.8, 4.8], [10.5, 11.5]] as Pt[]).map(([x0, x1]) => roofBoxPart(C, "bolster", x0, x1, 1.25, 1.25, 1.205, 1.4));
   parts.push(loadLodPart(["steel"], 1.2, { draw: (m) => { tubes.draw(m); for (const b of bolsters) b.draw(m); } }));
+  parts.push(loadLodPart(["lumber"], 1.2, roofBoxPart(C, "loadLumber", 0.9, 14.4, 1.3, 1.3, 1.2, 3.0)));
+  parts.push(loadLodPart(["cement"], 1.2, roofBoxPart(C, "loadCement", 0.7, 14.6, 1.3, 1.3, 1.2, 2.18)));
   return freightWagonLod({ palette: { ...WAGON_PALETTE, ...PAO_PALETTE }, shells, parts });
 }
 

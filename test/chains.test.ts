@@ -21,13 +21,13 @@ const SIZE = [{ name: "size", title: "Size", default: "normal", values: [{ value
 /** A small chain: oil from a pump, the steel mill and goods factory fed by nothing yet, towns and a sink. */
 const CATALOG: ChainRecord[] = [
   building("proc-building-pump", "Oil pump", { produces: { oil: 3 }, variants: [{ params: { size: "big" }, produces: { oil: 6 } }] }, { params: SIZE }),
-  building("proc-building-refinery", "Refinery", { processes: { output: "fuel", inputs: { oil: 1 }, rate: 40, stock: 400 } }),
+  building("proc-building-refinery", "Refinery", { processes: { outputs: { oil: "fuel" }, rate: 40, stock: 400 } }),
   building("proc-building-mill", "Steel mill", {
-    processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 30, stock: 300 },
-    variants: [{ params: { size: "big" }, processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 45, stock: 450 } }],
+    processes: { outputs: { "iron-ore": "steel", coal: "steel" }, rate: 30, stock: 300 },
+    variants: [{ params: { size: "big" }, processes: { outputs: { "iron-ore": "steel", coal: "steel" }, rate: 45, stock: 450 } }],
   }, { params: SIZE }),
-  building("proc-building-factory", "Goods factory", { processes: { output: "goods", inputs: { steel: 0.5, wood: 0.5 }, rate: 12, stock: 120 } }),
-  building("proc-building-house", "House", { residents: 4, produces: { mail: 0.1 }, accepts: ["food", "goods", "mail"] }),
+  building("proc-building-factory", "Goods factory", { processes: { outputs: { steel: "goods", wood: "goods" }, rate: 12, stock: 120 } }),
+  building("proc-building-house", "House", { residents: 4, produces: { mail: 0.1 }, accepts: ["cement", "goods", "mail"] }),
   building("proc-building-shop", "Shop", { jobs: 4, produces: { mail: 0.05 }, accepts: ["fuel", "goods", "mail"] }, { draft: true }),
   building("proc-building-power", "Power plant", { jobs: 40, accepts: ["coal", "fuel"] }),
   building("proc-building-station", "Station", {}),
@@ -60,8 +60,8 @@ describe("the graph", () => {
 
   it("has a node per commodity, a producer per raw commodity, a processor per recipe and the consumers", () => {
     for (const c of COMMODITIES) expect(node(c).kind).toBe("commodity");
-    expect([...g.nodes.values()].filter((n) => n.kind === "producer").map((n) => n.id)).toEqual(["make-grain", "make-wood", "make-coal", "make-iron-ore", "make-oil"]);
-    expect([...g.nodes.values()].filter((n) => n.kind === "processor").map((n) => n.id)).toEqual(["process-steel", "process-fuel", "process-goods"]);
+    expect([...g.nodes.values()].filter((n) => n.kind === "producer").map((n) => n.id)).toEqual(["make-grain", "make-wood", "make-coal", "make-iron-ore", "make-stone", "make-sand", "make-oil"]);
+    expect([...g.nodes.values()].filter((n) => n.kind === "processor").map((n) => n.id)).toEqual(["process-goods", "process-steel", "process-fuel"]);
     expect([...g.nodes.values()].filter((n) => n.kind === "consumer").map((n) => n.id)).toEqual(["towns", "takes-power"]);
     // the station and the coach play no part
     expect([...g.nodes.values()].some((n) => n.buildings.includes("proc-building-station"))).toBe(false);
@@ -79,7 +79,7 @@ describe("the graph", () => {
     expect(node("towns").col).toBe(6);
     expect(node("takes-power").col).toBe(6);
     // a processed commodity no recipe makes stands empty beside the first processors
-    expect(node("food")).toMatchObject({ col: 3, empty: true, lines: ["no recipe yet"] });
+    expect(node("lumber")).toMatchObject({ col: 3, empty: true, lines: ["no recipe yet"] });
   });
 
   it("lays the boxes out without overlap, each producer beside its commodity", () => {
@@ -103,7 +103,7 @@ describe("the graph", () => {
     expect(edges).toEqual(
       expect.arrayContaining([
         "make-oil>oil", "oil>process-fuel", "process-fuel>fuel", "coal>process-steel", "iron-ore>process-steel", "process-steel>steel",
-        "steel>process-goods", "wood>process-goods", "process-goods>goods", "food>towns", "fuel>towns", "goods>towns", "coal>takes-power", "fuel>takes-power",
+        "steel>process-goods", "wood>process-goods", "process-goods>goods", "cement>towns", "fuel>towns", "goods>towns", "coal>takes-power", "fuel>takes-power",
       ]),
     );
     expect(edges.some((e) => e.includes("mail"))).toBe(false);
@@ -117,14 +117,14 @@ describe("the graph", () => {
   });
 
   it("names each processor's recipe, rate and stock over its variants", () => {
-    expect(node("process-steel").lines).toEqual(["0.5 t coal + 1 t iron ore -> 1 t steel", "30-45 t/min - stock 300-450 t"]);
+    expect(node("process-steel").lines).toEqual(["coal, iron ore -> steel", "30-45 t/min - stock 300-450 t"]);
     expect(node("process-steel").commodities).toEqual(["coal", "iron-ore", "steel"]);
   });
 
   it("gathers the mail makers as the towns, marking a node draft only when every design is", () => {
     expect(node("towns").buildings).toEqual(["proc-building-house", "proc-building-shop"]);
     expect(node("towns").draft).toBe(false);
-    expect(node("towns").commodities).toEqual(["food", "fuel", "goods", "mail"]);
+    expect(node("towns").commodities).toEqual(["goods", "cement", "fuel", "mail"]);
   });
 });
 
@@ -137,8 +137,8 @@ describe("the cards", () => {
     expect(groups[0]!.buildings).toBeUndefined();
     expect(groups[0]!.vehicles!.map((v) => [v.id, v.line])).toEqual([["proc-vehicle-tank", "60 t - oil, fuel"]]);
     expect(nodeCards(g, "steel")[0]!.vehicles!.map((v) => [v.id, v.tonnes, v.draft])).toEqual([["proc-vehicle-flat", 70, true]]);
-    expect(nodeCards(g, "food")[0]!.vehicles).toEqual([]);
-    expect(nodeCards(g, "food")[0]!.empty).toBe("No vehicle carries food yet.");
+    expect(nodeCards(g, "lumber")[0]!.vehicles).toEqual([]);
+    expect(nodeCards(g, "lumber")[0]!.empty).toBe("No vehicle carries lumber yet.");
   });
 
   it("say when nothing makes a raw commodity yet", () => {
@@ -150,7 +150,7 @@ describe("the cards", () => {
     const groups = nodeCards(g, "process-steel");
     expect(groups.map((x) => x.title)).toEqual(["Processors"]);
     expect(groups[0]!.vehicles).toBeUndefined();
-    expect(groups[0]!.buildings!.map((c) => c.line)).toEqual(["0.5 t coal + 1 t iron ore -> 1 t steel, 30-45 t/min"]);
+    expect(groups[0]!.buildings!.map((c) => c.line)).toEqual(["coal, iron ore -> steel, 30-45 t/min"]);
     const towns = nodeCards(g, "towns");
     expect(towns.map((x) => x.title)).toEqual(["Buildings"]);
     expect(towns[0]!.buildings!.find((c) => c.id === "proc-building-shop")!.draft).toBe(true);
@@ -169,7 +169,7 @@ describe("the phone's chains", () => {
   it("run from the raw end through the processors to the consumers, mail last", () => {
     expect(g.chains.map((c) => c.title)).toEqual([
       "Coal -> Power plant",
-      "Food -> Towns",
+      "Cement -> Towns",
       "Wood + Coal + Iron ore -> Steel -> Goods -> Towns",
       "Oil -> Fuel -> Towns, Power plant",
       "Mail: town to town",
@@ -188,7 +188,7 @@ describe("the phone's chains", () => {
 
 /** The chains in the order their end commodity comes (COMMODITY_ORDER), mail last. */
 function order(title: string): number {
-  const ends: Record<string, number> = { "Coal -> Power plant": 2, "Food -> Towns": 5, "Wood + Coal + Iron ore -> Steel -> Goods -> Towns": 8, "Oil -> Fuel -> Towns, Power plant": 7, "Mail: town to town": 99 };
+  const ends: Record<string, number> = { "Coal -> Power plant": 2, "Wood + Coal + Iron ore -> Steel -> Goods -> Towns": 7, "Cement -> Towns": 10, "Oil -> Fuel -> Towns, Power plant": 11, "Mail: town to town": 99 };
   return ends[title]!;
 }
 

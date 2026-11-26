@@ -15,7 +15,7 @@ import type { Vec3 } from "./meshCore.ts";
 import { steeredWheels } from "./vehicleParts.ts";
 import type { SteerAxle, VehicleRig } from "./rig.ts";
 import { fitLod, lodBlock, lodPolygon, lodWheel, LOD_GLASS, LOD_PALETTE, type LodPart } from "./lodKit.ts";
-import { BULK_LOOKS } from "./loadKit.ts";
+import { BULK_LOOKS, cementLoad, lumberLoad } from "./loadKit.ts";
 import {
   Kit, axleY, caboverCab, freeOf, fender, hoodCab, miningCab, ord, sweepR, tyre, tyreSpans, tyreWidth, truckPalette, vanCab,
   type AxleSpec, type BodySpec, type CabPlace, type CabResult, type ChassisSpec, type TrailerSpec, type TruckSpec,
@@ -300,7 +300,7 @@ function tipperBody(k: Kit, b: BodySpec, p: BodyPlace): void {
     k.sidePanel("body2", s, hw, x - 0.04, x + 0.04, b.floor, b.top - 0.02, 0.02, 0.03);
   }
   for (const s of [-1, 1]) k.sidePanel("body2", s, hw, x0, x1, b.top - 0.08, b.top, 0.03, 0.03);
-  // a bulk body's loads: a heap each of coal, iron ore and grain on the floor (docs/models/loads.md)
+  // a bulk body's loads: a heap per bulk look (coal, iron ore, grain, stone, sand) on the floor (docs/models/loads.md)
   if (b.load === "gravel")
     for (const look of BULK_LOOKS)
       k.load(look.commodities, (x0 + x1) / 2, b.floor + 0.08, () => k.m.scope("heap", () => {
@@ -380,6 +380,27 @@ function deckBody(k: Kit, b: BodySpec, p: BodyPlace, sides: number, tilt: boolea
     }
   }
   if (b.load === "machine") machine(k, x0 + 0.4, x1 - 0.4, b.floor, hw - 0.1);
+  else if (sides === 0 && !tilt && b.load === undefined) flatbedLoads(k, x0 + 0.1, x1 - 0.15, hw - 0.04, b.floor);
+}
+
+/**
+ * A flatbed's loads (docs/models/loads.md), each a hidden load part on the deck:
+ * bundles of sawn lumber on bearers and pallets of cement bags six tiers high, as
+ * many as the deck holds; the low detail keeps each load as one mass.
+ */
+function flatbedLoads(k: Kit, x0: number, x1: number, hw: number, floor: number): void {
+  const len = x1 - x0;
+  const high = len > 5 ? 2 : 1;
+  const top = floor + high * 0.8;
+  k.load(["lumber"], (x0 + x1) / 2, floor, () => k.m.scope("lumber", () => {
+    lumberLoad(k.m, x0, x1, -hw, hw, floor, { rows: Math.max(1, Math.round(len / 4.2)), across: 2, high, h: 0.7 });
+    k.keep("loadLumber", x0, x1, floor, top, -hw, hw);
+  }));
+  const rows = Math.max(1, Math.floor((len + 0.1) / 1.25));
+  k.load(["cement"], (x0 + x1) / 2, floor, () => k.m.scope("cement", () => {
+    const y = cementLoad(k.m, x0, x1, -hw, hw, floor, { rows, across: 2, tiers: 6 });
+    k.keep("loadCement", x0, x1, floor, y, -hw, hw);
+  }));
 }
 
 /** A tracked excavator as a load: tracks, the upper body, the cab, the boom folded forward. */

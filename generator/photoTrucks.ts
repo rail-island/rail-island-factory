@@ -141,7 +141,7 @@ function tatra(m: MeshBuilder, s: Spec) {
     disk(m,'trim','z',1,1.94,.39,-1.02,-.78);
     block(m,'trim',1.05,1.15,1.35,3.22,.77,.86);
   });
-  // the loads on the bed's floor (docs/models/loads.md): coal, iron ore or grain heaped to a ridge over the sides
+  // the loads on the bed's floor (docs/models/loads.md): coal, iron ore, grain, stone or sand heaped to a ridge over the sides
   bulkLoads(m,[(s.end+.83)/2,TATRA_FLOOR,0],(mat)=>m.scope('heap',()=>m.sweep(mat,'x',TATRA_HEAP,s.end+.09,TATRA_HEAP,.76)));
 }
 /** The Tatra's bed floor, and the section of its heaps (z, y): from just above the floor to a ridge over the sides. */

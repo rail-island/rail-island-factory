@@ -15,7 +15,7 @@ import { BULK_LOOKS, CONTAINER_COMMODITIES } from "./loadKit.ts";
 const rod = (a: [number, number, number], b: [number, number, number], r: number, mat: string, name?: string): Item => ({ k: "rod", a, b, r, mat, ...(name ? { name } : {}) });
 /**
  * A ship's load (docs/models/loads.md): `items` as one hidden load part standing
- * for `commodities` (containers: goods and food), pivoted midway along them on
+ * for `commodities` (containers: goods), pivoted midway along them on
  * the hatch covers or the deck at height `floor`.
  */
 function cargo(floor: number, items: Item[], commodities: readonly string[] = CONTAINER_COMMODITIES): Item {
@@ -1071,7 +1071,7 @@ export function pushBargeSpec(): ShipSpec {
     livery: { hull: "#2b2f33", bottom: "#8f2a22", boot: "#1d2024", deck: "#5f6466", hatch: "#3b3f43", black: "#1b1c1d" },
     items: [
       { k: "box", u: [4, 72], z: [-5.3, 5.3], y: [D - 0.1, D + 1], mat: "hull", top: false, name: "hold coaming" },
-      // the loads in the hold: a heap each of coal, iron ore and grain, stepped to a crest
+      // the loads in the hold: a heap per bulk look (coal, iron ore, grain, stone, sand), stepped to a crest
       ...BULK_LOOKS.map((look) => cargo(D + 0.4, [
         { k: "box", u: [6, 70], z: [-4.8, 4.8], y: [D + 0.4, D + 1.4], mat: look.mat, name: "heap" },
         { k: "box", u: [12, 64], z: [-3.6, 3.6], y: [D + 1.4, D + 2.2], mat: look.mat, name: "heap top" },

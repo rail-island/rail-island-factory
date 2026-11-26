@@ -107,11 +107,14 @@ export const COMMODITY_LABELS: Readonly<Record<Commodity, string>> = {
   wood: "Wood",
   coal: "Coal",
   "iron-ore": "Iron ore",
+  stone: "Stone",
+  sand: "Sand",
   oil: "Oil",
-  food: "Food",
-  steel: "Steel",
-  fuel: "Fuel",
   goods: "Goods",
+  steel: "Steel",
+  lumber: "Lumber",
+  cement: "Cement",
+  fuel: "Fuel",
   mail: "Mail",
 };
 

@@ -3,7 +3,7 @@
 // coal hopper in their liveries, and the older Wap (the CSD name of the same
 // self-discharging type). Each body is the JT7 clip solid of its XML
 // `box`/`base` shapes (freightWagonParts.ts clipSolid), open at the top over an
-// inner tub, and its loads -- a heap of coal, iron ore or grain -- are hidden
+// inner tub, and its loads -- a heap of coal, iron ore, grain, stone or sand -- are hidden
 // load parts on the tub's floor (loadKit.ts, docs/models/loads.md). Source coordinates as in freightWagons.ts. See docs/models/freight-wagons.md.
 
 import { type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";

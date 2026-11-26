@@ -1,10 +1,11 @@
-// The primary industries of the supply chain (docs/models/industry.md, "Farm",
-// "Mine" and "Logging camp"): the sites that make the raw commodities grain, coal,
-// iron ore and wood from nothing. An arable farm, a mine head over a shaft with its
-// loadout over a siding, and a logging camp with its sawmill and log decks. Real-size
-// metres, +Y up, ground y = 0; the front (+z) faces the road or the track.
+// The primary industries of the supply chain (docs/models/industry.md, "Primary
+// industries"): the sites that make the raw commodities grain, coal, iron ore, stone,
+// sand and wood from nothing. An arable farm, a coal mine head and an iron ore mine
+// head over their shafts with their loadouts over a siding, a stone quarry, a sand pit
+// and a logging camp with its sawmill and log decks. Real-size metres, +Y up, ground
+// y = 0; the front (+z) faces the road or the track.
 //
-// No node: imports: this module is the three designs' own JS bundle entry (generate.ts),
+// No node: imports: this module is these designs' own JS bundle entry (generate.ts),
 // so it imports nothing from industry.ts, whose designs would come along.
 import { MeshBuilder, ngon, rect, type Ring } from './meshBuilder.ts';
 import { resolveParams, type CatalogFields, type ParamSpec, type ParamValues, type ProceduralDesign } from './design.ts';
@@ -45,6 +46,7 @@ const PALETTE = {
   coalSpoil: { color: '#4b4a48', roughness: 1 },
   ore: { color: '#8e3d24', roughness: 0.95 },
   oreSpoil: { color: '#9a5a3c', roughness: 1 },
+  wasteRock: { color: '#7d7166', roughness: 1 },
   hay: { color: '#d8c070', roughness: 1 },
   shingle: { color: '#6b5544', roughness: 0.95 },
   weathered: { color: '#8a7e6e', roughness: 0.95 },
@@ -56,8 +58,6 @@ const model = (): MeshBuilder => new MeshBuilder(PALETTE);
 
 const choice = (name: string, title: string, values: [string, string][], initial = values[0]![0]): ParamSpec => ({ name, title, default: initial, values: values.map(([value, t]) => ({ value, title: t })) });
 export const FARM_PARAMS: ParamSpec[] = [/* @__PURE__ */ choice('size', 'Site size', [['compact', 'Compact'], ['large', 'Large']])];
-/** The mine's ore; `iron` mines the commodity `iron-ore` (a parameter value is a plain word). */
-export const MINE_PARAMS: ParamSpec[] = [/* @__PURE__ */ choice('type', 'Mine type', [['coal', 'Coal'], ['iron', 'Iron ore']])];
 
 // ---------------------------------------------------------------- shared kit
 
@@ -400,28 +400,59 @@ function headframe(m: MeshBuilder, paint: Mat): void {
   });
 }
 
-function windingHouse(m: MeshBuilder): void {
-  const x = MINE.shaft.x, z = MINE.shaft.z - MINE.house, w = 10, d = 8, e = 8;
+/**
+ * The winding house the ropes run to. The coal mine's is brick with its boiler's
+ * chimney, smoking; the iron ore mine's is sheeted on a steel frame, its winder
+ * electric, fed from the substation beside it.
+ */
+function windingHouse(m: MeshBuilder, iron: boolean): void {
+  const x = MINE.shaft.x, z = MINE.shaft.z - MINE.house, w = 10, d = 8, e = 8, wall: Mat = iron ? 'sheet' : 'brick';
   m.scope('Winding house', () => {
     m.box('concrete', x, z, w + 0.4, d + 0.4, MINE_Y, MINE_Y + 0.8);
-    m.box('brick', x, z, w, d, MINE_Y + 0.8, e, 0, false);
-    gable(m, 'roof', 'brick', x, z, w, d, e, 2.6, 'z');
-    // tall round-headed engine windows on the long faces, the rope openings in the front gable
+    m.box(wall, x, z, w, d, MINE_Y + 0.8, e, 0, false);
+    gable(m, 'roof', wall, x, z, w, d, e, 2.6, 'z');
+    // tall engine windows on the long faces (a strip of them on the sheeted house), the rope openings in the front gable
     for (const s of [-1, 1]) for (const u of [-2.4, 0, 2.4]) {
-      windowOn(m, 'x', s as 1 | -1, x + s * w / 2, z + u, MINE_Y + 2, 1.3, 3.8, 'concrete');
+      if (iron) windowOn(m, 'x', s as 1 | -1, x + s * w / 2, z + u, MINE_Y + 4.6, 1.8, 1.6, 'frame');
+      else windowOn(m, 'x', s as 1 | -1, x + s * w / 2, z + u, MINE_Y + 2, 1.3, 3.8, 'concrete');
     }
     for (const dx of [-0.75, 0.75]) m.box('dark', x + dx, z + d / 2 + 0.03, 0.5, 0.06, MINE_Y + 8.6, MINE_Y + 9.6);
     m.box('timber', x - 2.5, z + d / 2 + 0.06, 1.6, 0.12, MINE_Y + 0.8, MINE_Y + 3.4);
-    // pilasters at the corners and a string course
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) m.box('brick', x + sx * (w / 2 - 0.15), z + sz * (d / 2 - 0.15), 0.6, 0.6, MINE_Y + 0.8, e);
-    m.box('concrete', x, z, w + 0.45, d + 0.45, e - 0.5, e - 0.3);
-    // the roof ventilator, and the boiler's chimney beside the house, smoking
+    if (iron) {
+      // the steel frame's columns proud of the sheeting, an eaves girt round it
+      for (const sx of [-1, 1]) for (const u of [-d / 2, -1.2, 1.2, d / 2]) m.box('red', x + sx * (w / 2 + 0.1), z + u * 0.97, 0.25, 0.3, MINE_Y + 0.8, e);
+      m.box('red', x, z, w + 0.5, d + 0.5, e - 0.45, e - 0.2);
+    } else {
+      // pilasters at the corners and a string course
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) m.box('brick', x + sx * (w / 2 - 0.15), z + sz * (d / 2 - 0.15), 0.6, 0.6, MINE_Y + 0.8, e);
+      m.box('concrete', x, z, w + 0.45, d + 0.45, e - 0.5, e - 0.3);
+    }
+    // the roof ventilator
     m.box('roof', x, z, 1.3, 2.4, e + 2.4, e + 3.1);
     const sx = x + w / 2 + 1.6, sz = z - d / 2 + 1.2;
-    m.box('concrete', sx, sz, 2.2, 2.2, MINE_Y, MINE_Y + 1);
-    m.loft('brick', rect(1.7, 1.7, sx, sz), MINE_Y + 1, rect(1.1, 1.1, sx, sz), 18, false);
-    m.box('dark', sx, sz, 1.35, 1.35, 18, 18.6);
-    m.emit('smoke', [sx, 18.6, sz], 0.5);
+    if (iron) m.scope('Substation', () => {
+      // the winder's transformer on its plinth, the incoming line on two poles with their insulators
+      m.box('concrete', sx + 0.4, sz + 1, 3, 3.2, MINE_Y, MINE_Y + 0.5);
+      m.box('green', sx + 0.4, sz + 1, 1.8, 2.2, MINE_Y + 0.5, MINE_Y + 2.8);
+      for (const dz of [-0.75, 0, 0.75]) m.box('dark', sx + 1.45, sz + 1 + dz, 0.3, 0.14, MINE_Y + 0.8, MINE_Y + 2.5);
+      for (const dx of [-0.5, 0, 0.5]) cyl(m, 'concrete', sx + 0.4 + dx, sz + 1, 0.1, MINE_Y + 2.8, MINE_Y + 3.6, 6);
+      for (const pz of [sz - 0.6, sz + 3.4]) {
+        cyl(m, 'timber', sx + 2.6, pz, 0.15, MINE_Y, MINE_Y + 9, 8);
+        m.box('timber', sx + 2.6, pz, 0.16, 2.2, MINE_Y + 8.2, MINE_Y + 8.4);
+        for (const dz of [-0.9, 0, 0.9]) cyl(m, 'concrete', sx + 2.6, pz + dz, 0.07, MINE_Y + 8.4, MINE_Y + 8.75, 6);
+      }
+      for (const dz of [-0.9, 0, 0.9]) m.rod('dark', [sx + 2.6, MINE_Y + 8.7, sz - 0.6 + dz], [sx + 2.6, MINE_Y + 8.7, sz + 3.4 + dz], 0.025, 4);
+      // a fence round the yard
+      for (const fx of [sx - 1.3, sx + 3.5]) m.box('galv', fx, sz + 1.2, 0.06, 5, MINE_Y, MINE_Y + 2);
+      m.box('galv', sx + 1.1, sz + 3.7, 4.8, 0.06, MINE_Y, MINE_Y + 2);
+    });
+    else {
+      // the boiler's chimney beside the house, smoking
+      m.box('concrete', sx, sz, 2.2, 2.2, MINE_Y, MINE_Y + 1);
+      m.loft('brick', rect(1.7, 1.7, sx, sz), MINE_Y + 1, rect(1.1, 1.1, sx, sz), 18, false);
+      m.box('dark', sx, sz, 1.35, 1.35, 18, 18.6);
+      m.emit('smoke', [sx, 18.6, sz], 0.5);
+    }
   });
 }
 
@@ -450,16 +481,21 @@ function bunker(m: MeshBuilder, mat: Mat, load: Mat): void {
     m.box('yellow', x, z + d / 2 + 0.1, w, 0.06, y1 + 1.25, y1 + 1.35);
     // the hopper wagon under the chutes, part loaded
     const ty = siding(m, -4, MINE.w / 2, MINE.track, MINE_Y);
-    const wx = x - 0.5, wl = 10;
-    m.box('frame', wx, z, wl, 2.4, ty + 0.9, ty + 1.3);
-    for (const s of [-1, 1]) {
-      m.box('frame', wx + s * (wl / 2 - 1.8), z, 2.4, 2.2, ty + 0.4, ty + 0.9);
-      for (const dx of [-0.9, 0.9]) for (const dz of [-0.75, 0.75]) wheelZ(m, wx + s * (wl / 2 - 1.8) + dx, ty + 0.46, z + dz, 0.46, 0.14);
-      m.loft(mat === 'rust' ? 'rust' : 'steel', rect(2, 2.6, wx + s * 2.3, z), ty + 1.3, rect(4.4, 3, wx + s * 2.3, z), ty + 3.4, false);
-    }
-    m.box(mat === 'rust' ? 'rust' : 'steel', wx, z, wl - 0.4, 3, ty + 3.4, ty + 3.9, 0, false);
-    m.loft(load, rect(wl - 0.6, 2.8, wx, z), ty + 3.3, rect(wl - 2.6, 1.4, wx, z), ty + 4.1);
+    hopperWagon(m, x - 0.5, z, ty, mat === 'rust' ? 'rust' : 'steel', load);
   });
+}
+
+/** A 10 m hopper wagon on the rail top `ty`, centred on (x, z), along x: its body and the heaped load. */
+function hopperWagon(m: MeshBuilder, wx: number, z: number, ty: number, body: Mat, load: Mat): void {
+  const wl = 10;
+  m.box('frame', wx, z, wl, 2.4, ty + 0.9, ty + 1.3);
+  for (const s of [-1, 1]) {
+    m.box('frame', wx + s * (wl / 2 - 1.8), z, 2.4, 2.2, ty + 0.4, ty + 0.9);
+    for (const dx of [-0.9, 0.9]) for (const dz of [-0.75, 0.75]) wheelZ(m, wx + s * (wl / 2 - 1.8) + dx, ty + 0.46, z + dz, 0.46, 0.14);
+    m.loft(body, rect(2, 2.6, wx + s * 2.3, z), ty + 1.3, rect(4.4, 3, wx + s * 2.3, z), ty + 3.4, false);
+  }
+  m.box(body, wx, z, wl - 0.4, 3, ty + 3.4, ty + 3.9, 0, false);
+  m.loft(load, rect(wl - 0.6, 2.8, wx, z), ty + 3.3, rect(wl - 2.6, 1.4, wx, z), ty + 4.1);
 }
 
 function conveyor(m: MeshBuilder): void {
@@ -567,20 +603,30 @@ function windingGear(m: MeshBuilder): void {
   });
 }
 
-/** The mine head at full detail: coal or iron ore. */
-export function mine(given?: ParamValues): MeshBuilder {
-  const p = resolveParams(MINE_PARAMS, given), m = model(), ore = p.type === 'iron';
-  const paint: Mat = ore ? 'red' : 'frame', bin: Mat = ore ? 'rust' : 'steel', load: Mat = ore ? 'ore' : 'coal', spoil: Mat = ore ? 'oreSpoil' : 'coalSpoil';
+/**
+ * A mine head at full detail: the coal mine's or the iron ore mine's. They share the
+ * headframe, its winder, the conveyor gallery and the bunker over the siding; the iron
+ * ore mine paints them red and rust, crushes its ore on the ground where the coal mine
+ * screens on legs, winds electrically from a sheeted house with its substation where
+ * the coal mine has a brick house and a boiler chimney, and stocks its ore in a long
+ * ridge beside a grey-brown waste rock heap where the coal mine has one dark spoil heap.
+ */
+function mineHead(iron: boolean): MeshBuilder {
+  const m = model();
+  const paint: Mat = iron ? 'red' : 'frame', bin: Mat = iron ? 'rust' : 'steel', load: Mat = iron ? 'ore' : 'coal';
   m.part('site', [0, 0, 0], () => {
     m.box('yard', 0, 0, MINE.w, MINE.d, 0, MINE_Y);
     headframe(m, paint);
-    windingHouse(m);
+    windingHouse(m, iron);
     bunker(m, bin, load);
     conveyor(m);
-    m.scope('Spoil heap', () => { heap(m, spoil, 13, -7.5, 7.4, 9, 1.25, ore ? 2 : 1); });
-    m.scope('Stockpile', () => { heap(m, load, -15, 12.6, 2.6, 2.6, 1.3, ore ? 4 : 3); });
-    if (ore) m.scope('Crusher house', () => {
-      // iron ore: the primary crusher between the shaft and the conveyor's foot, and the ore car tippler
+    if (iron) {
+      m.scope('Waste rock heap', () => { heap(m, 'wasteRock', 16, -9.5, 5.4, 6.5, 1.1, 2); });
+      m.scope('Ore stockpile', () => { heap(m, 'oreSpoil', 5, -11, 3.6, 4.2, 2, 5); });
+    } else m.scope('Spoil heap', () => { heap(m, 'coalSpoil', 13, -7.5, 7.4, 9, 1.25, 1); });
+    m.scope('Stockpile', () => { heap(m, load, -15, 12.6, 2.6, 2.6, 1.3, iron ? 4 : 3); });
+    if (iron) m.scope('Crusher house', () => {
+      // the primary crusher between the shaft and the conveyor's foot, and the ore car tippler
       const x = MINE.shaft.x + 6.5, z = MINE.shaft.z - 6;
       m.box('sheet', x, z, 6, 5, MINE_Y, 7, 0, false);
       gable(m, 'roof', 'sheet', x, z, 6, 5, 7, 1.4, 'z', 0.3, 0.12);
@@ -589,7 +635,7 @@ export function mine(given?: ParamValues): MeshBuilder {
       for (const dz of [-1, 1]) windowOn(m, 'x', -1, x - 3, z + dz, 4.2, 0.9, 1.2, 'sheet');
     });
     else m.scope('Screening house', () => {
-      // coal: the screens and picking belts in a sheeted house on legs beside the shaft
+      // the screens and picking belts in a sheeted house on legs beside the shaft
       const x = MINE.shaft.x + 6.5, z = MINE.shaft.z - 6;
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) m.box('frame', x + sx * 2.6, z + sz * 2, 0.4, 0.4, MINE_Y, 4);
       m.box('sheet', x, z, 6, 5, 4, 8.4, 0, false);
@@ -616,10 +662,14 @@ export function mine(given?: ParamValues): MeshBuilder {
   windingGear(m);
   return m;
 }
-/** The mine head's low detail: the tower and its back legs as plates, the sheaves, the house, bunker, gallery and heap. */
-export function mineLod(given?: ParamValues): MeshBuilder {
-  const p = resolveParams(MINE_PARAMS, given), m = model(), ore = p.type === 'iron';
-  const paint: Mat = ore ? 'red' : 'frame', bin: Mat = ore ? 'rust' : 'steel';
+/** The coal mine head at full detail. */
+export function mine(_given?: ParamValues): MeshBuilder { return mineHead(false); }
+/** The iron ore mine head at full detail. */
+export function ironMine(_given?: ParamValues): MeshBuilder { return mineHead(true); }
+
+/** A mine head's low detail: the tower and its back legs as plates, the sheaves, the house, bunker, gallery and heaps. */
+function mineHeadLod(iron: boolean): MeshBuilder {
+  const m = model(), paint: Mat = iron ? 'red' : 'frame', bin: Mat = iron ? 'rust' : 'steel';
   const { x, z } = MINE.shaft, a = 2.4, top = MINE.sheave - 1.6;
   lodBox(m, 'yard', 0, 0, MINE.w, MINE.d, 0, MINE_Y);
   for (const s of [-1, 1]) lodBox(m, paint, x + s * a, z, 0.5, 2 * a + 0.4, MINE_Y, top);
@@ -627,7 +677,7 @@ export function mineLod(given?: ParamValues): MeshBuilder {
   for (const s of [-1, 1]) m.slab(paint, [[x + s * (a + 0.3), top, z - a], [x + s * (a + 0.3), top, z - a + 0.8], [x + s * (a + 0.3), MINE_Y, z - MINE.legs + 0.8], [x + s * (a + 0.3), MINE_Y, z - MINE.legs]], [-s * 0.5, 0, 0]);
   m.sweep('frame', 'x', ngon(8, SHEAVE_R, 0, z - SHEAVE_R, MINE.sheave), x - 0.9, ngon(8, SHEAVE_R, 0, z - SHEAVE_R, MINE.sheave), x + 0.9);
   const hz = z - MINE.house;
-  lodBox(m, 'brick', x, hz, 10, 8, MINE_Y, 8);
+  lodBox(m, iron ? 'sheet' : 'brick', x, hz, 10, 8, MINE_Y, 8);
   const s: Ring = [[x - 5.4, 7.9], [x + 5.4, 7.9], [x, 10.6]];
   m.sweep('roof', 'z', s, hz - 4.4, s, hz + 4.4);
   const { x: bx, z: bz, y0, y1 } = MINE.bunker;
@@ -635,10 +685,17 @@ export function mineLod(given?: ParamValues): MeshBuilder {
   lodBox(m, 'frame', bx, bz, 7, 5, MINE_Y, y0 - 2);
   const xa = x + 3.6, ya = MINE_Y + 4.5, xb = bx - 3.6, yb = y1 + 0.8, cz = z + 1.5;
   m.slab('sheet', [[xa, ya, cz - 1.1], [xb, yb, cz - 1.1], [xb, yb + 2, cz - 1.1], [xa, ya + 2, cz - 1.1]], [0, 0, 2.2]);
-  lodBox(m, 'sheet', x + 6.5, z - 6, 6, 5, MINE_Y, 8.4);
-  lodLoft(m, ore ? 'oreSpoil' : 'coalSpoil', ngon(7, 8, 0, 13, -7.5), MINE_Y, ngon(7, 2, 0, 13, -7.5), MINE_Y + 9);
+  lodBox(m, 'sheet', x + 6.5, z - 6, 6, 5, MINE_Y, iron ? 7 : 8.4);
+  if (iron) {
+    lodLoft(m, 'wasteRock', ngon(7, 5.6, 0, 16, -9.5), MINE_Y, ngon(7, 1.4, 0, 16, -9.5), MINE_Y + 6.5);
+    lodLoft(m, 'oreSpoil', rect(14, 6.6, 5, -11), MINE_Y, rect(6, 1.4, 5, -11), MINE_Y + 4.2);
+  } else lodLoft(m, 'coalSpoil', ngon(7, 8, 0, 13, -7.5), MINE_Y, ngon(7, 2, 0, 13, -7.5), MINE_Y + 9);
   return m;
 }
+/** The coal mine head's low detail. */
+export function mineLod(_given?: ParamValues): MeshBuilder { return mineHeadLod(false); }
+/** The iron ore mine head's low detail. */
+export function ironMineLod(_given?: ParamValues): MeshBuilder { return mineHeadLod(true); }
 
 // ---------------------------------------------------------------- logging camp
 
@@ -1042,6 +1099,9 @@ const CATALOG: CatalogFields = { category: 'Industry', group: 'industry', defaul
  */
 export const PRIMARY_INDUSTRY: readonly ProceduralDesign[] = [
   { id: 'industry-farm', title: 'Arable farm', build: farm, buildLod: farmLod, lodTriangles: 500, params: FARM_PARAMS, references: 'industry-farm', catalog: CATALOG },
-  { id: 'industry-mine', title: 'Mine head', build: mine, buildLod: mineLod, lodTriangles: 500, params: MINE_PARAMS, references: 'industry-mine', catalog: CATALOG },
+  { id: 'industry-mine', title: 'Coal mine', build: mine, buildLod: mineLod, lodTriangles: 500, references: 'industry-mine', catalog: CATALOG },
+  { id: 'industry-iron-mine', title: 'Iron ore mine', build: ironMine, buildLod: ironMineLod, lodTriangles: 500, references: 'industry-iron-mine', catalog: CATALOG },
+  { id: 'industry-quarry', title: 'Stone quarry', build: quarry, buildLod: quarryLod, lodTriangles: 500, references: 'industry-quarry', catalog: CATALOG },
+  { id: 'industry-sand-pit', title: 'Sand pit', build: sandPit, buildLod: sandPitLod, lodTriangles: 500, references: 'industry-sand-pit', catalog: CATALOG },
   { id: 'industry-logging-camp', title: 'Logging camp', build: loggingCamp, buildLod: loggingCampLod, lodTriangles: 500, references: 'industry-logging-camp', catalog: CATALOG },
 ];

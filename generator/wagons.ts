@@ -3,9 +3,9 @@
 // (alongx sections, alongy plans, alongz elevations) and the native BMPs at
 // 0.1 m a pixel (assets/wagon-<name>/native/<key>/landmarks.json):
 //
-//   veh-nas-flat-wagon     n_nas, n_nas-full#1..#3   loads: wood, steel (tubes), goods (reels)
-//   veh-ua-open-wagon      n_ua-empty, n_ua#1..#3    loads: coal, iron ore and grain (the sand heap), wood
-//   veh-eas-open-wagon     n_eas, n_eas-drevo, -uhlo loads: coal, iron ore, grain, wood
+//   veh-nas-flat-wagon     n_nas, n_nas-full#1..#3   loads: wood, steel (tubes), goods (reels), lumber, cement
+//   veh-ua-open-wagon      n_ua-empty, n_ua#1..#3    loads: coal, iron ore, grain, stone, sand (the sand heap), wood
+//   veh-eas-open-wagon     n_eas, n_eas-drevo, -uhlo loads: coal, iron ore, grain, stone, sand, wood
 //   veh-raj-hopper-wagon   n_raj                     fixed
 //   veh-rah-tank-wagon     n_rah#1                   fixed
 //
@@ -16,7 +16,7 @@
 import { ngon, rect, type MaterialSpec, type MeshBuilder } from "./meshBuilder.ts";
 import type { Vec3 } from "./meshCore.ts";
 import type { CatalogFields, GameProperties, ParamSpec, ParamValues } from "./design.ts";
-import { BULK_LOOKS, LOAD_PALETTE, bulkLoads } from "./loadKit.ts";
+import { BULK_LOOKS, LOAD_PALETTE, bulkLoads, cementLoad, lumberLoad } from "./loadKit.ts";
 import { WAGON_PALETTE, Wagon } from "./wagonParts.ts";
 import { wagonLod, type WagonLodItem } from "./lodClassic.ts";
 import { strokeText } from "./strokeFont.ts";
@@ -243,7 +243,7 @@ export function uaOpenWagon(): MeshBuilder {
     m.scope("bogie 2", () => c.freightBogie(11.35, 1.8));
   });
   // the loads on the floor at 1.1 m (docs/models/loads.md): the native coal heap for coal, its
-  // sand heap for iron ore and grain, and the logs
+  // sand heap for iron ore, grain, stone and sand, and the logs
   const floor: Vec3 = [c.X(6.85), 1.1, 0];
   bulkLoads(m, floor, (mat) =>
     m.scope("heap", () => {
@@ -342,7 +342,7 @@ export function nasFlatWagon(): MeshBuilder {
     m.scope("bogie 1", () => c.freightBogie(2.65, 2.0));
     m.scope("bogie 2", () => c.freightBogie(18.35, 2.0));
   });
-  // the loads on the deck at 1.2 m (docs/models/loads.md): logs, steel tubes, cable reels as goods
+  // the loads on the deck at 1.2 m (docs/models/loads.md): logs, steel tubes, cable reels as goods, lumber, cement
   const floor: Vec3 = [c.X(10.45), 1.2, 0];
   loadPart(m, ["wood"], floor, () =>
     m.scope("logs", () => {
@@ -380,6 +380,10 @@ export function nasFlatWagon(): MeshBuilder {
         });
     }),
   );
+  // sawn lumber: four bundles along, two across, two high, on bearers between the stakes
+  loadPart(m, ["lumber"], floor, () => m.scope("lumber", () => lumberLoad(m, c.X(1.0), c.X(19.9), -1.26, 1.26, 1.2, { rows: 4, across: 2, high: 2, h: 0.8 })));
+  // cement: fourteen pallets of bags along, two across
+  loadPart(m, ["cement"], floor, () => m.scope("cement", () => cementLoad(m, c.X(0.9), c.X(20.0), -1.25, 1.25, 1.2, { rows: 14, across: 2 })));
   return m;
 }
 
@@ -687,6 +691,8 @@ export function nasFlatWagonLod(): MeshBuilder {
   items.push({ name: "tubes", load: { commodities: ["steel"], floor: 1.2 }, kind: "sweep", axis: "x", sec: [[-1.4, 1.2], [1.4, 1.2], [1.4, 2.1], [0.95, 2.87], [-0.95, 2.87], [-1.4, 2.1]], a: [2.8, 18.3], wall: "loadSteel", caps: "loadDark" });
   // the cable reels as one block from afar
   items.push({ name: "cable reels", load: { commodities: ["goods"], floor: 1.2 }, kind: "block", x: [2.0, 18.9], y: [1.2, 3.2], z: 1.0, side: "reel", end: "cable", top: "cable" });
+  items.push({ name: "lumber", load: { commodities: ["lumber"], floor: 1.2 }, kind: "block", x: [1.0, 19.9], y: [1.2, 3.0], z: 1.26, side: "loadLumber", end: "loadLumberEnd", top: "loadLumber" });
+  items.push({ name: "cement", load: { commodities: ["cement"], floor: 1.2 }, kind: "block", x: [0.9, 20.0], y: [1.2, 2.3], z: 1.25, side: "loadCement", end: "loadCement", top: "loadCement" });
   return wagonLod({ palette: { ...WAGON_PALETTE, ...NAS_PALETTE, ...LOAD_PALETTE }, centre: 10.45, bogies: [[2.65, 2.0], [18.35, 2.0]], items });
 }
 

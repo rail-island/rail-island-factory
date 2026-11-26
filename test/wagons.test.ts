@@ -56,9 +56,9 @@ describe("freight wagons transferred from vlakosimdb", () => {
     // no cargo parameter: the loads are hidden load parts (docs/models/loads.md)
     for (const w of WAGON_DESIGNS) expect(w.params).toBeUndefined();
     const loads = (id: string) => WAGON_DESIGNS.find((w) => w.id === id)!.build().loads()!.map((l) => l.commodities.join("+"));
-    expect(loads("proc-vehicle-nas-flat-wagon")).toEqual(["wood", "steel", "goods"]);
-    expect(loads("proc-vehicle-ua-open-wagon")).toEqual(["coal", "iron-ore", "grain", "wood"]);
-    expect(loads("proc-vehicle-eas-open-wagon")).toEqual(["coal", "iron-ore", "grain", "wood"]);
+    expect(loads("proc-vehicle-nas-flat-wagon")).toEqual(["wood", "steel", "goods", "lumber", "cement"]);
+    expect(loads("proc-vehicle-ua-open-wagon")).toEqual(["coal", "iron-ore", "grain", "stone", "sand", "wood"]);
+    expect(loads("proc-vehicle-eas-open-wagon")).toEqual(["coal", "iron-ore", "grain", "stone", "sand", "wood"]);
     // every load a transferred vlakosimdb vehicle shows is one of its design's
     for (const t of WAGON_TRANSFERS.filter((x) => x.load)) expect(WAGON_DESIGNS.find((w) => w.id === t.id)!.build().loads()!.some((l) => l.commodities.includes(t.load!))).toBe(true);
   });

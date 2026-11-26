@@ -52,9 +52,9 @@ describe("container, flat, sliding-wall and hopper wagons transferred from vlako
     // no cargo parameter: the loads are hidden load parts (docs/models/loads.md)
     for (const id of ["proc-vehicle-sqns-container-wagon", "proc-vehicle-pao-flat-wagon", "proc-vehicle-wap-hopper-wagon"]) expect(design(id).params, id).toBeUndefined();
     const loads = (id: string) => design(id).build().loads()!.map((l) => l.commodities.join("+"));
-    expect(loads("proc-vehicle-sqns-container-wagon")).toEqual(["goods+food"]);
-    expect(loads("proc-vehicle-pao-flat-wagon")).toEqual(["steel"]);
-    for (const id of ["proc-vehicle-faccs-hopper-wagon", "proc-vehicle-falls-hopper-wagon", "proc-vehicle-wap-hopper-wagon"]) expect(loads(id), id).toEqual(["coal", "iron-ore", "grain"]);
+    expect(loads("proc-vehicle-sqns-container-wagon")).toEqual(["goods"]);
+    expect(loads("proc-vehicle-pao-flat-wagon")).toEqual(["steel", "lumber", "cement"]);
+    for (const id of ["proc-vehicle-faccs-hopper-wagon", "proc-vehicle-falls-hopper-wagon", "proc-vehicle-wap-hopper-wagon"]) expect(loads(id), id).toEqual(["coal", "iron-ore", "grain", "stone", "sand"]);
     expect(design("proc-vehicle-hadgs-hopper-wagon").build().loads()).toBeNull();
     // the liveries name the vlakosimdb folder each one comes from
     expect(FACCS_LIVERIES.map((l) => l.source)).toEqual(["n_faccs", "viamont_faccs"]);
