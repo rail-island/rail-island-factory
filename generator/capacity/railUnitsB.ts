@@ -691,4 +691,8 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "6" }, seats: 282 },
     ],
   },
+  "proc-vehicle-obb-5047": {
+    seats: 62,
+    source: "Wikipedia (de): OBB 5047 62 seats, 2nd class only",
+  },
 };

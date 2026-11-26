@@ -204,7 +204,39 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 - **Budget**: power car 15,498 (blueIvory) / 12,267 (trafficRed), driving trailer 15,662 / 12,179,
   intermediate car 9,412 / 9,120; six cars 66,164; distant model 100 a car, 496 for six.
 
-<!-- design:obb-5047 -->
+### OBB 5047 (`proc-vehicle-obb-5047`)
+
+| | |
+|---|---|
+| Built on | series kit, a `single` railcar with its own cab face at both ends (`atObb5047.ts`: `OBB5047`), `railcarUnderside` for the body low under the cabs and between the bogies, high over them; no kit change |
+| Parameters | `livery`: `trafficRed` (default, OBB red with the dark grey windscreen band, light grey body), `valousek` (the 1987 delivery paint: ivory, ultramarine and blood orange, the old emblem) |
+| Figures | Jenbacher Werke 1987 - 1995, 2'B', 25.42 m over the buffers (24.18 m tip to tip, buffers 0.62 m out), 2.9 m wide, 3.83 m high; bogies 4.1 m inside the tips, 2.2 m wheelbase, 840 mm wheels; 419 kW, 120 km/h, 43.7 t, 62 seats |
+| Number | 5047 011-1 (traffic red), 5047 001-2 (Valousek) |
+
+- **Face** (head-on photographs at about 142 and 180 px/m from the buffers): flat and upright to the lamps,
+  leaning back 0.1 m over the two windscreens (2.33 - 3.18 m, 1.02 m each either side of a 0.2 m pillar),
+  rounding into the roof from 3.45 m, the crown 0.75 m behind the tip; bevelled corners (0.25 m low, 0.12 m
+  beside the windscreens). Headlight and red tail lamp each side at 1.66 m, the roof lamp between two small
+  lamps at 3.62 m, the two grilles under the logo, the buffers out of the bodywork (no beam) over the plough.
+- **Side** (projective fits over the body ends and the windows' 2.0 m pitch on the 5047 011 and 5047 001
+  photographs, residuals 0.2 - 0.3 px): leading cab: the small cab window 0.34 - 0.65 m and the cab door's
+  window 0.8 - 1.25 m behind the tip, the passenger door 1.43 - 2.46 m; windows (2.02 - 2.87 m, alu frames
+  with a transom) 3.37 - 4.28, a narrow one 5.1 - 5.71, six on the pitch from 6.27, a narrow one at 17.6, two
+  more to 21.51 m; the rear door 22.2 - 23.25 m, next to the rear cab (no cab window there on this side).
+- **Paint**: traffic red - the red ends back to an edge slanting from 5.45 m at the foot to 3.55 m at the roof,
+  carried up the roof's edges, the dark grey band (1.95 - 3.27 m) from the face along the cab side to the door,
+  white doors. Valousek - ivory, a blood-orange stripe at 1.27 - 1.43 m, the ultramarine window band
+  (1.93 - 3.05 m) dropping to the stripe behind the orange door zone at each end, a blue roof edge; on the
+  face blue round the windscreens over the orange number band, the emblem on the ivory, the blue beam and
+  orange plough.
+- **Roof and gear**: the exhaust housing on the crown near the rear end (the engine is under the floor);
+  engine, cooler and tanks under the middle.
+- **Distant model**: the red (orange) end zones as side fields, the face's own bands.
+- **References**: `assets/obb-5047/` (eight Commons photographs, SOURCES.md).
+- **Deviations**: both sides carry the photographed side's layout (the cars differ side to side); the
+  delivery livery key is `valousek` (the photographs show ivory with blue and orange, not an all-orange
+  "blood orange" paint); width and height are estimates (no drawing found); the face's "OBB" is without
+  the umlaut; the Valousek face's blue band runs to the face's edges (an ivory rim on the prototype). Triangles: 15,764 (traffic red), 15,541 (Valousek); distant model 94 / 100.
 
 ### OBB 5022 Desiro (`proc-vehicle-obb-5022`)
 

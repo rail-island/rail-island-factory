@@ -45,7 +45,7 @@ const COVERED = new Set([
 const LENGTHS: Record<string, number> = {
   "proc-vehicle-db-103": 20.2, "proc-vehicle-db-101": 19.1, "proc-vehicle-db-120": 19.2, "proc-vehicle-drg-e18": 16.92,
   "proc-vehicle-drg-e94": 18.6, "proc-vehicle-db-v200": 18.53, "proc-vehicle-db-218": 16.4, "proc-vehicle-db-ic-coach": 26.4,
-  "proc-vehicle-db-vt98": 13.95, "proc-vehicle-db-650": 25.5,
+  "proc-vehicle-db-vt98": 13.95, "proc-vehicle-db-650": 25.5, "proc-vehicle-obb-5047": 25.42,
   "proc-vehicle-sncf-cc6500": 20.19, "proc-vehicle-sncf-cc40100": 22.03, "proc-vehicle-sncf-bb22200": 17.48, "proc-vehicle-sncf-cc7100": 18.92,
   "proc-vehicle-sncf-bb9200": 16.2, "proc-vehicle-sncf-bb27000": 19.52, "proc-vehicle-sncf-bb67400": 17.09, "proc-vehicle-sncf-cc72000": 20.19,
   "proc-vehicle-sncf-corail-coach": 26.4, "proc-vehicle-sncf-grand-confort": 25.5, "proc-vehicle-ciwl-car": 23.45, "proc-vehicle-sncf-x3800": 21.85, "proc-vehicle-sncf-x73500": 28.9,
