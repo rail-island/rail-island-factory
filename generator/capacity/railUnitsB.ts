@@ -231,6 +231,15 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "2" }, seats: 250 },
     ],
   },
+  "proc-vehicle-obb-4020": {
+    seats: 195,
+    source: "de.wikipedia: 56 / 64 / 64 seats and 416 standing places in a three-car unit (600 in all)",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 205 },
+      { params: { unit: "train" }, seats: 600 },
+      { params: { unit: "train", cars: "2" }, seats: 395 },
+    ],
+  },
   "proc-vehicle-renfe-446": {
     seats: 196,
     source: "Cercanias 446: about 230 seats + 380 standing in 3 cars",

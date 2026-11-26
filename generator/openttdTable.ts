@@ -1129,6 +1129,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
     presets: presets({ unit: "middleCar" }, { unit: "restaurant" }, { livery: "cd" }),
     formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "restaurant" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" })],
   }),
+  "proc-vehicle-obb-4020": series(56, 64, ELRL, { cars: 3, liveries: ["trafficRed"] }), // 56 / 64 / 64 seats, 184 in three cars (de.wikipedia)
 };
 
 // --- the world aircraft -------------------------------------------------------------

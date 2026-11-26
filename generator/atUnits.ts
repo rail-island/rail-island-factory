@@ -11,7 +11,7 @@ import { OBB_4024_DESIGN } from "./atObb4024.ts";
 
 import { OBB4744_DESIGN } from "./atObb4744.ts";
 
-// import:obb-4020
+import { OBB4020_DESIGN } from "./atObb4020.ts";
 
 // import:obb-4010
 
@@ -34,7 +34,7 @@ export const AT_UNITS: ProceduralDesign[] = [
 
   OBB4744_DESIGN,
 
-  // design:obb-4020
+  OBB4020_DESIGN,
 
   // design:obb-4010
 
