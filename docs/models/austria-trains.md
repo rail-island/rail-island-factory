@@ -406,7 +406,40 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
   than in its own housing on the roof edge; the pantograph positions are estimated from oblique photos.
 - **Budget**: 14,924 triangles (traffic red), 14,592 (blood orange); distant model 100.
 
-<!-- design:obb-1142 -->
+### OBB 1142 (`proc-vehicle-obb-1142`)
+
+| | |
+|---|---|
+| Built on | the box locomotive kit (`boxLocoKit.ts`) with its own profile, `generator/atObb1142.ts`; no kit change |
+| Parameters | `livery` trafficRed (the 1987 scheme with the Pflatsch, default) / bloodOrange (the delivery paint) |
+| Figures | 16.22 m over the buffers, 2.98 m wide, eave 3.30 m, cab roofs 3.75 m, the raised machine-room roof 4.0 m; Bo'Bo', bogies 7.7 m apart, 2.95 m wheelbase, 1.25 m wheels; 83.5 t, 4,000 kW, 150 km/h (de.wikipedia "OBB 1042", the 1142 figures) |
+
+- **Side** (projective fit over the eleven machine-room openings of 1142 668 at Graz, pitch 0.914 m,
+  anchored on the buffer faces at +-8.11 m): at each end the cab side window (5.85 - 6.38 m from the
+  middle, with the red mirror box) and the cab door (5.02 - 5.75 m, its window, the handrails either
+  side); between them eleven openings 0.76 m wide, nine vertical-slat grilles (2.64 - 3.16 m) and two
+  windows (2.58 - 3.16 m), the 5th and 7th, one with a bar. Heights from the near-orthographic Passau
+  photograph (324 px/m): light grey band 1.45 - 1.84 m, window heads 0.14 m under the 3.30 m eave.
+- **Front**: nearly upright, 7.40 m from the middle at the band, leaning back to 7.16 m at the eave
+  and rounding into the cab roof; a 5 cm bow in plan and 0.32 m round corners (head-on StB photograph).
+  Two windscreens 1.06 m wide side by side (2.48 - 3.25 m), the top headlight's round housing on the
+  roof edge, the headlights in the band (1.71 m, +-1.08 m), the tail lamps above them in the red
+  (2.19 m), a grab rail under the windscreens, rectangular buffers, the plough.
+- **Roof**: the cab roofs round over from the eave; between them the machine room's raised roof
+  (|x| < 5.45 m) with its side grilles and four fan hatches; the single-arm pantographs at +-3.5 m
+  on it (the rear raised), the busbar and the main breaker between them.
+- **Paint**: traffic red, the light grey band, umbra grey below, grey roof; the grey cab cap round
+  the windscreens down to 2.41 m, swept back onto the side ahead of the cab window; the white Pflatsch
+  on the front and behind one door on each side (diagonally symmetric) with the white running number
+  1142 668-1, red on the front's band. Blood orange: ivory lines at 1.45 and 2.36 m the whole way round,
+  dark grey below, ivory Pflatsch and number 1142 679-8.
+- **References**: `assets/obb-1142/` (eight Commons photographs: 1142 668, 621, 602, 694, 679, 578,
+  579 and the 1042.517; SOURCES.md).
+- **Deviations**: the bogie arches in the skirt are not cut; the width, bogie centres, wheelbase and
+  wheel size are photo estimates (no published drawing found); the side of 1142 621 (one window at the
+  cab, no separate cab window) is a variant not drawn.
+- **Triangles**: 14,524 (blood orange 14,532); the distant model a coarser profile with only the raised
+  roof, within 100.
 
 <!-- design:obb-1110 -->
 
