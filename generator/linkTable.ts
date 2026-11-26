@@ -175,6 +175,7 @@ export const MODEL_LINKS: Readonly<Record<string, readonly ModelLink[]>> = {
   "proc-vehicle-br-mk1-coach": [{ title: "Wikipedia: British Rail Mark 1", url: "https://en.wikipedia.org/wiki/British_Rail_Mark_1" }, { title: "Wikimedia Commons: BR Mk1 coach 1st class interior.jpg", url: "https://commons.wikimedia.org/wiki/File:BR_Mk1_coach_1st_class_interior.jpg" }],
   "proc-vehicle-ciwl-car": [{ title: "Wikipedia: Compagnie Internationale des Wagons-Lits", url: "https://en.wikipedia.org/wiki/Compagnie_Internationale_des_Wagons-Lits" }, { title: "Wikimedia Commons: CIWL-Logo-bleu.jpg", url: "https://commons.wikimedia.org/wiki/File:CIWL-Logo-bleu.jpg" }],
   "proc-vehicle-cr-cr200j": [{ title: "Wikipedia: China Railway CR200J", url: "https://en.wikipedia.org/wiki/China_Railway_CR200J" }],
+  "proc-vehicle-cr-cr300af": [{ title: "Wikipedia: China Railway CR300AF", url: "https://en.wikipedia.org/wiki/China_Railway_CR300AF" }],
   "proc-vehicle-cr-cr400af": [{ title: "Wikipedia: China Railway CR400AF", url: "https://en.wikipedia.org/wiki/China_Railway_CR400AF" }],
   "proc-vehicle-cr-cr400bf": [{ title: "Wikipedia: China Railway CR400BF", url: "https://en.wikipedia.org/wiki/China_Railway_CR400BF" }],
   "proc-vehicle-cr-crh2a": [{ title: "Wikipedia: China Railway CRH2", url: "https://en.wikipedia.org/wiki/China_Railway_CRH2" }],
