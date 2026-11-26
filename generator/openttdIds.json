@@ -521,6 +521,7 @@
     "proc-vehicle-obb-4744": 836,
     "proc-vehicle-obb-5022": 841,
     "proc-vehicle-obb-5047": 843,
+    "proc-vehicle-obb-nightjet": 847,
     "proc-vehicle-obb-railjet": 839,
     "proc-vehicle-ocean-liner": 4,
     "proc-vehicle-odakyu-gse": 151,
@@ -3350,6 +3351,26 @@
       },
       "proc-vehicle-obb-5047?livery=valousek": {
         "id": 10496,
+        "size": 8
+      },
+      "proc-vehicle-obb-nightjet?": {
+        "id": 10590,
+        "size": 8
+      },
+      "proc-vehicle-obb-nightjet?formation=7 cars": {
+        "id": 10622,
+        "size": 32
+      },
+      "proc-vehicle-obb-nightjet?unit=couchette": {
+        "id": 10606,
+        "size": 8
+      },
+      "proc-vehicle-obb-nightjet?unit=middleCar": {
+        "id": 10598,
+        "size": 8
+      },
+      "proc-vehicle-obb-nightjet?unit=sleeper": {
+        "id": 10614,
         "size": 8
       },
       "proc-vehicle-obb-railjet?": {

@@ -1142,6 +1142,12 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-obb-5047": series(62, 62, RAIL, { single: true, liveries: ["valousek"] }),
   "proc-vehicle-westbahn-kiss": series(70, 90, ELRL, { cars: 6 }),
   "proc-vehicle-noevog-himmelstreppe": series(36, 44, ELRL, { cars: 3 }), // 116 seats in three cars (de.wikipedia; 760 mm gauge drawn on the game's one track)
+  // the new Nightjet: the control car leading the multi-purpose car, three couchette and two sleeping cars (the locomotive couples at the rear)
+  "proc-vehicle-obb-nightjet": pax(70, RAIL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 30 }), at({ unit: "couchette" }, { capacity: 40 }), at({ unit: "sleeper" }, { capacity: 20 })],
+    presets: presets({ unit: "middleCar" }, { unit: "couchette" }, { unit: "sleeper" }),
+    formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "sleeper" }, { unit: "sleeper" })],
+  }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

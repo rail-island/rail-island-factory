@@ -26,7 +26,7 @@ import { HIMMELSTREPPE_DESIGN } from "./atHimmelstreppe.ts";
 
 // import:obb-cityshuttle-dd
 
-// import:obb-nightjet
+import { NIGHTJET_DESIGN } from "./atNightjet.ts";
 
 export const AT_UNITS: ProceduralDesign[] = [
   RAILJET_DESIGN,
@@ -49,5 +49,5 @@ export const AT_UNITS: ProceduralDesign[] = [
 
   // design:obb-cityshuttle-dd
 
-  // design:obb-nightjet
+  NIGHTJET_DESIGN,
 ];
