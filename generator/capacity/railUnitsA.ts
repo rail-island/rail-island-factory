@@ -387,6 +387,20 @@ export const RAIL_UNITS_A: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "8" }, seats: 1478 },
     ],
   },
+  "proc-vehicle-cr-crh1a": {
+    seats: 72,
+    source: "zh.wikipedia: first CRH1A sets (1001-1012) ZY first-class end cars 72 seats, ZE second-class cars 101",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 101 },
+      { params: { unit: "train" }, seats: 346 },
+      { params: { unit: "train", cars: "2" }, seats: 144 },
+      { params: { unit: "train", cars: "3" }, seats: 245 },
+      { params: { unit: "train", cars: "5" }, seats: 447 },
+      { params: { unit: "train", cars: "6" }, seats: 548 },
+      { params: { unit: "train", cars: "7" }, seats: 649 },
+      { params: { unit: "train", cars: "8" }, seats: 750 },
+    ],
+  },
   "proc-vehicle-cr-cr450bf": {
     seats: 32,
     source: "Wikipedia: 8-car CR450BF prototype 552 seats (end cars business/premium first ~32, intermediate cars ~81); seats only",
