@@ -445,7 +445,42 @@ Every design is filed under Austria (`generator/factTable.ts`). Each starts as a
 
 <!-- design:obb-1189 -->
 
-<!-- design:obb-2016 -->
+### OBB 2016 Hercules (`proc-vehicle-obb-2016`)
+
+| | |
+|---|---|
+| Built on | the box locomotive kit (`boxLocoKit.ts`) with its own profile, `generator/atObb2016.ts`; no kit change |
+| Parameters | none: OBB traffic red with the dark grey skirt (no second OBB scheme found on the photographs) |
+| Figures | 19.275 m over the buffers, 2.87 m wide, 4.27 m high (photo), Bo'Bo', bogie centres 10.362 m, 2.7 m wheelbase, 1.1 m wheels; 80 t, 2,000 kW, 140 km/h (de.wikipedia "OBB 2016") |
+
+- **Side** (the near-square side of ER 20-006, a 1-D projective fit over both buffers and both bogie
+  centres, about 46 px/m): the cab side window 7.56 - 8.36 m from the middle in a black field whose
+  front edge rakes back along the cab corner, the mirror housing at its front; the cab door 6.80 -
+  7.52 m between two handrails; the front module's crease round the corner at the window's foot
+  (2.55 m) and its seam down ahead of the door. Side wall upright to 3.31 m, a narrow chamfer to
+  3.61 m, then the broad sloping roof to 4.27 m; the skirt reaches down to 0.63 m over the wheels' tops.
+- **The two sides differ** (2016 061, 100, 038, RTS 2016 905, ER 20-006): the left side (-z) has two
+  tall grilles behind the front cab door (3.57 - 6.53 m) and a pair ahead of the rear one (-5.32 to
+  -2.42 m); the right side one grille in two halves behind the front cab door (5.09 - 6.53 m) and plain
+  panels. Panel joints at 2.09, 0.55 and -0.97 m. Grilles painted red, vertical slats.
+- **Front** (head-on of ER 20-014 at about 145 px/m, side profile): upright over the lamps (9.28 m from
+  the middle), leaning back about 28 degrees over the windscreen (2.55 - 3.45 m, one pane 2.04 m wide)
+  and rounding into the roof 2.1 m behind the lamps. The face flat across, its corners rounded 0.33 m
+  below the windscreen, 0.41 m wide and 0.6 m deep round it. The top headlight's box under the
+  windscreen between the two halves of the grab rail, the tall handrails on the corners, the lamp boxes
+  low on the face (1.40 - 1.76 m, headlight outboard of the red tail lamp), the red face's lip at 1.30 m
+  over the recessed grey buffer beam, rectangular buffers, the plough.
+- **Roof**: five vents in each slope over the rear half, the engine room's grey hatch on the crown
+  between them with two low exhaust outlets (smoke emitters).
+- **Paint**: traffic red, dark grey below 1.30 m round the whole body; the white OBB mark (the open O
+  with its stroke) on the face over the number and big on each side (left side mid-body, right side
+  toward the rear cab); the running number 2016 038-8 on the face and the skirt.
+- **References**: `assets/obb-2016/` (three OBB photographs: 2016 061, 100, 038; four ER20 sisters for
+  the body only; SOURCES.md).
+- **Deviations**: the roof over the front half is drawn plain (no photograph from above); the exhaust
+  outlets' exact shape is a guess; the bogie arches are not cut in the skirt; the grey buffer beam is
+  the shell's set-back lower face rather than a separate headstock.
+- **Triangles**: 14,354; the distant model 100.
 
 <!-- design:obb-2043 -->
 
