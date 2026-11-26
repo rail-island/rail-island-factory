@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | `proc-vehicle-us-caboose` | Cupola caboose | `livery`: `santaFe` (red), `unionPacific` (yellow) | 11.10 m | 6,700 / 6,800 |
 | `proc-vehicle-us-boxcar` | 50 ft boxcar | `livery`: `boxcarRed`, `railbox` | 16.87 m | 9,300 / 8,200 |
-| `proc-vehicle-us-well-car` | Double-stack well car | - (its two containers a hidden `goods`/`food` load part, [loads.md](loads.md)) | 19.35 m | 8,700 at rest / 13,300 loaded |
+| `proc-vehicle-us-well-car` | Double-stack well car | - (its two containers a hidden `goods` load part, [loads.md](loads.md)) | 19.35 m | 8,700 at rest / 13,300 loaded |
 | `proc-vehicle-sf-cable-car` | San Francisco cable car | `livery`: `powell` (Powell Street car), `california` (California Street car) | 8.38 m / 9.22 m | 5,500 / 6,600 |
 
 The freight cars are wagons (`WAGON_CATALOG`) on two freight trucks with knuckle couplers; the

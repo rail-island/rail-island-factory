@@ -56,16 +56,19 @@ coupling), `logX`/`logZ` (logs with light cut ends), `tube` (a hollow tube),
 - **Nas**: deck with plank gaps every 0.4 m (native `y_dec`), 0.5 m drop sides,
   solebar and fishbelly, eight stakes per side and end walls with corner posts.
   Its loads on the deck at 1.2 m: a five-layer pile of 25 logs (wood), five
-  0.9 m steel tubes (steel), six 2 m cable reels standing across the wagon (goods).
+  0.9 m steel tubes (steel), six 2 m cable reels standing across the wagon (goods),
+  and two looks from the load kit ([loads.md](loads.md)): bundles of sawn lumber
+  four along, two across and two high on bearers (lumber), 28 pallets of cement
+  bags (cement).
 - **Ua**: 0.2 m walls, lighter rim and painted stanchions, two doors per side
   with seams and J-shaped locking bars, end posts, a red handbrake box and
   underframe equipment. Its loads on the floor at 1.1 m: the coal heap and the
-  sand heap are height fields of the XML `load` hull above the rim (coal; iron ore
-  and grain), the logs two layers under four steel straps (wood).
+  sand heap are height fields of the XML `load` hull above the rim (coal; iron ore,
+  grain, stone and sand), the logs two layers under four steel straps (wood).
 - **Eas**: the 13 XML side stanchions, grey two-leaf door frames, end posts and
   rails, a black data panel, label and running number at diagonally opposite
   ends. Its loads on the floor at 1.1 m: fifteen bundles of five logs laid across
-  (wood), a height field with four mounds (coal, iron ore, grain).
+  (wood), a height field with four mounds (coal, iron ore, grain, stone, sand).
 - **Raj**: the red sloped frame (a frustum between the XML alongx and alongz
   trapezoids), four 10-sided hoppers on the XML rotation profile with grey lids,
   two platforms with gratings, ladders and handrails, and the brake platform.

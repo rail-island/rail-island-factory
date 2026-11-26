@@ -172,8 +172,9 @@ axles, so the rig's Ackermann angles turn the second axle less.
 
 `box`, `curtain`, `reefer` (unit on the front wall), `container`, `tank` (round or
 elliptical, bands, walkway, manholes, saddles), `tipper` (bin, headboard, ribs, ram; with
-`load: gravel` a coal, an iron ore and a grain heap, each a hidden load part on the bin's floor,
-[loads.md](loads.md)), `dump` (a mining body with its canopy), `flatbed`, `dropside`, `canvas` (dropside and
+`load: gravel` a coal, an iron ore, a grain, a stone and a sand heap, each a hidden load part on the bin's floor,
+[loads.md](loads.md)), `dump` (a mining body with its canopy), `flatbed` (with no `load`, bundles of
+lumber and pallets of cement, each a hidden load part on the deck), `dropside`, `canvas` (dropside and
 tilt), `logs` (the logs a hidden `wood` load part on the bunks), `mixer` (the tilted drum, its stripe, water tank, hopper and chute), `refuse`
 (rounded body, rear loader), `crane` (loader crane behind the cab), `boom` (a mobile
 crane's superstructure; the boom is a part), `carCarrier` (two decks; with `load: cars` the

@@ -47,6 +47,19 @@ const PALETTE = {
   ore: { color: '#8e3d24', roughness: 0.95 },
   oreSpoil: { color: '#9a5a3c', roughness: 1 },
   wasteRock: { color: '#7d7166', roughness: 1 },
+  oreYard: { color: '#a3907f', roughness: 0.95 },
+  quarryYard: { color: '#aaa69c', roughness: 1 },
+  rockFace: { color: '#97948c', roughness: 0.95 },
+  rockTop: { color: '#878071', roughness: 1 },
+  rockWarm: { color: '#a69a88', roughness: 0.95 },
+  rock: { color: '#a8a59d', roughness: 0.95 },
+  stone: { color: '#c3c0b8', roughness: 1 },
+  stoneDark: { color: '#7f7d79', roughness: 1 },
+  sandYard: { color: '#c9b68e', roughness: 1 },
+  sandFace: { color: '#ddc189', roughness: 1 },
+  sand: { color: '#ead3a0', roughness: 1 },
+  water: { color: '#5b8a93', metallic: 0.2, roughness: 0.25 },
+  plantBlue: { color: '#3f6f9c', metallic: 0.35 },
   hay: { color: '#d8c070', roughness: 1 },
   shingle: { color: '#6b5544', roughness: 0.95 },
   weathered: { color: '#8a7e6e', roughness: 0.95 },
@@ -615,7 +628,7 @@ function mineHead(iron: boolean): MeshBuilder {
   const m = model();
   const paint: Mat = iron ? 'red' : 'frame', bin: Mat = iron ? 'rust' : 'steel', load: Mat = iron ? 'ore' : 'coal';
   m.part('site', [0, 0, 0], () => {
-    m.box('yard', 0, 0, MINE.w, MINE.d, 0, MINE_Y);
+    m.box(iron ? 'oreYard' : 'yard', 0, 0, MINE.w, MINE.d, 0, MINE_Y);
     headframe(m, paint);
     windingHouse(m, iron);
     bunker(m, bin, load);
@@ -671,7 +684,7 @@ export function ironMine(_given?: ParamValues): MeshBuilder { return mineHead(tr
 function mineHeadLod(iron: boolean): MeshBuilder {
   const m = model(), paint: Mat = iron ? 'red' : 'frame', bin: Mat = iron ? 'rust' : 'steel';
   const { x, z } = MINE.shaft, a = 2.4, top = MINE.sheave - 1.6;
-  lodBox(m, 'yard', 0, 0, MINE.w, MINE.d, 0, MINE_Y);
+  lodBox(m, iron ? 'oreYard' : 'yard', 0, 0, MINE.w, MINE.d, 0, MINE_Y);
   for (const s of [-1, 1]) lodBox(m, paint, x + s * a, z, 0.5, 2 * a + 0.4, MINE_Y, top);
   lodBox(m, paint, x, z - 0.6, 2 * a + 1.6, 2 * a + 2.8, top, top + 0.4);
   for (const s of [-1, 1]) m.slab(paint, [[x + s * (a + 0.3), top, z - a], [x + s * (a + 0.3), top, z - a + 0.8], [x + s * (a + 0.3), MINE_Y, z - MINE.legs + 0.8], [x + s * (a + 0.3), MINE_Y, z - MINE.legs]], [-s * 0.5, 0, 0]);
@@ -687,8 +700,8 @@ function mineHeadLod(iron: boolean): MeshBuilder {
   m.slab('sheet', [[xa, ya, cz - 1.1], [xb, yb, cz - 1.1], [xb, yb + 2, cz - 1.1], [xa, ya + 2, cz - 1.1]], [0, 0, 2.2]);
   lodBox(m, 'sheet', x + 6.5, z - 6, 6, 5, MINE_Y, iron ? 7 : 8.4);
   if (iron) {
-    lodLoft(m, 'wasteRock', ngon(7, 5.6, 0, 16, -9.5), MINE_Y, ngon(7, 1.4, 0, 16, -9.5), MINE_Y + 6.5);
-    lodLoft(m, 'oreSpoil', rect(14, 6.6, 5, -11), MINE_Y, rect(6, 1.4, 5, -11), MINE_Y + 4.2);
+    lodLoft(m, 'wasteRock', ngon(7, 5.3, 0, 16, -9.5), MINE_Y, ngon(7, 1.4, 0, 16, -9.5), MINE_Y + 6.5);
+    lodLoft(m, 'oreSpoil', rect(11, 6.6, 5, -11), MINE_Y, rect(5, 1.4, 5, -11), MINE_Y + 4.2);
   } else lodLoft(m, 'coalSpoil', ngon(7, 8, 0, 13, -7.5), MINE_Y, ngon(7, 2, 0, 13, -7.5), MINE_Y + 9);
   return m;
 }
@@ -696,6 +709,439 @@ function mineHeadLod(iron: boolean): MeshBuilder {
 export function mineLod(_given?: ParamValues): MeshBuilder { return mineHeadLod(false); }
 /** The iron ore mine head's low detail. */
 export function ironMineLod(_given?: ParamValues): MeshBuilder { return mineHeadLod(true); }
+
+// ---------------------------------------------------------------- quarry and sand pit kit
+
+/** A ring of (x, z) points wound as rect() and ngon() wind them, whatever order they come in. */
+function wound(pts: [number, number][]): Ring {
+  let a = 0;
+  for (let i = 0; i < pts.length; i++) { const [x0, z0] = pts[i]!, [x1, z1] = pts[(i + 1) % pts.length]!; a += x0 * z1 - x1 * z0; }
+  return a > 0 ? [...pts].reverse() : pts;
+}
+/** A ring moved `d` metres toward its centroid at every corner: a terrace's batter. */
+function inset(ring: Ring, d: number): Ring {
+  const cx = ring.reduce((s, p) => s + p[0], 0) / ring.length, cz = ring.reduce((s, p) => s + p[1], 0) / ring.length;
+  return ring.map(([x, z]) => { const l = Math.hypot(cx - x, cz - z) || 1; return [x + (cx - x) * d / l, z + (cz - z) * d / l]; });
+}
+/**
+ * A terrace of the ground: the walls from `lower` at y0 to `upper` at y1 in `face`,
+ * and its top in `top`. Rings of equal length, convex, the upper one inside the lower.
+ */
+function terrace(m: MeshBuilder, face: Mat, top: Mat | null, lower: Ring, y0: number, upper: Ring, y1: number): void {
+  m.loft(face, lower, y0, upper, y1, false);
+  if (top) m.cap(top, upper, y1);
+}
+/** A loose boulder: a six-sided lump narrowing to a flat top, about (x, z) on the ground y. */
+function boulder(m: MeshBuilder, mat: Mat, x: number, z: number, y: number, r: number, seed: number): void {
+  const ring = (k: number, rot: number): Ring => Array.from({ length: 6 }, (_, i) => {
+    const a = (i / 6) * Math.PI * 2 + rot, j = k * (1 + 0.1 * wob(i + seed * 5, seed));
+    return [x + Math.cos(a) * r * j, z - Math.sin(a) * r * j];
+  });
+  m.loft(mat, ring(1, seed), y, ring(0.55, seed + 0.3), y + r * (0.9 + 0.2 * wob(seed, 2)));
+}
+/**
+ * An open belt conveyor from `a` to `b` (the belt's top at each end), `w` wide: two
+ * plate stringers, the dark belt between them, and a trestle down to the ground `y0`
+ * at each fraction of `legs`.
+ */
+function belt(m: MeshBuilder, a: V3, b: V3, w: number, y0: number, legs: number[], frame: Mat = 'frame'): void {
+  const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], l = Math.hypot(dx, dz), px = -dz / l, pz = dx / l;
+  const at = (p: V3, s: number, h: number): V3 => [p[0] + s * px * w / 2, p[1] + h, p[2] + s * pz * w / 2];
+  for (const s of [-1, 1]) m.slab(frame, [at(a, s, -0.1), at(b, s, -0.1), at(b, s, -0.75), at(a, s, -0.75)], [-s * px * 0.1, 0, -s * pz * 0.1]);
+  m.slab('dark', [at(a, -0.84, 0), at(b, -0.84, 0), at(b, 0.84, 0), at(a, 0.84, 0)], [0, -0.14, 0]);
+  // the head drum's hood over the top end, a little past it
+  const len = Math.hypot(dx, dy, dz), u: V3 = [dx / len, dy / len, dz / len], e: V3 = [b[0] + u[0] * 0.08, b[1] + u[1] * 0.08, b[2] + u[2] * 0.08];
+  m.slab(frame, [at(e, -1, -0.05), at(e, 1, -0.05), at(e, 1, 0.55), at(e, -1, 0.55)], [u[0] * -0.95, u[1] * -0.95, u[2] * -0.95]);
+  for (const t of legs) {
+    const c: V3 = [a[0] + dx * t, a[1] + dy * t - 0.75, a[2] + dz * t];
+    if (c[1] - y0 < 0.6) continue;
+    for (const s of [-1, 1]) m.rod(frame, [c[0] + s * px * w / 2, y0, c[2] + s * pz * w / 2], [c[0] + s * px * w / 2, c[1], c[2] + s * pz * w / 2], 0.09, 4);
+    m.rod(frame, [c[0] - px * w / 2, c[1] - 0.15, c[2] - pz * w / 2], [c[0] + px * w / 2, c[1] - 0.15, c[2] + pz * w / 2], 0.07, 4);
+    m.rod(frame, [c[0] - px * w / 2, y0 + 0.3, c[2] - pz * w / 2], [c[0] + px * w / 2, c[1] - 0.3, c[2] + pz * w / 2], 0.05, 4);
+  }
+}
+/** A hydraulic excavator on the ground y at (x, z), its arm reaching toward -z `reach` metres to its bucket. */
+function excavator(m: MeshBuilder, x: number, z: number, y: number, reach: number): void {
+  m.scope('Excavator', () => {
+    for (const s of [-1, 1]) m.box('tyre', x + s * 1.25, z, 0.7, 4.2, y, y + 0.9);
+    m.box('frame', x, z, 1.8, 2.4, y + 0.5, y + 1.15);
+    m.box('yellow', x, z + 0.5, 2.8, 3.4, y + 1.15, y + 2.35);
+    m.box('yellow', x, z + 2.3, 2.8, 0.6, y + 1.15, y + 2.55);
+    m.box('glass', x - 0.75, z - 0.55, 1, 1.3, y + 2.35, y + 3.75, 0, false);
+    m.box('yellow', x - 0.75, z - 0.55, 1.12, 1.42, y + 3.75, y + 3.9);
+    const elbow: V3 = [x + 0.35, y + 5.4, z - reach * 0.55], tip: V3 = [x + 0.35, y + 1.3, z - reach];
+    m.rod('yellow', [x + 0.35, y + 2, z - 0.9], elbow, 0.28, 6);
+    m.rod('yellow', elbow, tip, 0.2, 6);
+    m.rod('steel', [x + 0.35, y + 2.2, z - 0.6], [x + 0.35, y + 4.4, z - reach * 0.4], 0.09, 5);
+    m.box('frame', tip[0], tip[2] - 0.35, 1.1, 0.9, tip[1] - 0.6, tip[1] + 0.3);
+  });
+}
+/** A site office: a cabin on blocks with a door and a window, its flat roof. */
+function siteCabin(m: MeshBuilder, x: number, z: number, y: number, w: number, d: number, wall: Mat): void {
+  m.scope('Site office', () => {
+    for (const s of [-1, 1]) m.box('concrete', x + s * (w / 2 - 0.4), z, 0.5, d, y, y + 0.3);
+    m.box(wall, x, z, w, d, y + 0.3, y + 2.8);
+    m.box('roof', x, z, w + 0.2, d + 0.2, y + 2.8, y + 2.95);
+    windowOn(m, 'z', 1, z + d / 2, x + w / 4, y + 1.2, 1.2, 0.9, 'galv');
+    m.box('dark', x - w / 4, z + d / 2 + 0.04, 0.9, 0.08, y + 0.3, y + 2.3);
+  });
+}
+
+// ---------------------------------------------------------------- quarry
+
+/** The stone quarry's site and its parts' positions. */
+export const QUARRY = {
+  w: 46, d: 32,
+  /** the benches' tops above the yard, from the lowest */
+  benches: [4.6, 8.8, 13] as const,
+  /** the crusher plant against the lowest bench's face */
+  plant: { x: 6.6, z: -5.4 },
+  /** the loading silos' centres along the siding, their table and their top */
+  silos: [13.2, 18.6] as const, table: 4.6, siloTop: 11.4,
+  /** the siding's centre line */
+  track: 11.5,
+};
+const QY = MINE_Y;
+/** The quarry's three terraces: the lower and upper rings of each, the lowest first. */
+function quarryBenches(): [Ring, Ring][] {
+  return [
+    [wound([[-23, -16], [7, -16], [6.5, -12], [1, -6.5], [-8, -3], [-23, -2]]), wound([[-21.4, -14.4], [5.8, -14.4], [5.4, -12.2], [0.2, -7.3], [-8.4, -4], [-21.4, -3.1]])],
+    [wound([[-21.4, -14.4], [3, -14.4], [2.4, -12.6], [-2.2, -9.6], [-9.6, -7.2], [-21.4, -6.5]]), wound([[-19.8, -12.8], [1.8, -12.8], [1.2, -12.2], [-2.9, -10.4], [-10, -8.2], [-19.8, -7.6]])],
+    [wound([[-19.8, -12.8], [-0.5, -12.8], [-1.2, -12.3], [-5, -11.4], [-11, -10.6], [-19.8, -10.2]]), wound([[-18.4, -12.2], [-1.6, -12.2], [-2, -12], [-5.4, -11.7], [-11.3, -11.3], [-18.4, -11]])],
+  ];
+}
+
+function quarryFace(m: MeshBuilder): void {
+  m.scope('Quarry face', () => {
+    const benches = quarryBenches(), ys = [QY, ...QUARRY.benches];
+    benches.forEach(([lo, hi], k) => terrace(m, k === 1 ? 'rockWarm' : 'rockFace', k === 2 ? null : 'rockTop', lo, ys[k]!, hi, ys[k + 1]!));
+    // the overburden over the top bench: a band of soil under the grass
+    const [, top] = benches[2]!, soil = inset(top, 0.5);
+    terrace(m, 'dirt', 'grass', top, QUARRY.benches[2], soil, QUARRY.benches[2] + 0.7);
+    // the haul road up to the lowest bench along its west face, sloped sides
+    const hi: Ring = [[-3.4, QY], [1.8, QY], [0.4, QUARRY.benches[0]], [-3.4, QUARRY.benches[0]]];
+    const lo: Ring = [[-3.4, QY], [0.6, QY], [0.4, QY + 0.06], [-3.4, QY + 0.06]];
+    m.sweep('rockTop', 'x', hi, -22.4, hi, -19.5, false);
+    m.sweep('rockTop', 'x', hi, -19.5, lo, -6);
+    // blasted rock fallen at the faces' feet, a scree fan
+    const rocks: [number, number, number, number][] = [[-12, -2.4, 0.7, QY], [-10.6, -1.9, 0.5, QY], [-4.5, -2.6, 0.8, QY], [-15, -5.6, 0.6, QUARRY.benches[0]], [-6, -6.6, 0.7, QUARRY.benches[0]], [-14, -9.6, 0.6, QUARRY.benches[1]], [-3.5, -10.6, 0.5, QUARRY.benches[1]], [-0.8, -4.2, 0.6, QY]];
+    rocks.forEach(([x, z, r, y], i) => boulder(m, i % 2 ? 'rock' : 'stoneDark', x, z, y, r, i + 1));
+    heap(m, 'rock', -7.2, -3.4, 2.2, 1.6, 1.5, 7);
+    // a drill rig's string of blast holes is a line of dark collars along the second bench
+    for (let i = 0; i < 6; i++) m.box('dark', -19 + i * 1.6, -8.9 - i * 0.05, 0.25, 0.25, QUARRY.benches[1], QUARRY.benches[1] + 0.05);
+  });
+}
+
+function crusherPlant(m: MeshBuilder): void {
+  const { x, z } = QUARRY.plant, w = 7, d = 6, e1 = 7.6;
+  m.scope('Crusher plant', () => {
+    // the primary hopper sunk into the lowest bench, its tipping wall, and the rock in it
+    const hx = 2.2, hz = -8.6, b0 = QUARRY.benches[0];
+    m.loft('rust', rect(2.4, 2.4, hx, hz), b0, rect(4.2, 4.2, hx, hz), b0 + 1.8, false);
+    m.cap('stoneDark', rect(3.8, 3.8, hx, hz), b0 + 1.45);
+    m.box('concrete', hx - 2.4, hz, 0.5, 4.6, b0, b0 + 0.9);
+    // the plant: a sheeted lower hall, the screen house over it, a gabled roof
+    m.box('concrete', x, z, w + 0.3, d + 0.3, QY, QY + 0.5);
+    m.box('sheet', x, z, w, d, QY + 0.5, e1, 0, false);
+    m.box('frame', x, z, w + 0.2, d + 0.2, e1 - 0.3, e1);
+    m.box('sheet', x + 0.6, z, 5, 4.4, e1, 11.6, 0, false);
+    gable(m, 'roof', 'sheet', x + 0.6, z, 5, 4.4, 11.6, 1.3, 'x', 0.3, 0.12);
+    lean(m, 'roof', x - w / 2 - 0.2, x + w / 2 + 0.2, z - d / 2 - 0.2, e1 + 0.15, z - 2.2, e1 + 0.15, 0.12);
+    lean(m, 'roof', x - w / 2 - 0.2, x + w / 2 + 0.2, z + 2.2, e1 + 0.15, z + d / 2 + 0.2, e1 + 0.15, 0.12);
+    // the feed chute from the hopper into the hall's upper floor
+    m.slab('rust', [[hx + 1.6, b0 + 0.6, hz - 0.6], [x - w / 2 + 0.2, 5.6, hz - 0.6], [x - w / 2 + 0.2, 5.6, hz + 0.6], [hx + 1.6, b0 + 0.6, hz + 0.6]], [0, -0.25, 0]);
+    // the windows, the vehicle door, the dust extraction's cyclone and duct
+    for (const u of [-2, 0, 2]) windowOn(m, 'z', 1, z + d / 2, x + u, 5, 1.2, 1, 'frame');
+    for (const u of [-1.2, 1.2]) windowOn(m, 'z', 1, z + 2.2, x + 0.6 + u, 9.4, 1.1, 0.9, 'frame');
+    m.box('dark', x + 1.6, z + d / 2 + 0.04, 3, 0.08, QY + 0.5, 4.2);
+    m.box('steel', x + 1.6, z + d / 2 + 0.1, 3.3, 0.12, 4.2, 4.45);
+    const cx = x + w / 2 + 1.3, cz = z - 1.4;
+    for (const dx of [-0.6, 0.6]) m.box('frame', cx + dx, cz, 0.15, 0.15, QY, 4.4);
+    m.loft('galv', ngon(10, 0.2, 0, cx, cz), 4.4, ngon(10, 0.75, 0, cx, cz), 6.2, false);
+    cyl(m, 'galv', cx, cz, 0.75, 6.2, 8.2, 10);
+    m.rod('galv', [cx, 7.6, cz], [x + w / 2, 7.6, cz], 0.22, 6);
+    // the oversize and undersize chutes under the hall's front corners
+    for (const dx of [-w / 2 + 0.6, w / 2 - 0.6]) m.slab('rust', [[x + dx - 0.4, 2.6, z + d / 2 - 0.1], [x + dx + 0.4, 2.6, z + d / 2 - 0.1], [x + dx + 0.3, 1.8, z + d / 2 + 1.2], [x + dx - 0.3, 1.8, z + d / 2 + 1.2]], [0, -0.12, 0]);
+  });
+}
+
+function loadingSilos(m: MeshBuilder): void {
+  const z = QUARRY.track, t = QUARRY.table, top = QUARRY.siloTop, [xa, xb] = QUARRY.silos, r = 2.5;
+  m.scope('Loading silos', () => {
+    // the table on six legs straddling the siding, braced along each side
+    for (const lx of [xa - 2.7, (xa + xb) / 2, xb + 2.7]) for (const s of [-1, 1]) {
+      m.box('concrete', lx, z + s * 2.3, 0.9, 0.9, QY, QY + 0.4);
+      m.box('frame', lx, z + s * 2.3, 0.45, 0.45, QY + 0.4, t);
+    }
+    for (const s of [-1, 1]) for (const [x0, x1] of [[xa - 2.7, (xa + xb) / 2], [(xa + xb) / 2, xb + 2.7]] as const) m.rod('frame', [x0, QY + 0.6, z + s * 2.3], [x1, t - 0.4, z + s * 2.3], 0.08, 4);
+    m.box('frame', (xa + xb) / 2, z, xb - xa + 5.9, 5.1, t, t + 0.4);
+    for (const x of [xa, xb]) {
+      // the silo, its stiffening rings, its cone and gate under the table, its roof
+      cyl(m, 'concrete', x, z, r, t + 0.4, top, 16, false);
+      for (const y of [t + 2.6, t + 4.8]) cyl(m, 'stone', x, z, r + 0.08, y, y + 0.25, 16, false);
+      m.loft('steel', ngon(12, 0.45, 0, x, z), t - 1.6, ngon(12, 1.9, 0, x, z), t - 0.01, false);
+      m.box('frame', x, z, 1, 1, t - 2.1, t - 1.6);
+      m.spire('galv', ngon(16, r + 0.2, 0, x, z), top, top + 1.1);
+      ladder(m, x, z + r + 0.12, t + 0.5, top - t - 0.6);
+    }
+    // the gallery over the silos where the conveyor tips
+    m.box('sheet', (xa + xb) / 2, z, xb - xa + 3, 2.4, top + 0.6, top + 2.6);
+    gable(m, 'roof', 'sheet', (xa + xb) / 2, z, xb - xa + 3, 2.4, top + 2.6, 0.5, 'x', 0.2, 0.1);
+    const ty = siding(m, 0, QUARRY.w / 2, z, QY);
+    hopperWagon(m, (xa + xb) / 2, z, ty, 'steel', 'stone');
+  });
+}
+
+/** The stone quarry at full detail. */
+export function quarry(_given?: ParamValues): MeshBuilder {
+  const m = model(), { x, z } = QUARRY.plant;
+  return m.scope('Stone quarry', () => {
+    m.box('quarryYard', 0, 0, QUARRY.w, QUARRY.d, 0, QY);
+    quarryFace(m);
+    crusherPlant(m);
+    loadingSilos(m);
+    m.scope('Conveyors', () => {
+      // the plant to the silo gallery, and the two stackers out to the graded heaps
+      belt(m, [x + 3.6, 9.4, z + 1.2], [QUARRY.silos[0] + 1.4, QUARRY.siloTop + 1.1, QUARRY.track - 1.2], 1.1, QY, [0.3, 0.62]);
+      belt(m, [x - 2.6, 2.4, z + 3.4], [-6.4, 6.6, 7.2], 0.9, QY, [0.35, 0.72]);
+      belt(m, [x + 2.6, 2.4, z + 3.4], [0.8, 5.2, 5.4], 0.9, QY, [0.5]);
+    });
+    m.scope('Stone heaps', () => {
+      heap(m, 'stone', -6.6, 7.6, 4.2, 6.2, 1, 11);
+      heap(m, 'stoneDark', 0.6, 5.8, 3, 4.8, 1, 12);
+      heap(m, 'stone', -15, 8.6, 3, 3, 1.2, 13);
+    });
+    excavator(m, -2.6, -0.4, QY, 4.6);
+    siteCabin(m, -19.5, 13.6, QY, 5, 2.4, 'yellow');
+    m.scope('Yard', () => {
+      lamp(m, -21.8, 4, QY, 1);
+      lamp(m, 10.5, 2.5, QY, -1);
+    });
+    return m;
+  });
+}
+/** The quarry's low detail: the terraces, the plant, the silos and the conveyors as plates, the heaps. */
+export function quarryLod(_given?: ParamValues): MeshBuilder {
+  const m = model(), { x, z } = QUARRY.plant, ys = [QY, ...QUARRY.benches];
+  lodBox(m, 'quarryYard', 0, 0, QUARRY.w, QUARRY.d, 0, QY);
+  quarryBenches().forEach(([lo, hi], k) => terrace(m, 'rockFace', k === 2 ? 'grass' : 'rockTop', lo, ys[k]!, hi, ys[k + 1]!));
+  const hi: Ring = [[-3.4, QY], [1.8, QY], [0.4, QUARRY.benches[0]], [-3.4, QUARRY.benches[0]]];
+  m.sweep('rockTop', 'x', hi, -19.5, [[-3.4, QY], [0.6, QY], [0.4, QY + 0.06], [-3.4, QY + 0.06]], -6);
+  lodBox(m, 'sheet', x, z, 7, 6, QY, 7.6);
+  lodBox(m, 'sheet', x + 0.6, z, 5, 4.4, 7.6, 11.6);
+  const s: Ring = [[z - 2.5, 11.5], [z + 2.5, 11.5], [z, 12.9]];
+  m.sweep('roof', 'x', s, x - 2.2, s, x + 3.4);
+  const { track: tz, table: t, siloTop: top, silos: [xa, xb] } = QUARRY;
+  lodBox(m, 'frame', (xa + xb) / 2, tz, xb - xa + 5.9, 5.1, t - 2, t + 0.4);
+  for (const sx of [xa, xb]) { lodCylinder(m, 'concrete', sx, tz, 2.5, t + 0.4, top, 8); m.spire('galv', ngon(8, 2.7, 0, sx, tz), top, top + 1.1); }
+  lodBox(m, 'sheet', (xa + xb) / 2, tz, xb - xa + 3, 2.4, top + 0.6, top + 2.6);
+  const plate = (a: V3, b: V3, w: number): void => {
+    const dx = b[0] - a[0], dz = b[2] - a[2], l = Math.hypot(dx, dz), px = -dz / l * w / 2, pz = dx / l * w / 2;
+    m.slab('frame', [[a[0] - px, a[1], a[2] - pz], [b[0] - px, b[1], b[2] - pz], [b[0] + px, b[1], b[2] + pz], [a[0] + px, a[1], a[2] + pz]], [0, -0.6, 0]);
+  };
+  plate([x + 3.6, 9.4, z + 1.2], [xa + 1.4, top + 1.1, tz - 1.2], 1.1);
+  plate([x - 2.6, 2.4, z + 3.4], [-6.4, 6.6, 7.2], 0.9);
+  lodLoft(m, 'stone', ngon(7, 4.4, 0, -6.6, 7.6), QY, ngon(7, 1, 0, -6.6, 7.6), QY + 6.2);
+  lodLoft(m, 'stoneDark', ngon(6, 3.2, 0, 0.6, 5.8), QY, ngon(6, 0.8, 0, 0.6, 5.8), QY + 4.8);
+  lodLoft(m, 'stone', ngon(6, 3.4, 0, -15, 8.6), QY, ngon(6, 0.8, 0, -15, 8.6), QY + 3);
+  return m;
+}
+
+// ---------------------------------------------------------------- sand pit
+
+/** The sand pit's site and its parts' positions. */
+export const SAND_PIT = {
+  w: 46, d: 32,
+  /** the pit's face: the sand bank's top, and the soil and grass over it */
+  bank: 3.4, soil: 4,
+  /** the washing and screening plant on its stage */
+  plant: { x: 9, z: 3.4 }, stage: 5.6,
+  /** the loading bin over the road bay */
+  bin: { x: 18.2, z: 10.4, y0: 4.6, y1: 7.2 },
+  /** the settling pond */
+  pond: { x: -15.5, z: 6.5 },
+};
+const SY = MINE_Y;
+/** The sand bank's lower and upper rings: the gentle face toward the pit, steeper at the site's edges. */
+function sandBank(): [Ring, Ring] {
+  return [
+    wound([[-23, -16], [12, -16], [11, -12], [3, -7], [-9, -3.5], [-23, -2]]),
+    wound([[-22.4, -15.4], [9.5, -15.4], [8, -12.3], [1, -9.6], [-10, -6.8], [-22.4, -5.4]]),
+  ];
+}
+
+function sandPitFace(m: MeshBuilder): void {
+  m.scope('Pit face', () => {
+    const [lo, hi] = sandBank();
+    terrace(m, 'sandFace', null, lo, SY, hi, SAND_PIT.bank);
+    terrace(m, 'dirt', 'grass', hi, SAND_PIT.bank, inset(hi, 0.4), SAND_PIT.soil);
+    // slumps of sand at the face's foot where the loader digs
+    heap(m, 'sandFace', -6.2, -4.4, 2.6, 1.5, 1.4, 21);
+    heap(m, 'sandFace', 6.2, -8.4, 2.2, 1.2, 1.3, 22);
+  });
+}
+
+function washPlant(m: MeshBuilder): void {
+  const { x, z } = SAND_PIT.plant, st = SAND_PIT.stage, w = 6.4, d = 5;
+  m.scope('Washing plant', () => {
+    // the stage on braced legs with its railing
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      m.box('concrete', x + sx * (w / 2 - 0.3), z + sz * (d / 2 - 0.3), 0.8, 0.8, SY, SY + 0.4);
+      m.box('plantBlue', x + sx * (w / 2 - 0.3), z + sz * (d / 2 - 0.3), 0.35, 0.35, SY + 0.4, st);
+    }
+    for (const sz of [-1, 1]) m.rod('plantBlue', [x - w / 2 + 0.3, SY + 0.6, z + sz * (d / 2 - 0.3)], [x + w / 2 - 0.3, st - 0.4, z + sz * (d / 2 - 0.3)], 0.08, 4);
+    m.box('galv', x, z, w, d, st, st + 0.3);
+    for (const sz of [-1, 1]) m.box('yellow', x, z + sz * (d / 2 - 0.05), w, 0.06, st + 1.2, st + 1.3);
+    for (const sx of [-1, 1]) m.box('yellow', x + sx * (w / 2 - 0.05), z, 0.06, d - 0.2, st + 1.2, st + 1.3);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) m.box('yellow', x + sx * (w / 2 - 0.05), z + sz * (d / 2 - 0.05), 0.06, 0.06, st + 0.3, st + 1.2);
+    // the vibrating screen: a sloped deck between side plates on its springs, the feed box at its head
+    const s0 = x - 2.4, s1 = x + 1.6, ya = st + 2.6, yb = st + 1.3, zs = z - 0.6;
+    for (const s of [-1, 1]) m.slab('plantBlue', [[s0, ya, zs + s * 1.1], [s1, yb, zs + s * 1.1], [s1, yb + 0.9, zs + s * 1.1], [s0, ya + 0.9, zs + s * 1.1]], [0, 0, -s * 0.12]);
+    m.slab('galv', [[s0 + 0.05, ya + 0.2, zs - 1], [s1 - 0.05, yb + 0.2, zs - 1], [s1 - 0.05, yb + 0.2, zs + 1], [s0 + 0.05, ya + 0.2, zs + 1]], [0, -0.12, 0]);
+    m.slab('sand', [[s0 + 0.3, ya + 0.3, zs - 0.8], [s1 - 0.6, yb + 0.42, zs - 0.8], [s1 - 0.6, yb + 0.42, zs + 0.8], [s0 + 0.3, ya + 0.3, zs + 0.8]], [0, -0.08, 0]);
+    for (const [px, py] of [[s0 + 0.3, ya], [s1 - 0.3, yb]] as const) for (const s of [-1, 1]) m.box('dark', px, zs + s * 1.1, 0.3, 0.3, st + 0.3, py - 0.02);
+    m.box('plantBlue', s0 - 0.5, zs, 1.2, 2.2, ya + 0.2, ya + 1.6);
+    // the spray bar's water main along the screen
+    m.rod('galv', [s0, ya + 1.3, zs], [s1, yb + 1.3, zs], 0.08, 6);
+    // two hydrocyclones on their frame, their cones pointing down to the dewatering screen
+    for (const cz of [z + 1.1, z + 1.9]) {
+      const cx = x + 2.2;
+      m.loft('galv', ngon(10, 0.12, 0, cx, cz), st + 0.9, ngon(10, 0.36, 0, cx, cz), st + 2.2, false);
+      cyl(m, 'galv', cx, cz, 0.36, st + 2.2, st + 3, 10);
+      m.rod('dark', [cx, st + 2.9, cz], [cx - 1.3, st + 2.9, cz], 0.08, 5);
+    }
+    for (const dx of [-0.4, 0.4]) m.box('plantBlue', x + 2.2 + dx, z + 1.5, 0.12, 1.4, st + 0.3, st + 1.6);
+    // the sump tank and the sand screw rising out of it toward the sand heap behind
+    const tx = x + 4.6, tz = z - 1.6;
+    m.box('concrete', tx, tz, 2.4, 2.6, SY, SY + 1.4);
+    m.box('water', tx, tz, 2, 2.2, SY + 1.4, SY + 1.42);
+    const top: V3 = [tx + 3.8, SY + 5, tz - 4.6];
+    m.slab('plantBlue', [[tx - 0.55, SY + 1.2, tz + 0.2], [top[0] - 0.55, top[1], top[2] + 0.2], [top[0] + 0.55, top[1], top[2] + 0.2], [tx + 0.55, SY + 1.2, tz + 0.2]], [0, -0.7, 0]);
+    m.rod('steel', [tx, SY + 1.5, tz + 0.2], [top[0], top[1] + 0.2, top[2] + 0.2], 0.3, 8);
+    m.box('plantBlue', top[0], top[2] - 0.2, 1.4, 1.2, top[1] - 0.3, top[1] + 0.9);
+    for (const t of [0.45, 0.8]) {
+      const lx = tx + (top[0] - tx) * t, lz = tz + 0.2 + (top[2] - tz - 0.2) * t, ly = SY + 1.2 + (top[1] - SY - 1.2) * t;
+      for (const s of [-0.5, 0.5]) m.box('plantBlue', lx + s, lz, 0.16, 0.16, SY, ly - 0.7);
+    }
+    // the control cabin under the stage, and the water main from the pond
+    m.box('render', x - 1.2, z + 0.6, 2.4, 2.2, SY, SY + 2.6);
+    m.box('roof', x - 1.2, z + 0.6, 2.6, 2.4, SY + 2.6, SY + 2.75);
+    windowOn(m, 'z', 1, z + 1.7, x - 1.2, SY + 1.2, 1.2, 0.8, 'galv');
+    const { x: px, z: pz } = SAND_PIT.pond;
+    m.rod('dark', [px + 6.2, SY + 0.35, pz - 0.6], [x - w / 2 + 0.3, SY + 0.35, z + 1.8], 0.16, 6);
+    m.rod('dark', [x - w / 2 + 0.3, SY + 0.35, z + 1.8], [x - w / 2 + 0.3, st + 2.4, z + 1.8], 0.16, 6);
+    m.rod('dark', [x - w / 2 + 0.3, st + 2.4, z + 1.8], [x + 1.4, st + 2.9, z + 1.6], 0.12, 6);
+  });
+}
+
+/** The loading bin over the road bay: a sheeted bin on four legs with its hopper, a tipper truck under it being loaded. */
+function sandBin(m: MeshBuilder): void {
+  const { x, z, y0, y1 } = SAND_PIT.bin, w = 3.6, d = 4;
+  m.scope('Loading bin', () => {
+    m.box('concrete', x, z + 0.4, 7, 10, SY, SY + 0.12);
+    for (const s of [-1, 1]) m.box('yellow', x + s * 3.3, z + 0.4, 0.25, 9.6, SY + 0.12, SY + 0.32);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      m.box('concrete', x + sx * 2.1, z + sz * (d / 2 - 0.3), 0.7, 0.7, SY + 0.12, SY + 0.6);
+      m.box('plantBlue', x + sx * 2.1, z + sz * (d / 2 - 0.3), 0.35, 0.35, SY + 0.6, y0);
+    }
+    for (const sx of [-1, 1]) m.rod('plantBlue', [x + sx * 2.1, SY + 0.8, z - d / 2 + 0.3], [x + sx * 2.1, y0 - 0.3, z + d / 2 - 0.3], 0.08, 4);
+    m.box('plantBlue', x, z, 4.4, d, y0 - 0.25, y0);
+    m.loft('steel', rect(1, 1, x, z), y0 - 1.4, rect(w, d - 0.4, x, z), y0 - 0.26, false);
+    m.box('steel', x, z, w, d - 0.4, y0, y1, 0, false);
+    m.loft('sand', rect(w - 0.2, d - 0.6, x, z), y1 - 0.2, rect(1.4, 1.6, x, z), y1 + 0.5);
+    for (const u of [-1, 0, 1]) m.box('plantBlue', x + u * 1.2, z - (d - 0.4) / 2 - 0.05, 0.15, 0.1, y0, y1);
+    // the tipper truck under the bin, its cab toward the road (+z)
+    m.scope('Tipper truck', () => {
+      const ty = SY + 0.12;
+      m.box('frame', x, z + 0.6, 1.2, 7.4, ty + 0.75, ty + 1.15);
+      m.box('red', x, z + 4.1, 2.4, 1.9, ty + 1.15, ty + 2.2);
+      m.box('glass', x, z + 4.15, 2.2, 1.7, ty + 2.2, ty + 3.05, 0, false);
+      m.box('red', x, z + 4.15, 2.36, 1.8, ty + 3.05, ty + 3.2);
+      m.loft('red', rect(2.1, 4.6, x, z - 0.2), ty + 1.15, rect(2.4, 5.1, x, z - 0.2), ty + 2.6, false);
+      m.loft('sand', rect(2.2, 4.8, x, z - 0.2), ty + 2.4, rect(1, 2.6, x, z - 0.2), ty + 3.1);
+      for (const [wz, k] of [[4.1, 0], [-0.8, 1], [-2.3, 1]] as const) for (const s of [-1, 1]) wheelX(m, x + s * (1.05 + k * 0.05), ty + 0.55, z + wz, 0.55, 0.4, 'dark');
+    });
+  });
+}
+
+/** A wheel loader on the ground y at (x, z), its bucket toward -z. */
+function wheelLoader(m: MeshBuilder, x: number, z: number, y: number): void {
+  m.scope('Wheel loader', () => {
+    m.box('yellow', x, z + 1.4, 2, 2.6, y + 0.9, y + 2.3);
+    m.box('yellow', x, z - 1.1, 1.6, 2, y + 0.9, y + 1.8);
+    m.box('glass', x, z + 0.3, 1.4, 1.3, y + 2.3, y + 3.5, 0, false);
+    m.box('yellow', x, z + 0.3, 1.55, 1.45, y + 3.5, y + 3.65);
+    for (const s of [-1, 1]) m.rod('yellow', [x + s * 0.6, y + 1.6, z - 1.2], [x + s * 0.6, y + 1.1, z - 3], 0.14, 5);
+    m.box('frame', x, z - 3.2, 2.6, 0.9, y + 0.15, y + 1.2);
+    for (const wz of [-1.1, 1.7]) for (const s of [-1, 1]) wheelX(m, x + s * 1.1, y + 0.75, z + wz, 0.75, 0.55, 'yellow');
+  });
+}
+
+/** The sand pit at full detail. */
+export function sandPit(_given?: ParamValues): MeshBuilder {
+  const m = model(), { x, z } = SAND_PIT.plant, st = SAND_PIT.stage, { x: bx, z: bz, y1 } = SAND_PIT.bin;
+  return m.scope('Sand pit', () => {
+    m.box('sandYard', 0, 0, SAND_PIT.w, SAND_PIT.d, 0, SY);
+    sandPitFace(m);
+    m.scope('Settling pond', () => {
+      const { x: px, z: pz } = SAND_PIT.pond, ring: Ring = ngon(14, 4.6, 0, 0, 0).map(([u, v]) => [px + u * 1.5, pz + v]);
+      // a wet margin round the water, both laid on the pit floor
+      m.cap('sandFace', ring, SY + 0.04);
+      m.cap('water', inset(ring, 0.9), SY + 0.12);
+    });
+    m.scope('Feed hopper', () => {
+      const hx = -2.6, hz = -2.2;
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) m.box('plantBlue', hx + sx * 1.2, hz + sz * 1.2, 0.3, 0.3, SY, 2.4);
+      m.loft('plantBlue', rect(1.2, 1.2, hx, hz), 1.6, rect(3.4, 3.4, hx, hz), 3.6, false);
+      m.cap('sand', rect(3, 3, hx, hz), 3.3);
+      for (let u = -1.2; u <= 1.21; u += 0.6) m.box('frame', hx + u, hz, 0.1, 3.4, 3.6, 3.75);
+    });
+    washPlant(m);
+    sandBin(m);
+    m.scope('Conveyors', () => {
+      belt(m, [-1.6, 1.8, -1.4], [x - 2.8, st + 2.7, z - 0.6], 0.9, SY, [0.35, 0.7], 'plantBlue');
+      belt(m, [x + 3.3, 2.2, z + 2.6], [bx - 0.6, y1 + 0.9, bz - 2.2], 0.9, SY, [0.55], 'plantBlue');
+      belt(m, [x - 2.4, 2.2, z + 2.8], [1.4, 5.4, 10.4], 0.9, SY, [0.5], 'plantBlue');
+    });
+    m.scope('Sand heaps', () => {
+      heap(m, 'sand', 18.2, -6.6, 4.2, 5.6, 1, 23);
+      heap(m, 'sand', 1.8, 11, 3.6, 5, 1, 24);
+      heap(m, 'stone', -5, 12.4, 2.2, 2, 1.3, 25);
+    });
+    wheelLoader(m, -7.6, 0.6, SY);
+    siteCabin(m, -19.6, 13.6, SY, 5, 2.4, 'render');
+    m.scope('Yard', () => {
+      lamp(m, -9.5, 13.8, SY, 1);
+      lamp(m, 13.4, 9.5, SY, -1);
+    });
+    return m;
+  });
+}
+/** The sand pit's low detail: the bank, the pond, the plant on its stage, the bin, the conveyors as plates, the heaps. */
+export function sandPitLod(_given?: ParamValues): MeshBuilder {
+  const m = model(), { x, z } = SAND_PIT.plant, st = SAND_PIT.stage, { x: bx, z: bz, y0, y1 } = SAND_PIT.bin;
+  lodBox(m, 'sandYard', 0, 0, SAND_PIT.w, SAND_PIT.d, 0, SY);
+  const [lo, hi] = sandBank();
+  terrace(m, 'sandFace', 'grass', lo, SY, hi, SAND_PIT.soil);
+  const { x: px, z: pz } = SAND_PIT.pond;
+  m.cap('water', ngon(8, 4.2, 0, 0, 0).map(([u, v]) => [px + u * 1.5, pz + v]), SY + 0.1);
+  lodBox(m, 'plantBlue', x, z, 6, 4.6, SY, st);
+  lodBox(m, 'galv', x, z, 6.4, 5, st, st + 0.3);
+  lodBox(m, 'plantBlue', x - 0.4, z - 0.6, 4.2, 2.2, st + 0.3, st + 2.6);
+  lodBox(m, 'steel', bx, bz, 3.6, 3.6, y0 - 1.4, y1);
+  for (const s of [-1, 1]) lodBox(m, 'plantBlue', bx + s * 2.1, bz, 0.4, 3.4, SY, y0 - 1.4);
+  lodBox(m, 'red', bx, bz + 0.6, 2.4, 7.4, SY, SY + 3);
+  const plate = (a: V3, b: V3, w: number): void => {
+    const dx = b[0] - a[0], dz = b[2] - a[2], l = Math.hypot(dx, dz), qx = -dz / l * w / 2, qz = dx / l * w / 2;
+    m.slab('plantBlue', [[a[0] - qx, a[1], a[2] - qz], [b[0] - qx, b[1], b[2] - qz], [b[0] + qx, b[1], b[2] + qz], [a[0] + qx, a[1], a[2] + qz]], [0, -0.6, 0]);
+  };
+  plate([-1.6, 1.8, -1.4], [x - 2.8, st + 2.7, z - 0.6], 0.9);
+  plate([x + 3.3, 2.2, z + 2.6], [bx - 0.6, y1 + 0.9, bz - 2.2], 0.9);
+  plate([x - 2.4, 2.2, z + 2.8], [1.4, 5.4, 10.4], 0.9);
+  lodLoft(m, 'sand', ngon(7, 4.4, 0, 18.2, -6.6), SY, ngon(7, 0.8, 0, 18.2, -6.6), SY + 5.6);
+  lodLoft(m, 'sand', ngon(7, 3.8, 0, 1.8, 11), SY, ngon(7, 0.7, 0, 1.8, 11), SY + 5);
+  return m;
+}
 
 // ---------------------------------------------------------------- logging camp
 

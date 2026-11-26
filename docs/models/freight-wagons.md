@@ -14,13 +14,13 @@ The vlakosimdb wagons the game has archived are not transferred (below).
 
 | id | vlakosimdb | parameter, load parts | over buffers | triangles |
 |---|---|---|---|---|
-| `veh-sqns-container-wagon` | `n_sqns`, `n_sqns-full#1` | load: a Maersk 40 ft box (`goods`, `food`) | 19.8 m | 3,500 / 5,100 loaded |
-| `veh-pao-flat-wagon` | `n_pao`, `n_pao-full#1` | load: steel tubes on bolsters (`steel`) | 15.3 m | 4,800 / 5,100 loaded |
+| `veh-sqns-container-wagon` | `n_sqns`, `n_sqns-full#1` | load: a Maersk 40 ft box (`goods`) | 19.8 m | 3,500 / 5,100 loaded |
+| `veh-pao-flat-wagon` | `n_pao`, `n_pao-full#1` | loads: steel tubes on bolsters (`steel`), lumber bundles (`lumber`), cement pallets (`cement`; [loads.md](loads.md)) | 15.3 m | 3,800 at rest / 7,400 with the cement |
 | `veh-habis-sliding-wall-wagon` | `n_habis_tw1`, `n_habis_tw2` | `livery`: `tw1` (default, grey), `tw2` (weathered brown) | 23.2 m | 4,100 |
 | `veh-hadgs-hopper-wagon` | `n_hadgs` | - | 16.8 m | 4,000 |
-| `veh-faccs-hopper-wagon` | `n_faccs`, `viamont_faccs` | `livery`: `cd` (default), `viamont`; loads: `coal`, `iron-ore`, `grain` heaps | 12.8 m | 3,900 / 4,000 |
-| `veh-falls-hopper-wagon` | `n_falls`, `sd_falls`, `viamont_falls` | `livery`: `cd` (default), `sd`, `viamont`; loads: `coal`, `iron-ore`, `grain` heaps | 13.5 m | 3,700 to 3,900 |
-| `veh-wap-hopper-wagon` | `n_wap-full#2` | loads: `coal`, `iron-ore`, `grain` heaps | 13.5 m | 3,800 |
+| `veh-faccs-hopper-wagon` | `n_faccs`, `viamont_faccs` | `livery`: `cd` (default), `viamont`; loads: `coal`, `iron-ore`, `grain`, `stone`, `sand` heaps | 12.8 m | 3,900 / 4,000 |
+| `veh-falls-hopper-wagon` | `n_falls`, `sd_falls`, `viamont_falls` | `livery`: `cd` (default), `sd`, `viamont`; loads: `coal`, `iron-ore`, `grain`, `stone`, `sand` heaps | 13.5 m | 3,700 to 3,900 |
+| `veh-wap-hopper-wagon` | `n_wap-full#2` | loads: `coal`, `iron-ore`, `grain`, `stone`, `sand` heaps | 13.5 m | 3,800 |
 
 The Sqns's two vlakosimdb folders (empty, with the Maersk box) and the Pao's
 loaded one are one model each, the load a hidden part; the Wap's former `cargo`
@@ -91,8 +91,8 @@ Wap (lower body with side flaps, upper bulge, the platform at the -x end).
 
 An open top shows an inner tub (`hopperTub`): the body is drawn without its top
 face, a rim runs from the opening in to the tub, whose walls face in down to its
-floor. The loads (`hopperLoads`) are a height field each of coal, iron ore and
-grain spanning the opening, its edges on the rim, pivoted on the tub's floor so a
+floor. The loads (`hopperLoads`) are a height field each of coal, iron ore,
+grain, stone and sand spanning the opening, its edges on the rim, pivoted on the tub's floor so a
 heap scaled down sinks into the tub (the Wap's heaped to the XML `load` hull).
 
 ## Deliberate deviations
