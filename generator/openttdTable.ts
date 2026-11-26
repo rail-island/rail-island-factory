@@ -198,6 +198,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-obb-1110": loco(ELRL, { presets: presets(...each("livery", "bloodOrange")) }),
   "proc-vehicle-obb-2016": loco(RAIL, { presets: presets() }),
   "proc-vehicle-bbo-214": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-obb-1099": loco(ELRL, { presets: presets(...each("livery", "brown")) }), // 760 mm gauge drawn on the game's one track
   "proc-vehicle-vectron": loco(ELRL, { presets: presets(...each("livery", "regiojet", "cdWhite")) }),
 
   // --- diesel locomotives ----------------------------------------------------------

@@ -27,7 +27,8 @@ export { obb2016, obb2016Lod } from "./atObb2016.ts";
 import { OBB2043_DESIGN } from "./atObb2043.ts";
 export { obb2043, obb2043Lod } from "./atObb2043.ts";
 
-// import:obb-1099
+import { OBB1099_DESIGN } from "./atObb1099.ts";
+export { obb1099, obb1099Lod } from "./atObb1099.ts";
 
 import { BBO214_DESIGN } from "./atBbo214.ts";
 export { bbo214, bbo214Lod } from "./atBbo214.ts";
@@ -47,7 +48,7 @@ export const AT_LOCOS: ProceduralDesign[] = [
 
   OBB2043_DESIGN,
 
-  // design:obb-1099
+  OBB1099_DESIGN,
 
   BBO214_DESIGN,
 ];
