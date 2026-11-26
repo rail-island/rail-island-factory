@@ -384,9 +384,27 @@ export const BUILDING_TRAFFIC: Readonly<Record<string, BuildingTrafficEntry>> = 
       { params: { size: "extended" }, jobs: 300, processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 45, stock: 450 } },
     ],
   },
+  "proc-building-industry-farm": {
+    residents: 4, jobs: 6, produces: { grain: 15 }, accepts: ["fuel", "goods"],
+    source: "size: 42 x 30 m arable farm with a field strip and two grain bins, a farming family and a few hands; grain out, diesel and supplies in",
+    variants: [
+      { params: { size: "large" }, residents: 6, jobs: 10, produces: { grain: 25 } },
+    ],
+  },
   "proc-building-industry-offshore-platform": {
     jobs: 120, produces: { oil: 150 }, accepts: ["food", "goods"],
     source: "offshore oil platform: a crew of about 120 on rotation, some 150 t of crude oil an hour; supplied with food and goods",
+  },
+  "proc-building-industry-logging-camp": {
+    jobs: 15, produces: { wood: 12 }, accepts: ["fuel"],
+    source: "size: 44 x 32 m logging camp with four log decks and a loader, a felling crew of about 15; logs out, diesel for the saws and the loader in",
+  },
+  "proc-building-industry-mine": {
+    jobs: 120, produces: { coal: 25 }, accepts: ["fuel"],
+    source: "size: 46 x 32 m mine head with a bunker over the siding, about 120 miners a shift; coal out, fuel for the winding engine and the plant in",
+    variants: [
+      { params: { type: "iron" }, produces: { "iron-ore": 30 } },
+    ],
   },
   "proc-building-industry-oil-pump": {
     jobs: 1, produces: { oil: 3 },

@@ -396,29 +396,16 @@ export function chainOf(buildings: readonly ChainDesign[], vehicles: readonly Ch
 }
 
 /**
- * TEMPORARY allowance, to be removed when the new primary industries are merged:
- * the raw commodities whose producers are being modelled on another branch -
- * proc-building-industry-farm (grain), proc-building-industry-mine (coal, and
- * iron-ore with `type: "iron-ore"`) and proc-building-industry-logging-camp (wood).
- * The chain check does not ask these for a producer; it fails once one has one, so
- * the list cannot outlive the merge.
- */
-export const PENDING_PRODUCERS: readonly Commodity[] = ["grain", "wood", "coal", "iron-ore"];
-
-/**
  * The supply chain's orphans: a commodity no confirmed building makes, none takes,
  * or no confirmed vehicle carries. Over the confirmed designs at their defaults and
- * in every variant. `pending` names commodities excused from having a producer
- * (PENDING_PRODUCERS); naming one that has a producer is a problem too.
+ * in every variant.
  */
-export function chainProblems(buildings: readonly ChainDesign[], vehicles: readonly ChainDesign[], pending: readonly Commodity[] = []): string[] {
+export function chainProblems(buildings: readonly ChainDesign[], vehicles: readonly ChainDesign[]): string[] {
   const chain = chainOf(buildings, vehicles);
   const out: string[] = [];
   for (const c of COMMODITIES) {
     const { producers, consumers, carriers } = chain[c];
-    if (pending.includes(c)) {
-      if (producers.length) out.push(`${c}: made by ${producers.join(", ")}, so drop it from PENDING_PRODUCERS (traffic.ts)`);
-    } else if (!producers.length) out.push(`${c}: no building makes it (produces, or a recipe's output)`);
+    if (!producers.length) out.push(`${c}: no building makes it (produces, or a recipe's output)`);
     if (!consumers.length) out.push(`${c}: no building takes it (accepts, or a recipe's input)`);
     if (!carriers.length) out.push(`${c}: no vehicle carries it (capacity commodities)`);
   }

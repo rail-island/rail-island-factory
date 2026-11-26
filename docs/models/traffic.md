@@ -7,8 +7,8 @@ and the commodities it may carry (`game.capacity`); the commodities, the chain a
 its check, which designs must state their numbers, variants and how they match, the
 checks, the export and where the numbers came from.
 **Code** - `generator/traffic.ts` (`COMMODITIES`, types, `mustCarry`,
-`trafficProblems`, `exportedBlock`, `resolvedNumbers`, `chainOf`, `chainProblems`,
-`PENDING_PRODUCERS`), `generator/trafficTable.ts` (buildings),
+`trafficProblems`, `exportedBlock`, `resolvedNumbers`, `chainOf`, `chainProblems`),
+`generator/trafficTable.ts` (buildings),
 `generator/capacityTable.ts` and `generator/capacity/*.ts` (vehicles),
 `generator/catalog.ts` (`withTraffic`, `checkTraffic`, `supplyChainProblems`),
 `generator/generate.ts` (the stray-id and chain checks), `generator/text.ts`
@@ -106,10 +106,10 @@ take. A concrete mixer carries no commodity (`nothing`).
 
 | Commodity | Made by | Taken by |
 |---|---|---|
-| grain | farm (pending) | food plant (`ind-building-a`) |
-| wood | logging camp (pending) | goods factories (`ind-building-h`, `ind-building-k`) |
-| coal | coal mine (pending) | steel mill (`industry-factory-a`); power plant, coal type (a sink) |
-| iron-ore | iron mine (pending) | steel mill |
+| grain | farm (`industry-farm`) | food plant (`ind-building-a`) |
+| wood | logging camp (`industry-logging-camp`) | goods factories (`ind-building-h`, `ind-building-k`) |
+| coal | mine (`industry-mine`) | steel mill (`industry-factory-a`); power plant, coal type (a sink) |
+| iron-ore | mine, `type: iron` | steel mill |
 | oil | oil pump (3 t/h, large 6), offshore platform (150 t/h) | refineries (`chemical-factory`, both types) |
 | food | food plant: 1 t grain -> 1 t food, 15 t/h (extended 22) | homes, shops and landmarks, the warehouse (`ind-building-s`), the offshore platform |
 | steel | steel mill: 1 t iron ore + 0.5 t coal -> 1 t steel, 30 t/h (extended 45) | goods factories |
@@ -128,12 +128,6 @@ commodity has no confirmed building that makes it (`produces` or a recipe's
 `output`), none that takes it (`accepts` or a recipe's input), or no confirmed vehicle
 that carries it, over every confirmed design at its defaults and in each of its
 variants (`chainOf`, `chainProblems`); `test/traffic.test.ts` runs it too.
-
-`PENDING_PRODUCERS` (`traffic.ts`) is a **temporary** allowance: grain, wood, coal
-and iron ore are excused from having a producer while their buildings - the farm,
-the mine (coal, or iron ore with `type: "iron-ore"`) and the logging camp - are
-modelled. The check fails once a pending commodity has a producer, so the list is
-emptied when they land.
 
 ## Where they live
 

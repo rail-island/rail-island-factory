@@ -27,7 +27,7 @@ import { checkGameProperties, resolveParams, type CatalogFields, type GameProper
 import type { VehicleRig } from "./rig.ts";
 import { cityExport, extentOf, type CityExport } from "./cityVariants.ts";
 import { measureHelipad, type ExportedHelipad } from "./helipad.ts";
-import { chainProblems, exportedBlock, isVehicleCategory, PENDING_PRODUCERS, trafficProblems, type ChainDesign, type ExportedCapacity, type ExportedTraffic } from "./traffic.ts";
+import { chainProblems, exportedBlock, isVehicleCategory, trafficProblems, type ChainDesign, type ExportedCapacity, type ExportedTraffic } from "./traffic.ts";
 import { BUILDING_TRAFFIC } from "./trafficTable.ts";
 import { VEHICLE_CAPACITY } from "./capacityTable.ts";
 
@@ -476,11 +476,11 @@ export function chainDesigns(designs: readonly ProceduralDesign[], family: Catal
 
 /**
  * The supply chain's orphans over the confirmed buildings and vehicles (traffic.ts
- * chainProblems, with its temporary PENDING_PRODUCERS allowance); a whole build
+ * chainProblems); a whole build
  * fails on any (generate.ts).
  */
 export function supplyChainProblems(buildings: readonly ProceduralDesign[], vehicles: readonly ProceduralDesign[]): string[] {
-  return chainProblems(chainDesigns(buildings, SKYSCRAPER_CATALOG), chainDesigns(vehicles, VEHICLE_CATALOG), PENDING_PRODUCERS);
+  return chainProblems(chainDesigns(buildings, SKYSCRAPER_CATALOG), chainDesigns(vehicles, VEHICLE_CATALOG));
 }
 
 /**

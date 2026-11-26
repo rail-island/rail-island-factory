@@ -1,6 +1,7 @@
 import { proceduralId } from "../generator/modelId.ts";
 import { expect, it } from 'vitest';
 import { buildingSpec, INDUSTRY } from '../generator/industry.ts';
+import { PRIMARY_INDUSTRY } from '../generator/primaryIndustry.ts';
 import { bayLayout, FACES, faceLength, hallOpenings, PLINTH } from '../generator/industryHall.ts';
 import { INDUSTRY_MIGRATION } from '../generator/industryMigration.ts';
 import { paramCombinations, resolveParams } from '../generator/design.ts';
@@ -24,7 +25,7 @@ it('covers the 35 audited Industry entries with valid target parameters', () => 
   expect(buildings).toHaveLength(20);
   expect(new Set(buildings.map(e => e.designId)).size).toBe(4);
 });
-for (const d of INDUSTRY) it(`${d.id}: all variants deterministic, grounded and under 10k triangles`, () => {
+for (const d of [...INDUSTRY, ...PRIMARY_INDUSTRY]) it(`${d.id}: all variants deterministic, grounded and under 10k triangles`, () => {
   const shapes = new Set<string>();
   for (const p of paramCombinations(d.params)) {
     const m = d.build(p), glb = m.toGlb('industry test');
@@ -119,4 +120,31 @@ it('blocks the offshore platform on its jacket alone and marks it offshore', () 
   expect(r.w * r.d).toBeLessThan(0.4);
   expect(Math.abs(r.x) + r.w / 2).toBeLessThanOrEqual(0.5);
   expect(Math.abs(r.z) + r.d / 2).toBeLessThanOrEqual(0.5);
+});
+
+// The primary industries of the supply chain (docs/models/industry.md, "Primary industries"):
+// a farm, a mine head and a logging camp. Each stands within its site's
+// plan, keeps a low detail of at most 500 triangles, and the mine's ore shows in its heap.
+it('draws the farm, mine and logging camp on their plans, with their low detail', async () => {
+  const { farmPlan, MINE, CAMP } = await import('../generator/primaryIndustry.ts');
+  const plans: Record<string, (p: Record<string, string>) => { w: number; d: number }> = {
+    'proc-building-industry-farm': p => farmPlan(p.size!), 'proc-building-industry-mine': () => MINE, 'proc-building-industry-logging-camp': () => CAMP,
+  };
+  for (const [id, plan] of Object.entries(plans)) {
+    const d = PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === id)!;
+    expect(d, id).toBeDefined();
+    expect(d.references).toBe(id.replace('proc-building-', ''));
+    for (const p of paramCombinations(d.params)) {
+      const { w, d: depth } = plan(p as Record<string, string>), stats = glbStats(d.build(p).toGlb('plan'));
+      expect(stats.min[0]).toBeGreaterThanOrEqual(-w / 2 - 1e-6); expect(stats.max[0]).toBeLessThanOrEqual(w / 2 + 1e-6);
+      expect(stats.min[2]).toBeGreaterThanOrEqual(-depth / 2 - 1e-6); expect(stats.max[2]).toBeLessThanOrEqual(depth / 2 + 1e-6);
+      const low = d.buildLod(p);
+      expect(low.triangleCount()).toBeLessThanOrEqual(d.lodTriangles!);
+      expect(findCoplanarOverlaps(low.toGlb('low'))).toEqual([]);
+    }
+  }
+  const mine = PRIMARY_INDUSTRY.find(d => proceduralId(d.id) === 'proc-building-industry-mine')!;
+  expect(materialPositions(mine.build({ type: 'coal' }), 'coalSpoil').length).toBeGreaterThan(0);
+  expect(materialPositions(mine.build({ type: 'iron' }), 'oreSpoil').length).toBeGreaterThan(0);
+  expect(materialPositions(mine.build({ type: 'iron' }), 'coalSpoil')).toHaveLength(0);
 });

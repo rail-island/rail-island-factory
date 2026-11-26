@@ -41,6 +41,8 @@ lives in the workshop until somebody confirms it.
   Regiolis, X 3800 and X 73500, the CC 6500, CC 40100, BB 22200, CC 7100, BB 9200,
   BB 27000, BB 67400 and CC 72000, the 241 P and 141 R, and the Corail, Grand Confort and
   Wagons-Lits coaches (docs/models/france-trains.md).
+  The three primary industries of the supply chain (2026-11): the farm, the mine and the
+  logging camp (docs/models/industry.md, docs/models/traffic.md).
 - **A new model starts as a draft**: nothing to do when adding one. It reaches the
   game only once confirmed.
 - **Confirming** a model is adding its id to `ids` in `catalogModels.json` (sorted). Do it

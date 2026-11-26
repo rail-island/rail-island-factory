@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import type { ParamSpec } from "../generator/design.ts";
 import {
-  chainOf, chainProblems, COMMODITIES, COMMODITY_KINDS, exportedBlock, mustCarry, PENDING_PRODUCERS, type BuildingTrafficEntry, type ChainDesign,
+  chainOf, chainProblems, COMMODITIES, COMMODITY_KINDS, exportedBlock, mustCarry, type BuildingTrafficEntry, type ChainDesign,
   type VehicleCapacityEntry, resolvedNumbers, trafficProblems, unknownTrafficIds,
 } from "../generator/traffic.ts";
 import { BUILDING_TRAFFIC } from "../generator/trafficTable.ts";
@@ -175,7 +175,7 @@ describe("the exported blocks", () => {
       processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 30, stock: 300 },
       variants: [{ params: { size: "extended" }, jobs: 300, processes: { output: "steel", inputs: { "iron-ore": 1, coal: 0.5 }, rate: 45, stock: 450 } }],
     });
-    expect(withTraffic(entry("proc-vehicle-eas-open-wagon", "Rail vehicles", "wagon")).game!.capacity).toEqual({ tonnes: 58, commodities: ["grain", "coal", "iron-ore"] });
+    expect(withTraffic(entry("proc-vehicle-eas-open-wagon", "Rail vehicles", "wagon")).game!.capacity).toEqual({ tonnes: 58, commodities: ["grain", "wood", "coal", "iron-ore"] });
     expect(withTraffic(entry("proc-vehicle-airbus-a380", "Aircraft", "aircraft")).game!.capacity).toEqual({ seats: 525, tonnes: 17, commodities: ["goods", "mail"] });
   });
 
@@ -260,17 +260,9 @@ describe("the supply chain", () => {
     expect(chainOf(FULL, [b("van", { tonnes: 0, commodities: [] })]).mail.carriers).toEqual([]);
   });
 
-  it("excuses only the pending producers, and only while they have none", () => {
-    const noRaw = FULL.filter((d) => !["farm", "camp", "mine"].includes(d.id));
-    expect(chainProblems(noRaw, ALL_CARRIER, PENDING_PRODUCERS)).toEqual([]);
-    expect(chainProblems(FULL, ALL_CARRIER, ["grain"])).toEqual(["grain: made by farm, so drop it from PENDING_PRODUCERS (traffic.ts)"]);
-  });
 
   it("has no orphan over the confirmed designs (the build fails on one)", () => {
     expect(supplyChainProblems([...BUILDINGS, ...VILLAGE_DESIGNS], ALL_VEHICLES)).toEqual([]);
   });
 
-  it("asks only for the producers being modelled on another branch (TEMPORARY: the integrator empties PENDING_PRODUCERS)", () => {
-    expect(PENDING_PRODUCERS).toEqual(["grain", "wood", "coal", "iron-ore"]);
-  });
 });
