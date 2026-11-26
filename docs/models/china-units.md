@@ -45,14 +45,17 @@ published figures; heights over the rail, d behind the nose's tip.
   published), eight cars 208.9 m (209.06 m). 17.5 m bogie centres, 920 mm wheels; the leading bogie
   7.05 m behind the tip, the others 3.85 m in from the body ends. Body 0.5 - 4.05 m, 3.24 m wide in the
   gauge (3.36 m real); white skirts down to 0.5 m, no underfloor box below them.
-- **The nose** is a cab face joined to the body 9.4 m behind the tip. The coupler hatch is a fat bulb
-  standing out at the tip (`hatchBulb`): half a blunt ellipsoid of rounded-rectangle sections, 1.8 m
-  wide from 0.49 to 1.53 m, its front bowed 1.25 m ahead of its rim, which sinks into the face; the rim
-  and the leaves' joint down its middle are dark seams. The face behind it stands 0.55 m back and rises
-  over the bulb's top in a convex curve (2.0 m at 1.04 m back, 2.6 m at 1.72 m, 3.6 m at 4.55 m, the
-  crown 9.4 m back); its plan is round at every height (elliptic corners 2.0 - 2.7 m deep) - the
-  rounder, fuller "phoenix" head, not the CR400AF's. The distant model's end reaches forward over the
-  hatch to the tip.
+- **The nose** is a cab face joined to the body 9.4 m behind the tip: one smooth, continuous "phoenix"
+  head from the skirt to the canopy, measured on the B-5155 side view (22.4 px/m along the car). Its
+  centre line is a single convex curve with the tip 1.0 m up at the coupler hatch: 0.3 m back at the
+  skirt (0.5 m), 0.18 m at the hatch's top (1.45 m), 0.49 m at the canopy's chin (1.75 m), 1.1 m at
+  2.2 m, 1.75 m at 2.6 m, 4.55 m at 3.6 m, the crown 9.4 m back. Its plan is round at every height,
+  blunt at the hatch (elliptic corners 1.5 - 1.6 m deep below 1.0 m, the G-5167 from above) and longer
+  above (2.5 m at 1.8 m). The coupler hatch is no separate part: only its seam, a thin dark outline
+  flush in the surface (a rounded box 1.8 m wide from 0.56 to 1.57 m, its top arched) with the leaves'
+  joint down its middle. The distant model's end has the same profile and plan on fewer rows.
+  `test/cnCr400bfNose.test.ts` holds the centre line to one convex curve (an earlier model drew the
+  hatch as a bulb standing 1.25 m out of a face 0.55 m behind the tip, a lump the train does not have).
 - **The canopy.** Black from a rounded point on the chin (1.7 m) widening as a shield to the lamps
   (1.0 m half width at 2.1 m, 1.44 m at 2.6 m), then running back on the sides over the cab window to
   the crown 9.0 m behind the tip; outlined by a narrow border in the livery's colour (0.11 m wider head-on, 0.1 m on the sides), the face below it white. The windscreen glass
