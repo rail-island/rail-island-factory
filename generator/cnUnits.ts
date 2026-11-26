@@ -21,6 +21,7 @@ import { CR450BF } from "./cnCr450bf.ts";
 import { CR300BF } from "./cnCr300bf.ts";
 import { CR450AF } from "./cnCr450af.ts";
 import { CR300AF } from "./cnCr300af.ts";
+import { CRH380CL } from "./cnCrh380cl.ts";
 
 export { CRH380A };
 export { CRH3C };
@@ -32,6 +33,8 @@ export { CR200J };
 export { CRH6A };
 
 export { CRH380B };
+
+export { CRH380CL };
 
 const P = { af: seriesParams(CR400AF), bf: seriesParams(CR400BF), a380: seriesParams(CRH380A), c2a: seriesParams(CRH2A), c3c: seriesParams(CRH3C), c5a: seriesParams(CRH5A), j: seriesParams(CR200J), c6a: seriesParams(CRH6A) };
 const P380B = seriesParams(CRH380B);
@@ -48,6 +51,7 @@ export { CR450AF };
 
 const P_CR450AF = seriesParams(CR450AF);
 const P_CR300AF = seriesParams(CR300AF);
+const P380CL = seriesParams(CRH380CL);
 
 export function crCr400af(v?: ParamValues): MeshBuilder { return buildSeries(CR400AF, P.af, v); }
 export function crCr400afLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR400AF, P.af, v); }
@@ -78,6 +82,8 @@ export function crCr450af(v?: ParamValues): MeshBuilder { return buildSeries(CR4
 export function crCr450afLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR450AF, P_CR450AF, v); }
 export function crCr300af(v?: ParamValues): MeshBuilder { return buildSeries(CR300AF, P_CR300AF, v); }
 export function crCr300afLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CR300AF, P_CR300AF, v); }
+export function crCrh380cl(v?: ParamValues): MeshBuilder { return buildSeries(CRH380CL, P380CL, v); }
+export function crCrh380clLod(v?: ParamValues): MeshBuilder { return buildSeriesLod(CRH380CL, P380CL, v); }
 
 export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-cr400af", "Fuxing CR400AF", CR400AF, P.af, crCr400af, crCr400afLod, "cr-cr400af"),
@@ -94,4 +100,5 @@ export const CN_UNITS: ProceduralDesign[] = [
   seriesDesign("proc-vehicle-cr-cr300bf", "Fuxing CR300BF", CR300BF, P_CR300BF, crCr300bf, crCr300bfLod, "cr-cr300bf"),
   seriesDesign("proc-vehicle-cr-cr450af", "Fuxing CR450AF", CR450AF, P_CR450AF, crCr450af, crCr450afLod, "cr-cr450af"),
   seriesDesign("proc-vehicle-cr-cr300af", "Fuxing CR300AF", CR300AF, P_CR300AF, crCr300af, crCr300afLod, "cr-cr300af"),
+  seriesDesign("proc-vehicle-cr-crh380cl", "CRH380CL", CRH380CL, P380CL, crCrh380cl, crCrh380clLod, "cr-crh380cl", "uic"),
 ];
