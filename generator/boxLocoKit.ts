@@ -118,8 +118,11 @@ export interface LocoSpec {
   /** The underframe under the shell: from y0 to y1, `half` long, `hw` wide. */
   frame: { y0: number; y1: number; half: number; hw: number; mat: string };
   bogies: readonly BogieSpec[];
-  /** The pantographs at +-x (the rear raised, the front folded); none on a diesel. */
-  pantograph?: { kind: "singleArm" | "diamond"; x: number; roofY: number; baseY: number; lower?: number; upper?: number };
+  /**
+   * The pantographs at +-x (the rear raised, the front folded); none on a diesel. A single arm's
+   * knee points toward its cab end; `kneeIn` turns both so the knee points toward the middle.
+   */
+  pantograph?: { kind: "singleArm" | "diamond"; x: number; roofY: number; baseY: number; lower?: number; upper?: number; kneeIn?: boolean };
   /** A diesel's exhaust stacks on the roof: x, z, the roof's height there. */
   exhausts?: ReadonlyArray<readonly [number, number, number]>;
   /** A roof cable from an insulator at |x| to each pantograph, at height y. */
@@ -429,7 +432,7 @@ export function buildBoxLoco(s: LocoSpec): MeshBuilder {
       for (const e of [-1, 1])
         m.scope(e > 0 ? "front pantograph" : "rear pantograph", () => {
           if (p.kind === "diamond") diamond(m, { xc: e * p.x, roofY: p.roofY, baseY: p.baseY, raised: e < 0 });
-          else singleArm(m, { xc: e * p.x, roofY: p.roofY, baseY: p.baseY, h: -e, raised: e < 0, lower: p.lower, upper: p.upper });
+          else singleArm(m, { xc: e * p.x, roofY: p.roofY, baseY: p.baseY, h: p.kneeIn ? e : -e, raised: e < 0, lower: p.lower, upper: p.upper });
         });
     });
     if (s.hvLine && p) {
@@ -491,8 +494,8 @@ export function boxLocoLod(s: LocoSpec, budget = 100): MeshBuilder {
       draw: (m) => m.scope(r.name, () => lodRoofBox(m, r.mat, r.x[0], r.x[1], r.w[0], r.w[1], r.y[0], r.y[1])),
     })),
     ...(p ? [
-      { draw: (m: MeshBuilder) => m.scope("raised pantograph", () => lodPantograph(m, { x: -p.x, roofY: p.roofY, baseY: p.baseY, h: 1, raised: true, lower: p.lower, upper: p.upper })) },
-      { optional: 0, draw: (m: MeshBuilder) => m.scope("folded pantograph", () => lodPantograph(m, { x: p.x, roofY: p.roofY, baseY: p.baseY, h: -1, raised: false })) },
+      { draw: (m: MeshBuilder) => m.scope("raised pantograph", () => lodPantograph(m, { x: -p.x, roofY: p.roofY, baseY: p.baseY, h: p.kneeIn ? -1 : 1, raised: true, lower: p.lower, upper: p.upper })) },
+      { optional: 0, draw: (m: MeshBuilder) => m.scope("folded pantograph", () => lodPantograph(m, { x: p.x, roofY: p.roofY, baseY: p.baseY, h: p.kneeIn ? 1 : -1, raised: false })) },
     ] : []),
   ];
   return fitLod({ palette: { ...KIT_PALETTE, ...s.palette }, shells: [shell], parts }, budget);

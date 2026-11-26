@@ -74,14 +74,14 @@ const slant = (u0: number, v0: number, u1: number, v1: number, t: number): Strok
   const area = q.reduce((s, [a, b], i) => { const [c2, d2] = q[(i + 1) % 4]!; return s + a * d2 - c2 * b; }, 0);
   return area >= 0 ? q : [...q].reverse();
 };
-const HE: Stroke[] = [
+export const HE: Stroke[] = [
   // he: the grain radical
   slant(0.06, 0.86, 0.4, 0.97, 0.08), box(0.02, 0.66, 0.44, 0.74), box(0.19, 0.0, 0.27, 0.9),
   slant(0.21, 0.6, 0.02, 0.24, 0.08), slant(0.27, 0.56, 0.43, 0.4, 0.08),
   // the mouth
   box(0.55, 0.12, 0.62, 0.72), box(0.88, 0.12, 0.95, 0.72), box(0.62, 0.65, 0.88, 0.72), box(0.62, 0.12, 0.88, 0.19),
 ];
-const XIE: Stroke[] = [
+export const XIE: Stroke[] = [
   // xie: the speech radical
   slant(0.05, 0.93, 0.15, 0.82, 0.08), box(0.02, 0.57, 0.19, 0.64), box(0.12, 0.08, 0.19, 0.57), slant(0.15, 0.08, 0.28, 0.2, 0.07),
   // bi, over
@@ -92,7 +92,7 @@ const XIE: Stroke[] = [
 ];
 
 /** "Hexie" from (u, v) (bottom left, reading direction +u) at height h: the strokes' outlines. */
-function hexie(u: number, v: number, h: number, gap = 0.18): Ring[] {
+export function hexie(u: number, v: number, h: number, gap = 0.18): Ring[] {
   return [...HE.map((s) => ({ s, du: 0 })), ...XIE.map((s) => ({ s, du: 1 + gap }))].map(({ s, du }) =>
     s.map(([a, b]) => [u + (a + du) * h, v + b * h] as [number, number]));
 }
@@ -103,10 +103,12 @@ const LETTERS: Record<string, Array<Array<[number, number]>>> = {
   H: [[[0.14, 0.06], [0.14, 0.94]], [[0.86, 0.06], [0.86, 0.94]], [[0.14, 0.5], [0.86, 0.5]]],
   X: [[[0.12, 0.94], [0.88, 0.06]], [[0.12, 0.06], [0.88, 0.94]]],
   D: [[[0.14, 0.06], [0.14, 0.94], [0.6, 0.94], [0.86, 0.75], [0.86, 0.25], [0.6, 0.06], [0.14, 0.06]]],
+  // the HXD3C's class letter (cnHxd3c.ts)
+  C: [[[0.86, 0.8], [0.66, 0.94], [0.34, 0.94], [0.14, 0.75], [0.14, 0.25], [0.34, 0.06], [0.66, 0.06], [0.86, 0.2]]],
 };
 
-/** `text` centred at (u, v) on a surface, h high, read toward -u when `flip` (facets() winds them outward). */
-function letterOn(m: MeshBuilder, at: Place, n: Vec3, text: string, u: number, v: number, h: number, d: number, flip: boolean): void {
+/** `text` centred at (u, v) on a surface, h high, read toward -u when `flip` (facets() winds them outward), in `mat`. */
+export function letterOn(m: MeshBuilder, at: Place, n: Vec3, text: string, u: number, v: number, h: number, d: number, flip: boolean, mat = "white"): void {
   const w = h * 0.45, gap = h * 0.12, width = text.length * w + (text.length - 1) * gap;
   const u0 = flip ? u + width / 2 : u - width / 2, v0 = v - h / 2;
   const tris: Array<[number, number]> = [];
@@ -123,7 +125,7 @@ function letterOn(m: MeshBuilder, at: Place, n: Vec3, text: string, u: number, v
         for (const k of [0, 1, 2, 0, 2, 3]) { const [qu, qv] = q[k]!; tris.push([flip ? at0 - qu : at0 + qu, v0 + qv]); }
       }
   });
-  m.facets("white", tris.map(([a, b]) => at(a, b, d)), n);
+  m.facets(mat, tris.map(([a, b]) => at(a, b, d)), n);
 }
 
 const mirrorU = (q: Ring): Ring => q.map(([a, b]) => [-a, b] as [number, number]).reverse();
