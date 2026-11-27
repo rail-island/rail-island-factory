@@ -231,6 +231,15 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "2" }, seats: 250 },
     ],
   },
+  "proc-vehicle-obb-4020": {
+    seats: 195,
+    source: "de.wikipedia: 56 / 64 / 64 seats and 416 standing places in a three-car unit (600 in all)",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 205 },
+      { params: { unit: "train" }, seats: 600 },
+      { params: { unit: "train", cars: "2" }, seats: 395 },
+    ],
+  },
   "proc-vehicle-renfe-446": {
     seats: 196,
     source: "Cercanias 446: about 230 seats + 380 standing in 3 cars",
@@ -631,6 +640,103 @@ export const RAIL_UNITS_B: Readonly<Record<string, VehicleCapacityEntry>> = {
       { params: { unit: "train", cars: "6" }, seats: 260 },
       { params: { unit: "train", cars: "7" }, seats: 330 },
       { params: { unit: "train", cars: "8" }, seats: 360 },
+    ],
+  },
+  "proc-vehicle-obb-4744": {
+    seats: 145,
+    source: "Wikipedia (de): OBB 4744 254 seats in 3 cars; standing room approx. 200",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 165 },
+      { params: { unit: "train" }, seats: 455 },
+    ],
+  },
+  "proc-vehicle-obb-4024": {
+    seats: 105,
+    source: "Wikipedia (de): 4-car OBB 4024 199 seats + 252 standing; the 3-car 4023 151 + 160",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 120 },
+      { params: { unit: "train" }, seats: 450 },
+      { params: { unit: "train", cars: "3" }, seats: 330 },
+    ],
+  },
+  "proc-vehicle-obb-railjet": {
+    seats: 27,
+    source: "de.wikipedia Railjet 1. Generation (sets 01-51): 404 seats - driving trailer Afmpz 27 (business 16), first-class Ampz 55, restaurant car ARbmpz 10 (and 14 restaurant seats), economy Bmpz 80, coupling car Bmpvz 72; a train's second car the Ampz, its last the Bmpvz",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 80 },
+      { params: { unit: "restaurant" }, seats: 10 },
+      { params: { unit: "train" }, seats: 164 },
+      { params: { unit: "train", cars: "3" }, seats: 109 },
+      { params: { unit: "train", cars: "5" }, seats: 244 },
+      { params: { unit: "train", cars: "6" }, seats: 324 },
+      { params: { unit: "train", cars: "7" }, seats: 404 },
+    ],
+  },
+  "proc-vehicle-obb-cityshuttle-dd": {
+    seats: 86,
+    source: "de.wikipedia OBB Nahverkehrs-Doppelstockwagen: driving trailer 86 seats, coach 114 seats; usually a driving trailer and up to four coaches",
+    variants: [
+      { params: { unit: "coach" }, seats: 114 },
+      { params: { unit: "train" }, seats: 428 },
+      { params: { unit: "train", cars: "3" }, seats: 314 },
+      { params: { unit: "train", cars: "5" }, seats: 542 },
+    ],
+  },
+  "proc-vehicle-obb-5022": {
+    seats: 108,
+    source: "Wikipedia (de): OBB 5022 117 seats (10 tip-up) in 2 cars; standing room as the DB 642 (approx. 99)",
+    variants: [
+      { params: { unit: "train" }, seats: 216 },
+    ],
+  },
+  "proc-vehicle-obb-4010": {
+    seats: 0,
+    source: "de.wikipedia: OBB 4010 six-car set 66 first + 174 second + 34 dining seats; the 4010 power car has no seats (luggage and guard's compartments), the 7010 open second ~60 (10 bays of 6), the 6010 driving trailer 42 first (7 bays of 6)",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 60 },
+      { params: { unit: "endCar" }, seats: 42 },
+      { params: { unit: "train" }, seats: 162 },
+      { params: { unit: "train", cars: "3" }, seats: 102 },
+      { params: { unit: "train", cars: "5" }, seats: 222 },
+      { params: { unit: "train", cars: "6" }, seats: 282 },
+    ],
+  },
+  "proc-vehicle-obb-5047": {
+    seats: 62,
+    source: "Wikipedia (de): OBB 5047 62 seats, 2nd class only",
+  },
+  "proc-vehicle-westbahn-kiss": {
+    seats: 70,
+    source: "Wikipedia (de): Stadler KISS, WESTbahn 4010 six-car 501 seats (KISS 2 523), four-car 4110 337 seats",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 90 },
+      { params: { unit: "train" }, seats: 320 },
+      { params: { unit: "train", cars: "2" }, seats: 140 },
+      { params: { unit: "train", cars: "3" }, seats: 230 },
+      { params: { unit: "train", cars: "5" }, seats: 410 },
+      { params: { unit: "train", cars: "6" }, seats: 500 },
+    ],
+  },
+  "proc-vehicle-noevog-himmelstreppe": {
+    seats: 36,
+    source: "de.wikipedia NOVOG ET1-ET9: 116 (+11 folding) seats and 113 standing places in three cars; about 36 a high-floor end car, 44 the low-floor middle car",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 44 },
+      { params: { unit: "train" }, seats: 116 },
+    ],
+  },
+  "proc-vehicle-obb-nightjet": {
+    seats: 70,
+    source: "de.wikipedia Nightjet (new generation): 260 places a set - control car Bfmpz 70 seats, multi-purpose car ABbmpvz 26 seats + 2 barrier-free berths + 2 companions' places, couchette cars Bcmz 40 berths (28 mini cabins, 3 four-berth compartments), sleeping cars WLAmz 20 beds (10 compartments)",
+    variants: [
+      { params: { unit: "middleCar" }, seats: 30 },
+      { params: { unit: "couchette" }, seats: 40 },
+      { params: { unit: "sleeper" }, seats: 20 },
+      { params: { unit: "train", cars: "3" }, seats: 130 },
+      { params: { unit: "train" }, seats: 160 },
+      { params: { unit: "train", cars: "5" }, seats: 200 },
+      { params: { unit: "train", cars: "6" }, seats: 240 },
+      { params: { unit: "train", cars: "7" }, seats: 260 },
     ],
   },
 };

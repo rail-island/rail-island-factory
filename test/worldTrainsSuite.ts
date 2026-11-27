@@ -49,7 +49,7 @@ const COVERED = new Set([
 const LENGTHS: Record<string, number> = {
   "proc-vehicle-db-103": 20.2, "proc-vehicle-db-101": 19.1, "proc-vehicle-db-120": 19.2, "proc-vehicle-drg-e18": 16.92,
   "proc-vehicle-drg-e94": 18.6, "proc-vehicle-db-v200": 18.53, "proc-vehicle-db-218": 16.4, "proc-vehicle-db-ic-coach": 26.4,
-  "proc-vehicle-db-vt98": 13.95, "proc-vehicle-db-650": 25.5,
+  "proc-vehicle-db-vt98": 13.95, "proc-vehicle-db-650": 25.5, "proc-vehicle-obb-5047": 25.42,
   "proc-vehicle-sncf-cc6500": 20.19, "proc-vehicle-sncf-cc40100": 22.03, "proc-vehicle-sncf-bb22200": 17.48, "proc-vehicle-sncf-cc7100": 18.92,
   "proc-vehicle-sncf-bb9200": 16.2, "proc-vehicle-sncf-bb27000": 19.52, "proc-vehicle-sncf-bb67400": 17.09, "proc-vehicle-sncf-cc72000": 20.19,
   "proc-vehicle-sncf-corail-coach": 26.4, "proc-vehicle-sncf-grand-confort": 25.5, "proc-vehicle-ciwl-car": 23.45, "proc-vehicle-sncf-x3800": 21.85, "proc-vehicle-sncf-x73500": 28.9,
@@ -66,18 +66,31 @@ const LENGTHS: Record<string, number> = {
   "proc-vehicle-cr-df8b": 22.0,
   "proc-vehicle-cr-25t-coach": 26.6, "proc-vehicle-cr-cr450af": 28.725,
   "proc-vehicle-sbb-ew4-coach": 26.4, "proc-vehicle-sbb-ic2000": 26.8, "proc-vehicle-glacier-express": 18.4,
+  "proc-vehicle-obb-1144": 16.1,
+  "proc-vehicle-obb-1142": 16.22,
+  "proc-vehicle-obb-1116": 19.28,
+  "proc-vehicle-obb-1110": 17.86,
+  "proc-vehicle-obb-2016": 19.275,
+  "proc-vehicle-obb-railjet": 26.85,
+  "proc-vehicle-obb-nightjet": 26.85,
+  "proc-vehicle-obb-1189": 20.4,
+  // the engine alone (the default unit): 22.58 m with its 6.45 m tender
+  "proc-vehicle-bbo-214": 16.13,
+  "proc-vehicle-obb-cityshuttle-dd": 27.1,
+  "proc-vehicle-obb-2043": 15.76,
+  "proc-vehicle-obb-1099": 11.02,
 };
 
 /** A design's country by the operator prefix of its id. */
-const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl", sbb: "ch", rhb: "ch", mgb: "ch", glacier: "ch", renfe: "es", talgo: "es", iryo: "es", br: "gb", lner: "gb", gwr: "gb", lms: "gb", lu: "gb", eurostar: "gb", rocket: "gb", ir: "in", eir: "in", dhr: "in", ncrtc: "in", dmrc: "in", cr: "cn" };
+const COUNTRY: Record<string, string> = { db: "de", dr: "de", drg: "de", kpev: "de", sncf: "fr", ratp: "fr", ciwl: "fr", ns: "nl", sbb: "ch", rhb: "ch", mgb: "ch", glacier: "ch", renfe: "es", talgo: "es", iryo: "es", br: "gb", lner: "gb", gwr: "gb", lms: "gb", lu: "gb", eurostar: "gb", rocket: "gb", ir: "in", eir: "in", dhr: "in", ncrtc: "in", dmrc: "in", cr: "cn", obb: "at", westbahn: "at", bbo: "at", noevog: "at" };
 
 const PASSENGER_GROUPS = new Set(["coach", "unit", "tram", "metro", "bus"]);
 
 export function worldTrainsSuite(index: number, count: number): void {
 describe("the eight countries' trains", () => {
   if (index === 0) it("are all filed under their country", () => {
-    // the plan's 160 designs and the Class 378 and the Chinese units added after it
-    expect(FAMILIES.length).toBe(181);
+    // the plan's 160 designs, the Class 378, the Austrian designs (docs/models/austria-trains.md) and the twenty more Chinese designs added after it
+    expect(FAMILIES.length).toBe(201);
     for (const d of FAMILIES) {
       const prefix = d.id.replace("proc-vehicle-", "").split("-")[0]!;
       expect(countryOf(d.id), d.id).toBe(COUNTRY[prefix]);

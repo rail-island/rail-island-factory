@@ -191,6 +191,14 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   }),
   "proc-vehicle-obb-1012": loco(ELRL, { presets: presets() }),
   "proc-vehicle-obb-1040": loco(ELRL, { presets: presets() }),
+  "proc-vehicle-obb-1144": loco(ELRL, { presets: presets(...each("livery", "bloodOrange")) }),
+  "proc-vehicle-obb-1142": loco(ELRL, { presets: presets(...each("livery", "bloodOrange")) }),
+  "proc-vehicle-obb-1116": loco(ELRL, { presets: presets(...each("livery", "railjet")) }),
+  "proc-vehicle-obb-1189": loco(ELRL, { presets: presets(...each("livery", "brown", "bloodOrange")) }),
+  "proc-vehicle-obb-1110": loco(ELRL, { presets: presets(...each("livery", "bloodOrange")) }),
+  "proc-vehicle-obb-2016": loco(RAIL, { presets: presets() }),
+  "proc-vehicle-bbo-214": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
+  "proc-vehicle-obb-1099": loco(ELRL, { presets: presets(...each("livery", "brown")) }), // 760 mm gauge drawn on the game's one track
   "proc-vehicle-vectron": loco(ELRL, { presets: presets(...each("livery", "regiojet", "cdWhite")) }),
 
   // --- diesel locomotives ----------------------------------------------------------
@@ -210,6 +218,7 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-csd-t679-0": loco(RAIL, { presets: presets() }),
   "proc-vehicle-csd-t499": loco(RAIL, { presets: presets() }),
   "proc-vehicle-cd-771": loco(RAIL, { presets: presets(...each("livery", "cd771", "cd771No421")) }),
+  "proc-vehicle-obb-2043": loco(RAIL, { presets: presets(...each("livery", "trafficRed")) }),
 
   // --- North American diesels ------------------------------------------------------
   "proc-vehicle-emd-gp9": loco(RAIL, { presets: presets(...each("livery", "pennsylvania", "santaFe")) }),
@@ -1027,6 +1036,13 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-sbb-ew4-coach": pax(54, RAIL, { variants: [at({ unit: "b" }, { capacity: 78 })], presets: presets({ unit: "b" }, ...each("livery", "sbb")) }),
   "proc-vehicle-sbb-ic2000": pax(100, RAIL, { variants: [at({ unit: "b" }, { capacity: 130 })], presets: presets({ unit: "b" }) }),
   "proc-vehicle-glacier-express": pax(36, RAIL, { variants: [at({ unit: "second" }, { capacity: 48 })], presets: presets({ unit: "second" }) }),
+  // Austria (docs/models/austria-trains.md)
+  // the 4010 power car carries the luggage and guard's compartments: no seats
+  "proc-vehicle-obb-4010": pax(0, ELRL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 60 }), at({ unit: "endCar" }, { capacity: 42 })],
+    presets: presets({ unit: "middleCar" }, { unit: "endCar" }, ...each("livery", "trafficRed")),
+    formations: [formation("6 cars", {}, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, [{ unit: "endCar" }, "turned"])],
+  }),
   // Spain (docs/models/spain-trains.md)
   "proc-vehicle-renfe-s100": series(0, 41, ELRL, { cars: 8, liveries: ["avlo"] }), // power cars without seats; 329 seats in 8 trailers
   "proc-vehicle-renfe-s103": series(40, 50, ELRL, { cars: 8 }),
@@ -1147,6 +1163,32 @@ export const OPENTTD_TABLE: Readonly<Record<string, OpenttdProperties>> = {
   "proc-vehicle-cr-sy": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-js": loco(RAIL, { presets: presets({ unit: "tender" }), formations: [formation("with tender", {}, { unit: "tender" })] }),
   "proc-vehicle-cr-25t-coach": pax(36, RAIL, { variants: [at({ unit: "hardSeat" }, { capacity: 118 })], presets: presets({ unit: "hardSeat" }, ...each("livery", "green25b")) }),
+  // Austria (docs/models/austria-trains.md)
+  "proc-vehicle-obb-4744": series(80, 94, ELRL, { cars: 3 }),
+  "proc-vehicle-obb-4024": series(45, 55, ELRL, { cars: 4, liveries: ["cityjet"] }),
+  // the Railjet: the driving trailer leading the first-class coach, the restaurant car and four coaches (the locomotive couples at the rear)
+  "proc-vehicle-obb-railjet": pax(27, RAIL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 80 }), at({ unit: "restaurant" }, { capacity: 10 })],
+    presets: presets({ unit: "middleCar" }, { unit: "restaurant" }, { livery: "cd" }),
+    formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "restaurant" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" }, { unit: "middleCar" })],
+  }),
+  "proc-vehicle-obb-4020": series(56, 64, ELRL, { cars: 3, liveries: ["trafficRed"] }), // 56 / 64 / 64 seats, 184 in three cars (de.wikipedia)
+  "proc-vehicle-obb-5022": series(58, 58, RAIL, { cars: 2, liveries: ["cityjet"] }),
+  "proc-vehicle-obb-5047": series(62, 62, RAIL, { single: true, liveries: ["valousek"] }),
+  "proc-vehicle-westbahn-kiss": series(70, 90, ELRL, { cars: 6 }),
+  "proc-vehicle-noevog-himmelstreppe": series(36, 44, ELRL, { cars: 3 }), // 116 seats in three cars (de.wikipedia; 760 mm gauge drawn on the game's one track)
+  // the new Nightjet: the control car leading the multi-purpose car, three couchette and two sleeping cars (the locomotive couples at the rear)
+  "proc-vehicle-obb-nightjet": pax(70, RAIL, {
+    variants: [at({ unit: "middleCar" }, { capacity: 30 }), at({ unit: "couchette" }, { capacity: 40 }), at({ unit: "sleeper" }, { capacity: 20 })],
+    presets: presets({ unit: "middleCar" }, { unit: "couchette" }, { unit: "sleeper" }),
+    formations: [formation("7 cars", {}, { unit: "middleCar" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "couchette" }, { unit: "sleeper" }, { unit: "sleeper" })],
+  }),
+  // the CityShuttle double-deck set: the driving trailer leading three coaches (the locomotive couples at the rear)
+  "proc-vehicle-obb-cityshuttle-dd": pax(86, RAIL, {
+    variants: [at({ unit: "coach" }, { capacity: 114 })],
+    presets: presets({ unit: "coach" }, { livery: "cityjet" }),
+    formations: [formation("4 cars", {}, { unit: "coach" }, { unit: "coach" }, { unit: "coach" })],
+  }),
 };
 
 // --- the world aircraft -------------------------------------------------------------

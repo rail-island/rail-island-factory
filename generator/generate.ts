@@ -138,6 +138,8 @@ import { IN_LOCOS } from "./inLocos.ts";
 import { WORLD_WAGONS } from "./worldWagons.ts";
 import { CN_UNITS } from "./cnUnits.ts";
 import { CN_LOCOS } from "./cnLocos.ts";
+import { AT_UNITS } from "./atUnits.ts";
+import { AT_LOCOS } from "./atLocos.ts";
 import { TRUCKS } from "./trucks.ts";
 import { PHOTO_TRUCKS } from "./photoTrucks.ts";
 import { TRAM_DESIGNS } from "./trams.ts";
@@ -311,6 +313,8 @@ const RAW_FAMILIES: ReadonlyArray<{ designs: readonly ProceduralDesign[]; source
   { designs: WORLD_WAGONS, source: "worldWagons.ts", meta: "vehicles" },
   { designs: CN_UNITS, source: "cnUnits.ts", meta: "vehicles" },
   { designs: CN_LOCOS, source: "cnLocos.ts", meta: "vehicles" },
+  { designs: AT_UNITS, source: "atUnits.ts", meta: "vehicles" },
+  { designs: AT_LOCOS, source: "atLocos.ts", meta: "vehicles" },
   { designs: TRAM_DESIGNS, source: "trams.ts", meta: "vehicles" },
   { designs: EUROPE_TRAMS, source: "worldTramsEurope.ts", meta: "vehicles" }, // the world trams
   { designs: WORLD_REGION_TRAMS, source: "worldTramsWorld.ts", meta: "vehicles" }, // the world trams

@@ -417,7 +417,10 @@ export function sliceCabin(m: MeshBuilder, b: SliceBody, X: (d: number) => numbe
   const ceiling = Math.min(Math.max(...doors.map((o) => o.y1)) + 0.12, ...ds.map((d) => b.C(d) - 0.08));
   const wide = Math.max(...ds.map((d) => b.w(d)));
   const narrowest = (d: number) => Math.min(...[floor, ceiling, ...halfSlice(b, d).map((p) => p[1]).filter((y) => y > floor && y < ceiling)].map((y) => sliceHalf(b, d, y)));
-  const half = Math.min(...ds.filter((d) => b.w(d) >= 0.9 * wide).map(narrowest)) - CABIN_INSET;
+  // a double-deck car's end sections stand above a floor laid in its well (lowWell): only the slices reaching down to the floor set the width
+  const full = ds.filter((d) => b.w(d) >= 0.9 * wide);
+  const low = full.filter((d) => b.B(d) <= floor + 1e-9);
+  const half = Math.min(...(low.length ? low : full).map(narrowest)) - CABIN_INSET;
   // model x back to d (X is a shift, perhaps turned)
   const [x0, k] = [X(0), X(1) - X(0)];
   const dOf = (x: number) => (x - x0) / k;
